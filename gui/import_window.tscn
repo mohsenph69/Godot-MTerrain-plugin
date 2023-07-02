@@ -1,0 +1,155 @@
+[gd_scene load_steps=2 format=3 uid="uid://bi64wdm5e26po"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/gui/import_window.gd" id="1_1yy7h"]
+
+[node name="import_window" type="Window"]
+title = "MTerrain Importer"
+initial_position = 1
+size = Vector2i(450, 350)
+script = ExtResource("1_1yy7h")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "select"
+
+[node name="filepath_line" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "File Path"
+
+[node name="image_dimension" type="HBoxContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Button" type="Label" parent="VBoxContainer/image_dimension"]
+layout_mode = 2
+text = "Image Dimension "
+
+[node name="width" type="LineEdit" parent="VBoxContainer/image_dimension"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "width"
+
+[node name="height" type="LineEdit" parent="VBoxContainer/image_dimension"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "height"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "Region Size in pixel:"
+
+[node name="region_size_line" type="LineEdit" parent="VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "0"
+
+[node name="is_heightmap_checkbox" type="CheckButton" parent="VBoxContainer"]
+layout_mode = 2
+text = "Is Heightmap"
+
+[node name="min_height" type="HBoxContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/min_height"]
+layout_mode = 2
+text = "min height:"
+
+[node name="min_height_line" type="LineEdit" parent="VBoxContainer/min_height"]
+layout_mode = 2
+text = "0"
+
+[node name="max_height" type="HBoxContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/max_height"]
+layout_mode = 2
+text = "max height:"
+
+[node name="max_height_line" type="LineEdit" parent="VBoxContainer/max_height"]
+layout_mode = 2
+text = "1"
+
+[node name="uniform_name" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/uniform_name"]
+layout_mode = 2
+text = "Uniform name:"
+
+[node name="uniform_name_line" type="LineEdit" parent="VBoxContainer/uniform_name"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="uniform_name2" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/uniform_name2"]
+layout_mode = 2
+text = "Format Enum number"
+
+[node name="image_format_line" type="LineEdit" parent="VBoxContainer/uniform_name2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-1"
+placeholder_text = "Format Enum Integer"
+
+[node name="save" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="save_folder_button" type="Button" parent="VBoxContainer/save"]
+layout_mode = 2
+text = "select"
+
+[node name="save_folder_line" type="LineEdit" parent="VBoxContainer/save"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Save folder"
+
+[node name="import" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Import"
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Open File(s)"
+initial_position = 1
+size = Vector2i(508, 450)
+ok_button_text = "Open"
+file_mode = 1
+access = 2
+filters = PackedStringArray("*.r16", "*.exr", "*.png", "*.bmp", "*.webp", "*.jpg", "*.jpeg")
+
+[node name="FileDialog_save" type="FileDialog" parent="."]
+title = "Open a Directory"
+initial_position = 1
+size = Vector2i(508, 450)
+ok_button_text = "Select Current Folder"
+file_mode = 2
+
+[connection signal="close_requested" from="." to="." method="_on_close_requested"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/Button" to="." method="_on_button_button_down"]
+[connection signal="text_changed" from="VBoxContainer/HBoxContainer/filepath_line" to="." method="_on_filepath_line_text_changed"]
+[connection signal="toggled" from="VBoxContainer/is_heightmap_checkbox" to="." method="_on_check_button_toggled"]
+[connection signal="pressed" from="VBoxContainer/save/save_folder_button" to="." method="_on_save_folder_button_pressed"]
+[connection signal="text_changed" from="VBoxContainer/save/save_folder_line" to="." method="_on_filepath_line_text_changed"]
+[connection signal="pressed" from="VBoxContainer/import" to="." method="_on_import_pressed"]
+[connection signal="files_selected" from="FileDialog" to="." method="_on_file_dialog_files_selected"]
+[connection signal="dir_selected" from="FileDialog_save" to="." method="_on_file_dialog_save_dir_selected"]

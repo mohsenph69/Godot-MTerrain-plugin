@@ -1,0 +1,16 @@
+
+env = SConscript('godot-cpp/SConstruct')
+
+
+env.Append(CPPPATH="src/")
+
+
+#env.Append(LIB="......")
+#env.Append(LIBPATH=".....")
+
+
+src = Glob("src/*.cpp")
+
+libpath = '../libs/MTerrain{}{}'.format( env['suffix'], env['SHLIBSUFFIX'] )
+sharedlib = env.SharedLibrary(libpath, src)
+Default(sharedlib)

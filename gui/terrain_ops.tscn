@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://568g1hkbth38"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/gui/terrain_ops.gd" id="1_neobb"]
+
+[node name="terrain_ops" type="OptionButton"]
+offset_right = 8.0
+offset_bottom = 8.0
+item_count = 4
+selected = 0
+popup/item_0/text = "MTerrain"
+popup/item_0/id = 0
+popup/item_1/text = "restart"
+popup/item_1/id = 1
+popup/item_2/text = "create"
+popup/item_2/id = 2
+popup/item_3/text = "remove"
+popup/item_3/id = 3
+script = ExtResource("1_neobb")
+
+[connection signal="item_selected" from="." to="." method="_on_item_selected"]

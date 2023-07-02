@@ -1,0 +1,11 @@
+[configuration]
+
+entry_symbol = "test_library_init"
+compatibility_minimum = 4.1
+
+[libraries]
+
+linux.debug.x86_64 = "res://addons/m_terrain/libs/libMTerrain.linux.template_debug.x86_64.so"
+linux.debug.x86_32 = "res://addons/m_terrain/libs/libMTerrain.linux.template_debug.x86_32.so"
+windows.debug.x86_64 = "res://addons/m_terrain/libs/libMTerrain.windows.template_debug.x86_64.dll"
+windows.debug.x86_32 = "res://addons/m_terrain/libs/libMTerrain.windows.template_debug.x86_32.dll"
