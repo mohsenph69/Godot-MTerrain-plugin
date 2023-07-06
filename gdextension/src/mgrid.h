@@ -3,6 +3,8 @@
 
 //#define NO_MERGE
 
+#include <thread>
+
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/rid.hpp>
 #include <godot_cpp/templates/vector.hpp>
@@ -24,6 +26,7 @@
 #include "mchunks.h"
 #include "mconfig.h"
 #include "mbound.h"
+#include "mpixel_region.h"
 
 
 
@@ -86,8 +89,7 @@ class MGrid : public Object {
     int32_t chunk_counter = 0;
     MGridPos _region_grid_size;
     int32_t _regions_count;
-    
-    
+    PackedVector3Array nvec8;
     
     
     Vector<RID> remove_instance_list;
@@ -107,12 +109,20 @@ class MGrid : public Object {
     static void _bind_methods(){};
 
     public:
+    bool has_normals = false;
+    Dictionary uniforms_id;
     int32_t physics_update_limit = 1;
     RID space;
     String dataDir;
     PackedInt32Array lod_distance;
     int32_t region_size = 128;
     int32_t region_size_meter;
+    uint32_t region_pixel_size;
+    uint32_t rp;
+    //MBound grid_pixel_bound;
+    uint32_t pixel_width;
+    uint32_t pixel_height;
+    MPixelRegion grid_pixel_region;
     Vector3 offset;
     int32_t max_range = 128;
     MGrid();
@@ -150,6 +160,16 @@ class MGrid : public Object {
     void update_chunks(const Vector3& cam_pos);
     void apply_update_chunks();
     void update_physics(const Vector3& cam_pos);
+
+    _FORCE_INLINE_ bool has_pixel(const uint32_t& x,const uint32_t& y);
+    Color get_pixel(uint32_t x,uint32_t y, const int32_t& index);
+    void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index);
+    real_t get_height_by_pixel(uint32_t x,uint32_t y);
+    void set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value);
+    
+    void generate_normals_thread();
+    void generate_normals(MPixelRegion pxr);
+    void save_image(int index,bool force_save);
 };
 
 #endif

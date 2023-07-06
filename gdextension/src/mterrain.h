@@ -63,6 +63,7 @@ class MTerrain : public  Node3D {
     Array uniforms;
     int32_t region_size;
     String dataDir;
+    bool save_generated_normals = false;
     
 
 
@@ -83,6 +84,15 @@ class MTerrain : public  Node3D {
     void finish_update_physics();
     bool is_finish_updating_chunks();
     bool is_finish_updating_physics();
+    Array get_image_list();
+    int get_image_id(String uniform_name);
+    void save_image(int image_index, bool force_save);
+
+    Color get_pixel(const uint32_t& x,const uint32_t& y, const int32_t& index);
+    void set_pixel(const uint32_t& x,const uint32_t& y,const Color& col,const int32_t& index);
+    real_t get_height_by_pixel(const uint32_t& x,const uint32_t& y);
+    void set_height_by_pixel(const uint32_t& x,const uint32_t& y,const real_t& value);
+
     void get_cam_pos();
 
     void set_dataDir(String input);
@@ -94,6 +104,8 @@ class MTerrain : public  Node3D {
 
     Ref<ShaderMaterial> get_material();
     void set_material(Ref<ShaderMaterial> m);
+    void set_save_generated_normals(bool input);
+    bool get_save_generated_normals();
     float get_update_chunks_interval();
     void set_update_chunks_interval(float input);
     void set_update_chunks_loop(bool input);
@@ -134,7 +146,6 @@ class MTerrain : public  Node3D {
     Array get_size_info();
     void set_lod_distance(const PackedInt32Array& input);
     PackedInt32Array get_lod_distance();
-
 
     real_t get_closest_height(const Vector3& pos);
 

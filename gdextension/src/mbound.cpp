@@ -196,7 +196,6 @@ bool MBound::grow_positive(const int32_t& amount, const MBound& limit_bound) {
     return true;
 }
 
-
 bool MBound::get_next_region(const int32_t& region_size, const MBound& limit_bound) {
     if(cursor.z == limit_bound.bottom){
         return false;
@@ -226,3 +225,4 @@ bool MBound::get_next_shared_edge_region(const int32_t& region_size, const MBoun
     cursor.z = top - 1;
     return true;
 }
+

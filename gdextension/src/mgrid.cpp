@@ -7,7 +7,17 @@
 #include <iostream>
 
 
-MGrid::MGrid(){}
+MGrid::MGrid(){
+    nvec8.append(Vector3(0,0,-1));
+    nvec8.append(Vector3(-1,0,-1));
+    nvec8.append(Vector3(-1,0,0));
+    nvec8.append(Vector3(-1,0,1));
+    nvec8.append(Vector3(0,0,1));
+    nvec8.append(Vector3(1,0,1));
+    nvec8.append(Vector3(1,0,0));
+    nvec8.append(Vector3(1,0,-1));
+    nvec8.append(Vector3(0,0,-1));
+}
 MGrid::~MGrid() {
     clear();
 }
@@ -40,6 +50,8 @@ void MGrid::clear() {
     _last_search_bound.clear();
     _region_grid_bound.clear();
     is_dirty = false;
+    uniforms_id.clear();
+    has_normals = false;
 }
 
 bool MGrid::is_created() {
@@ -59,6 +71,10 @@ void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) 
     _chunks = chunks;
     _size.x = width;
     _size.z = height;
+    // Not added to one because pixels start from zero
+    pixel_width = (uint32_t)(_size.x*_chunks->base_size_meter/_chunks->h_scale) + 1;
+    pixel_height = (uint32_t)(_size.z*_chunks->base_size_meter/_chunks->h_scale) + 1;
+    grid_pixel_region = MPixelRegion(pixel_width,pixel_height);
     _size_meter.x = width*_chunks->base_size_meter;
     _size_meter.z = height*_chunks->base_size_meter;
     _vertex_size.x = (_size_meter.x/chunks->h_scale) + 1;
@@ -69,6 +85,8 @@ void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) 
     _region_grid_bound.bottom = _region_grid_size.z - 1;
     _regions_count = _region_grid_size.x*_region_grid_size.z;
     region_size_meter = region_size*_chunks->base_size_meter;
+    rp = (region_size_meter/_chunks->h_scale);
+    region_pixel_size = rp + 1;
     _grid_bound = MBound(0,width-1, 0, height-1);
     regions = memnew_arr(MRegion, _regions_count);
     points = memnew_arr(MPoint*, _size.z);
@@ -110,6 +128,18 @@ void MGrid::update_regions_uniforms(Array input) {
         Dictionary unifrom_info = input[i];
         update_regions_uniform(unifrom_info);
     }
+    for(int i=0; i<_regions_count; i++){
+        regions[i].configure();
+    }
+    if(_regions_count > 0 ){
+        for(int i=0;i<regions[0].images.size();i++){
+            MImage* img = regions[0].images[i];
+            uniforms_id[img->name] = i;
+        }
+    }
+    if(!has_normals){
+        generate_normals_thread();
+    }
 }
 
 void MGrid::update_regions_uniform(Dictionary input) {
@@ -121,8 +151,12 @@ void MGrid::update_regions_uniform(Dictionary input) {
             MRegion* region= get_region(x,z);
             String file_name = name+"_x"+itos(x)+"_y"+itos(z)+".res";
             String file_path = dataDir.path_join(file_name);
-            ERR_FAIL_COND_MSG(!ResourceLoader::get_singleton()->exists(file_path), "MTerrain can not find files check dataDir OR adjust Terrain size and region size to match dataDir files");
-            MImageInfo* i = memnew(MImageInfo(file_path,name,uniform_name,compression));
+            if(!ResourceLoader::get_singleton()->exists(file_path)){
+                WARN_PRINT("Can not find "+name);
+                return;
+            }
+            has_normals = name=="normals";
+            MImage* i = memnew(MImage(file_path,name,uniform_name,compression));
             region->set_image_info(i);
         }
     }
@@ -192,7 +226,6 @@ void MGrid::update_search_bound() {
     MBound sb(_cam_pos, max_range, _size);
     _last_search_bound = _search_bound;
     _search_bound = sb;
-    //_search_bound = _grid_bound; /// For now just for debuging
 }
 
 void MGrid::cull_out_of_bound() {
@@ -202,8 +235,8 @@ void MGrid::cull_out_of_bound() {
         for(int32_t x=_last_search_bound.left; x <=_last_search_bound.right; x++){
             if (!_search_bound.has_point(x,z)){
                 if(points[z][x].has_instance()){
-                    //rs->free_rid(points[z][x].instance);
-                    remove_instance_list.append(points[z][x].instance);
+                    //remove_instance_list.append(points[z][x].instance);
+                    remove_instance_list.push_back(points[z][x].instance);
                     points[z][x].instance = RID();
                     points[z][x].mesh = RID();
                 }
@@ -401,20 +434,22 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
                 if(points[z][x].mesh != mesh){
                     points[z][x].mesh = mesh;
                     if(points[z][x].has_instance()){
-                        remove_instance_list.append(points[z][x].instance);
+                        //remove_instance_list.append(points[z][x].instance);
+                        remove_instance_list.push_back(points[z][x].instance);
                         points[z][x].instance = RID(); 
                     }
                     MRegion* region = get_region_by_point(x,z);
-                    region->insert_lod(lod);
                     points[z][x].create_instance(get_world_pos(x,0,z), _scenario, region->get_material_rid());
                     rs->instance_set_visible(points[z][x].instance, false);
                     rs->instance_set_base(points[z][x].instance, mesh);
-                    update_mesh_list.append(points[z][x].instance);
+                    //update_mesh_list.append(points[z][x].instance);
+                    update_mesh_list.push_back(points[z][x].instance);
                 }
             } else {
                 points[z][x].size = -1;
                 if(points[z][x].has_instance()){
-                    remove_instance_list.append(points[z][x].instance);
+                    //remove_instance_list.append(points[z][x].instance);
+                    remove_instance_list.push_back(points[z][x].instance);
                     points[z][x].instance = RID();
                     points[z][x].mesh = RID();
                 }
@@ -512,7 +547,6 @@ void MGrid::apply_update_chunks() {
     for(RID add : update_mesh_list){
         rs->instance_set_visible(add, true);
     }
-    MRegion::number_of_tex_update = 0;
 }
 
 void MGrid::update_physics(const Vector3& cam_pos){
@@ -539,5 +573,158 @@ void MGrid::update_physics(const Vector3& cam_pos){
                 get_region(x,z)->create_physics();
             }
         }
+    }
+}
+
+bool MGrid::has_pixel(const uint32_t& x,const uint32_t& y){
+    if(x>=pixel_width) return false;
+    if(y>=pixel_height) return false;
+    if(x<0) return false;
+    if(y<0) return false;
+    return true;
+}
+
+Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t& index) {
+    if(!has_pixel(x,y)){
+        return Color();
+    }
+    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
+    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - ex;
+    uint32_t ry = (y/rp) - ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    return r->get_pixel(x,y,index);
+}
+
+void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index) {
+    if(!has_pixel(x,y)){
+        return;
+    }
+    bool ex = (x%rp == 0 && x!=0);
+    bool ey = (y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - (uint32_t)ex;
+    uint32_t ry = (y/rp) - (uint32_t)ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    r->set_pixel(x,y,col,index);
+    // Take care of the edges
+    ex = (ex && rx != _region_grid_bound.right);
+    // Same for ey
+    ey = (ey && ry != _region_grid_bound.bottom);
+    if(ex && ey){
+        MRegion* re = get_region(rx+1,ry+1);
+        re->set_pixel(0,0,col,index);
+    }
+    if(ex){
+        MRegion* re = get_region(rx+1,ry);
+        re->set_pixel(0,y,col,index);
+    }
+    if(ey){
+        MRegion* re = get_region(rx,ry+1);
+        re->set_pixel(x,0,col,index);
+    }
+}
+
+real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
+    if(!has_pixel(x,y)){
+        return -10000000.0;
+    }
+    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
+    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - ex;
+    uint32_t ry = (y/rp) - ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    return r->get_height_by_pixel(x,y);
+}
+
+void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value){
+    if(!has_pixel(x,y)){
+        return;
+    }
+    bool ex = (x%rp == 0 && x!=0);
+    bool ey = (y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - (uint32_t)ex;
+    uint32_t ry = (y/rp) - (uint32_t)ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    r->set_height_by_pixel(x,y,value);
+    // Take care of the edges
+    // We dont want ex to be true at the edge of the terrain
+    ex = (ex && rx != _region_grid_bound.right);
+    // Same for ey
+    ey = (ey && ry != _region_grid_bound.bottom);
+    if(ex && ey){
+        MRegion* re = get_region(rx+1,ry+1);
+        re->set_height_by_pixel(0,0,value);
+    }
+    if(ex){
+        MRegion* re = get_region(rx+1,ry);
+        re->set_height_by_pixel(0,y,value);
+    }
+    if(ey){
+        MRegion* re = get_region(rx,ry+1);
+        re->set_height_by_pixel(x,0,value);
+    }
+}
+
+void MGrid::generate_normals_thread() {
+    Vector<MPixelRegion> px_regions = grid_pixel_region.devide(4);
+    Vector<std::thread*> threads_pull;
+    UtilityFunctions::print("Generating normals");
+    for(int i=0;i<px_regions.size();i++){
+        std::thread* t = new std::thread(&MGrid::generate_normals,this, px_regions[i]);
+        threads_pull.append(t);
+    }
+    for(int i=0;i<threads_pull.size();i++){
+        std::thread* t = threads_pull[i];
+        t->join();
+        delete t;
+    }
+}
+
+void MGrid::generate_normals(MPixelRegion pxr) {
+    if(!uniforms_id.has("normals")) return;
+    int id = uniforms_id["normals"];
+    for(uint32_t y=pxr.top; y<=pxr.bottom; y++){
+        for(uint32_t x=pxr.left; x<=pxr.right; x++){
+            Vector3 normal_vec;
+            Vector2i px(x,y);
+            real_t h = get_height_by_pixel(x,y);
+            // Caculating face normals around point
+            // and average them
+            // In total there are 8 face around each point
+            for(int i=0;i<nvec8.size()-1;i++){
+                Vector2i px1(nvec8[i].x,nvec8[i].z);
+                Vector2i px2(nvec8[i+1].x,nvec8[i+1].z);
+                px1 += px;
+                px2 += px;
+                // Edge of the terrain
+                if(!has_pixel(px1.x,px1.y) || !has_pixel(px2.x,px2.y)){
+                    continue;
+                }
+                Vector3 vec1 = nvec8[i];
+                Vector3 vec2 = nvec8[i+1];
+                vec1.y = get_height_by_pixel(px1.x,px1.y) - h;
+                vec2.y = get_height_by_pixel(px2.x,px2.y) - h;
+                normal_vec += vec1.cross(vec2);
+            }
+            normal_vec.normalize();
+            // packing normals for image
+            normal_vec = normal_vec*0.5 + Vector3(0.5,0.5,0.5);
+            Color col(normal_vec.x,normal_vec.y,normal_vec.z);
+            set_pixel(x,y,col,id);
+        }
+    }
+}
+
+void MGrid::save_image(int index,bool force_save){
+    for(int i=0;i<_regions_count;i++){
+        regions[i].save_image(index,force_save);
     }
 }

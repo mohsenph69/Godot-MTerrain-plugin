@@ -18,48 +18,15 @@
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/transform3d.hpp>
+#include <godot_cpp/variant/vector3.hpp>
+#include <godot_cpp/variant/vector2i.hpp>
+#include <godot_cpp/variant/packed_vector3_array.hpp>
 #include "mbound.h"
+#include "mimage.h"
 
 class MGrid;
 
 using namespace godot;
-
-
-
-struct MImageInfo {
-    String file_path;
-    String name;
-    String uniform_name;
-    int compression;
-    int32_t size; // Width or height , because they are equal
-    Image::Format format;
-    PackedByteArray data;
-    MImageInfo(const String& _file_path,const String& _name,const String& _uniform_name,const int& _compression){
-        file_path = _file_path;
-        name = _name;
-        uniform_name = _uniform_name;
-        compression = _compression;
-        load();
-    }
-    void load(){
-        Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
-        size = img->get_size().x;
-        format = img->get_format();
-        data = img->get_data();
-    }
-    // This works only for Format_RF
-    real_t get_pixel_RF(const int32_t&x, const int32_t& y){
-        int32_t ofs = (x + y*size);
-        return ((float *)data.ptr())[ofs];
-    }
-};
-
-struct MUpdateInfo
-{
-    StringName uniform;
-    Ref<ImageTexture> tex;
-};
-
 
 
 
@@ -68,9 +35,8 @@ class MRegion : public Object{
 
     private:
     Ref<ShaderMaterial> _material;
-    Vector<MImageInfo*> images;
-    MImageInfo* heightmap = nullptr;
-    Vector<MUpdateInfo> update_info;
+    MImage* heightmap = nullptr;
+    MImage* normals = nullptr;
     String shader_code;
     VSet<int8_t>* lods;
     int8_t last_lod = -2;
@@ -78,12 +44,14 @@ class MRegion : public Object{
     RID heightmap_shape;
     bool has_physic=false;
     double current_image_size = 5;
+    int32_t current_scale=1;
 
 
     protected:
     static void _bind_methods(){}
 
     public:
+    Vector<MImage*> images;
     float min_height= 1000000000000000;	
     float max_height=-1000000000000000;
     MGrid* grid;
@@ -94,28 +62,29 @@ class MRegion : public Object{
     MRegion* right = nullptr;
     MRegion* top = nullptr;
     MRegion* bottom = nullptr;
-    static int number_of_tex_update;
+    static Vector<Vector3> nvecs;
     
     
     MRegion();
     ~MRegion();
     void set_material(const Ref<ShaderMaterial> input);
     RID get_material_rid();
-    void update_material(Ref<ShaderMaterial> mat);
-    void set_image_info(MImageInfo* input);
+    void set_image_info(MImage* input);
+    void configure();
     void update_region();
     void insert_lod(const int8_t& input);
     void apply_update();
-    Ref<ImageTexture> get_texture(MImageInfo* info,int8_t lod);
     void create_physics();
     void remove_physics();
-
+    Color get_pixel(const uint32_t& x, const uint32_t& y, const int32_t& index) const;
+    void set_pixel(const uint32_t& x, const uint32_t& y,const Color& color,const int32_t& index);
+    Color get_normal_by_pixel(const uint32_t& x, const uint32_t& y) const;
+    void set_normal_by_pixel(const uint32_t& x, const uint32_t& y,const Color& value);
+    real_t get_height_by_pixel(const uint32_t& x, const uint32_t& y) const;
+    void set_height_by_pixel(const uint32_t& x, const uint32_t& y,const real_t& value);
     real_t get_closest_height(Vector3 pos);
 
-    // This function exist in godot source code
-    // But unfortunatlly it is not expose in GDExtension
-    // Beacause of this I have to copy that here
-    // later if they expose this we can remove this
-    static int get_format_pixel_size(Image::Format p_format);
+
+    void save_image(int index,bool force_save);
 };
 #endif

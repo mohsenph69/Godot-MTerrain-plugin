@@ -5,7 +5,7 @@
 [node name="import_window" type="Window"]
 title = "MTerrain Importer"
 initial_position = 1
-size = Vector2i(450, 350)
+size = Vector2i(550, 400)
 script = ExtResource("1_1yy7h")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
@@ -48,6 +48,19 @@ placeholder_text = "width"
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "height"
+
+[node name="flips" type="HBoxContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="flip_x" type="CheckBox" parent="VBoxContainer/flips"]
+layout_mode = 2
+text = "Flip X"
+
+[node name="flip_y" type="CheckBox" parent="VBoxContainer/flips"]
+layout_mode = 2
+button_pressed = true
+text = "Flip Y"
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -112,6 +125,18 @@ size_flags_horizontal = 3
 text = "-1"
 placeholder_text = "Format Enum Integer"
 
+[node name="tmp" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="tmp_folder_button" type="Button" parent="VBoxContainer/tmp"]
+layout_mode = 2
+text = "select"
+
+[node name="tmp_folder_line" type="LineEdit" parent="VBoxContainer/tmp"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "tmp folder"
+
 [node name="save" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
@@ -137,6 +162,14 @@ file_mode = 1
 access = 2
 filters = PackedStringArray("*.r16", "*.exr", "*.png", "*.bmp", "*.webp", "*.jpg", "*.jpeg")
 
+[node name="FileDialog_tmp" type="FileDialog" parent="."]
+title = "Open a Directory"
+initial_position = 1
+size = Vector2i(508, 450)
+ok_button_text = "Select Current Folder"
+file_mode = 2
+access = 2
+
 [node name="FileDialog_save" type="FileDialog" parent="."]
 title = "Open a Directory"
 initial_position = 1
@@ -148,8 +181,10 @@ file_mode = 2
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/Button" to="." method="_on_button_button_down"]
 [connection signal="text_changed" from="VBoxContainer/HBoxContainer/filepath_line" to="." method="_on_filepath_line_text_changed"]
 [connection signal="toggled" from="VBoxContainer/is_heightmap_checkbox" to="." method="_on_check_button_toggled"]
+[connection signal="pressed" from="VBoxContainer/tmp/tmp_folder_button" to="." method="_on_tmp_folder_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/save/save_folder_button" to="." method="_on_save_folder_button_pressed"]
 [connection signal="text_changed" from="VBoxContainer/save/save_folder_line" to="." method="_on_filepath_line_text_changed"]
 [connection signal="pressed" from="VBoxContainer/import" to="." method="_on_import_pressed"]
 [connection signal="files_selected" from="FileDialog" to="." method="_on_file_dialog_files_selected"]
+[connection signal="dir_selected" from="FileDialog_tmp" to="." method="_on_file_dialog_tmp_dir_selected"]
 [connection signal="dir_selected" from="FileDialog_save" to="." method="_on_file_dialog_save_dir_selected"]

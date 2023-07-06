@@ -10,8 +10,8 @@
 
 
 void MTerrain::_bind_methods() {
-    ADD_SIGNAL(MethodInfo("finish_updating_chunks"));
-    ADD_SIGNAL(MethodInfo("finish_updating_physics"));
+    //ADD_SIGNAL(MethodInfo("finish_updating_chunks"));
+    //ADD_SIGNAL(MethodInfo("finish_updating_physics"));
 
     ClassDB::bind_method(D_METHOD("finish_terrain"), &MTerrain::finish_terrain);
     ClassDB::bind_method(D_METHOD("start"), &MTerrain::start);
@@ -20,14 +20,27 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("restart_grid"), &MTerrain::restart_grid);
     ClassDB::bind_method(D_METHOD("update"), &MTerrain::update);
     ClassDB::bind_method(D_METHOD("finish_update"), &MTerrain::finish_update);
+    ClassDB::bind_method(D_METHOD("update_physics"), &MTerrain::update_physics);
     ClassDB::bind_method(D_METHOD("finish_update_physics"), &MTerrain::finish_update_physics);
+    ClassDB::bind_method(D_METHOD("get_image_list"), &MTerrain::get_image_list);
+    ClassDB::bind_method(D_METHOD("get_image_id", "uniform_name"), &MTerrain::get_image_id);
+    ClassDB::bind_method(D_METHOD("save_image","image_index","force_save"), &MTerrain::save_image);
     ClassDB::bind_method(D_METHOD("is_finishing_update_chunks"), &MTerrain::is_finish_updating_chunks);
     ClassDB::bind_method(D_METHOD("is_finishing_update_physics"), &MTerrain::is_finish_updating_physics);
+    ClassDB::bind_method(D_METHOD("get_pixel", "x","y","image_index"), &MTerrain::get_pixel);
+    ClassDB::bind_method(D_METHOD("set_pixel", "x","y","color","image_index"), &MTerrain::set_pixel);
+    ClassDB::bind_method(D_METHOD("get_height_by_pixel", "x","y"), &MTerrain::get_height_by_pixel);
+    ClassDB::bind_method(D_METHOD("set_height_by_pixel", "x","y","value"), &MTerrain::set_height_by_pixel);
     ClassDB::bind_method(D_METHOD("get_closest_height", "world_position"), &MTerrain::get_closest_height);
 
     ClassDB::bind_method(D_METHOD("set_dataDir","dir"), &MTerrain::set_dataDir);
     ClassDB::bind_method(D_METHOD("get_dataDir"), &MTerrain::get_dataDir);
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "dataDir"), "set_dataDir", "get_dataDir");
+
+    ClassDB::bind_method(D_METHOD("set_save_generated_normals","value"), &MTerrain::set_save_generated_normals);
+    ClassDB::bind_method(D_METHOD("get_save_generated_normals"), &MTerrain::get_save_generated_normals);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "save_generated_normals"), "set_save_generated_normals", "get_save_generated_normals");
+
     ClassDB::bind_method(D_METHOD("set_grid_create","val"), &MTerrain::set_create_grid);
     ClassDB::bind_method(D_METHOD("get_create_grid"), &MTerrain::get_create_grid);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "create_grid"), "set_grid_create", "get_create_grid");
@@ -157,6 +170,11 @@ void MTerrain::create_grid(){
     if(update_chunks_loop){
         update();
     }
+    if(!grid->has_normals && save_generated_normals){
+        int normals_index = get_image_id("normals");
+        UtilityFunctions::print("Saving normals");
+        save_image(normals_index, true);
+    }
     UtilityFunctions::print("Chunks has been created ");
 }
 
@@ -193,9 +211,8 @@ void MTerrain::finish_update() {
     if(status == std::future_status::ready){
         finish_updating_chunks = true;
         grid->apply_update_chunks();
-        emit_signal("finish_updating_chunks");
         if(update_chunks_loop){
-            update();
+            call_deferred("update");
         }
     } else {
         update_chunks_timer->start();
@@ -215,9 +232,8 @@ void MTerrain::finish_update_physics(){
     std::future_status status = update_thread_physics.wait_for(std::chrono::microseconds(1));
     if(status == std::future_status::ready){
         finish_updating_physics = true;
-        emit_signal("finish_updating_physics");
         if(update_physics_loop){
-            update_physics();
+            call_deferred("update_physics");
         }
     } else {
         update_physics_timer->start();
@@ -229,6 +245,35 @@ bool MTerrain::is_finish_updating_chunks(){
 }
 bool MTerrain::is_finish_updating_physics(){
     return finish_updating_physics;
+}
+
+Array MTerrain::get_image_list(){
+    return grid->uniforms_id.keys();
+}
+
+int MTerrain::get_image_id(String uniform_name){
+    if(!grid->is_created()) return -1;
+    if(!grid->uniforms_id.has(uniform_name)) return -1;
+    return grid->uniforms_id[uniform_name];
+}
+
+void MTerrain::save_image(int image_index, bool force_save) {
+    ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND(image_index>grid->uniforms_id.keys().size());
+    grid->save_image(image_index,force_save);
+}
+
+Color MTerrain::get_pixel(const uint32_t& x,const uint32_t& y, const int32_t& index){
+    return grid->get_pixel(x,y,index);
+}
+void MTerrain::set_pixel(const uint32_t& x,const uint32_t& y,const Color& col,const int32_t& index){
+    grid->set_pixel(x,y,col,index);
+}
+real_t MTerrain::get_height_by_pixel(const uint32_t& x,const uint32_t& y){
+    return grid->get_height_by_pixel(x,y);
+}
+void MTerrain::set_height_by_pixel(const uint32_t& x,const uint32_t& y,const real_t& value){
+    grid->set_height_by_pixel(x,y,value);
 }
 
 void MTerrain::get_cam_pos() {
@@ -278,6 +323,14 @@ Ref<ShaderMaterial> MTerrain::get_material(){
 
 void MTerrain::set_material(Ref<ShaderMaterial> m){
     material = m;
+}
+
+void MTerrain::set_save_generated_normals(bool input){
+    save_generated_normals = input;
+}
+
+bool MTerrain::get_save_generated_normals(){
+    return save_generated_normals;
 }
 
 float MTerrain::get_update_chunks_interval(){

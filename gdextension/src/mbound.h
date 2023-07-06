@@ -5,6 +5,7 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/core/math.hpp>
 #include <godot_cpp/variant/rect2i.hpp>
+#include <godot_cpp/templates/vector.hpp>
 
 #include "mconfig.h"
 
@@ -69,7 +70,6 @@ struct  MBound
     //use to devide the image to different region
     bool get_next_region(const int32_t& region_size, const MBound& limit_bound);
     bool get_next_shared_edge_region(const int32_t& region_size, const MBound& limit_bound);
-
 
 };
 
