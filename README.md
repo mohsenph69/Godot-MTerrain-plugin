@@ -1,5 +1,7 @@
 # godot-mterrain-plugin
-
+## how to start
+Watch this youtube video:
+https://www.youtube.com/watch?v=PcAkWClET4U
 ## download
 To downalod the latest release use this link:
 https://github.com/mohsenph69/Godot-MTerrain-plugin/releases
