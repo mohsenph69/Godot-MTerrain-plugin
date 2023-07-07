@@ -14,7 +14,7 @@ void vertex(){
 	region_uv = (world_uv - region_world_position.xz)/region_size;
 	vec2 terrain_heightmap_uv = region_uv*region_a + region_b;
 	VERTEX.y = texture(mterrain_heightmap, terrain_heightmap_uv).r;
-	vec3 n = texture(mterrain_normals, terrain_heightmap_uv).rbg;
+	vec3 n = texture(mterrain_normals, terrain_heightmap_uv).rgb;
 	n = fma(n,vec3(2.0),vec3(-1.0));
 	NORMAL = n;
 	//Scale world uv for terrain texture
