@@ -27,6 +27,7 @@ void MImage::create(uint32_t _size, Image::Format _format) {
 	size = _size;
 	format = _format;
 	pixel_size = get_format_pixel_size(format);
+	data.clear();
 	data.resize(size*size*pixel_size);
 	current_size = size;
 }

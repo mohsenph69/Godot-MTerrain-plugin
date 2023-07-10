@@ -49,6 +49,15 @@ void MRegion::set_image_info(MImage* input) {
 void MRegion::configure() {
 	for(int i=0; i < images.size(); i++){
 		images[i]->load();
+		if(images[i]->size != grid->region_pixel_size){
+			UtilityFunctions::print("grid pixel size",grid->region_pixel_size);
+			images[i]->create(grid->region_pixel_size, images[i]->format);
+			if(images[i]->name == "heightmap"){
+				min_height = -0.1;
+				max_height = 0.1;
+			}
+			ERR_FAIL_MSG("Region size not match for "+images[i]->name+ " please Check region size");
+		}
 	}
 	if(heightmap==nullptr){
 		String f_name = "heightmap_x"+itos(pos.x)+"_y"+itos(pos.z)+".res";
