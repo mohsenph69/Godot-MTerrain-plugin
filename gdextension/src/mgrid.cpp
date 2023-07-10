@@ -122,8 +122,6 @@ void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) 
 }
 
 void MGrid::update_regions_uniforms(Array input) {
-    ERR_FAIL_COND(!_material.is_valid());
-    ERR_FAIL_COND(!_material->get_shader().is_valid());
     for(int i=0;i<input.size();i++){
         Dictionary unifrom_info = input[i];
         update_regions_uniform(unifrom_info);
@@ -153,7 +151,7 @@ void MGrid::update_regions_uniform(Dictionary input) {
             String file_path = dataDir.path_join(file_name);
             if(!ResourceLoader::get_singleton()->exists(file_path)){
                 WARN_PRINT("Can not find "+name);
-                return;
+                continue;
             }
             has_normals = name=="normals";
             MImage* i = memnew(MImage(file_path,name,uniform_name,compression));

@@ -50,7 +50,6 @@ void MRegion::configure() {
 	for(int i=0; i < images.size(); i++){
 		images[i]->load();
 		if(images[i]->size != grid->region_pixel_size){
-			UtilityFunctions::print("grid pixel size",grid->region_pixel_size);
 			images[i]->create(grid->region_pixel_size, images[i]->format);
 			if(images[i]->name == "heightmap"){
 				min_height = -0.1;
@@ -98,8 +97,9 @@ void MRegion::configure() {
 }
 
 void MRegion::update_region() {
-	ERR_FAIL_COND(!_material.is_valid());
-	ERR_FAIL_COND(!_material->get_shader().is_valid());
+	if(!_material.is_valid()){
+		return;
+	}
     int8_t curren_lod = (lods->is_empty()) ? -1 : (*lods)[0];
 	current_scale = pow(2, (int32_t)curren_lod);
 	for(int i=0; i < images.size(); i++){
@@ -123,8 +123,9 @@ void MRegion::insert_lod(const int8_t& input) {
 }
 
 void MRegion::apply_update() {
-	ERR_FAIL_COND(!_material.is_valid());
-	ERR_FAIL_COND(!_material->get_shader().is_valid());
+	if(!_material.is_valid()){
+		return;
+	}
 	for(int i=0; i < images.size(); i++){
 		MImage* img = images[i];
 		img->apply_update();

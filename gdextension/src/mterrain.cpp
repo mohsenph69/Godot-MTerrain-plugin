@@ -113,7 +113,11 @@ void MTerrain::_bind_methods() {
 }
 
 MTerrain::MTerrain() {
-    //connect("ready", Callable(this, "start"));
+    lod_distance.append(3);
+    lod_distance.append(6);
+    lod_distance.append(12);
+    lod_distance.append(16);
+    lod_distance.append(24);
     connect("tree_exiting", Callable(this, "finish_terrain"));
     recalculate_terrain_config(true);
     grid = memnew(MGrid);

@@ -53,7 +53,7 @@ class MTerrain : public  Node3D {
     int max_h_scale_index = 7;
     int8_t max_lod;
     int8_t max_size;
-    int32_t size_list[8] = M_SIZE_LIST;
+    int32_t size_list[9] = M_SIZE_LIST;
     real_t h_scale_list[8]   = M_H_SCALE_LIST;
     Array size_info;
     int32_t max_range;
