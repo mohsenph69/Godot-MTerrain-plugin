@@ -17,6 +17,7 @@
 #include "mchunks.h"
 #include "mraw16.h"
 #include "mregion.h"
+#include "mbrush_manager.h"
 
 using namespace godot;
 
@@ -30,6 +31,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MChunks>();
 	ClassDB::register_class<MRegion>();
 	ClassDB::register_class<MRaw16>();
+	ClassDB::register_class<MBrushManager>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {

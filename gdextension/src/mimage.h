@@ -21,8 +21,9 @@ struct MImage {
     String file_path;
     String name;
     String uniform_name;
-    int compression;
-    uint32_t size; // Width or height , because they are equal
+    int compression=-1;
+    uint32_t width;
+    uint32_t height;
     uint32_t current_size;
     uint32_t current_scale = 1;
     uint32_t pixel_size;
@@ -34,10 +35,13 @@ struct MImage {
     bool is_dirty = false;
     bool is_save = false;
     std::mutex update_mutex;
-        
+    
+    MImage();
     MImage(const String& _file_path,const String& _name,const String& _uniform_name,const int& _compression);
     void load();
     void create(uint32_t _size, Image::Format _format);
+    // This create bellow should not be used for terrain, It is for other stuff
+    void create(uint32_t _width,uint32_t _height, Image::Format _format);
     // get data with custom scale
     PackedByteArray get_data(int scale);
     void update_texture(int scale,bool apply_update);

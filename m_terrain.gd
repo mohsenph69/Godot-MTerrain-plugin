@@ -2,7 +2,7 @@
 extends EditorPlugin
 
 var import_window_res = preload("res://addons/m_terrain/gui/import_window.tscn")
-
+#var brush_manger = null
 
 var raw_img_importer = null
 var raw_tex_importer = null
@@ -10,9 +10,11 @@ var active_terrain:MTerrain = null
 
 func _enter_tree():
 	add_tool_menu_item("MTerrain importer", Callable(self,"show_import_window"))
+	#brush_manger = MBrushManager.new()
 	
 func _exit_tree():
 	remove_tool_menu_item("MTerrain importer")
+	#brush_manger.free()
 
 
 func show_import_window():

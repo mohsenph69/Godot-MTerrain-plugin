@@ -28,6 +28,9 @@
 #include "mbound.h"
 #include "mpixel_region.h"
 
+class MBrushManager;
+class MHeightBrush;
+
 
 
 using namespace godot;
@@ -68,6 +71,7 @@ class MGrid : public Object {
     GDCLASS(MGrid, Object);
     friend class MRegion;
     private:
+    MBrushManager* _brush_manager;
     MPoint** points;
     MRegion* regions;
     bool current_update = true;
@@ -125,6 +129,12 @@ class MGrid : public Object {
     MPixelRegion grid_pixel_region;
     Vector3 offset;
     int32_t max_range = 128;
+    /*
+    Brush Stuff
+    */
+    uint32_t brush_px_pos_x;
+    uint32_t brush_px_pos_y;
+    uint32_t brush_px_radius;
     MGrid();
     ~MGrid();
     void clear();
@@ -167,9 +177,15 @@ class MGrid : public Object {
     real_t get_height_by_pixel(uint32_t x,uint32_t y);
     void set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value);
     
-    void generate_normals_thread();
+    void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
     void save_image(int index,bool force_save);
+
+    Vector2i get_closest_pixel(Vector3 world_pos);
+
+    void set_brush_manager(MBrushManager* input);
+    void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
+    void draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush);
 };
 
 #endif

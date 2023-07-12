@@ -49,7 +49,7 @@ void MRegion::set_image_info(MImage* input) {
 void MRegion::configure() {
 	for(int i=0; i < images.size(); i++){
 		images[i]->load();
-		if(images[i]->size != grid->region_pixel_size){
+		if(images[i]->width != grid->region_pixel_size){
 			images[i]->create(grid->region_pixel_size, images[i]->format);
 			if(images[i]->name == "heightmap"){
 				min_height = -0.1;
@@ -144,8 +144,8 @@ void MRegion::create_physics() {
 	PhysicsServer3D::get_singleton()->body_set_mode(physic_body, PhysicsServer3D::BodyMode::BODY_MODE_STATIC);
 	heightmap_shape = PhysicsServer3D::get_singleton()->heightmap_shape_create();
 	Dictionary d;
-	d["width"] = heightmap->size;
-	d["depth"] = heightmap->size;
+	d["width"] = heightmap->width;
+	d["depth"] = heightmap->height;
 	d["heights"] = heightmap->data.to_float32_array();
 	d["min_height"] = min_height;
 	d["max_height"] = max_height;

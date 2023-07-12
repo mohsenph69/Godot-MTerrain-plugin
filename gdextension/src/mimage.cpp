@@ -2,7 +2,9 @@
 #include <godot_cpp/classes/resource_saver.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
-
+MImage::MImage(){
+	
+}
 MImage::MImage(const String& _file_path,const String& _name,const String& _uniform_name,const int& _compression){
     file_path = _file_path;
     name = _name;
@@ -12,11 +14,12 @@ MImage::MImage(const String& _file_path,const String& _name,const String& _unifo
 
 void MImage::load(){
     Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
-    size = img->get_size().x;
+    width = img->get_size().x;
+	height = img->get_size().x;
     format = img->get_format();
 	pixel_size = get_format_pixel_size(format);
     data = img->get_data();
-    current_size = size;
+    current_size = width;
 	if(pixel_size==0){
 		ERR_FAIL_EDMSG("Unsported image format for Mterrain");
 	}
@@ -24,22 +27,33 @@ void MImage::load(){
 }
 
 void MImage::create(uint32_t _size, Image::Format _format) {
-	size = _size;
+	width = _size;
+	height =_size;
 	format = _format;
 	pixel_size = get_format_pixel_size(format);
 	data.clear();
-	data.resize(size*size*pixel_size);
-	current_size = size;
+	data.resize(width*width*pixel_size);
+	current_size = width;
+}
+
+void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
+	width = _width;
+	height =_height;
+	format = _format;
+	pixel_size = get_format_pixel_size(format);
+	data.clear();
+	data.resize(width*_height*pixel_size);
+	current_size = width;
 }
 
 PackedByteArray MImage::get_data(int scale) {
-    current_size = ((size - 1)/scale) + 1;
+    current_size = ((width - 1)/scale) + 1;
 	current_scale = scale;
     PackedByteArray output;
     output.resize(current_size*current_size*pixel_size);
     for(int32_t y=0; y < current_size; y++){
         for(int32_t x=0; x < current_size; x++){
-            int32_t main_offset = (scale*x+size*y*scale)*pixel_size;
+            int32_t main_offset = (scale*x+width*y*scale)*pixel_size;
             int32_t new_offset = (x+y*current_size)*pixel_size;
             for(int32_t i=0; i < pixel_size; i++){
                 output[new_offset+i] = data[main_offset+i];
@@ -86,24 +100,24 @@ void MImage::apply_update() {
 
 // This works only for Format_RF
 real_t MImage::get_pixel_RF(const uint32_t&x, const uint32_t& y) const {
-    uint32_t ofs = (x + y*size);
+    uint32_t ofs = (x + y*width);
     return ((float *)data.ptr())[ofs];
 }
 
 void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value){
-	uint32_t ofs = (x + y*size);
+	uint32_t ofs = (x + y*width);
 	((float *)data.ptrw())[ofs] = value;
 	is_dirty = true;
 	is_save = false;
 }
 
 Color MImage::get_pixel(const uint32_t&x, const uint32_t& y) const {
-	uint32_t ofs = (x + y*size);
+	uint32_t ofs = (x + y*width);
 	return _get_color_at_ofs(data.ptr(), ofs);
 }
 
 void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
-	uint32_t ofs = (x + y*size);
+	uint32_t ofs = (x + y*width);
 	_set_color_at_ofs(data.ptrw(), ofs, color);
 	is_dirty = true;
 	is_save = false;
@@ -112,7 +126,7 @@ void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
 
 void MImage::save(bool force_save) {
 	if(force_save || !is_save){
-		Ref<Image> img = Image::create_from_data(size,size,false,format,data);
+		Ref<Image> img = Image::create_from_data(width,height,false,format,data);
 		ResourceSaver::get_singleton()->save(img,file_path);
 		is_save = true;
 	}

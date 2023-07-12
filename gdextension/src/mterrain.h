@@ -152,6 +152,11 @@ class MTerrain : public  Node3D {
     void _get_property_list(List<PropertyInfo> *p_list) const;
     bool _get(const StringName &p_name, Variant &r_ret) const;
     bool _set(const StringName &p_name, const Variant &p_value);
+
+    Vector2i get_closest_pixel(const Vector3& world_pos);
+    void set_brush_manager(Object* input);
+    void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
+    
 };
 
 

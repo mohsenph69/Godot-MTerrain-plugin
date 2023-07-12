@@ -7,6 +7,8 @@
 #include <godot_cpp/classes/reg_ex.hpp>
 #include <godot_cpp/classes/reg_ex_match.hpp>
 
+#include "mbrush_manager.h"
+
 
 
 void MTerrain::_bind_methods() {
@@ -110,6 +112,10 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_lod_distance", "lod_distance"), &MTerrain::set_lod_distance);
     ClassDB::bind_method(D_METHOD("get_lod_distance"), &MTerrain::get_lod_distance);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY, "lod_distance",PROPERTY_HINT_NONE,"", PROPERTY_USAGE_STORAGE),"set_lod_distance","get_lod_distance");
+
+    ClassDB::bind_method(D_METHOD("get_closest_pixel", "world_pos"), &MTerrain::get_closest_pixel);
+    ClassDB::bind_method(D_METHOD("set_brush_manager", "brush_manager"), &MTerrain::set_brush_manager);
+    ClassDB::bind_method(D_METHOD("draw_height", "brush_pos","radius","brush_id"), &MTerrain::draw_height);
 }
 
 MTerrain::MTerrain() {
@@ -653,4 +659,16 @@ bool MTerrain::_set(const StringName &p_name, const Variant &p_value) {
         return true;
     }
     return false;
+}
+
+Vector2i MTerrain::get_closest_pixel(const Vector3& world_pos){
+    return grid->get_closest_pixel(world_pos);
+}
+void MTerrain::set_brush_manager(Object* input){
+    ERR_FAIL_COND(!input->is_class("MBrushManager"));
+    MBrushManager* brush_manager = Object::cast_to<MBrushManager>(input);
+    grid->set_brush_manager(brush_manager);
+}
+void MTerrain::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
+    grid->draw_height(brush_pos,radius,brush_id);
 }
