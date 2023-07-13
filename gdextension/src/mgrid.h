@@ -27,6 +27,7 @@
 #include "mconfig.h"
 #include "mbound.h"
 #include "mpixel_region.h"
+#include "mcollision.h"
 
 class MBrushManager;
 class MHeightBrush;
@@ -167,6 +168,7 @@ class MGrid : public Object {
     MGridPos get_3d_grid_pos_by_middle_point(MGridPos input);
     real_t get_closest_height(const Vector3& pos);
     real_t get_height(Vector3 pos);
+    Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
 
     void update_chunks(const Vector3& cam_pos);
     void apply_update_chunks();

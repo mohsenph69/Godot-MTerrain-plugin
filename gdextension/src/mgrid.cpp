@@ -548,6 +548,26 @@ real_t MGrid::get_height(Vector3 pos){
     return (ivalbottom - ivaltop)*factor_z + ivaltop;
 }
 
+Ref<MCollision> MGrid::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
+    ray_vector.normalize();
+    Ref<MCollision> col;
+    col.instantiate();
+    for(int i=0;i<max_step;i++){
+        ray_origin += ray_vector*step;
+        real_t terrain_height = get_height(ray_origin);
+        //real_t terrain_height = get_closest_height(ray_origin);
+        if(terrain_height > ray_origin.y){
+            col->collided = true;
+            break;
+        }
+    }
+    if(col->collided){
+        Vector3 las_pos = ray_origin - ray_vector*step;
+        col->collision_position = las_pos.lerp(ray_origin, 0.5);
+    }
+    return col;
+}
+
 void MGrid::update_chunks(const Vector3& cam_pos) {
     set_cam_pos(cam_pos);
     update_search_bound();
@@ -650,7 +670,7 @@ void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& inde
 
 real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
     if(!has_pixel(x,y)){
-        return -10000000.0;
+        return 0.0;
     }
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
     uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);

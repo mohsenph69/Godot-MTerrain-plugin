@@ -35,6 +35,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_height_by_pixel", "x","y","value"), &MTerrain::set_height_by_pixel);
     ClassDB::bind_method(D_METHOD("get_closest_height", "world_position"), &MTerrain::get_closest_height);
     ClassDB::bind_method(D_METHOD("get_height", "world_position"), &MTerrain::get_height);
+    ClassDB::bind_method(D_METHOD("get_ray_collision_point", "ray_origin","ray_vector","step","max_step"), &MTerrain::get_ray_collision_point);
     
     ClassDB::bind_method(D_METHOD("set_dataDir","dir"), &MTerrain::set_dataDir);
     ClassDB::bind_method(D_METHOD("get_dataDir"), &MTerrain::get_dataDir);
@@ -616,6 +617,9 @@ real_t MTerrain::get_height(const Vector3& pos){
     return grid->get_height(pos);
 }
 
+Ref<MCollision> MTerrain::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
+    return grid->get_ray_collision_point(ray_origin,ray_vector,step,max_step);
+}
 
 bool MTerrain::_get(const StringName &p_name, Variant &r_ret) const {
     if(p_name.begins_with("SIZE_")){
