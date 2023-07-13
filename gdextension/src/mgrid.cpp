@@ -529,6 +529,25 @@ real_t MGrid::get_closest_height(const Vector3& pos) {
     return r->get_closest_height(pos);
 }
 
+real_t MGrid::get_height(Vector3 pos){
+    pos -= offset;
+    pos = pos/_chunks->h_scale;
+    if(pos.x <0 || pos.z <0){
+        return 0;
+    }
+    uint32_t x = (uint32_t)pos.x;
+    uint32_t y = (uint32_t)pos.z;
+    real_t hx0z0 = get_height_by_pixel(x,y);
+    real_t hx1z0 = get_height_by_pixel(x+1,y);
+    real_t hx0z1 = get_height_by_pixel(x,y+1);
+    real_t hx1z1 = get_height_by_pixel(x+1,y+1);
+    real_t factor_x = pos.x - floor(pos.x);
+    real_t factor_z = pos.z - floor(pos.z);
+    real_t ivaltop = (hx1z0 - hx0z0)*factor_x + hx0z0;
+    real_t ivalbottom = (hx1z1 - hx0z1)*factor_x + hx0z1;
+    return (ivalbottom - ivaltop)*factor_z + ivaltop;
+}
+
 void MGrid::update_chunks(const Vector3& cam_pos) {
     set_cam_pos(cam_pos);
     update_search_bound();

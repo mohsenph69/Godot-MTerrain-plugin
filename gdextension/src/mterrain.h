@@ -148,6 +148,7 @@ class MTerrain : public  Node3D {
     PackedInt32Array get_lod_distance();
 
     real_t get_closest_height(const Vector3& pos);
+    real_t get_height(const Vector3& pos);
 
     void _get_property_list(List<PropertyInfo> *p_list) const;
     bool _get(const StringName &p_name, Variant &r_ret) const;

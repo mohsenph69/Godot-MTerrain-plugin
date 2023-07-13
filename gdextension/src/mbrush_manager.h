@@ -27,6 +27,8 @@ class MBrushManager : public Object {
     MHeightBrush* get_height_brush(int brush_id);
     PackedStringArray get_height_brush_list();
     int get_height_brush_id(String brush_name);
+    Array get_height_brush_property(int brush_id);
+    void set_height_brush_propert(String prop_name,Variant value,int brush_id);
     
 };
 #endif

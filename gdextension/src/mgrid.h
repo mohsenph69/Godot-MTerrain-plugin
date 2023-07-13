@@ -166,6 +166,7 @@ class MGrid : public Object {
 
     MGridPos get_3d_grid_pos_by_middle_point(MGridPos input);
     real_t get_closest_height(const Vector3& pos);
+    real_t get_height(Vector3 pos);
 
     void update_chunks(const Vector3& cam_pos);
     void apply_update_chunks();

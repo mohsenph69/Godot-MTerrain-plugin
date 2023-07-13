@@ -12,6 +12,8 @@ MBrushManager::MBrushManager(){
 void MBrushManager::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_height_brush_list"), &MBrushManager::get_height_brush_list);
     ClassDB::bind_method(D_METHOD("get_height_brush_id", "brush_name"), &MBrushManager::get_height_brush_id);
+    ClassDB::bind_method(D_METHOD("get_height_brush_property", "brush_id"), &MBrushManager::get_height_brush_property);
+    ClassDB::bind_method(D_METHOD("set_height_brush_property", "property_name","value","brush_id"), &MBrushManager::set_height_brush_propert);
 }
 
 MBrushManager::~MBrushManager(){
@@ -44,5 +46,10 @@ int MBrushManager::get_height_brush_id(String brush_name){
     return height_brush_map[brush_name];
 }
 
+Array MBrushManager::get_height_brush_property(int brush_id){
+    return height_brushes[brush_id]->_get_property_list();
+}
 
-
+void MBrushManager::set_height_brush_propert(String prop_name,Variant value,int brush_id){
+    height_brushes[brush_id]->_set_property(prop_name,value);
+}

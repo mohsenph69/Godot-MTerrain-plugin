@@ -34,7 +34,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_height_by_pixel", "x","y"), &MTerrain::get_height_by_pixel);
     ClassDB::bind_method(D_METHOD("set_height_by_pixel", "x","y","value"), &MTerrain::set_height_by_pixel);
     ClassDB::bind_method(D_METHOD("get_closest_height", "world_position"), &MTerrain::get_closest_height);
-
+    ClassDB::bind_method(D_METHOD("get_height", "world_position"), &MTerrain::get_height);
+    
     ClassDB::bind_method(D_METHOD("set_dataDir","dir"), &MTerrain::set_dataDir);
     ClassDB::bind_method(D_METHOD("get_dataDir"), &MTerrain::get_dataDir);
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "dataDir"), "set_dataDir", "get_dataDir");
@@ -611,6 +612,10 @@ void MTerrain::_get_property_list(List<PropertyInfo> *p_list) const {
 real_t MTerrain::get_closest_height(const Vector3& pos) {
     return grid->get_closest_height(pos);
 }
+real_t MTerrain::get_height(const Vector3& pos){
+    return grid->get_height(pos);
+}
+
 
 bool MTerrain::_get(const StringName &p_name, Variant &r_ret) const {
     if(p_name.begins_with("SIZE_")){
