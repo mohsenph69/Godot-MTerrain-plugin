@@ -34,3 +34,6 @@
 *.exe
 *.out
 *.app
+
+
+!/gui/human_male.obj
