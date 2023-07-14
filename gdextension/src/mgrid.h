@@ -72,7 +72,7 @@ class MGrid : public Object {
     GDCLASS(MGrid, Object);
     friend class MRegion;
     private:
-    MBrushManager* _brush_manager;
+    MBrushManager* _brush_manager = nullptr;
     MPoint** points;
     MRegion* regions;
     bool current_update = true;
@@ -94,6 +94,7 @@ class MGrid : public Object {
     int32_t chunk_counter = 0;
     MGridPos _region_grid_size;
     int32_t _regions_count;
+    Vector<MImage*> _all_image_list;
     PackedVector3Array nvec8;
     
     
@@ -147,6 +148,7 @@ class MGrid : public Object {
     void create(const int32_t &width,const int32_t& height, MChunks* chunks);
     void update_regions_uniforms(Array input);
     void update_regions_uniform(Dictionary input);
+    void update_all_image_list();
     Vector3 get_world_pos(const int32_t &x,const int32_t& y,const int32_t& z);
     Vector3 get_world_pos(const MGridPos& pos);
     MGridPos get_grid_pos(const Vector3& pos);
@@ -162,7 +164,7 @@ class MGrid : public Object {
     void merge_chunks();
     bool check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t& region_id, const MBound& bound);
     int8_t get_edge_num(const bool& left,const bool& right,const bool& top,const bool& bottom);
-    
+
 
     void set_material(Ref<ShaderMaterial> material);
     Ref<ShaderMaterial> get_material();

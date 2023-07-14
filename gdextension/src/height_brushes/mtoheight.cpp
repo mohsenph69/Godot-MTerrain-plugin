@@ -47,7 +47,7 @@ Array MToHeight::_get_property_list(){
     p4["type"] = Variant::BOOL;
     p4["hint"] = "";
     p4["hint_string"] = "";
-    p4["default_value"] = 0.2;
+    p4["default_value"] = false;
     p4["min"] = -0;
     p4["max"] = 0;
     props.append(p1);
@@ -70,6 +70,9 @@ void MToHeight::_set_property(String prop_name, Variant value){
     {
         weight = value;
         return;
+    } else if (prop_name == "absolute"){
+        UtilityFunctions::print("Absoulute value ", value);
+        absolute = value;
     }
 }
 void MToHeight::before_draw(){
@@ -80,7 +83,12 @@ float MToHeight::get_height(const uint32_t& x,const uint32_t& y){
     real_t dis = grid->brush_world_pos.distance_to(world_pos);
     dis = dis/grid->brush_radius;
     dis = UtilityFunctions::smoothstep(1,hardness,dis);
-    float toh = grid->brush_world_pos.y;
+    float toh;
+    if(absolute){
+        toh=offset;
+    } else {
+        toh = grid->brush_world_pos.y + offset;
+    }
     float h = grid->get_height_by_pixel(x,y);
     return (toh - h)*weight*dis + h;
 }

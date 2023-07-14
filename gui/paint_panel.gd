@@ -10,6 +10,7 @@ signal brush_size_changed
 
 var float_prop_element=preload("res://addons/m_terrain/gui/control_prop_element/float.tscn")
 var float_range_prop_element=preload("res://addons/m_terrain/gui/control_prop_element/float_range.tscn")
+var bool_element = preload("res://addons/m_terrain/gui/control_prop_element/bool.tscn")
 
 var brush_manager:MBrushManager = MBrushManager.new()
 var is_color_brush:=true
@@ -73,6 +74,12 @@ func create_props(dic:Dictionary):
 			element.max = dic["max"]
 			element.connect("prop_changed",Callable(self,"prop_change"))
 			add_child(element)
+	elif dic["type"]==TYPE_BOOL:
+		element = bool_element.instantiate()
+		element.set_name(dic["name"])
+		element.set_value(dic["default_value"])
+		element.connect("prop_changed",Callable(self,"prop_change"))
+		add_child(element)
 	property_element_list.append(element)
 
 
@@ -80,7 +87,8 @@ func create_props(dic:Dictionary):
 func clear_property_element():
 	print("free ", property_element_list)
 	for e in property_element_list:
-		e.queue_free()
+		if is_instance_valid(e):
+			e.queue_free()
 	property_element_list = []
 
 func prop_change(prop_name,value):

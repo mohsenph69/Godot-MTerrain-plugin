@@ -2,12 +2,33 @@
 extends HBoxContainer
 class_name MTools
 
+@onready var height_lable := $h_lable
+@onready var distance_lable := $d_lable
+@onready var human_male_button:= $human_male
 
 signal toggle_paint_mode
 var active_paint_mode := false
+var human_male_active:=false
 
 
 
 func _on_paint_mode_toggled(button_pressed):
 	active_paint_mode = button_pressed
 	emit_signal("toggle_paint_mode",button_pressed)
+
+
+func set_height_lable(input:float):
+	height_lable.text = ("H: "+str(input)+"m").pad_decimals(2)
+
+func disable_height_lable():
+	height_lable.text = "H: UNKOWN"
+
+func set_distance_lable(input:float):
+	distance_lable.text = ("D: "+str(input)+"m").pad_decimals(2)
+
+func disable_distance_lable():
+	distance_lable.text = "D: UNKOWN"
+
+
+func _on_human_male_toggled(button_pressed):
+	human_male_active = button_pressed

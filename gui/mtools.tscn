@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://cl1dbmg2xmtro"]
+[gd_scene load_steps=6 format=3 uid="uid://cl1dbmg2xmtro"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
 [ext_resource type="Texture2D" uid="uid://dok8ugsvea2hg" path="res://addons/m_terrain/icons/paint-normal.png" id="2_4m4r2"]
 [ext_resource type="Texture2D" uid="uid://dc8xvtd03qq1j" path="res://addons/m_terrain/icons/paint-pressed.png" id="3_vfilu"]
+[ext_resource type="Texture2D" uid="uid://b72iot2bj8ls" path="res://addons/m_terrain/icons/human_button_normal.png" id="4_mec0g"]
+[ext_resource type="Texture2D" uid="uid://c0lxruofvkcr" path="res://addons/m_terrain/icons/human_button_pressed.png" id="5_507tw"]
 
 [node name="mtools" type="HBoxContainer"]
 offset_right = 40.0
@@ -15,4 +17,19 @@ toggle_mode = true
 texture_normal = ExtResource("2_4m4r2")
 texture_pressed = ExtResource("3_vfilu")
 
+[node name="human_male" type="TextureButton" parent="."]
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("4_mec0g")
+texture_pressed = ExtResource("5_507tw")
+
+[node name="h_lable" type="Label" parent="."]
+layout_mode = 2
+text = "H: 321m"
+
+[node name="d_lable" type="Label" parent="."]
+layout_mode = 2
+text = "D: 620m"
+
 [connection signal="toggled" from="paint_mode" to="." method="_on_paint_mode_toggled"]
+[connection signal="toggled" from="human_male" to="." method="_on_human_male_toggled"]

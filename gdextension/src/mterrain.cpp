@@ -621,6 +621,11 @@ real_t MTerrain::get_height(const Vector3& pos){
 }
 
 Ref<MCollision> MTerrain::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
+    if(!grid->is_created()){
+        Ref<MCollision> col;
+        col.instantiate();
+        return col;
+    }
     return grid->get_ray_collision_point(ray_origin,ray_vector,step,max_step);
 }
 

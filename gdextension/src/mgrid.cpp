@@ -141,6 +141,7 @@ void MGrid::update_regions_uniforms(Array input) {
     if(!has_normals){
         generate_normals_thread(grid_pixel_region);
     }
+    update_all_image_list();
 }
 
 void MGrid::update_regions_uniform(Dictionary input) {
@@ -163,6 +164,15 @@ void MGrid::update_regions_uniform(Dictionary input) {
     }
 }
 
+void MGrid::update_all_image_list(){
+    _all_image_list.clear();
+    for(int i=0;i<_regions_count;i++){
+        Vector<MImage*> rimgs = regions[i].images;
+        for(int j=0;j<rimgs.size();j++){
+            _all_image_list.append(rimgs[j]);
+        }
+    }
+}
 
 Vector3 MGrid::get_world_pos(const int32_t &x,const int32_t& y,const int32_t& z) {
     return Vector3(x,y,z)*_chunks->base_size_meter + offset;
@@ -788,6 +798,7 @@ void MGrid::set_brush_manager(MBrushManager* input){
 }
 
 void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
+    ERR_FAIL_COND(_brush_manager==nullptr);
     Vector2i bpxpos = get_closest_pixel(brush_pos);
     if(bpxpos.x<0 || bpxpos.y<0 || bpxpos.x>grid_pixel_region.right || bpxpos.y>grid_pixel_region.bottom){
         return;
@@ -867,9 +878,17 @@ void MGrid::draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPix
     }
 }
 
-
+//&MGrid::generate_normals,this, px_regions[i]
 void MGrid::update_all_dirty_image_texture(){
-    for(int i=0;i<_regions_count;i++){
-        regions[i].update_all_dirty_image_texture();
+    Vector<std::thread*> threads_pull;
+    for(int i=0;i<_all_image_list.size();i++){
+        if(_all_image_list[i]->is_dirty){
+            std::thread* t = new std::thread(&MImage::update_texture,_all_image_list[i],_all_image_list[i]->current_scale,true);
+            threads_pull.push_back(t);
+        }
+    }
+    for(int i=0;i<threads_pull.size();i++){
+        threads_pull[i]->join();
+        delete threads_pull[i];
     }
 }
