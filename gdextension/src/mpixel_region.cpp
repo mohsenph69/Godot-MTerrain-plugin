@@ -49,8 +49,6 @@ Vector<MPixelRegion> MPixelRegion::devide(uint32_t amount) {
     Vector<MPixelRegion> output;
     uint32_t xamount = (right - left)/amount;
     uint32_t yamount = (bottom - top)/amount;
-    UtilityFunctions::print("xamount ", xamount);
-    UtilityFunctions::print("yamount ", yamount);
     uint32_t xpoint=left;
     uint32_t ypoint=top;
     uint32_t index = 0;

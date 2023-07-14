@@ -115,9 +115,11 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_lod_distance"), &MTerrain::get_lod_distance);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY, "lod_distance",PROPERTY_HINT_NONE,"", PROPERTY_USAGE_STORAGE),"set_lod_distance","get_lod_distance");
 
+    ClassDB::bind_method(D_METHOD("get_pixel_world_pos", "x","y"), &MTerrain::get_pixel_world_pos);
     ClassDB::bind_method(D_METHOD("get_closest_pixel", "world_pos"), &MTerrain::get_closest_pixel);
     ClassDB::bind_method(D_METHOD("set_brush_manager", "brush_manager"), &MTerrain::set_brush_manager);
     ClassDB::bind_method(D_METHOD("draw_height", "brush_pos","radius","brush_id"), &MTerrain::draw_height);
+
 }
 
 MTerrain::MTerrain() {
@@ -358,7 +360,7 @@ void MTerrain::set_update_chunks_interval(float input){
 
 void MTerrain::set_update_chunks_loop(bool input) {
     update_chunks_loop = input;
-    if(update_chunks_interval && finish_updating_chunks){
+    if(update_chunks_loop && finish_updating_chunks){
         update();
     }
 }
@@ -380,7 +382,7 @@ void MTerrain::set_update_physics_interval(float input){
 bool MTerrain::get_update_physics_loop(){
     return update_physics_loop;
 }
-void MTerrain::set_update_physics_loop(float input){
+void MTerrain::set_update_physics_loop(bool input){
     update_physics_loop = input;
     if(update_physics_loop && finish_updating_physics){
         update_physics();
@@ -430,6 +432,7 @@ void MTerrain::set_custom_camera(Node3D* camera_node){
 }
 
 void MTerrain::set_offset(Vector3 input){
+    input.y = 0;
     offset = input;
 }
 
@@ -679,5 +682,10 @@ void MTerrain::set_brush_manager(Object* input){
     grid->set_brush_manager(brush_manager);
 }
 void MTerrain::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
+    if(!grid->is_created()) return;
     grid->draw_height(brush_pos,radius,brush_id);
+}
+
+Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
+    return grid->get_pixel_world_pos(x,y);
 }

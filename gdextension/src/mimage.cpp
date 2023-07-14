@@ -64,13 +64,15 @@ PackedByteArray MImage::get_data(int scale) {
 }
 
 void MImage::update_texture(int scale,bool apply_update){
-	update_mutex.lock();
+	//update_mutex.lock();
+	/*
 	while (has_texture_to_apply)
 	{
 		update_mutex.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		update_mutex.lock();
 	}
+	*/
 	Ref<ImageTexture> new_tex;
 	if(scale > 0){
 		PackedByteArray scaled_data = get_data(scale);
@@ -78,23 +80,23 @@ void MImage::update_texture(int scale,bool apply_update){
 		new_tex = ImageTexture::create_from_image(new_img);
 	}
 	if(apply_update){
-		material->set_shader_parameter(uniform_name, material);
+		material->set_shader_parameter(uniform_name, new_tex);
 		is_dirty = false;
 	} else {
 		has_texture_to_apply = true;
 		texture_to_apply = new_tex;
 	}
-	update_mutex.unlock();
+	//update_mutex.unlock();
 }
 
 void MImage::apply_update() {
-	update_mutex.lock();
+	//update_mutex.lock();
 	if(has_texture_to_apply){
 		material->set_shader_parameter(uniform_name, texture_to_apply);
 		has_texture_to_apply = false;
 		is_dirty = false;
 	}
-	update_mutex.unlock();
+	//update_mutex.unlock();
 }
 
 

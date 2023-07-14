@@ -2,11 +2,13 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include "height_brushes/mraise.h"
+#include "height_brushes/mtoheight.h"
 
 
 
 MBrushManager::MBrushManager(){
     add_height_brush(memnew(MRaise));
+    add_height_brush(memnew(MToHeight));
 }
 
 void MBrushManager::_bind_methods(){

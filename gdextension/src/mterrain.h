@@ -34,6 +34,7 @@ class MTerrain : public  Node3D {
     Timer* update_chunks_timer;
     float update_chunks_interval = 0.2;
 
+
     std::future<void> update_thread_physics;
     bool finish_updating_physics=true;
     bool update_physics_loop=true;
@@ -113,7 +114,7 @@ class MTerrain : public  Node3D {
     float get_update_physics_interval();
     void set_update_physics_interval(float input);
     bool get_update_physics_loop();
-    void set_update_physics_loop(float input);
+    void set_update_physics_loop(bool input);
     void set_physics_update_limit(int32_t input);
     int32_t get_physics_update_limit();
     Vector2i get_terrain_size();
@@ -146,7 +147,7 @@ class MTerrain : public  Node3D {
     Array get_size_info();
     void set_lod_distance(const PackedInt32Array& input);
     PackedInt32Array get_lod_distance();
-
+    
     real_t get_closest_height(const Vector3& pos);
     real_t get_height(const Vector3& pos);
     Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
@@ -155,6 +156,7 @@ class MTerrain : public  Node3D {
     bool _get(const StringName &p_name, Variant &r_ret) const;
     bool _set(const StringName &p_name, const Variant &p_value);
 
+    Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
     Vector2i get_closest_pixel(const Vector3& world_pos);
     void set_brush_manager(Object* input);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);

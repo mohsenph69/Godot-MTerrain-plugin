@@ -136,6 +136,8 @@ class MGrid : public Object {
     uint32_t brush_px_pos_x;
     uint32_t brush_px_pos_y;
     uint32_t brush_px_radius;
+    real_t brush_radius;
+    Vector3 brush_world_pos;
     MGrid();
     ~MGrid();
     void clear();
@@ -185,10 +187,13 @@ class MGrid : public Object {
     void save_image(int index,bool force_save);
 
     Vector2i get_closest_pixel(Vector3 world_pos);
+    Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
 
     void set_brush_manager(MBrushManager* input);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
     void draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush);
+
+    void update_all_dirty_image_texture();
 };
 
 #endif

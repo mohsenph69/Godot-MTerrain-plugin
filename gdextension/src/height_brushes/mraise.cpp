@@ -11,7 +11,7 @@ MRaise::~MRaise(){
 
 }
 String MRaise::_get_name(){
-    return "raise";
+    return "Raise";
 }
 //{"name":"name of props", type:Variant_type,hint:"Type hint",hint_string:"", default:default_value, min:min_value, max:max_value}
 Array MRaise::_get_property_list(){
@@ -23,17 +23,17 @@ Array MRaise::_get_property_list(){
     p1["hint"] = "range";
     p1["hint_string"] = "0.001";
     p1["default_value"] = 0.5;
-    p1["min"] = 0.01;
-    p1["max"] = 1.0;
+    p1["min"] = 0.0;
+    p1["max"] = 0.95;
     //p2
     Dictionary p2;
     p2["name"] = "amount";
     p2["type"] = Variant::FLOAT;
-    p2["hint"] = "";
-    p2["hint_string"] = "";
-    p2["default_value"] = 0.5;
-    p2["min"] = -100000000;
-    p2["max"] = 100000000;
+    p2["hint"] = "range";
+    p2["hint_string"] = "0.1";
+    p2["default_value"] = 0.2;
+    p2["min"] = -10;
+    p2["max"] = 10;
     props.append(p1);
     props.append(p2);
     return props;
@@ -52,6 +52,9 @@ void MRaise::before_draw(){
     
 }
 float MRaise::get_height(const uint32_t& x,const uint32_t& y){
-    float h = grid->get_height_by_pixel(x,y);
-    return h + 10.0;
+    Vector3 world_pos = grid->get_pixel_world_pos(x,y);
+    real_t dis = grid->brush_world_pos.distance_to(world_pos);
+    dis = dis/grid->brush_radius;
+    dis = UtilityFunctions::smoothstep(1,hardness,dis)*amount;
+    return world_pos.y + dis;
 }

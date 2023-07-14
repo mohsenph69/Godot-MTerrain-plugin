@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://cesssdkp0wyi8"]
+[gd_scene load_steps=3 format=3 uid="uid://cesssdkp0wyi8"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/paint_panel.gd" id="1_udfkn"]
+[ext_resource type="PackedScene" uid="uid://bctt0naq7rbmu" path="res://addons/m_terrain/gui/control_prop_element/float.tscn" id="2_1uaj7"]
 
 [node name="paint" type="VBoxContainer"]
 offset_right = 40.0
@@ -8,16 +9,21 @@ offset_bottom = 40.0
 size_flags_horizontal = 3
 script = ExtResource("1_udfkn")
 
+[node name="brush_size" parent="." instance=ExtResource("2_1uaj7")]
+layout_mode = 2
+
 [node name="brush_type" type="CheckButton" parent="."]
 layout_mode = 2
 text = "Height brush"
 
 [node name="brush_list" type="OptionButton" parent="."]
 layout_mode = 2
-item_count = 1
+item_count = 2
 selected = 0
-popup/item_0/text = "raise"
+popup/item_0/text = "Raise"
 popup/item_0/id = 0
+popup/item_1/text = "To Height"
+popup/item_1/id = 1
 
 [connection signal="toggled" from="brush_type" to="." method="_on_brush_type_toggled"]
 [connection signal="item_selected" from="brush_list" to="." method="_on_brush_list_item_selected"]

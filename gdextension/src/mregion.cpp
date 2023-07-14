@@ -204,6 +204,15 @@ real_t MRegion::get_closest_height(Vector3 pos){
 }
 
 
+void MRegion::update_all_dirty_image_texture(){
+	for(int i=0; i < images.size(); i++){
+		if(images[i]->is_dirty){
+			images[i]->update_texture(images[i]->current_scale, true);
+		}
+	}
+}
+
+
 void MRegion::save_image(int index,bool force_save) {
 	images[index]->save(force_save);
 }

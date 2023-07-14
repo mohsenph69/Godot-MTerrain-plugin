@@ -4,6 +4,9 @@ class_name MPaintPanel
 
 @onready var brush_type_checkbox:=$brush_type
 @onready var brush_list_option:=$brush_list
+@onready var brush_size:=$brush_size
+
+signal brush_size_changed
 
 var float_prop_element=preload("res://addons/m_terrain/gui/control_prop_element/float.tscn")
 var float_range_prop_element=preload("res://addons/m_terrain/gui/control_prop_element/float_range.tscn")
@@ -16,6 +19,9 @@ var property_element_list:Array
 
 func _ready():
 	_on_brush_type_toggled(false)
+	brush_size.call_deferred("set_name","brush size")
+	brush_size.min = 0.25
+	brush_size.max = 4000
 
 func _on_brush_type_toggled(button_pressed):
 	is_color_brush = button_pressed
