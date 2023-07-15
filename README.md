@@ -1,7 +1,9 @@
 # godot-mterrain-plugin
 ## how to start
-Watch this youtube video:
+Watch first this youtube video:
 https://www.youtube.com/watch?v=PcAkWClET4U
+And then this video shows how to use use height brushes to modifying the terrain:
+https://www.youtube.com/watch?v=e7nplXnemGo
 ## download
 To downalod the latest release use this link:
 https://github.com/mohsenph69/Godot-MTerrain-plugin/releases
