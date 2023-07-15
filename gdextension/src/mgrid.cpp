@@ -626,6 +626,14 @@ void MGrid::update_physics(const Vector3& cam_pos){
     }
 }
 
+bool MGrid::_has_pixel(const uint32_t& x,const uint32_t& y){
+    if(x>=pixel_width) return false;
+    if(y>=pixel_height) return false;
+    if(x<0) return false;
+    if(y<0) return false;
+    return true;
+}
+
 bool MGrid::has_pixel(const uint32_t& x,const uint32_t& y){
     if(x>=pixel_width) return false;
     if(y>=pixel_height) return false;
@@ -635,7 +643,7 @@ bool MGrid::has_pixel(const uint32_t& x,const uint32_t& y){
 }
 
 Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t& index) {
-    if(!has_pixel(x,y)){
+    if(!_has_pixel(x,y)){
         return Color();
     }
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
@@ -649,7 +657,7 @@ Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t& index) {
 }
 
 void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index) {
-    if(!has_pixel(x,y)){
+    if(!_has_pixel(x,y)){
         return;
     }
     bool ex = (x%rp == 0 && x!=0);
@@ -679,7 +687,7 @@ void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& inde
 }
 
 real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
-    if(!has_pixel(x,y)){
+    if(!_has_pixel(x,y)){
         return 0.0;
     }
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
@@ -693,7 +701,7 @@ real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
 }
 
 void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value){
-    if(!has_pixel(x,y)){
+    if(!_has_pixel(x,y)){
         return;
     }
     bool ex = (x%rp == 0 && x!=0);
@@ -754,7 +762,7 @@ void MGrid::generate_normals(MPixelRegion pxr) {
                 px1 += px;
                 px2 += px;
                 // Edge of the terrain
-                if(!has_pixel(px1.x,px1.y) || !has_pixel(px2.x,px2.y)){
+                if(!_has_pixel(px1.x,px1.y) || !_has_pixel(px2.x,px2.y)){
                     continue;
                 }
                 Vector3 vec1 = nvec8[i];

@@ -18,12 +18,14 @@ text = "Height brush"
 
 [node name="brush_list" type="OptionButton" parent="."]
 layout_mode = 2
-item_count = 2
+item_count = 3
 selected = 0
 popup/item_0/text = "Raise"
 popup/item_0/id = 0
 popup/item_1/text = "To Height"
 popup/item_1/id = 1
+popup/item_2/text = "Blur"
+popup/item_2/id = 2
 
 [connection signal="toggled" from="brush_type" to="." method="_on_brush_type_toggled"]
 [connection signal="item_selected" from="brush_list" to="." method="_on_brush_list_item_selected"]

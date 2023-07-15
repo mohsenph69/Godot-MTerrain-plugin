@@ -106,6 +106,8 @@ class MGrid : public Object {
     uint64_t total_add=0;
     uint64_t total_chunks=0;
 
+    _FORCE_INLINE_ bool _has_pixel(const uint32_t& x,const uint32_t& y);
+
     
 
 
@@ -178,12 +180,11 @@ class MGrid : public Object {
     void apply_update_chunks();
     void update_physics(const Vector3& cam_pos);
 
-    _FORCE_INLINE_ bool has_pixel(const uint32_t& x,const uint32_t& y);
     Color get_pixel(uint32_t x,uint32_t y, const int32_t& index);
     void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index);
     real_t get_height_by_pixel(uint32_t x,uint32_t y);
     void set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value);
-    
+    bool has_pixel(const uint32_t& x,const uint32_t& y);
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
     void save_image(int index,bool force_save);

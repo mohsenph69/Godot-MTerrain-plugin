@@ -3,12 +3,14 @@
 
 #include "height_brushes/mraise.h"
 #include "height_brushes/mtoheight.h"
+#include "height_brushes/msmooth.h"
 
 
 
 MBrushManager::MBrushManager(){
     add_height_brush(memnew(MRaise));
     add_height_brush(memnew(MToHeight));
+    add_height_brush(memnew(MSmooth));
 }
 
 void MBrushManager::_bind_methods(){

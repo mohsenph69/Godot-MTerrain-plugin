@@ -11,6 +11,8 @@ signal brush_size_changed
 var float_prop_element=preload("res://addons/m_terrain/gui/control_prop_element/float.tscn")
 var float_range_prop_element=preload("res://addons/m_terrain/gui/control_prop_element/float_range.tscn")
 var bool_element = preload("res://addons/m_terrain/gui/control_prop_element/bool.tscn")
+var int_element = preload("res://addons/m_terrain/gui/control_prop_element/int.tscn")
+var int_enum_element = preload("res://addons/m_terrain/gui/control_prop_element/int_enum.tscn")
 
 var brush_manager:MBrushManager = MBrushManager.new()
 var is_color_brush:=true
@@ -53,39 +55,37 @@ func _on_brush_list_item_selected(index):
 
 
 func create_props(dic:Dictionary):
-	print(dic)
 	var element
 	if dic["type"]==TYPE_FLOAT:
 		var rng = dic["max"] - dic["min"]
 		if dic["hint"] == "range":
 			element = float_range_prop_element.instantiate()
-			element.set_name(dic["name"])
-			element.set_value(dic["default_value"])
 			element.set_min(dic["min"])
 			element.set_max(dic["max"])
 			element.set_step(dic["hint_string"].to_float())
-			element.connect("prop_changed",Callable(self,"prop_change"))
-			add_child(element)
 		else:
 			element = float_prop_element.instantiate()
-			element.set_name(dic["name"])
-			element.set_value(dic["default_value"])
 			element.min = dic["min"]
 			element.max = dic["max"]
-			element.connect("prop_changed",Callable(self,"prop_change"))
-			add_child(element)
 	elif dic["type"]==TYPE_BOOL:
 		element = bool_element.instantiate()
-		element.set_name(dic["name"])
-		element.set_value(dic["default_value"])
-		element.connect("prop_changed",Callable(self,"prop_change"))
-		add_child(element)
+	elif dic["type"]==TYPE_INT:
+		if dic["hint"] == "enum":
+			element = int_enum_element.instantiate()
+			element.set_options(dic["hint_string"])
+		else:
+			element = int_element.instantiate()
+			element.set_min(dic["min"])
+			element.set_max(dic["max"])
+	add_child(element)
+	element.connect("prop_changed",Callable(self,"prop_change"))
+	element.set_value(dic["default_value"])
+	element.set_name(dic["name"])
 	property_element_list.append(element)
 
 
 
 func clear_property_element():
-	print("free ", property_element_list)
 	for e in property_element_list:
 		if is_instance_valid(e):
 			e.queue_free()

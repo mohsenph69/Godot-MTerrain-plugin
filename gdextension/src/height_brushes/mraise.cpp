@@ -30,10 +30,10 @@ Array MRaise::_get_property_list(){
     p2["name"] = "amount";
     p2["type"] = Variant::FLOAT;
     p2["hint"] = "range";
-    p2["hint_string"] = "0.1";
+    p2["hint_string"] = "0.01";
     p2["default_value"] = 0.2;
-    p2["min"] = -10;
-    p2["max"] = 10;
+    p2["min"] = -6;
+    p2["max"] = 6;
     props.append(p1);
     props.append(p2);
     return props;
