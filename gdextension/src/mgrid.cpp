@@ -786,6 +786,33 @@ void MGrid::save_image(int index,bool force_save){
     }
 }
 
+bool MGrid::has_unsave_image(){
+    for(int i=0;i<_all_image_list.size();i++){
+        if(_all_image_list[i]->name=="normals"){
+            if(!_all_image_list[i]->is_save && save_generated_normals){
+                return true;
+            }
+        } else {
+            if(!_all_image_list[i]->is_save){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void MGrid::save_all_dirty_images(){
+    for(int i=0;i<_all_image_list.size();i++){
+        if(_all_image_list[i]->name=="normals"){
+            if(save_generated_normals){
+                _all_image_list[i]->save(false);
+            }
+        } else {
+            _all_image_list[i]->save(false);
+        }
+    }
+}
+
 Vector2i MGrid::get_closest_pixel(Vector3 world_pos){
     world_pos -= offset;
     world_pos = world_pos/_chunks->h_scale;

@@ -21,6 +21,7 @@ func _enter_tree():
 		add_tool_menu_item("MTerrain importer", Callable(self,"show_import_window"))
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
 		tools.toggle_paint_mode.connect(Callable(self,"toggle_paint_mode"))
+		tools.save_request.connect(Callable(self,"save_request"))
 		tools.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		paint_panel = preload("res://addons/m_terrain/gui/paint_panel.tscn").instantiate()
@@ -55,7 +56,8 @@ func _forward_3d_gui_input(viewport_camera, event):
 			tools.set_height_lable(ray_col.get_collision_position().y)
 			tools.set_distance_lable(col_dis)
 			if tools.active_paint_mode:
-				return paint_mode_handle(event)
+				if paint_mode_handle(event) == AFTER_GUI_INPUT_STOP:
+					return AFTER_GUI_INPUT_STOP
 			if tools.human_male_active:
 				human_male.global_position = ray_col.get_collision_position()
 				human_male.visible = true
@@ -67,6 +69,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 			collision_ray_step = (col_dis + 50)/100
 		else:
 			collision_ray_step = 3
+		tools.set_save_button_disabled(not active_terrain.has_unsave_image())
 	if event is InputEventKey:
 		if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
 			var size = brush_decal.get_brush_size() + 1
@@ -79,6 +82,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 	if not tools.human_male_active:
 		human_male.visible = false
 	
+	
 
 func paint_mode_handle(event:InputEvent):
 	if ray_col.is_collided():
@@ -89,6 +93,7 @@ func paint_mode_handle(event:InputEvent):
 			return AFTER_GUI_INPUT_STOP
 	else:
 		brush_decal.visible = false
+		return AFTER_GUI_INPUT_PASS
 
 func _handles(object):
 	if not Engine.is_editor_hint():
@@ -114,3 +119,7 @@ func toggle_paint_mode(input):
 	else:
 		brush_decal.visible = false
 		remove_control_from_docks(paint_panel)
+
+func save_request():
+	if active_terrain:
+		active_terrain.save_all_dirty_images()

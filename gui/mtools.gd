@@ -5,8 +5,10 @@ class_name MTools
 @onready var height_lable := $h_lable
 @onready var distance_lable := $d_lable
 @onready var human_male_button:= $human_male
+@onready var save_button:= $save
 
 signal toggle_paint_mode
+signal save_request
 var active_paint_mode := false
 var human_male_active:=false
 
@@ -32,3 +34,10 @@ func disable_distance_lable():
 
 func _on_human_male_toggled(button_pressed):
 	human_male_active = button_pressed
+
+
+func set_save_button_disabled(input:bool):
+	save_button.disabled = input
+
+func _on_save_pressed():
+	emit_signal("save_request")

@@ -27,6 +27,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_image_list"), &MTerrain::get_image_list);
     ClassDB::bind_method(D_METHOD("get_image_id", "uniform_name"), &MTerrain::get_image_id);
     ClassDB::bind_method(D_METHOD("save_image","image_index","force_save"), &MTerrain::save_image);
+    ClassDB::bind_method(D_METHOD("has_unsave_image"), &MTerrain::has_unsave_image);
+    ClassDB::bind_method(D_METHOD("save_all_dirty_images"), &MTerrain::save_all_dirty_images);
     ClassDB::bind_method(D_METHOD("is_finishing_update_chunks"), &MTerrain::is_finish_updating_chunks);
     ClassDB::bind_method(D_METHOD("is_finishing_update_physics"), &MTerrain::is_finish_updating_physics);
     ClassDB::bind_method(D_METHOD("get_pixel", "x","y","image_index"), &MTerrain::get_pixel);
@@ -277,6 +279,14 @@ void MTerrain::save_image(int image_index, bool force_save) {
     grid->save_image(image_index,force_save);
 }
 
+bool MTerrain::has_unsave_image(){
+    return grid->has_unsave_image();
+}
+
+void MTerrain::save_all_dirty_images(){
+    grid->save_all_dirty_images();
+}
+
 Color MTerrain::get_pixel(const uint32_t& x,const uint32_t& y, const int32_t& index){
     return grid->get_pixel(x,y,index);
 }
@@ -340,6 +350,7 @@ void MTerrain::set_material(Ref<ShaderMaterial> m){
 }
 
 void MTerrain::set_save_generated_normals(bool input){
+    grid->save_generated_normals = input;
     save_generated_normals = input;
 }
 

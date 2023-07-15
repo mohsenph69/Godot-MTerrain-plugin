@@ -88,6 +88,8 @@ class MTerrain : public  Node3D {
     Array get_image_list();
     int get_image_id(String uniform_name);
     void save_image(int image_index, bool force_save);
+    bool has_unsave_image();
+    void save_all_dirty_images();
 
     Color get_pixel(const uint32_t& x,const uint32_t& y, const int32_t& index);
     void set_pixel(const uint32_t& x,const uint32_t& y,const Color& col,const int32_t& index);

@@ -118,6 +118,7 @@ class MGrid : public Object {
 
     public:
     bool has_normals = false;
+    bool save_generated_normals=false;
     Dictionary uniforms_id;
     int32_t physics_update_limit = 1;
     RID space;
@@ -188,6 +189,8 @@ class MGrid : public Object {
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
     void save_image(int index,bool force_save);
+    bool has_unsave_image();
+    void save_all_dirty_images();
 
     Vector2i get_closest_pixel(Vector3 world_pos);
     Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
