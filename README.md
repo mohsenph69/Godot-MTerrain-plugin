@@ -2,6 +2,7 @@
 ## how to start
 Watch first this youtube video:
 https://www.youtube.com/watch?v=PcAkWClET4U
+
 And then this video shows how to use use height brushes to modifying the terrain:
 https://www.youtube.com/watch?v=e7nplXnemGo
 ## download
