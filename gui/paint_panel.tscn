@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://cesssdkp0wyi8"]
+[gd_scene load_steps=2 format=3 uid="uid://cesssdkp0wyi8"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/paint_panel.gd" id="1_udfkn"]
-[ext_resource type="PackedScene" uid="uid://bctt0naq7rbmu" path="res://addons/m_terrain/gui/control_prop_element/float.tscn" id="2_1uaj7"]
 
 [node name="paint" type="VBoxContainer"]
 offset_right = 40.0
@@ -9,8 +8,22 @@ offset_bottom = 40.0
 size_flags_horizontal = 3
 script = ExtResource("1_udfkn")
 
-[node name="brush_size" parent="." instance=ExtResource("2_1uaj7")]
+[node name="brush_size" type="HBoxContainer" parent="."]
 layout_mode = 2
+
+[node name="lable" type="Label" parent="brush_size"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+text = "brush size : 10"
+clip_text = true
+
+[node name="brush_slider" type="HSlider" parent="brush_size"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.5
+step = 0.5
+value = 1.0
 
 [node name="brush_type" type="CheckButton" parent="."]
 layout_mode = 2
@@ -27,5 +40,6 @@ popup/item_1/id = 1
 popup/item_2/text = "Smooth"
 popup/item_2/id = 2
 
+[connection signal="value_changed" from="brush_size/brush_slider" to="." method="_on_brush_slider_value_changed"]
 [connection signal="toggled" from="brush_type" to="." method="_on_brush_type_toggled"]
 [connection signal="item_selected" from="brush_list" to="." method="_on_brush_list_item_selected"]

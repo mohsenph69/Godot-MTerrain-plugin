@@ -4,7 +4,8 @@ class_name MPaintPanel
 
 @onready var brush_type_checkbox:=$brush_type
 @onready var brush_list_option:=$brush_list
-@onready var brush_size:=$brush_size
+@onready var brush_slider:=$brush_size/brush_slider
+@onready var brush_lable:=$brush_size/lable
 
 signal brush_size_changed
 
@@ -18,13 +19,14 @@ var brush_manager:MBrushManager = MBrushManager.new()
 var is_color_brush:=true
 var brush_id:int=-1
 
+var brush_size:float
+
 var property_element_list:Array
 
 func _ready():
 	_on_brush_type_toggled(false)
-	brush_size.call_deferred("set_name","brush size")
-	brush_size.min = 0.25
-	brush_size.max = 4000
+	change_brush_size(50)
+
 
 func _on_brush_type_toggled(button_pressed):
 	is_color_brush = button_pressed
@@ -96,3 +98,13 @@ func prop_change(prop_name,value):
 		pass
 	else:
 		brush_manager.set_height_brush_property(prop_name,value,brush_id)
+
+
+func change_brush_size(value):
+	brush_slider.value = value
+
+func _on_brush_slider_value_changed(value):
+	brush_size = value
+	brush_slider.max_value = 100*pow(value,0.3)
+	brush_lable.text = "brush size "+str(value).pad_decimals(1)
+	emit_signal("brush_size_changed",value)

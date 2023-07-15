@@ -25,6 +25,7 @@ func _enter_tree():
 		tools.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		paint_panel = preload("res://addons/m_terrain/gui/paint_panel.tscn").instantiate()
+		paint_panel.brush_size_changed.connect(Callable(self,"brush_size_changed"))
 		get_editor_interface().get_selection().selection_changed.connect(Callable(self,"selection_changed"))
 		brush_decal = preload("res://addons/m_terrain/gui/brush_decal.tscn").instantiate()
 		brush_decal.visible = false
@@ -72,12 +73,12 @@ func _forward_3d_gui_input(viewport_camera, event):
 		tools.set_save_button_disabled(not active_terrain.has_unsave_image())
 	if event is InputEventKey:
 		if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
-			var size = brush_decal.get_brush_size() + 1
-			brush_decal.set_brush_size(size)
+			var size = paint_panel.brush_size + 1
+			paint_panel.change_brush_size(size)
 			return AFTER_GUI_INPUT_STOP
 		if event.keycode == KEY_MINUS:
-			var size = brush_decal.get_brush_size() - 1
-			brush_decal.set_brush_size(size)
+			var size = paint_panel.brush_size - 1
+			paint_panel.change_brush_size(size)
 			return AFTER_GUI_INPUT_STOP
 	if not tools.human_male_active:
 		human_male.visible = false
@@ -123,3 +124,6 @@ func toggle_paint_mode(input):
 func save_request():
 	if active_terrain:
 		active_terrain.save_all_dirty_images()
+
+func brush_size_changed(value):
+	brush_decal.set_brush_size(value)

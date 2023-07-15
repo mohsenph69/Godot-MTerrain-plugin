@@ -39,8 +39,8 @@ Array MToHeight::_get_property_list(){
     p3["hint"] = "";
     p3["hint_string"] = "";
     p3["default_value"] = 0.0;
-    p3["min"] = -10;
-    p3["max"] = 10;
+    p3["min"] = -10000000000;
+    p3["max"] = 100000000000;
     //p4
     Dictionary p4;
     p4["name"] = "absolute";
