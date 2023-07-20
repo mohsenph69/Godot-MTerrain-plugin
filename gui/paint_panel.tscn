@@ -14,7 +14,7 @@ layout_mode = 2
 [node name="lable" type="Label" parent="brush_size"]
 custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
-text = "brush size : 10"
+text = "brush size 50.0"
 clip_text = true
 
 [node name="brush_slider" type="HSlider" parent="brush_size"]
@@ -22,8 +22,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 min_value = 0.5
+max_value = 323.364
 step = 0.5
-value = 1.0
+value = 50.0
 
 [node name="brush_type" type="CheckButton" parent="."]
 layout_mode = 2

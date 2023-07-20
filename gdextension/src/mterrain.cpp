@@ -416,9 +416,7 @@ Vector2i MTerrain::get_terrain_size(){
 }
 
 void MTerrain::set_terrain_size(Vector2i size){
-    if(size.x < 1 || size.y < 1){
-        return;
-    }
+    ERR_FAIL_COND_EDMSG(size.x < 1 || size.y < 1,"Terrain size can not be zero");
     if(size == terrain_size){
         return;
     }
@@ -427,6 +425,7 @@ void MTerrain::set_terrain_size(Vector2i size){
 
 
 void MTerrain::set_max_range(int32_t input) {
+    ERR_FAIL_COND_EDMSG(input<1,"Max range can not be less than one");
     max_range = input;
     grid->max_range = input;
 }
@@ -453,6 +452,7 @@ Vector3 MTerrain::get_offset(){
 
 
 void MTerrain::set_region_size(int32_t input) {
+    ERR_FAIL_COND_EDMSG(input<4,"Region size can not be smaller than 4");
     region_size = input;
 }
 

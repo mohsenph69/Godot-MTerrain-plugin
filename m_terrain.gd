@@ -2,9 +2,9 @@
 extends EditorPlugin
 
 var import_window_res = preload("res://addons/m_terrain/gui/import_window.tscn")
-var tools:MTools= null
-var paint_panel:MPaintPanel=null
-var brush_decal:MBrushDecal=null
+var tools= null
+var paint_panel=null
+var brush_decal=null
 var human_male:MeshInstance3D=null
 
 var raw_img_importer = null

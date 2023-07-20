@@ -43,7 +43,7 @@ class MTerrain : public  Node3D {
 
     MGrid* grid;
     Ref<ShaderMaterial> material;
-    Vector2i terrain_size = Vector2i(10,10);
+    Vector2i terrain_size = Vector2i(16,16);
     Vector3 cam_pos;
     Node3D* editor_camera = nullptr;
     Node3D* custom_camera = nullptr;
@@ -57,12 +57,12 @@ class MTerrain : public  Node3D {
     int32_t size_list[9] = M_SIZE_LIST;
     real_t h_scale_list[8]   = M_H_SCALE_LIST;
     Array size_info;
-    int32_t max_range;
+    int32_t max_range=32;
     PackedInt32Array lod_distance;
     // key is name
     // value is compression
     Array uniforms;
-    int32_t region_size;
+    int32_t region_size=16;
     String dataDir;
     bool save_generated_normals = false;
     
