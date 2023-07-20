@@ -310,8 +310,9 @@ void MTerrain::get_cam_pos() {
         return;
     }
     Viewport* v = get_viewport();
-    Camera3D* c = v->get_camera_3d();
-    cam_pos = c->get_position();
+    Camera3D* camera = v->get_camera_3d();
+    ERR_FAIL_COND_EDMSG(camera==nullptr, "No camera is detected, If you are in editor activate MTerrain plugin");
+    cam_pos = camera->get_position();
 }
 
 void MTerrain::set_dataDir(String input) {
