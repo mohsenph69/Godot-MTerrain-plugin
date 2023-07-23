@@ -1,7 +1,7 @@
 shader_type spatial;
 
-uniform sampler2D mterrain_heightmap;
-uniform sampler2D mterrain_normals;
+uniform sampler2D mterrain_heightmap:filter_nearest;
+uniform sampler2D mterrain_normals:filter_nearest;
 uniform vec3 region_world_position;
 uniform float region_size;
 uniform float region_a;

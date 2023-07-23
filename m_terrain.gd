@@ -110,9 +110,6 @@ func _handles(object):
 
 func selection_changed():
 	var selection := get_editor_interface().get_selection()
-	if tools.active_paint_mode:
-		selection.clear()
-		selection.add_node(active_terrain)
 
 func toggle_paint_mode(input):
 	if input:
