@@ -112,8 +112,9 @@ func selection_changed():
 	var selection := get_editor_interface().get_selection()
 
 func toggle_paint_mode(input):
-	if input:
+	if input and active_terrain:
 		add_control_to_dock(EditorPlugin.DOCK_SLOT_RIGHT_UL,paint_panel)
+		paint_panel.set_active_terrain(active_terrain)
 	else:
 		brush_decal.visible = false
 		remove_control_from_docks(paint_panel)

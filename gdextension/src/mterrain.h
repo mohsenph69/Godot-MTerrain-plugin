@@ -64,7 +64,9 @@ class MTerrain : public  Node3D {
     Array uniforms;
     int32_t region_size=16;
     String dataDir;
+    String layersDataDir;
     bool save_generated_normals = false;
+    PackedStringArray heightmap_layers;
     
 
 
@@ -100,6 +102,9 @@ class MTerrain : public  Node3D {
 
     void set_dataDir(String input);
     String get_dataDir();
+    void set_layersDataDir(String input);
+    String get_layersDataDir();
+
 
     void set_create_grid(bool input);
     bool get_create_grid();
@@ -163,6 +168,13 @@ class MTerrain : public  Node3D {
     void set_brush_manager(Object* input);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
     
+    void set_heightmap_layers(PackedStringArray input);
+    PackedStringArray get_heightmap_layers();
+
+    void set_active_layer(int input);
+    void set_active_layer_by_name(String lname);
+    void add_heightmap_layer(String lname);
+    void test_function();
 };
 
 

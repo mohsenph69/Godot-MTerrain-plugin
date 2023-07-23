@@ -2,20 +2,25 @@
 #include <godot_cpp/classes/resource_saver.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include "mbound.h"
+
 MImage::MImage(){
 	
 }
-MImage::MImage(const String& _file_path,const String& _name,const String& _uniform_name,const int& _compression){
+MImage::MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,const int& _compression){
     file_path = _file_path;
     name = _name;
     uniform_name = _uniform_name;
     compression = _compression;
+	layerDataDir = _layers_folder;
+	grid_pos = _grid_pos;
 }
 
 void MImage::load(){
     Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
     width = img->get_size().x;
 	height = img->get_size().x;
+	total_pixel_amount = width*height;
     format = img->get_format();
 	pixel_size = get_format_pixel_size(format);
     data = img->get_data();
@@ -24,26 +29,66 @@ void MImage::load(){
 		ERR_FAIL_EDMSG("Unsported image format for Mterrain");
 	}
 	is_save = true;
+	image_layers.push_back(&data);
+	layer_names.push_back("Background");
+	is_saved_layers.push_back(true);
+}
+
+// This must called alway after loading background image
+void MImage::add_layer(String lname){
+	ERR_FAIL_COND_EDMSG(data.size()==0,"You must first load the background image and then the layers");
+	ERR_FAIL_COND_EDMSG(name!="heightmap","Layers is supported only for heightmap images");
+	String ltname = lname +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".res";
+	String layer_path = layerDataDir.path_join(ltname);
+	UtilityFunctions::print("Layer Path ",layer_path);
+	if(ResourceLoader::get_singleton()->exists(layer_path)){
+		UtilityFunctions::print("Found res ", layer_path);
+		Ref<Image> img_layer = ResourceLoader::get_singleton()->load(layer_path);
+		ERR_FAIL_COND(img_layer->get_format()!=Image::Format::FORMAT_RF);
+		PackedByteArray* img_layer_data = memnew(PackedByteArray);
+		*img_layer_data = img_layer->get_data();
+		ERR_FAIL_COND(img_layer_data->size()!=data.size());
+		image_layers.push_back(img_layer_data);
+		layer_names.push_back(lname);
+		is_saved_layers.push_back(true);
+		for(uint32_t i=0;i<total_pixel_amount;i++){
+			((float *)data.ptrw())[i] += ((float *)img_layer_data->ptr())[i];
+		}
+	} else {
+		PackedByteArray* new_layer = memnew(PackedByteArray);
+		//we empty the new layer but never remove this from Vector because this cause ID of other will change
+		image_layers.push_back(new_layer);
+		layer_names.push_back(lname);
+		is_saved_layers.push_back(true);
+	}
 }
 
 void MImage::create(uint32_t _size, Image::Format _format) {
 	width = _size;
 	height =_size;
+	total_pixel_amount = width*height;
 	format = _format;
 	pixel_size = get_format_pixel_size(format);
 	data.clear();
 	data.resize(width*width*pixel_size);
 	current_size = width;
+	image_layers.push_back(&data);
+	layer_names.push_back("Background");
+	is_saved_layers.push_back(false);
 }
 
 void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
 	width = _width;
 	height =_height;
+	total_pixel_amount = width*height;
 	format = _format;
 	pixel_size = get_format_pixel_size(format);
 	data.clear();
 	data.resize(width*_height*pixel_size);
 	current_size = width;
+	image_layers.push_back(&data);
+	layer_names.push_back("Background");
+	is_saved_layers.push_back(false);
 }
 
 PackedByteArray MImage::get_data(int scale) {
@@ -102,13 +147,33 @@ void MImage::apply_update() {
 
 // This works only for Format_RF
 real_t MImage::get_pixel_RF(const uint32_t&x, const uint32_t& y) const {
-    uint32_t ofs = (x + y*width);
+	uint32_t ofs = (x + y*width);
     return ((float *)data.ptr())[ofs];
 }
 
 void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value){
 	uint32_t ofs = (x + y*width);
+	#ifdef M_IMAGE_LAYER_ON
+	// For when we have only background layer
+	if(active_layer==0){
+		((float *)data.ptrw())[ofs] = value;
+		is_saved_layers.set(0,false);
+		is_dirty = true;
+		is_save = false;
+		return;
+	}
+	// Check if we the layer is empty we resize that
+	if(image_layers[active_layer]->size()!=data.size()){
+		image_layers[active_layer]->resize(data.size());
+	}
+	is_saved_layers.set(active_layer,false);
+	// Paint on background is forbiden when we have layers but I will put an if statement in higher level
+	float dif = value - ((float *)image_layers[active_layer]->ptr())[ofs];
+	((float *)image_layers[active_layer]->ptrw())[ofs] = value;
+	((float *)data.ptrw())[ofs] += dif;
+	#else
 	((float *)data.ptrw())[ofs] = value;
+	#endif
 	is_dirty = true;
 	is_save = false;
 }
@@ -127,10 +192,52 @@ void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
 
 
 void MImage::save(bool force_save) {
-	if(force_save || !is_save){
-		Ref<Image> img = Image::create_from_data(width,height,false,format,data);
-		ResourceSaver::get_singleton()->save(img,file_path);
+	UtilityFunctions::print("layer_names ",layer_names);
+	UtilityFunctions::print("Stage 1");
+	if(force_save || !is_save) {
+		#ifdef M_IMAGE_LAYER_ON
+		if(!is_saved_layers[0]){
+			UtilityFunctions::print("Stage 1.1");
+			PackedByteArray background_data = data;
+			int total_pixel = width*height;
+			UtilityFunctions::print("Stage 1.11");
+			for(int i=1;i<image_layers.size();i++){
+				UtilityFunctions::print("Stage 1.2");
+				if(!image_layers[i]->is_empty()){
+					UtilityFunctions::print("saving layer ", 1);
+					for(int j=0;j<total_pixel;j++){
+						((float *)background_data.ptrw())[j] -= ((float *)image_layers[i]->ptr())[j];
+					}
+				}
+			}
+			UtilityFunctions::print("Stage 2");
+			UtilityFunctions::print("file_path ", file_path);
+			Ref<Image> img = Image::create_from_data(width,height,false,format,background_data);
+			UtilityFunctions::print("BG size ",background_data.size());
+			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+			ERR_FAIL_COND_MSG(err,"Can not save background image, image class erro: "+itos(err));
+			is_saved_layers.set(0,true);
+		}
+		for(int i=1;i<image_layers.size();i++){
+			UtilityFunctions::print("is save size ", is_saved_layers.size());
+			if(!is_saved_layers[i]){
+				UtilityFunctions::print(layer_names);
+				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".res";
+				String layer_path = layerDataDir.path_join(lname);
+				UtilityFunctions::print("layer path ",layer_path);
+				Ref<Image> img = Image::create_from_data(width,height,false,format,*image_layers[i]);
+				godot::Error err = ResourceSaver::get_singleton()->save(img,layer_path);
+				ERR_FAIL_COND_MSG(err,"Can not save layer, image class erro: "+itos(err));
+				is_saved_layers.set(i,true);
+			}
+		}
 		is_save = true;
+		#else
+		Ref<Image> img = Image::create_from_data(width,height,false,format,data);
+		godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+		ERR_FAIL_COND_MSG(err,"Can not save image, image class erro: "+itos(err));
+		is_save = true;
+		#endif
 	}
 }
 

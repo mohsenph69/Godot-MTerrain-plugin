@@ -6,6 +6,8 @@ class_name MPaintPanel
 @onready var brush_list_option:=$brush_list
 @onready var brush_slider:=$brush_size/brush_slider
 @onready var brush_lable:=$brush_size/lable
+@onready var heightmap_layers:=$heightmap_layers
+
 
 signal brush_size_changed
 
@@ -18,6 +20,8 @@ var int_enum_element = preload("res://addons/m_terrain/gui/control_prop_element/
 var brush_manager:MBrushManager = MBrushManager.new()
 var is_color_brush:=true
 var brush_id:int=-1
+var active_heightmap_layer:="background"
+var active_terrain:MTerrain
 
 var brush_size:float
 
@@ -27,6 +31,9 @@ func _ready():
 	_on_brush_type_toggled(false)
 	change_brush_size(50)
 
+func set_active_terrain(input:MTerrain):
+	active_terrain = input
+	update_heightmap_layers()
 
 func _on_brush_type_toggled(button_pressed):
 	is_color_brush = button_pressed
@@ -108,3 +115,29 @@ func _on_brush_slider_value_changed(value):
 	brush_slider.max_value = 100*pow(value,0.3)
 	brush_lable.text = "brush size "+str(value).pad_decimals(1)
 	emit_signal("brush_size_changed",value)
+
+
+
+### Layers
+func update_heightmap_layers():
+	if not active_terrain: return
+	heightmap_layers.clear()
+	## Background image always exist
+	## and it does not conatin in this input
+	## so we add that by ourself here
+	heightmap_layers.add_item("background")
+	var inputs = active_terrain.get_heightmap_layers()
+	for i in range(0,inputs.size()):
+		heightmap_layers.add_item(inputs[i])
+	heightmap_layers.select(0)
+	
+
+
+func _on_heightmap_layer_item_selected(index):
+	print(index)
+	active_heightmap_layer = heightmap_layers.get_item_text(index)
+	if not active_terrain:
+		printerr("No active terrain")
+		return
+	print("active_heightmap_layer ",active_heightmap_layer)
+	active_terrain.set_active_layer_by_name(active_heightmap_layer)

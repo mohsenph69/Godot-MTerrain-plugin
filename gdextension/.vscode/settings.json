@@ -91,6 +91,8 @@
         "__tuple": "cpp",
         "__verbose_abort": "cpp",
         "locale": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "charconv": "cpp",
+        "__memory": "cpp"
     }
 }

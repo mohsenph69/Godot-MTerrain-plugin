@@ -75,6 +75,11 @@ void MToHeight::_set_property(String prop_name, Variant value){
         absolute = value;
     }
 }
+
+bool MToHeight::is_two_point_brush(){
+    return false;
+}
+
 void MToHeight::before_draw(){
 
 }

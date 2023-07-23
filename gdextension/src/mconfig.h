@@ -1,6 +1,11 @@
 #ifndef MCONFIG
 #define MCONFIG
 
+
+#define M_IMAGE_LAYER_ON
+
+
+
 #define M_DEBUG
 //#undef M_DEBUG
 

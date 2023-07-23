@@ -26,6 +26,7 @@ MGrid::~MGrid() {
 }
 
 void MGrid::clear() {
+    UtilityFunctions::print("clearing ---------------");
     if(is_dirty){
         RenderingServer* rs = RenderingServer::get_singleton();
         for(int32_t z=_search_bound.top; z <=_search_bound.bottom; z++)
@@ -55,6 +56,10 @@ void MGrid::clear() {
     is_dirty = false;
     uniforms_id.clear();
     has_normals = false;
+    _all_heightmap_image_list.clear();
+    _all_image_list.clear();
+    heightmap_layers.clear();
+    UtilityFunctions::print("All heightmap image list size ", _all_heightmap_image_list.size());
 }
 
 bool MGrid::is_created() {
@@ -125,6 +130,7 @@ void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) 
 }
 
 void MGrid::update_regions_uniforms(Array input) {
+    UtilityFunctions::print("unifrom array size ", input.size());
     for(int i=0;i<input.size();i++){
         Dictionary unifrom_info = input[i];
         update_regions_uniform(unifrom_info);
@@ -138,10 +144,14 @@ void MGrid::update_regions_uniforms(Array input) {
             uniforms_id[img->name] = i;
         }
     }
+    update_all_image_list();
+    UtilityFunctions::print("heightmap_layers ", heightmap_layers.size());
+    for(int i=0;i<heightmap_layers.size();i++){
+        add_heightmap_layer(heightmap_layers[i]);
+    }
     if(!has_normals){
         generate_normals_thread(grid_pixel_region);
     }
-    update_all_image_list();
 }
 
 void MGrid::update_regions_uniform(Dictionary input) {
@@ -154,11 +164,14 @@ void MGrid::update_regions_uniform(Dictionary input) {
             String file_name = name+"_x"+itos(x)+"_y"+itos(z)+".res";
             String file_path = dataDir.path_join(file_name);
             if(!ResourceLoader::get_singleton()->exists(file_path)){
-                WARN_PRINT("Can not find "+name);
+                if (name != "normals"){
+                    WARN_PRINT("Can not find "+name);
+                }
                 continue;
             }
+            MGridPos rpos(x,0,z);
             has_normals = name=="normals";
-            MImage* i = memnew(MImage(file_path,name,uniform_name,compression));
+            MImage* i = memnew(MImage(file_path,layersDataDir,name,uniform_name,rpos,compression));
             region->set_image_info(i);
         }
     }
@@ -166,10 +179,17 @@ void MGrid::update_regions_uniform(Dictionary input) {
 
 void MGrid::update_all_image_list(){
     _all_image_list.clear();
+    UtilityFunctions::print("Region count is ",_regions_count );
     for(int i=0;i<_regions_count;i++){
         Vector<MImage*> rimgs = regions[i].images;
+        UtilityFunctions::print("Region image size ", rimgs.size());
         for(int j=0;j<rimgs.size();j++){
-            _all_image_list.append(rimgs[j]);
+            _all_image_list.push_back(rimgs[j]);
+            UtilityFunctions::print("image naaame ", rimgs[j]->name);
+            if(rimgs[j]->name=="heightmap"){
+                UtilityFunctions::print("Yeah this is heightmap");
+                _all_heightmap_image_list.push_back(rimgs[j]);
+            }
         }
     }
 }
@@ -925,5 +945,23 @@ void MGrid::update_all_dirty_image_texture(){
     for(int i=0;i<threads_pull.size();i++){
         threads_pull[i]->join();
         delete threads_pull[i];
+    }
+}
+
+void MGrid::set_active_layer(int input){
+    UtilityFunctions::print("_all_heightmap_image_list size ",_all_heightmap_image_list.size());
+    // We did not add background to heightmap layers so the error handling down here is ok
+    ERR_FAIL_COND(input>heightmap_layers.size());
+    ERR_FAIL_COND(input<0);
+    for(int i=0;i<_all_heightmap_image_list.size();i++){
+        UtilityFunctions::print("setting active layer ",i," ",input);
+        _all_heightmap_image_list[i]->active_layer = input;
+    }
+}
+
+void MGrid::add_heightmap_layer(String lname){
+    UtilityFunctions::print("_all_heightmap_image_list size ", _all_heightmap_image_list.size());
+    for(int i=0;i<_all_heightmap_image_list.size();i++){
+        _all_heightmap_image_list[i]->add_layer(lname);
     }
 }

@@ -14,8 +14,13 @@ MRegion::MRegion(){
 }
 
 MRegion::~MRegion(){
+	UtilityFunctions::print("Removing image ---------------");
     memdelete(lods);
 	remove_physics();
+	for(int i=0;i<images.size();i++){
+		memdelete(images[i]);
+	}
+	images.clear();
 }
 
 void MRegion::set_material(const Ref<ShaderMaterial> input) {
@@ -61,7 +66,7 @@ void MRegion::configure() {
 	if(heightmap==nullptr){
 		String f_name = "heightmap_x"+itos(pos.x)+"_y"+itos(pos.z)+".res";
 		String f_path = grid->dataDir.path_join(f_name);
-		MImage* mimg = memnew(MImage(f_path,"heightmap","mterrain_heightmap",-1));
+		MImage* mimg = memnew(MImage(f_path,grid->layersDataDir,"heightmap","mterrain_heightmap",pos,-1));
 		mimg->material = _material;
 		mimg->create(grid->region_pixel_size, Image::FORMAT_RF);
 		heightmap = mimg;
@@ -88,7 +93,7 @@ void MRegion::configure() {
 	if(normals==nullptr){
 		String f_name = "normals_x"+itos(pos.x)+"_y"+itos(pos.z)+".res";
 		String f_path = grid->dataDir.path_join(f_name);
-		MImage* mimg = memnew(MImage(f_path,"normals","mterrain_normals",-1));
+		MImage* mimg = memnew(MImage(f_path,grid->layersDataDir,"normals","mterrain_normals",pos,-1));
 		mimg->material = _material;
 		mimg->create(grid->region_pixel_size, Image::FORMAT_RGB8);
 		normals = mimg;

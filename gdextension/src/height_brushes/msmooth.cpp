@@ -46,6 +46,11 @@ void MSmooth::_set_property(String prop_name, Variant value){
         return;
     }
 }
+
+bool MSmooth::is_two_point_brush(){
+    return false;
+}
+
 void MSmooth::before_draw(){
 
 }

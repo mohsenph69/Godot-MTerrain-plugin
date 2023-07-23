@@ -12,6 +12,7 @@ class MRaise : public MHeightBrush {
     String _get_name();
     Array _get_property_list();
     void _set_property(String prop_name, Variant value);
+    bool is_two_point_brush();
     void before_draw();
     float get_height(const uint32_t& x,const uint32_t& y);
 };

@@ -48,6 +48,11 @@ void MRaise::_set_property(String prop_name, Variant value){
         return;
     }
 }
+
+bool MRaise::is_two_point_brush(){
+    return false;
+}
+
 void MRaise::before_draw(){
     
 }

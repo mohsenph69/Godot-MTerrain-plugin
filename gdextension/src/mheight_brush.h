@@ -36,6 +36,7 @@ class MHeightBrush {
     virtual String _get_name()=0;
     virtual Array _get_property_list()=0;
     virtual void _set_property(String prop_name, Variant value)=0;
+    virtual bool is_two_point_brush()=0;
     // Will be called before start to draw
     // a initilized type before each draw
     virtual void before_draw()=0;

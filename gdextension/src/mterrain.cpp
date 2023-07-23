@@ -42,6 +42,9 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_dataDir","dir"), &MTerrain::set_dataDir);
     ClassDB::bind_method(D_METHOD("get_dataDir"), &MTerrain::get_dataDir);
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "dataDir"), "set_dataDir", "get_dataDir");
+    ClassDB::bind_method(D_METHOD("set_layersDataDir","input"), &MTerrain::set_layersDataDir);
+    ClassDB::bind_method(D_METHOD("get_layersDataDir"), &MTerrain::get_layersDataDir);
+    ADD_PROPERTY(PropertyInfo(Variant::STRING, "layersDataDir"), "set_layersDataDir","get_layersDataDir");
 
     ClassDB::bind_method(D_METHOD("set_save_generated_normals","value"), &MTerrain::set_save_generated_normals);
     ClassDB::bind_method(D_METHOD("get_save_generated_normals"), &MTerrain::get_save_generated_normals);
@@ -54,6 +57,10 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_material", "terrain_material"), &MTerrain::set_material);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "material", PROPERTY_HINT_RESOURCE_TYPE, "ShaderMaterial"), "set_material", "get_material");
     
+    ClassDB::bind_method(D_METHOD("set_heightmap_layers", "input"), &MTerrain::set_heightmap_layers);
+    ClassDB::bind_method(D_METHOD("get_heightmap_layers"), &MTerrain::get_heightmap_layers);
+    ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "heightmap_layers"), "set_heightmap_layers","get_heightmap_layers");
+
     ClassDB::bind_method(D_METHOD("set_update_chunks_interval","interval"), &MTerrain::set_update_chunks_interval);
     ClassDB::bind_method(D_METHOD("get_update_chunks_interval"), &MTerrain::get_update_chunks_interval);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "update_chunks_interval"), "set_update_chunks_interval", "get_update_chunks_interval");
@@ -122,6 +129,11 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_brush_manager", "brush_manager"), &MTerrain::set_brush_manager);
     ClassDB::bind_method(D_METHOD("draw_height", "brush_pos","radius","brush_id"), &MTerrain::draw_height);
 
+    ClassDB::bind_method(D_METHOD("set_active_layer","heightmap_layer"), &MTerrain::set_active_layer);
+    ClassDB::bind_method(D_METHOD("set_active_layer_by_name","layer_name"), &MTerrain::set_active_layer_by_name);
+
+    ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
+
 }
 
 MTerrain::MTerrain() {
@@ -168,7 +180,10 @@ void MTerrain::create_grid(){
     grid->space = get_world_3d()->get_space();
     grid->offset = offset;
     grid->dataDir = dataDir;
+    grid->layersDataDir = layersDataDir;
     grid->region_size = region_size;
+    UtilityFunctions::print("heightmap layers size in mterrain ", heightmap_layers.size());
+    grid->heightmap_layers = heightmap_layers;
     if(material.is_valid()){
         grid->set_material(material);
     }
@@ -323,6 +338,13 @@ String MTerrain::get_dataDir() {
     return dataDir;
 }
 
+void MTerrain::set_layersDataDir(String input){
+    layersDataDir = input;
+}
+String MTerrain::get_layersDataDir(){
+    return layersDataDir;
+}
+
 void MTerrain::set_create_grid(bool input){
     if(!is_inside_tree()){
         return;
@@ -462,6 +484,7 @@ int32_t MTerrain::get_region_size() {
 }
 
 void MTerrain::update_uniforms() {
+    uniforms.clear();
     ERR_FAIL_COND(!material.is_valid());
     ERR_FAIL_COND(!material->get_shader().is_valid());
     Array uniform_list = material->get_shader()->get_shader_uniform_list();
@@ -705,4 +728,45 @@ void MTerrain::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
 
 Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
     return grid->get_pixel_world_pos(x,y);
+}
+
+
+
+void MTerrain::set_heightmap_layers(PackedStringArray input){
+    heightmap_layers = input;
+}
+PackedStringArray MTerrain::get_heightmap_layers(){
+    return heightmap_layers;
+}
+
+void MTerrain::set_active_layer(int input){
+    ERR_FAIL_COND(!grid->is_created());
+    grid->set_active_layer(input);
+}
+
+void MTerrain::set_active_layer_by_name(String lname){
+    ERR_FAIL_COND(!grid->is_created());
+    // Zero is always background layer
+    UtilityFunctions::print("activating layer by name ", lname);
+    if(lname=="background"){
+        set_active_layer(0);
+    }
+    int index = heightmap_layers.find(lname);
+    if(index>=0) {
+        // Index plus one because heightmap_layers in mterrain does not contain background layer
+        index++;
+        UtilityFunctions::print("activating layer ", index);
+        set_active_layer(index);
+    }
+}
+
+void MTerrain::add_heightmap_layer(String lname){
+    heightmap_layers.push_back(lname);
+    ERR_FAIL_COND(!grid->is_created());
+    grid->add_heightmap_layer(lname);
+}
+
+void MTerrain::test_function(){
+    UtilityFunctions::print("creating image");
+    MImage img("res://layers/heightmap_x1_y1.res","res://layer_data/","heightmap","mterrain_heightmap",MGridPos(1,0,1),-1);
 }

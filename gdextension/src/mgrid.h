@@ -95,6 +95,7 @@ class MGrid : public Object {
     MGridPos _region_grid_size;
     int32_t _regions_count;
     Vector<MImage*> _all_image_list;
+    Vector<MImage*> _all_heightmap_image_list;
     PackedVector3Array nvec8;
     
     
@@ -117,12 +118,14 @@ class MGrid : public Object {
     static void _bind_methods(){};
 
     public:
+    PackedStringArray heightmap_layers;
     bool has_normals = false;
     bool save_generated_normals=false;
     Dictionary uniforms_id;
     int32_t physics_update_limit = 1;
     RID space;
     String dataDir;
+    String layersDataDir;
     PackedInt32Array lod_distance;
     int32_t region_size = 128;
     int32_t region_size_meter;
@@ -200,6 +203,9 @@ class MGrid : public Object {
     void draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush);
 
     void update_all_dirty_image_texture();
+
+    void set_active_layer(int input);
+    void add_heightmap_layer(String lname);
 };
 
 #endif
