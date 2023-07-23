@@ -167,10 +167,13 @@ void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& valu
 		image_layers[active_layer]->resize(data.size());
 	}
 	is_saved_layers.set(active_layer,false);
-	// Paint on background is forbiden when we have layers but I will put an if statement in higher level
-	float dif = value - ((float *)image_layers[active_layer]->ptr())[ofs];
-	((float *)image_layers[active_layer]->ptrw())[ofs] = value;
-	((float *)data.ptrw())[ofs] += dif;
+	//float dif = value - ((float *)image_layers[active_layer]->ptr())[ofs];
+	//((float *)image_layers[active_layer]->ptrw())[ofs] = dif;
+	//float org_val = ((float *)data.ptr())[ofs];
+	float dif = value - ((float *)data.ptr())[ofs];
+	((float *)image_layers[active_layer]->ptrw())[ofs] += dif;
+	((float *)data.ptrw())[ofs] = value;
+	//UtilityFunctions::print("dif ", dif, " val ", value, " org_val ",org_val);
 	#else
 	((float *)data.ptrw())[ofs] = value;
 	#endif
