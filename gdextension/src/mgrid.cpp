@@ -990,7 +990,7 @@ void MGrid::remove_heightmap_layer(){
             pxr.left = _all_heightmap_image_list[i]->grid_pos.x*region_pixel_size;
             pxr.top = _all_heightmap_image_list[i]->grid_pos.z*region_pixel_size;
             pxr.right = pxr.left + region_pixel_size;
-            pxr.bottom = pxr.bottom + region_pixel_size;
+            pxr.bottom = pxr.top + region_pixel_size;
             pxr.grow_all_side(grid_pixel_region);
             generate_normals_thread(pxr);
         }
@@ -1008,8 +1008,9 @@ void MGrid::toggle_heightmap_layer_visibile(){
             pxr.left = _all_heightmap_image_list[i]->grid_pos.x*region_pixel_size;
             pxr.top = _all_heightmap_image_list[i]->grid_pos.z*region_pixel_size;
             pxr.right = pxr.left + region_pixel_size;
-            pxr.bottom = pxr.bottom + region_pixel_size;
+            pxr.bottom = pxr.top + region_pixel_size;
             pxr.grow_all_side(grid_pixel_region);
+            UtilityFunctions::print(pxr.left," , ",pxr.right," , ",pxr.top," , ",pxr.bottom);
             generate_normals_thread(pxr);
         }
     }
