@@ -52,6 +52,9 @@ struct MImage {
     MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,const int& _compression);
     void load();
     void add_layer(String lname);
+    void merge_layer();
+    void remove_layer();
+    void layer_visible(bool input);
     void create(uint32_t _size, Image::Format _format);
     // This create bellow should not be used for terrain, It is for other stuff
     void create(uint32_t _width,uint32_t _height, Image::Format _format);
@@ -71,7 +74,6 @@ struct MImage {
 	_FORCE_INLINE_ Color _get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const;
 	_FORCE_INLINE_ void _set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color);
     static int get_format_pixel_size(Image::Format p_format);
-
 };
 
 

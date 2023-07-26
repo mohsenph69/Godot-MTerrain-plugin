@@ -32,7 +32,7 @@ func _enter_tree():
 		get_editor_interface().get_editor_main_screen().add_child(brush_decal)
 		human_male = preload("res://addons/m_terrain/gui/human_male.tscn").instantiate()
 		get_editor_interface().get_editor_main_screen().add_child(human_male)
-	
+
 
 func _exit_tree():
 	if Engine.is_editor_hint():
@@ -90,6 +90,9 @@ func paint_mode_handle(event:InputEvent):
 		brush_decal.visible = true
 		brush_decal.set_position(ray_col.get_collision_position())
 		if event.button_mask == MOUSE_BUTTON_LEFT:
+			if event is InputEventMouseButton:
+				if event.pressed:
+					paint_panel.set_active_layer()
 			active_terrain.draw_height(ray_col.get_collision_position(),brush_decal.radius,paint_panel.brush_id)
 			return AFTER_GUI_INPUT_STOP
 	else:

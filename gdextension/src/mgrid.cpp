@@ -59,6 +59,8 @@ void MGrid::clear() {
     _all_heightmap_image_list.clear();
     _all_image_list.clear();
     heightmap_layers.clear();
+    heightmap_layers_visibility.clear();
+    active_heightmap_layer=0;
     UtilityFunctions::print("All heightmap image list size ", _all_heightmap_image_list.size());
 }
 
@@ -145,8 +147,10 @@ void MGrid::update_regions_uniforms(Array input) {
         }
     }
     update_all_image_list();
-    UtilityFunctions::print("heightmap_layers ", heightmap_layers.size());
-    for(int i=0;i<heightmap_layers.size();i++){
+    // We start from one because we don\t want to add background layer
+    // background layer will added in MImage automaticly
+    for(int i=1;i<heightmap_layers.size();i++){
+        UtilityFunctions::print(heightmap_layers[i]);
         add_heightmap_layer(heightmap_layers[i]);
     }
     if(!has_normals){
@@ -854,6 +858,7 @@ void MGrid::set_brush_manager(MBrushManager* input){
 
 void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     ERR_FAIL_COND(_brush_manager==nullptr);
+    ERR_FAIL_COND_EDMSG(!heightmap_layers_visibility[active_heightmap_layer], "Can not paint on invisible layer");
     Vector2i bpxpos = get_closest_pixel(brush_pos);
     if(bpxpos.x<0 || bpxpos.y<0 || bpxpos.x>grid_pixel_region.right || bpxpos.y>grid_pixel_region.bottom){
         return;
@@ -953,6 +958,7 @@ void MGrid::set_active_layer(int input){
     // We did not add background to heightmap layers so the error handling down here is ok
     ERR_FAIL_COND(input>heightmap_layers.size());
     ERR_FAIL_COND(input<0);
+    active_heightmap_layer = input;
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         UtilityFunctions::print("setting active layer ",i," ",input);
         _all_heightmap_image_list[i]->active_layer = input;
@@ -964,4 +970,48 @@ void MGrid::add_heightmap_layer(String lname){
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         _all_heightmap_image_list[i]->add_layer(lname);
     }
+    heightmap_layers_visibility.push_back(true);
+}
+
+void MGrid::merge_heightmap_layer(){
+    // Merging current active layer
+    for(int i=0;i<_all_heightmap_image_list.size();i++){
+        _all_heightmap_image_list[i]->merge_layer();
+    }
+}
+
+void MGrid::remove_heightmap_layer(){
+    // Removing current active layer
+    for(int i=0;i<_all_heightmap_image_list.size();i++){
+        _all_heightmap_image_list[i]->remove_layer();
+        // Correcting normals if is dirty
+        if(_all_heightmap_image_list[i]->is_dirty){
+            MPixelRegion pxr;
+            pxr.left = _all_heightmap_image_list[i]->grid_pos.x*region_pixel_size;
+            pxr.top = _all_heightmap_image_list[i]->grid_pos.z*region_pixel_size;
+            pxr.right = pxr.left + region_pixel_size;
+            pxr.bottom = pxr.bottom + region_pixel_size;
+            pxr.grow_all_side(grid_pixel_region);
+            generate_normals_thread(pxr);
+        }
+    }
+    update_all_dirty_image_texture();
+}
+
+void MGrid::toggle_heightmap_layer_visibile(){
+    bool input = !heightmap_layers_visibility[active_heightmap_layer];
+    for(int i=0;i<_all_heightmap_image_list.size();i++){
+        _all_heightmap_image_list[i]->layer_visible(input);
+        // Correcting normals if is dirty
+        if(_all_heightmap_image_list[i]->is_dirty){
+            MPixelRegion pxr;
+            pxr.left = _all_heightmap_image_list[i]->grid_pos.x*region_pixel_size;
+            pxr.top = _all_heightmap_image_list[i]->grid_pos.z*region_pixel_size;
+            pxr.right = pxr.left + region_pixel_size;
+            pxr.bottom = pxr.bottom + region_pixel_size;
+            pxr.grow_all_side(grid_pixel_region);
+            generate_normals_thread(pxr);
+        }
+    }
+    heightmap_layers_visibility.set(active_heightmap_layer,input);
 }

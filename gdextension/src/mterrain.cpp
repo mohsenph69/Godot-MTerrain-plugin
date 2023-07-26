@@ -129,11 +129,14 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_brush_manager", "brush_manager"), &MTerrain::set_brush_manager);
     ClassDB::bind_method(D_METHOD("draw_height", "brush_pos","radius","brush_id"), &MTerrain::draw_height);
 
-    ClassDB::bind_method(D_METHOD("set_active_layer","heightmap_layer"), &MTerrain::set_active_layer);
     ClassDB::bind_method(D_METHOD("set_active_layer_by_name","layer_name"), &MTerrain::set_active_layer_by_name);
+    ClassDB::bind_method(D_METHOD("add_heightmap_layer","layer_name"), &MTerrain::add_heightmap_layer);
+    ClassDB::bind_method(D_METHOD("merge_heightmap_layer"), &MTerrain::merge_heightmap_layer);
+    ClassDB::bind_method(D_METHOD("remove_heightmap_layer"), &MTerrain::remove_heightmap_layer);
+    ClassDB::bind_method(D_METHOD("toggle_heightmap_layer_visibile"), &MTerrain::toggle_heightmap_layer_visibile);
+    ClassDB::bind_method(D_METHOD("get_layer_visibility","input"), &MTerrain::get_layer_visibility);
 
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
-
 }
 
 MTerrain::MTerrain() {
@@ -183,7 +186,9 @@ void MTerrain::create_grid(){
     grid->layersDataDir = layersDataDir;
     grid->region_size = region_size;
     UtilityFunctions::print("heightmap layers size in mterrain ", heightmap_layers.size());
-    grid->heightmap_layers = heightmap_layers;
+    grid->heightmap_layers.push_back("background");
+    grid->heightmap_layers_visibility.push_back(true);
+    grid->heightmap_layers.append_array(heightmap_layers);
     if(material.is_valid()){
         grid->set_material(material);
     }
@@ -739,34 +744,79 @@ PackedStringArray MTerrain::get_heightmap_layers(){
     return heightmap_layers;
 }
 
-void MTerrain::set_active_layer(int input){
-    ERR_FAIL_COND(!grid->is_created());
-    grid->set_active_layer(input);
-}
-
 void MTerrain::set_active_layer_by_name(String lname){
     ERR_FAIL_COND(!grid->is_created());
     // Zero is always background layer
     UtilityFunctions::print("activating layer by name ", lname);
     if(lname=="background"){
-        set_active_layer(0);
+        grid->set_active_layer(0);
     }
-    int index = heightmap_layers.find(lname);
+    int index = grid->heightmap_layers.find(lname);
     if(index>=0) {
-        // Index plus one because heightmap_layers in mterrain does not contain background layer
-        index++;
         UtilityFunctions::print("activating layer ", index);
-        set_active_layer(index);
+        grid->set_active_layer(index);
+        active_layer_name = lname;
     }
+}
+
+bool MTerrain::get_layer_visibility(String lname){
+    ERR_FAIL_COND_V(!grid->is_created(),false);
+    // Zero is always background layer
+    UtilityFunctions::print("activating layer by name ", lname);
+    if(lname=="background"){
+        return true;
+    }
+    int index = grid->heightmap_layers.find(lname);
+    if(index>0) {
+        return grid->heightmap_layers_visibility[index];
+    }
+    return false;
 }
 
 void MTerrain::add_heightmap_layer(String lname){
+    ERR_FAIL_COND_EDMSG(heightmap_layers.find(lname)!=-1,"Layer name must be unique");
     heightmap_layers.push_back(lname);
     ERR_FAIL_COND(!grid->is_created());
+    grid->heightmap_layers.push_back(lname);
     grid->add_heightmap_layer(lname);
+    UtilityFunctions::print("Adding new layers ");
+    UtilityFunctions::print(grid->heightmap_layers);
 }
 
+void MTerrain::merge_heightmap_layer(){
+    ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND_EDMSG(grid->active_heightmap_layer == 0,"Can't merge background layer");
+    grid->merge_heightmap_layer();
+    int index = heightmap_layers.find(active_layer_name);
+    if(index>=0){
+        heightmap_layers.remove_at(index);
+    }
+}
+
+void MTerrain::remove_heightmap_layer(){
+    ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND_EDMSG(active_layer_name=="background", "Can not remove background layer");
+    grid->remove_heightmap_layer();
+    int index = heightmap_layers.find(active_layer_name);
+    if(index>=0){
+        heightmap_layers.remove_at(index);
+    }
+}
+
+void MTerrain::toggle_heightmap_layer_visibile(){
+    ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND_EDMSG(active_layer_name=="background", "Can not Hide background layer");
+    grid->toggle_heightmap_layer_visibile();
+}
+
+#include <godot_cpp/classes/file_access.hpp>
+
 void MTerrain::test_function(){
-    UtilityFunctions::print("creating image");
-    MImage img("res://layers/heightmap_x1_y1.res","res://layer_data/","heightmap","mterrain_heightmap",MGridPos(1,0,1),-1);
+    Ref<FileAccess> f = FileAccess::open("res://layers/river_x0_y0.mlayer", FileAccess::READ);
+    PackedByteArray data;
+    data.resize(f->get_length());
+    for(int i=0;i<f->get_length();i++){
+        data[i] = f->get_8();
+    }
+    UtilityFunctions::print(sqrt(data.size()/4));
 }

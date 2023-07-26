@@ -38,17 +38,18 @@ layout_mode = 2
 text = "Add"
 
 [node name="addName" type="LineEdit" parent="layer_buttons"]
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 
-[node name="Button" type="Button" parent="layer_buttons"]
+[node name="mergeBT" type="Button" parent="layer_buttons"]
 layout_mode = 2
 text = "Merge"
 
-[node name="Button2" type="Button" parent="layer_buttons"]
+[node name="visibiltyBT" type="Button" parent="layer_buttons"]
 layout_mode = 2
 text = "visibility"
 
-[node name="Button3" type="Button" parent="layer_buttons"]
+[node name="removeBT" type="Button" parent="layer_buttons"]
 layout_mode = 2
 text = "Remove"
 
@@ -69,5 +70,10 @@ popup/item_2/id = 2
 
 [connection signal="value_changed" from="brush_size/brush_slider" to="." method="_on_brush_slider_value_changed"]
 [connection signal="toggled" from="brush_type" to="." method="_on_brush_type_toggled"]
+[connection signal="pressed" from="layer_buttons/addBT" to="." method="_on_add_bt_pressed"]
+[connection signal="gui_input" from="layer_buttons/addName" to="." method="_on_add_name_gui_input"]
+[connection signal="pressed" from="layer_buttons/mergeBT" to="." method="_on_merge_bt_pressed"]
+[connection signal="pressed" from="layer_buttons/visibiltyBT" to="." method="_on_visibilty_bt_pressed"]
+[connection signal="pressed" from="layer_buttons/removeBT" to="." method="_on_remove_bt_pressed"]
 [connection signal="item_selected" from="heightmap_layers" to="." method="_on_heightmap_layer_item_selected"]
 [connection signal="item_selected" from="brush_list" to="." method="_on_brush_list_item_selected"]

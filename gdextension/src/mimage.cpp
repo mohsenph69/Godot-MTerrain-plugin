@@ -1,6 +1,8 @@
 #include "mimage.h"
 #include <godot_cpp/classes/resource_saver.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/dir_access.hpp>
+#include <godot_cpp/classes/file_access.hpp>
 
 #include "mbound.h"
 
@@ -30,7 +32,7 @@ void MImage::load(){
 	}
 	is_save = true;
 	image_layers.push_back(&data);
-	layer_names.push_back("Background");
+	layer_names.push_back("background");
 	is_saved_layers.push_back(true);
 }
 
@@ -38,16 +40,20 @@ void MImage::load(){
 void MImage::add_layer(String lname){
 	ERR_FAIL_COND_EDMSG(data.size()==0,"You must first load the background image and then the layers");
 	ERR_FAIL_COND_EDMSG(name!="heightmap","Layers is supported only for heightmap images");
-	String ltname = lname +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".res";
+	String ltname = lname +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	String layer_path = layerDataDir.path_join(ltname);
 	UtilityFunctions::print("Layer Path ",layer_path);
-	if(ResourceLoader::get_singleton()->exists(layer_path)){
+	if(FileAccess::file_exists(layer_path)){
 		UtilityFunctions::print("Found res ", layer_path);
-		Ref<Image> img_layer = ResourceLoader::get_singleton()->load(layer_path);
-		ERR_FAIL_COND(img_layer->get_format()!=Image::Format::FORMAT_RF);
+		Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::READ);
+		ERR_FAIL_COND(file->get_length() != data.size());
 		PackedByteArray* img_layer_data = memnew(PackedByteArray);
-		*img_layer_data = img_layer->get_data();
-		ERR_FAIL_COND(img_layer_data->size()!=data.size());
+		img_layer_data->resize(data.size());
+		uint8_t* ptrw = img_layer_data->ptrw();
+		for(int s=0;s<data.size();s++){
+			ptrw[s] = file->get_8();
+		}
+		file->close();
 		image_layers.push_back(img_layer_data);
 		layer_names.push_back(lname);
 		is_saved_layers.push_back(true);
@@ -61,6 +67,64 @@ void MImage::add_layer(String lname){
 		layer_names.push_back(lname);
 		is_saved_layers.push_back(true);
 	}
+}
+
+void MImage::merge_layer(){
+	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
+	path = layerDataDir.path_join(path);
+	image_layers[active_layer]->resize(0);
+	layer_names[active_layer] = "null";
+	is_saved_layers.set(active_layer,true);
+	if(FileAccess::file_exists(path)){
+		UtilityFunctions::print("Removing layer ", path);
+		DirAccess::remove_absolute(path);
+	}
+	is_saved_layers.set(0,false);
+	is_save = false;
+	save(false);
+}
+
+void MImage::remove_layer(){
+	if(image_layers[active_layer]->size()==0){
+		return;
+	}
+	const uint8_t* ptr=image_layers[active_layer]->ptr();
+	for(uint32_t i=0;i<total_pixel_amount;i++){
+		((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+	}
+	image_layers[active_layer]->resize(0);
+	is_saved_layers.set(active_layer,true);
+	is_saved_layers.set(0,false);
+	is_save = false;
+	is_dirty = true;
+	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
+	path = layerDataDir.path_join(path);
+	layer_names[active_layer] = "null";
+	if(FileAccess::file_exists(path)){
+		DirAccess::remove_absolute(path);
+	}
+	save(false);
+}
+
+void MImage::layer_visible(bool input){
+	if(image_layers[active_layer]->size()==0){
+		return;
+	}
+	// There is no control if the layer is currently visibile or not
+	// These checks must be done in Grid Level
+	// We save before hiding the layer to not complicating the save system for now
+	save(false); // So we are sure in the save method we should do nothing
+	const uint8_t* ptr=image_layers[active_layer]->ptr();
+	if(input){
+		for(uint32_t i=0;i<total_pixel_amount;i++){
+			((float *)data.ptrw())[i] += ((float *)ptr)[i];
+		}
+	} else {
+		for(uint32_t i=0;i<total_pixel_amount;i++){
+			((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+		}
+	}
+	is_dirty = true;
 }
 
 void MImage::create(uint32_t _size, Image::Format _format) {
@@ -152,6 +216,8 @@ real_t MImage::get_pixel_RF(const uint32_t&x, const uint32_t& y) const {
 }
 
 void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value){
+	// not visibile layers should not be modified but as this called many times
+	// it is better to check that in upper level
 	uint32_t ofs = (x + y*width);
 	#ifdef M_IMAGE_LAYER_ON
 	// For when we have only background layer
@@ -167,13 +233,9 @@ void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& valu
 		image_layers[active_layer]->resize(data.size());
 	}
 	is_saved_layers.set(active_layer,false);
-	//float dif = value - ((float *)image_layers[active_layer]->ptr())[ofs];
-	//((float *)image_layers[active_layer]->ptrw())[ofs] = dif;
-	//float org_val = ((float *)data.ptr())[ofs];
 	float dif = value - ((float *)data.ptr())[ofs];
 	((float *)image_layers[active_layer]->ptrw())[ofs] += dif;
 	((float *)data.ptrw())[ofs] = value;
-	//UtilityFunctions::print("dif ", dif, " val ", value, " org_val ",org_val);
 	#else
 	((float *)data.ptrw())[ofs] = value;
 	#endif
@@ -225,12 +287,15 @@ void MImage::save(bool force_save) {
 			UtilityFunctions::print("is save size ", is_saved_layers.size());
 			if(!is_saved_layers[i]){
 				UtilityFunctions::print(layer_names);
-				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".res";
+				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 				String layer_path = layerDataDir.path_join(lname);
 				UtilityFunctions::print("layer path ",layer_path);
-				Ref<Image> img = Image::create_from_data(width,height,false,format,*image_layers[i]);
-				godot::Error err = ResourceSaver::get_singleton()->save(img,layer_path);
-				ERR_FAIL_COND_MSG(err,"Can not save layer, image class erro: "+itos(err));
+				Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::WRITE);
+				const uint8_t* ptr = image_layers[i]->ptr();
+				for(int j=0;j<image_layers[i]->size();j++){
+					file->store_8(ptr[j]);
+				}
+				file->close();
 				is_saved_layers.set(i,true);
 			}
 		}

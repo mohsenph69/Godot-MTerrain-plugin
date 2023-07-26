@@ -118,6 +118,10 @@ class MGrid : public Object {
     static void _bind_methods(){};
 
     public:
+    int active_heightmap_layer=0;
+    // MImage does not check for visibility of layers
+    // Here we should check that in the case someone want to draw on them it should give an error
+    Vector<bool> heightmap_layers_visibility;
     PackedStringArray heightmap_layers;
     bool has_normals = false;
     bool save_generated_normals=false;
@@ -206,6 +210,10 @@ class MGrid : public Object {
 
     void set_active_layer(int input);
     void add_heightmap_layer(String lname);
+    void merge_heightmap_layer();
+    void remove_heightmap_layer();
+    void toggle_heightmap_layer_visibile();
+
 };
 
 #endif

@@ -7,7 +7,10 @@ class_name MPaintPanel
 @onready var brush_slider:=$brush_size/brush_slider
 @onready var brush_lable:=$brush_size/lable
 @onready var heightmap_layers:=$heightmap_layers
+@onready var add_name_line:=$layer_buttons/addName
 
+var hide_icon = preload("res://addons/m_terrain/icons/hidden.png")
+var show_icon = preload("res://addons/m_terrain/icons/show.png")
 
 signal brush_size_changed
 
@@ -119,18 +122,32 @@ func _on_brush_slider_value_changed(value):
 
 
 ### Layers
-func update_heightmap_layers():
+func update_heightmap_layers(select=0):
 	if not active_terrain: return
 	heightmap_layers.clear()
 	## Background image always exist
-	## and it does not conatin in this input
+	## and it does not conatin in this input from MTerrain
+	## it exist in MGrid and MImage which are lower level
 	## so we add that by ourself here
 	heightmap_layers.add_item("background")
 	var inputs = active_terrain.get_heightmap_layers()
 	for i in range(0,inputs.size()):
 		heightmap_layers.add_item(inputs[i])
-	heightmap_layers.select(0)
+		var visibile = active_terrain.get_layer_visibility(inputs[i])
+		if visibile:
+			heightmap_layers.set_item_icon(i+1,show_icon)
+		else:
+			heightmap_layers.set_item_icon(i+1,hide_icon)
+	heightmap_layers.select(select)
 	
+
+func set_active_layer():
+	var selected:PackedInt32Array= heightmap_layers.get_selected_items()
+	if selected.size() == 0:
+		active_terrain.set_active_layer_by_name("background")
+		return
+	var lname = heightmap_layers.get_item_text(selected[0])
+	active_terrain.set_active_layer_by_name(lname)
 
 
 func _on_heightmap_layer_item_selected(index):
@@ -141,3 +158,48 @@ func _on_heightmap_layer_item_selected(index):
 		return
 	print("active_heightmap_layer ",active_heightmap_layer)
 	active_terrain.set_active_layer_by_name(active_heightmap_layer)
+	
+
+func _on_merge_bt_pressed():
+	set_active_layer()
+	active_terrain.merge_heightmap_layer()
+	update_heightmap_layers()
+
+func _on_add_bt_pressed():
+	if not active_terrain:
+		printerr("No active terrain")
+	var layer_name:String= add_name_line.text
+	add_name_line.text = ""
+	if layer_name.is_empty():
+		printerr("Layer name is empty")
+	active_terrain.add_heightmap_layer(layer_name)
+	update_heightmap_layers()
+
+
+func _on_add_name_gui_input(event):
+	if event is InputEventKey:
+		if event.keycode == KEY_ENTER and not event.echo and event.pressed:
+			_on_add_bt_pressed()
+
+func _on_remove_bt_pressed():
+	if not active_terrain:
+		printerr("No active terrain")
+	set_active_layer()
+	active_terrain.remove_heightmap_layer()
+	update_heightmap_layers()
+	
+
+func _on_visibilty_bt_pressed():
+	if not active_terrain:
+		printerr("No active terrain")
+	var selected:PackedInt32Array= heightmap_layers.get_selected_items()
+	if selected.size()==0:
+		return
+	set_active_layer()
+	active_terrain.toggle_heightmap_layer_visibile()
+	update_heightmap_layers(selected[0])
+
+
+
+
+

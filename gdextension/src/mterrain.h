@@ -66,8 +66,18 @@ class MTerrain : public  Node3D {
     String dataDir;
     String layersDataDir;
     bool save_generated_normals = false;
+    // Top Level for heightmap layers
+    // Heightmap layers index here are not the active layer id, but in grid they are
+    // Also we record the active layer by it's name here not its id
+    // in Grid and image level we set the active layer by it's id
+    // Also to not change the layer id in the current session we not delete the layer
+    // From Vector in Image and grid level, we just set their name to null
+    // The heightmap_layers in MTerrain deose not come with background
+    // also heightmap_layers in MTerrain is responsibile for saving layer information with scene
     PackedStringArray heightmap_layers;
-    
+    // The default layer name is background
+    String active_layer_name="background";
+
 
 
     protected:
@@ -171,9 +181,12 @@ class MTerrain : public  Node3D {
     void set_heightmap_layers(PackedStringArray input);
     PackedStringArray get_heightmap_layers();
 
-    void set_active_layer(int input);
     void set_active_layer_by_name(String lname);
+    bool get_layer_visibility(String lname);
     void add_heightmap_layer(String lname);
+    void merge_heightmap_layer();
+    void remove_heightmap_layer();
+    void toggle_heightmap_layer_visibile();
     void test_function();
 };
 
