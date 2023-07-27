@@ -68,6 +68,16 @@ struct MPoint
     }
 };
 
+struct MGridUpdateInfo
+{
+    RID terrain_instance;
+    int region_id;
+    Vector3 region_world_pos;
+    Vector2 region_offset_ratio;
+    int lod;
+    int chunk_size;
+};
+
 class MGrid : public Object {
     GDCLASS(MGrid, Object);
     friend class MRegion;
@@ -99,8 +109,7 @@ class MGrid : public Object {
     PackedVector3Array nvec8;
     
     
-    Vector<RID> remove_instance_list;
-    Vector<RID> update_mesh_list;
+
     Ref<ShaderMaterial> _material;
     uint64_t update_count=0;
     uint64_t total_remove=0;
@@ -118,6 +127,10 @@ class MGrid : public Object {
     static void _bind_methods(){};
 
     public:
+    // This can be removed in future but right now I keep it
+    Vector<RID> update_mesh_list;
+    Vector<RID> remove_instance_list;
+    Vector<MGridUpdateInfo> grid_update_info;
     int active_heightmap_layer=0;
     // MImage does not check for visibility of layers
     // Here we should check that in the case someone want to draw on them it should give an error
@@ -166,6 +179,8 @@ class MGrid : public Object {
     MRegion* get_region_by_point(const int32_t &x, const int32_t& z);
     MRegion* get_region(const int32_t &x, const int32_t& z);
     MGridPos get_region_pos_by_world_pos(Vector3 world_pos);
+    Vector2 get_point_region_offset_ratio(int32_t x,int32_t z);
+    Vector3 get_region_world_pos_by_point(int32_t x,int32_t z);
     int8_t get_lod_by_distance(const int32_t& dis);
     void set_cam_pos(const Vector3& cam_world_pos);
     void update_search_bound();

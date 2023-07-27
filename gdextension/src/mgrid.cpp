@@ -237,6 +237,24 @@ MGridPos MGrid::get_region_pos_by_world_pos(Vector3 world_pos){
     return p;
 }
 
+Vector2 MGrid::get_point_region_offset_ratio(int32_t x,int32_t z){
+    int ofsx = x%region_size;
+    int ofsz = z%region_size;
+    Vector2 offset;
+    offset.x = (double)(ofsx)/double(region_size);
+    offset.y = (double)(ofsz)/double(region_size);
+    return offset;
+}
+
+Vector3 MGrid::get_region_world_pos_by_point(int32_t x,int32_t z){
+    int rx = x/region_size;
+    int rz = z/region_size;
+    Vector3 pos;
+    pos.x = region_size_meter*rx + offset.x;
+    pos.z = region_size_meter*rz + offset.z;
+    return pos;
+}
+
 int8_t MGrid::get_lod_by_distance(const int32_t& dis) {
     for(int8_t i=0 ; i < lod_distance.size(); i++){
         if(dis < lod_distance[i]){
@@ -258,6 +276,7 @@ void MGrid::update_search_bound() {
     num_chunks = 0;
     update_mesh_list.clear();
     remove_instance_list.clear();
+    grid_update_info.clear();
     MBound sb(_cam_pos, max_range, _size);
     _last_search_bound = _search_bound;
     _search_bound = sb;
@@ -473,11 +492,22 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
                         remove_instance_list.push_back(points[z][x].instance);
                         points[z][x].instance = RID(); 
                     }
-                    MRegion* region = get_region_by_point(x,z);
-                    points[z][x].create_instance(get_world_pos(x,0,z), _scenario, region->get_material_rid());
+                    int32_t region_id = get_region_id_by_point(x,z);
+                    //MRegion* region = get_region_by_point(x,z);
+                    points[z][x].create_instance(get_world_pos(x,0,z), _scenario, regions[region_id].get_material_rid());
                     rs->instance_set_visible(points[z][x].instance, false);
                     rs->instance_set_base(points[z][x].instance, mesh);
-                    //update_mesh_list.append(points[z][x].instance);
+                    /*
+                    Update info use for grass too
+                    */
+                   MGridUpdateInfo update_info;
+                   update_info.terrain_instance = points[z][x].instance;
+                   update_info.region_id = region_id;
+                   update_info.region_world_pos = get_region_world_pos_by_point(x,z);
+                   update_info.region_offset_ratio = get_point_region_offset_ratio(x,z);
+                   update_info.lod = lod;
+                   update_info.chunk_size = size;
+                   grid_update_info.push_back(update_info);
                     update_mesh_list.push_back(points[z][x].instance);
                 }
             } else {
