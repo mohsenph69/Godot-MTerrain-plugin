@@ -20,6 +20,8 @@
 #include "mbrush_manager.h"
 #include "mcollision.h"
 
+#include "grass/mgrass.h"
+
 using namespace godot;
 
 void initialize_test_module(ModuleInitializationLevel p_level) {
@@ -34,6 +36,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MRaw16>();
 	ClassDB::register_class<MBrushManager>();
 	ClassDB::register_class<MCollision>();
+	ClassDB::register_class<MGrass>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {
