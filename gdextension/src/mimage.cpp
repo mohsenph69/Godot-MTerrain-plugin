@@ -42,9 +42,7 @@ void MImage::add_layer(String lname){
 	ERR_FAIL_COND_EDMSG(name!="heightmap","Layers is supported only for heightmap images");
 	String ltname = lname +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	String layer_path = layerDataDir.path_join(ltname);
-	UtilityFunctions::print("Layer Path ",layer_path);
 	if(FileAccess::file_exists(layer_path)){
-		UtilityFunctions::print("Found res ", layer_path);
 		Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::READ);
 		ERR_FAIL_COND(file->get_length() != data.size());
 		PackedByteArray* img_layer_data = memnew(PackedByteArray);
@@ -76,7 +74,6 @@ void MImage::merge_layer(){
 	layer_names[active_layer] = "null";
 	is_saved_layers.set(active_layer,true);
 	if(FileAccess::file_exists(path)){
-		UtilityFunctions::print("Removing layer ", path);
 		DirAccess::remove_absolute(path);
 	}
 	is_saved_layers.set(0,false);
@@ -257,26 +254,18 @@ void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
 
 
 void MImage::save(bool force_save) {
-	UtilityFunctions::print("layer_names ",layer_names);
-	UtilityFunctions::print("Stage 1");
 	if(force_save || !is_save) {
 		#ifdef M_IMAGE_LAYER_ON
 		if(!is_saved_layers[0]){
-			//UtilityFunctions::print("Stage 1.1");
 			PackedByteArray background_data = data;
 			int total_pixel = width*height;
-			//UtilityFunctions::print("Stage 1.11");
 			for(int i=1;i<image_layers.size();i++){
-				//UtilityFunctions::print("Stage 1.2");
 				if(!image_layers[i]->is_empty()){
-					//UtilityFunctions::print("saving layer ", 1);
 					for(int j=0;j<total_pixel;j++){
 						((float *)background_data.ptrw())[j] -= ((float *)image_layers[i]->ptr())[j];
 					}
 				}
 			}
-			//UtilityFunctions::print("Stage 2");
-			//UtilityFunctions::print("file_path ", file_path);
 			Ref<Image> img = Image::create_from_data(width,height,false,format,background_data);
 			//UtilityFunctions::print("BG size ",background_data.size());
 			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);

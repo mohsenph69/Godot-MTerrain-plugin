@@ -20,6 +20,7 @@
 
 
 #include "mgrid.h"
+#include "grass/mgrass.h"
 
 using namespace godot;
 
@@ -77,6 +78,7 @@ class MTerrain : public  Node3D {
     PackedStringArray heightmap_layers;
     // The default layer name is background
     String active_layer_name="background";
+    Vector<MGrass*> grass_list;
 
 
 

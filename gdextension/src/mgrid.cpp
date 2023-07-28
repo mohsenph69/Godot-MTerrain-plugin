@@ -184,12 +184,9 @@ void MGrid::update_all_image_list(){
     UtilityFunctions::print("Region count is ",_regions_count );
     for(int i=0;i<_regions_count;i++){
         Vector<MImage*> rimgs = regions[i].images;
-        UtilityFunctions::print("Region image size ", rimgs.size());
         for(int j=0;j<rimgs.size();j++){
             _all_image_list.push_back(rimgs[j]);
-            UtilityFunctions::print("image naaame ", rimgs[j]->name);
             if(rimgs[j]->name=="heightmap"){
-                UtilityFunctions::print("Yeah this is heightmap");
                 _all_heightmap_image_list.push_back(rimgs[j]);
             }
         }

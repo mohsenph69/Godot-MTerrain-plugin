@@ -93,6 +93,7 @@
         "locale": "cpp",
         "span": "cpp",
         "charconv": "cpp",
-        "__memory": "cpp"
+        "__memory": "cpp",
+        "__availability": "cpp"
     }
 }

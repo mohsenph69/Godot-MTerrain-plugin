@@ -185,7 +185,6 @@ void MTerrain::create_grid(){
     grid->dataDir = dataDir;
     grid->layersDataDir = layersDataDir;
     grid->region_size = region_size;
-    UtilityFunctions::print("heightmap layers size in mterrain ", heightmap_layers.size());
     grid->heightmap_layers.push_back("background");
     grid->heightmap_layers_visibility.push_back(true);
     grid->heightmap_layers.append_array(heightmap_layers);
@@ -200,6 +199,18 @@ void MTerrain::create_grid(){
     grid->update_chunks(cam_pos);
     grid->apply_update_chunks();
     grid->update_physics(cam_pos);
+
+    // Grass part
+    grass_list.clear(); // First make sure grass list is clear
+    int child_count = get_child_count();
+    for(int i=0;i<child_count;i++){
+        if("MGrass" == get_child(i)->get_class()){
+            MGrass* g = Object::cast_to<MGrass>(get_child(i));
+            grass_list.push_back(g);
+            g->init_grass(grid);
+        }
+    }
+    /// Finish initlaztion start update
     if(update_physics_loop){
         update_physics();
     }
@@ -226,6 +237,9 @@ void MTerrain::remove_grid(){
         finish_updating_physics = true;
     }
     grid->clear();
+    for(int i=0;i<grass_list.size();i++){
+        grass_list[i]->clear_grass();
+    }
 }
 
 void MTerrain::restart_grid(){
