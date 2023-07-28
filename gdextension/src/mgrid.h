@@ -175,6 +175,7 @@ class MGrid : public Object {
     Vector3 get_world_pos(const int32_t &x,const int32_t& y,const int32_t& z);
     Vector3 get_world_pos(const MGridPos& pos);
     MGridPos get_grid_pos(const Vector3& pos);
+    int32_t get_regions_count();
     int32_t get_region_id_by_point(const int32_t &x, const int32_t& z);
     MRegion* get_region_by_point(const int32_t &x, const int32_t& z);
     MRegion* get_region(const int32_t &x, const int32_t& z);
@@ -228,6 +229,7 @@ class MGrid : public Object {
     void merge_heightmap_layer();
     void remove_heightmap_layer();
     void toggle_heightmap_layer_visibile();
+
 
 };
 

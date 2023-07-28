@@ -210,6 +210,10 @@ MGridPos MGrid::get_grid_pos(const Vector3& pos) {
     return p;
 }
 
+int32_t MGrid::get_regions_count(){
+    return _regions_count;
+}
+
 int32_t MGrid::get_region_id_by_point(const int32_t &x, const int32_t& z) {
     return x/region_size + (z/region_size)*_region_grid_size.x;
 }

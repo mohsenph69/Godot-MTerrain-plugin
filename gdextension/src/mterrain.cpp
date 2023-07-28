@@ -136,6 +136,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("toggle_heightmap_layer_visibile"), &MTerrain::toggle_heightmap_layer_visibile);
     ClassDB::bind_method(D_METHOD("get_layer_visibility","input"), &MTerrain::get_layer_visibility);
 
+    ClassDB::bind_method(D_METHOD("update_grass_list"), &MTerrain::update_grass_list);
+    ClassDB::bind_method(D_METHOD("terrain_child_changed"), &MTerrain::terrain_child_changed);
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
 }
 
@@ -159,6 +161,11 @@ MTerrain::MTerrain() {
     update_physics_timer->set_one_shot(true);
     add_child(update_physics_timer);
     update_physics_timer->connect("timeout", Callable(this, "finish_update_physics"));
+
+    // Grass List update conditions
+    connect("ready",Callable(this,"update_grass_list"));
+    connect("child_exiting_tree",Callable(this,"terrain_child_changed"));
+    connect("child_entered_tree",Callable(this,"terrain_child_changed"));
 }
 
 MTerrain::~MTerrain() {
@@ -199,18 +206,10 @@ void MTerrain::create_grid(){
     grid->update_chunks(cam_pos);
     grid->apply_update_chunks();
     grid->update_physics(cam_pos);
-
-    // Grass part
-    grass_list.clear(); // First make sure grass list is clear
-    int child_count = get_child_count();
-    for(int i=0;i<child_count;i++){
-        if("MGrass" == get_child(i)->get_class()){
-            MGrass* g = Object::cast_to<MGrass>(get_child(i));
-            grass_list.push_back(g);
-            g->init_grass(grid);
-        }
+    // Grass Part
+    for(int i=0;i<grass_list.size();i++){
+        grass_list[i]->init_grass(grid);
     }
-    /// Finish initlaztion start update
     if(update_physics_loop){
         update_physics();
     }
@@ -577,11 +576,10 @@ void MTerrain::recalculate_terrain_config(const bool& force_calculate) {
         ll = lod_distance[i];
     }
     notify_property_list_changed();
+    for(int i=0;i<grass_list.size();i++){
+        grass_list[i]->recalculate_grass_config(max_lod);
+    }
 }
-
-
-
-
 
 int MTerrain::get_min_size() {
     return min_size_index;
@@ -821,6 +819,33 @@ void MTerrain::toggle_heightmap_layer_visibile(){
     ERR_FAIL_COND(!grid->is_created());
     ERR_FAIL_COND_EDMSG(active_layer_name=="background", "Can not Hide background layer");
     grid->toggle_heightmap_layer_visibile();
+}
+
+void MTerrain::terrain_child_changed(Node* n){
+    if(!is_ready){
+        return;
+    }
+    if(n->is_class("MGrass")){
+        MGrass* g = Object::cast_to<MGrass>(n);
+        if(grass_list.find(g)==-1){
+            update_grass_list();
+        }
+    }
+}
+
+void MTerrain::update_grass_list(){
+    // Grass part
+    grass_list.clear(); // First make sure grass list is clear
+    int child_count = get_child_count();
+    for(int i=0;i<child_count;i++){
+        if("MGrass" == get_child(i)->get_class()){
+            MGrass* g = Object::cast_to<MGrass>(get_child(i));
+            grass_list.push_back(g);
+            g->recalculate_grass_config(max_h_scale_index - min_h_scale_index);
+        }
+    }
+    is_ready = true;
+    /// Finish initlaztion start update
 }
 
 #include <godot_cpp/classes/file_access.hpp>

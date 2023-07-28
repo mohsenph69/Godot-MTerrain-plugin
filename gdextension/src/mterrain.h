@@ -42,7 +42,7 @@ class MTerrain : public  Node3D {
     Timer* update_physics_timer;
     float update_physics_interval = 1.0;
 
-    MGrid* grid;
+    MGrid* grid=nullptr;
     Ref<ShaderMaterial> material;
     Vector2i terrain_size = Vector2i(16,16);
     Vector3 cam_pos;
@@ -79,6 +79,8 @@ class MTerrain : public  Node3D {
     // The default layer name is background
     String active_layer_name="background";
     Vector<MGrass*> grass_list;
+    // Show if terrain ready called
+    bool is_ready=false;
 
 
 
@@ -153,7 +155,7 @@ class MTerrain : public  Node3D {
     
 
     void update_uniforms();
-    void recalculate_terrain_config(const bool& force_calculate);    
+    void recalculate_terrain_config(const bool& force_calculate);
     int get_min_size();
     void set_min_size(int index);
     int get_max_size();
@@ -189,6 +191,8 @@ class MTerrain : public  Node3D {
     void merge_heightmap_layer();
     void remove_heightmap_layer();
     void toggle_heightmap_layer_visibile();
+    void terrain_child_changed(Node* n);
+    void update_grass_list();
     void test_function();
 };
 
