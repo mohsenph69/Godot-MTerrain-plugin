@@ -26,7 +26,6 @@ MGrid::~MGrid() {
 }
 
 void MGrid::clear() {
-    UtilityFunctions::print("clearing ---------------");
     if(is_dirty){
         RenderingServer* rs = RenderingServer::get_singleton();
         for(int32_t z=_search_bound.top; z <=_search_bound.bottom; z++)
@@ -61,7 +60,6 @@ void MGrid::clear() {
     heightmap_layers.clear();
     heightmap_layers_visibility.clear();
     active_heightmap_layer=0;
-    UtilityFunctions::print("All heightmap image list size ", _all_heightmap_image_list.size());
 }
 
 bool MGrid::is_created() {
