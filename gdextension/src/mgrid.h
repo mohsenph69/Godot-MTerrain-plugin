@@ -84,6 +84,7 @@ class MGrid : public Object {
     private:
     MBrushManager* _brush_manager = nullptr;
     MPoint** points;
+    MPoint* points_row;
     MRegion* regions;
     bool current_update = true;
     bool is_dirty = false;

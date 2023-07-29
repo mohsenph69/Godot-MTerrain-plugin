@@ -38,9 +38,7 @@ void MGrid::clear() {
                 }
             }
         }
-        for(int32_t z=0; z <_size.z; z++){
-                memdelete_arr<MPoint>(points[z]);
-            }
+        memdelete_arr<MPoint>(points_row);
         memdelete_arr<MPoint*>(points);
         memdelete_arr<MRegion>(regions);
         memdelete(_chunks);
@@ -101,9 +99,11 @@ void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) 
     region_pixel_size = rp + 1;
     _grid_bound = MBound(0,width-1, 0, height-1);
     regions = memnew_arr(MRegion, _regions_count);
+    int total_points = _size.z*_size.x;
+    points_row = memnew_arr(MPoint, total_points);
     points = memnew_arr(MPoint*, _size.z);
     for (int32_t z=0; z<_size.z; z++){
-        points[z] = memnew_arr(MPoint, _size.x);
+        points[z] = &points_row[z*_size.x];
     }
     //Init Regions
     int index = 0;
