@@ -1,6 +1,11 @@
 #ifndef MGRASS
 #define MGRASS
 
+#define BUFFER_STRID_FLOAT 12
+#define BUFFER_STRID_BYTE 48
+
+#include <godot_cpp/templates/vector.hpp>
+#include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include "mgrass_data.h"
@@ -24,7 +29,7 @@ struct MGrassChunk // Rendering server multi mesh data
         RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
         RenderingServer::get_singleton()->instance_geometry_set_material_overlay(instance,material);
         RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
-        RenderingServer::get_singleton()->instance_set_visible(instance,false);
+        //RenderingServer::get_singleton()->instance_set_visible(instance,false);
         lod = _lod;
     }
     ~MGrassChunk(){
@@ -39,8 +44,8 @@ struct MGrassChunk // Rendering server multi mesh data
         RenderingServer::get_singleton()->instance_set_visible(instance,true);
         is_relax = false;
     }
-    void set_buffer(int count, const PackedFloat32Array& data){
-        RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
+    void set_buffer(int _count, const PackedFloat32Array& data){
+        RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
         RenderingServer::get_singleton()->multimesh_set_buffer(multimesh, data);
     }
 };
@@ -48,26 +53,42 @@ struct MGrassChunk // Rendering server multi mesh data
 
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
+    private:
 
     protected:
     static void _bind_methods();
 
     public:
     bool is_grass_init = false;
+    RID scenario;
     Ref<MGrassData> grass_data;
     MGrid* grid = nullptr;
     int grass_in_cell=1;
-    uint32_t grass_region_pixel_size;
+    uint32_t base_grid_size_in_pixel;
+    uint32_t grass_region_pixel_width; // Width or Height both are equal
+    uint32_t grass_region_pixel_size; // Total pixel size for each region
+    uint32_t region_grid_width;
+    uint32_t width;
+    uint32_t height;
     int lod_count;
     int min_grass_cutoff=5;
     Array materials;
     Array meshes;
+    Vector<RID> material_rids;
+    Vector<RID> meshe_rids;
+    HashMap<int64_t,MGrassChunk*> grid_to_grass;
 
     MGrass();
     ~MGrass();
-    void init_grass(MGrid* grid);
+    void init_grass(MGrid* _grid);
     void clear_grass();
+    void update_grass();
+    void create_grass_chunk(int grid_index);
     void recalculate_grass_config(int max_lod);
+
+    void set_grass(uint32_t px, uint32_t py, bool p_value);
+    bool get_grass(uint32_t px, uint32_t py);
+
     void set_grass_data(Ref<MGrassData> d);
     Ref<MGrassData> get_grass_data();
     void set_grass_in_cell(int input);

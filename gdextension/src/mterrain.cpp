@@ -207,8 +207,11 @@ void MTerrain::create_grid(){
     grid->apply_update_chunks();
     grid->update_physics(cam_pos);
     // Grass Part
+    update_grass_list();
+    UtilityFunctions::print("grass list size ",grass_list.size());
     for(int i=0;i<grass_list.size();i++){
         grass_list[i]->init_grass(grid);
+        grass_list[i]->update_grass();
     }
     if(update_physics_loop){
         update_physics();

@@ -74,6 +74,10 @@ void MGrid::set_scenario(RID scenario){
     _scenario = scenario;
 }
 
+RID MGrid::get_scenario(){
+    return _scenario;
+}
+
 void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) {
     if (width == 0 || height == 0) return;
     _chunks = chunks;
@@ -212,6 +216,10 @@ MGridPos MGrid::get_grid_pos(const Vector3& pos) {
 
 int32_t MGrid::get_regions_count(){
     return _regions_count;
+}
+
+MGridPos MGrid::get_region_grid_size(){
+    return _region_grid_size;
 }
 
 int32_t MGrid::get_region_id_by_point(const int32_t &x, const int32_t& z) {

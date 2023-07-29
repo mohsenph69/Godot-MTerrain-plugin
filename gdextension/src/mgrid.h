@@ -168,6 +168,7 @@ class MGrid : public Object {
     bool is_created();
     MGridPos get_size();
     void set_scenario(RID scenario);
+    RID get_scenario();
     void create(const int32_t &width,const int32_t& height, MChunks* chunks);
     void update_regions_uniforms(Array input);
     void update_regions_uniform(Dictionary input);
@@ -176,6 +177,7 @@ class MGrid : public Object {
     Vector3 get_world_pos(const MGridPos& pos);
     MGridPos get_grid_pos(const Vector3& pos);
     int32_t get_regions_count();
+    MGridPos get_region_grid_size();
     int32_t get_region_id_by_point(const int32_t &x, const int32_t& z);
     MRegion* get_region_by_point(const int32_t &x, const int32_t& z);
     MRegion* get_region(const int32_t &x, const int32_t& z);
