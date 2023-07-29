@@ -31,7 +31,7 @@ void MGrid::clear() {
         for(int32_t z=_search_bound.top; z <=_search_bound.bottom; z++)
         {
             for(int32_t x=_search_bound.left; x <=_search_bound.right; x++){
-                if(points[z][x].has_instance()){
+                if(points[z][x].has_instance){
                     rs->free_rid(points[z][x].instance);
                     points[z][x].instance = RID();
                     points[z][x].mesh = RID();
@@ -295,10 +295,11 @@ void MGrid::cull_out_of_bound() {
     {
         for(int32_t x=_last_search_bound.left; x <=_last_search_bound.right; x++){
             if (!_search_bound.has_point(x,z)){
-                if(points[z][x].has_instance()){
+                if(points[z][x].has_instance){
                     //remove_instance_list.append(points[z][x].instance);
                     remove_instance_list.push_back(points[z][x].instance);
                     points[z][x].instance = RID();
+                    points[z][x].has_instance = false;
                     points[z][x].mesh = RID();
                 }
             }
@@ -486,6 +487,7 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
     // So we start to build that
     // Top left corner will have one chunk with this size
     RenderingServer* rs = RenderingServer::get_singleton();
+    RID merged_instance;
     for(int32_t z=bound.top; z<=bound.bottom; z++){
         for(int32_t x=bound.left;x<=bound.right;x++){
             if(z==bound.top && x==bound.left){
@@ -494,16 +496,17 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
                 RID mesh = _chunks->sizes[size].lods[lod].meshes[edge_num];
                 if(points[z][x].mesh != mesh){
                     points[z][x].mesh = mesh;
-                    if(points[z][x].has_instance()){
+                    if(points[z][x].has_instance){
                         //remove_instance_list.append(points[z][x].instance);
                         remove_instance_list.push_back(points[z][x].instance);
-                        points[z][x].instance = RID(); 
+                        points[z][x].instance = RID();
                     }
                     int32_t region_id = get_region_id_by_point(x,z);
                     //MRegion* region = get_region_by_point(x,z);
                     points[z][x].create_instance(get_world_pos(x,0,z), _scenario, regions[region_id].get_material_rid());
                     rs->instance_set_visible(points[z][x].instance, false);
                     rs->instance_set_base(points[z][x].instance, mesh);
+                    merged_instance = points[z][x].instance;
                     /*
                     Update info use for grass too
                     */
@@ -519,12 +522,13 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
                 }
             } else {
                 points[z][x].size = -1;
-                if(points[z][x].has_instance()){
-                    //remove_instance_list.append(points[z][x].instance);
+                if(points[z][x].has_instance){
+                    points[z][x].has_instance = false;
                     remove_instance_list.push_back(points[z][x].instance);
-                    points[z][x].instance = RID();
                     points[z][x].mesh = RID();
                 }
+                points[z][x].instance = merged_instance;
+                points[z][x].has_instance = false;
             }
         }
     }

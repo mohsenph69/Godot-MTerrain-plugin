@@ -49,11 +49,11 @@ struct MPoint
     RID mesh = RID();
     int8_t lod = -1;
     int8_t size=0;
+    bool has_instance=false;
 
-    _FORCE_INLINE_ bool has_instance(){
-        return instance != RID();
-    }
+   
     void create_instance(const Vector3& pos,const RID& scenario,const RID& material){
+        has_instance = true;
         Transform3D xform(Basis(), pos);
         RenderingServer* rs = RenderingServer::get_singleton();
         instance = rs->instance_create();

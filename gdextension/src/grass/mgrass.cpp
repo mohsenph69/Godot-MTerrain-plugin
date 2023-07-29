@@ -137,7 +137,7 @@ void MGrass::create_grass_chunk(int grid_index){
             //UtilityFunctions::print("ibyte ", ibyte);
             uint32_t ibit = offs%8;
             //UtilityFunctions::print("ibit ", ibit);
-            if( (ptr[ibyte] & (1 << ibit)) != 0  ){
+            if( (ptr[ibyte] & (1 << ibit)) != 0 ){
                 for(int r=0;r<grass_in_cell;r++){
                     index=count*BUFFER_STRID_FLOAT;
                     buffer.resize(buffer.size()+12);
