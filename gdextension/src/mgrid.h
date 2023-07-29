@@ -176,6 +176,7 @@ class MGrid : public Object {
     void update_all_image_list();
     Vector3 get_world_pos(const int32_t &x,const int32_t& y,const int32_t& z);
     Vector3 get_world_pos(const MGridPos& pos);
+    int get_point_id_by_non_offs_ws(const Vector2& input); // Get point id non offset world posiotion usefull for grass for now
     MGridPos get_grid_pos(const Vector3& pos);
     int32_t get_regions_count();
     MGridPos get_region_grid_size();

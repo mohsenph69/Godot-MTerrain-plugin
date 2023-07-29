@@ -5,6 +5,7 @@
 #define BUFFER_STRID_BYTE 48
 
 #include <godot_cpp/templates/vector.hpp>
+#include <godot_cpp/templates/vset.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -19,9 +20,10 @@ struct MGrassChunk // Rendering server multi mesh data
 {
     RID multimesh;
     RID instance;
-    int id=-1;
+    int count=0;
     int lod;
     bool is_relax=true;
+
     MGrassChunk(RID scenario, RID mesh_rid, RID material,int _lod){
         multimesh = RenderingServer::get_singleton()->multimesh_create();
         RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
@@ -29,7 +31,7 @@ struct MGrassChunk // Rendering server multi mesh data
         RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
         RenderingServer::get_singleton()->instance_geometry_set_material_overlay(instance,material);
         RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
-        //RenderingServer::get_singleton()->instance_set_visible(instance,false);
+        RenderingServer::get_singleton()->instance_set_visible(instance,false);
         lod = _lod;
     }
     ~MGrassChunk(){
@@ -45,6 +47,7 @@ struct MGrassChunk // Rendering server multi mesh data
         is_relax = false;
     }
     void set_buffer(int _count, const PackedFloat32Array& data){
+        count = _count;
         RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
         RenderingServer::get_singleton()->multimesh_set_buffer(multimesh, data);
     }
@@ -77,12 +80,15 @@ class MGrass : public Node3D {
     Vector<RID> material_rids;
     Vector<RID> meshe_rids;
     HashMap<int64_t,MGrassChunk*> grid_to_grass;
+    Vector<MGrassChunk*> to_be_visible;
+    VSet<int> dirty_points_id;
 
     MGrass();
     ~MGrass();
     void init_grass(MGrid* _grid);
     void clear_grass();
     void update_grass();
+    void apply_update_grass();
     void create_grass_chunk(int grid_index);
     void recalculate_grass_config(int max_lod);
 

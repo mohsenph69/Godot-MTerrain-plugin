@@ -85,6 +85,9 @@ void MGrass::clear_grass(){
 void MGrass::update_grass(){
     set_grass(0,0,true);
     set_grass(1,0,true);
+    set_grass(31,0,true);
+    set_grass(32,0,true);
+    set_grass(33,0,true);
     set_grass(1023,0,true);
     set_grass(0,1023,true);
     set_grass(511,511,true);
@@ -110,7 +113,6 @@ void MGrass::create_grass_chunk(int grid_index){
     //UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
 
     int lod_scale = pow(2,CHUNK_INFO.lod);
-    lod_scale=1;
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
     const uint8_t* ptr = grass_data->data.ptr() + CHUNK_INFO.region_id*grass_region_pixel_size/8;
@@ -137,7 +139,7 @@ void MGrass::create_grass_chunk(int grid_index){
             //UtilityFunctions::print("ibyte ", ibyte);
             uint32_t ibit = offs%8;
             //UtilityFunctions::print("ibit ", ibit);
-            if( (ptr[ibyte] & (1 << ibit)) != 0 ){
+            if( (ptr[ibyte] & (1 << ibit)) != 0){
                 for(int r=0;r<grass_in_cell;r++){
                     index=count*BUFFER_STRID_FLOAT;
                     buffer.resize(buffer.size()+12);
@@ -169,6 +171,20 @@ void MGrass::create_grass_chunk(int grid_index){
     }
     MGrassChunk* g = memnew(MGrassChunk(scenario,meshe_rids[CHUNK_INFO.lod],material_rids[CHUNK_INFO.lod],CHUNK_INFO.lod));
     g->set_buffer(count,buffer);
+    grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
+    to_be_visible.push_back(g);
+}
+
+void MGrass::apply_update_grass(){
+    for(int i=0;i<to_be_visible.size();i++){
+        to_be_visible[i]->unrelax();
+    }
+    for(int i=0;i<grid->remove_instance_list.size();i++){
+        if(grid_to_grass.has(grid->remove_instance_list[i].get_id())){
+            MGrassChunk* g = grid_to_grass.get(grid->remove_instance_list[i].get_id());
+            memdelete(g);
+        }
+    }
 }
 
 void MGrass::recalculate_grass_config(int max_lod){
@@ -185,15 +201,15 @@ void MGrass::recalculate_grass_config(int max_lod){
 void MGrass::set_grass(uint32_t px, uint32_t py, bool p_value){
     ERR_FAIL_INDEX(px, width);
     ERR_FAIL_INDEX(py, height);
+    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
+    dirty_points_id.insert(point_id);
     uint32_t rx = px/grass_region_pixel_width;
     uint32_t ry = py/grass_region_pixel_width;
     uint32_t rid = ry*region_grid_width + rx;
-    //UtilityFunctions::print("Region id ", rid);
     uint32_t x = px%grass_region_pixel_width;
     uint32_t y = py%grass_region_pixel_width;
-    //UtilityFunctions::print("x , y ", x," , ",y);
     uint32_t offs = rid*grass_region_pixel_size + y*grass_region_pixel_width + x;
-    //UtilityFunctions::print("Offs ", offs);
     uint32_t ibyte = offs/8;
     uint32_t ibit = offs%8;
 
@@ -318,4 +334,3 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
     }
     return false;
 }
-
