@@ -21,16 +21,24 @@ struct MGrassChunk // Rendering server multi mesh data
 {
     RID multimesh;
     RID instance;
+    Vector3 world_pos;
     int count=0;
+    int lod;
+    int region_id;
     MPixelRegion pixel_region;
     bool is_relax=true;
 
-    MGrassChunk(const MPixelRegion& _pixel_region){
+    MGrassChunk(const MPixelRegion& _pixel_region,Vector3 _world_pos, int _lod,int _region_id){
         pixel_region = _pixel_region;
+        lod = _lod;
+        region_id = _region_id;
+        world_pos = _world_pos;
     }
     ~MGrassChunk(){
-        RenderingServer::get_singleton()->free_rid(multimesh);
-        RenderingServer::get_singleton()->free_rid(instance);
+        if(count!=0){
+            RenderingServer::get_singleton()->free_rid(multimesh);
+            RenderingServer::get_singleton()->free_rid(instance);
+        }
     }
     void relax(){
         RenderingServer::get_singleton()->instance_set_visible(instance,false);
@@ -48,7 +56,6 @@ struct MGrassChunk // Rendering server multi mesh data
             RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
             RenderingServer::get_singleton()->instance_geometry_set_material_overlay(instance,material);
             RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
-            RenderingServer::get_singleton()->instance_set_visible(instance,false);
         } else if(_count==0 && count!=0){
             RenderingServer::get_singleton()->free_rid(multimesh);
             RenderingServer::get_singleton()->free_rid(instance);
@@ -89,15 +96,16 @@ class MGrass : public Node3D {
     Vector<RID> meshe_rids;
     HashMap<int64_t,MGrassChunk*> grid_to_grass;
     Vector<MGrassChunk*> to_be_visible;
-    VSet<int> dirty_points_id;
+    VSet<int>* dirty_points_id;
 
     MGrass();
     ~MGrass();
     void init_grass(MGrid* _grid);
     void clear_grass();
     void update_grass();
+    void update_dirty_chunks();
     void apply_update_grass();
-    void create_grass_chunk(int grid_index);
+    void create_grass_chunk(int grid_index,MGrassChunk* grass_chunk=nullptr);
     void recalculate_grass_config(int max_lod);
 
     void set_grass(uint32_t px, uint32_t py, bool p_value);

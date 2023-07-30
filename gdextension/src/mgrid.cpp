@@ -213,6 +213,10 @@ int MGrid::get_point_id_by_non_offs_ws(const Vector2& input){
     return z*_size.z + x;
 }
 
+int64_t MGrid::get_point_instance_id_by_point_id(int pid){
+    return points_row[pid].instance.get_id();
+}
+
 MGridPos MGrid::get_grid_pos(const Vector3& pos) {
     MGridPos p;
     Vector3 rp = pos - offset;

@@ -9,6 +9,7 @@ void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
     ClassDB::bind_method(D_METHOD("set_grass","x","y","val"), &MGrass::set_grass);
     ClassDB::bind_method(D_METHOD("get_grass","x","y"), &MGrass::get_grass);
+    ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks);
 
     ClassDB::bind_method(D_METHOD("set_grass_data","input"), &MGrass::set_grass_data);
     ClassDB::bind_method(D_METHOD("get_grass_data"), &MGrass::get_grass_data);
@@ -28,10 +29,10 @@ void MGrass::_bind_methods() {
 }
 
 MGrass::MGrass(){
-
+    dirty_points_id = memnew(VSet<int>);
 }
 MGrass::~MGrass(){
-
+    memdelete(dirty_points_id);
 }
 
 void MGrass::init_grass(MGrid* _grid) {
@@ -82,7 +83,22 @@ void MGrass::clear_grass(){
 
 }
 
+void MGrass::update_dirty_chunks(){
+    for(int i=0;i<dirty_points_id->size();i++){
+        UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);
+        int64_t terrain_instance_id = grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]);
+        UtilityFunctions::print("terrain_instance_id ",terrain_instance_id);
+        ERR_FAIL_COND(!grid_to_grass.has(terrain_instance_id));
+        MGrassChunk* g = grid_to_grass[terrain_instance_id];
+        UtilityFunctions::print("MGrassChunk count ",g->count, " right ",g->pixel_region.right);
+        create_grass_chunk(-1,g);
+    }
+    memdelete(dirty_points_id);
+    dirty_points_id = memnew(VSet<int>);
+}
+
 void MGrass::update_grass(){
+    /*
     set_grass(0,0,true);
     set_grass(1,0,true);
     set_grass(31,0,true);
@@ -93,7 +109,7 @@ void MGrass::update_grass(){
     set_grass(511,511,true);
     set_grass(512,512,true);
     set_grass(1023,1023,true);
-    set_grass(0,0,true);
+    */
     int new_chunk_count = grid->grid_update_info.size();
     UtilityFunctions::print("new_chunk_count ",new_chunk_count);
     for(int i=0;i<new_chunk_count;i++){
@@ -102,8 +118,10 @@ void MGrass::update_grass(){
     }
 }
 
-void MGrass::create_grass_chunk(int grid_index){
+void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
+    MGrassChunk* g;
     MPixelRegion px;
+    if(grass_chunk==nullptr){
     px.left = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.x);
     px.top = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.y);
     int size_scale = pow(2,CHUNK_INFO.chunk_size);
@@ -111,23 +129,27 @@ void MGrass::create_grass_chunk(int grid_index){
     px.bottom = px.top + base_grid_size_in_pixel*size_scale - 1;
     //UtilityFunctions::print("Region id ", CHUNK_INFO.region_id);
     //UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
-
-    int lod_scale = pow(2,CHUNK_INFO.lod);
+    g = memnew(MGrassChunk(px,CHUNK_INFO.region_world_pos,CHUNK_INFO.lod,CHUNK_INFO.region_id));
+    grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
+    } else {
+        g = grass_chunk;
+        px = grass_chunk->pixel_region;
+    }
+    int lod_scale = pow(2,g->lod);
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
 
-    MGrassChunk* g = memnew(MGrassChunk(px));
-    grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
+    
 
-    const uint8_t* ptr = grass_data->data.ptr() + CHUNK_INFO.region_id*grass_region_pixel_size/8;
+    const uint8_t* ptr = grass_data->data.ptr() + g->region_id*grass_region_pixel_size/8;
 
-    //UtilityFunctions::print("OFFSET ",CHUNK_INFO.region_id*grass_region_pixel_size/8);
+    //UtilityFunctions::print("OFFSET ",g->region_id*grass_region_pixel_size/8 , " Region id ",g->region_id);
     uint32_t count=0;
     uint32_t index;
     uint32_t x=px.left;
     uint32_t y=px.top;
     uint32_t i=0;
-    uint32_t j=0;
+    uint32_t j=1;
     PackedFloat32Array buffer;
     while (true)
     {
@@ -143,7 +165,8 @@ void MGrass::create_grass_chunk(int grid_index){
             //UtilityFunctions::print("ibyte ", ibyte);
             uint32_t ibit = offs%8;
             //UtilityFunctions::print("ibit ", ibit);
-            if( (ptr[ibyte] & (1 << ibit)) != 0 || true){
+            if( (ptr[ibyte] & (1 << ibit)) != 0){
+                //UtilityFunctions::print("Found some grass ",x," , ",y);
                 for(int r=0;r<grass_in_cell;r++){
                     index=count*BUFFER_STRID_FLOAT;
                     buffer.resize(buffer.size()+12);
@@ -152,8 +175,8 @@ void MGrass::create_grass_chunk(int grid_index){
                     buffer[index+10]=1;
                     int rand_index = y*grass_region_pixel_width_lod + x + r;
                     Vector3 pos;
-                    pos.x = CHUNK_INFO.region_world_pos.x + x*grass_data->density;
-                    pos.z = CHUNK_INFO.region_world_pos.z + y*grass_data->density;
+                    pos.x = g->world_pos.x + x*grass_data->density;
+                    pos.z = g->world_pos.z + y*grass_data->density;
                     buffer.set(index+3,pos.x);
                     buffer.set(index+7,grid->get_height(pos));
                     buffer.set(index+11,pos.z);
@@ -169,11 +192,15 @@ void MGrass::create_grass_chunk(int grid_index){
         j++;
     }
     // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
-    if(meshe_rids[CHUNK_INFO.lod] == RID() || count < min_grass_cutoff){
+    if(meshe_rids[g->lod] == RID() || count < min_grass_cutoff){
         return;
     }
-    //g->create();
-    g->set_buffer(count,scenario,meshe_rids[CHUNK_INFO.lod],material_rids[CHUNK_INFO.lod],buffer);
+    g->set_buffer(count,scenario,meshe_rids[g->lod],material_rids[g->lod],buffer);
+    // IF grass chunk is nullpointer this is not a grass chunk update
+    // it is a grass chunk creation so we relax that
+    if(grass_chunk==nullptr){
+        g->relax();
+    }
     to_be_visible.push_back(g);
 }
 
@@ -205,7 +232,7 @@ void MGrass::set_grass(uint32_t px, uint32_t py, bool p_value){
     ERR_FAIL_INDEX(py, height);
     Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
     int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
-    dirty_points_id.insert(point_id);
+    dirty_points_id->insert(point_id);
     uint32_t rx = px/grass_region_pixel_width;
     uint32_t ry = py/grass_region_pixel_width;
     uint32_t rid = ry*region_grid_width + rx;
