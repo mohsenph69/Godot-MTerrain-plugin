@@ -1,6 +1,6 @@
 #include "mgrass.h"
 #include "../mgrid.h"
-#include "../mpixel_region.h"
+
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
 
@@ -115,6 +115,10 @@ void MGrass::create_grass_chunk(int grid_index){
     int lod_scale = pow(2,CHUNK_INFO.lod);
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
+
+    MGrassChunk* g = memnew(MGrassChunk(px));
+    grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
+
     const uint8_t* ptr = grass_data->data.ptr() + CHUNK_INFO.region_id*grass_region_pixel_size/8;
 
     //UtilityFunctions::print("OFFSET ",CHUNK_INFO.region_id*grass_region_pixel_size/8);
@@ -139,7 +143,7 @@ void MGrass::create_grass_chunk(int grid_index){
             //UtilityFunctions::print("ibyte ", ibyte);
             uint32_t ibit = offs%8;
             //UtilityFunctions::print("ibit ", ibit);
-            if( (ptr[ibyte] & (1 << ibit)) != 0){
+            if( (ptr[ibyte] & (1 << ibit)) != 0 || true){
                 for(int r=0;r<grass_in_cell;r++){
                     index=count*BUFFER_STRID_FLOAT;
                     buffer.resize(buffer.size()+12);
@@ -164,14 +168,12 @@ void MGrass::create_grass_chunk(int grid_index){
         }
         j++;
     }
-    //MGrassChunk(RID scenario, RID mesh_rid, RID material,int _lod)
-    // Discard grass chunk in case there is no mesh RID
+    // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
     if(meshe_rids[CHUNK_INFO.lod] == RID() || count < min_grass_cutoff){
         return;
     }
-    MGrassChunk* g = memnew(MGrassChunk(scenario,meshe_rids[CHUNK_INFO.lod],material_rids[CHUNK_INFO.lod],CHUNK_INFO.lod));
-    g->set_buffer(count,buffer);
-    grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
+    //g->create();
+    g->set_buffer(count,scenario,meshe_rids[CHUNK_INFO.lod],material_rids[CHUNK_INFO.lod],buffer);
     to_be_visible.push_back(g);
 }
 

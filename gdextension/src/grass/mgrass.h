@@ -10,6 +10,7 @@
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include "mgrass_data.h"
+#include "../mpixel_region.h"
 
 
 using namespace godot;
@@ -21,18 +22,11 @@ struct MGrassChunk // Rendering server multi mesh data
     RID multimesh;
     RID instance;
     int count=0;
-    int lod;
+    MPixelRegion pixel_region;
     bool is_relax=true;
 
-    MGrassChunk(RID scenario, RID mesh_rid, RID material,int _lod){
-        multimesh = RenderingServer::get_singleton()->multimesh_create();
-        RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
-        instance = RenderingServer::get_singleton()->instance_create();
-        RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
-        RenderingServer::get_singleton()->instance_geometry_set_material_overlay(instance,material);
-        RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
-        RenderingServer::get_singleton()->instance_set_visible(instance,false);
-        lod = _lod;
+    MGrassChunk(const MPixelRegion& _pixel_region){
+        pixel_region = _pixel_region;
     }
     ~MGrassChunk(){
         RenderingServer::get_singleton()->free_rid(multimesh);
@@ -46,7 +40,21 @@ struct MGrassChunk // Rendering server multi mesh data
         RenderingServer::get_singleton()->instance_set_visible(instance,true);
         is_relax = false;
     }
-    void set_buffer(int _count, const PackedFloat32Array& data){
+    void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data){
+        if(_count!=0 && count == 0){
+            multimesh = RenderingServer::get_singleton()->multimesh_create();
+            RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
+            instance = RenderingServer::get_singleton()->instance_create();
+            RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
+            RenderingServer::get_singleton()->instance_geometry_set_material_overlay(instance,material);
+            RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
+            RenderingServer::get_singleton()->instance_set_visible(instance,false);
+        } else if(_count==0 && count!=0){
+            RenderingServer::get_singleton()->free_rid(multimesh);
+            RenderingServer::get_singleton()->free_rid(instance);
+            count = _count;
+            return;
+        }
         count = _count;
         RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
         RenderingServer::get_singleton()->multimesh_set_buffer(multimesh, data);
