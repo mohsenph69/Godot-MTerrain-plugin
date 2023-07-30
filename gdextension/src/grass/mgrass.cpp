@@ -111,7 +111,7 @@ void MGrass::update_grass(){
     set_grass(1023,1023,true);
     */
     int new_chunk_count = grid->grid_update_info.size();
-    UtilityFunctions::print("new_chunk_count ",new_chunk_count);
+    //UtilityFunctions::print("new_chunk_count ",new_chunk_count);
     for(int i=0;i<new_chunk_count;i++){
         create_grass_chunk(i);
         //return; // For now for test remove later
@@ -212,8 +212,12 @@ void MGrass::apply_update_grass(){
         if(grid_to_grass.has(grid->remove_instance_list[i].get_id())){
             MGrassChunk* g = grid_to_grass.get(grid->remove_instance_list[i].get_id());
             memdelete(g);
+            grid_to_grass.erase(grid->remove_instance_list[i].get_id());
+        } else {
+            WARN_PRINT("Instance not found for removing");
         }
     }
+    to_be_visible.clear();
 }
 
 void MGrass::recalculate_grass_config(int max_lod){

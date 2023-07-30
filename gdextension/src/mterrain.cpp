@@ -12,7 +12,7 @@
 
 
 void MTerrain::_bind_methods() {
-    //ADD_SIGNAL(MethodInfo("finish_updating_chunks"));
+    //ADD_SIGNAL(MethodInfo("finish_updating"));
     //ADD_SIGNAL(MethodInfo("finish_updating_physics"));
 
     ClassDB::bind_method(D_METHOD("finish_terrain"), &MTerrain::finish_terrain);
@@ -29,7 +29,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("save_image","image_index","force_save"), &MTerrain::save_image);
     ClassDB::bind_method(D_METHOD("has_unsave_image"), &MTerrain::has_unsave_image);
     ClassDB::bind_method(D_METHOD("save_all_dirty_images"), &MTerrain::save_all_dirty_images);
-    ClassDB::bind_method(D_METHOD("is_finishing_update_chunks"), &MTerrain::is_finish_updating_chunks);
+    ClassDB::bind_method(D_METHOD("is_finishing_update_chunks"), &MTerrain::is_finish_updating);
     ClassDB::bind_method(D_METHOD("is_finishing_update_physics"), &MTerrain::is_finish_updating_physics);
     ClassDB::bind_method(D_METHOD("get_pixel", "x","y","image_index"), &MTerrain::get_pixel);
     ClassDB::bind_method(D_METHOD("set_pixel", "x","y","color","image_index"), &MTerrain::set_pixel);
@@ -65,6 +65,10 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_update_chunks_interval"), &MTerrain::get_update_chunks_interval);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "update_chunks_interval"), "set_update_chunks_interval", "get_update_chunks_interval");
     
+    ClassDB::bind_method(D_METHOD("set_distance_update_threshold","input"), &MTerrain::set_distance_update_threshold);
+    ClassDB::bind_method(D_METHOD("get_distance_update_threshold"), &MTerrain::get_distance_update_threshold);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"distance_update_threshold"),"set_distance_update_threshold","get_distance_update_threshold");
+
     ClassDB::bind_method(D_METHOD("set_update_chunks_loop", "val"), &MTerrain::set_update_chunks_loop);
     ClassDB::bind_method(D_METHOD("get_update_chunks_loop"), &MTerrain::get_update_chunks_loop);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "update_chunks_loop"), "set_update_chunks_loop", "get_update_chunks_loop");
@@ -208,11 +212,11 @@ void MTerrain::create_grid(){
     grid->update_physics(cam_pos);
     // Grass Part
     update_grass_list();
-    UtilityFunctions::print("grass list size ",grass_list.size());
-    for(int i=0;i<grass_list.size();i++){
-        grass_list[i]->init_grass(grid);
-        grass_list[i]->update_grass();
-        grass_list[i]->apply_update_grass();
+    confirm_grass_list = grass_list;
+    for(int i=0;i<confirm_grass_list.size();i++){
+        confirm_grass_list[i]->init_grass(grid);
+        confirm_grass_list[i]->update_grass();
+        confirm_grass_list[i]->apply_update_grass();
     }
     if(update_physics_loop){
         update_physics();
@@ -233,7 +237,7 @@ void MTerrain::remove_grid(){
     update_physics_timer->stop();
     if(update_thread_chunks.valid()){
         update_thread_chunks.wait();
-        finish_updating_chunks = true;
+        finish_updating = true;
     }
     if(update_thread_physics.valid()){
         update_thread_physics.wait();
@@ -251,19 +255,38 @@ void MTerrain::restart_grid(){
 }
 
 void MTerrain::update() {
-    ERR_FAIL_COND(!finish_updating_chunks);
+    ERR_FAIL_COND(!finish_updating);
     ERR_FAIL_COND(!grid->is_created());
     get_cam_pos();
-    finish_updating_chunks = false;
-    update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
+    finish_updating = false;
+    // In case -1 is Terrain grid update turn
+    if(update_stage==-1){
+        update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
+        
+    }
+    else if(update_stage>=0){
+        update_thread_chunks = std::async(std::launch::async, &MGrass::update_grass, confirm_grass_list[update_stage]);
+    }
     update_chunks_timer->start();
 }
 
 void MTerrain::finish_update() {
     std::future_status status = update_thread_chunks.wait_for(std::chrono::microseconds(1));
     if(status == std::future_status::ready){
-        finish_updating_chunks = true;
-        grid->apply_update_chunks();
+        finish_updating = true;
+        if(update_stage==-1){
+            grid->apply_update_chunks();
+            if(confirm_grass_list.size()!=0){
+                update_stage++;
+            }
+        }
+        else if(update_stage>=0){
+            confirm_grass_list[update_stage]->apply_update_grass();
+            update_stage++;
+            if(update_stage>=confirm_grass_list.size()){
+                update_stage = -1;
+            }
+        }
         if(update_chunks_loop){
             call_deferred("update");
         }
@@ -293,8 +316,8 @@ void MTerrain::finish_update_physics(){
     }
 }
 
-bool MTerrain::is_finish_updating_chunks(){
-    return finish_updating_chunks;
+bool MTerrain::is_finish_updating(){
+    return finish_updating;
 }
 bool MTerrain::is_finish_updating_physics(){
     return finish_updating_physics;
@@ -414,9 +437,16 @@ void MTerrain::set_update_chunks_interval(float input){
     update_chunks_timer->set_wait_time(update_chunks_interval);
 }
 
+float MTerrain::get_distance_update_threshold(){
+    return distance_update_threshold;
+}
+void MTerrain::set_distance_update_threshold(float input){
+    distance_update_threshold = input;
+}
+
 void MTerrain::set_update_chunks_loop(bool input) {
     update_chunks_loop = input;
-    if(update_chunks_loop && finish_updating_chunks){
+    if(update_chunks_loop && finish_updating){
         update();
     }
 }

@@ -30,10 +30,15 @@ class MTerrain : public  Node3D {
     private:
     MChunks* _chunks;
     std::future<void> update_thread_chunks;
-    bool finish_updating_chunks=true;
+    bool finish_updating=true;
     bool update_chunks_loop=true;
     Timer* update_chunks_timer;
     float update_chunks_interval = 0.2;
+    float distance_update_threshold=10.0;
+    // -1 is Terrain grid update
+    // >=0 is index of confirm grass list update
+    // -2 Update is finished and if we want we can start that again
+    int update_stage=-1;
 
 
     std::future<void> update_thread_physics;
@@ -79,6 +84,7 @@ class MTerrain : public  Node3D {
     // The default layer name is background
     String active_layer_name="background";
     Vector<MGrass*> grass_list;
+    Vector<MGrass*> confirm_grass_list;
     // Show if terrain ready called
     bool is_ready=false;
 
@@ -99,7 +105,7 @@ class MTerrain : public  Node3D {
     void finish_update();
     void update_physics();
     void finish_update_physics();
-    bool is_finish_updating_chunks();
+    bool is_finish_updating();
     bool is_finish_updating_physics();
     Array get_image_list();
     int get_image_id(String uniform_name);
@@ -130,6 +136,8 @@ class MTerrain : public  Node3D {
     bool get_save_generated_normals();
     float get_update_chunks_interval();
     void set_update_chunks_interval(float input);
+    float get_distance_update_threshold();
+    void set_distance_update_threshold(float input);
     void set_update_chunks_loop(bool input);
     bool get_update_chunks_loop();
     float get_update_physics_interval();

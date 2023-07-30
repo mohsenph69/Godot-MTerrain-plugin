@@ -41,11 +41,15 @@ struct MGrassChunk // Rendering server multi mesh data
         }
     }
     void relax(){
-        RenderingServer::get_singleton()->instance_set_visible(instance,false);
+        if(count!=0){
+            RenderingServer::get_singleton()->instance_set_visible(instance,false);
+        }
         is_relax = true;
     }
     void unrelax(){
-        RenderingServer::get_singleton()->instance_set_visible(instance,true);
+        if(count!=0){
+            RenderingServer::get_singleton()->instance_set_visible(instance,true);
+        }
         is_relax = false;
     }
     void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data){
@@ -59,7 +63,9 @@ struct MGrassChunk // Rendering server multi mesh data
         } else if(_count==0 && count!=0){
             RenderingServer::get_singleton()->free_rid(multimesh);
             RenderingServer::get_singleton()->free_rid(instance);
-            count = _count;
+            instance = RID();
+            multimesh = RID();
+            count = 0;
             return;
         }
         count = _count;
