@@ -10,6 +10,7 @@ var human_male:MeshInstance3D=null
 var raw_img_importer = null
 var raw_tex_importer = null
 var active_terrain:MTerrain = null
+var active_grass:MGrass = null
 var last_camera_position:Vector3
 
 var collision_ray_step=0.2
@@ -90,6 +91,9 @@ func paint_mode_handle(event:InputEvent):
 		brush_decal.visible = true
 		brush_decal.set_position(ray_col.get_collision_position())
 		if event.button_mask == MOUSE_BUTTON_LEFT:
+			if active_grass:
+				active_grass.draw_grass(ray_col.get_collision_position(),brush_decal.radius,paint_panel.is_grass_add)
+				return AFTER_GUI_INPUT_STOP
 			if event is InputEventMouseButton:
 				if event.pressed:
 					paint_panel.set_active_layer()
@@ -106,7 +110,17 @@ func _handles(object):
 		active_terrain = object
 		active_terrain.set_brush_manager(paint_panel.brush_manager)
 		tools.visible = true
+		paint_panel.set_grass_mode(false)
+		active_grass = null
 		return true
+	elif object.has_method("draw_grass"):
+		if object.get_parent().has_method("create_grid"):
+			active_grass = object
+			tools.visible = true
+			paint_panel.set_grass_mode(true)
+			active_terrain = object.get_parent()
+			return true
+	active_grass = null
 	tools.visible = false
 	return false
 
@@ -118,6 +132,10 @@ func toggle_paint_mode(input):
 	if input and active_terrain:
 		add_control_to_dock(EditorPlugin.DOCK_SLOT_RIGHT_UL,paint_panel)
 		paint_panel.set_active_terrain(active_terrain)
+		if active_grass:
+			paint_panel.set_grass_mode(true)
+		else:
+			paint_panel.set_grass_mode(false)
 	else:
 		brush_decal.visible = false
 		remove_control_from_docks(paint_panel)

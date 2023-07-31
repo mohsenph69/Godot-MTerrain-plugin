@@ -9,6 +9,7 @@ size_flags_horizontal = 3
 script = ExtResource("1_udfkn")
 
 [node name="brush_size" type="HBoxContainer" parent="."]
+custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 
 [node name="lable" type="Label" parent="brush_size"]
@@ -29,6 +30,12 @@ value = 50.0
 [node name="brush_type" type="CheckButton" parent="."]
 layout_mode = 2
 text = "Height brush"
+
+[node name="grass_add" type="CheckButton" parent="."]
+visible = false
+layout_mode = 2
+button_pressed = true
+text = "Grass Add"
 
 [node name="layer_buttons" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -70,6 +77,7 @@ popup/item_2/id = 2
 
 [connection signal="value_changed" from="brush_size/brush_slider" to="." method="_on_brush_slider_value_changed"]
 [connection signal="toggled" from="brush_type" to="." method="_on_brush_type_toggled"]
+[connection signal="toggled" from="grass_add" to="." method="_on_grass_add_toggled"]
 [connection signal="pressed" from="layer_buttons/addBT" to="." method="_on_add_bt_pressed"]
 [connection signal="gui_input" from="layer_buttons/addName" to="." method="_on_add_name_gui_input"]
 [connection signal="pressed" from="layer_buttons/mergeBT" to="." method="_on_merge_bt_pressed"]

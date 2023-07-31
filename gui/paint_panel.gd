@@ -3,11 +3,14 @@ extends VBoxContainer
 class_name MPaintPanel
 
 @onready var brush_type_checkbox:=$brush_type
+@onready var grass_add_checkbox:=$grass_add
 @onready var brush_list_option:=$brush_list
 @onready var brush_slider:=$brush_size/brush_slider
 @onready var brush_lable:=$brush_size/lable
 @onready var heightmap_layers:=$heightmap_layers
+@onready var layer_buttons:=$layer_buttons
 @onready var add_name_line:=$layer_buttons/addName
+
 
 var hide_icon = preload("res://addons/m_terrain/icons/hidden.png")
 var show_icon = preload("res://addons/m_terrain/icons/show.png")
@@ -30,13 +33,27 @@ var brush_size:float
 
 var property_element_list:Array
 
+var is_grass_add:bool = true
+
 func _ready():
 	_on_brush_type_toggled(false)
 	change_brush_size(50)
+	
 
 func set_active_terrain(input:MTerrain):
 	active_terrain = input
 	update_heightmap_layers()
+
+func set_grass_mode(input:bool):
+	for e in property_element_list:
+		e.visible = not input
+	brush_list_option.visible = not input
+	heightmap_layers.visible = not input
+	layer_buttons.visible = not input
+	brush_type_checkbox.visible = not input
+	grass_add_checkbox.visible = input
+	
+	
 
 func _on_brush_type_toggled(button_pressed):
 	is_color_brush = button_pressed
@@ -200,6 +217,5 @@ func _on_visibilty_bt_pressed():
 	update_heightmap_layers(selected[0])
 
 
-
-
-
+func _on_grass_add_toggled(button_pressed):
+	is_grass_add = button_pressed
