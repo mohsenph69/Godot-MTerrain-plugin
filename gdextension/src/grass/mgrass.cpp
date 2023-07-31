@@ -87,6 +87,7 @@ void MGrass::init_grass(MGrid* _grid) {
 }
 
 void MGrass::clear_grass(){
+    std::lock_guard<std::mutex> lock(update_mutex);
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
         memdelete(it->value);
     }
@@ -97,9 +98,9 @@ void MGrass::clear_grass(){
 void MGrass::update_dirty_chunks(){
     std::lock_guard<std::mutex> lock(update_mutex);
     for(int i=0;i<dirty_points_id->size();i++){
-        UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);
+        //UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);
         int64_t terrain_instance_id = grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]);
-        UtilityFunctions::print("terrain_instance_id ",terrain_instance_id);
+        //UtilityFunctions::print("terrain_instance_id ",terrain_instance_id);
         if(!grid_to_grass.has(terrain_instance_id)){
             WARN_PRINT("Dirty point not found "+itos((*dirty_points_id)[i])+ " instance is "+itos(terrain_instance_id));
             continue;
@@ -298,9 +299,9 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
     px.top = (brush_px_pos_y>brush_px_radius) ? brush_px_pos_y - brush_px_radius : 0;
     px.bottom = brush_px_pos_y + brush_px_radius;
     px.bottom = (px.bottom>grass_pixel_region.bottom) ? grass_pixel_region.bottom : px.bottom;
-    UtilityFunctions::print("brush pos ", brush_pos);
-    UtilityFunctions::print("draw R ",brush_px_radius);
-    UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
+    //UtilityFunctions::print("brush pos ", brush_pos);
+    //UtilityFunctions::print("draw R ",brush_px_radius);
+    //UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
     // LOD Scale
     //int lod_scale = pow(2,lod);
     // LOOP
