@@ -80,6 +80,8 @@ void MGrass::init_grass(MGrid* _grid) {
             material_rids.push_back(RID());
         }
     }
+    update_grass();
+    apply_update_grass();
     is_grass_init = true;
     emit_signal("grass_is_ready");
 }

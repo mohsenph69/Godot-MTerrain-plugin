@@ -215,8 +215,6 @@ void MTerrain::create_grid(){
     confirm_grass_list = grass_list;
     for(int i=0;i<confirm_grass_list.size();i++){
         confirm_grass_list[i]->init_grass(grid);
-        confirm_grass_list[i]->update_grass();
-        confirm_grass_list[i]->apply_update_grass();
     }
     if(update_physics_loop){
         update_physics();
