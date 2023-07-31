@@ -25,6 +25,10 @@ MGrid::~MGrid() {
     clear();
 }
 
+uint64_t MGrid::get_update_id(){
+    return _update_id;
+}
+
 void MGrid::clear() {
     if(is_dirty){
         RenderingServer* rs = RenderingServer::get_singleton();
@@ -518,7 +522,6 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
                     points[z][x].create_instance(get_world_pos(x,0,z), _scenario, regions[region_id].get_material_rid());
                     rs->instance_set_visible(points[z][x].instance, false);
                     rs->instance_set_base(points[z][x].instance, mesh);
-                    merged_instance = points[z][x].instance;
                     /*
                     Update info use for grass too
                     */
@@ -532,6 +535,7 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
                    grid_update_info.push_back(update_info);
                     update_mesh_list.push_back(points[z][x].instance);
                 }
+                merged_instance = points[z][x].instance;
             } else {
                 points[z][x].size = -1;
                 if(points[z][x].has_instance){
@@ -656,6 +660,7 @@ Ref<MCollision> MGrid::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_ve
 }
 
 void MGrid::update_chunks(const Vector3& cam_pos) {
+    _update_id++;
     set_cam_pos(cam_pos);
     update_search_bound();
     cull_out_of_bound();

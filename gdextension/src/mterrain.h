@@ -34,11 +34,12 @@ class MTerrain : public  Node3D {
     bool update_chunks_loop=true;
     Timer* update_chunks_timer;
     float update_chunks_interval = 0.2;
-    float distance_update_threshold=10.0;
+    float distance_update_threshold=32;
     // -1 is Terrain grid update
     // >=0 is index of confirm grass list update
     // -2 Update is finished and if we want we can start that again
     int update_stage=-1;
+    Vector3 last_update_pos;
 
 
     std::future<void> update_thread_physics;

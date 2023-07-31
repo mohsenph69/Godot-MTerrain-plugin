@@ -82,6 +82,7 @@ class MGrid : public Object {
     GDCLASS(MGrid, Object);
     friend class MRegion;
     private:
+    uint8_t _update_id=0; // Only for mesh update not for physics
     MBrushManager* _brush_manager = nullptr;
     MPoint** points;
     MPoint* points_row;
@@ -165,6 +166,7 @@ class MGrid : public Object {
     Vector3 brush_world_pos;
     MGrid();
     ~MGrid();
+    uint64_t get_update_id();
     void clear();
     bool is_created();
     MGridPos get_size();

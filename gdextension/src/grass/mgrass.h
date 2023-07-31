@@ -80,6 +80,7 @@ struct MGrassChunk // Rendering server multi mesh data
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
     private:
+    uint64_t update_id;
     std::mutex update_mutex;
 
     protected:

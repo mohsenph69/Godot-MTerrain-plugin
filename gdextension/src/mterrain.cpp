@@ -210,6 +210,7 @@ void MTerrain::create_grid(){
     grid->update_chunks(cam_pos);
     grid->apply_update_chunks();
     grid->update_physics(cam_pos);
+    last_update_pos = cam_pos;
     // Grass Part
     update_grass_list();
     confirm_grass_list = grass_list;
@@ -258,7 +259,9 @@ void MTerrain::update() {
     get_cam_pos();
     finish_updating = false;
     // In case -1 is Terrain grid update turn
+    UtilityFunctions::print("Udate stage ",update_stage);
     if(update_stage==-1){
+        last_update_pos = cam_pos;
         update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
         
     }
@@ -269,6 +272,18 @@ void MTerrain::update() {
 }
 
 void MTerrain::finish_update() {
+    //UtilityFunctions::print("Finish update stage ", update_stage);
+    if(update_stage == -2){
+        get_cam_pos();
+        float dis = last_update_pos.distance_to(cam_pos);
+        if(dis>distance_update_threshold){
+            update_stage = -1;
+            call_deferred("update");
+            return;
+        } else {
+            update_chunks_timer->start();
+        }
+    }
     std::future_status status = update_thread_chunks.wait_for(std::chrono::microseconds(1));
     if(status == std::future_status::ready){
         finish_updating = true;
@@ -276,17 +291,21 @@ void MTerrain::finish_update() {
             grid->apply_update_chunks();
             if(confirm_grass_list.size()!=0){
                 update_stage++;
+                call_deferred("update");
+            } else {
+                update_stage = -2;
+                finish_update();
             }
         }
         else if(update_stage>=0){
             confirm_grass_list[update_stage]->apply_update_grass();
             update_stage++;
             if(update_stage>=confirm_grass_list.size()){
-                update_stage = -1;
+                update_stage = -2;
+                finish_update();
+            } else {
+                call_deferred("update");
             }
-        }
-        if(update_chunks_loop){
-            call_deferred("update");
         }
     } else {
         update_chunks_timer->start();
