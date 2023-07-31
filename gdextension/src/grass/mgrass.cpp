@@ -7,8 +7,8 @@
 
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
-    ClassDB::bind_method(D_METHOD("set_grass","x","y","val"), &MGrass::set_grass);
-    ClassDB::bind_method(D_METHOD("get_grass","x","y"), &MGrass::get_grass);
+    ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
+    ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks);
 
     ClassDB::bind_method(D_METHOD("set_grass_data","input"), &MGrass::set_grass_data);
@@ -80,10 +80,15 @@ void MGrass::init_grass(MGrid* _grid) {
 }
 
 void MGrass::clear_grass(){
-
+    for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
+        memdelete(it->value);
+    }
+    grid_to_grass.clear();
+    is_grass_init = false;
 }
 
 void MGrass::update_dirty_chunks(){
+    update_mutex.lock();
     for(int i=0;i<dirty_points_id->size();i++){
         UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);
         int64_t terrain_instance_id = grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]);
@@ -93,6 +98,7 @@ void MGrass::update_dirty_chunks(){
         UtilityFunctions::print("MGrassChunk count ",g->count, " right ",g->pixel_region.right);
         create_grass_chunk(-1,g);
     }
+    update_mutex.unlock();
     memdelete(dirty_points_id);
     dirty_points_id = memnew(VSet<int>);
 }
@@ -112,10 +118,12 @@ void MGrass::update_grass(){
     */
     int new_chunk_count = grid->grid_update_info.size();
     //UtilityFunctions::print("new_chunk_count ",new_chunk_count);
+    update_mutex.lock();
     for(int i=0;i<new_chunk_count;i++){
         create_grass_chunk(i);
         //return; // For now for test remove later
     }
+    update_mutex.unlock();
 }
 
 void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
@@ -231,7 +239,7 @@ void MGrass::recalculate_grass_config(int max_lod){
     notify_property_list_changed();
 }
 
-void MGrass::set_grass(uint32_t px, uint32_t py, bool p_value){
+void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
     ERR_FAIL_INDEX(px, width);
     ERR_FAIL_INDEX(py, height);
     Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
@@ -256,7 +264,7 @@ void MGrass::set_grass(uint32_t px, uint32_t py, bool p_value){
     grass_data->data.set(ibyte,b);
 }
 
-bool MGrass::get_grass(uint32_t px, uint32_t py) {
+bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) {
     ERR_FAIL_INDEX_V(px, width,false);
     ERR_FAIL_INDEX_V(py, height,false);
     uint32_t rx = px/grass_region_pixel_width;

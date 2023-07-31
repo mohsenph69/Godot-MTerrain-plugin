@@ -4,6 +4,8 @@
 #define BUFFER_STRID_FLOAT 12
 #define BUFFER_STRID_BYTE 48
 
+#include <mutex>
+
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/vset.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
@@ -78,6 +80,7 @@ struct MGrassChunk // Rendering server multi mesh data
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
     private:
+    std::mutex update_mutex;
 
     protected:
     static void _bind_methods();
@@ -114,8 +117,8 @@ class MGrass : public Node3D {
     void create_grass_chunk(int grid_index,MGrassChunk* grass_chunk=nullptr);
     void recalculate_grass_config(int max_lod);
 
-    void set_grass(uint32_t px, uint32_t py, bool p_value);
-    bool get_grass(uint32_t px, uint32_t py);
+    void set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value);
+    bool get_grass_by_pixel(uint32_t px, uint32_t py);
 
     void set_grass_data(Ref<MGrassData> d);
     Ref<MGrassData> get_grass_data();
