@@ -69,6 +69,8 @@ struct MGrassChunk // Rendering server multi mesh data
             multimesh = RID();
             count = 0;
             return;
+        } else if(_count==0 && count==0){
+            return;
         }
         count = _count;
         RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);

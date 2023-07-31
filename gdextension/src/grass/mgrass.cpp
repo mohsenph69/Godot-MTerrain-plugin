@@ -198,6 +198,7 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     }
     // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
     if(meshe_rids[g->lod] == RID() || count < min_grass_cutoff){
+        g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
         return;
     }
     g->set_buffer(count,scenario,meshe_rids[g->lod],material_rids[g->lod],buffer);

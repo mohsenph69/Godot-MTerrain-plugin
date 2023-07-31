@@ -259,7 +259,6 @@ void MTerrain::update() {
     get_cam_pos();
     finish_updating = false;
     // In case -1 is Terrain grid update turn
-    UtilityFunctions::print("Udate stage ",update_stage);
     if(update_stage==-1){
         last_update_pos = cam_pos;
         update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
