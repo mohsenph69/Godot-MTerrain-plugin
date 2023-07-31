@@ -12,6 +12,7 @@
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include "mgrass_data.h"
+#include "mgrass_lod_setting.h"
 #include "../mpixel_region.h"
 
 
@@ -103,6 +104,7 @@ class MGrass : public Node3D {
     MPixelRegion grass_pixel_region;
     int lod_count;
     int min_grass_cutoff=5;
+    Array lod_settings;
     Array materials;
     Array meshes;
     Vector<RID> material_rids;
@@ -132,6 +134,8 @@ class MGrass : public Node3D {
     int get_grass_in_cell();
     void set_min_grass_cutoff(int input);
     int get_min_grass_cutoff();
+    void set_lod_settings(Array input);
+    Array get_lod_settings();
     void set_meshes(Array input);
     Array get_meshes();
     void set_materials(Array input);

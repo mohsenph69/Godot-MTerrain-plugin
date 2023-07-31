@@ -21,6 +21,9 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_min_grass_cutoff","input"), &MGrass::set_min_grass_cutoff);
     ClassDB::bind_method(D_METHOD("get_min_grass_cutoff"), &MGrass::get_min_grass_cutoff);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "min_grass_cutoff"),"set_min_grass_cutoff","get_min_grass_cutoff");
+    ClassDB::bind_method(D_METHOD("set_lod_settings","input"), &MGrass::set_lod_settings);
+    ClassDB::bind_method(D_METHOD("get_lod_settings"), &MGrass::get_lod_settings);
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"lod_settings",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE), "set_lod_settings","get_lod_settings");
     ClassDB::bind_method(D_METHOD("set_meshes","input"), &MGrass::set_meshes);
     ClassDB::bind_method(D_METHOD("get_meshes"), &MGrass::get_meshes);
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"meshes",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_meshes","get_meshes");
@@ -234,6 +237,9 @@ void MGrass::recalculate_grass_config(int max_lod){
     if(materials.size()!=lod_count){
         materials.resize(lod_count);
     }
+    if(lod_settings.size()!=lod_count){
+        lod_settings.resize(lod_count);
+    }
     notify_property_list_changed();
 }
 
@@ -349,6 +355,13 @@ int MGrass::get_min_grass_cutoff(){
     return min_grass_cutoff;
 }
 
+void MGrass::set_lod_settings(Array input){
+    lod_settings = input;
+}
+Array MGrass::get_lod_settings(){
+    return lod_settings;
+}
+
 void MGrass::set_meshes(Array input){
     meshes = input;
 }
@@ -365,6 +378,12 @@ Array MGrass::get_materials(){
 }
 
 void MGrass::_get_property_list(List<PropertyInfo> *p_list) const{
+    PropertyInfo sub_lod0(Variant::INT, "LOD Settings", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_SUBGROUP);
+    p_list->push_back(sub_lod0);
+    for(int i=0;i<materials.size();i++){
+        PropertyInfo m(Variant::OBJECT,"Setting_LOD_"+itos(i),PROPERTY_HINT_RESOURCE_TYPE,"MGrassLodSetting",PROPERTY_USAGE_EDITOR);
+        p_list->push_back(m);
+    }
     PropertyInfo sub_lod(Variant::INT, "Grass Materials", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_SUBGROUP);
     p_list->push_back(sub_lod);
     for(int i=0;i<materials.size();i++){
@@ -398,6 +417,15 @@ bool MGrass::_get(const StringName &p_name, Variant &r_ret) const{
         r_ret = meshes[index];
         return true;
     }
+    if(p_name.begins_with("Setting_LOD_")){
+        PackedStringArray s = p_name.split("_");
+        int index = s[2].to_int();
+        if(index>lod_settings.size()-1){
+            return false;
+        }
+        r_ret = lod_settings[index];
+        return true;
+    }
     return false;
 }
 bool MGrass::_set(const StringName &p_name, const Variant &p_value){
@@ -417,6 +445,15 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
             return false;
         }
         meshes[index] = p_value;
+        return true;
+    }
+    if(p_name.begins_with("Setting_LOD_")){
+        PackedStringArray s = p_name.split("_");
+        int index = s[2].to_int();
+        if(index>lod_settings.size()-1){
+            return false;
+        }
+        lod_settings[index] = p_value;
         return true;
     }
     return false;
