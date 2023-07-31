@@ -10,7 +10,7 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks);
-    ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add","lod"), &MGrass::draw_grass);
+    ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add"), &MGrass::draw_grass);
 
     ClassDB::bind_method(D_METHOD("set_grass_data","input"), &MGrass::set_grass_data);
     ClassDB::bind_method(D_METHOD("get_grass_data"), &MGrass::get_grass_data);
@@ -282,7 +282,7 @@ Vector2i MGrass::get_closest_pixel(Vector3 pos){
 // At least for now it is not safe to put this function inside a thread
 // because set_grass_by_pixel is chaning dirty_points_id
 // And I don't think that we need to do that because it is not a huge process
-void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add,int lod){
+void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
     Vector2i px_pos = get_closest_pixel(brush_pos);
     if(px_pos.x<0 || px_pos.y<0 || px_pos.x>width || px_pos.y>height){
         return;
@@ -302,32 +302,20 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add,int lod){
     UtilityFunctions::print("draw R ",brush_px_radius);
     UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
     // LOD Scale
-    int lod_scale = pow(2,lod);
+    //int lod_scale = pow(2,lod);
     // LOOP
     uint32_t x=px.left;
     uint32_t y=px.top;
     uint32_t i=0;
     uint32_t j=1;
-    while (true)
-    {
-        while (true){
-            x = px.left + i*lod_scale;
-            if(x>px.right){
-                break;
-            }
-            i++;
+    for(uint32_t y = px.top; y<=px.bottom;y++){
+        for(uint32_t x = px.left; x<=px.right;x++){
             uint32_t dif_x = abs(x - brush_px_pos_x);
             uint32_t dif_y = abs(y - brush_px_pos_y);
             uint32_t dis = sqrt(dif_x*dif_x + dif_y*dif_y);
             if(dis<brush_px_radius)
                 set_grass_by_pixel(x,y,add);
         }
-        i= 0;
-        y= px.top + j*lod_scale;
-        if(y>px.bottom){
-            break;
-        }
-        j++;
     }
     update_dirty_chunks();
 }
