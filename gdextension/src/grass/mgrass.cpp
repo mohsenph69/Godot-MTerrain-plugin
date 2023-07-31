@@ -10,6 +10,7 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks);
+    ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add","lod"), &MGrass::draw_grass);
 
     ClassDB::bind_method(D_METHOD("set_grass_data","input"), &MGrass::set_grass_data);
     ClassDB::bind_method(D_METHOD("get_grass_data"), &MGrass::get_grass_data);
@@ -47,6 +48,10 @@ void MGrass::init_grass(MGrid* _grid) {
     UtilityFunctions::print("grass_region_pixel_width ", itos(grass_region_pixel_width));
     width = grass_region_pixel_width*grid->get_region_grid_size().x;
     height = grass_region_pixel_width*grid->get_region_grid_size().z;
+    grass_pixel_region.left=0;
+    grass_pixel_region.top=0;
+    grass_pixel_region.right = width - 1;
+    grass_pixel_region.bottom = height - 1;
     UtilityFunctions::print("Grass Pixel Limit ", width, " , ",height);
     int64_t data_size = ((grass_region_pixel_size*grid->get_regions_count() - 1)/8) + 1;
     UtilityFunctions::print("Grass data size ", data_size);
@@ -88,42 +93,30 @@ void MGrass::clear_grass(){
 }
 
 void MGrass::update_dirty_chunks(){
-    update_mutex.lock();
+    std::lock_guard<std::mutex> lock(update_mutex);
     for(int i=0;i<dirty_points_id->size();i++){
         UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);
         int64_t terrain_instance_id = grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]);
         UtilityFunctions::print("terrain_instance_id ",terrain_instance_id);
-        ERR_FAIL_COND(!grid_to_grass.has(terrain_instance_id));
+        if(!grid_to_grass.has(terrain_instance_id)){
+            WARN_PRINT("Dirty point not found "+itos((*dirty_points_id)[i])+ " instance is "+itos(terrain_instance_id));
+            continue;
+        }
         MGrassChunk* g = grid_to_grass[terrain_instance_id];
-        UtilityFunctions::print("MGrassChunk count ",g->count, " right ",g->pixel_region.right);
+        //UtilityFunctions::print("MGrassChunk count ",g->count, " right ",g->pixel_region.right);
         create_grass_chunk(-1,g);
     }
-    update_mutex.unlock();
+    //update_mutex.unlock();
     memdelete(dirty_points_id);
     dirty_points_id = memnew(VSet<int>);
 }
 
 void MGrass::update_grass(){
-    /*
-    set_grass(0,0,true);
-    set_grass(1,0,true);
-    set_grass(31,0,true);
-    set_grass(32,0,true);
-    set_grass(33,0,true);
-    set_grass(1023,0,true);
-    set_grass(0,1023,true);
-    set_grass(511,511,true);
-    set_grass(512,512,true);
-    set_grass(1023,1023,true);
-    */
     int new_chunk_count = grid->grid_update_info.size();
-    //UtilityFunctions::print("new_chunk_count ",new_chunk_count);
-    update_mutex.lock();
+    std::lock_guard<std::mutex> lock(update_mutex);
     for(int i=0;i<new_chunk_count;i++){
         create_grass_chunk(i);
-        //return; // For now for test remove later
     }
-    update_mutex.unlock();
 }
 
 void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
@@ -276,6 +269,65 @@ bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) {
     uint32_t ibyte = offs/8;
     uint32_t ibit = offs%8;
     return (grass_data->data[ibyte] & (1 << ibit)) != 0;
+}
+
+Vector2i MGrass::get_closest_pixel(Vector3 pos){
+    pos -= grid->offset;
+    pos = pos / grass_data->density;
+    return Vector2i(round(pos.x),round(pos.z));
+}
+
+// At least for now it is not safe to put this function inside a thread
+// because set_grass_by_pixel is chaning dirty_points_id
+// And I don't think that we need to do that because it is not a huge process
+void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add,int lod){
+    Vector2i px_pos = get_closest_pixel(brush_pos);
+    if(px_pos.x<0 || px_pos.y<0 || px_pos.x>width || px_pos.y>height){
+        return;
+    }
+    uint32_t brush_px_radius = (uint32_t)(radius/grass_data->density);
+    uint32_t brush_px_pos_x = px_pos.x;
+    uint32_t brush_px_pos_y = px_pos.y;
+    // Setting left right top bottom
+    MPixelRegion px;
+    px.left = (brush_px_pos_x>brush_px_radius) ? brush_px_pos_x - brush_px_radius : 0;
+    px.right = brush_px_pos_x + brush_px_radius;
+    px.right = px.right > grass_pixel_region.right ? grass_pixel_region.right : px.right;
+    px.top = (brush_px_pos_y>brush_px_radius) ? brush_px_pos_y - brush_px_radius : 0;
+    px.bottom = brush_px_pos_y + brush_px_radius;
+    px.bottom = (px.bottom>grass_pixel_region.bottom) ? grass_pixel_region.bottom : px.bottom;
+    UtilityFunctions::print("brush pos ", brush_pos);
+    UtilityFunctions::print("draw R ",brush_px_radius);
+    UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
+    // LOD Scale
+    int lod_scale = pow(2,lod);
+    // LOOP
+    uint32_t x=px.left;
+    uint32_t y=px.top;
+    uint32_t i=0;
+    uint32_t j=1;
+    while (true)
+    {
+        while (true){
+            x = px.left + i*lod_scale;
+            if(x>px.right){
+                break;
+            }
+            i++;
+            uint32_t dif_x = abs(x - brush_px_pos_x);
+            uint32_t dif_y = abs(y - brush_px_pos_y);
+            uint32_t dis = sqrt(dif_x*dif_x + dif_y*dif_y);
+            if(dis<brush_px_radius)
+                set_grass_by_pixel(x,y,add);
+        }
+        i= 0;
+        y= px.top + j*lod_scale;
+        if(y>px.bottom){
+            break;
+        }
+        j++;
+    }
+    update_dirty_chunks();
 }
 
 void MGrass::set_grass_data(Ref<MGrassData> d){
