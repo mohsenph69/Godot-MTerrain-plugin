@@ -83,6 +83,22 @@ void MGrass::init_grass(MGrid* _grid) {
             material_rids.push_back(RID());
         }
     }
+    // Rand num Generation
+    default_lod_setting = ResourceLoader::get_singleton()->load("res://addons/m_terrain/default_lod_setting.res");
+    for(int i=0;i<lod_settings.size();i++){
+        Ref<MGrassLodSetting> s = lod_settings[i];
+        if(s.is_valid()){
+            settings.push_back(s);
+        } else {
+            settings.push_back(default_lod_setting);
+        }
+    }
+    for(int i=0;i<settings.size();i++){
+        int lod_scale = pow(2,i);
+        float cdensity = pow(grass_data->density,lod_scale);
+        rand_buffer_pull.push_back(settings[i]->generate_random_number(cdensity,100));
+    }
+    // Done
     update_grass();
     apply_update_grass();
     is_grass_init = true;
@@ -99,6 +115,7 @@ void MGrass::clear_grass(){
 }
 
 void MGrass::update_dirty_chunks(){
+    ERR_FAIL_COND(!grass_data.is_valid());
     std::lock_guard<std::mutex> lock(update_mutex);
     for(int i=0;i<dirty_points_id->size();i++){
         //UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);

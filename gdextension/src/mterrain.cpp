@@ -901,11 +901,5 @@ void MTerrain::update_grass_list(){
 #include <godot_cpp/classes/file_access.hpp>
 
 void MTerrain::test_function(){
-    Ref<FileAccess> f = FileAccess::open("res://layers/river_x0_y0.mlayer", FileAccess::READ);
-    PackedByteArray data;
-    data.resize(f->get_length());
-    for(int i=0;i<f->get_length();i++){
-        data[i] = f->get_8();
-    }
-    UtilityFunctions::print(sqrt(data.size()/4));
+
 }
