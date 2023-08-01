@@ -11,6 +11,7 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks);
     ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add"), &MGrass::draw_grass);
+    ClassDB::bind_method(D_METHOD("get_count"), &MGrass::get_count);
 
     ClassDB::bind_method(D_METHOD("set_grass_data","input"), &MGrass::set_grass_data);
     ClassDB::bind_method(D_METHOD("get_grass_data"), &MGrass::get_grass_data);
@@ -133,7 +134,6 @@ void MGrass::update_dirty_chunks(){
         //UtilityFunctions::print("MGrassChunk count ",g->count, " right ",g->pixel_region.right);
         create_grass_chunk(-1,g);
     }
-    //update_mutex.unlock();
     memdelete(dirty_points_id);
     dirty_points_id = memnew(VSet<int>);
 }
@@ -144,6 +144,14 @@ void MGrass::update_grass(){
     update_id = grid->get_update_id();
     for(int i=0;i<new_chunk_count;i++){
         create_grass_chunk(i);
+    }
+    for(int i=0;i<grid->remove_instance_list.size();i++){
+        if(grid_to_grass.has(grid->remove_instance_list[i].get_id())){
+            MGrassChunk* g = grid_to_grass.get(grid->remove_instance_list[i].get_id());
+            counter -= g->count;
+        } else {
+            WARN_PRINT("Instance not found for removing");
+        }
     }
 }
 
@@ -233,6 +241,7 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
         g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
         return;
     }
+    counter += count - g->count;
     g->set_buffer(count,scenario,meshe_rids[g->lod],material_rids[g->lod],buffer);
     // IF grass chunk is nullpointer this is not a grass chunk update
     // it is a grass chunk creation so we relax that
@@ -404,6 +413,10 @@ void MGrass::set_materials(Array input){
 
 Array MGrass::get_materials(){
     return materials;
+}
+
+uint64_t MGrass::get_count(){
+    return counter;
 }
 
 void MGrass::_get_property_list(List<PropertyInfo> *p_list) const{

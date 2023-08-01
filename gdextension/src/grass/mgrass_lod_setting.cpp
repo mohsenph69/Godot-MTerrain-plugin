@@ -117,8 +117,7 @@ float MGrassLodSetting::rand_float(float a,float b,int seed){
 }
 
 
-//srand(seed);
-//double r = (double)rand()/double(RAND_MAX);
+
 PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int amount){
     PackedFloat32Array* out = memnew(PackedFloat32Array);
     out->resize(amount * 12);
