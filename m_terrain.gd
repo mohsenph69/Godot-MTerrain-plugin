@@ -83,6 +83,10 @@ func _forward_3d_gui_input(viewport_camera, event):
 			return AFTER_GUI_INPUT_STOP
 	if not tools.human_male_active:
 		human_male.visible = false
+	if active_grass:
+		tools.set_grass_label(active_grass.get_count())
+	else:
+		tools.disable_grass_lable()
 	
 	
 

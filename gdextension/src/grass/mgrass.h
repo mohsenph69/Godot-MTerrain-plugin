@@ -83,7 +83,7 @@ struct MGrassChunk // Rendering server multi mesh data
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
     private:
-    uint64_t update_id;
+    int64_t update_id;
     std::mutex update_mutex;
     uint64_t counter=0;
 
@@ -145,7 +145,7 @@ class MGrass : public Node3D {
     void set_materials(Array input);
     Array get_materials();
 
-    uint64_t get_count();
+    int64_t get_count();
 
 
     void _get_property_list(List<PropertyInfo> *p_list) const;

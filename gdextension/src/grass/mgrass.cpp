@@ -117,6 +117,7 @@ void MGrass::clear_grass(){
     }
     grid_to_grass.clear();
     is_grass_init = false;
+    counter = 0;
 }
 
 void MGrass::update_dirty_chunks(){
@@ -238,10 +239,11 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     }
     // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
     if(meshe_rids[g->lod] == RID() || count < min_grass_cutoff){
+        counter -= g->count;
         g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
         return;
     }
-    counter += count - g->count;
+    counter += (int)count - g->count;
     g->set_buffer(count,scenario,meshe_rids[g->lod],material_rids[g->lod],buffer);
     // IF grass chunk is nullpointer this is not a grass chunk update
     // it is a grass chunk creation so we relax that
@@ -415,7 +417,7 @@ Array MGrass::get_materials(){
     return materials;
 }
 
-uint64_t MGrass::get_count(){
+int64_t MGrass::get_count(){
     return counter;
 }
 
