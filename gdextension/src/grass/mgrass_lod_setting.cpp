@@ -12,9 +12,6 @@ void MGrassLodSetting::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_force_lod_count","input"), &MGrassLodSetting::set_force_lod_count);
     ClassDB::bind_method(D_METHOD("get_force_lod_count"), &MGrassLodSetting::get_force_lod_count);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"force_lod_count"),"set_force_lod_count","get_force_lod_count");
-    ClassDB::bind_method(D_METHOD("set_force_lod_mesh","input"), &MGrassLodSetting::set_force_lod_mesh);
-    ClassDB::bind_method(D_METHOD("get_force_lod_mesh"), &MGrassLodSetting::get_force_lod_mesh);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"force_lod_mesh"),"set_force_lod_mesh","get_force_lod_mesh");
     ClassDB::bind_method(D_METHOD("set_offset","input"), &MGrassLodSetting::set_offset);
     ClassDB::bind_method(D_METHOD("get_offset"), &MGrassLodSetting::get_offset);
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR3,"offset"),"set_offset","get_offset");
@@ -54,13 +51,6 @@ void MGrassLodSetting::set_force_lod_count(int input){
 }
 int MGrassLodSetting::get_force_lod_count(){
     return force_lod_count;
-}
-
-void MGrassLodSetting::set_force_lod_mesh(int input){
-    force_lod_mesh = input;
-}
-int MGrassLodSetting::get_force_lod_mesh(){
-    return force_lod_mesh;
 }
 
 void MGrassLodSetting::set_offset(Vector3 input){
@@ -156,14 +146,18 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
         _rand_scale.z = rand_float(rand_scale_start.z,rand_scale_end.z,iseed);
         // stage 2
         Basis b;
+        
+        b.rotate(Vector3(0,1,0),UtilityFunctions::deg_to_rad(rot_offset.y));
+        b.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(rot_offset.x));
+        b.rotate(Vector3(0,0,1),UtilityFunctions::deg_to_rad(rot_offset.z));
         Vector3 org = offset + _rand_pos;
         Transform3D t(b,org);
         // Scale
         t.scale(_rand_scale);
         // Rotation order YXZ
-        t.rotate(Vector3(0,1,0),_rand_rot.y);
-        t.rotate(Vector3(1,0,0),_rand_rot.x);
-        t.rotate(Vector3(0,0,1),_rand_rot.z);
+        t.rotate(Vector3(0,1,0),UtilityFunctions::deg_to_rad(_rand_rot.y));
+        t.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(_rand_rot.x));
+        t.rotate(Vector3(0,0,1),UtilityFunctions::deg_to_rad(_rand_rot.z));
         
         int index = i*12;
 

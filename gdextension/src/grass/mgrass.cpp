@@ -95,8 +95,12 @@ void MGrass::init_grass(MGrid* _grid) {
     }
     for(int i=0;i<settings.size();i++){
         int lod_scale = pow(2,i);
-        float cdensity = pow(grass_data->density,lod_scale);
+        if(settings[i]->force_lod_count >=0){
+            lod_scale = pow(2,settings[i]->force_lod_count);
+        }
+        float cdensity = grass_data->density*lod_scale;
         rand_buffer_pull.push_back(settings[i]->generate_random_number(cdensity,100));
+        //UtilityFunctions::print(*rand_buffer_pull[i]);
     }
     // Done
     update_grass();
@@ -160,7 +164,14 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
         g = grass_chunk;
         px = grass_chunk->pixel_region;
     }
-    int lod_scale = pow(2,g->lod);
+    int lod_scale;
+    int rand_buffer_size = rand_buffer_pull[g->lod]->size()/12;
+    const float* rand_buffer =(float*)rand_buffer_pull[g->lod]->ptr();
+    if(settings[g->lod]->force_lod_count >=0 && settings[g->lod]->force_lod_count < lod_count){
+        lod_scale = pow(2,settings[g->lod]->force_lod_count);
+    } else {
+        lod_scale = pow(2,g->lod);
+    }
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
 
@@ -194,17 +205,18 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                 //UtilityFunctions::print("Found some grass ",x," , ",y);
                 for(int r=0;r<grass_in_cell;r++){
                     index=count*BUFFER_STRID_FLOAT;
-                    buffer.resize(buffer.size()+12);
-                    buffer[index]=1;
-                    buffer[index+5]=1;
-                    buffer[index+10]=1;
                     int rand_index = y*grass_region_pixel_width_lod + x + r;
+                    const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*BUFFER_STRID_FLOAT;
+                    buffer.resize(buffer.size()+12);
+                    float* ptrw = (float*)buffer.ptrw();
+                    ptrw += index;
+                    mempcpy(ptrw,ptr,BUFFER_STRID_BYTE);
                     Vector3 pos;
                     pos.x = g->world_pos.x + x*grass_data->density;
                     pos.z = g->world_pos.z + y*grass_data->density;
-                    buffer.set(index+3,pos.x);
-                    buffer.set(index+7,grid->get_height(pos));
-                    buffer.set(index+11,pos.z);
+                    ptrw[3] += pos.x;
+                    ptrw[7] += grid->get_height(pos);
+                    ptrw[11] += pos.z;
                     count++;
                 }
             }
