@@ -76,7 +76,21 @@ struct MGridUpdateInfo
     Vector2 region_offset_ratio;
     int lod;
     int chunk_size;
+    int distance;
 };
+
+struct InstanceDistance
+{
+    int64_t id;
+    int distance;
+    friend bool operator<(const InstanceDistance& c1, const InstanceDistance& c2){
+        return c1.distance<c2.distance;
+    }
+    friend bool operator>(const InstanceDistance& c1, const InstanceDistance& c2){
+        return c1.distance>c2.distance;
+    }
+};
+
 
 class MGrid : public Object {
     GDCLASS(MGrid, Object);
@@ -133,6 +147,7 @@ class MGrid : public Object {
     Vector<RID> update_mesh_list;
     Vector<RID> remove_instance_list;
     Vector<MGridUpdateInfo> grid_update_info;
+    Vector<InstanceDistance> instances_distance; // ordered by distance
     int active_heightmap_layer=0;
     // MImage does not check for visibility of layers
     // Here we should check that in the case someone want to draw on them it should give an error
@@ -197,7 +212,7 @@ class MGrid : public Object {
     void merge_chunks();
     bool check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t& region_id, const MBound& bound);
     int8_t get_edge_num(const bool& left,const bool& right,const bool& top,const bool& bottom);
-
+    void create_ordered_instances_distance();
 
     void set_material(Ref<ShaderMaterial> material);
     Ref<ShaderMaterial> get_material();

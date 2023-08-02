@@ -900,6 +900,33 @@ void MTerrain::update_grass_list(){
 
 #include <godot_cpp/classes/file_access.hpp>
 
-void MTerrain::test_function(){
+struct Foo
+{
+    String name = "foo zad";
+    int dis;
+    friend bool operator<(const Foo& c1,Foo& c2){
+        return c1.dis<c2.dis;
+    }
+    friend bool operator>(const Foo& c1,Foo& c2){
+        return c1.dis>c2.dis;
+    }
+};
 
+
+void MTerrain::test_function(){
+    Foo f1 = {"foo1", 5}; 
+    Foo f2 = {"foo1", 8}; 
+    Foo f3 = {"foo1", 3}; 
+    Foo f4 = {"foo1", 5};
+    Foo f5 = {"foo1", 1}; 
+    Vector<Foo*> foos;
+    foos.ordered_insert(&f1);
+    foos.ordered_insert(&f2);
+    foos.ordered_insert(&f3);
+    foos.ordered_insert(&f4);
+    foos.ordered_insert(&f5);
+
+    for(int i=0;i<foos.size();i++){
+        UtilityFunctions::print("dis ", foos[i]->dis);
+    }
 }

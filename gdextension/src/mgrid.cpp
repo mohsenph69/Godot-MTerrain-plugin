@@ -532,6 +532,8 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
                    update_info.region_offset_ratio = get_point_region_offset_ratio(x,z);
                    update_info.lod = lod;
                    update_info.chunk_size = size;
+                   MGridPos pos3d = get_3d_grid_pos_by_middle_point(MGridPos(x,0,z));
+                   update_info.distance = _cam_pos.get_distance(pos3d);
                    grid_update_info.push_back(update_info);
                     update_mesh_list.push_back(points[z][x].instance);
                 }
@@ -585,6 +587,20 @@ int8_t MGrid::get_edge_num(const bool& left,const bool& right,const bool& top,co
     UtilityFunctions::print("Error Can not find correct Edge");
     UtilityFunctions::print(left, " ", right, " ", top, " ", bottom);
     return 0;
+}
+
+void MGrid::create_ordered_instances_distance(){
+    instances_distance.clear();
+    for(int32_t z=_search_bound.top; z<=_search_bound.bottom; z++){
+        for(int32_t x=_search_bound.left;x<=_search_bound.right;x++){
+            if(points[z][x].has_instance){
+                MGridPos pos3d = get_3d_grid_pos_by_middle_point(MGridPos(x,0,z));
+                int distance = _cam_pos.get_distance(pos3d);
+                InstanceDistance ins_dis = {points[z][x].instance.get_id(),distance};
+                instances_distance.ordered_insert(ins_dis);
+            }
+        }
+    }
 }
 
 Ref<ShaderMaterial> MGrid::get_material() {
@@ -666,6 +682,7 @@ void MGrid::update_chunks(const Vector3& cam_pos) {
     cull_out_of_bound();
     update_lods();
     merge_chunks();
+    create_ordered_instances_distance();
 }
 
 void MGrid::apply_update_chunks() {

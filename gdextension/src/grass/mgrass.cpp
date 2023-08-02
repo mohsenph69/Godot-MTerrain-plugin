@@ -16,6 +16,9 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_grass_data","input"), &MGrass::set_grass_data);
     ClassDB::bind_method(D_METHOD("get_grass_data"), &MGrass::get_grass_data);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"grass_data",PROPERTY_HINT_RESOURCE_TYPE,"MGrassData"),"set_grass_data","get_grass_data");
+    ClassDB::bind_method(D_METHOD("set_grass_count_limit","input"), &MGrass::set_grass_count_limit);
+    ClassDB::bind_method(D_METHOD("get_grass_count_limit"), &MGrass::get_grass_count_limit);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"grass_count_limit"),"set_grass_count_limit","get_grass_count_limit");
     ClassDB::bind_method(D_METHOD("set_grass_in_cell","input"), &MGrass::set_grass_in_cell);
     ClassDB::bind_method(D_METHOD("get_grass_in_cell"), &MGrass::get_grass_in_cell);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "grass_in_cell"),"set_grass_in_cell","get_grass_in_cell");
@@ -117,7 +120,7 @@ void MGrass::clear_grass(){
     }
     grid_to_grass.clear();
     is_grass_init = false;
-    counter = 0;
+    final_count = 0;
 }
 
 void MGrass::update_dirty_chunks(){
@@ -137,6 +140,7 @@ void MGrass::update_dirty_chunks(){
     }
     memdelete(dirty_points_id);
     dirty_points_id = memnew(VSet<int>);
+    cull_out_of_bound();
 }
 
 void MGrass::update_grass(){
@@ -146,14 +150,24 @@ void MGrass::update_grass(){
     for(int i=0;i<new_chunk_count;i++){
         create_grass_chunk(i);
     }
-    for(int i=0;i<grid->remove_instance_list.size();i++){
-        if(grid_to_grass.has(grid->remove_instance_list[i].get_id())){
-            MGrassChunk* g = grid_to_grass.get(grid->remove_instance_list[i].get_id());
-            counter -= g->count;
+    cull_out_of_bound();
+}
+
+void MGrass::cull_out_of_bound(){
+    int count_pointer = 0;
+    for(int i=0;i<grid->instances_distance.size();i++){
+        MGrassChunk* g = grid_to_grass.get(grid->instances_distance[i].id);
+        if(count_pointer<grass_count_limit){
+            count_pointer += g->count;
+            if(g->is_part_of_scene){
+                g->unrelax();
+            }
+            to_be_visible.push_back(g);
         } else {
-            WARN_PRINT("Instance not found for removing");
+            g->relax();
         }
     }
+    final_count = count_pointer;
 }
 
 void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
@@ -167,7 +181,7 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     px.bottom = px.top + base_grid_size_in_pixel*size_scale - 1;
     //UtilityFunctions::print("Region id ", CHUNK_INFO.region_id);
     //UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
-    g = memnew(MGrassChunk(px,CHUNK_INFO.region_world_pos,CHUNK_INFO.lod,CHUNK_INFO.region_id));
+    g = memnew(MGrassChunk(px,CHUNK_INFO.region_world_pos,CHUNK_INFO.lod,CHUNK_INFO.region_id,CHUNK_INFO.distance));
     grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
     } else {
         g = grass_chunk;
@@ -239,23 +253,26 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     }
     // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
     if(meshe_rids[g->lod] == RID() || count < min_grass_cutoff){
-        counter -= g->count;
         g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
         return;
     }
-    counter += (int)count - g->count;
     g->set_buffer(count,scenario,meshe_rids[g->lod],material_rids[g->lod],buffer);
     // IF grass chunk is nullpointer this is not a grass chunk update
     // it is a grass chunk creation so we relax that
     if(grass_chunk==nullptr){
         g->relax();
     }
-    to_be_visible.push_back(g);
+    //to_be_visible.push_back(g);
 }
+
+
 
 void MGrass::apply_update_grass(){
     for(int i=0;i<to_be_visible.size();i++){
-        to_be_visible[i]->unrelax();
+        if(!to_be_visible[i]->is_out_of_range){
+            to_be_visible[i]->unrelax();
+            to_be_visible[i]->is_part_of_scene = true;
+        }
     }
     for(int i=0;i<grid->remove_instance_list.size();i++){
         if(grid_to_grass.has(grid->remove_instance_list[i].get_id())){
@@ -378,6 +395,13 @@ Ref<MGrassData> MGrass::get_grass_data(){
     return grass_data;
 }
 
+void MGrass::set_grass_count_limit(int input){
+    grass_count_limit = input;
+}
+int MGrass::get_grass_count_limit(){
+    return grass_count_limit;
+}
+
 void MGrass::set_grass_in_cell(int input){
     ERR_FAIL_COND(input<1);
     grass_in_cell = input;
@@ -418,7 +442,7 @@ Array MGrass::get_materials(){
 }
 
 int64_t MGrass::get_count(){
-    return counter;
+    return final_count;
 }
 
 void MGrass::_get_property_list(List<PropertyInfo> *p_list) const{

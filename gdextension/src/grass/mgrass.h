@@ -14,6 +14,7 @@
 #include "mgrass_data.h"
 #include "mgrass_lod_setting.h"
 #include "../mpixel_region.h"
+#include <godot_cpp/variant/utility_functions.hpp>
 
 
 using namespace godot;
@@ -26,16 +27,20 @@ struct MGrassChunk // Rendering server multi mesh data
     RID instance;
     Vector3 world_pos;
     int count=0;
+    int distance;
     int lod;
     int region_id;
     MPixelRegion pixel_region;
-    bool is_relax=true;
+    bool is_relax=false;
+    bool is_part_of_scene=false;
+    bool is_out_of_range=false;
 
-    MGrassChunk(const MPixelRegion& _pixel_region,Vector3 _world_pos, int _lod,int _region_id){
+    MGrassChunk(const MPixelRegion& _pixel_region,Vector3 _world_pos, int _lod,int _region_id,int _distance){
         pixel_region = _pixel_region;
         lod = _lod;
         region_id = _region_id;
         world_pos = _world_pos;
+        distance = _distance;
     }
     ~MGrassChunk(){
         if(count!=0){
@@ -44,16 +49,16 @@ struct MGrassChunk // Rendering server multi mesh data
         }
     }
     void relax(){
-        if(count!=0){
+        if(count!=0 && !is_relax){
             RenderingServer::get_singleton()->instance_set_visible(instance,false);
+            is_relax = true;
         }
-        is_relax = true;
     }
     void unrelax(){
-        if(count!=0){
+        if(count!=0 && is_relax){
             RenderingServer::get_singleton()->instance_set_visible(instance,true);
+            is_relax = false;
         }
-        is_relax = false;
     }
     void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data){
         if(_count!=0 && count == 0){
@@ -77,6 +82,13 @@ struct MGrassChunk // Rendering server multi mesh data
         RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
         RenderingServer::get_singleton()->multimesh_set_buffer(multimesh, data);
     }
+
+    friend bool operator<(const MGrassChunk& c1, const MGrassChunk& c2){
+        return c1.distance<c2.distance;
+    }
+    friend bool operator>(const MGrassChunk& c1, const MGrassChunk& c2){
+        return c1.distance>c2.distance;
+    }
 };
 
 
@@ -85,7 +97,8 @@ class MGrass : public Node3D {
     private:
     int64_t update_id;
     std::mutex update_mutex;
-    uint64_t counter=0;
+    uint64_t final_count=0;
+    int grass_count_limit=9000000;
 
     protected:
     static void _bind_methods();
@@ -124,6 +137,7 @@ class MGrass : public Node3D {
     void update_grass();
     void update_dirty_chunks();
     void apply_update_grass();
+    void cull_out_of_bound();
     void create_grass_chunk(int grid_index,MGrassChunk* grass_chunk=nullptr);
     void recalculate_grass_config(int max_lod);
 
@@ -134,6 +148,8 @@ class MGrass : public Node3D {
 
     void set_grass_data(Ref<MGrassData> d);
     Ref<MGrassData> get_grass_data();
+    void set_grass_count_limit(int input);
+    int get_grass_count_limit();
     void set_grass_in_cell(int input);
     int get_grass_in_cell();
     void set_min_grass_cutoff(int input);
