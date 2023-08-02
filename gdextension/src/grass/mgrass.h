@@ -25,9 +25,10 @@ struct MGrassChunk // Rendering server multi mesh data
 {
     RID multimesh;
     RID instance;
+    MGrassChunk* next=nullptr;
     Vector3 world_pos;
     int count=0;
-    int distance;
+    int total_count=0;
     int lod;
     int region_id;
     MPixelRegion pixel_region;
@@ -35,17 +36,20 @@ struct MGrassChunk // Rendering server multi mesh data
     bool is_part_of_scene=false;
     bool is_out_of_range=false;
 
-    MGrassChunk(const MPixelRegion& _pixel_region,Vector3 _world_pos, int _lod,int _region_id,int _distance){
+    MGrassChunk(const MPixelRegion& _pixel_region,Vector3 _world_pos, int _lod,int _region_id){
         pixel_region = _pixel_region;
         lod = _lod;
         region_id = _region_id;
         world_pos = _world_pos;
-        distance = _distance;
     }
+    MGrassChunk(){}
     ~MGrassChunk(){
         if(count!=0){
             RenderingServer::get_singleton()->free_rid(multimesh);
             RenderingServer::get_singleton()->free_rid(instance);
+        }
+        if(next!=nullptr){
+            memdelete(next);
         }
     }
     void relax(){
@@ -53,14 +57,27 @@ struct MGrassChunk // Rendering server multi mesh data
             RenderingServer::get_singleton()->instance_set_visible(instance,false);
             is_relax = true;
         }
+        if(next!=nullptr){
+            next->relax();
+        }
     }
     void unrelax(){
         if(count!=0 && is_relax){
             RenderingServer::get_singleton()->instance_set_visible(instance,true);
             is_relax = false;
         }
+        if(next!=nullptr){
+            next->unrelax();
+        }
+    }
+    void clear_tree(){
+        if(next!=nullptr){
+            memdelete(next);
+            next=nullptr;
+        }
     }
     void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data){
+        //UtilityFunctions::print("Buffer count ",_count, " c ", count);
         if(_count!=0 && count == 0){
             multimesh = RenderingServer::get_singleton()->multimesh_create();
             RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
@@ -81,13 +98,6 @@ struct MGrassChunk // Rendering server multi mesh data
         count = _count;
         RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
         RenderingServer::get_singleton()->multimesh_set_buffer(multimesh, data);
-    }
-
-    friend bool operator<(const MGrassChunk& c1, const MGrassChunk& c2){
-        return c1.distance<c2.distance;
-    }
-    friend bool operator>(const MGrassChunk& c1, const MGrassChunk& c2){
-        return c1.distance>c2.distance;
     }
 };
 
@@ -167,6 +177,8 @@ class MGrass : public Node3D {
     void _get_property_list(List<PropertyInfo> *p_list) const;
     bool _get(const StringName &p_name, Variant &r_ret) const;
     bool _set(const StringName &p_name, const Variant &p_value);
+
+    void test_function();
 
 };
 #endif

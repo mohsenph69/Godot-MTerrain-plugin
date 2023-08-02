@@ -19,6 +19,7 @@ class MGrassLodSetting : public Resource {
 
     public:
     int seed=1001;
+    int devide=1;
     int force_lod_count=-1;
     Vector3 offset = Vector3(0,0,0);
     Vector3 rot_offset = Vector3(0,0,0);
@@ -31,6 +32,9 @@ class MGrassLodSetting : public Resource {
 
     void set_seed(int input);
     int get_seed();
+
+    void set_devide(int input);
+    int get_devide();
 
     void set_force_lod_count(int input);
     int get_force_lod_count();

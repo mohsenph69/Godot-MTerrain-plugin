@@ -34,6 +34,8 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_materials"), &MGrass::set_materials);
     ClassDB::bind_method(D_METHOD("get_materials"), &MGrass::get_materials);
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"materials",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_materials","get_materials");
+
+    ClassDB::bind_method(D_METHOD("test_function"), &MGrass::test_function);
 }
 
 MGrass::MGrass(){
@@ -158,11 +160,12 @@ void MGrass::cull_out_of_bound(){
     for(int i=0;i<grid->instances_distance.size();i++){
         MGrassChunk* g = grid_to_grass.get(grid->instances_distance[i].id);
         if(count_pointer<grass_count_limit){
-            count_pointer += g->count;
+            count_pointer += g->total_count;
             if(g->is_part_of_scene){
                 g->unrelax();
+            }else{
+                to_be_visible.push_back(g);
             }
-            to_be_visible.push_back(g);
         } else {
             g->relax();
         }
@@ -174,17 +177,18 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     MGrassChunk* g;
     MPixelRegion px;
     if(grass_chunk==nullptr){
-    px.left = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.x);
-    px.top = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.y);
-    int size_scale = pow(2,CHUNK_INFO.chunk_size);
-    px.right = px.left + base_grid_size_in_pixel*size_scale - 1;
-    px.bottom = px.top + base_grid_size_in_pixel*size_scale - 1;
-    //UtilityFunctions::print("Region id ", CHUNK_INFO.region_id);
-    //UtilityFunctions::print("L ",itos(px.left)," R ",itos(px.right)," T ",itos(px.top), " B ",itos(px.bottom));
-    g = memnew(MGrassChunk(px,CHUNK_INFO.region_world_pos,CHUNK_INFO.lod,CHUNK_INFO.region_id,CHUNK_INFO.distance));
-    grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
+        px.left = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.x);
+        px.top = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.y);
+        int size_scale = pow(2,CHUNK_INFO.chunk_size);
+        px.right = px.left + base_grid_size_in_pixel*size_scale - 1;
+        px.bottom = px.top + base_grid_size_in_pixel*size_scale - 1;
+        // We keep the chunk information for grass only in root grass chunk
+        g = memnew(MGrassChunk(px,CHUNK_INFO.region_world_pos,CHUNK_INFO.lod,CHUNK_INFO.region_id));
+        grid_to_grass.insert(CHUNK_INFO.terrain_instance.get_id(),g);
     } else {
         g = grass_chunk;
+        // We clear tree to create everything again from start
+        g->clear_tree();
         px = grass_chunk->pixel_region;
     }
     int lod_scale;
@@ -197,72 +201,82 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     }
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
-
+    uint32_t devide_amount= (uint32_t)settings[g->lod]->devide;
+    Vector<MPixelRegion> pixel_regions = px.devide(devide_amount);
     
 
     const uint8_t* ptr = grass_data->data.ptr() + g->region_id*grass_region_pixel_size/8;
 
     //UtilityFunctions::print("OFFSET ",g->region_id*grass_region_pixel_size/8 , " Region id ",g->region_id);
-    uint32_t count=0;
-    uint32_t index;
-    uint32_t x=px.left;
-    uint32_t y=px.top;
-    uint32_t i=0;
-    uint32_t j=1;
-    PackedFloat32Array buffer;
-    while (true)
-    {
-        while (true){
-            x = px.left + i*lod_scale;
-            if(x>px.right){
-                break;
-            }
-            i++;
-            uint32_t offs = (y*grass_region_pixel_width + x);
-            //UtilityFunctions::print("OFFSET in region ", offs);
-            uint32_t ibyte = offs/8;
-            //UtilityFunctions::print("ibyte ", ibyte);
-            uint32_t ibit = offs%8;
-            //UtilityFunctions::print("ibit ", ibit);
-            if( (ptr[ibyte] & (1 << ibit)) != 0){
-                //UtilityFunctions::print("Found some grass ",x," , ",y);
-                for(int r=0;r<grass_in_cell;r++){
-                    index=count*BUFFER_STRID_FLOAT;
-                    int rand_index = y*grass_region_pixel_width_lod + x + r;
-                    const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*BUFFER_STRID_FLOAT;
-                    buffer.resize(buffer.size()+12);
-                    float* ptrw = (float*)buffer.ptrw();
-                    ptrw += index;
-                    mempcpy(ptrw,ptr,BUFFER_STRID_BYTE);
-                    Vector3 pos;
-                    pos.x = g->world_pos.x + x*grass_data->density;
-                    pos.z = g->world_pos.z + y*grass_data->density;
-                    ptrw[3] += pos.x;
-                    ptrw[7] += grid->get_height(pos);
-                    ptrw[11] += pos.z;
-                    count++;
+    MGrassChunk* root_g=g;
+    MGrassChunk* last_g=g;
+    uint32_t total_count=0;
+    for(int k=0;k<pixel_regions.size();k++){
+        px = pixel_regions[k];
+        if(k!=0){
+            g = memnew(MGrassChunk());
+            last_g->next = g;
+            last_g = g;
+        }
+        uint32_t count=0;
+        uint32_t index;
+        uint32_t x=px.left;
+        uint32_t y=px.top;
+        uint32_t i=0;
+        uint32_t j=1;
+        PackedFloat32Array buffer;
+        //UtilityFunctions::print("Stage 3.1 k ",k);
+        while (true)
+        {
+            while (true){
+                x = px.left + i*lod_scale;
+                if(x>px.right){
+                    break;
+                }
+                i++;
+                uint32_t offs = (y*grass_region_pixel_width + x);
+                //UtilityFunctions::print("OFFSET in region ", offs);
+                uint32_t ibyte = offs/8;
+                //UtilityFunctions::print("ibyte ", ibyte);
+                uint32_t ibit = offs%8;
+                //UtilityFunctions::print("ibit ", ibit);
+                if( (ptr[ibyte] & (1 << ibit)) != 0){
+                    //UtilityFunctions::print("Found some grass ",x," , ",y);
+                    for(int r=0;r<grass_in_cell;r++){
+                        index=count*BUFFER_STRID_FLOAT;
+                        int rand_index = y*grass_region_pixel_width_lod + x + r;
+                        const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*BUFFER_STRID_FLOAT;
+                        buffer.resize(buffer.size()+12);
+                        float* ptrw = (float*)buffer.ptrw();
+                        ptrw += index;
+                        mempcpy(ptrw,ptr,BUFFER_STRID_BYTE);
+                        Vector3 pos;
+                        pos.x = root_g->world_pos.x + x*grass_data->density;
+                        pos.z = root_g->world_pos.z + y*grass_data->density;
+                        ptrw[3] += pos.x;
+                        ptrw[7] += grid->get_height(pos);
+                        ptrw[11] += pos.z;
+                        count++;
+                    }
                 }
             }
+            i= 0;
+            y= px.top + j*lod_scale;
+            if(y>px.bottom){
+                break;
+            }
+            j++;
         }
-        i= 0;
-        y= px.top + j*lod_scale;
-        if(y>px.bottom){
-            break;
+        //UtilityFunctions::print("Stage 4.1 k ",k);
+        // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
+        if(meshe_rids[root_g->lod] == RID() || count < min_grass_cutoff){
+            g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
+            continue;
         }
-        j++;
+        g->set_buffer(count,scenario,meshe_rids[root_g->lod],material_rids[root_g->lod],buffer);
+        total_count += count;
     }
-    // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
-    if(meshe_rids[g->lod] == RID() || count < min_grass_cutoff){
-        g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
-        return;
-    }
-    g->set_buffer(count,scenario,meshe_rids[g->lod],material_rids[g->lod],buffer);
-    // IF grass chunk is nullpointer this is not a grass chunk update
-    // it is a grass chunk creation so we relax that
-    if(grass_chunk==nullptr){
-        g->relax();
-    }
-    //to_be_visible.push_back(g);
+    root_g->total_count = total_count;
 }
 
 
@@ -525,4 +539,14 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
         return true;
     }
     return false;
+}
+
+
+void MGrass::test_function(){
+    MGrassChunk* g = memnew(MGrassChunk());
+    MGrassChunk* b1 = memnew(MGrassChunk());
+    MGrassChunk* b2 = memnew(MGrassChunk());
+    g->next = b1;
+    b1->next = b2;
+    g->clear_tree();
 }
