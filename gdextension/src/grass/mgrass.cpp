@@ -120,6 +120,10 @@ void MGrass::clear_grass(){
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
         memdelete(it->value);
     }
+    for(int i=0;i<rand_buffer_pull.size();i++){
+        memdelete(rand_buffer_pull[i]);
+    }
+    rand_buffer_pull.clear();
     grid_to_grass.clear();
     is_grass_init = false;
     final_count = 0;
@@ -251,11 +255,11 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                         ptrw += index;
                         mempcpy(ptrw,ptr,BUFFER_STRID_BYTE);
                         Vector3 pos;
-                        pos.x = root_g->world_pos.x + x*grass_data->density;
-                        pos.z = root_g->world_pos.z + y*grass_data->density;
-                        ptrw[3] += pos.x;
+                        pos.x = root_g->world_pos.x + x*grass_data->density + ptrw[3];
+                        pos.z = root_g->world_pos.z + y*grass_data->density + ptrw[11];
+                        ptrw[3] = pos.x;
                         ptrw[7] += grid->get_height(pos);
-                        ptrw[11] += pos.z;
+                        ptrw[11] = pos.z;
                         count++;
                     }
                 }
@@ -277,6 +281,7 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
         total_count += count;
     }
     root_g->total_count = total_count;
+    //to_be_visible.push_back(root_g);
 }
 
 

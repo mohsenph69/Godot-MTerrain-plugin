@@ -82,8 +82,10 @@ struct MGrassChunk // Rendering server multi mesh data
             multimesh = RenderingServer::get_singleton()->multimesh_create();
             RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
             instance = RenderingServer::get_singleton()->instance_create();
+            RenderingServer::get_singleton()->instance_set_visible(instance,false);
+            is_relax = true;
             RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
-            RenderingServer::get_singleton()->instance_geometry_set_material_overlay(instance,material);
+            RenderingServer::get_singleton()->instance_geometry_set_material_override(instance,material);
             RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
         } else if(_count==0 && count!=0){
             RenderingServer::get_singleton()->free_rid(multimesh);

@@ -160,14 +160,16 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
         b.rotate(Vector3(0,1,0),UtilityFunctions::deg_to_rad(rot_offset.y));
         b.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(rot_offset.x));
         b.rotate(Vector3(0,0,1),UtilityFunctions::deg_to_rad(rot_offset.z));
+        // Rotation order YXZ
+        b.rotate(Vector3(0,1,0),UtilityFunctions::deg_to_rad(_rand_rot.y));
+        b.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(_rand_rot.x));
+        b.rotate(Vector3(0,0,1),UtilityFunctions::deg_to_rad(_rand_rot.z));
+
         Vector3 org = offset + _rand_pos;
         Transform3D t(b,org);
         // Scale
         t.scale(_rand_scale);
-        // Rotation order YXZ
-        t.rotate(Vector3(0,1,0),UtilityFunctions::deg_to_rad(_rand_rot.y));
-        t.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(_rand_rot.x));
-        t.rotate(Vector3(0,0,1),UtilityFunctions::deg_to_rad(_rand_rot.z));
+
         
         int index = i*12;
 
