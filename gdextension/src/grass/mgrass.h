@@ -11,9 +11,12 @@
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/physics_server3d.hpp>
+#include <godot_cpp/classes/shape3d.hpp>
 #include "mgrass_data.h"
 #include "mgrass_lod_setting.h"
 #include "../mpixel_region.h"
+#include "../mbound.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 
@@ -103,6 +106,22 @@ struct MGrassChunk // Rendering server multi mesh data
     }
 };
 
+struct MGrassPhysics
+{
+    RID physic_body;
+    MGrassPhysics(RID shape_rid,RID space_rid, Transform3D transform_3d){
+        physic_body = PhysicsServer3D::get_singleton()->body_create();
+        PhysicsServer3D::get_singleton()->body_set_mode(physic_body,PhysicsServer3D::BODY_MODE_STATIC);
+        PhysicsServer3D::get_singleton()->body_set_space(physic_body,space_rid);
+        PhysicsServer3D::get_singleton()->body_set_state(physic_body,PhysicsServer3D::BODY_STATE_TRANSFORM,transform_3d);
+        PhysicsServer3D::get_singleton()->body_add_shape(physic_body,shape_rid);
+    }
+    ~MGrassPhysics(){
+        PhysicsServer3D::get_singleton()->free_rid(physic_body);
+    }
+};
+
+
 
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
@@ -118,6 +137,7 @@ class MGrass : public Node3D {
     public:
     bool is_grass_init = false;
     RID scenario;
+    RID space;
     Ref<MGrassData> grass_data;
     MGrid* grid = nullptr;
     //int grass_in_cell=1;
@@ -128,6 +148,7 @@ class MGrass : public Node3D {
     uint32_t width;
     uint32_t height;
     MPixelRegion grass_pixel_region;
+    MBound grass_bound_limit;
     int lod_count;
     int min_grass_cutoff=5;
     Array lod_settings;
@@ -141,6 +162,11 @@ class MGrass : public Node3D {
     HashMap<int64_t,MGrassChunk*> grid_to_grass;
     Vector<MGrassChunk*> to_be_visible;
     VSet<int>* dirty_points_id;
+    Ref<Shape3D> shape;
+    MBound physics_search_bound;
+    MBound last_physics_search_bound;
+    HashMap<uint64_t,MGrassPhysics*> physics;
+    float collision_radius=64;
 
     MGrass();
     ~MGrass();
@@ -174,6 +200,10 @@ class MGrass : public Node3D {
     Array get_materials();
 
     int64_t get_count();
+
+    void set_shape(Ref<Shape3D> input);
+    Ref<Shape3D> get_shape();
+    void update_physics(Vector3 cam_pos);
 
 
     void _get_property_list(List<PropertyInfo> *p_list) const;

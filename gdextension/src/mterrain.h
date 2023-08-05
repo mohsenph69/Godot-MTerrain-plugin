@@ -47,6 +47,8 @@ class MTerrain : public  Node3D {
     bool update_physics_loop=true;
     Timer* update_physics_timer;
     float update_physics_interval = 1.0;
+    //Physics update stage is same as chunk update but just for physics
+    int update_stage_physics=-1;
 
     MGrid* grid=nullptr;
     Ref<ShaderMaterial> material;

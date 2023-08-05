@@ -316,7 +316,11 @@ void MTerrain::update_physics(){
     ERR_FAIL_COND(!grid->is_created());
     get_cam_pos();
     finish_updating_physics = false;
-    update_thread_physics = std::async(std::launch::async, &MGrid::update_physics, grid, cam_pos);
+    if(update_stage_physics==-1){
+        update_thread_physics = std::async(std::launch::async, &MGrid::update_physics, grid, cam_pos);
+    } else if(update_stage_physics>=0){
+        update_thread_physics = std::async(std::launch::async, &MGrass::update_physics,confirm_grass_list[update_stage_physics], cam_pos);
+    }
     update_physics_timer->start();
 }
 
@@ -324,6 +328,10 @@ void MTerrain::finish_update_physics(){
     std::future_status status = update_thread_physics.wait_for(std::chrono::microseconds(1));
     if(status == std::future_status::ready){
         finish_updating_physics = true;
+        update_stage_physics++;
+        if(update_stage_physics>=confirm_grass_list.size()){
+            update_stage_physics = -1;
+        }
         if(update_physics_loop){
             call_deferred("update_physics");
         }
