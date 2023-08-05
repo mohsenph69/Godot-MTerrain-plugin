@@ -12,6 +12,9 @@ void MGrassLodSetting::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_devide","input"), &MGrassLodSetting::set_devide);
     ClassDB::bind_method(D_METHOD("get_devide"), &MGrassLodSetting::get_devide);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"devide"),"set_devide","get_devide");
+    ClassDB::bind_method(D_METHOD("set_grass_in_cell","input"), &MGrassLodSetting::set_grass_in_cell);
+    ClassDB::bind_method(D_METHOD("get_grass_in_cell"), &MGrassLodSetting::get_grass_in_cell);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"grass_in_cell"),"set_grass_in_cell","get_grass_in_cell");
     ClassDB::bind_method(D_METHOD("set_force_lod_count","input"), &MGrassLodSetting::set_force_lod_count);
     ClassDB::bind_method(D_METHOD("get_force_lod_count"), &MGrassLodSetting::get_force_lod_count);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"force_lod_count"),"set_force_lod_count","get_force_lod_count");
@@ -57,7 +60,15 @@ int MGrassLodSetting::get_devide(){
     return devide;
 }
 
+void MGrassLodSetting::set_grass_in_cell(int input){
+    grass_in_cell = input;
+}
+int MGrassLodSetting::get_grass_in_cell(){
+    return grass_in_cell;
+}
+
 void MGrassLodSetting::set_force_lod_count(int input){
+    ERR_FAIL_COND(input<1);
     force_lod_count = input;
 }
 int MGrassLodSetting::get_force_lod_count(){

@@ -19,9 +19,9 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_grass_count_limit","input"), &MGrass::set_grass_count_limit);
     ClassDB::bind_method(D_METHOD("get_grass_count_limit"), &MGrass::get_grass_count_limit);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"grass_count_limit"),"set_grass_count_limit","get_grass_count_limit");
-    ClassDB::bind_method(D_METHOD("set_grass_in_cell","input"), &MGrass::set_grass_in_cell);
-    ClassDB::bind_method(D_METHOD("get_grass_in_cell"), &MGrass::get_grass_in_cell);
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "grass_in_cell"),"set_grass_in_cell","get_grass_in_cell");
+    //ClassDB::bind_method(D_METHOD("set_grass_in_cell","input"), &MGrass::set_grass_in_cell);
+    //ClassDB::bind_method(D_METHOD("get_grass_in_cell"), &MGrass::get_grass_in_cell);
+    //ADD_PROPERTY(PropertyInfo(Variant::INT, "grass_in_cell"),"set_grass_in_cell","get_grass_in_cell");
     ClassDB::bind_method(D_METHOD("set_min_grass_cutoff","input"), &MGrass::set_min_grass_cutoff);
     ClassDB::bind_method(D_METHOD("get_min_grass_cutoff"), &MGrass::get_min_grass_cutoff);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "min_grass_cutoff"),"set_min_grass_cutoff","get_min_grass_cutoff");
@@ -207,6 +207,8 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
 
     uint32_t devide_amount= (uint32_t)settings[g->lod]->devide;
     Vector<MPixelRegion> pixel_regions = px.devide(devide_amount);
+    int grass_in_cell = settings[g->lod]->grass_in_cell;
+
     
 
     const uint8_t* ptr = grass_data->data.ptr() + g->region_id*grass_region_pixel_size/8;
@@ -420,7 +422,7 @@ void MGrass::set_grass_count_limit(int input){
 int MGrass::get_grass_count_limit(){
     return grass_count_limit;
 }
-
+/*
 void MGrass::set_grass_in_cell(int input){
     ERR_FAIL_COND(input<1);
     grass_in_cell = input;
@@ -428,6 +430,7 @@ void MGrass::set_grass_in_cell(int input){
 int MGrass::get_grass_in_cell(){
     return grass_in_cell;
 }
+*/
 
 void MGrass::set_min_grass_cutoff(int input){
     ERR_FAIL_COND(input<0);
