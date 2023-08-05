@@ -106,7 +106,6 @@ void MGrass::init_grass(MGrid* _grid) {
         }
         float cdensity = grass_data->density*lod_scale;
         rand_buffer_pull.push_back(settings[i]->generate_random_number(cdensity,100));
-        //UtilityFunctions::print(*rand_buffer_pull[i]);
     }
     // Done
     update_grass();
@@ -116,6 +115,7 @@ void MGrass::init_grass(MGrid* _grid) {
 }
 
 void MGrass::clear_grass(){
+    UtilityFunctions::print("Clearing grass");
     std::lock_guard<std::mutex> lock(update_mutex);
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
         memdelete(it->value);

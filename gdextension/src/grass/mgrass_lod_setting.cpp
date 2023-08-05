@@ -61,6 +61,7 @@ int MGrassLodSetting::get_devide(){
 }
 
 void MGrassLodSetting::set_grass_in_cell(int input){
+    ERR_FAIL_COND(input<1);
     grass_in_cell = input;
 }
 int MGrassLodSetting::get_grass_in_cell(){
@@ -68,7 +69,6 @@ int MGrassLodSetting::get_grass_in_cell(){
 }
 
 void MGrassLodSetting::set_force_lod_count(int input){
-    ERR_FAIL_COND(input<1);
     force_lod_count = input;
 }
 int MGrassLodSetting::get_force_lod_count(){
@@ -132,6 +132,7 @@ Vector3 MGrassLodSetting::get_rand_scale_end(){
 }
 
 float MGrassLodSetting::rand_float(float a,float b,int seed){
+    srand(seed);
     float random = ((float) rand()) / (float) RAND_MAX;
     float diff = b - a;
     float r = random * diff;
@@ -141,6 +142,7 @@ float MGrassLodSetting::rand_float(float a,float b,int seed){
 
 
 PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int amount){
+    UtilityFunctions::print("Generate with density ", density, " seed ", seed);
     PackedFloat32Array* out = memnew(PackedFloat32Array);
     out->resize(amount * 12);
     for(int i=0;i<amount;i++){
