@@ -1,6 +1,6 @@
 # godot M Terrain Plugin
 ## Please read before using this plugin
-Using this plugin require to learn some concpet about terrain, This terrain plugin will not work out of the box, so I really suggest to read the [wiki](https://github.com/mohsenph69/Godot-MTerrain-plugin/wiki/) which I add recently added, I will add more stuff to wiki but for now I wrote the main concept that you need to know.
+Using this plugin require to learn some concept about terrain, This terrain plugin will not work out of the box, so I really suggest to read the [wiki](https://github.com/mohsenph69/Godot-MTerrain-plugin/wiki/) which I add recently added, I will add more stuff to wiki but for now I wrote the main concept that you need to know.
 
 Also watching this video will be helpful:
 https://www.youtube.com/watch?v=PcAkWClET4U
