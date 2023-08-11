@@ -131,6 +131,7 @@ void MGrass::clear_grass(){
     for(int i=0;i<rand_buffer_pull.size();i++){
         memdelete(rand_buffer_pull[i]);
     }
+    settings.clear();
     rand_buffer_pull.clear();
     grid_to_grass.clear();
     is_grass_init = false;
@@ -553,9 +554,15 @@ void MGrass::update_physics(Vector3 cam_pos){
                 //UtilityFunctions::print("Physic pos ",wpos);
                 wpos += grid->offset;
                 wpos.y = grid->get_height(wpos) + ptr[7];
-                Vector3 x_axis(ptr[0],ptr[4],ptr[8]);
-                Vector3 y_axis(ptr[1],ptr[5],ptr[9]);
-                Vector3 z_axis(ptr[2],ptr[6],ptr[10]);
+                // Godot physics not work properly with collission transformation
+                // So for now we ignore transformation
+                //Vector3 x_axis(ptr[0],ptr[4],ptr[8]);
+                //Vector3 y_axis(ptr[1],ptr[5],ptr[9]);
+                //Vector3 z_axis(ptr[2],ptr[6],ptr[10]);
+                ///
+                Vector3 x_axis(1,0,0);
+                Vector3 y_axis(0,1,0);
+                Vector3 z_axis(0,0,1);
                 Basis b(x_axis,y_axis,z_axis);
                 Transform3D t(b,wpos);
                 //UtilityFunctions::print(t);
