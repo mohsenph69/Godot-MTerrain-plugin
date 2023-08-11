@@ -6,12 +6,12 @@ uniform vec3 region_world_position;
 uniform float region_size;
 uniform float region_a;
 uniform float region_b;
-varying vec2 world_pos;
+varying vec3 world_pos;
 varying vec2 region_uv;
 
 void vertex(){
-	world_pos = (NODE_POSITION_WORLD + VERTEX).xz;
-	region_uv = (world_pos - region_world_position.xz)/region_size;
+	world_pos = (NODE_POSITION_WORLD + VERTEX);
+	region_uv = (world_pos.xz - region_world_position.xz)/region_size;
 	region_uv = region_uv*region_a + region_b;
 	VERTEX.y = texture(mterrain_heightmap, region_uv).r;
 	world_pos.y = VERTEX.y;
