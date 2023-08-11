@@ -2,6 +2,7 @@
 
 #include <godot_cpp/variant/transform3d.hpp>
 #include <godot_cpp/variant/basis.hpp>
+#include <random>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 
@@ -132,11 +133,9 @@ Vector3 MGrassLodSetting::get_rand_scale_end(){
 }
 
 float MGrassLodSetting::rand_float(float a,float b,int seed){
-    srand(seed);
-    float random = ((float) rand()) / (float) RAND_MAX;
-    float diff = b - a;
-    float r = random * diff;
-    return a + r;
+    std::default_random_engine re(seed);
+    std::uniform_real_distribution<double> dist(a,b);
+    return dist(re);
 }
 
 
