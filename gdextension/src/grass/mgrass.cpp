@@ -13,6 +13,9 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add"), &MGrass::draw_grass);
     ClassDB::bind_method(D_METHOD("get_count"), &MGrass::get_count);
 
+    ClassDB::bind_method(D_METHOD("set_active","input"), &MGrass::set_active);
+    ClassDB::bind_method(D_METHOD("get_active"), &MGrass::get_active);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"active"),"set_active","get_active");
     ClassDB::bind_method(D_METHOD("set_grass_data","input"), &MGrass::set_grass_data);
     ClassDB::bind_method(D_METHOD("get_grass_data"), &MGrass::get_grass_data);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"grass_data",PROPERTY_HINT_RESOURCE_TYPE,"MGrassData"),"set_grass_data","get_grass_data");
@@ -50,6 +53,9 @@ MGrass::~MGrass(){
 
 void MGrass::init_grass(MGrid* _grid) {
     ERR_FAIL_COND(!grass_data.is_valid());
+    if(!active){
+        return;
+    }
     grid = _grid;
     scenario = grid->get_scenario();
     space = grid->space;
@@ -422,7 +428,12 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
     }
     update_dirty_chunks();
 }
-
+void MGrass::set_active(bool input){
+    active = input;
+}
+bool MGrass::get_active(){
+    return active;
+}
 void MGrass::set_grass_data(Ref<MGrassData> d){
     grass_data = d;
 }

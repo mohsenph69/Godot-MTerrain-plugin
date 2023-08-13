@@ -135,6 +135,7 @@ class MGrass : public Node3D {
     static void _bind_methods();
 
     public:
+    bool active = true;
     bool is_grass_init = false;
     RID scenario;
     RID space;
@@ -183,7 +184,8 @@ class MGrass : public Node3D {
     bool get_grass_by_pixel(uint32_t px, uint32_t py);
     Vector2i get_closest_pixel(Vector3 pos);
     void draw_grass(Vector3 brush_pos,real_t radius,bool add);
-
+    void set_active(bool input);
+    bool get_active();
     void set_grass_data(Ref<MGrassData> d);
     Ref<MGrassData> get_grass_data();
     void set_grass_count_limit(int input);

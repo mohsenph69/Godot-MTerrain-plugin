@@ -213,9 +213,11 @@ void MTerrain::create_grid(){
     last_update_pos = cam_pos;
     // Grass Part
     update_grass_list();
-    confirm_grass_list = grass_list;
-    for(int i=0;i<confirm_grass_list.size();i++){
-        confirm_grass_list[i]->init_grass(grid);
+    for(int i=0;i<grass_list.size();i++){
+        grass_list[i]->init_grass(grid);
+        if(grass_list[i]->is_grass_init){
+            confirm_grass_list.push_back(grass_list[i]);
+        }
     }
     if(update_physics_loop){
         update_physics();
