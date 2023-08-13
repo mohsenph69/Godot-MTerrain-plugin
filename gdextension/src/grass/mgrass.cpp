@@ -572,10 +572,10 @@ void MGrass::update_physics(Vector3 cam_pos){
             }
         }
     }
-    UtilityFunctions::print("----------------------------------------------------");
-    UtilityFunctions::print("Grass Physics Update count ",update_count);
-    UtilityFunctions::print("Grass Physics remove count ",remove_count);
-    UtilityFunctions::print("Total Physics ",physics.size());
+    //UtilityFunctions::print("----------------------------------------------------");
+    //UtilityFunctions::print("Grass Physics Update count ",update_count);
+    //UtilityFunctions::print("Grass Physics remove count ",remove_count);
+    //UtilityFunctions::print("Total Physics ",physics.size());
 }
 
 void MGrass::_get_property_list(List<PropertyInfo> *p_list) const{

@@ -2,7 +2,7 @@
 
 #include <godot_cpp/variant/transform3d.hpp>
 #include <godot_cpp/variant/basis.hpp>
-#include <random>
+#include<cstdlib>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 
@@ -133,9 +133,25 @@ Vector3 MGrassLodSetting::get_rand_scale_end(){
 }
 
 float MGrassLodSetting::rand_float(float a,float b,int seed){
-    std::default_random_engine re(seed);
-    std::uniform_real_distribution<double> dist(a,b);
-    return dist(re);
+    srand(seed);
+    double r = (sin(double(seed)*3.512+13.23)*2.01*(double)seed);
+    if(r<0){
+        r*=-1.0;
+    }
+    r = r - floor(r);
+    r = (cos(r*63.341+3.29)*((double)seed+8362.3215));
+    if(r<0){
+        r*=-1.0;
+    }
+    r = r - floor(r);
+    r = (sin(double(r)*5.312+1.23)*23.01*(double)seed);
+    if(r<0){
+        r*=-1.0;
+    }
+    r = r - floor(r);
+    double diff = b - a;
+    r = r * diff + a;
+    return (float)(r);
 }
 
 
@@ -168,6 +184,7 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
         // stage 2
         Basis b;
         
+        b.scale(_rand_scale);
         b.rotate(Vector3(0,1,0),UtilityFunctions::deg_to_rad(rot_offset.y));
         b.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(rot_offset.x));
         b.rotate(Vector3(0,0,1),UtilityFunctions::deg_to_rad(rot_offset.z));
@@ -176,10 +193,9 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
         b.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(_rand_rot.x));
         b.rotate(Vector3(0,0,1),UtilityFunctions::deg_to_rad(_rand_rot.z));
 
+
         Vector3 org = offset + _rand_pos;
         Transform3D t(b,org);
-        // Scale
-        t.scale(_rand_scale);
 
         
         int index = i*12;

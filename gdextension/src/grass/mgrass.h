@@ -150,7 +150,7 @@ class MGrass : public Node3D {
     MPixelRegion grass_pixel_region;
     MBound grass_bound_limit;
     int lod_count;
-    int min_grass_cutoff=5;
+    int min_grass_cutoff=1;
     Array lod_settings;
     Array materials;
     Array meshes;

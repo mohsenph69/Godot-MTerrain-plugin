@@ -920,21 +920,31 @@ struct Foo
     }
 };
 
-
+#include <random>
 void MTerrain::test_function(){
-    Foo f1 = {"foo1", 5}; 
-    Foo f2 = {"foo1", 8}; 
-    Foo f3 = {"foo1", 3}; 
-    Foo f4 = {"foo1", 5};
-    Foo f5 = {"foo1", 1}; 
-    Vector<Foo*> foos;
-    foos.ordered_insert(&f1);
-    foos.ordered_insert(&f2);
-    foos.ordered_insert(&f3);
-    foos.ordered_insert(&f4);
-    foos.ordered_insert(&f5);
-
-    for(int i=0;i<foos.size();i++){
-        UtilityFunctions::print("dis ", foos[i]->dis);
+    int seed = 1001;
+    double min=300;
+    double max = -600;
+    for(int i=0;i<100000;i++){
+        seed = i+seed;
+        double r = (sin(double(seed)*3.512+13.23)*2.01*(double)seed);
+        if(r<0){
+            r*=-1.0;
+        }
+        r = r - floor(r);
+        r = (cos(r*63.341+3.29)*((double)seed+8362.3215));
+        if(r<0){
+            r*=-1.0;
+        }
+        r = r - floor(r);
+        if(r<min){
+            min=r;
+        }
+        if(r>max){
+            max=r;
+        }
     }
+    UtilityFunctions::print("Min ",min);
+    UtilityFunctions::print("Max ",max);
+
 }
