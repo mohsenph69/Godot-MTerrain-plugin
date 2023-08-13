@@ -37,6 +37,12 @@ void MGrassLodSetting::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_rand_rot_end","input"), &MGrassLodSetting::set_rand_rot_end);
     ClassDB::bind_method(D_METHOD("get_rand_rot_end"), &MGrassLodSetting::get_rand_rot_end);
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR3,"rand_rot_end"),"set_rand_rot_end","get_rand_rot_end");
+    ClassDB::bind_method(D_METHOD("set_uniform_rand_scale_start","input"), &MGrassLodSetting::set_uniform_rand_scale_start);
+    ClassDB::bind_method(D_METHOD("get_uniform_rand_scale_start"), &MGrassLodSetting::get_uniform_rand_scale_start);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"uniform_rand_scale_start"),"set_uniform_rand_scale_start","get_uniform_rand_scale_start");
+    ClassDB::bind_method(D_METHOD("set_uniform_rand_scale_end","input"), &MGrassLodSetting::set_uniform_rand_scale_end);
+    ClassDB::bind_method(D_METHOD("get_uniform_rand_scale_end"), &MGrassLodSetting::get_uniform_rand_scale_end);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"uniform_rand_scale_end"),"set_uniform_rand_scale_end","get_uniform_rand_scale_end");
     ClassDB::bind_method(D_METHOD("set_rand_scale_start","input"), &MGrassLodSetting::set_rand_scale_start);
     ClassDB::bind_method(D_METHOD("get_rand_scale_start"), &MGrassLodSetting::get_rand_scale_start);
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR3,"rand_scale_start"),"set_rand_scale_start","get_rand_scale_start");
@@ -118,6 +124,21 @@ Vector3 MGrassLodSetting::get_rand_rot_end(){
     return rand_rot_end;
 }
 
+void MGrassLodSetting::set_uniform_rand_scale_start(float input){
+    unifrom_rand_scale_start = input;
+}
+float MGrassLodSetting::get_uniform_rand_scale_start(){
+    return unifrom_rand_scale_start;
+}
+
+void MGrassLodSetting::set_uniform_rand_scale_end(float input){
+    unifrom_rand_scale_end = input;
+}
+
+float MGrassLodSetting::get_uniform_rand_scale_end(){
+    return unifrom_rand_scale_end;
+}
+
 void MGrassLodSetting::set_rand_scale_start(Vector3 input){
     rand_scale_start = input;
 }
@@ -163,7 +184,8 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
         Vector3 _rand_pos;
         Vector3 _rand_rot;
         Vector3 _rand_scale;
-        int iseed = i*9+seed;
+        float uniform_scale;
+        int iseed = i*10+seed;
         _rand_pos.x = rand_float(rand_pos_start.x*density,rand_pos_end.x*density,iseed);
         iseed++;
         _rand_pos.y = rand_float(rand_pos_start.y*density,rand_pos_end.y*density,iseed);
@@ -181,9 +203,11 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
         _rand_scale.y = rand_float(rand_scale_start.y,rand_scale_end.y,iseed);
         iseed++;
         _rand_scale.z = rand_float(rand_scale_start.z,rand_scale_end.z,iseed);
+        iseed++;
+        uniform_scale = rand_float(unifrom_rand_scale_start,unifrom_rand_scale_end,iseed);
         // stage 2
         Basis b;
-        
+        b.scale(Vector3(uniform_scale,uniform_scale,uniform_scale));
         b.scale(_rand_scale);
         b.rotate(Vector3(0,1,0),UtilityFunctions::deg_to_rad(rot_offset.y));
         b.rotate(Vector3(1,0,0),UtilityFunctions::deg_to_rad(rot_offset.x));
