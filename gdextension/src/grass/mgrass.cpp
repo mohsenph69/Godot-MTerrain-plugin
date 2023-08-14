@@ -590,13 +590,16 @@ void MGrass::update_physics(Vector3 cam_pos){
                 wpos += shape_offset;
                 // Godot physics not work properly with collission transformation
                 // So for now we ignore transformation
-                //Vector3 x_axis(ptr[0],ptr[4],ptr[8]);
-                //Vector3 y_axis(ptr[1],ptr[5],ptr[9]);
-                //Vector3 z_axis(ptr[2],ptr[6],ptr[10]);
+                Vector3 x_axis(ptr[0],ptr[4],ptr[8]);
+                Vector3 y_axis(ptr[1],ptr[5],ptr[9]);
+                Vector3 z_axis(ptr[2],ptr[6],ptr[10]);
                 ///
-                Vector3 x_axis(1,0,0);
-                Vector3 y_axis(0,1,0);
-                Vector3 z_axis(0,0,1);
+                //Vector3 x_axis(1,0,0);
+                //Vector3 y_axis(0,1,0);
+                //Vector3 z_axis(0,0,1);
+                x_axis.normalize();
+                y_axis.normalize();
+                z_axis.normalize();
                 Basis b(x_axis,y_axis,z_axis);
                 Transform3D t(b,wpos);
                 //UtilityFunctions::print(t);
