@@ -392,6 +392,7 @@ Vector2i MGrass::get_closest_pixel(Vector3 pos){
 // because set_grass_by_pixel is chaning dirty_points_id
 // And I don't think that we need to do that because it is not a huge process
 void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
+    ERR_FAIL_COND(!is_grass_init);
     ERR_FAIL_COND(update_id!=grid->get_update_id());
     Vector2i px_pos = get_closest_pixel(brush_pos);
     if(px_pos.x<0 || px_pos.y<0 || px_pos.x>width || px_pos.y>height){
