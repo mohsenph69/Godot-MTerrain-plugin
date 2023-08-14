@@ -27,7 +27,6 @@ void MGrassData::set_density(int input){
     float l[] = M_H_SCALE_LIST;
     density = l[input];
     density_index = input;
-    UtilityFunctions::print("density ", density);
 }
 
 int MGrassData::get_density(){

@@ -14,7 +14,6 @@ MRegion::MRegion(){
 }
 
 MRegion::~MRegion(){
-	UtilityFunctions::print("Removing image ---------------");
     memdelete(lods);
 	remove_physics();
 	for(int i=0;i<images.size();i++){

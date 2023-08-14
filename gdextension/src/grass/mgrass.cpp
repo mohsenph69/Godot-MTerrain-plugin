@@ -66,11 +66,9 @@ void MGrass::init_grass(MGrid* _grid) {
     scenario = grid->get_scenario();
     space = grid->space;
     region_grid_width = grid->get_region_grid_size().x;
-    UtilityFunctions::print("Init grass ", get_name());
     grass_region_pixel_width = (uint32_t)round((float)grid->region_size_meter/grass_data->density);
     grass_region_pixel_size = grass_region_pixel_width*grass_region_pixel_width;
     base_grid_size_in_pixel = (uint32_t)round((double)grass_region_pixel_width/(double)grid->region_size);
-    UtilityFunctions::print("grass_region_pixel_width ", itos(grass_region_pixel_width));
     width = grass_region_pixel_width*grid->get_region_grid_size().x;
     height = grass_region_pixel_width*grid->get_region_grid_size().z;
     grass_pixel_region.left=0;
@@ -81,9 +79,7 @@ void MGrass::init_grass(MGrid* _grid) {
     grass_bound_limit.right = grass_pixel_region.right;
     grass_bound_limit.top = grass_pixel_region.top;
     grass_bound_limit.bottom = grass_pixel_region.bottom;
-    UtilityFunctions::print("Grass Pixel Limit ", width, " , ",height);
     int64_t data_size = ((grass_region_pixel_size*grid->get_regions_count() - 1)/8) + 1;
-    UtilityFunctions::print("Grass data size ", data_size);
     if(grass_data->data.size()==0){
         // grass data is empty so we create grass data here
         grass_data->data.resize(data_size);
@@ -135,7 +131,6 @@ void MGrass::init_grass(MGrid* _grid) {
 }
 
 void MGrass::clear_grass(){
-    UtilityFunctions::print("Clearing grass");
     std::lock_guard<std::mutex> lock(update_mutex);
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
         memdelete(it->value);
