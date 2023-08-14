@@ -248,6 +248,7 @@ void MTerrain::remove_grid(){
     for(int i=0;i<confirm_grass_list.size();i++){
         confirm_grass_list[i]->clear_grass();
     }
+    confirm_grass_list.clear();
 }
 
 void MTerrain::restart_grid(){
