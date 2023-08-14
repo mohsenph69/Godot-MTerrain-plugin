@@ -28,6 +28,12 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_min_grass_cutoff","input"), &MGrass::set_min_grass_cutoff);
     ClassDB::bind_method(D_METHOD("get_min_grass_cutoff"), &MGrass::get_min_grass_cutoff);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "min_grass_cutoff"),"set_min_grass_cutoff","get_min_grass_cutoff");
+    ClassDB::bind_method(D_METHOD("set_collision_radius","input"), &MGrass::set_collision_radius);
+    ClassDB::bind_method(D_METHOD("get_collision_radius"), &MGrass::get_collision_radius);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"collision_radius"), "set_collision_radius","get_collision_radius");
+    ClassDB::bind_method(D_METHOD("set_shape_offset","input"), &MGrass::set_shape_offset);
+    ClassDB::bind_method(D_METHOD("get_shape_offset"), &MGrass::get_shape_offset);
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR3,"shape_offset"), "set_shape_offset","get_shape_offset");
     ClassDB::bind_method(D_METHOD("set_shape","input"), &MGrass::set_shape);
     ClassDB::bind_method(D_METHOD("get_shape"), &MGrass::get_shape);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"shape",PROPERTY_HINT_RESOURCE_TYPE,"Shape3D"),"set_shape","get_shape");
@@ -493,6 +499,22 @@ int64_t MGrass::get_count(){
     return final_count;
 }
 
+void MGrass::set_collision_radius(float input){
+    collision_radius=input;
+}
+
+float MGrass::get_collision_radius(){
+    return collision_radius;
+}
+
+void MGrass::set_shape_offset(Vector3 input){
+    shape_offset = input;
+}
+
+Vector3 MGrass::get_shape_offset(){
+    return shape_offset;
+}
+
 void MGrass::set_shape(Ref<Shape3D> input){
     shape = input;
 }
@@ -565,6 +587,7 @@ void MGrass::update_physics(Vector3 cam_pos){
                 //UtilityFunctions::print("Physic pos ",wpos);
                 wpos += grid->offset;
                 wpos.y = grid->get_height(wpos) + ptr[7];
+                wpos += shape_offset;
                 // Godot physics not work properly with collission transformation
                 // So for now we ignore transformation
                 //Vector3 x_axis(ptr[0],ptr[4],ptr[8]);

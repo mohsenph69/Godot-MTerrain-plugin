@@ -163,6 +163,7 @@ class MGrass : public Node3D {
     HashMap<int64_t,MGrassChunk*> grid_to_grass;
     Vector<MGrassChunk*> to_be_visible;
     VSet<int>* dirty_points_id;
+    Vector3 shape_offset;
     Ref<Shape3D> shape;
     MBound physics_search_bound;
     MBound last_physics_search_bound;
@@ -203,6 +204,10 @@ class MGrass : public Node3D {
 
     int64_t get_count();
 
+    void set_collision_radius(float input);
+    float get_collision_radius();
+    void set_shape_offset(Vector3 input);
+    Vector3 get_shape_offset();
     void set_shape(Ref<Shape3D> input);
     Ref<Shape3D> get_shape();
     void update_physics(Vector3 cam_pos);
