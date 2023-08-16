@@ -7,6 +7,9 @@ https://www.youtube.com/watch?v=PcAkWClET4U
 
 And then this video shows how to use use height brushes to modifying the terrain:
 https://www.youtube.com/watch?v=e7nplXnemGo
+## Get Camera
+Currentlly there is a bug, and sometimes the camera can not be accessed by Terrain
+Use `set_custom_camera(Node3D node)` and pass your player or camera in that!
 ## download
 To downalod the latest release use this link:
 https://github.com/mohsenph69/Godot-MTerrain-plugin/releases
