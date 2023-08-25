@@ -10,9 +10,9 @@ void MGrassLodSetting::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_seed","input"), &MGrassLodSetting::set_seed);
     ClassDB::bind_method(D_METHOD("get_seed"), &MGrassLodSetting::get_seed);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"seed"),"set_seed","get_seed");
-    ClassDB::bind_method(D_METHOD("set_devide","input"), &MGrassLodSetting::set_devide);
-    ClassDB::bind_method(D_METHOD("get_devide"), &MGrassLodSetting::get_devide);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"devide"),"set_devide","get_devide");
+    ClassDB::bind_method(D_METHOD("set_divide","input"), &MGrassLodSetting::set_divide);
+    ClassDB::bind_method(D_METHOD("get_divide"), &MGrassLodSetting::get_divide);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"divide"),"set_divide","get_divide");
     ClassDB::bind_method(D_METHOD("set_grass_in_cell","input"), &MGrassLodSetting::set_grass_in_cell);
     ClassDB::bind_method(D_METHOD("get_grass_in_cell"), &MGrassLodSetting::get_grass_in_cell);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"grass_in_cell"),"set_grass_in_cell","get_grass_in_cell");
@@ -59,12 +59,12 @@ int MGrassLodSetting::get_seed(){
     return seed;
 }
 
-void MGrassLodSetting::set_devide(int input){
+void MGrassLodSetting::set_divide(int input){
     ERR_FAIL_COND(input<1);
-    devide = input;
+    divide = input;
 }
-int MGrassLodSetting::get_devide(){
-    return devide;
+int MGrassLodSetting::get_divide(){
+    return divide;
 }
 
 void MGrassLodSetting::set_grass_in_cell(int input){

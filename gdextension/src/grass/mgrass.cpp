@@ -225,8 +225,8 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     }
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
-    uint32_t devide_amount= (uint32_t)settings[g->lod]->devide;
-    Vector<MPixelRegion> pixel_regions = px.devide(devide_amount);
+    uint32_t divide_amount= (uint32_t)settings[g->lod]->divide;
+    Vector<MPixelRegion> pixel_regions = px.devide(divide_amount);
     int grass_in_cell = settings[g->lod]->grass_in_cell;
 
     
