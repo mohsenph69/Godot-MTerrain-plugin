@@ -10,7 +10,6 @@
 #include <godot_cpp/templates/vset.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/classes/node3d.hpp>
-#include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/physics_server3d.hpp>
 #include <godot_cpp/classes/shape3d.hpp>
 #include "mgrass_data.h"
@@ -19,92 +18,11 @@
 #include "../mbound.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include "mgrass_chunk.h"
 
 using namespace godot;
 
 class MGrid;
-
-struct MGrassChunk // Rendering server multi mesh data
-{
-    RID multimesh;
-    RID instance;
-    MGrassChunk* next=nullptr;
-    Vector3 world_pos;
-    int count=0;
-    int total_count=0;
-    int lod;
-    int region_id;
-    MPixelRegion pixel_region;
-    bool is_relax=false;
-    bool is_part_of_scene=false;
-    bool is_out_of_range=false;
-
-    MGrassChunk(const MPixelRegion& _pixel_region,Vector3 _world_pos, int _lod,int _region_id){
-        pixel_region = _pixel_region;
-        lod = _lod;
-        region_id = _region_id;
-        world_pos = _world_pos;
-    }
-    MGrassChunk(){}
-    ~MGrassChunk(){
-        if(count!=0){
-            RenderingServer::get_singleton()->free_rid(multimesh);
-            RenderingServer::get_singleton()->free_rid(instance);
-        }
-        if(next!=nullptr){
-            memdelete(next);
-        }
-    }
-    void relax(){
-        if(count!=0 && !is_relax){
-            RenderingServer::get_singleton()->instance_set_visible(instance,false);
-            is_relax = true;
-        }
-        if(next!=nullptr){
-            next->relax();
-        }
-    }
-    void unrelax(){
-        if(count!=0 && is_relax){
-            RenderingServer::get_singleton()->instance_set_visible(instance,true);
-            is_relax = false;
-        }
-        if(next!=nullptr){
-            next->unrelax();
-        }
-    }
-    void clear_tree(){
-        if(next!=nullptr){
-            memdelete(next);
-            next=nullptr;
-        }
-    }
-    void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data){
-        //UtilityFunctions::print("Buffer count ",_count, " c ", count);
-        if(_count!=0 && count == 0){
-            multimesh = RenderingServer::get_singleton()->multimesh_create();
-            RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
-            instance = RenderingServer::get_singleton()->instance_create();
-            RenderingServer::get_singleton()->instance_set_visible(instance,false);
-            is_relax = true;
-            RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
-            RenderingServer::get_singleton()->instance_geometry_set_material_override(instance,material);
-            RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
-        } else if(_count==0 && count!=0){
-            RenderingServer::get_singleton()->free_rid(multimesh);
-            RenderingServer::get_singleton()->free_rid(instance);
-            instance = RID();
-            multimesh = RID();
-            count = 0;
-            return;
-        } else if(_count==0 && count==0){
-            return;
-        }
-        count = _count;
-        RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
-        RenderingServer::get_singleton()->multimesh_set_buffer(multimesh, data);
-    }
-};
 
 struct MGrassPhysics
 {
@@ -130,6 +48,7 @@ class MGrass : public Node3D {
     std::mutex update_mutex;
     uint64_t final_count=0;
     int grass_count_limit=9000000;
+    float nav_obstacle_radius=1.0;
 
     protected:
     static void _bind_methods();
@@ -210,7 +129,11 @@ class MGrass : public Node3D {
     Vector3 get_shape_offset();
     void set_shape(Ref<Shape3D> input);
     Ref<Shape3D> get_shape();
+    void set_nav_obstacle_radius(float input);
+    float get_nav_obstacle_radius();
     void update_physics(Vector3 cam_pos);
+    void remove_all_physics();
+    PackedVector3Array get_physic_positions(Vector3 cam_pos,float radius);
 
 
     void _get_property_list(List<PropertyInfo> *p_list) const;

@@ -15,5 +15,11 @@ windows.debug.x86_32 = "res://addons/m_terrain/libs/libMTerrain.windows.template
 windows.release.x86_32 = "res://addons/m_terrain/libs/libMTerrain.windows.template_release.x86_32.dll"
 
 
+[icons]
+
+MTerrain = "res://addons/m_terrain/icons/M-terrain_icon.png"
+MGrass = "res://addons/m_terrain/icons/foilage_icon.png"
+
+
 
 

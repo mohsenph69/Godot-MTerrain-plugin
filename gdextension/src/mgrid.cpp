@@ -1091,3 +1091,8 @@ void MGrid::toggle_heightmap_layer_visibile(){
     }
     heightmap_layers_visibility.set(active_heightmap_layer,input);
 }
+
+
+float MGrid::get_h_scale(){
+    return _chunks->h_scale;
+}

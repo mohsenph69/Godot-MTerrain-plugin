@@ -37,6 +37,9 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_shape","input"), &MGrass::set_shape);
     ClassDB::bind_method(D_METHOD("get_shape"), &MGrass::get_shape);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"shape",PROPERTY_HINT_RESOURCE_TYPE,"Shape3D"),"set_shape","get_shape");
+    ClassDB::bind_method(D_METHOD("set_nav_obstacle_radius","input"), &MGrass::set_nav_obstacle_radius);
+    ClassDB::bind_method(D_METHOD("get_nav_obstacle_radius"), &MGrass::get_nav_obstacle_radius);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"nav_obstacle_radius"),"set_nav_obstacle_radius","get_nav_obstacle_radius");
     ClassDB::bind_method(D_METHOD("set_lod_settings","input"), &MGrass::set_lod_settings);
     ClassDB::bind_method(D_METHOD("get_lod_settings"), &MGrass::get_lod_settings);
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"lod_settings",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE), "set_lod_settings","get_lod_settings");
@@ -138,6 +141,7 @@ void MGrass::clear_grass(){
     for(int i=0;i<rand_buffer_pull.size();i++){
         memdelete(rand_buffer_pull[i]);
     }
+    remove_all_physics();
     settings.clear();
     rand_buffer_pull.clear();
     grid_to_grass.clear();
@@ -517,6 +521,13 @@ void MGrass::set_shape(Ref<Shape3D> input){
 Ref<Shape3D> MGrass::get_shape(){
     return shape;
 }
+void MGrass::set_nav_obstacle_radius(float input){
+    ERR_FAIL_COND(input<0.05);
+    nav_obstacle_radius = input;
+}
+float MGrass::get_nav_obstacle_radius(){
+    return nav_obstacle_radius;
+}
 /*
 Vector3 pos;
 pos.x = root_g->world_pos.x + x*grass_data->density + ptrw[3];
@@ -538,8 +549,16 @@ void MGrass::update_physics(Vector3 cam_pos){
     int px_x = round(cam_pos.x);
     int px_y = round(cam_pos.z);
     int col_r = round(collision_radius/grass_data->density);
+    if(px_x < - col_r || px_y < - col_r){
+        remove_all_physics();
+        return;
+    }
     physics_search_bound = MBound(MGridPos(px_x,0,px_y));
     physics_search_bound.grow(grass_bound_limit,col_r,col_r);
+    if(!(physics_search_bound.left <width && physics_search_bound.top<height)){
+        remove_all_physics();
+        return;
+    }
     //UtilityFunctions::print("Left ",physics_search_bound.left," right ",physics_search_bound.right," top ",physics_search_bound.top," bottom ",physics_search_bound.bottom );
     // culling
     int remove_count=0;
@@ -609,6 +628,64 @@ void MGrass::update_physics(Vector3 cam_pos){
     //UtilityFunctions::print("Grass Physics Update count ",update_count);
     //UtilityFunctions::print("Grass Physics remove count ",remove_count);
     //UtilityFunctions::print("Total Physics ",physics.size());
+}
+
+void MGrass::remove_all_physics(){
+    for(HashMap<uint64_t,MGrassPhysics*>::Iterator it=physics.begin();it!=physics.end();++it){
+        memdelete(it->value);
+    }
+    physics.clear();
+}
+
+PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
+    PackedVector3Array positions;
+   if(!shape.is_valid()){
+        return positions;
+    }
+    ERR_FAIL_COND_V(!is_grass_init,positions);
+    int grass_in_cell = settings[0]->grass_in_cell;
+    cam_pos -= grid->offset;
+    cam_pos = cam_pos / grass_data->density;
+    int px_x = round(cam_pos.x);
+    int px_y = round(cam_pos.z);
+    int col_r = round(radius/grass_data->density);
+    if(px_x < -col_r || px_y < -col_r){
+        return positions;
+    }
+    //MBound bound = MBound(MGridPos(px_x,0,px_y));
+    //bound.grow(grass_bound_limit,col_r,col_r);
+    MPixelRegion bound;
+    bound.left = px_x > col_r ? px_x - col_r : 0;
+    bound.top = px_y > col_r ? px_y - col_r : 0;
+    if(!(bound.left <width && bound.top<height)){
+        return positions;
+    }
+    bound.right = px_x + col_r;
+    bound.right = bound.right < width ? bound.right : width - 1;
+    bound.bottom = px_y + col_r;
+    bound.bottom = bound.bottom < height ? bound.bottom : height - 1;
+    const float* rand_buffer =(float*)rand_buffer_pull[0]->ptr();
+    int rand_buffer_size = rand_buffer_pull[0]->size()/12;
+    UtilityFunctions::print("L ",bound.left, " R ",bound.right, " T ",bound.top, " B ",bound.bottom);
+    for(uint32_t y=bound.top;y<=bound.bottom;y++){
+        for(uint32_t x=bound.left;x<=bound.right;x++){
+            if(!get_grass_by_pixel(x,y)){
+                continue;
+            }
+            for(int r=0;r<grass_in_cell;r++){
+                int rx = (x/grass_region_pixel_width);
+                int ry = (y/grass_region_pixel_width);
+                int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width) + r;
+                const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*BUFFER_STRID_FLOAT;
+                Vector3 wpos(x*grass_data->density+ptr[3],0,y*grass_data->density+ptr[11]);
+                wpos += grid->offset;
+                wpos.y = grid->get_height(wpos) + ptr[7];
+                wpos += shape_offset;
+                positions.push_back(wpos);
+            }
+        }
+    }
+    return positions;
 }
 
 void MGrass::_get_property_list(List<PropertyInfo> *p_list) const{

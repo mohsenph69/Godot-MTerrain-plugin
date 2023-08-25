@@ -24,6 +24,8 @@
 
 using namespace godot;
 
+class MNavigationRegion3D;
+
 
 class MTerrain : public  Node3D {
     GDCLASS(MTerrain, Node3D);
@@ -50,11 +52,9 @@ class MTerrain : public  Node3D {
     //Physics update stage is same as chunk update but just for physics
     int update_stage_physics=-1;
 
-    MGrid* grid=nullptr;
     Ref<ShaderMaterial> material;
     Vector2i terrain_size = Vector2i(16,16);
     Vector3 cam_pos;
-    Node3D* editor_camera = nullptr;
     Node3D* custom_camera = nullptr;
     Vector3 offset;
     int min_size_index = 2;
@@ -88,6 +88,8 @@ class MTerrain : public  Node3D {
     String active_layer_name="background";
     Vector<MGrass*> grass_list;
     Vector<MGrass*> confirm_grass_list;
+    Vector<MNavigationRegion3D*> confirm_nav;
+    int total_update_count=0;
     // Show if terrain ready called
     bool is_ready=false;
 
@@ -97,6 +99,10 @@ class MTerrain : public  Node3D {
     static void _bind_methods();
 
     public:
+    // Confirm grass list with collision
+    Vector<MGrass*> confirm_grass_col_list;
+    MGrid* grid=nullptr;
+    Node3D* editor_camera = nullptr;
     MTerrain();
     ~MTerrain();
     void finish_terrain();

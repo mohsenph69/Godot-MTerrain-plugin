@@ -11,11 +11,13 @@ var raw_img_importer = null
 var raw_tex_importer = null
 var active_terrain:MTerrain = null
 var active_grass:MGrass = null
+var active_nav_region:MNavigationRegion3D = null
 var last_camera_position:Vector3
 
 var collision_ray_step=0.2
 var ray_col:MCollision
 var col_dis:float
+var is_paint_active:bool = false
 
 func _enter_tree():
 	if Engine.is_editor_hint():
@@ -98,6 +100,9 @@ func paint_mode_handle(event:InputEvent):
 			if active_grass:
 				active_grass.draw_grass(ray_col.get_collision_position(),brush_decal.radius,paint_panel.is_grass_add)
 				return AFTER_GUI_INPUT_STOP
+			if active_nav_region:
+				active_nav_region.draw_npoints(ray_col.get_collision_position(),brush_decal.radius,paint_panel.is_grass_add)
+				return AFTER_GUI_INPUT_STOP
 			if event is InputEventMouseButton:
 				if event.pressed:
 					paint_panel.set_active_layer()
@@ -110,18 +115,33 @@ func paint_mode_handle(event:InputEvent):
 func _handles(object):
 	if not Engine.is_editor_hint():
 		return false
+	if active_nav_region != object:
+		if active_nav_region:
+			active_nav_region.set_npoints_visible(false)
 	if object.has_method("create_grid"):
 		active_terrain = object
 		active_terrain.set_brush_manager(paint_panel.brush_manager)
 		tools.visible = true
 		paint_panel.set_grass_mode(false)
 		active_grass = null
+		active_nav_region = null
 		return true
 	elif object.has_method("draw_grass"):
 		if object.get_parent().has_method("create_grid"):
 			active_grass = object
 			tools.visible = true
+			active_nav_region = null
 			paint_panel.set_grass_mode(true)
+			active_terrain = object.get_parent()
+			return true
+	elif object.has_method("draw_npoints"):
+		if object.get_parent().has_method("create_grid"):
+			active_nav_region = object
+			tools.visible = true
+			active_grass = null
+			paint_panel.set_grass_mode(true)
+			if is_paint_active:
+				active_nav_region.set_npoints_visible(true)
 			active_terrain = object.get_parent()
 			return true
 	active_grass = null
@@ -133,10 +153,13 @@ func selection_changed():
 	var selection := get_editor_interface().get_selection()
 
 func toggle_paint_mode(input):
+	is_paint_active = input
+	if active_nav_region:
+		active_nav_region.set_npoints_visible(input)
 	if input and active_terrain:
 		add_control_to_dock(EditorPlugin.DOCK_SLOT_RIGHT_UL,paint_panel)
 		paint_panel.set_active_terrain(active_terrain)
-		if active_grass:
+		if active_grass or active_nav_region:
 			paint_panel.set_grass_mode(true)
 		else:
 			paint_panel.set_grass_mode(false)

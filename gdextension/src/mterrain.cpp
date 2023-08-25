@@ -8,6 +8,7 @@
 #include <godot_cpp/classes/reg_ex_match.hpp>
 
 #include "mbrush_manager.h"
+#include "navmesh/mnavigation_region_3d.h"
 
 
 
@@ -217,8 +218,26 @@ void MTerrain::create_grid(){
         grass_list[i]->init_grass(grid);
         if(grass_list[i]->is_grass_init){
             confirm_grass_list.push_back(grass_list[i]);
+            if(grass_list[i]->shape.is_valid()){
+                confirm_grass_col_list.push_back(grass_list[i]);
+                grass_list[i]->update_physics(cam_pos);
+            }
         }
     }
+
+    for(int i=0;i<get_child_count();i++){
+        MNavigationRegion3D*  mnav= Object::cast_to<MNavigationRegion3D>(get_child(i));
+        if(mnav){
+            mnav->init(this,grid);
+            if(mnav->is_nav_init && Engine::get_singleton()->is_editor_hint()){
+                confirm_nav.push_back(mnav);
+                mnav->update_npoints();
+                mnav->apply_update_npoints();
+            }
+        }
+    }
+    total_update_count = confirm_grass_list.size() + confirm_nav.size();
+    UtilityFunctions::print("Confirm col list size ",confirm_grass_col_list.size());
     if(update_physics_loop){
         update_physics();
     }
@@ -230,7 +249,6 @@ void MTerrain::create_grid(){
         UtilityFunctions::print("Saving normals");
         save_image(normals_index, true);
     }
-    UtilityFunctions::print("Chunks has been created ");
 }
 
 void MTerrain::remove_grid(){
@@ -249,6 +267,14 @@ void MTerrain::remove_grid(){
         confirm_grass_list[i]->clear_grass();
     }
     confirm_grass_list.clear();
+    confirm_grass_col_list.clear();
+    for(int i=0;i<get_child_count();i++){
+        MNavigationRegion3D*  mnav= Object::cast_to<MNavigationRegion3D>(get_child(i));
+        if(mnav){
+            mnav->clear();
+        }
+    }
+    confirm_nav.clear();
 }
 
 void MTerrain::restart_grid(){
@@ -268,7 +294,12 @@ void MTerrain::update() {
         
     }
     else if(update_stage>=0){
-        update_thread_chunks = std::async(std::launch::async, &MGrass::update_grass, confirm_grass_list[update_stage]);
+        if(update_stage>=confirm_grass_list.size()){
+            int index = update_stage - confirm_grass_list.size();
+            update_thread_chunks = std::async(std::launch::async, &MNavigationRegion3D::update_npoints, confirm_nav[index]);
+        } else {
+            update_thread_chunks = std::async(std::launch::async, &MGrass::update_grass, confirm_grass_list[update_stage]);
+        }
     }
     update_chunks_timer->start();
 }
@@ -300,9 +331,14 @@ void MTerrain::finish_update() {
             }
         }
         else if(update_stage>=0){
-            confirm_grass_list[update_stage]->apply_update_grass();
-            update_stage++;
             if(update_stage>=confirm_grass_list.size()){
+                int index = update_stage - confirm_grass_list.size();
+                confirm_nav[index]->apply_update_npoints();
+            } else {
+                confirm_grass_list[update_stage]->apply_update_grass();
+            }
+            update_stage++;
+            if(update_stage>=total_update_count){
                 update_stage = -2;
                 finish_update();
             } else {
@@ -322,7 +358,7 @@ void MTerrain::update_physics(){
     if(update_stage_physics==-1){
         update_thread_physics = std::async(std::launch::async, &MGrid::update_physics, grid, cam_pos);
     } else if(update_stage_physics>=0){
-        update_thread_physics = std::async(std::launch::async, &MGrass::update_physics,confirm_grass_list[update_stage_physics], cam_pos);
+        update_thread_physics = std::async(std::launch::async, &MGrass::update_physics,confirm_grass_col_list[update_stage_physics], cam_pos);
     }
     update_physics_timer->start();
 }
@@ -332,7 +368,7 @@ void MTerrain::finish_update_physics(){
     if(status == std::future_status::ready){
         finish_updating_physics = true;
         update_stage_physics++;
-        if(update_stage_physics>=confirm_grass_list.size()){
+        if(update_stage_physics>=confirm_grass_col_list.size()){
             update_stage_physics = -1;
         }
         if(update_physics_loop){
@@ -389,17 +425,17 @@ void MTerrain::set_height_by_pixel(const uint32_t& x,const uint32_t& y,const rea
 
 void MTerrain::get_cam_pos() {
     if(custom_camera != nullptr){
-        cam_pos = custom_camera->get_position();
+        cam_pos = custom_camera->get_global_position();
         return;
     }
     if(editor_camera !=nullptr){
-        cam_pos = editor_camera->get_position();
+        cam_pos = editor_camera->get_global_position();
         return;
     }
     Viewport* v = get_viewport();
     Camera3D* camera = v->get_camera_3d();
     ERR_FAIL_COND_EDMSG(camera==nullptr, "No camera is detected, If you are in editor activate MTerrain plugin");
-    cam_pos = camera->get_position();
+    cam_pos = camera->get_global_position();
 }
 
 void MTerrain::set_dataDir(String input) {

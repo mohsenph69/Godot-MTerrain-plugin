@@ -163,7 +163,7 @@ class MGrid : public Object {
     PackedInt32Array lod_distance;
     int32_t region_size = 128;
     int32_t region_size_meter;
-    uint32_t region_pixel_size;
+    uint32_t region_pixel_size; //Region width or height they are equal
     uint32_t rp;
     //MBound grid_pixel_bound;
     uint32_t pixel_width;
@@ -251,6 +251,8 @@ class MGrid : public Object {
     void merge_heightmap_layer();
     void remove_heightmap_layer();
     void toggle_heightmap_layer_visibile();
+
+    float get_h_scale();
 
 
 };
