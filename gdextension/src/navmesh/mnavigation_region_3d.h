@@ -65,6 +65,7 @@ class MNavigationRegion3D : public NavigationRegion3D{
     uint32_t height;
     float h_scale;
     bool is_npoints_visible = false;
+    int max_shown_lod=2;
 
 
 
@@ -100,6 +101,9 @@ class MNavigationRegion3D : public NavigationRegion3D{
 
     void set_navigation_radius(float input);
     float get_navigation_radius();
+
+    void set_max_shown_lod(int input);
+    int get_max_shown_lod();
 
 
 

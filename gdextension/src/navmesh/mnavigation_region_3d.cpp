@@ -41,6 +41,9 @@ void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_navigation_radius","input"), &MNavigationRegion3D::set_navigation_radius);
     ClassDB::bind_method(D_METHOD("get_navigation_radius"), &MNavigationRegion3D::get_navigation_radius);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"navigation_radius"),"set_navigation_radius","get_navigation_radius");
+    ClassDB::bind_method(D_METHOD("set_max_shown_lod","input"), &MNavigationRegion3D::set_max_shown_lod);
+    ClassDB::bind_method(D_METHOD("get_max_shown_lod"), &MNavigationRegion3D::get_max_shown_lod);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"max_shown_lod"), "set_max_shown_lod", "get_max_shown_lod");
     ADD_SIGNAL(MethodInfo("navigation_region_is_ready"));
     ADD_SIGNAL(MethodInfo("update_navmesh"));
 }
@@ -90,6 +93,9 @@ void MNavigationRegion3D::init(MTerrain* _terrain, MGrid* _grid){
         ERR_FAIL_COND_MSG(nav_data->data.size()!=0&&nav_data->data.size()!=data_size,"Terrain Size or Terrain Base Size has been changed and this data is not valid anymore");
         if(nav_data->data.size()==0){
             nav_data->data.resize(data_size);
+            if(nav_data->on_all_at_creation){
+                nav_data->data.fill(255);
+            }
         }
     }
     UtilityFunctions::print("Region pixel width ",region_pixel_width);
@@ -354,12 +360,20 @@ float MNavigationRegion3D::get_navigation_radius(){
     return navigation_radius;
 }
 
+void MNavigationRegion3D::set_max_shown_lod(int input){
+    max_shown_lod = input;
+}
+
+int MNavigationRegion3D::get_max_shown_lod(){
+    return max_shown_lod;
+}
+
 void MNavigationRegion3D::update_npoints(){
     int new_chunk_count = grid->grid_update_info.size();
     std::lock_guard<std::mutex> lock(npoint_mutex);
     update_id = grid->get_update_id();
     for(int i=0;i<new_chunk_count;i++){
-        if(grid->grid_update_info[i].lod>2){
+        if(grid->grid_update_info[i].lod>max_shown_lod){
             continue;
         }
         create_npoints(i);
@@ -419,13 +433,22 @@ void MNavigationRegion3D::create_npoints(int grid_index,MGrassChunk* grass_chunk
     //UtilityFunctions::print("Left ",px.left, " Right ",px.right," bottom ",px.bottom, " top ",px.top);
 
     const uint8_t* ptr = nav_data->data.ptr() + g->region_id*region_pixel_size/8;
-
+    int lod_scale = pow(2,g->lod);
     uint32_t count=0;
     uint32_t index;
+    uint32_t x=px.left;
+    uint32_t y=px.top;
+    uint32_t i=0;
+    uint32_t j=1;
     PackedFloat32Array buffer;
-    for(uint32_t y=px.top;y<=px.bottom;y++)
+    while (true)
     {
-        for (uint32_t x=px.left;x<=px.right;x++){
+        while (true){
+            x = px.left + i*lod_scale;
+            if(x>px.right){
+                break;
+            }
+            i++;
             uint32_t offs = (y*region_pixel_width + x);
             uint32_t ibyte = offs/8;
             uint32_t ibit = offs%8;
@@ -436,15 +459,15 @@ void MNavigationRegion3D::create_npoints(int grid_index,MGrassChunk* grass_chunk
                 float* ptrw = (float*)buffer.ptrw();
                 ptrw += index;
                 Vector3 pos;
-                ptrw[0]=1;
+                ptrw[0]=lod_scale;
                 ptrw[1]=0;
                 ptrw[2]=0;
                 ptrw[4]=0;
-                ptrw[5]=1;
+                ptrw[5]=lod_scale;
                 ptrw[6]=0;
                 ptrw[8]=0;
                 ptrw[9]=0;
-                ptrw[10]=1;
+                ptrw[10]=lod_scale;
                 pos.x = g->world_pos.x + x*h_scale;
                 pos.z = g->world_pos.z + y*h_scale;
                 
@@ -454,6 +477,12 @@ void MNavigationRegion3D::create_npoints(int grid_index,MGrassChunk* grass_chunk
                 count++;
             }
         }
+        i= 0;
+        y= px.top + j*lod_scale;
+        if(y>px.bottom){
+            break;
+        }
+        j++;
     }
     //UtilityFunctions::print("Stage 4.1 k ",k);
     // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
