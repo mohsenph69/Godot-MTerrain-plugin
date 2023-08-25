@@ -153,7 +153,6 @@ void MNavigationRegion3D::update_navmesh(Vector3 cam_pos){
 }
 
 void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
-    UtilityFunctions::print("Update navmesh");
     tmp_nav = get_navigation_mesh()->duplicate();
     uint32_t l = round(tmp_nav->get_detail_sample_distance()/h_scale);
     
@@ -272,8 +271,6 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
         debug_mesh->call_deferred("clear_surfaces");
         debug_mesh->call_deferred("add_surface_from_arrays",Mesh::PRIMITIVE_TRIANGLES,debug_arr);
     }
-    UtilityFunctions::print("Finish adding second  faces");
-
     NavigationServer3D::get_singleton()->bake_from_source_geometry_data(tmp_nav,geo_data);
     last_update_pos = cam_pos;
     UtilityFunctions::print("Finish Thread ");
@@ -284,12 +281,10 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
 
 void MNavigationRegion3D::_finish_update(Ref<NavigationMesh> nvm){
     emit_signal("update_navmesh");
-    UtilityFunctions::print("Finish Updating  ");
     update_thread.wait();
     call_deferred("set_navigation_mesh",nvm);
     call_deferred("update_gizmos");
     call_deferred("_set_is_updating",false);
-    UtilityFunctions::print("Finish set navmesh  ");
 }
 
 void MNavigationRegion3D::_set_is_updating(bool input){
@@ -314,6 +309,10 @@ void MNavigationRegion3D::get_cam_pos(){
 
 void MNavigationRegion3D::force_update(){
     _force_update = true;
+}
+
+bool MNavigationRegion3D::has_data(){
+    return nav_data.is_valid();
 }
 
 void MNavigationRegion3D::set_nav_data(Ref<MNavigationMeshData> input){
@@ -369,6 +368,8 @@ int MNavigationRegion3D::get_max_shown_lod(){
 }
 
 void MNavigationRegion3D::update_npoints(){
+    ERR_FAIL_COND(!is_nav_init);
+    ERR_FAIL_COND(!nav_data.is_valid());
     int new_chunk_count = grid->grid_update_info.size();
     std::lock_guard<std::mutex> lock(npoint_mutex);
     update_id = grid->get_update_id();
@@ -381,6 +382,7 @@ void MNavigationRegion3D::update_npoints(){
 }
 void MNavigationRegion3D::update_dirty_npoints(){
     ERR_FAIL_COND(!is_nav_init);
+    ERR_FAIL_COND(!nav_data.is_valid());
     std::lock_guard<std::mutex> lock(npoint_mutex);
     for(int i=0;i<dirty_points_id->size();i++){
         //UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);
@@ -502,6 +504,7 @@ void MNavigationRegion3D::create_npoints(int grid_index,MGrassChunk* grass_chunk
 }
 void MNavigationRegion3D::set_npoint_by_pixel(uint32_t px, uint32_t py, bool p_value){
     ERR_FAIL_COND(!is_nav_init);
+    ERR_FAIL_COND(!nav_data.is_valid());
     ERR_FAIL_INDEX(px, width);
     ERR_FAIL_INDEX(py, height);
     Vector2 flat_pos(float(px)*h_scale,float(py)*h_scale);
@@ -525,6 +528,9 @@ void MNavigationRegion3D::set_npoint_by_pixel(uint32_t px, uint32_t py, bool p_v
 }
 
 bool MNavigationRegion3D::get_npoint_by_pixel(uint32_t px, uint32_t py){
+    if(!nav_data.is_valid()){
+        return true;
+    }
     ERR_FAIL_COND_V(!is_nav_init,false);
     ERR_FAIL_INDEX_V(px, width,false);
     ERR_FAIL_INDEX_V(py, height,false);
@@ -546,6 +552,7 @@ Vector2i MNavigationRegion3D::get_closest_pixel(Vector3 pos){
 }
 
 void MNavigationRegion3D::draw_npoints(Vector3 brush_pos,real_t radius,bool add){
+    ERR_FAIL_COND(!nav_data.is_valid());
     ERR_FAIL_COND(!is_nav_init);
     ERR_FAIL_COND(update_id!=grid->get_update_id());
     Vector2i px_pos = get_closest_pixel(brush_pos);
@@ -586,6 +593,7 @@ void MNavigationRegion3D::draw_npoints(Vector3 brush_pos,real_t radius,bool add)
 }
 
 void MNavigationRegion3D::set_npoints_visible(bool val){
+    ERR_FAIL_COND(!nav_data.is_valid());
     std::lock_guard<std::mutex> lock(npoint_mutex);
     if(val == is_npoints_visible){
         return;

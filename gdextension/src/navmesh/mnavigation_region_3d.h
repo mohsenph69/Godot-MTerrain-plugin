@@ -86,6 +86,7 @@ class MNavigationRegion3D : public NavigationRegion3D{
     void _set_is_updating(bool input);
     void get_cam_pos();
     void force_update();
+    bool has_data();
 
     void set_nav_data(Ref<MNavigationMeshData> input);
     Ref<MNavigationMeshData> get_nav_data();

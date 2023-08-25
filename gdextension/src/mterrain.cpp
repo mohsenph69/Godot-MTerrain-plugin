@@ -229,7 +229,7 @@ void MTerrain::create_grid(){
         MNavigationRegion3D*  mnav= Object::cast_to<MNavigationRegion3D>(get_child(i));
         if(mnav){
             mnav->init(this,grid);
-            if(mnav->is_nav_init && Engine::get_singleton()->is_editor_hint()){
+            if(mnav->is_nav_init && Engine::get_singleton()->is_editor_hint() && mnav->has_data()){
                 confirm_nav.push_back(mnav);
                 mnav->update_npoints();
                 mnav->apply_update_npoints();
@@ -237,7 +237,6 @@ void MTerrain::create_grid(){
         }
     }
     total_update_count = confirm_grass_list.size() + confirm_nav.size();
-    UtilityFunctions::print("Confirm col list size ",confirm_grass_col_list.size());
     if(update_physics_loop){
         update_physics();
     }
