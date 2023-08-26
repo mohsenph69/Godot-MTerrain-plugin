@@ -90,6 +90,9 @@ class MNavigationRegion3D : public NavigationRegion3D{
     void force_update();
     bool has_data();
 
+    void set_force_update(bool input);
+    bool get_force_update();
+
     void set_nav_data(Ref<MNavigationMeshData> input);
     Ref<MNavigationMeshData> get_nav_data();
 

@@ -21,6 +21,9 @@ void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("draw_npoints","brush_pos","radius","add"), &MNavigationRegion3D::draw_npoints);
     ClassDB::bind_method(D_METHOD("set_npoints_visible","val"), &MNavigationRegion3D::set_npoints_visible);
 
+    ClassDB::bind_method(D_METHOD("set_force_update","input"), &MNavigationRegion3D::set_force_update);
+    ClassDB::bind_method(D_METHOD("get_force_update"), &MNavigationRegion3D::get_force_update);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"force_bake"),"set_force_update","get_force_update");
 
     ClassDB::bind_method(D_METHOD("set_nav_data","input"), &MNavigationRegion3D::set_nav_data);
     ClassDB::bind_method(D_METHOD("get_nav_data"), &MNavigationRegion3D::get_nav_data);
@@ -141,7 +144,8 @@ void MNavigationRegion3D::clear(){
 void MNavigationRegion3D::_update_loop(){
     get_cam_pos();
     float dis = (last_update_pos - cam_pos).length();
-    if(dis>distance_update_threshold && !is_updating){
+    if( (dis>distance_update_threshold && !is_updating) || _force_update ){
+        _force_update = false;
         update_navmesh(cam_pos);
     }
 }
@@ -321,6 +325,14 @@ void MNavigationRegion3D::force_update(){
 
 bool MNavigationRegion3D::has_data(){
     return nav_data.is_valid();
+}
+
+void MNavigationRegion3D::set_force_update(bool input){
+    _force_update = true;
+}
+
+bool MNavigationRegion3D::get_force_update(){
+    return true;
 }
 
 void MNavigationRegion3D::set_nav_data(Ref<MNavigationMeshData> input){
@@ -510,7 +522,11 @@ void MNavigationRegion3D::create_npoints(int grid_index,MGrassChunk* grass_chunk
     g->set_buffer(count,scenario,paint_mesh->get_rid(),paint_material->get_rid(),buffer);
     g->set_shadow_setting(RenderingServer::SHADOW_CASTING_SETTING_OFF);
 
-    g->unrelax();
+    if(is_npoints_visible){
+        g->unrelax();
+    } else {
+        g->relax();
+    }
     //g->total_count = count;
     //if(is_npoints_visible)
     //    g->unrelax();
