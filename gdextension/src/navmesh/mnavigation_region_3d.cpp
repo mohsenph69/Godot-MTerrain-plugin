@@ -26,6 +26,10 @@ void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_nav_data"), &MNavigationRegion3D::get_nav_data);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"data",PROPERTY_HINT_RESOURCE_TYPE,"MNavigationMeshData"),"set_nav_data","get_nav_data");
 
+    ClassDB::bind_method(D_METHOD("set_follow_camera","input"), &MNavigationRegion3D::set_follow_camera);
+    ClassDB::bind_method(D_METHOD("get_follow_camera"), &MNavigationRegion3D::get_follow_camera);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"follow_camera"),"set_follow_camera","get_follow_camera");
+
     ClassDB::bind_method(D_METHOD("set_start_update","input"), &MNavigationRegion3D::set_start_update);
     ClassDB::bind_method(D_METHOD("get_start_update"), &MNavigationRegion3D::get_start_update);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"start_update"),"set_start_update","get_start_update");
@@ -168,7 +172,6 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
     uint32_t top = top_left.y < 0 ? 0 : top_left.y;
     uint32_t right = bottom_right.x > grid->grid_pixel_region.right ? grid->grid_pixel_region.right : bottom_right.x;
     uint32_t bottom = bottom_right.y > grid->grid_pixel_region.bottom ? grid->grid_pixel_region.bottom : bottom_right.y;
-    UtilityFunctions::print("left ",left," right ",right, " top ",top," bottom ",bottom);
     Ref<NavigationMeshSourceGeometryData3D> geo_data;
     geo_data.instantiate();
     PackedVector3Array faces;
@@ -209,7 +212,7 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
         return;
     }
     Basis b;
-    Transform3D t(b,Vector3(0,0,0));
+    Transform3D t(b,-g_pos);
     geo_data->add_faces(faces,t);
     // Add Grass Col
     faces.clear();
@@ -293,6 +296,11 @@ void MNavigationRegion3D::_set_is_updating(bool input){
 
 
 void MNavigationRegion3D::get_cam_pos(){
+    g_pos = get_global_position();
+    if(!follow_camera){
+        cam_pos = g_pos;
+        return;
+    }
     if(custom_camera != nullptr){
         cam_pos = custom_camera->get_global_position();
         return;
@@ -321,6 +329,13 @@ void MNavigationRegion3D::set_nav_data(Ref<MNavigationMeshData> input){
 
 Ref<MNavigationMeshData> MNavigationRegion3D::get_nav_data(){
     return nav_data;
+}
+
+void MNavigationRegion3D::set_follow_camera(bool input){
+    follow_camera = input;
+}
+bool MNavigationRegion3D::get_follow_camera(){
+    return follow_camera;
 }
 
 void MNavigationRegion3D::set_start_update(bool input){

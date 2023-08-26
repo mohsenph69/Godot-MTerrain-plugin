@@ -666,7 +666,6 @@ PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
     bound.bottom = bound.bottom < height ? bound.bottom : height - 1;
     const float* rand_buffer =(float*)rand_buffer_pull[0]->ptr();
     int rand_buffer_size = rand_buffer_pull[0]->size()/12;
-    UtilityFunctions::print("L ",bound.left, " R ",bound.right, " T ",bound.top, " B ",bound.bottom);
     for(uint32_t y=bound.top;y<=bound.bottom;y++){
         for(uint32_t x=bound.left;x<=bound.right;x++){
             if(!get_grass_by_pixel(x,y)){

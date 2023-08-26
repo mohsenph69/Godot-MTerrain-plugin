@@ -29,6 +29,7 @@ using namespace godot;
 class MNavigationRegion3D : public NavigationRegion3D{
     GDCLASS(MNavigationRegion3D,NavigationRegion3D);
     Ref<MNavigationMeshData> nav_data;
+    bool follow_camera = true;
     MGrid* grid = nullptr;
     MTerrain* terrain = nullptr;
     float navigation_radius = 256;
@@ -37,6 +38,7 @@ class MNavigationRegion3D : public NavigationRegion3D{
     bool _force_update = false;
     bool start_update = true;
     Vector3 cam_pos;
+    Vector3 g_pos;
     Vector3 last_update_pos;
     Node3D* custom_camera = nullptr;
     Timer* update_timer;
@@ -90,6 +92,9 @@ class MNavigationRegion3D : public NavigationRegion3D{
 
     void set_nav_data(Ref<MNavigationMeshData> input);
     Ref<MNavigationMeshData> get_nav_data();
+
+    void set_follow_camera(bool input);
+    bool get_follow_camera();
 
     void set_start_update(bool input);
     bool get_start_update();
