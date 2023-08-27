@@ -21,6 +21,10 @@ void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("draw_npoints","brush_pos","radius","add"), &MNavigationRegion3D::draw_npoints);
     ClassDB::bind_method(D_METHOD("set_npoints_visible","val"), &MNavigationRegion3D::set_npoints_visible);
 
+    ClassDB::bind_method(D_METHOD("set_active","input"), &MNavigationRegion3D::set_active);
+    ClassDB::bind_method(D_METHOD("get_active"), &MNavigationRegion3D::get_active);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"active"),"set_active","get_active");
+
     ClassDB::bind_method(D_METHOD("set_force_update","input"), &MNavigationRegion3D::set_force_update);
     ClassDB::bind_method(D_METHOD("get_force_update"), &MNavigationRegion3D::get_force_update);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"force_bake"),"set_force_update","get_force_update");
@@ -32,14 +36,6 @@ void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_follow_camera","input"), &MNavigationRegion3D::set_follow_camera);
     ClassDB::bind_method(D_METHOD("get_follow_camera"), &MNavigationRegion3D::get_follow_camera);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"follow_camera"),"set_follow_camera","get_follow_camera");
-
-    ClassDB::bind_method(D_METHOD("set_start_update","input"), &MNavigationRegion3D::set_start_update);
-    ClassDB::bind_method(D_METHOD("get_start_update"), &MNavigationRegion3D::get_start_update);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"start_update"),"set_start_update","get_start_update");
-
-    ClassDB::bind_method(D_METHOD("set_active_update_loop","input"), &MNavigationRegion3D::set_active_update_loop);
-    ClassDB::bind_method(D_METHOD("get_active_update_loop"), &MNavigationRegion3D::get_active_update_loop);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"active_update_loop"),"set_active_update_loop","get_active_update_loop");
 
     ClassDB::bind_method(D_METHOD("set_distance_update_threshold","input"), &MNavigationRegion3D::set_distance_update_threshold);
     ClassDB::bind_method(D_METHOD("get_distance_update_threshold"), &MNavigationRegion3D::get_distance_update_threshold);
@@ -75,14 +71,15 @@ MNavigationRegion3D::~MNavigationRegion3D(){
 }
 
 void MNavigationRegion3D::init(MTerrain* _terrain, MGrid* _grid){
+    if(!active){
+        return;
+    }
     terrain = _terrain;
     grid = _grid;
-    if(start_update){
-        get_cam_pos();
-        update_navmesh(cam_pos);
-        last_update_pos = cam_pos;
-        update_timer->start();
-    }
+    get_cam_pos();
+    update_navmesh(cam_pos);
+    last_update_pos = cam_pos;
+    update_timer->start();
     ERR_FAIL_COND(!grid->is_created());
     h_scale = grid->get_h_scale();
     scenario = grid->get_scenario();
@@ -139,6 +136,8 @@ void MNavigationRegion3D::clear(){
         memdelete(it->value);
     }
     grid_to_npoint.clear();
+    update_timer->stop();
+    is_nav_init = false;
 }
 
 void MNavigationRegion3D::_update_loop(){
@@ -328,6 +327,8 @@ bool MNavigationRegion3D::has_data(){
 }
 
 void MNavigationRegion3D::set_force_update(bool input){
+    ERR_FAIL_COND(!active);
+    ERR_FAIL_COND(!is_nav_init);
     _force_update = true;
 }
 
@@ -350,24 +351,14 @@ bool MNavigationRegion3D::get_follow_camera(){
     return follow_camera;
 }
 
-void MNavigationRegion3D::set_start_update(bool input){
-    start_update = input;
-}
-bool MNavigationRegion3D::get_start_update(){
-    return start_update;
-}
-
-void MNavigationRegion3D::set_active_update_loop(bool input){
-    if(input){
-        update_timer->start();
-    } else {
-        update_timer->stop();
+void MNavigationRegion3D::set_active(bool input){
+    active = input;
+    if(is_nav_init){
+        WARN_PRINT("You should restart Terrain if you want to active MNavigationRegion3D update");
     }
-    active_update_loop = input;
 }
-
-bool MNavigationRegion3D::get_active_update_loop(){
-    return active_update_loop;
+bool MNavigationRegion3D::get_active(){
+    return active;
 }
 
 void MNavigationRegion3D::set_distance_update_threshold(float input){

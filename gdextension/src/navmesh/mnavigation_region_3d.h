@@ -36,13 +36,12 @@ class MNavigationRegion3D : public NavigationRegion3D{
     std::future<void> update_thread;
     bool is_updating = false;
     bool _force_update = false;
-    bool start_update = true;
+    bool active = true;
     Vector3 cam_pos;
     Vector3 g_pos;
     Vector3 last_update_pos;
     Node3D* custom_camera = nullptr;
     Timer* update_timer;
-    bool active_update_loop=true;
     float distance_update_threshold=64;
     void _update_navmesh(Vector3 cam_pos);
     MeshInstance3D* debug_mesh_instance;
@@ -99,11 +98,8 @@ class MNavigationRegion3D : public NavigationRegion3D{
     void set_follow_camera(bool input);
     bool get_follow_camera();
 
-    void set_start_update(bool input);
-    bool get_start_update();
-
-    void set_active_update_loop(bool input);
-    bool get_active_update_loop();
+    void set_active(bool input);
+    bool get_active();
 
     void set_distance_update_threshold(float input);
     float get_distance_update_threshold();

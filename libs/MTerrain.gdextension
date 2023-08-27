@@ -19,6 +19,7 @@ windows.release.x86_32 = "res://addons/m_terrain/libs/libMTerrain.windows.templa
 
 MTerrain = "res://addons/m_terrain/icons/M-terrain_icon.png"
 MGrass = "res://addons/m_terrain/icons/foilage_icon.png"
+MNavigationRegion3D = "res://addons/m_terrain/icons/MNavigationRegion3D.png"
 
 
 
