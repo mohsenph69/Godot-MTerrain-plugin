@@ -115,9 +115,12 @@ func paint_mode_handle(event:InputEvent):
 func _handles(object):
 	if not Engine.is_editor_hint():
 		return false
-	if active_nav_region != object:
-		if active_nav_region:
-			active_nav_region.set_npoints_visible(false)
+	if is_instance_valid(active_nav_region):
+		if active_nav_region != object:
+			if active_nav_region:
+				active_nav_region.set_npoints_visible(false)
+	else:
+		active_nav_region = null
 	if object.has_method("create_grid"):
 		active_terrain = object
 		active_terrain.set_brush_manager(paint_panel.brush_manager)
