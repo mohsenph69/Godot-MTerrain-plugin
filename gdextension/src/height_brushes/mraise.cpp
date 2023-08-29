@@ -22,7 +22,7 @@ Array MRaise::_get_property_list(){
     p1["type"] = Variant::FLOAT;
     p1["hint"] = "range";
     p1["hint_string"] = "0.001";
-    p1["default_value"] = 0.5;
+    p1["default_value"] = hardness;
     p1["min"] = 0.0;
     p1["max"] = 0.95;
     //p2
@@ -31,7 +31,7 @@ Array MRaise::_get_property_list(){
     p2["type"] = Variant::FLOAT;
     p2["hint"] = "range";
     p2["hint_string"] = "0.01";
-    p2["default_value"] = 0.2;
+    p2["default_value"] = amount;
     p2["min"] = -6;
     p2["max"] = 6;
     props.append(p1);

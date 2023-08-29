@@ -20,7 +20,7 @@ Array MSmooth::_get_property_list(){
     p1["type"] = Variant::INT;
     p1["hint"] = "enum";
     p1["hint_string"] = "AVERAGE,GAUSSIAN";
-    p1["default_value"] = 1;
+    p1["default_value"] = mode;
     p1["min"] = 0;
     p1["max"] = 2;
     // p2
@@ -29,7 +29,7 @@ Array MSmooth::_get_property_list(){
     p2["type"] = Variant::FLOAT;
     p2["hint"] = "range";
     p2["hint_string"] = "0.01";
-    p2["default_value"] = 0.5;
+    p2["default_value"] = amount;
     p2["min"] = 0;
     p2["max"] = 1;
     props.append(p1);

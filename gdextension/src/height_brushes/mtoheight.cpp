@@ -20,7 +20,7 @@ Array MToHeight::_get_property_list(){
     p1["type"] = Variant::FLOAT;
     p1["hint"] = "range";
     p1["hint_string"] = "0.01";
-    p1["default_value"] = 0.5;
+    p1["default_value"] = weight;
     p1["min"] = 0.1;
     p1["max"] = 1.0;
     //p2
@@ -29,7 +29,7 @@ Array MToHeight::_get_property_list(){
     p2["type"] = Variant::FLOAT;
     p2["hint"] = "range";
     p2["hint_string"] = "0.01";
-    p2["default_value"] = 0.9;
+    p2["default_value"] = hardness;
     p2["min"] = 0.1;
     p2["max"] = 0.95;
     //p3
@@ -38,7 +38,7 @@ Array MToHeight::_get_property_list(){
     p3["type"] = Variant::FLOAT;
     p3["hint"] = "";
     p3["hint_string"] = "";
-    p3["default_value"] = 0.0;
+    p3["default_value"] = offset;
     p3["min"] = -10000000000;
     p3["max"] = 100000000000;
     //p4
@@ -47,7 +47,7 @@ Array MToHeight::_get_property_list(){
     p4["type"] = Variant::BOOL;
     p4["hint"] = "";
     p4["hint_string"] = "";
-    p4["default_value"] = false;
+    p4["default_value"] = absolute;
     p4["min"] = -0;
     p4["max"] = 0;
     props.append(p1);
