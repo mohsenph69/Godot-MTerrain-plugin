@@ -143,6 +143,9 @@ void MTerrain::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("update_grass_list"), &MTerrain::update_grass_list);
     ClassDB::bind_method(D_METHOD("terrain_child_changed"), &MTerrain::terrain_child_changed);
+    ClassDB::bind_method(D_METHOD("get_region_grid_size"), &MTerrain::get_region_grid_size);
+    ClassDB::bind_method(D_METHOD("get_base_size"), &MTerrain::get_base_size);
+    ClassDB::bind_method(D_METHOD("get_h_scale"), &MTerrain::get_h_scale);
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
 }
 
@@ -942,6 +945,17 @@ void MTerrain::update_grass_list(){
     }
     is_ready = true;
     /// Finish initlaztion start update
+}
+
+Vector2i MTerrain::get_region_grid_size(){
+    return Vector2i(grid->get_region_grid_size().x,grid->get_region_grid_size().z);
+}
+
+int32_t MTerrain::get_base_size(){
+    return size_list[min_size_index];
+}
+float MTerrain::get_h_scale(){
+    return h_scale_list[min_h_scale_index];
 }
 
 #include <godot_cpp/classes/file_access.hpp>

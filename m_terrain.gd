@@ -2,6 +2,7 @@
 extends EditorPlugin
 
 var import_window_res = preload("res://addons/m_terrain/gui/import_window.tscn")
+var image_creator_window_res = preload("res://addons/m_terrain/gui/image_creator_window.tscn")
 var tools= null
 var paint_panel=null
 var brush_decal=null
@@ -22,6 +23,7 @@ var is_paint_active:bool = false
 func _enter_tree():
 	if Engine.is_editor_hint():
 		add_tool_menu_item("MTerrain importer", Callable(self,"show_import_window"))
+		add_tool_menu_item("MTerrain image creator", Callable(self,"show_image_creator_window"))
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
 		tools.toggle_paint_mode.connect(Callable(self,"toggle_paint_mode"))
 		tools.save_request.connect(Callable(self,"save_request"))
@@ -40,6 +42,7 @@ func _enter_tree():
 func _exit_tree():
 	if Engine.is_editor_hint():
 		remove_tool_menu_item("MTerrain importer")
+		remove_tool_menu_item("MTerrain image creator")
 		remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		remove_control_from_docks(paint_panel)
 		brush_decal.queue_free()
@@ -48,6 +51,12 @@ func _exit_tree():
 func show_import_window():
 	var window = import_window_res.instantiate()
 	add_child(window)
+
+func show_image_creator_window():
+	var window = image_creator_window_res.instantiate()
+	add_child(window)
+	if active_terrain:
+		window.set_terrain(active_terrain)
 
 func _forward_3d_gui_input(viewport_camera, event):
 	if active_terrain and event is InputEventMouse:
@@ -125,7 +134,8 @@ func _handles(object):
 		active_terrain = object
 		active_terrain.set_brush_manager(paint_panel.brush_manager)
 		tools.visible = true
-		paint_panel.set_grass_mode(false)
+		if is_paint_active:
+			paint_panel.set_grass_mode(false)
 		active_grass = null
 		active_nav_region = null
 		return true
@@ -134,7 +144,8 @@ func _handles(object):
 			active_grass = object
 			tools.visible = true
 			active_nav_region = null
-			paint_panel.set_grass_mode(true)
+			if is_paint_active:
+				paint_panel.set_grass_mode(true)
 			active_terrain = object.get_parent()
 			return true
 	elif object.has_method("draw_npoints"):
@@ -142,7 +153,8 @@ func _handles(object):
 			active_nav_region = object
 			tools.visible = true
 			active_grass = null
-			paint_panel.set_grass_mode(true)
+			if is_paint_active:
+				paint_panel.set_grass_mode(true)
 			if is_paint_active:
 				active_nav_region.set_npoints_visible(true)
 			active_terrain = object.get_parent()

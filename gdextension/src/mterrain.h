@@ -210,6 +210,9 @@ class MTerrain : public  Node3D {
     void toggle_heightmap_layer_visibile();
     void terrain_child_changed(Node* n);
     void update_grass_list();
+    Vector2i get_region_grid_size();
+    int32_t get_base_size();
+    float get_h_scale();
     void test_function();
 };
 

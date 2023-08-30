@@ -1013,6 +1013,33 @@ void MGrid::draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPix
     }
 }
 
+void MGrid::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index){
+    ERR_FAIL_COND(_brush_manager==nullptr);
+    current_paint_index = index;
+    Vector2i bpxpos = get_closest_pixel(brush_pos);
+    if(bpxpos.x<0 || bpxpos.y<0 || bpxpos.x>grid_pixel_region.right || bpxpos.y>grid_pixel_region.bottom){
+        return;
+    }
+    brush_px_pos_x = bpxpos.x;
+    brush_px_pos_y = bpxpos.y;
+    brush_px_radius = (uint32_t)(radius/_chunks->h_scale);
+    brush_world_pos = brush_pos;
+    brush_radius = radius;
+    // Setting left right top bottom
+    uint32_t left = (brush_px_pos_x>brush_px_radius) ? brush_px_pos_x - brush_px_radius : 0;
+    uint32_t right = brush_px_pos_x + brush_px_radius;
+    right = right > grid_pixel_region.right ? grid_pixel_region.right : right;
+    uint32_t top = (brush_px_pos_y>brush_px_radius) ? brush_px_pos_y - brush_px_radius : 0;
+    uint32_t bottom = brush_px_pos_y + brush_px_radius;
+    bottom = (bottom>grid_pixel_region.bottom) ? grid_pixel_region.bottom : bottom;
+    // Stop here To go write a basic color brush
+    //MHeightBrush* brush = _brush_manager->get_height_brush(brush_id);
+    //brush->set_grid(this);
+}
+void MGrid::draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush){
+    
+}
+
 //&MGrid::generate_normals,this, px_regions[i]
 void MGrid::update_all_dirty_image_texture(){
     Vector<std::thread*> threads_pull;
