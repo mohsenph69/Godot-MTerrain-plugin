@@ -66,6 +66,17 @@ popup/item_10/id = 10
 popup/item_11/text = "FORMAT_RGBAF"
 popup/item_11/id = 11
 
+[node name="def_color" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/def_color"]
+layout_mode = 2
+text = "Default Color"
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="VBoxContainer/def_color"]
+layout_mode = 2
+text = "-------------"
+
 [node name="create" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Create"
