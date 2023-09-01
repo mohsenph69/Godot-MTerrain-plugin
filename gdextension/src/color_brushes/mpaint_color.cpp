@@ -1,4 +1,7 @@
 #include "mpaint_color.h"
+#include "../mbrush_manager.h"
+
+
 
 
 

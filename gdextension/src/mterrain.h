@@ -92,6 +92,8 @@ class MTerrain : public  Node3D {
     int total_update_count=0;
     // Show if terrain ready called
     bool is_ready=false;
+    //Array of brush layers resource
+    Array brush_layers;
 
 
 
@@ -214,6 +216,12 @@ class MTerrain : public  Node3D {
     Vector2i get_region_grid_size();
     int32_t get_base_size();
     float get_h_scale();
+
+    void set_brush_layers(Array input);
+    Array get_brush_layers();
+    void set_brush_layers_num(int input);
+    int get_brush_layers_num();
+
     void test_function();
 };
 

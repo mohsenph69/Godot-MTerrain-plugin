@@ -25,6 +25,7 @@
 #include "grass/mgrass_lod_setting.h"
 #include "navmesh/mnavigation_region_3d.h"
 #include "navmesh/mnavigation_mesh_data.h"
+#include "mbrush_layers.h"
 
 using namespace godot;
 
@@ -45,6 +46,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MGrassLodSetting>();
 	ClassDB::register_class<MNavigationRegion3D>();
 	ClassDB::register_class<MNavigationMeshData>();
+	ClassDB::register_class<MBrushLayers>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {

@@ -147,6 +147,13 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_region_grid_size"), &MTerrain::get_region_grid_size);
     ClassDB::bind_method(D_METHOD("get_base_size"), &MTerrain::get_base_size);
     ClassDB::bind_method(D_METHOD("get_h_scale"), &MTerrain::get_h_scale);
+
+    ClassDB::bind_method(D_METHOD("set_brush_layers","input"), &MTerrain::set_brush_layers);
+    ClassDB::bind_method(D_METHOD("get_brush_layers"), &MTerrain::get_brush_layers);
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"brush_layers",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_brush_layers","get_brush_layers");
+    ClassDB::bind_method(D_METHOD("set_brush_layers_num","input"), &MTerrain::set_brush_layers_num);
+    ClassDB::bind_method(D_METHOD("get_brush_layers_num"), &MTerrain::get_brush_layers_num);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"brush_layers_num",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_brush_layers_num","get_brush_layers_num");
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
 }
 
@@ -763,6 +770,15 @@ void MTerrain::_get_property_list(List<PropertyInfo> *p_list) const {
             p_list->push_back(p);
         }
     }
+    // Brush layers property
+    PropertyInfo ccat(Variant::INT, "Brush Layers", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_CATEGORY);
+    p_list->push_back(ccat);
+    PropertyInfo bln(Variant::INT, "brush_layers_num", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR);
+    p_list->push_back(bln);
+    for(int i=0;i<brush_layers.size();i++){
+        PropertyInfo brl(Variant::OBJECT, "MBL_"+itos(i), PROPERTY_HINT_RESOURCE_TYPE, "MBrushLayers", PROPERTY_USAGE_EDITOR);
+        p_list->push_back(brl);
+    }
 }
 
 real_t MTerrain::get_closest_height(const Vector3& pos) {
@@ -798,6 +814,11 @@ bool MTerrain::_get(const StringName &p_name, Variant &r_ret) const {
         r_ret = (float)lod_distance[index];
         return true;
     }
+    if(p_name.begins_with("MBL_")){
+        int64_t index = p_name.get_slicec('_',1).to_int();
+        r_ret = brush_layers[index];
+        return true;
+    }
     return false;
 }
 
@@ -825,6 +846,11 @@ bool MTerrain::_set(const StringName &p_name, const Variant &p_value) {
             return false;
         }
         lod_distance[index] = val;
+        return true;
+    }
+    if(p_name.begins_with("MBL_")){
+        int64_t index = p_name.get_slicec('_',1).to_int();
+        brush_layers[index] = p_value;
         return true;
     }
     return false;
@@ -978,31 +1004,23 @@ struct Foo
     }
 };
 
-#include <random>
+
+void MTerrain::set_brush_layers(Array input){
+    brush_layers = input;
+}
+Array MTerrain::get_brush_layers(){
+    return brush_layers;
+}
+void MTerrain::set_brush_layers_num(int input){
+    ERR_FAIL_COND(input<0);
+    brush_layers.resize(input);
+    notify_property_list_changed();
+}
+int MTerrain::get_brush_layers_num(){
+    return brush_layers.size();
+}
+
 void MTerrain::test_function(){
-    int seed = 1001;
-    double min=300;
-    double max = -600;
-    for(int i=0;i<100000;i++){
-        seed = i+seed;
-        double r = (sin(double(seed)*3.512+13.23)*2.01*(double)seed);
-        if(r<0){
-            r*=-1.0;
-        }
-        r = r - floor(r);
-        r = (cos(r*63.341+3.29)*((double)seed+8362.3215));
-        if(r<0){
-            r*=-1.0;
-        }
-        r = r - floor(r);
-        if(r<min){
-            min=r;
-        }
-        if(r>max){
-            max=r;
-        }
-    }
-    UtilityFunctions::print("Min ",min);
-    UtilityFunctions::print("Max ",max);
+
 
 }

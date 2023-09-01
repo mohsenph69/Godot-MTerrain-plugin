@@ -41,6 +41,6 @@ class MBrushManager : public Object {
     List<PropertyInfo> get_color_brush_property(int brush_id);
     void set_color_brush_propert(String prop_name,Variant value,int brush_id);
 
-    
+    static void register_prop(String brush_name,String prop_name, Variant::Type type);
 };
 #endif
