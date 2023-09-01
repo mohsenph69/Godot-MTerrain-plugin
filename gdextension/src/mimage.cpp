@@ -252,10 +252,28 @@ void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
 	is_save = false;
 }
 
+void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
+	uint32_t ofs = (x + y*width);
+	uint8_t* ptrw = data.ptrw() + ofs*pixel_size;
+	mempcpy(ptrw,ptr,pixel_size);
+	is_dirty = true;
+	is_save = false;
+}
+
+const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y){
+	uint32_t ofs = (x + y*width);
+	return data.ptr() + ofs*pixel_size;
+}
 
 void MImage::save(bool force_save) {
+	if(name!="heightmap"){
+		Ref<Image> img = Image::create_from_data(width,height,false,format,data);
+		godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+		ERR_FAIL_COND_MSG(err,"Can not save image, image class erro: "+itos(err));
+		is_save = true;
+		return;
+	}
 	if(force_save || !is_save) {
-		#ifdef M_IMAGE_LAYER_ON
 		if(!is_saved_layers[0]){
 			PackedByteArray background_data = data;
 			int total_pixel = width*height;
@@ -289,12 +307,6 @@ void MImage::save(bool force_save) {
 			}
 		}
 		is_save = true;
-		#else
-		Ref<Image> img = Image::create_from_data(width,height,false,format,data);
-		godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
-		ERR_FAIL_COND_MSG(err,"Can not save image, image class erro: "+itos(err));
-		is_save = true;
-		#endif
 	}
 }
 

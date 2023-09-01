@@ -31,6 +31,7 @@
 
 class MBrushManager;
 class MHeightBrush;
+class MColorBrush;
 
 
 
@@ -228,7 +229,9 @@ class MGrid : public Object {
     void update_physics(const Vector3& cam_pos);
 
     Color get_pixel(uint32_t x,uint32_t y, const int32_t& index);
+    const uint8_t* get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t& index);
     void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index);
+    void set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t& index);
     real_t get_height_by_pixel(uint32_t x,uint32_t y);
     void set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value);
     bool has_pixel(const uint32_t& x,const uint32_t& y);
@@ -246,7 +249,7 @@ class MGrid : public Object {
     void draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush);
 
     void draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index);
-    void draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush);
+    void draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MColorBrush* brush);
 
     void update_all_dirty_image_texture();
 

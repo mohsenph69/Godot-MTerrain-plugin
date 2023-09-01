@@ -5,12 +5,16 @@
 #include "height_brushes/mtoheight.h"
 #include "height_brushes/msmooth.h"
 
+#include "color_brushes/mpaint_color.h"
+
 
 
 MBrushManager::MBrushManager(){
     add_height_brush(memnew(MRaise));
     add_height_brush(memnew(MToHeight));
     add_height_brush(memnew(MSmooth));
+
+    add_color_brush(memnew(MPaintColor));
 }
 
 void MBrushManager::_bind_methods(){
@@ -30,6 +34,12 @@ void MBrushManager::add_height_brush(MHeightBrush* brush){\
     ERR_FAIL_COND_MSG(height_brush_map.has(brush->_get_name()), "Duplicate brush name: "+brush->_get_name());
     height_brushes.append(brush);
     height_brush_map.insert(brush->_get_name(), height_brushes.size() -1);
+}
+
+void MBrushManager::add_color_brush(MColorBrush* brush){
+    ERR_FAIL_COND_MSG(color_brush_map.has(brush->_get_name()), "Duplicate brush name: "+brush->_get_name());
+    color_brushes.append(brush);
+    color_brush_map.insert(brush->_get_name(), height_brushes.size() -1);
 }
 
 MHeightBrush* MBrushManager::get_height_brush(int brush_id){
@@ -56,4 +66,22 @@ Array MBrushManager::get_height_brush_property(int brush_id){
 
 void MBrushManager::set_height_brush_propert(String prop_name,Variant value,int brush_id){
     height_brushes[brush_id]->_set_property(prop_name,value);
+}
+
+MColorBrush* MBrushManager::get_color_brush(int brush_id){
+    ERR_FAIL_COND_V(brush_id >= color_brushes.size(), nullptr);
+    return color_brushes[brush_id];
+}
+PackedStringArray MBrushManager::get_color_brush_list(){
+    PackedStringArray out;
+    for(int i=0;i<color_brushes.size();i++){
+        out.append(color_brushes[i]->_get_name());
+    }
+    return out;
+}
+List<PropertyInfo> MBrushManager::get_color_brush_property(int brush_id){
+    return color_brushes[brush_id]->_get_property_list();
+}
+void MBrushManager::set_color_brush_propert(String prop_name,Variant value,int brush_id){
+    color_brushes[brush_id]->_set_property(prop_name,value);
 }

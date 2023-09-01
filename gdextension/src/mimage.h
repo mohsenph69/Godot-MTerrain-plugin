@@ -67,6 +67,8 @@ struct MImage {
     void set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value);
     Color get_pixel(const uint32_t&x, const uint32_t& y) const;
     void set_pixel(const uint32_t&x, const uint32_t& y,const Color& color);
+    void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
+    const uint8_t* get_pixel_by_data_pointer(uint32_t x,uint32_t y);
     void save(bool force_save);
 
 

@@ -198,6 +198,7 @@ class MTerrain : public  Node3D {
     Vector2i get_closest_pixel(const Vector3& world_pos);
     void set_brush_manager(Object* input);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
+    void draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index);
     
     void set_heightmap_layers(PackedStringArray input);
     PackedStringArray get_heightmap_layers();

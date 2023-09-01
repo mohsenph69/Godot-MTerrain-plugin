@@ -7,6 +7,7 @@ env.Append(CPPPATH="src/")
 
 src = Glob("src/*.cpp")
 src.append(Glob("src/height_brushes/*.cpp"))
+src.append(Glob("src/color_brushes/*.cpp"))
 src.append(Glob("src/grass/*.cpp"))
 src.append(Glob("src/navmesh/*.cpp"))
 

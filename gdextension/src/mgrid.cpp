@@ -755,6 +755,17 @@ Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t& index) {
     return r->get_pixel(x,y,index);
 }
 
+const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t& index){
+    ERR_FAIL_COND_V(!_has_pixel(x,y),nullptr);
+    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
+    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - ex;
+    uint32_t ry = (y/rp) - ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    return get_region(rx,ry)->images[index]->get_pixel_by_data_pointer(x,y);
+}
+
 void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index) {
     if(!_has_pixel(x,y)){
         return;
@@ -782,6 +793,36 @@ void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& inde
     if(ey){
         MRegion* re = get_region(rx,ry+1);
         re->set_pixel(x,0,col,index);
+    }
+}
+
+void MGrid::set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t& index){
+    if(!_has_pixel(x,y)){
+        return;
+    }
+    bool ex = (x%rp == 0 && x!=0);
+    bool ey = (y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - (uint32_t)ex;
+    uint32_t ry = (y/rp) - (uint32_t)ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    r->images[index]->set_pixel_by_data_pointer(x,y,ptr);
+    // Take care of the edges
+    ex = (ex && rx != _region_grid_bound.right);
+    // Same for ey
+    ey = (ey && ry != _region_grid_bound.bottom);
+    if(ex && ey){
+        MRegion* re = get_region(rx+1,ry+1);
+        re->images[index]->set_pixel_by_data_pointer(0,0,ptr);
+    }
+    if(ex){
+        MRegion* re = get_region(rx+1,ry);
+        re->images[index]->set_pixel_by_data_pointer(0,y,ptr);
+    }
+    if(ey){
+        MRegion* re = get_region(rx,ry+1);
+        re->images[index]->set_pixel_by_data_pointer(x,0,ptr);
     }
 }
 
@@ -1015,6 +1056,8 @@ void MGrid::draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPix
 
 void MGrid::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index){
     ERR_FAIL_COND(_brush_manager==nullptr);
+    ERR_FAIL_INDEX(index,regions[0].images.size());
+    Image::Format format = regions[0].images[index]->format;
     current_paint_index = index;
     Vector2i bpxpos = get_closest_pixel(brush_pos);
     if(bpxpos.x<0 || bpxpos.y<0 || bpxpos.x>grid_pixel_region.right || bpxpos.y>grid_pixel_region.bottom){
@@ -1033,11 +1076,67 @@ void MGrid::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t ind
     uint32_t bottom = brush_px_pos_y + brush_px_radius;
     bottom = (bottom>grid_pixel_region.bottom) ? grid_pixel_region.bottom : bottom;
     // Stop here To go write a basic color brush
-    //MHeightBrush* brush = _brush_manager->get_height_brush(brush_id);
-    //brush->set_grid(this);
+    MColorBrush* brush = _brush_manager->get_color_brush(brush_id);
+    brush->set_grid(this);
+    MPixelRegion draw_pixel_region(left,right,top,bottom);
+    MImage* draw_image = memnew(MImage);
+    {
+        draw_image->create(draw_pixel_region.width,draw_pixel_region.height,format);
+        Vector<MPixelRegion> draw_pixel_regions = draw_pixel_region.devide(4);
+        Vector<MPixelRegion> local_pixel_regions;
+        for(int i=0;i<draw_pixel_regions.size();i++){
+            local_pixel_regions.append(draw_pixel_region.get_local(draw_pixel_regions[i]));
+        }
+        Vector<std::thread*> threads_pull;
+        for(int i=0;i<draw_pixel_regions.size();i++){
+            std::thread* t = new std::thread(&MGrid::draw_color_region,this, draw_image,draw_pixel_regions[i],local_pixel_regions[i],brush);
+            threads_pull.append(t);
+        }
+        for(int i=0;i<threads_pull.size();i++){
+            std::thread* t = threads_pull[i];
+            t->join();
+            delete t;
+        }
+    }
+    uint32_t local_x=0;
+    uint32_t local_y=0;
+    uint32_t x=draw_pixel_region.left;
+    uint32_t y=draw_pixel_region.top;
+    int print_index = 0;
+    while(local_y<draw_image->height){
+        while(local_x<draw_image->width){
+            //set_height_by_pixel(x,y,draw_image->get_pixel_RF(local_x,local_y));
+            uint32_t ofs = (local_x + local_y*draw_image->width)*draw_image->pixel_size;
+            uint8_t* ptr = draw_image->data.ptrw() + ofs;
+            //set_pixel_by_pointer(x,y,ptr,index);
+            set_pixel(x,y,Color(1,0,0,1),index);
+            local_x++;
+            x++;
+        }
+        local_x=0;
+        x=draw_pixel_region.left;
+        local_y++;
+        y++;
+    }
+    memdelete(draw_image);
+    update_all_dirty_image_texture();
 }
-void MGrid::draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush){
-    
+void MGrid::draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MColorBrush* brush){
+    uint32_t local_x=local_pixel_region.left;
+    uint32_t local_y=local_pixel_region.top;
+    uint32_t x=draw_pixel_region.left;
+    uint32_t y=draw_pixel_region.top;
+    while(local_y<=local_pixel_region.bottom){
+        while(local_x<=local_pixel_region.right){
+            brush->set_color(local_x,local_y,x,y,img);
+            local_x++;
+            x++;
+        }
+        local_x=local_pixel_region.left;
+        x=draw_pixel_region.left;
+        local_y++;
+        y++;
+    }
 }
 
 //&MGrid::generate_normals,this, px_regions[i]

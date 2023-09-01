@@ -133,6 +133,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_closest_pixel", "world_pos"), &MTerrain::get_closest_pixel);
     ClassDB::bind_method(D_METHOD("set_brush_manager", "brush_manager"), &MTerrain::set_brush_manager);
     ClassDB::bind_method(D_METHOD("draw_height", "brush_pos","radius","brush_id"), &MTerrain::draw_height);
+    ClassDB::bind_method(D_METHOD("draw_color","brush_pos","radius","brush_id","index"),&MTerrain::draw_color);
 
     ClassDB::bind_method(D_METHOD("set_active_layer_by_name","layer_name"), &MTerrain::set_active_layer_by_name);
     ClassDB::bind_method(D_METHOD("add_heightmap_layer","layer_name"), &MTerrain::add_heightmap_layer);
@@ -840,6 +841,11 @@ void MTerrain::set_brush_manager(Object* input){
 void MTerrain::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     if(!grid->is_created()) return;
     grid->draw_height(brush_pos,radius,brush_id);
+}
+
+void MTerrain::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index){
+    if(!grid->is_created()) return;
+    grid->draw_color(brush_pos,radius,brush_id,index);
 }
 
 Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
