@@ -5,11 +5,18 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
+#include <godot_cpp/templates/vector.hpp>
 
 
 using namespace godot;
 
 class MColorBrush;
+
+struct LayerProps
+{
+    PropertyInfo pinfo;
+    Variant def_value;
+};
 
 
 class MBrushLayers : public Resource {
@@ -19,7 +26,7 @@ class MBrushLayers : public Resource {
     static void _bind_methods();
 
     public:
-    Dictionary props;
+    HashMap<String,Vector<LayerProps>> layer_props;
     String layers_title;
     String uniform_name;
     String brush_name="Color Paint";

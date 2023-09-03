@@ -35,6 +35,7 @@ var brush_size:float
 
 var property_element_list:Array
 var color_brush_layers:Array
+var color_brush_titles:Array
 var selected_layer_group=0
 var current_uniform:=""
 var current_color_brush:=""
@@ -87,7 +88,7 @@ func create_color_brush_layers():
 	var layer_group = 0
 	for layers in layers_group:
 		var title_lable = layers_title_res.instantiate()
-		color_brush_layers.push_back(title_lable)
+		color_brush_titles.push_back(title_lable)
 		var title :String= layers["title"]
 		if title.is_empty():
 			title = "Layer Group "+str(layer_group)
@@ -109,7 +110,10 @@ func create_color_brush_layers():
 func remove_color_brush_layers():
 	for l in color_brush_layers:
 		l.queue_free()
+	for l in color_brush_titles:
+		l.queue_free()
 	color_brush_layers.clear()
+	color_brush_titles.clear()
 
 func brush_layer_selected(index, layer_group):
 	if selected_layer_group != layer_group:

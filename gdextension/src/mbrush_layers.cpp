@@ -25,10 +25,22 @@ void MBrushLayers::_bind_methods(){
 }
 
 MBrushLayers::MBrushLayers(){
+    Vector<LayerProps> color_brush;
+    LayerProps hardness = {PropertyInfo(Variant::FLOAT,"hardness",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0.9)};
+    LayerProps color = {PropertyInfo(Variant::COLOR,"color",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),Variant(Color(1.0,0.0,0.0,1.0))};
+    color_brush.push_back(hardness);
+    color_brush.push_back(color);
+    layer_props.insert("Color Paint",color_brush);
+    /*
     Dictionary color_brush;
-    color_brush["hardness"] = Variant(0.9);
+    Dictionary color_brush_def;
+    color_brush["hardness"] = PropertyInfo(Variant::FLOAT,"hardness",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR);
+    color_brush_def["hardness"] = Variant(0.9);
     color_brush["color"] = Variant(Color(1.0,0.0,0.0,1.0));
+    color_brush_def["color"] = Variant(Color(1.0,0.0,0.0,1.0));
     props["Color Paint"]=color_brush;
+    props_def["Color Paint"]=color_brush_def;
+    */
 }
 MBrushLayers::~MBrushLayers(){
 
@@ -59,11 +71,10 @@ void MBrushLayers::set_brush_name(String input){
         Dictionary dic;
         dic["NAME"]=org["NAME"];
         dic["ICON"]=org["ICON"];
-        if(props.has(brush_name)){
-            Dictionary p = props[brush_name];
-            Array n = p.keys();
-            for(int k=0;k<n.size();k++){
-                dic[n[k]] = p[n[k]];
+        if(layer_props.has(brush_name)){
+            Vector<LayerProps> p = layer_props.get(brush_name);
+            for(int j=0;j<p.size();j++){
+                dic[p[j].pinfo.name] = p[j].def_value;
             }
         }
         layers[i] = dic;
@@ -82,11 +93,10 @@ void MBrushLayers::set_layers_num(int input){
             Dictionary dic;
             dic["NAME"]="";
             dic["ICON"]="";
-            if(props.has(brush_name)){
-                Dictionary p = props[brush_name];
-                Array n = p.keys();
-                for(int k=0;k<n.size();k++){
-                    dic[n[k]] = p[n[k]];
+            if(layer_props.has(brush_name)){
+                Vector<LayerProps> p = layer_props.get(brush_name);
+                for(int j=0;j<p.size();j++){
+                    dic[p[j].pinfo.name] = p[j].def_value;
                 }
             }
             layers[i] = dic;
@@ -118,12 +128,12 @@ void MBrushLayers::_get_property_list(List<PropertyInfo> *p_list) const {
         p_list->push_back(lsub);
         p_list->push_back(lname);
         p_list->push_back(licon);
-        if(props.has(brush_name)){
-            Dictionary p = props[brush_name];
-            Array keys=p.keys();
-            for(int k=0;k<keys.size();k++){
-                PropertyInfo ll(p[keys[k]].get_type(), "L_ "+String(keys[k])+"_"+itos(i),PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR);
-                p_list->push_back(ll);
+        if(layer_props.has(brush_name)){
+            Vector<LayerProps> p = layer_props.get(brush_name);
+            for(int k=0;k<p.size();k++){
+                PropertyInfo pinfo = p[k].pinfo;
+                pinfo.name = "L_"+pinfo.name+"_"+itos(i);
+                p_list->push_back(pinfo);
             }
         }
     }

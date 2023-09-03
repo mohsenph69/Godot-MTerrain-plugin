@@ -419,7 +419,9 @@ bool MTerrain::has_unsave_image(){
 }
 
 void MTerrain::save_all_dirty_images(){
-    grid->save_all_dirty_images();
+    if(grid->is_created()){
+        grid->save_all_dirty_images();
+    }
 }
 
 Color MTerrain::get_pixel(const uint32_t& x,const uint32_t& y, const int32_t& index){

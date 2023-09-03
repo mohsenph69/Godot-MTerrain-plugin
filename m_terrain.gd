@@ -191,3 +191,8 @@ func save_request():
 
 func brush_size_changed(value):
 	brush_decal.set_brush_size(value)
+
+
+func _save_external_data():
+	if active_terrain:
+		active_terrain.save_all_dirty_images()
