@@ -12,6 +12,7 @@ class_name MPaintPanel
 @onready var add_name_line:=$layer_buttons/addName
 
 var brush_layers_res = preload("res://addons/m_terrain/gui/brush_layers.tscn")
+var layers_title_res = preload("res://addons/m_terrain/gui/layers_title.tscn")
 
 var hide_icon = preload("res://addons/m_terrain/icons/hidden.png")
 var show_icon = preload("res://addons/m_terrain/icons/show.png")
@@ -85,6 +86,13 @@ func create_color_brush_layers():
 	var layers_group:Array = active_terrain.get_layers_info()
 	var layer_group = 0
 	for layers in layers_group:
+		var title_lable = layers_title_res.instantiate()
+		color_brush_layers.push_back(title_lable)
+		var title :String= layers["title"]
+		if title.is_empty():
+			title = "Layer Group "+str(layer_group)
+		title_lable.text = title
+		add_child(title_lable)
 		var l = brush_layers_res.instantiate()
 		color_brush_layers.push_back(l)
 		add_child(l)

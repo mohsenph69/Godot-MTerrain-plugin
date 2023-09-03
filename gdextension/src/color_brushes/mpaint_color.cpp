@@ -14,7 +14,7 @@ void MPaintColor::_set_property(String prop_name, Variant value){
         return;
     }
     if(prop_name=="hardness"){
-        hardness = value;
+        hardness = UtilityFunctions::clamp(value,0.0,0.99);
         return;
     }
 }
@@ -25,5 +25,12 @@ void MPaintColor::before_draw(){
 
 }
 void MPaintColor::set_color(const uint32_t& local_x,const uint32_t& local_y,const uint32_t& x,const uint32_t& y,MImage* img){
-    img->set_pixel(local_x,local_y,color);
+    uint32_t dx = abs(x - grid->brush_px_pos_x);
+    uint32_t dy = abs(y - grid->brush_px_pos_y);
+    float px_dis = (float)sqrt(dx*dx + dy*dy);
+    px_dis /= (float)grid->brush_px_radius;
+    float w = UtilityFunctions::smoothstep(1,hardness,px_dis);
+    Color bg_color = grid->get_pixel(x,y,grid->current_paint_index);
+    bg_color = bg_color.lerp(color,w);
+    img->set_pixel(local_x,local_y,bg_color);
 }

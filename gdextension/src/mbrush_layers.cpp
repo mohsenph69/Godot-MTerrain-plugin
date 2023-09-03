@@ -26,7 +26,7 @@ void MBrushLayers::_bind_methods(){
 
 MBrushLayers::MBrushLayers(){
     Dictionary color_brush;
-    color_brush["hardness"] = Variant(0.5);
+    color_brush["hardness"] = Variant(0.9);
     color_brush["color"] = Variant(Color(1.0,0.0,0.0,1.0));
     props["Color Paint"]=color_brush;
 }
