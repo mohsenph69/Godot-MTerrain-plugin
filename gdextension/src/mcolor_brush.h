@@ -22,7 +22,6 @@ class MColorBrush {
     void set_grid(MGrid* _grid){grid = _grid;};
     virtual ~MColorBrush(){};
     virtual String _get_name()=0;
-    virtual List<PropertyInfo> _get_property_list()=0;
     virtual void _set_property(String prop_name, Variant value)=0;
     virtual bool is_two_point_brush()=0;
     virtual void before_draw()=0;

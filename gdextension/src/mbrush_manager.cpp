@@ -39,7 +39,7 @@ void MBrushManager::add_height_brush(MHeightBrush* brush){\
 void MBrushManager::add_color_brush(MColorBrush* brush){
     ERR_FAIL_COND_MSG(color_brush_map.has(brush->_get_name()), "Duplicate brush name: "+brush->_get_name());
     color_brushes.append(brush);
-    color_brush_map.insert(brush->_get_name(), height_brushes.size() -1);
+    color_brush_map.insert(brush->_get_name(), color_brushes.size() -1);
 }
 
 MHeightBrush* MBrushManager::get_height_brush(int brush_id){
@@ -72,16 +72,17 @@ MColorBrush* MBrushManager::get_color_brush(int brush_id){
     ERR_FAIL_COND_V(brush_id >= color_brushes.size(), nullptr);
     return color_brushes[brush_id];
 }
+
+MColorBrush* MBrushManager::get_color_brush_by_name(String brush_name){
+    ERR_FAIL_COND_V(!color_brush_map.has(brush_name),nullptr);
+    int id = color_brush_map.get(brush_name);
+    return color_brushes[id];
+}
+
 PackedStringArray MBrushManager::get_color_brush_list(){
     PackedStringArray out;
     for(int i=0;i<color_brushes.size();i++){
         out.append(color_brushes[i]->_get_name());
     }
     return out;
-}
-List<PropertyInfo> MBrushManager::get_color_brush_property(int brush_id){
-    return color_brushes[brush_id]->_get_property_list();
-}
-void MBrushManager::set_color_brush_propert(String prop_name,Variant value,int brush_id){
-    color_brushes[brush_id]->_set_property(prop_name,value);
 }

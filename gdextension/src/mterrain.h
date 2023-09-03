@@ -94,6 +94,7 @@ class MTerrain : public  Node3D {
     bool is_ready=false;
     //Array of brush layers resource
     Array brush_layers;
+    
 
 
 
@@ -200,7 +201,7 @@ class MTerrain : public  Node3D {
     Vector2i get_closest_pixel(const Vector3& world_pos);
     void set_brush_manager(Object* input);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
-    void draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index);
+    void draw_color(Vector3 brush_pos,real_t radius,String brush_name, String uniform_name);
     
     void set_heightmap_layers(PackedStringArray input);
     PackedStringArray get_heightmap_layers();
@@ -221,6 +222,9 @@ class MTerrain : public  Node3D {
     Array get_brush_layers();
     void set_brush_layers_num(int input);
     int get_brush_layers_num();
+
+    Array get_layers_info();
+    void set_color_layer(int index,int group_index,String brush_name);
 
     void test_function();
 };

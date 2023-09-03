@@ -5,8 +5,9 @@
 
 
 class MPaintColor : public MColorBrush{
+    Color color;
+    float hardness;
     String _get_name();
-    List<PropertyInfo> _get_property_list();
     void _set_property(String prop_name, Variant value);
     bool is_two_point_brush();
     void before_draw();

@@ -11,6 +11,7 @@ class_name MPaintPanel
 @onready var layer_buttons:=$layer_buttons
 @onready var add_name_line:=$layer_buttons/addName
 
+var brush_layers_res = preload("res://addons/m_terrain/gui/brush_layers.tscn")
 
 var hide_icon = preload("res://addons/m_terrain/icons/hidden.png")
 var show_icon = preload("res://addons/m_terrain/icons/show.png")
@@ -32,6 +33,10 @@ var active_terrain:MTerrain
 var brush_size:float
 
 var property_element_list:Array
+var color_brush_layers:Array
+var selected_layer_group=0
+var current_uniform:=""
+var current_color_brush:=""
 
 var is_grass_add:bool = true
 
@@ -52,21 +57,66 @@ func set_grass_mode(input:bool):
 	layer_buttons.visible = not input
 	brush_type_checkbox.visible = not input
 	grass_add_checkbox.visible = input
+	if not input:
+		_on_brush_type_toggled(is_color_brush)
 	
-	
+
 
 func _on_brush_type_toggled(button_pressed):
 	is_color_brush = button_pressed
 	brush_list_option.clear()
+	brush_list_option.visible = not button_pressed
+	layer_buttons.visible = not button_pressed
+	heightmap_layers.visible = not button_pressed
 	if button_pressed:
 		brush_type_checkbox.text = "Color brush"
 		_on_brush_list_item_selected(-1)
+		create_color_brush_layers()
 	else:
+		remove_color_brush_layers()
 		brush_type_checkbox.text = "Height brush"
 		var brushe_names = brush_manager.get_height_brush_list()
 		for n in brushe_names:
 			brush_list_option.add_item(n)
 			_on_brush_list_item_selected(0)
+
+func create_color_brush_layers():
+	remove_color_brush_layers()
+	var layers_group:Array = active_terrain.get_layers_info()
+	var layer_group = 0
+	for layers in layers_group:
+		var l = brush_layers_res.instantiate()
+		color_brush_layers.push_back(l)
+		add_child(l)
+		l.create_layers(layers["info"])
+		l.index = layers["index"]
+		l.uniform = layers["uniform"]
+		l.brush_name = layers["brush_name"]
+		l.connect("item_selected",Callable(self,"brush_layer_selected").bind(layer_group))
+		if layer_group==0 and layers.size()!=0:
+			l.select(0)
+			brush_layer_selected(0, layer_group)
+		layer_group += 1
+
+func remove_color_brush_layers():
+	for l in color_brush_layers:
+		l.queue_free()
+	color_brush_layers.clear()
+
+func brush_layer_selected(index, layer_group):
+	if selected_layer_group != layer_group:
+		var i=0
+		for l in color_brush_layers:
+			if l.is_class("ItemList"):
+				if i != layer_group:
+					l.deselect_all()
+				i +=1
+	selected_layer_group = layer_group
+	var l = color_brush_layers[layer_group]
+	current_uniform = l.uniform
+	current_color_brush = l.brush_name
+	var group_index = l.index
+	active_terrain.set_color_layer(index,group_index,l.brush_name)
 
 
 func _on_brush_list_item_selected(index):

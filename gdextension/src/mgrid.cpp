@@ -972,6 +972,10 @@ void MGrid::set_brush_manager(MBrushManager* input){
     _brush_manager = input;
 }
 
+MBrushManager* MGrid::get_brush_manager(){
+    return _brush_manager;
+}
+
 void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     ERR_FAIL_COND(_brush_manager==nullptr);
     ERR_FAIL_COND_EDMSG(!heightmap_layers_visibility[active_heightmap_layer], "Can not paint on invisible layer");
@@ -1054,7 +1058,7 @@ void MGrid::draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPix
     }
 }
 
-void MGrid::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index){
+void MGrid::draw_color(Vector3 brush_pos,real_t radius,MColorBrush* brush, int32_t index){
     ERR_FAIL_COND(_brush_manager==nullptr);
     ERR_FAIL_INDEX(index,regions[0].images.size());
     Image::Format format = regions[0].images[index]->format;
@@ -1076,7 +1080,6 @@ void MGrid::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t ind
     uint32_t bottom = brush_px_pos_y + brush_px_radius;
     bottom = (bottom>grid_pixel_region.bottom) ? grid_pixel_region.bottom : bottom;
     // Stop here To go write a basic color brush
-    MColorBrush* brush = _brush_manager->get_color_brush(brush_id);
     brush->set_grid(this);
     MPixelRegion draw_pixel_region(left,right,top,bottom);
     MImage* draw_image = memnew(MImage);
@@ -1105,11 +1108,9 @@ void MGrid::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t ind
     int print_index = 0;
     while(local_y<draw_image->height){
         while(local_x<draw_image->width){
-            //set_height_by_pixel(x,y,draw_image->get_pixel_RF(local_x,local_y));
             uint32_t ofs = (local_x + local_y*draw_image->width)*draw_image->pixel_size;
             uint8_t* ptr = draw_image->data.ptrw() + ofs;
-            //set_pixel_by_pointer(x,y,ptr,index);
-            set_pixel(x,y,Color(1,0,0,1),index);
+            set_pixel_by_pointer(x,y,ptr,index);
             local_x++;
             x++;
         }

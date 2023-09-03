@@ -9,7 +9,7 @@
 
 #include "mbrush_manager.h"
 #include "navmesh/mnavigation_region_3d.h"
-
+#include "mbrush_layers.h"
 
 
 void MTerrain::_bind_methods() {
@@ -154,6 +154,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_brush_layers_num","input"), &MTerrain::set_brush_layers_num);
     ClassDB::bind_method(D_METHOD("get_brush_layers_num"), &MTerrain::get_brush_layers_num);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"brush_layers_num",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_brush_layers_num","get_brush_layers_num");
+    ClassDB::bind_method(D_METHOD("get_layers_info"), &MTerrain::get_layers_info);
+    ClassDB::bind_method(D_METHOD("set_color_layer","index","group_index","brush_name"), &MTerrain::set_color_layer);
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
 }
 
@@ -869,9 +871,13 @@ void MTerrain::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     grid->draw_height(brush_pos,radius,brush_id);
 }
 
-void MTerrain::draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index){
+void MTerrain::draw_color(Vector3 brush_pos,real_t radius,String brush_name, String uniform_name){
     if(!grid->is_created()) return;
-    grid->draw_color(brush_pos,radius,brush_id,index);
+    MColorBrush* brush = grid->get_brush_manager()->get_color_brush_by_name(brush_name);
+    ERR_FAIL_COND(!brush);
+    int id = get_image_id(uniform_name);
+    ERR_FAIL_COND(id==-1);
+    grid->draw_color(brush_pos,radius,brush,id);
 }
 
 Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
@@ -1018,6 +1024,32 @@ void MTerrain::set_brush_layers_num(int input){
 }
 int MTerrain::get_brush_layers_num(){
     return brush_layers.size();
+}
+
+Array MTerrain::get_layers_info(){
+    Array info;
+    for(int i=0;i<brush_layers.size();i++){
+        Ref<MBrushLayers> layers = brush_layers[i];
+        if(layers.is_valid()){
+            Dictionary dic;
+            dic["title"]=layers->layers_title;
+            dic["index"]=i;
+            dic["uniform"]=layers->uniform_name;
+            dic["brush_name"]=layers->brush_name;
+            dic["info"]=layers->get_layers_info();
+            info.push_back(dic);
+        }
+    }
+    return info;
+}
+
+void MTerrain::set_color_layer(int index,int group_index,String brush_name){
+    ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND(!grid->get_brush_manager());
+    MColorBrush* brush = grid->get_brush_manager()->get_color_brush_by_name(brush_name);
+    ERR_FAIL_COND(!brush);
+    Ref<MBrushLayers> bl = brush_layers[group_index];
+    bl->set_layer(index,brush);
 }
 
 void MTerrain::test_function(){

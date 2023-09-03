@@ -1,7 +1,9 @@
 #include "mbrush_layers.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
-#define BRUSH_NAMES "color brush,bitwise brush"
+#include <godot_cpp/classes/image.hpp>
+#include "mcolor_brush.h"
+#define BRUSH_NAMES "Color Paint,bitwise brush"
 
 
 void MBrushLayers::_bind_methods(){
@@ -26,7 +28,7 @@ MBrushLayers::MBrushLayers(){
     Dictionary color_brush;
     color_brush["hardness"] = Variant(0.5);
     color_brush["color"] = Variant(Color(1.0,0.0,0.0,1.0));
-    props["color brush"]=color_brush;
+    props["Color Paint"]=color_brush;
 }
 MBrushLayers::~MBrushLayers(){
 
@@ -112,7 +114,7 @@ void MBrushLayers::_get_property_list(List<PropertyInfo> *p_list) const {
     for(int i=0;i<layers.size();i++){
         PropertyInfo lsub(Variant::INT, "layers "+itos(i),PROPERTY_HINT_NONE,"",PROPERTY_USAGE_SUBGROUP);
         PropertyInfo lname(Variant::STRING, "L_NAME_"+itos(i),PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR);
-        PropertyInfo licon(Variant::STRING, "L_ICON_"+itos(i),PROPERTY_HINT_FILE,"",PROPERTY_USAGE_EDITOR);
+        PropertyInfo licon(Variant::STRING, "L_ICON_"+itos(i),PROPERTY_HINT_GLOBAL_FILE,"",PROPERTY_USAGE_EDITOR);
         p_list->push_back(lsub);
         p_list->push_back(lname);
         p_list->push_back(licon);
@@ -131,7 +133,8 @@ bool MBrushLayers::_get(const StringName &p_name, Variant &r_ret) const{
         PackedStringArray parts = p_name.split("_");
         int index = parts[2].to_int();
         Dictionary dic = layers[index];
-        r_ret = dic[parts[1]];
+        String key = parts[1].strip_edges();
+        r_ret = dic[key];
         return true;
     }
     return false;
@@ -141,9 +144,51 @@ bool MBrushLayers::_set(const StringName &p_name, const Variant &p_value){
         PackedStringArray parts = p_name.split("_");
         int index = parts[2].to_int();
         Dictionary dic = layers[index];
-        dic[parts[1]] = p_value;
+        String key = parts[1].strip_edges();
+        dic[key] = p_value;
         layers[index] = dic;
         return true;
     }
     return false;
+}
+
+Array MBrushLayers::get_layers_info(){
+    Array out;
+    HashMap<String,Ref<ImageTexture>> current_textures;
+    for(int i=0;i<layers.size();i++){
+        Dictionary l = layers[i];
+        Dictionary dic;
+        dic["name"]=l["NAME"];
+        if(textures.has(l["ICON"])){
+            current_textures.insert(l["ICON"],textures.get(l["ICON"]));
+            dic["icon"]=textures.get(l["ICON"]);
+        } else {
+            Ref<Image> img = Image::load_from_file(l["ICON"]);
+            Ref<ImageTexture> tex;
+            if(img.is_valid()){
+                img->resize(64,64);
+                tex = ImageTexture::create_from_image(img);
+            }
+            textures.insert(l["ICON"],tex);
+            current_textures.insert(l["ICON"],tex);
+            dic["icon"]=tex;
+        }
+        out.push_back(dic);
+    }
+    for(HashMap<String,Ref<ImageTexture>>::Iterator it=textures.begin();it!=textures.end();++it){
+        if(!current_textures.has(it->key)){
+            textures.erase(it->key);
+        }
+    }
+    return out;
+}
+
+void MBrushLayers::set_layer(int index,MColorBrush* brush){
+    Dictionary info = layers[index];
+    Array keys = info.keys();
+    for(int i=0;i<keys.size();i++){
+        if(keys[i]!="NAME" && keys[i]!="ICON"){
+            brush->_set_property(keys[i],info[keys[i]]);
+        }
+    }
 }

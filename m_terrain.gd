@@ -113,7 +113,7 @@ func paint_mode_handle(event:InputEvent):
 				active_nav_region.draw_npoints(ray_col.get_collision_position(),brush_decal.radius,paint_panel.is_grass_add)
 				return AFTER_GUI_INPUT_STOP
 			if paint_panel.is_color_brush:
-				active_terrain.draw_color(ray_col.get_collision_position(),brush_decal.radius,0,1)
+				active_terrain.draw_color(ray_col.get_collision_position(),brush_decal.radius,paint_panel.current_color_brush,paint_panel.current_uniform)
 				return AFTER_GUI_INPUT_STOP
 			if event is InputEventMouseButton:
 				if event.pressed:

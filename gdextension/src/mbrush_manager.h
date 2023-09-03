@@ -37,10 +37,8 @@ class MBrushManager : public Object {
     void set_height_brush_propert(String prop_name,Variant value,int brush_id);
 
     MColorBrush* get_color_brush(int brush_id);
+    MColorBrush* get_color_brush_by_name(String brush_name);
     PackedStringArray get_color_brush_list();
-    List<PropertyInfo> get_color_brush_property(int brush_id);
     void set_color_brush_propert(String prop_name,Variant value,int brush_id);
-
-    static void register_prop(String brush_name,String prop_name, Variant::Type type);
 };
 #endif

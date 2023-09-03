@@ -245,10 +245,11 @@ class MGrid : public Object {
     Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
 
     void set_brush_manager(MBrushManager* input);
+    MBrushManager* get_brush_manager();
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
     void draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush);
 
-    void draw_color(Vector3 brush_pos,real_t radius,int brush_id, int32_t index);
+    void draw_color(Vector3 brush_pos,real_t radius,MColorBrush* brush, int32_t index);
     void draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MColorBrush* brush);
 
     void update_all_dirty_image_texture();
