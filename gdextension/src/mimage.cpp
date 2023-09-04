@@ -498,3 +498,194 @@ int MImage::get_format_pixel_size(Image::Format p_format) {
 	}
 	return 0;
 }
+
+
+
+void MImage::set_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t channel,const float& value){
+	uint32_t ofs = (x + y*width);
+	uint8_t* ptr = data.ptrw();
+	switch (format) {
+		case Image::FORMAT_L8: {
+			if(channel==0){
+				ptr[ofs] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			}
+		} break;
+		case Image::FORMAT_LA8: {
+			if(channel==0)
+				ptr[ofs * 2 + 0] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			else if(channel==3)
+				ptr[ofs * 2 + 1] = uint8_t(CLAMP(value * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_R8: {
+			if(channel==0)
+				ptr[ofs] = uint8_t(CLAMP(value * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_RG8: {
+			if(channel==0)
+				ptr[ofs * 2 + 0] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			if(channel==1)
+				ptr[ofs * 2 + 1] = uint8_t(CLAMP(value * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_RGB8: {
+			if(channel==0)
+				ptr[ofs * 3 + 0] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			if(channel==1)
+				ptr[ofs * 3 + 1] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			if(channel==2)
+				ptr[ofs * 3 + 2] = uint8_t(CLAMP(value * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_RGBA8: {
+			if(channel==0)
+				ptr[ofs * 4 + 0] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			if(channel==1)
+				ptr[ofs * 4 + 1] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			if(channel==2)
+				ptr[ofs * 4 + 2] = uint8_t(CLAMP(value * 255.0, 0, 255));
+			if(channel==3)
+				ptr[ofs * 4 + 3] = uint8_t(CLAMP(value * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_RGBA4444: {
+			uint16_t rgba = ((uint16_t *)ptr)[ofs];
+			if(channel==0)
+				rgba = uint16_t(CLAMP(value * 15.0, 0, 15)) << 12;
+			if(channel==1)
+				rgba |= uint16_t(CLAMP(value * 15.0, 0, 15)) << 8;
+			if(channel==2)
+				rgba |= uint16_t(CLAMP(value * 15.0, 0, 15)) << 4;
+			if(channel==3)
+				rgba |= uint16_t(CLAMP(value * 15.0, 0, 15));
+
+			((uint16_t *)ptr)[ofs] = rgba;
+
+		} break;
+		case Image::FORMAT_RGB565: {
+			uint16_t rgba = ((uint16_t *)ptr)[ofs];
+			if(channel==0)
+				rgba = uint16_t(CLAMP(value * 31.0, 0, 31));
+			if(channel==1)
+				rgba |= uint16_t(CLAMP(value * 63.0, 0, 33)) << 5;
+			if(channel==2)
+				rgba |= uint16_t(CLAMP(value * 31.0, 0, 31)) << 11;
+
+			((uint16_t *)ptr)[ofs] = rgba;
+
+		} break;
+		case Image::FORMAT_RF: {
+			if(channel==0)
+				((float *)ptr)[ofs] = value;
+		} break;
+		case Image::FORMAT_RGF: {
+			if(channel==0)
+				((float *)ptr)[ofs * 2 + 0] = value;
+			if(channel==1)
+				((float *)ptr)[ofs * 2 + 1] = value;
+		} break;
+		case Image::FORMAT_RGBF: {
+			if(channel==0)
+				((float *)ptr)[ofs * 3 + 0] = value;
+			if(channel==1)
+				((float *)ptr)[ofs * 3 + 1] = value;
+			if(channel==2)
+				((float *)ptr)[ofs * 3 + 2] = value;
+		} break;
+		case Image::FORMAT_RGBAF: {
+			if(channel==0)
+				((float *)ptr)[ofs * 4 + 0] = value;
+			if(channel==1)
+				((float *)ptr)[ofs * 4 + 1] = value;
+			if(channel==2)
+				((float *)ptr)[ofs * 4 + 2] = value;
+			if(channel==3)
+				((float *)ptr)[ofs * 4 + 3] = value;
+		} break;
+		default: {
+			ERR_FAIL_MSG("Can't set_pixel_by_channel() on compressed image, sorry.");
+		}
+	}
+}
+
+#define INVALID_CHANELL 0
+
+float MImage::get_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t channel){
+	uint32_t ofs = (x + y*width);
+	const uint8_t* ptr = data.ptr();
+	switch (format) {
+		case Image::FORMAT_L8: {
+			if(channel==0)
+				return (float)ptr[ofs] / 255.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_LA8: {
+			if(channel==0)
+				return (float)ptr[ofs * 2] / 255.0;
+			if(channel==3)
+				return (float)ptr[ofs * 2 + 1] / 255.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_R8: {
+			if(channel==0)
+				return (float)ptr[ofs] / 255.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RG8: {
+			if(channel<2)
+				return (float)ptr[ofs * 2 + channel] / 255.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RGB8: {
+			if(channel<3)
+				return (float)ptr[ofs * 3 + channel] / 255.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RGBA8: {
+			if(channel<4)
+				return (float)ptr[ofs * 4 + channel] / 255.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RGBA4444: {
+			uint16_t u = ((uint16_t *)ptr)[ofs];
+			if(channel==0)
+				return (float)((u >> 12) & 0xF) / 15.0;
+			if(channel==1)
+				return (float)((u >> 8) & 0xF) / 15.0;
+			if(channel==2)
+				return (float)((u >> 4) & 0xF) / 15.0;
+			if(channel==3)
+				return (float)(u & 0xF) / 15.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RGB565: {
+			uint16_t u = ((uint16_t *)ptr)[ofs];
+			if(channel==0)
+				return (float)(u & 0x1F) / 31.0;
+			if(channel==1)
+				return (float)((u >> 5) & 0x3F) / 63.0;
+			if(channel==2)
+				return (float)((u >> 11) & 0x1F) / 31.0;
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RF: {
+			if(channel==0)
+				return ((float *)ptr)[ofs];
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RGF: {
+			if(channel<2)
+				return ((float *)ptr)[ofs * 2 + channel];
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RGBF: {
+			if(channel<3)
+				return ((float *)ptr)[ofs * 3 + channel];
+			return INVALID_CHANELL;
+		}
+		case Image::FORMAT_RGBAF: {
+			if(channel<4)
+				return ((float *)ptr)[ofs * 4 + channel];
+			return INVALID_CHANELL;
+		}
+		default: {
+			ERR_FAIL_V_MSG(INVALID_CHANELL, "Unsportet format for Mterrain");
+		}
+	}
+}

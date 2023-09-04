@@ -6,6 +6,7 @@
 #include "height_brushes/msmooth.h"
 
 #include "color_brushes/mpaint_color.h"
+#include "color_brushes/mchannel_painter.h"
 
 
 
@@ -15,6 +16,7 @@ MBrushManager::MBrushManager(){
     add_height_brush(memnew(MSmooth));
 
     add_color_brush(memnew(MPaintColor));
+    add_color_brush(memnew(MChannelPainter));
 }
 
 void MBrushManager::_bind_methods(){

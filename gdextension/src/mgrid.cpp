@@ -741,6 +741,20 @@ bool MGrid::has_pixel(const uint32_t& x,const uint32_t& y){
     return true;
 }
 
+MImage* MGrid::get_image_by_pixel(uint32_t& x,uint32_t& y, const int32_t& index){
+    if(!_has_pixel(x,y)){
+        return nullptr;
+    }
+    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
+    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - ex;
+    uint32_t ry = (y/rp) - ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    return r->images[index];
+}
+
 Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t& index) {
     if(!_has_pixel(x,y)){
         return Color();

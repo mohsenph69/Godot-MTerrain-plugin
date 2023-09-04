@@ -3,7 +3,7 @@
 
 #include <godot_cpp/classes/image.hpp>
 #include "mcolor_brush.h"
-#define BRUSH_NAMES "Color Paint,bitwise brush"
+#define BRUSH_NAMES "Color Paint,Channel Painter"
 
 
 void MBrushLayers::_bind_methods(){
@@ -25,12 +25,37 @@ void MBrushLayers::_bind_methods(){
 }
 
 MBrushLayers::MBrushLayers(){
-    Vector<LayerProps> color_brush;
-    LayerProps hardness = {PropertyInfo(Variant::FLOAT,"hardness",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0.9)};
-    LayerProps color = {PropertyInfo(Variant::COLOR,"color",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),Variant(Color(1.0,0.0,0.0,1.0))};
-    color_brush.push_back(hardness);
-    color_brush.push_back(color);
-    layer_props.insert("Color Paint",color_brush);
+    {
+        Vector<LayerProps> color_brush;
+        LayerProps hardness = {PropertyInfo(Variant::FLOAT,"hardness",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0.9)};
+        LayerProps color = {PropertyInfo(Variant::COLOR,"color",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),Variant(Color(1.0,0.0,0.0,1.0))};
+        color_brush.push_back(hardness);
+        color_brush.push_back(color);
+        layer_props.insert("Color Paint",color_brush);
+    }
+    // Channel Painter
+    {
+        Vector<LayerProps> channel_paiter;
+        LayerProps hardness = {PropertyInfo(Variant::FLOAT,"hardness",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0)};
+        LayerProps red = {PropertyInfo(Variant::BOOL,"red",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),Variant(false)};
+        LayerProps green = {PropertyInfo(Variant::BOOL,"green",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),Variant(false)};
+        LayerProps blue = {PropertyInfo(Variant::BOOL,"blue",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),Variant(false)};
+        LayerProps alpha = {PropertyInfo(Variant::BOOL,"alpha",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),Variant(false)};
+        LayerProps red_value = {PropertyInfo(Variant::FLOAT,"red-value",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0)};
+        LayerProps green_value = {PropertyInfo(Variant::FLOAT,"green-value",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0)};
+        LayerProps blue_value = {PropertyInfo(Variant::FLOAT,"blue-value",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0)};
+        LayerProps alpha_value = {PropertyInfo(Variant::FLOAT,"alpha-value",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR),Variant(0)};
+        channel_paiter.push_back(hardness);
+        channel_paiter.push_back(red);
+        channel_paiter.push_back(red_value);
+        channel_paiter.push_back(green);
+        channel_paiter.push_back(green_value);
+        channel_paiter.push_back(blue);
+        channel_paiter.push_back(blue_value);
+        channel_paiter.push_back(alpha);
+        channel_paiter.push_back(alpha_value);
+        layer_props.insert("Channel Painter",channel_paiter);
+    }
     /*
     Dictionary color_brush;
     Dictionary color_brush_def;
@@ -79,6 +104,7 @@ void MBrushLayers::set_brush_name(String input){
         }
         layers[i] = dic;
     }
+    notify_property_list_changed();
 }
 
 String MBrushLayers::get_brush_name(){

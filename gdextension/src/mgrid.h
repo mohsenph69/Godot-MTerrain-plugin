@@ -228,6 +228,7 @@ class MGrid : public Object {
     void apply_update_chunks();
     void update_physics(const Vector3& cam_pos);
 
+    MImage* get_image_by_pixel(uint32_t& x,uint32_t& y, const int32_t& index);
     Color get_pixel(uint32_t x,uint32_t y, const int32_t& index);
     const uint8_t* get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t& index);
     void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index);

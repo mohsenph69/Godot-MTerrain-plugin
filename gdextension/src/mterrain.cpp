@@ -1055,6 +1055,15 @@ void MTerrain::set_color_layer(int index,int group_index,String brush_name){
 }
 
 void MTerrain::test_function(){
-
-
+    uint32_t x = 0;
+    uint32_t y = 0;
+    int id = get_image_id("splatmap");
+    MImage* img = grid->get_image_by_pixel(x,y,id);
+    UtilityFunctions::print("--------------------Test function");
+    Color c(0.1,0.2,0.3,1);
+    img->set_pixel(1,2,c);
+    Color o = img->get_pixel(1,2);
+    UtilityFunctions::print("o color ",o);
+    float red = img->get_pixel_in_channel(1,2,0);
+    UtilityFunctions::print("red ",red);
 }
