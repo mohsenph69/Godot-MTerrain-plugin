@@ -1,6 +1,7 @@
 #include "mgrass.h"
 #include "../mgrid.h"
 
+#include <godot_cpp/classes/resource_saver.hpp>
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
 
@@ -49,6 +50,8 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_materials"), &MGrass::set_materials);
     ClassDB::bind_method(D_METHOD("get_materials"), &MGrass::get_materials);
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"materials",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_materials","get_materials");
+
+    ClassDB::bind_method(D_METHOD("save_grass_data"), &MGrass::save_grass_data);
 
     ClassDB::bind_method(D_METHOD("test_function"), &MGrass::test_function);
 }
@@ -769,6 +772,12 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
     return false;
 }
 
+godot::Error MGrass::save_grass_data(){
+    if(grass_data.is_valid()){
+        return ResourceSaver::get_singleton()->save(grass_data,grass_data->get_path());
+    }
+    return ERR_UNAVAILABLE;   
+}
 
 void MGrass::test_function(){
     update_physics(Vector3());

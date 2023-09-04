@@ -140,6 +140,9 @@ class MGrass : public Node3D {
     bool _get(const StringName &p_name, Variant &r_ret) const;
     bool _set(const StringName &p_name, const Variant &p_value);
 
+
+    godot::Error save_grass_data();
+
     void test_function();
 
 };

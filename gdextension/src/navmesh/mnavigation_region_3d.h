@@ -122,5 +122,7 @@ class MNavigationRegion3D : public NavigationRegion3D{
     void draw_npoints(Vector3 brush_pos,real_t radius,bool add);
     void set_npoints_visible(bool val);
 
+    godot::Error save_nav_data();
+
 };
 #endif

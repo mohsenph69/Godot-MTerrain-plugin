@@ -20,6 +20,8 @@ var ray_col:MCollision
 var col_dis:float
 var is_paint_active:bool = false
 
+var action=""
+
 func _enter_tree():
 	if Engine.is_editor_hint():
 		add_tool_menu_item("MTerrain importer", Callable(self,"show_import_window"))
@@ -105,6 +107,22 @@ func paint_mode_handle(event:InputEvent):
 	if ray_col.is_collided():
 		brush_decal.visible = true
 		brush_decal.set_position(ray_col.get_collision_position())
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				if event.pressed:
+					if active_grass:
+						pass
+					elif active_nav_region:
+						pass
+					elif active_terrain:
+						paint_panel.set_active_layer()
+				else:
+					if active_grass:
+						active_grass.save_grass_data()
+					elif active_nav_region:
+						active_nav_region.save_nav_data()
+					elif active_terrain:
+						pass
 		if event.button_mask == MOUSE_BUTTON_LEFT:
 			if active_grass:
 				active_grass.draw_grass(ray_col.get_collision_position(),brush_decal.radius,paint_panel.is_grass_add)
@@ -115,9 +133,6 @@ func paint_mode_handle(event:InputEvent):
 			if paint_panel.is_color_brush:
 				active_terrain.draw_color(ray_col.get_collision_position(),brush_decal.radius,paint_panel.current_color_brush,paint_panel.current_uniform)
 				return AFTER_GUI_INPUT_STOP
-			if event is InputEventMouseButton:
-				if event.pressed:
-					paint_panel.set_active_layer()
 			active_terrain.draw_height(ray_col.get_collision_position(),brush_decal.radius,paint_panel.brush_id)
 			return AFTER_GUI_INPUT_STOP
 	else:

@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/collision_shape3d.hpp>
 #include <godot_cpp/classes/box_shape3d.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/resource_saver.hpp>
 
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
@@ -47,6 +48,8 @@ void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_max_shown_lod","input"), &MNavigationRegion3D::set_max_shown_lod);
     ClassDB::bind_method(D_METHOD("get_max_shown_lod"), &MNavigationRegion3D::get_max_shown_lod);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"max_shown_lod"), "set_max_shown_lod", "get_max_shown_lod");
+    
+    ClassDB::bind_method(D_METHOD("save_nav_data"), &MNavigationRegion3D::save_nav_data);
     ADD_SIGNAL(MethodInfo("navigation_region_is_ready"));
     ADD_SIGNAL(MethodInfo("update_navmesh"));
 }
@@ -628,4 +631,12 @@ void MNavigationRegion3D::set_npoints_visible(bool val){
             it->value->relax();
         }
     }
+}
+
+
+godot::Error MNavigationRegion3D::save_nav_data(){
+    if(nav_data.is_valid()){
+        return ResourceSaver::get_singleton()->save(nav_data,nav_data->get_path());
+    }
+    return ERR_UNAVAILABLE;   
 }
