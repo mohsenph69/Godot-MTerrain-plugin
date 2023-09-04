@@ -1170,13 +1170,11 @@ void MGrid::update_all_dirty_image_texture(){
 }
 
 void MGrid::set_active_layer(int input){
-    UtilityFunctions::print("_all_heightmap_image_list size ",_all_heightmap_image_list.size());
     // We did not add background to heightmap layers so the error handling down here is ok
     ERR_FAIL_COND(input>heightmap_layers.size());
     ERR_FAIL_COND(input<0);
     active_heightmap_layer = input;
     for(int i=0;i<_all_heightmap_image_list.size();i++){
-        UtilityFunctions::print("setting active layer ",i," ",input);
         _all_heightmap_image_list[i]->active_layer = input;
     }
 }

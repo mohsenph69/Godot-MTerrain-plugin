@@ -3,7 +3,7 @@
 
 #include <godot_cpp/classes/image.hpp>
 #include "mcolor_brush.h"
-#define BRUSH_NAMES "Color Paint,Channel Painter"
+#define BRUSH_NAMES "Color Paint,Channel Painter,Bitwise Brush"
 
 
 void MBrushLayers::_bind_methods(){
@@ -56,16 +56,15 @@ MBrushLayers::MBrushLayers(){
         channel_paiter.push_back(alpha_value);
         layer_props.insert("Channel Painter",channel_paiter);
     }
-    /*
-    Dictionary color_brush;
-    Dictionary color_brush_def;
-    color_brush["hardness"] = PropertyInfo(Variant::FLOAT,"hardness",PROPERTY_HINT_RANGE,"0,1",PROPERTY_USAGE_EDITOR);
-    color_brush_def["hardness"] = Variant(0.9);
-    color_brush["color"] = Variant(Color(1.0,0.0,0.0,1.0));
-    color_brush_def["color"] = Variant(Color(1.0,0.0,0.0,1.0));
-    props["Color Paint"]=color_brush;
-    props_def["Color Paint"]=color_brush_def;
-    */
+    // Channel Painter
+    {
+        Vector<LayerProps> bit_painter;
+        LayerProps value = {PropertyInfo(Variant::BOOL,"value",PROPERTY_HINT_RANGE,"",PROPERTY_USAGE_EDITOR),Variant(false)};
+        LayerProps bit = {PropertyInfo(Variant::INT,"bit",PROPERTY_HINT_RANGE,"0,127",PROPERTY_USAGE_EDITOR),Variant(0)};
+        bit_painter.push_back(value);
+        bit_painter.push_back(bit);
+        layer_props.insert("Bitwise Brush",bit_painter);
+    }
 }
 MBrushLayers::~MBrushLayers(){
 

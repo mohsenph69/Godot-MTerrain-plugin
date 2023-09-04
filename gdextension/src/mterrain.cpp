@@ -898,13 +898,11 @@ PackedStringArray MTerrain::get_heightmap_layers(){
 void MTerrain::set_active_layer_by_name(String lname){
     ERR_FAIL_COND(!grid->is_created());
     // Zero is always background layer
-    UtilityFunctions::print("activating layer by name ", lname);
     if(lname=="background"){
         grid->set_active_layer(0);
     }
     int index = grid->heightmap_layers.find(lname);
     if(index>=0) {
-        UtilityFunctions::print("activating layer ", index);
         grid->set_active_layer(index);
         active_layer_name = lname;
     }
@@ -913,7 +911,6 @@ void MTerrain::set_active_layer_by_name(String lname){
 bool MTerrain::get_layer_visibility(String lname){
     ERR_FAIL_COND_V(!grid->is_created(),false);
     // Zero is always background layer
-    UtilityFunctions::print("activating layer by name ", lname);
     if(lname=="background"){
         return true;
     }
