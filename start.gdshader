@@ -3,8 +3,7 @@ shader_type spatial;
 
 
 uniform sampler2D mterrain_heightmap:filter_nearest;
-uniform sampler2D mterrain_normals;
-uniform sampler2D mterrain_splatmap:filter_nearest;
+uniform sampler2D mterrain_normals:filter_nearest;
 
 uniform sampler2DArray albedo_tex;
 
@@ -14,11 +13,6 @@ uniform float region_a;
 uniform float region_b;
 varying vec3 world_pos;
 varying vec2 region_uv;
-
-varying vec3 splatmap;
-varying flat float alpha;
-
-#include "res://addons/m_terrain/shader_include/paint256.gdshaderinc"
 
 void vertex(){
 	world_pos = (NODE_POSITION_WORLD + VERTEX);
@@ -35,6 +29,5 @@ void vertex(){
 }
 
 void fragment(){
-	vec4 albedo = get_texture256(mterrain_splatmap,albedo_tex,world_pos.xz);
-	ALBEDO = albedo.rgb;
+	ALBEDO = vec3(0.4);
 }

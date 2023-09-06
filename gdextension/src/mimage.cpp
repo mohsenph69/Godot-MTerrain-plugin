@@ -545,17 +545,25 @@ void MImage::set_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t cha
 				ptr[ofs * 4 + 3] = uint8_t(CLAMP(value * 255.0, 0, 255));
 		} break;
 		case Image::FORMAT_RGBA4444: {
-			uint16_t rgba = ((uint16_t *)ptr)[ofs];
-			if(channel==0)
-				rgba = uint16_t(CLAMP(value * 15.0, 0, 15)) << 12;
+			uint16_t u = ((uint16_t *)ptr)[ofs];
+			if(channel==0){
+				u &= 0x0FFF;
+				u |= uint16_t(CLAMP(value * 15.0, 0, 15)) << 12;
+			}
 			if(channel==1)
-				rgba |= uint16_t(CLAMP(value * 15.0, 0, 15)) << 8;
-			if(channel==2)
-				rgba |= uint16_t(CLAMP(value * 15.0, 0, 15)) << 4;
-			if(channel==3)
-				rgba |= uint16_t(CLAMP(value * 15.0, 0, 15));
-
-			((uint16_t *)ptr)[ofs] = rgba;
+			{
+				u &= 0xF0FF;
+				u |= uint16_t(CLAMP(value * 15.0, 0, 15)) << 8;
+			}
+			if(channel==2){
+				u &= 0xFF0F;
+				u |= uint16_t(CLAMP(value * 15.0, 0, 15)) << 4;	
+			}
+			if(channel==3){
+				u &= 0xFFF0;
+				u |= uint16_t(CLAMP(value * 15.0, 0, 15));
+			}
+			((uint16_t *)ptr)[ofs] = u;
 
 		} break;
 		case Image::FORMAT_RGB565: {

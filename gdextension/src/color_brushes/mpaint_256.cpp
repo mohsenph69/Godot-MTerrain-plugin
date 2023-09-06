@@ -14,8 +14,7 @@ bool MPaint256::is_two_point_brush(){
     return false;
 }
 void MPaint256::before_draw(){
-    Image::Format format = grid->regions[0].images[grid->current_paint_index]->format;
-    ERR_FAIL_COND_MSG(!(format==Image::FORMAT_RGB8||format==Image::FORMAT_RGBA8),"Image Format should be FORMAT_RGB8 or FORMAT_RGBA8 for Paint256 brush");
+
 }
 void MPaint256::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_t y,MImage* img){
     //Calculating w
@@ -27,9 +26,6 @@ void MPaint256::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_t 
     uint32_t ofs = (local_y*img->width + local_x)*img->pixel_size;
     uint8_t* ptrw = img->data.ptrw() + ofs;
     mempcpy(ptrw, ptr, img->pixel_size);
-    if(!(img->format==Image::FORMAT_RGB8||img->format==Image::FORMAT_RGBA8)){
-        return;
-    }
     if(px_dis<(float)grid->brush_px_radius){
         ptrw[0]=paint_layer;
     }
