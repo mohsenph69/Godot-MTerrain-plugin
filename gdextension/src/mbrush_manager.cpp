@@ -8,6 +8,7 @@
 #include "color_brushes/mpaint_color.h"
 #include "color_brushes/mchannel_painter.h"
 #include "color_brushes/mbitwise_brush.h"
+#include "color_brushes/mpaint_256.h"
 
 
 MBrushManager::MBrushManager(){
@@ -18,6 +19,7 @@ MBrushManager::MBrushManager(){
     add_color_brush(memnew(MPaintColor));
     add_color_brush(memnew(MChannelPainter));
     add_color_brush(memnew(MBitwiseBrush));
+    add_color_brush(memnew(MPaint256));
 }
 
 void MBrushManager::_bind_methods(){

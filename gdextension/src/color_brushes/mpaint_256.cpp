@@ -1,0 +1,36 @@
+#include "mpaint_256.h"
+
+
+String MPaint256::_get_name(){
+    return "Paint 256";
+}
+void MPaint256::_set_property(String prop_name, Variant value){
+    if(prop_name=="paint-layer"){
+        int tmp = value;
+        paint_layer = tmp;
+    }
+}
+bool MPaint256::is_two_point_brush(){
+    return false;
+}
+void MPaint256::before_draw(){
+    Image::Format format = grid->regions[0].images[grid->current_paint_index]->format;
+    ERR_FAIL_COND_MSG(!(format==Image::FORMAT_RGB8||format==Image::FORMAT_RGBA8),"Image Format should be FORMAT_RGB8 or FORMAT_RGBA8 for Paint256 brush");
+}
+void MPaint256::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_t y,MImage* img){
+    //Calculating w
+    float dx = (float)abs(x - grid->brush_px_pos_x);
+    float dy = (float)abs(y - grid->brush_px_pos_y);
+    float px_dis = sqrt(dx*dx + dy*dy);
+    // setting color
+    const uint8_t* ptr = grid->get_pixel_by_pointer(x,y,grid->current_paint_index);
+    uint32_t ofs = (local_y*img->width + local_x)*img->pixel_size;
+    uint8_t* ptrw = img->data.ptrw() + ofs;
+    mempcpy(ptrw, ptr, img->pixel_size);
+    if(!(img->format==Image::FORMAT_RGB8||img->format==Image::FORMAT_RGBA8)){
+        return;
+    }
+    if(px_dis<(float)grid->brush_px_radius){
+        ptrw[0]=paint_layer;
+    }
+}

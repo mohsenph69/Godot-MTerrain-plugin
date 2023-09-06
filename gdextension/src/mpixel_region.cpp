@@ -31,6 +31,21 @@ void MPixelRegion::grow_all_side(const MPixelRegion& limit){
     if(top<limit.top) top = limit.top;
     if(right>limit.right) right = limit.right;
     if(bottom>limit.bottom) bottom = limit.bottom;
+    width = right - left + 1;
+    height = bottom - top + 1;
+}
+
+void MPixelRegion::grow_all_side(const MPixelRegion& limit,uint32_t amount){
+    left = left > amount ? left - amount : 0;
+    left = left < limit.left ? limit.left : left;
+    top = top > amount ? top - amount : 0;
+    top = top < limit.top ? limit.top : top;
+    right += amount;
+    bottom += amount;
+    right = right > limit.right ? limit.right : right;
+    bottom = bottom > limit.bottom ? limit.bottom : bottom;
+    width = right - left + 1;
+    height = bottom - top + 1;
 }
 
 

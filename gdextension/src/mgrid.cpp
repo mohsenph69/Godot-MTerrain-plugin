@@ -1095,7 +1095,8 @@ void MGrid::draw_color(Vector3 brush_pos,real_t radius,MColorBrush* brush, int32
     bottom = (bottom>grid_pixel_region.bottom) ? grid_pixel_region.bottom : bottom;
     // Stop here To go write a basic color brush
     brush->set_grid(this);
-    MPixelRegion draw_pixel_region(left,right,top,bottom);
+    draw_pixel_region = MPixelRegion(left,right,top,bottom);
+    brush->before_draw();
     MImage* draw_image = memnew(MImage);
     {
         draw_image->create(draw_pixel_region.width,draw_pixel_region.height,format);

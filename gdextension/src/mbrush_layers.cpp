@@ -3,7 +3,7 @@
 
 #include <godot_cpp/classes/image.hpp>
 #include "mcolor_brush.h"
-#define BRUSH_NAMES "Color Paint,Channel Painter,Bitwise Brush"
+#define BRUSH_NAMES "Color Paint,Channel Painter,Bitwise Brush,Paint 256"
 
 
 void MBrushLayers::_bind_methods(){
@@ -64,6 +64,13 @@ MBrushLayers::MBrushLayers(){
         bit_painter.push_back(value);
         bit_painter.push_back(bit);
         layer_props.insert("Bitwise Brush",bit_painter);
+    }
+    // Paint 256
+    {
+        Vector<LayerProps> painter;
+        LayerProps bit = {PropertyInfo(Variant::INT,"paint-layer",PROPERTY_HINT_RANGE,"0,255",PROPERTY_USAGE_EDITOR),Variant(0)};
+        painter.push_back(bit);
+        layer_props.insert("Paint 256",painter);
     }
 }
 MBrushLayers::~MBrushLayers(){

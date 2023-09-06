@@ -101,7 +101,6 @@ class MGrid : public Object {
     MBrushManager* _brush_manager = nullptr;
     MPoint** points;
     MPoint* points_row;
-    MRegion* regions;
     bool current_update = true;
     bool is_dirty = false;
     MChunks* _chunks;
@@ -144,6 +143,7 @@ class MGrid : public Object {
     static void _bind_methods(){};
 
     public:
+    MRegion* regions;
     // This can be removed in future but right now I keep it
     Vector<RID> update_mesh_list;
     Vector<RID> remove_instance_list;
@@ -178,6 +178,7 @@ class MGrid : public Object {
     uint32_t brush_px_pos_x;
     uint32_t brush_px_pos_y;
     uint32_t brush_px_radius;
+    MPixelRegion draw_pixel_region;
     real_t brush_radius;
     Vector3 brush_world_pos;
     int32_t current_paint_index=-1;

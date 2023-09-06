@@ -22,7 +22,8 @@ bool MBitwiseBrush::is_two_point_brush(){
     return false;
 }
 void MBitwiseBrush::before_draw(){
-
+    uint32_t pixel_size = grid->regions[0].images[0]->pixel_size;
+    ERR_FAIL_COND_MSG(bit>(pixel_size*8 - 1),"Bit is out of bound");
 }
 void MBitwiseBrush::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_t y,MImage* img){
     //Calculating w
@@ -35,7 +36,9 @@ void MBitwiseBrush::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint3
     uint32_t ofs = (local_y*img->width + local_x)*img->pixel_size;
     uint8_t* ptrw = img->data.ptrw() + ofs;
     mempcpy(ptrw, ptr, img->pixel_size);
-    ERR_FAIL_COND_MSG(bit>(img->pixel_size*8 - 1),"Bit is out of bound");
+    if( bit>(img->pixel_size*8 - 1) ){
+        return;
+    }
     uint32_t ibyte = bit/8;
     uint32_t ibit = bit%8;
     uint8_t b = ptrw[ibyte];
