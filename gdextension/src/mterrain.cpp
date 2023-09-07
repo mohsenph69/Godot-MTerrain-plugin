@@ -153,7 +153,7 @@ void MTerrain::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"brush_layers",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_brush_layers","get_brush_layers");
     ClassDB::bind_method(D_METHOD("set_brush_layers_num","input"), &MTerrain::set_brush_layers_num);
     ClassDB::bind_method(D_METHOD("get_brush_layers_num"), &MTerrain::get_brush_layers_num);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"brush_layers_num",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_brush_layers_num","get_brush_layers_num");
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"brush_layers_groups_num",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_brush_layers_num","get_brush_layers_num");
     ClassDB::bind_method(D_METHOD("get_layers_info"), &MTerrain::get_layers_info);
     ClassDB::bind_method(D_METHOD("set_color_layer","index","group_index","brush_name"), &MTerrain::set_color_layer);
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
@@ -777,7 +777,7 @@ void MTerrain::_get_property_list(List<PropertyInfo> *p_list) const {
     // Brush layers property
     PropertyInfo ccat(Variant::INT, "Brush Layers", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_CATEGORY);
     p_list->push_back(ccat);
-    PropertyInfo bln(Variant::INT, "brush_layers_num", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR);
+    PropertyInfo bln(Variant::INT, "brush_layers_groups_num", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR);
     p_list->push_back(bln);
     for(int i=0;i<brush_layers.size();i++){
         PropertyInfo brl(Variant::OBJECT, "MBL_"+itos(i), PROPERTY_HINT_RESOURCE_TYPE, "MBrushLayers", PROPERTY_USAGE_EDITOR);
