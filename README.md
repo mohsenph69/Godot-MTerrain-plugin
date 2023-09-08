@@ -21,16 +21,21 @@ You can support me with patreon [Click here](https://patreon.com/mohsenzare?utm_
 
 ## Features
 
-# Tested with terrrain up to size 16km X 16 km
-# Supporting grass system Even with collission for things like trees (Grass is paintable)
-# Suppoting baking navigation system from terrain (navigation mesh is paintable)
-# Terrain sculptur
-# Color brush which support different algorithm (splatmapping, bitwise, index mapping ...)
+* Tested with terrrain up to size 16km X 16 km
+* Supporting grass system Even with collission for things like trees (Grass is paintable)
+* Suppoting baking navigation system from terrain (navigation mesh is paintable)
+* Terrain sculptur
+* Color brush which support different algorithm (splatmapping, bitwise, index mapping ...)
+  
+![Screenshot_20230719_144752](https://github.com/mohsenph69/Godot-MTerrain-plugin/assets/52196206/704c51a8-7554-4345-907b-efc635a67dd0)
 
 
 ## download
 To downalod the latest release use this link:
 https://github.com/mohsenph69/Godot-MTerrain-plugin/releases
+
+![Screenshot_20230719_144757](https://github.com/mohsenph69/Godot-MTerrain-plugin/assets/52196206/ef78652f-c4cc-4226-948e-9f4e44bb1af8)
+
 ## build by yourself
 First clone this repo on your local machine, so you need godot-cpp to exist in GDExtension folder so you can build that, godot-cpp is added as a submodule in this project so to put that inside GDExtension folder only thing you need to do after cloning this repo is runing this code
 ```
