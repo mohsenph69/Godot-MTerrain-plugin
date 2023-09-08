@@ -1,4 +1,8 @@
 # godot M Terrain Plugin
+
+![Screenshot_20230707_104154](https://github.com/mohsenph69/Godot-MTerrain-plugin/assets/52196206/7e3eb7da-af57-4ae5-8f55-f9fc1c8b26f8)
+
+
 ## Please read before using this plugin
 Using this plugin require to learn some concept about terrain, This terrain plugin will not work out of the box, so I really suggest to read the [wiki](https://github.com/mohsenph69/Godot-MTerrain-plugin/wiki/) which I add recently added, I will add more stuff to wiki but for now I wrote the main concept that you need to know.
 
@@ -15,9 +19,15 @@ https://www.youtube.com/watch?v=0zEYzKEMWR8
 
 You can support me with patreon [Click here](https://patreon.com/mohsenzare?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link)
 
-## Get Camera
-Currentlly there is a bug, and sometimes the camera can not be accessed by Terrain
-Use `set_custom_camera(Node3D node)` and pass your player or camera in that!
+## Features
+
+# Tested with terrrain up to size 16km X 16 km
+# Supporting grass system Even with collission for things like trees (Grass is paintable)
+# Suppoting baking navigation system from terrain (navigation mesh is paintable)
+# Terrain sculptur
+# Color brush which support different algorithm (splatmapping, bitwise, index mapping ...)
+
+
 ## download
 To downalod the latest release use this link:
 https://github.com/mohsenph69/Godot-MTerrain-plugin/releases
