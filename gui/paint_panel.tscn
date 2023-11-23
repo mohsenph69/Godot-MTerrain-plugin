@@ -3,8 +3,11 @@
 [ext_resource type="Script" path="res://addons/m_terrain/gui/paint_panel.gd" id="1_udfkn"]
 
 [node name="paint" type="VBoxContainer"]
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 script = ExtResource("1_udfkn")
 
@@ -74,6 +77,13 @@ popup/item_1/text = "To Height"
 popup/item_1/id = 1
 popup/item_2/text = "Smooth"
 popup/item_2/id = 2
+
+[node name="color_brushe_scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="color_brushe_root" type="VBoxContainer" parent="color_brushe_scroll"]
+layout_mode = 2
 
 [connection signal="value_changed" from="brush_size/brush_slider" to="." method="_on_brush_slider_value_changed"]
 [connection signal="toggled" from="brush_type" to="." method="_on_brush_type_toggled"]

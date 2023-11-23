@@ -10,6 +10,7 @@ class_name MPaintPanel
 @onready var heightmap_layers:=$heightmap_layers
 @onready var layer_buttons:=$layer_buttons
 @onready var add_name_line:=$layer_buttons/addName
+@onready var color_brush_root:=$color_brushe_scroll/color_brushe_root
 
 var brush_layers_res = preload("res://addons/m_terrain/gui/brush_layers.tscn")
 var layers_title_res = preload("res://addons/m_terrain/gui/layers_title.tscn")
@@ -70,6 +71,7 @@ func _on_brush_type_toggled(button_pressed):
 	brush_list_option.visible = not button_pressed
 	layer_buttons.visible = not button_pressed
 	heightmap_layers.visible = not button_pressed
+	color_brush_root.visible = button_pressed
 	if button_pressed:
 		brush_type_checkbox.text = "Color brush"
 		_on_brush_list_item_selected(-1)
@@ -93,10 +95,10 @@ func create_color_brush_layers():
 		if title.is_empty():
 			title = "Layer Group "+str(layer_group)
 		title_lable.text = title
-		add_child(title_lable)
+		color_brush_root.add_child(title_lable)
 		var l = brush_layers_res.instantiate()
 		color_brush_layers.push_back(l)
-		add_child(l)
+		color_brush_root.add_child(l)
 		l.create_layers(layers["info"])
 		l.index = layers["index"]
 		l.uniform = layers["uniform"]
