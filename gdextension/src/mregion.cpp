@@ -136,7 +136,8 @@ void MRegion::apply_update() {
 	}
 	current_image_size = ((double)heightmap->current_size);
 	_material->set_shader_parameter("region_a", (current_image_size-1)/current_image_size);
-	_material->set_shader_parameter("region_b", 0.5/current_image_size);	
+	_material->set_shader_parameter("region_b", 0.5/current_image_size);
+	_material->set_shader_parameter("min_lod", last_lod);
 }
 
 void MRegion::create_physics() {

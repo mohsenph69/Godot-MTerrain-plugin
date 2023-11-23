@@ -11,6 +11,7 @@ uniform vec3 region_world_position;
 uniform float region_size;
 uniform float region_a;
 uniform float region_b;
+uniform int min_lod;
 varying vec3 world_pos;
 varying vec2 region_uv;
 
