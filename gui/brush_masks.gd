@@ -8,7 +8,7 @@ const allowed_extension:PackedStringArray = ["jpg","jpeg","png","exr","bmp","dds
 var stencil=null
 
 var is_loaded:=false
-var current_selected_index:int=0
+var current_selected_index:int=-1
 
 var images:Array
 var textures:Array
@@ -65,8 +65,23 @@ func get_texture():
 func _on_item_selected(index):
 	if index == 0:
 		stencil.set_mask(null,null)
+		current_selected_index = -1
 		return
-	current_selected_index = index
-	stencil.set_mask(images[index-1],textures[index-1])
+	current_selected_index = index - 1
+	stencil.set_mask(images[current_selected_index],textures[current_selected_index])
+
+func invert_selected_image():
+	if current_selected_index == -1:return
+	var img:Image= images[current_selected_index]
+	for j in range(img.get_height()):
+		for i in range(img.get_width()):
+			var val:float= img.get_pixel(i,j).r
+			val = 1.0 - val;
+			img.set_pixel(i,j,Color(val,0,0,1))
+	textures[current_selected_index] = ImageTexture.create_from_image(img)
+	set_item_icon(current_selected_index+1,textures[current_selected_index])
+	stencil.set_mask(images[current_selected_index],textures[current_selected_index])
+
+
 
 

@@ -9,11 +9,10 @@ border_width_bottom = 2
 border_color = Color(0, 0, 0, 1)
 
 [node name="layers_title" type="Label"]
-anchors_preset = 15
+anchors_preset = 10
 anchor_right = 1.0
-anchor_bottom = 1.0
+offset_bottom = 30.0
 grow_horizontal = 2
-grow_vertical = 2
 theme_override_colors/font_color = Color(0.882353, 0.905882, 0.529412, 1)
 theme_override_colors/font_shadow_color = Color(0.160784, 0.305882, 0, 1)
 theme_override_colors/font_outline_color = Color(0.0705882, 0.0627451, 0.0196078, 1)

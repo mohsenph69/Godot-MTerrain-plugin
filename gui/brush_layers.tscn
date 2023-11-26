@@ -4,7 +4,8 @@
 
 [node name="brush_layers" type="ItemList"]
 custom_minimum_size = Vector2(300, 250)
-offset_right = 262.0
-offset_bottom = 40.0
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
 max_columns = 4
 script = ExtResource("1_3au4w")

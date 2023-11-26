@@ -66,7 +66,6 @@ func change_size(amount:float,terrain:MTerrain):
 	current_size += amount * terrain.get_h_scale()
 	if current_size < terrain.get_h_scale():
 		current_size = terrain.get_h_scale()
-	print(position)
 	size.x = current_size
 	size.z = current_size
 	var last_pos = position
@@ -103,7 +102,6 @@ func rotate_image(amount:int):
 	image_rotation += amount
 	image_rotation = image_rotation % 4
 	is_dirty = true
-	print(image_rotation)
 	update_active_image()
 
 func update_active_image():
