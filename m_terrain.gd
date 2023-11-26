@@ -139,6 +139,7 @@ func paint_mode_handle(event:InputEvent):
 					elif active_nav_region:
 						pass
 					elif active_terrain:
+						active_terrain.set_brush_start_point(ray_col.get_collision_position(),brush_decal.radius)
 						paint_panel.set_active_layer()
 				else:
 					if active_grass:

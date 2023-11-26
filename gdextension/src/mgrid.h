@@ -184,6 +184,8 @@ class MGrid : public Object {
     MPixelRegion draw_pixel_region;
     real_t brush_radius;
     Vector3 brush_world_pos;
+    Vector3 brush_world_pos_start;
+    Vector3 brush_radius_start;
     int32_t current_paint_index=-1;
     MGrid();
     ~MGrid();
@@ -251,6 +253,7 @@ class MGrid : public Object {
 
     void set_brush_manager(MBrushManager* input);
     MBrushManager* get_brush_manager();
+    void set_brush_start_point(Vector3 brush_pos,real_t radius);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
     void draw_height_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MHeightBrush* brush);
 

@@ -132,6 +132,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_pixel_world_pos", "x","y"), &MTerrain::get_pixel_world_pos);
     ClassDB::bind_method(D_METHOD("get_closest_pixel", "world_pos"), &MTerrain::get_closest_pixel);
     ClassDB::bind_method(D_METHOD("set_brush_manager", "brush_manager"), &MTerrain::set_brush_manager);
+    ClassDB::bind_method(D_METHOD("set_brush_start_point", "brush_pos","radius"), &MTerrain::set_brush_start_point);
     ClassDB::bind_method(D_METHOD("draw_height", "brush_pos","radius","brush_id"), &MTerrain::draw_height);
     ClassDB::bind_method(D_METHOD("draw_color","brush_pos","radius","brush_id","index"),&MTerrain::draw_color);
 
@@ -871,6 +872,11 @@ void MTerrain::set_brush_manager(Object* input){
     MBrushManager* brush_manager = Object::cast_to<MBrushManager>(input);
     grid->set_brush_manager(brush_manager);
 }
+
+void MTerrain::set_brush_start_point(Vector3 brush_pos,real_t radius){
+    grid->set_brush_start_point(brush_pos,radius);
+}
+
 void MTerrain::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     if(!grid->is_created()) return;
     grid->draw_height(brush_pos,radius,brush_id);

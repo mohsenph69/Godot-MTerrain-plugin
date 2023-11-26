@@ -48,12 +48,14 @@ var is_grass_add:bool = true
 
 var smooth_brush_id:int
 var raise_brush_id:int
+var to_height_brush_id:int
 
 func _ready():
 	_on_brush_type_toggled(false)
 	change_brush_size(50)
 	smooth_brush_id = brush_manager.get_height_brush_id("Smooth")
 	raise_brush_id = brush_manager.get_height_brush_id("Raise")
+	to_height_brush_id = brush_manager.get_height_brush_id("To Height")
 
 func set_active_terrain(input:MTerrain):
 	active_terrain = input
@@ -302,6 +304,11 @@ func _input(event):
 			if event.keycode == KEY_SHIFT:
 				if event.is_pressed():
 					brush_id = smooth_brush_id
+				else:
+					brush_id = last_height_brush_id
+			elif event.keycode == KEY_CTRL:
+				if event.is_pressed():
+					brush_id = to_height_brush_id
 				else:
 					brush_id = last_height_brush_id
 

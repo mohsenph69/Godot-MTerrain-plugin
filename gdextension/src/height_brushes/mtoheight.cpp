@@ -41,19 +41,19 @@ Array MToHeight::_get_property_list(){
     p3["default_value"] = offset;
     p3["min"] = -10000000000;
     p3["max"] = 100000000000;
-    //p4
-    Dictionary p4;
-    p4["name"] = "absolute";
-    p4["type"] = Variant::BOOL;
-    p4["hint"] = "";
-    p4["hint_string"] = "";
-    p4["default_value"] = absolute;
-    p4["min"] = -0;
-    p4["max"] = 0;
+    // p5
+    Dictionary p5;
+    p5["name"] = "mode";
+    p5["type"] = Variant::INT;
+    p5["hint"] = "enum";
+    p5["hint_string"] = "RELATIVE,START_POINT,ABSOLUTE";
+    p5["default_value"] = mode;
+    p5["min"] = 0;
+    p5["max"] = 2;
     props.append(p1);
     props.append(p2);
     props.append(p3);
-    props.append(p4);
+    props.append(p5);
     return props;
 }
 
@@ -70,9 +70,8 @@ void MToHeight::_set_property(String prop_name, Variant value){
     {
         weight = value;
         return;
-    } else if (prop_name == "absolute"){
-        UtilityFunctions::print("Absoulute value ", value);
-        absolute = value;
+    } else if (prop_name == "mode"){
+        mode = value;
     }
 }
 
@@ -81,7 +80,7 @@ bool MToHeight::is_two_point_brush(){
 }
 
 void MToHeight::before_draw(){
-
+    start_height = grid->get_height(grid->brush_world_pos_start);
 }
 float MToHeight::get_height(const uint32_t& x,const uint32_t& y){
     Vector3 world_pos = grid->get_pixel_world_pos(x,y);
@@ -89,11 +88,15 @@ float MToHeight::get_height(const uint32_t& x,const uint32_t& y){
     dis = dis/grid->brush_radius;
     dis = UtilityFunctions::smoothstep(1,hardness,dis);
     float toh;
-    if(absolute){
+    if(mode==2){ // absoulte
         toh=offset;
-    } else {
+    } else if(mode==0) { // relative
         toh = grid->brush_world_pos.y + offset;
+    } else if(mode==1) { // relative to start position
+        toh = start_height + offset;
     }
     float h = grid->get_height_by_pixel(x,y);
-    return (toh - h)*weight*dis + h;
+    float mask = grid->get_brush_mask_value(x,y);
+    mask = pow(mask,2);
+    return (toh - h)*weight*dis*mask + h;
 }

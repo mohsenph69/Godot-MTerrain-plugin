@@ -990,6 +990,11 @@ MBrushManager* MGrid::get_brush_manager(){
     return _brush_manager;
 }
 
+void MGrid::set_brush_start_point(Vector3 brush_pos,real_t radius){
+    brush_world_pos_start = brush_pos;
+    brush_radius = radius;
+}
+
 void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     ERR_FAIL_COND(_brush_manager==nullptr);
     ERR_FAIL_COND_EDMSG(!heightmap_layers_visibility[active_heightmap_layer], "Can not paint on invisible layer");

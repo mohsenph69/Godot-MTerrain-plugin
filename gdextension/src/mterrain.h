@@ -200,6 +200,7 @@ class MTerrain : public  Node3D {
     Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
     Vector2i get_closest_pixel(const Vector3& world_pos);
     void set_brush_manager(Object* input);
+    void set_brush_start_point(Vector3 brush_pos,real_t radius);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
     void draw_color(Vector3 brush_pos,real_t radius,String brush_name, String uniform_name);
     

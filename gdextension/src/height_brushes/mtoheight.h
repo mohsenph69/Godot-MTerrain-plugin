@@ -10,7 +10,8 @@ class MToHeight : public MHeightBrush {
     float weight=0.1;
     float hardness=0.5;
     float offset=0.0;
-    bool absolute=false;
+    int mode=1;
+    float start_height;
     MToHeight();
     ~MToHeight();
     String _get_name();
