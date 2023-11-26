@@ -395,6 +395,22 @@ Vector2i MGrass::get_closest_pixel(Vector3 pos){
     return Vector2i(round(pos.x),round(pos.z));
 }
 
+Vector3 MGrass::get_pixel_world_pos(uint32_t px, uint32_t py){
+    Vector3 out(0,0,0);
+    ERR_FAIL_COND_V(!grass_data.is_valid(),out);
+    out.x = grid->offset.x + ((float)px)*grass_data->density;
+    out.z = grid->offset.z + ((float)py)*grass_data->density;
+    return out;
+}
+
+Vector2i MGrass::grass_px_to_grid_px(uint32_t px, uint32_t py){
+    Vector2 v;
+    ERR_FAIL_COND_V(!grass_data.is_valid(),Vector2i(v));
+    v = Vector2(px,py)*grass_data->density;
+    v = v/grid->get_h_scale();
+    return Vector2i(round(v.x),round(v.y));
+}
+
 // At least for now it is not safe to put this function inside a thread
 // because set_grass_by_pixel is chaning dirty_points_id
 // And I don't think that we need to do that because it is not a huge process
@@ -431,7 +447,8 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
             uint32_t dif_x = abs(x - brush_px_pos_x);
             uint32_t dif_y = abs(y - brush_px_pos_y);
             uint32_t dis = sqrt(dif_x*dif_x + dif_y*dif_y);
-            if(dis<brush_px_radius)
+            Vector2i grid_px = grass_px_to_grid_px(x,y);
+            if(dis<brush_px_radius && grid->get_brush_mask_value_bool(grid_px.x,grid_px.y))
                 set_grass_by_pixel(x,y,add);
         }
     }

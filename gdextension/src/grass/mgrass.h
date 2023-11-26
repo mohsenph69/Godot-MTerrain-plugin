@@ -103,6 +103,8 @@ class MGrass : public Node3D {
     void set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value);
     bool get_grass_by_pixel(uint32_t px, uint32_t py);
     Vector2i get_closest_pixel(Vector3 pos);
+    Vector3 get_pixel_world_pos(uint32_t px, uint32_t py);
+    Vector2i grass_px_to_grid_px(uint32_t px, uint32_t py);
     void draw_grass(Vector3 brush_pos,real_t radius,bool add);
     void set_active(bool input);
     bool get_active();
