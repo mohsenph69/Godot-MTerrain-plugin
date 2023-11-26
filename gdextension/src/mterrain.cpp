@@ -156,6 +156,9 @@ void MTerrain::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::INT,"brush_layers_groups_num",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_brush_layers_num","get_brush_layers_num");
     ClassDB::bind_method(D_METHOD("get_layers_info"), &MTerrain::get_layers_info);
     ClassDB::bind_method(D_METHOD("set_color_layer","index","group_index","brush_name"), &MTerrain::set_color_layer);
+    ClassDB::bind_method(D_METHOD("disable_brush_mask"), &MTerrain::disable_brush_mask);
+    ClassDB::bind_method(D_METHOD("set_brush_mask","mask_image"), &MTerrain::set_brush_mask);
+    ClassDB::bind_method(D_METHOD("set_brush_mask_px_pos","mask_image"), &MTerrain::set_brush_mask_px_pos);
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
 }
 
@@ -1063,4 +1066,17 @@ void MTerrain::test_function(){
     UtilityFunctions::print("o color ",o);
     float red = img->get_pixel_in_channel(1,2,0);
     UtilityFunctions::print("red ",red);
+}
+
+void MTerrain::disable_brush_mask(){
+    grid->brush_mask_active = false;
+}
+
+void MTerrain::set_brush_mask(const Ref<Image>& img) {
+    grid->brush_mask_active = true;
+    grid->brush_mask = img;
+}
+
+void MTerrain::set_brush_mask_px_pos(Vector2i pos) {
+    grid->brush_mask_px_pos = pos;
 }

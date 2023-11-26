@@ -5,6 +5,7 @@
 
 [node name="brush_decal" type="Decal"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.7598, 0, 20.5917)
+sorting_offset = 1.0
 size = Vector3(10, 1000, 10)
 texture_albedo = ExtResource("1_tnwak")
 modulate = Color(0, 0.435294, 0.027451, 1)

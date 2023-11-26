@@ -226,6 +226,10 @@ class MTerrain : public  Node3D {
     Array get_layers_info();
     void set_color_layer(int index,int group_index,String brush_name);
 
+    void disable_brush_mask();
+    void set_brush_mask(const Ref<Image>& img);
+    void set_brush_mask_px_pos(Vector2i pos);
+
     void test_function();
 };
 

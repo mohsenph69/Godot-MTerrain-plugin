@@ -6,7 +6,9 @@
 class MRaise : public MHeightBrush {
     public:
     float hardness=0.5;
-    float amount=1.0;
+    float amount=0.2;
+    float revers=false;
+    float final_amount;
     MRaise();
     ~MRaise();
     String _get_name();

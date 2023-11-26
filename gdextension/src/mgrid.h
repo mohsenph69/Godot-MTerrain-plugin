@@ -175,6 +175,9 @@ class MGrid : public Object {
     /*
     Brush Stuff
     */
+    bool brush_mask_active=false;
+    Ref<Image> brush_mask;
+    Vector2i brush_mask_px_pos;
     uint32_t brush_px_pos_x;
     uint32_t brush_px_pos_y;
     uint32_t brush_px_radius;
@@ -264,7 +267,7 @@ class MGrid : public Object {
 
     float get_h_scale();
 
-
+    float get_brush_mask_value(uint32_t x,uint32_t y);
 };
 
 #endif

@@ -1011,6 +1011,7 @@ void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     bottom = (bottom>grid_pixel_region.bottom) ? grid_pixel_region.bottom : bottom;
     MHeightBrush* brush = _brush_manager->get_height_brush(brush_id);
     brush->set_grid(this);
+    brush->before_draw();
     MPixelRegion draw_pixel_region(left,right,top,bottom);
     //ERR_FAIL_COND_MSG(draw_pixel_region.width!=draw_pixel_region.height,"Non square brush is not supported");
     MImage* draw_image = memnew(MImage);
@@ -1235,4 +1236,15 @@ void MGrid::toggle_heightmap_layer_visibile(){
 
 float MGrid::get_h_scale(){
     return _chunks->h_scale;
+}
+
+float MGrid::get_brush_mask_value(uint32_t x,uint32_t y){
+    if(!brush_mask_active){
+        return 1.0;
+    }
+    Vector2i vpos = Vector2i(x,y) - brush_mask_px_pos;
+    if(vpos.x < 0 || vpos.y < 0 || vpos.x >= brush_mask->get_width() || vpos.y >= brush_mask->get_height()){
+        return 0.0;
+    }
+    return brush_mask->get_pixel(vpos.x,vpos.y).r;
 }

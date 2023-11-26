@@ -32,10 +32,20 @@ Array MRaise::_get_property_list(){
     p2["hint"] = "range";
     p2["hint_string"] = "0.01";
     p2["default_value"] = amount;
-    p2["min"] = -6;
-    p2["max"] = 6;
+    p2["min"] = 0;
+    p2["max"] = 1;
+    //p3
+    Dictionary p3;
+    p3["name"] = "revers";
+    p3["type"] = Variant::BOOL;
+    p3["hint"] = "";
+    p3["hint_string"] = "";
+    p3["default_value"] = revers;
+    p3["min"] = 0;
+    p3["max"] = 1;
     props.append(p1);
     props.append(p2);
+    props.append(p3);
     return props;
 }
 void MRaise::_set_property(String prop_name, Variant value){
@@ -46,6 +56,8 @@ void MRaise::_set_property(String prop_name, Variant value){
     {
         amount = value;
         return;
+    } else if (prop_name == "revers"){
+        revers = value;
     }
 }
 
@@ -54,12 +66,16 @@ bool MRaise::is_two_point_brush(){
 }
 
 void MRaise::before_draw(){
-    
+    final_amount = amount*sqrt(grid->brush_radius/50.0);
+    if(revers){
+        final_amount *= -1.0;
+    }
 }
 float MRaise::get_height(const uint32_t& x,const uint32_t& y){
     Vector3 world_pos = grid->get_pixel_world_pos(x,y);
     real_t dis = grid->brush_world_pos.distance_to(world_pos);
     dis = dis/grid->brush_radius;
-    dis = UtilityFunctions::smoothstep(1,hardness,dis)*amount;
+    dis = UtilityFunctions::smoothstep(1,hardness,dis)*final_amount*grid->get_brush_mask_value(x,y);
+
     return world_pos.y + dis;
 }

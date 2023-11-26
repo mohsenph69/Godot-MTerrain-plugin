@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://cesssdkp0wyi8"]
+[gd_scene load_steps=3 format=3 uid="uid://cesssdkp0wyi8"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/paint_panel.gd" id="1_udfkn"]
+[ext_resource type="PackedScene" uid="uid://b6wfdaqojnwju" path="res://addons/m_terrain/gui/brush_masks.tscn" id="2_o8i15"]
 
 [node name="paint" type="VBoxContainer"]
 anchors_preset = 15
@@ -33,6 +34,9 @@ value = 50.0
 [node name="brush_type" type="CheckButton" parent="."]
 layout_mode = 2
 text = "Height brush"
+
+[node name="brush_masks" parent="." instance=ExtResource("2_o8i15")]
+layout_mode = 2
 
 [node name="grass_add" type="CheckButton" parent="."]
 visible = false
@@ -79,10 +83,12 @@ popup/item_2/text = "Smooth"
 popup/item_2/id = 2
 
 [node name="color_brushe_scroll" type="ScrollContainer" parent="."]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 
 [node name="color_brushe_root" type="VBoxContainer" parent="color_brushe_scroll"]
+visible = false
 layout_mode = 2
 
 [connection signal="value_changed" from="brush_size/brush_slider" to="." method="_on_brush_slider_value_changed"]

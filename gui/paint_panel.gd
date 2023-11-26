@@ -11,6 +11,8 @@ class_name MPaintPanel
 @onready var layer_buttons:=$layer_buttons
 @onready var add_name_line:=$layer_buttons/addName
 @onready var color_brush_root:=$color_brushe_scroll/color_brushe_root
+@onready var color_brush_scroll:=$color_brushe_scroll
+@onready var brush_masks:=$brush_masks
 
 var brush_layers_res = preload("res://addons/m_terrain/gui/brush_layers.tscn")
 var layers_title_res = preload("res://addons/m_terrain/gui/layers_title.tscn")
@@ -43,10 +45,15 @@ var current_color_brush:=""
 
 var is_grass_add:bool = true
 
+
+var smooth_brush_id:int
+var raise_brush_id:int
+
 func _ready():
 	_on_brush_type_toggled(false)
 	change_brush_size(50)
-	
+	smooth_brush_id = brush_manager.get_height_brush_id("Smooth")
+	raise_brush_id = brush_manager.get_height_brush_id("Raise")
 
 func set_active_terrain(input:MTerrain):
 	active_terrain = input
@@ -72,6 +79,7 @@ func _on_brush_type_toggled(button_pressed):
 	layer_buttons.visible = not button_pressed
 	heightmap_layers.visible = not button_pressed
 	color_brush_root.visible = button_pressed
+	color_brush_scroll.visible = button_pressed
 	if button_pressed:
 		brush_type_checkbox.text = "Color brush"
 		_on_brush_list_item_selected(-1)
@@ -283,3 +291,20 @@ func _on_visibilty_bt_pressed():
 
 func _on_grass_add_toggled(button_pressed):
 	is_grass_add = button_pressed
+
+
+var last_height_brush_id:int
+
+func _input(event):
+	if event is InputEventKey:
+		if not is_color_brush:
+			last_height_brush_id = brush_list_option.get_selected_id()
+			if event.keycode == KEY_SHIFT:
+				if event.is_pressed():
+					brush_id = smooth_brush_id
+				else:
+					brush_id = last_height_brush_id
+
+
+
+

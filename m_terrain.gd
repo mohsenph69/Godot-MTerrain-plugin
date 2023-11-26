@@ -6,6 +6,7 @@ var image_creator_window_res = preload("res://addons/m_terrain/gui/image_creator
 var tools= null
 var paint_panel=null
 var brush_decal=null
+var stencil_decal=null
 var human_male:MeshInstance3D=null
 
 var raw_img_importer = null
@@ -33,13 +34,19 @@ func _enter_tree():
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		paint_panel = preload("res://addons/m_terrain/gui/paint_panel.tscn").instantiate()
 		paint_panel.brush_size_changed.connect(Callable(self,"brush_size_changed"))
+		## ADD and Remove so the ready function will be called
+		add_control_to_dock(EditorPlugin.DOCK_SLOT_RIGHT_UL,paint_panel)
+		remove_control_from_docks(paint_panel)
 		get_editor_interface().get_selection().selection_changed.connect(Callable(self,"selection_changed"))
 		brush_decal = preload("res://addons/m_terrain/gui/brush_decal.tscn").instantiate()
 		brush_decal.visible = false
 		get_editor_interface().get_editor_main_screen().add_child(brush_decal)
-		human_male = preload("res://addons/m_terrain/gui/human_male.tscn").instantiate()
+		stencil_decal = load("res://addons/m_terrain/gui/stencil_decal.tscn").instantiate()
+		get_editor_interface().get_editor_main_screen().add_child(stencil_decal)
+		stencil_decal.visible = false
+		human_male = load("res://addons/m_terrain/gui/human_male.tscn").instantiate()
 		get_editor_interface().get_editor_main_screen().add_child(human_male)
-
+		paint_panel.brush_masks.load_images(stencil_decal)
 
 func _exit_tree():
 	if Engine.is_editor_hint():
@@ -47,8 +54,10 @@ func _exit_tree():
 		remove_tool_menu_item("MTerrain image creator")
 		remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		remove_control_from_docks(paint_panel)
+		paint_panel.queue_free()
 		brush_decal.queue_free()
 		human_male.queue_free()
+		stencil_decal.queue_free()
 
 func show_import_window():
 	var window = import_window_res.instantiate()
@@ -85,28 +94,43 @@ func _forward_3d_gui_input(viewport_camera, event):
 		else:
 			collision_ray_step = 3
 		tools.set_save_button_disabled(not active_terrain.has_unsave_image())
-	if event is InputEventKey:
-		if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
-			var size = paint_panel.brush_size + 1
-			paint_panel.change_brush_size(size)
-			return AFTER_GUI_INPUT_STOP
-		if event.keycode == KEY_MINUS:
-			var size = paint_panel.brush_size - 1
-			paint_panel.change_brush_size(size)
-			return AFTER_GUI_INPUT_STOP
+	if tools.active_paint_mode:
+		if event is InputEventKey:
+			if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
+				var size = paint_panel.brush_size + 1
+				paint_panel.change_brush_size(size)
+				return AFTER_GUI_INPUT_STOP
+			elif event.keycode == KEY_MINUS:
+				var size = paint_panel.brush_size - 1
+				paint_panel.change_brush_size(size)
+				return AFTER_GUI_INPUT_STOP
+			elif event.keycode == KEY_COMMA and event.pressed:
+				stencil_decal.decrease_size(active_terrain)
+			elif event.keycode == KEY_PERIOD and event.pressed:
+				stencil_decal.increase_size(active_terrain)
+			elif event.keycode == KEY_K and event.pressed:
+				stencil_decal.rotate_image(-1)
+			elif event.keycode == KEY_L and event.pressed:
+				stencil_decal.rotate_image(1)
+			elif event.keycode == KEY_SEMICOLON and event.pressed:
+				stencil_decal.reset_image_rotation()
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_MIDDLE and not event.pressed:
+				stencil_decal.toggle_fix()
 	if not tools.human_male_active:
 		human_male.visible = false
 	if active_grass:
 		tools.set_grass_label(active_grass.get_count())
 	else:
 		tools.disable_grass_lable()
-	
-	
+
 
 func paint_mode_handle(event:InputEvent):
 	if ray_col.is_collided():
 		brush_decal.visible = true
 		brush_decal.set_position(ray_col.get_collision_position())
+		stencil_decal.visible = true
+		stencil_decal.set_absolute_terrain_pos(ray_col.get_collision_position(),active_terrain)
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				if event.pressed:
@@ -137,6 +161,7 @@ func paint_mode_handle(event:InputEvent):
 			return AFTER_GUI_INPUT_STOP
 	else:
 		brush_decal.visible = false
+		stencil_decal.visible = false
 		return AFTER_GUI_INPUT_PASS
 
 func _handles(object):
@@ -198,6 +223,7 @@ func toggle_paint_mode(input):
 			paint_panel.set_grass_mode(false)
 	else:
 		brush_decal.visible = false
+		stencil_decal.visible = false
 		remove_control_from_docks(paint_panel)
 
 func save_request():
