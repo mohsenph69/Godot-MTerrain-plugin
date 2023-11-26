@@ -25,7 +25,7 @@ void MPaint16::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_t y
     uint32_t ofs = (local_y*img->width + local_x);
     uint8_t* ptrw = img->data.ptrw() + ofs*img->pixel_size;
     mempcpy(ptrw, ptr, img->pixel_size);
-    if(px_dis<(float)grid->brush_px_radius){
+    if(px_dis<(float)grid->brush_px_radius && grid->get_brush_mask_value_bool(x,y)){
         uint16_t u = ((uint16_t *)img->data.ptrw())[ofs];
         u &= 0x0FFF;
         u |= paint_layer << 12;

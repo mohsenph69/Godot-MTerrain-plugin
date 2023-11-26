@@ -30,6 +30,9 @@ void MPaintColor::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_
     float px_dis = (float)sqrt(dx*dx + dy*dy);
     px_dis /= (float)grid->brush_px_radius;
     float w = UtilityFunctions::smoothstep(1,hardness,px_dis);
+    float mask = grid->get_brush_mask_value(x,y);
+    mask = pow(mask,4.0);
+    w = w * mask;
     Color bg_color = grid->get_pixel(x,y,grid->current_paint_index);
     bg_color = bg_color.lerp(color,w);
     img->set_pixel(local_x,local_y,bg_color);

@@ -1253,3 +1253,14 @@ float MGrid::get_brush_mask_value(uint32_t x,uint32_t y){
     }
     return brush_mask->get_pixel(vpos.x,vpos.y).r;
 }
+
+bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y){
+    if(!brush_mask_active){
+        return true;
+    }
+    Vector2i vpos = Vector2i(x,y) - brush_mask_px_pos;
+    if(vpos.x < 0 || vpos.y < 0 || vpos.x >= brush_mask->get_width() || vpos.y >= brush_mask->get_height()){
+        return false;
+    }
+    return brush_mask->get_pixel(vpos.x,vpos.y).r > 0.5;
+}

@@ -56,6 +56,9 @@ void MChannelPainter::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uin
     float px_dis = (float)sqrt(dx*dx + dy*dy);
     px_dis /= (float)grid->brush_px_radius;
     float w = UtilityFunctions::smoothstep(1,hardness,px_dis);
+    float mask = grid->get_brush_mask_value(x,y);
+    mask = pow(mask,4.0);
+    w = w * mask;
     // setting color
     const uint8_t* ptr = grid->get_pixel_by_pointer(x,y,grid->current_paint_index);
     uint32_t ofs = local_y*img->width + local_x;

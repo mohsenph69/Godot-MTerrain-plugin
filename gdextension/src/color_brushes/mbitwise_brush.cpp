@@ -42,7 +42,7 @@ void MBitwiseBrush::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint3
     uint32_t ibyte = bit/8;
     uint32_t ibit = bit%8;
     uint8_t b = ptrw[ibyte];
-    if(px_dis<1){
+    if(px_dis<1 && grid->get_brush_mask_value_bool(x,y)){
         if(value){
             b |= (1 << ibit);
         } else {

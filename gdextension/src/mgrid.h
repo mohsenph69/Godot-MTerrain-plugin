@@ -271,6 +271,7 @@ class MGrid : public Object {
     float get_h_scale();
 
     float get_brush_mask_value(uint32_t x,uint32_t y);
+    bool get_brush_mask_value_bool(uint32_t x,uint32_t y);
 };
 
 #endif
