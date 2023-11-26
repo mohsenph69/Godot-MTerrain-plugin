@@ -1262,5 +1262,5 @@ bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y){
     if(vpos.x < 0 || vpos.y < 0 || vpos.x >= brush_mask->get_width() || vpos.y >= brush_mask->get_height()){
         return false;
     }
-    return brush_mask->get_pixel(vpos.x,vpos.y).r > 0.5;
+    return brush_mask->get_pixel(vpos.x,vpos.y).r > mask_cutoff;
 }

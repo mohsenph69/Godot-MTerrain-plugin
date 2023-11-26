@@ -175,6 +175,7 @@ class MGrid : public Object {
     /*
     Brush Stuff
     */
+    float mask_cutoff=0.5; // Agreed initiale value here and in paint panel
     bool brush_mask_active=false;
     Ref<Image> brush_mask;
     Vector2i brush_mask_px_pos;

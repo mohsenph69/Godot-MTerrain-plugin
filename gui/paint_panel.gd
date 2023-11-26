@@ -13,6 +13,8 @@ class_name MPaintPanel
 @onready var color_brush_root:=$color_brushe_scroll/color_brushe_root
 @onready var color_brush_scroll:=$color_brushe_scroll
 @onready var brush_masks:=$brush_masks
+@onready var mask_cutt_off_label:=$HBoxContainer2/Labelmask_cutt_off_label
+@onready var mask_cutt_off_slider:=$HBoxContainer2/mask_cutt_off_slider
 
 var brush_layers_res = preload("res://addons/m_terrain/gui/brush_layers.tscn")
 var layers_title_res = preload("res://addons/m_terrain/gui/layers_title.tscn")
@@ -60,6 +62,7 @@ func _ready():
 func set_active_terrain(input:MTerrain):
 	active_terrain = input
 	update_heightmap_layers()
+	set_mask_cutoff_value(mask_cutt_off_slider.value)
 
 func set_grass_mode(input:bool):
 	for e in property_element_list:
@@ -312,6 +315,8 @@ func _input(event):
 				else:
 					brush_id = last_height_brush_id
 
-
-
-
+func set_mask_cutoff_value(value):
+	if active_terrain:
+		active_terrain.set_mask_cutoff(value)
+	mask_cutt_off_label.text = "Mask Cutoff: " + str(value)
+	

@@ -60,6 +60,22 @@ theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_iouu7")
 text = ", . k l ; middle_mouse_btn"
 
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Labelmask_cutt_off_label" type="Label" parent="HBoxContainer2"]
+layout_mode = 2
+text = "Mask Cutoff: 0.5"
+vertical_alignment = 1
+
+[node name="mask_cutt_off_slider" type="HSlider" parent="HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.01
+value = 0.5
+
 [node name="brush_masks" parent="." instance=ExtResource("2_o8i15")]
 layout_mode = 2
 
@@ -120,6 +136,7 @@ size_flags_horizontal = 3
 [connection signal="value_changed" from="brush_size/brush_slider" to="." method="_on_brush_slider_value_changed"]
 [connection signal="toggled" from="brush_type" to="." method="_on_brush_type_toggled"]
 [connection signal="pressed" from="HBoxContainer/invert_btn" to="brush_masks" method="invert_selected_image"]
+[connection signal="value_changed" from="HBoxContainer2/mask_cutt_off_slider" to="." method="set_mask_cutoff_value"]
 [connection signal="toggled" from="grass_add" to="." method="_on_grass_add_toggled"]
 [connection signal="pressed" from="layer_buttons/addBT" to="." method="_on_add_bt_pressed"]
 [connection signal="gui_input" from="layer_buttons/addName" to="." method="_on_add_name_gui_input"]

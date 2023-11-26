@@ -160,6 +160,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("disable_brush_mask"), &MTerrain::disable_brush_mask);
     ClassDB::bind_method(D_METHOD("set_brush_mask","mask_image"), &MTerrain::set_brush_mask);
     ClassDB::bind_method(D_METHOD("set_brush_mask_px_pos","mask_image"), &MTerrain::set_brush_mask_px_pos);
+    ClassDB::bind_method(D_METHOD("set_mask_cutoff","val"), &MTerrain::set_mask_cutoff);
     ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
 }
 
@@ -1085,4 +1086,8 @@ void MTerrain::set_brush_mask(const Ref<Image>& img) {
 
 void MTerrain::set_brush_mask_px_pos(Vector2i pos) {
     grid->brush_mask_px_pos = pos;
+}
+
+void MTerrain::set_mask_cutoff(float val){
+    grid->mask_cutoff = val;
 }

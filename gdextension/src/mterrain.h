@@ -230,6 +230,7 @@ class MTerrain : public  Node3D {
     void disable_brush_mask();
     void set_brush_mask(const Ref<Image>& img);
     void set_brush_mask_px_pos(Vector2i pos);
+    void set_mask_cutoff(float val);
 
     void test_function();
 };
