@@ -71,7 +71,11 @@ func set_grass_mode(input:bool):
 	heightmap_layers.visible = not input
 	layer_buttons.visible = not input
 	brush_type_checkbox.visible = not input
+	$layer_note.visible = not input
 	grass_add_checkbox.visible = input
+	if is_color_brush:
+		color_brush_scroll.visible = false
+	$grass_lable.visible = input
 	if not input:
 		_on_brush_type_toggled(is_color_brush)
 	
@@ -319,6 +323,11 @@ func _input(event):
 					brush_id = to_height_brush_id
 				else:
 					brush_id = last_height_brush_id
+	if event.keycode == KEY_SHIFT:
+		if event.is_pressed():
+			is_grass_add = not is_grass_add
+		else:
+			is_grass_add = not is_grass_add
 
 func set_mask_cutoff_value(value):
 	if active_terrain:

@@ -135,7 +135,10 @@ func paint_mode_handle(event:InputEvent):
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				if event.pressed:
 					if active_grass:
-						pass
+						active_grass.check_undo()
+						get_undo_redo().create_action("GrassPaint")
+						get_undo_redo().add_undo_method(active_grass,"undo")
+						get_undo_redo().commit_action(false)
 					elif active_nav_region:
 						pass
 					elif active_terrain: ## Start of painting

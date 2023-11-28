@@ -79,6 +79,11 @@ value = 0.5
 [node name="brush_masks" parent="." instance=ExtResource("2_o8i15")]
 layout_mode = 2
 
+[node name="grass_lable" type="Label" parent="."]
+visible = false
+layout_mode = 2
+text = "Hold Shift to revers"
+
 [node name="grass_add" type="CheckButton" parent="."]
 visible = false
 layout_mode = 2
