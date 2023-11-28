@@ -123,7 +123,6 @@ void MImage::remove_layer(){
 }
 
 void MImage::layer_visible(bool input){
-	UtilityFunctions::print("Change layer ",active_layer," visiblity to ",input);
 	if(image_layers[active_layer]->size()==0){
 		return;
 	}
@@ -267,6 +266,7 @@ Color MImage::get_pixel(const uint32_t&x, const uint32_t& y) const {
 }
 
 void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
+	check_undo();
 	uint32_t ofs = (x + y*width);
 	_set_color_at_ofs(data.ptrw(), ofs, color);
 	is_dirty = true;
@@ -274,6 +274,7 @@ void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
 }
 
 void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
+	check_undo();
 	uint32_t ofs = (x + y*width);
 	uint8_t* ptrw = data.ptrw() + ofs*pixel_size;
 	mempcpy(ptrw,ptr,pixel_size);
@@ -306,18 +307,14 @@ void MImage::save(bool force_save) {
 				}
 			}
 			Ref<Image> img = Image::create_from_data(width,height,false,format,background_data);
-			//UtilityFunctions::print("BG size ",background_data.size());
 			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
 			ERR_FAIL_COND_MSG(err,"Can not save background image, image class erro: "+itos(err));
 			is_saved_layers.set(0,true);
 		}
 		for(int i=1;i<image_layers.size();i++){
-			//UtilityFunctions::print("is save size ", is_saved_layers.size());
 			if(!is_saved_layers[i]){
-				//UtilityFunctions::print(layer_names);
 				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 				String layer_path = layerDataDir.path_join(lname);
-				//UtilityFunctions::print("layer path ",layer_path);
 				Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::WRITE);
 				const uint8_t* ptr = image_layers[i]->ptr();
 				for(int j=0;j<image_layers[i]->size();j++){
@@ -337,7 +334,6 @@ void MImage::check_undo(){
 		update_mutex.unlock();
 		return;
 	}
-	UtilityFunctions::print("Creating backup id ",current_undo_id," ",name);
 	MImageUndoData ur;
 	ur.layer = active_layer;
 	if(image_layers[active_layer]->is_empty()){
@@ -370,7 +366,6 @@ void MImage::go_to_undo(int ur_id){
 	if(!undo_data.has(ur_id)){
 		return; // noting to do here we don't have any data change corrispond to this undo redo
 	}
-	UtilityFunctions::print("Has undo ",ur_id," ",name);
 	MImageUndoData ur = undo_data[ur_id];
 	if(ur.layer==0){
 		memcpy(data.ptrw(),ur.data,data.size());
@@ -479,6 +474,7 @@ Color MImage::_get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const {
 }
 
 void MImage::_set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color) {
+	check_undo();
 	switch (format) {
 		case Image::FORMAT_L8: {
 			ptr[ofs] = uint8_t(CLAMP(p_color.get_v() * 255.0, 0, 255));
@@ -591,6 +587,7 @@ int MImage::get_format_pixel_size(Image::Format p_format) {
 
 
 void MImage::set_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t channel,const float& value){
+	check_undo();
 	uint32_t ofs = (x + y*width);
 	uint8_t* ptr = data.ptrw();
 	switch (format) {

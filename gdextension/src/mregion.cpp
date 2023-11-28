@@ -106,8 +106,6 @@ void MRegion::configure() {
 		images.push_back(mimg);
 	}
 	uint32_t ss = grid->region_pixel_size - 1;
-	UtilityFunctions::print("ss ",ss);
-	UtilityFunctions::print("pos.x ",pos.x);
 	normals_pixel_region.left = pos.x*ss;
 	normals_pixel_region.right = (pos.x + 1)*ss;
 	normals_pixel_region.top = pos.z*ss;
