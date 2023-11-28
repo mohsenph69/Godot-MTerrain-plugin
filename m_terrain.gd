@@ -138,9 +138,13 @@ func paint_mode_handle(event:InputEvent):
 						pass
 					elif active_nav_region:
 						pass
-					elif active_terrain:
+					elif active_terrain: ## Start of painting
 						active_terrain.set_brush_start_point(ray_col.get_collision_position(),brush_decal.radius)
 						paint_panel.set_active_layer()
+						active_terrain.images_add_undo_stage()
+						get_undo_redo().create_action("Sculpting")
+						get_undo_redo().add_undo_method(active_terrain,"images_undo")
+						get_undo_redo().commit_action(false)
 				else:
 					if active_grass:
 						active_grass.save_grass_data()

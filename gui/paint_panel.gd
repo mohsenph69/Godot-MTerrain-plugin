@@ -83,6 +83,7 @@ func _on_brush_type_toggled(button_pressed):
 	brush_list_option.visible = not button_pressed
 	layer_buttons.visible = not button_pressed
 	heightmap_layers.visible = not button_pressed
+	$layer_note.visible = not button_pressed
 	color_brush_root.visible = button_pressed
 	color_brush_scroll.visible = button_pressed
 	if button_pressed:
@@ -262,7 +263,11 @@ func _on_merge_bt_pressed():
 func _on_add_bt_pressed():
 	if not active_terrain:
 		printerr("No active terrain")
+		return
 	var layer_name:String= add_name_line.text
+	if layer_name.is_empty():
+		printerr("Layer Name is empty")
+		return
 	add_name_line.text = ""
 	if layer_name.is_empty():
 		printerr("Layer name is empty")

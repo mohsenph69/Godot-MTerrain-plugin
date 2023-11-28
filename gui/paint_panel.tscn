@@ -108,6 +108,11 @@ text = "visibility"
 layout_mode = 2
 text = "Remove"
 
+[node name="layer_note" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Note: By Changing the layer the undo data will lost"
+
 [node name="heightmap_layers" type="ItemList" parent="."]
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
