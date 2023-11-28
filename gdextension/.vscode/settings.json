@@ -95,6 +95,7 @@
         "charconv": "cpp",
         "__memory": "cpp",
         "__availability": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "stack": "cpp"
     }
 }

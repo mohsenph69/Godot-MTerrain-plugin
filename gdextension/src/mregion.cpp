@@ -52,7 +52,11 @@ void MRegion::set_image_info(MImage* input) {
 
 void MRegion::configure() {
 	for(int i=0; i < images.size(); i++){
+		images[i]->region = this;
 		images[i]->load();
+		if(images[i]->name != "normals"){
+			images[i]->active_undo = true;
+		}
 		if(images[i]->width != grid->region_pixel_size){
 			images[i]->create(grid->region_pixel_size, images[i]->format);
 			if(images[i]->name == "heightmap"){
@@ -67,8 +71,10 @@ void MRegion::configure() {
 		String f_path = grid->dataDir.path_join(f_name);
 		MImage* mimg = memnew(MImage(f_path,grid->layersDataDir,"heightmap","mterrain_heightmap",pos,-1));
 		mimg->material = _material;
+		mimg->active_undo = true;
 		mimg->create(grid->region_pixel_size, Image::FORMAT_RF);
 		heightmap = mimg;
+		heightmap->region = this;
 		images.push_back(mimg);
 		min_height = -0.1;
 		max_height = 0.1;
@@ -96,8 +102,17 @@ void MRegion::configure() {
 		mimg->material = _material;
 		mimg->create(grid->region_pixel_size, Image::FORMAT_RGB8);
 		normals = mimg;
+		normals->region = this;
 		images.push_back(mimg);
 	}
+	uint32_t ss = grid->region_pixel_size - 1;
+	UtilityFunctions::print("ss ",ss);
+	UtilityFunctions::print("pos.x ",pos.x);
+	normals_pixel_region.left = pos.x*ss;
+	normals_pixel_region.right = (pos.x + 1)*ss;
+	normals_pixel_region.top = pos.z*ss;
+	normals_pixel_region.bottom = (pos.z + 1)*ss;
+	normals_pixel_region.grow_all_side(grid->grid_pixel_region);
 }
 
 void MRegion::update_region() {
@@ -220,4 +235,9 @@ void MRegion::update_all_dirty_image_texture(){
 
 void MRegion::save_image(int index,bool force_save) {
 	images[index]->save(force_save);
+}
+
+void MRegion::recalculate_normals(){
+	if(grid)
+		grid->generate_normals_thread(normals_pixel_region);
 }

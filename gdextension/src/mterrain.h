@@ -232,7 +232,8 @@ class MTerrain : public  Node3D {
     void set_brush_mask_px_pos(Vector2i pos);
     void set_mask_cutoff(float val);
 
-    void test_function();
+    void images_add_undo_stage(); // This will called before drawing or change happen
+    void images_undo();
 };
 
 

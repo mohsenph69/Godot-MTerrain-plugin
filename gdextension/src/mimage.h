@@ -13,14 +13,28 @@
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/templates/hash_map.hpp>
 
 #include "mbound.h"
 
 
 using namespace godot;
 
+class MRegion;
+
+struct MImageUndoData {
+    int layer;
+    bool empty=false;// In case the layer is empty at this data
+    uint8_t* data;
+
+    void free(){
+        if(!empty)
+            memdelete_arr(data);
+    }
+};
 
 struct MImage {
+    MRegion* region=nullptr;
     String file_path;
     String layerDataDir;
     String name;
@@ -47,10 +61,16 @@ struct MImage {
     bool is_save = false;
     MGridPos grid_pos;
     std::mutex update_mutex;
+    bool active_undo=false;
+    int current_undo_id;
+    // Key is undo redo id
+    HashMap<int,MImageUndoData> undo_data;
     
     MImage();
     MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,const int& _compression);
+    ~MImage();
     void load();
+    void set_active_layer(int l);
     void add_layer(String lname);
     void merge_layer();
     void remove_layer();
@@ -70,7 +90,11 @@ struct MImage {
     void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
     const uint8_t* get_pixel_by_data_pointer(uint32_t x,uint32_t y);
     void save(bool force_save);
-
+    void check_undo(); // Register the state of image before the draw
+    void remove_undo_data(int ur_id);
+    void remove_undo_data_in_layer(int layer_index);
+    void go_to_undo(int ur_id);
+    bool has_undo(int ur_id);
 
     // This functions exist in godot source code
 	_FORCE_INLINE_ Color _get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const;

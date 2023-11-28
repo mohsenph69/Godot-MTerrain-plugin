@@ -23,6 +23,7 @@
 #include <godot_cpp/variant/packed_vector3_array.hpp>
 #include "mbound.h"
 #include "mimage.h"
+#include "mpixel_region.h"
 
 class MGrid;
 
@@ -57,6 +58,7 @@ class MRegion : public Object{
     MGrid* grid;
     MGridPos pos;
     Vector3 world_pos;
+    MPixelRegion normals_pixel_region; // use for recalculating normals
     //int32_t region_size_meter;
     MRegion* left = nullptr;
     MRegion* right = nullptr;
@@ -86,5 +88,7 @@ class MRegion : public Object{
 
     void update_all_dirty_image_texture();
     void save_image(int index,bool force_save);
+
+    void recalculate_normals();
 };
 #endif

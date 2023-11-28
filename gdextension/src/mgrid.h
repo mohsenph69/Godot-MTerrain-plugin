@@ -188,6 +188,10 @@ class MGrid : public Object {
     Vector3 brush_world_pos_start;
     Vector3 brush_radius_start;
     int32_t current_paint_index=-1;
+    // Undo Redo stuff
+    int current_undo_id=0;
+    int lowest_undo_id=0;
+    // End
     MGrid();
     ~MGrid();
     uint64_t get_update_id();
@@ -273,6 +277,9 @@ class MGrid : public Object {
 
     float get_brush_mask_value(uint32_t x,uint32_t y);
     bool get_brush_mask_value_bool(uint32_t x,uint32_t y);
+
+    void images_add_undo_stage(); // This will called before drawing or change happen
+    void images_undo();
 };
 
 #endif

@@ -62,6 +62,8 @@ void MGrid::clear() {
     heightmap_layers.clear();
     heightmap_layers_visibility.clear();
     active_heightmap_layer=0;
+    current_undo_id =0;
+    lowest_undo_id=0;
 }
 
 bool MGrid::is_created() {
@@ -1182,7 +1184,7 @@ void MGrid::set_active_layer(int input){
     ERR_FAIL_COND(input<0);
     active_heightmap_layer = input;
     for(int i=0;i<_all_heightmap_image_list.size();i++){
-        _all_heightmap_image_list[i]->active_layer = input;
+        _all_heightmap_image_list[i]->set_active_layer(input);
     }
 }
 
@@ -1236,6 +1238,7 @@ void MGrid::toggle_heightmap_layer_visibile(){
         }
     }
     heightmap_layers_visibility.set(active_heightmap_layer,input);
+    update_all_dirty_image_texture();
 }
 
 
@@ -1263,4 +1266,24 @@ bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y){
         return false;
     }
     return brush_mask->get_pixel(vpos.x,vpos.y).r > mask_cutoff;
+}
+
+void MGrid::images_add_undo_stage(){
+    for(int i=0;i<_all_image_list.size();i++){
+        _all_image_list[i]->current_undo_id = current_undo_id;
+    }
+    current_undo_id++;
+}
+
+void MGrid::images_undo(){
+    if(current_undo_id <= lowest_undo_id){
+        UtilityFunctions::print("No more undo");
+        return;
+    }
+    current_undo_id--;
+    for(int i=0;i<_all_image_list.size();i++){
+        _all_image_list[i]->go_to_undo(current_undo_id);
+        _all_image_list[i]->remove_undo_data(current_undo_id);
+    }
+    update_all_dirty_image_texture();
 }

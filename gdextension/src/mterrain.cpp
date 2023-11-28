@@ -161,7 +161,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_brush_mask","mask_image"), &MTerrain::set_brush_mask);
     ClassDB::bind_method(D_METHOD("set_brush_mask_px_pos","mask_image"), &MTerrain::set_brush_mask_px_pos);
     ClassDB::bind_method(D_METHOD("set_mask_cutoff","val"), &MTerrain::set_mask_cutoff);
-    ClassDB::bind_method(D_METHOD("test_function"), &MTerrain::test_function);
+    ClassDB::bind_method(D_METHOD("images_add_undo_stage"), &MTerrain::images_add_undo_stage);
+    ClassDB::bind_method(D_METHOD("images_undo"), &MTerrain::images_undo);
 }
 
 MTerrain::MTerrain() {
@@ -1061,20 +1062,6 @@ void MTerrain::set_color_layer(int index,int group_index,String brush_name){
     bl->set_layer(index,brush);
 }
 
-void MTerrain::test_function(){
-    uint32_t x = 0;
-    uint32_t y = 0;
-    int id = get_image_id("splatmap");
-    MImage* img = grid->get_image_by_pixel(x,y,id);
-    UtilityFunctions::print("--------------------Test function");
-    Color c(0.1,0.2,0.3,1);
-    img->set_pixel(1,2,c);
-    Color o = img->get_pixel(1,2);
-    UtilityFunctions::print("o color ",o);
-    float red = img->get_pixel_in_channel(1,2,0);
-    UtilityFunctions::print("red ",red);
-}
-
 void MTerrain::disable_brush_mask(){
     grid->brush_mask_active = false;
 }
@@ -1090,4 +1077,11 @@ void MTerrain::set_brush_mask_px_pos(Vector2i pos) {
 
 void MTerrain::set_mask_cutoff(float val){
     grid->mask_cutoff = val;
+}
+
+void MTerrain::images_add_undo_stage(){
+    grid->images_add_undo_stage();
+}
+void MTerrain::images_undo(){
+    grid->images_undo();
 }

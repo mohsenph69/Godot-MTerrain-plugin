@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 
 #include "mbound.h"
+#include "mregion.h"
 
 MImage::MImage(){
 	
@@ -16,6 +17,15 @@ MImage::MImage(const String& _file_path,const String& _layers_folder,const Strin
     compression = _compression;
 	layerDataDir = _layers_folder;
 	grid_pos = _grid_pos;
+}
+
+MImage::~MImage(){
+	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){
+		it->value.free();
+	}
+	for(int i=1;i<image_layers.size();i++){
+		memdelete(image_layers[i]);
+	}
 }
 
 void MImage::load(){
@@ -34,6 +44,13 @@ void MImage::load(){
 	image_layers.push_back(&data);
 	layer_names.push_back("background");
 	is_saved_layers.push_back(true);
+}
+
+void MImage::set_active_layer(int l){
+	if(l!=active_layer){
+		remove_undo_data_in_layer(active_layer);
+	}
+	active_layer = l;
 }
 
 // This must called alway after loading background image
@@ -78,6 +95,7 @@ void MImage::merge_layer(){
 	}
 	is_saved_layers.set(0,false);
 	is_save = false;
+	remove_undo_data_in_layer(active_layer);
 	save(false);
 }
 
@@ -100,10 +118,12 @@ void MImage::remove_layer(){
 	if(FileAccess::file_exists(path)){
 		DirAccess::remove_absolute(path);
 	}
+	remove_undo_data_in_layer(active_layer);
 	save(false);
 }
 
 void MImage::layer_visible(bool input){
+	UtilityFunctions::print("Change layer ",active_layer," visiblity to ",input);
 	if(image_layers[active_layer]->size()==0){
 		return;
 	}
@@ -213,6 +233,7 @@ real_t MImage::get_pixel_RF(const uint32_t&x, const uint32_t& y) const {
 }
 
 void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value){
+	check_undo();
 	// not visibile layers should not be modified but as this called many times
 	// it is better to check that in upper level
 	uint32_t ofs = (x + y*width);
@@ -308,6 +329,74 @@ void MImage::save(bool force_save) {
 		}
 		is_save = true;
 	}
+}
+
+void MImage::check_undo(){
+	update_mutex.lock();
+	if(undo_data.has(current_undo_id) || !active_undo){
+		update_mutex.unlock();
+		return;
+	}
+	UtilityFunctions::print("Creating backup id ",current_undo_id," ",name);
+	MImageUndoData ur;
+	ur.layer = active_layer;
+	if(image_layers[active_layer]->is_empty()){
+		ur.empty = true;
+	} else {
+		ur.data = memnew_arr(uint8_t,image_layers[active_layer]->size());
+		memcpy(ur.data,image_layers[active_layer]->ptr(),image_layers[active_layer]->size());
+	}
+	undo_data.insert(current_undo_id,ur);
+	update_mutex.unlock();
+}
+
+void MImage::remove_undo_data(int ur_id){
+	if(undo_data.has(ur_id)){
+		undo_data[ur_id].free();
+		undo_data.erase(ur_id);
+	}
+}
+
+void MImage::remove_undo_data_in_layer(int layer_index){
+	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){
+		if(it->value.layer==layer_index){
+			it->value.free();
+			undo_data.erase(it->key);
+		}
+	}
+}
+
+void MImage::go_to_undo(int ur_id){
+	if(!undo_data.has(ur_id)){
+		return; // noting to do here we don't have any data change corrispond to this undo redo
+	}
+	UtilityFunctions::print("Has undo ",ur_id," ",name);
+	MImageUndoData ur = undo_data[ur_id];
+	if(ur.layer==0){
+		memcpy(data.ptrw(),ur.data,data.size());
+	} else {
+		// First Remove the layer which we want to undo
+		const uint8_t* ptr=image_layers[active_layer]->ptr();
+		for(uint32_t i=0;i<total_pixel_amount;i++){
+			((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+		}
+		//Now we add the backup data
+		if(!ur.empty){ // the layer was empty at that stage no need to do anything
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				((float *)data.ptrw())[i] += ((float *)ur.data)[i];
+			}
+			//And we copy the backup data into that layer
+			memcpy(image_layers[active_layer]->ptrw(),ur.data,data.size());
+		}
+	}
+	if(name=="heightmap" && region){
+		region->recalculate_normals();
+	}
+	is_dirty = true;
+}
+
+bool MImage::has_undo(int ur_id){
+	return undo_data.has(ur_id);
 }
 
 Color MImage::_get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const {
