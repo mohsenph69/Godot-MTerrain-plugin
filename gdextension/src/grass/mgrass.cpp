@@ -53,7 +53,8 @@ void MGrass::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("save_grass_data"), &MGrass::save_grass_data);
 
-    ClassDB::bind_method(D_METHOD("test_function"), &MGrass::test_function);
+    ClassDB::bind_method(D_METHOD("check_undo"), &MGrass::check_undo);
+    ClassDB::bind_method(D_METHOD("undo"), &MGrass::undo);
 }
 
 MGrass::MGrass(){
@@ -796,6 +797,19 @@ godot::Error MGrass::save_grass_data(){
     return ERR_UNAVAILABLE;   
 }
 
-void MGrass::test_function(){
-    update_physics(Vector3());
+void MGrass::recreate_all_grass(){
+    for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
+        create_grass_chunk(-1,it->value);
+    }
+}
+
+void MGrass::check_undo(){
+    ERR_FAIL_COND(!grass_data.is_valid());
+    grass_data->check_undo();
+}
+
+void MGrass::undo(){
+    ERR_FAIL_COND(!grass_data.is_valid());
+    grass_data->undo();
+    recreate_all_grass();
 }

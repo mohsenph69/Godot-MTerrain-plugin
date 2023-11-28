@@ -144,8 +144,9 @@ class MGrass : public Node3D {
 
 
     godot::Error save_grass_data();
-
-    void test_function();
+    void recreate_all_grass();
+    void check_undo(); // register a grass data stege for undo
+    void undo();
 
 };
 #endif
