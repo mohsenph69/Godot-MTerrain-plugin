@@ -47,6 +47,9 @@ void MGrid::clear() {
         memdelete_arr<MRegion>(regions);
         memdelete(_chunks);
     }
+    if(_terrain_material.is_valid()){
+        _terrain_material->clear();
+    }
     _size.x = 0;
     _size.y = 0;
     _size.z = 0;
@@ -59,7 +62,7 @@ void MGrid::clear() {
     has_normals = false;
     _all_heightmap_image_list.clear();
     _all_image_list.clear();
-    heightmap_layers.clear();
+    //heightmap_layers.clear();
     heightmap_layers_visibility.clear();
     active_heightmap_layer=0;
     current_undo_id =0;
@@ -130,13 +133,29 @@ void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) 
             if(z!=_region_grid_size.z-1){
                 regions[index].bottom = get_region(x,z+1);
             }
-            if(_material.is_valid()){
-                regions[index].set_material(_material->duplicate());
+            if(_terrain_material.is_valid()){
+                regions[index].set_material(_terrain_material->get_material(index));
             }
             index++;
         }
     }
     is_dirty = true;
+    _terrain_material->load_images();
+    for(int i=0; i<_regions_count; i++){
+        regions[i].configure();
+    }
+    _all_image_list = _terrain_material->all_images;
+    _all_heightmap_image_list = _terrain_material->all_heightmap_images;
+    //Initilazing Heightmap layers visibilty
+    heightmap_layers_visibility.clear();
+    heightmap_layers_visibility.resize(heightmap_layers.size());
+    for(int i=0;i<heightmap_layers.size();i++){
+        heightmap_layers_visibility.set(i,true);
+        if(i!=0){ // Background layer will added automaticly in each image
+            add_heightmap_layer(heightmap_layers[i]);
+        }
+    }
+    generate_normals_thread(grid_pixel_region);
 }
 
 void MGrid::update_regions_uniforms(Array input) {
@@ -184,7 +203,7 @@ void MGrid::update_regions_uniform(Dictionary input) {
             MGridPos rpos(x,0,z);
             has_normals = name=="normals";
             MImage* i = memnew(MImage(file_path,layersDataDir,name,uniform_name,rpos,compression));
-            region->set_image_info(i);
+            region->add_image(i);
         }
     }
 }
@@ -605,18 +624,10 @@ void MGrid::create_ordered_instances_distance(){
     }
 }
 
-Ref<ShaderMaterial> MGrid::get_material() {
-    return _material;
-}
 
-
-
-void MGrid::set_material(Ref<ShaderMaterial> material) {
-    if(material.is_valid()){
-        if(material->get_shader().is_valid()){
-            _material = material;
-        }
-    }
+void MGrid::set_terrain_material(Ref<MTerrainMaterial> m) {
+    m->set_grid(this);
+    _terrain_material = m;
 }
 
 
@@ -730,16 +741,16 @@ void MGrid::update_physics(const Vector3& cam_pos){
 bool MGrid::_has_pixel(const uint32_t& x,const uint32_t& y){
     if(x>=pixel_width) return false;
     if(y>=pixel_height) return false;
-    if(x<0) return false;
-    if(y<0) return false;
+    //if(x<0) return false; // There is no need for this as we use uint32
+    //if(y<0) return false;
     return true;
 }
 
 bool MGrid::has_pixel(const uint32_t& x,const uint32_t& y){
     if(x>=pixel_width) return false;
     if(y>=pixel_height) return false;
-    if(x<0) return false;
-    if(y<0) return false;
+    //if(x<0) return false;
+    //if(y<0) return false;
     return true;
 }
 
@@ -902,8 +913,9 @@ void MGrid::generate_normals_thread(MPixelRegion pxr) {
 }
 
 void MGrid::generate_normals(MPixelRegion pxr) {
-    if(!uniforms_id.has("normals")) return;
-    int id = uniforms_id["normals"];
+    //if(!uniforms_id.has("normals")) return;
+    int id = _terrain_material->get_texture_id("normals");
+    ERR_FAIL_COND(id==-1);
     for(uint32_t y=pxr.top; y<=pxr.bottom; y++){
         for(uint32_t x=pxr.left; x<=pxr.right; x++){
             Vector3 normal_vec;
@@ -1168,6 +1180,7 @@ void MGrid::update_all_dirty_image_texture(){
     Vector<std::thread*> threads_pull;
     for(int i=0;i<_all_image_list.size();i++){
         if(_all_image_list[i]->is_dirty){
+            //_all_image_list[i]->update_texture(_all_image_list[i]->current_scale,true);
             std::thread* t = new std::thread(&MImage::update_texture,_all_image_list[i],_all_image_list[i]->current_scale,true);
             threads_pull.push_back(t);
         }
@@ -1178,13 +1191,17 @@ void MGrid::update_all_dirty_image_texture(){
     }
 }
 
-void MGrid::set_active_layer(int input){
+void MGrid::set_active_layer(String input){
     // We did not add background to heightmap layers so the error handling down here is ok
-    ERR_FAIL_COND(input>heightmap_layers.size());
-    ERR_FAIL_COND(input<0);
-    active_heightmap_layer = input;
+    int index = heightmap_layers.find(input);
+    if(index != -1){
+        active_heightmap_layer = index;
+    } else {
+        active_heightmap_layer = 0;
+    }
+    UtilityFunctions::print("Active Layer ",active_heightmap_layer);
     for(int i=0;i<_all_heightmap_image_list.size();i++){
-        _all_heightmap_image_list[i]->set_active_layer(input);
+        _all_heightmap_image_list[i]->set_active_layer(active_heightmap_layer);
     }
 }
 
@@ -1197,44 +1214,39 @@ void MGrid::add_heightmap_layer(String lname){
 }
 
 void MGrid::merge_heightmap_layer(){
+    ERR_FAIL_COND_EDMSG(active_heightmap_layer == 0,"Can't merge background layer");
+    ERR_FAIL_COND_EDMSG(!heightmap_layers_visibility[active_heightmap_layer],"Make the layer visible first and then merge");
     // Merging current active layer
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         _all_heightmap_image_list[i]->merge_layer();
     }
+    heightmap_layers.remove_at(active_heightmap_layer);
+    heightmap_layers_visibility.remove_at(active_heightmap_layer);
 }
 
 void MGrid::remove_heightmap_layer(){
+    ERR_FAIL_COND_EDMSG(active_heightmap_layer == 0,"Can't remove background layer");
     // Removing current active layer
     for(int i=0;i<_all_heightmap_image_list.size();i++){
-        _all_heightmap_image_list[i]->remove_layer();
+        _all_heightmap_image_list[i]->remove_layer(heightmap_layers_visibility[active_heightmap_layer]);
         // Correcting normals if is dirty
         if(_all_heightmap_image_list[i]->is_dirty){
-            MPixelRegion pxr;
-            pxr.left = _all_heightmap_image_list[i]->grid_pos.x*region_pixel_size;
-            pxr.top = _all_heightmap_image_list[i]->grid_pos.z*region_pixel_size;
-            pxr.right = pxr.left + region_pixel_size;
-            pxr.bottom = pxr.top + region_pixel_size;
-            pxr.grow_all_side(grid_pixel_region);
-            generate_normals_thread(pxr);
+            _all_heightmap_image_list[i]->region->recalculate_normals();
         }
     }
     update_all_dirty_image_texture();
+    heightmap_layers.remove_at(active_heightmap_layer);
+    heightmap_layers_visibility.remove_at(active_heightmap_layer);
 }
 
 void MGrid::toggle_heightmap_layer_visibile(){
+    ERR_FAIL_COND_EDMSG(active_heightmap_layer==0, "Can not Hide background layer");
     bool input = !heightmap_layers_visibility[active_heightmap_layer];
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         _all_heightmap_image_list[i]->layer_visible(input);
         // Correcting normals if is dirty
         if(_all_heightmap_image_list[i]->is_dirty){
-            MPixelRegion pxr;
-            pxr.left = _all_heightmap_image_list[i]->grid_pos.x*region_pixel_size;
-            pxr.top = _all_heightmap_image_list[i]->grid_pos.z*region_pixel_size;
-            pxr.right = pxr.left + region_pixel_size;
-            pxr.bottom = pxr.top + region_pixel_size;
-            pxr.grow_all_side(grid_pixel_region);
-            UtilityFunctions::print(pxr.left," , ",pxr.right," , ",pxr.top," , ",pxr.bottom);
-            generate_normals_thread(pxr);
+            _all_heightmap_image_list[i]->region->recalculate_normals();
         }
     }
     heightmap_layers_visibility.set(active_heightmap_layer,input);
@@ -1269,7 +1281,7 @@ bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y){
 }
 
 void MGrid::images_add_undo_stage(){
-    if(current_undo_id - lowest_undo_id > 20){
+    if(current_undo_id - lowest_undo_id > 10){
         for(int i=0;i<_all_image_list.size();i++){
             _all_image_list[i]->remove_undo_data(lowest_undo_id);
         }

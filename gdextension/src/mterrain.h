@@ -22,6 +22,7 @@
 #include "mgrid.h"
 #include "grass/mgrass.h"
 
+
 using namespace godot;
 
 class MNavigationRegion3D;
@@ -52,7 +53,7 @@ class MTerrain : public  Node3D {
     //Physics update stage is same as chunk update but just for physics
     int update_stage_physics=-1;
 
-    Ref<ShaderMaterial> material;
+    Ref<MTerrainMaterial> terrain_material;
     Vector2i terrain_size = Vector2i(16,16);
     Vector3 cam_pos;
     Node3D* custom_camera = nullptr;
@@ -68,9 +69,6 @@ class MTerrain : public  Node3D {
     Array size_info;
     int32_t max_range=32;
     PackedInt32Array lod_distance;
-    // key is name
-    // value is compression
-    Array uniforms;
     int32_t region_size=16;
     String dataDir;
     String layersDataDir;
@@ -83,7 +81,8 @@ class MTerrain : public  Node3D {
     // From Vector in Image and grid level, we just set their name to null
     // The heightmap_layers in MTerrain deose not come with background
     // also heightmap_layers in MTerrain is responsibile for saving layer information with scene
-    PackedStringArray heightmap_layers;
+    
+    ///////////////////////////PackedStringArray heightmap_layers; 
     // The default layer name is background
     String active_layer_name="background";
     Vector<MGrass*> grass_list;
@@ -119,7 +118,7 @@ class MTerrain : public  Node3D {
     void finish_update_physics();
     bool is_finish_updating();
     bool is_finish_updating_physics();
-    Array get_image_list();
+    PackedStringArray get_image_list();
     int get_image_id(String uniform_name);
     void save_image(int image_index, bool force_save);
     bool has_unsave_image();
@@ -142,8 +141,6 @@ class MTerrain : public  Node3D {
     bool get_create_grid();
 
 
-    Ref<ShaderMaterial> get_material();
-    void set_material(Ref<ShaderMaterial> m);
     void set_save_generated_normals(bool input);
     bool get_save_generated_normals();
     float get_update_chunks_interval();
@@ -174,7 +171,6 @@ class MTerrain : public  Node3D {
     int32_t get_region_size();
     
 
-    void update_uniforms();
     void recalculate_terrain_config(const bool& force_calculate);
     int get_min_size();
     void set_min_size(int index);
@@ -234,6 +230,9 @@ class MTerrain : public  Node3D {
 
     void images_add_undo_stage(); // This will called before drawing or change happen
     void images_undo();
+
+    void set_terrain_material(Ref<MTerrainMaterial> input);
+    Ref<MTerrainMaterial> get_terrain_material();
 };
 
 

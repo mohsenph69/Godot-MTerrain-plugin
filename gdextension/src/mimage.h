@@ -54,8 +54,8 @@ struct MImage {
     Vector<PackedByteArray*> image_layers;
     Vector<bool> is_saved_layers;
     #endif
-    Ref<ShaderMaterial> material;
-    Ref<ImageTexture> texture_to_apply;
+    RID old_tex_rid;
+    RID new_tex_rid;
     bool has_texture_to_apply = false;
     bool is_dirty = false;
     bool is_save = false;
@@ -68,18 +68,19 @@ struct MImage {
     
     MImage();
     MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,const int& _compression);
+    MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r);
     ~MImage();
     void load();
     void set_active_layer(int l);
     void add_layer(String lname);
     void merge_layer();
-    void remove_layer();
+    void remove_layer(bool is_visible);
     void layer_visible(bool input);
     void create(uint32_t _size, Image::Format _format);
     // This create bellow should not be used for terrain, It is for other stuff
     void create(uint32_t _width,uint32_t _height, Image::Format _format);
     // get data with custom scale
-    PackedByteArray get_data(int scale);
+    void get_data(PackedByteArray* out,int scale);
     void update_texture(int scale,bool apply_update);
     void apply_update();
     // This works only for Format_RF

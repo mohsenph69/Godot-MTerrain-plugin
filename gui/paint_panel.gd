@@ -224,19 +224,15 @@ func _on_brush_slider_value_changed(value):
 func update_heightmap_layers(select=0):
 	if not active_terrain: return
 	heightmap_layers.clear()
-	## Background image always exist
-	## and it does not conatin in this input from MTerrain
-	## it exist in MGrid and MImage which are lower level
-	## so we add that by ourself here
-	heightmap_layers.add_item("background")
 	var inputs = active_terrain.get_heightmap_layers()
 	for i in range(0,inputs.size()):
 		heightmap_layers.add_item(inputs[i])
-		var visibile = active_terrain.get_layer_visibility(inputs[i])
-		if visibile:
-			heightmap_layers.set_item_icon(i+1,show_icon)
-		else:
-			heightmap_layers.set_item_icon(i+1,hide_icon)
+		if i!=0: # We don't add visibilty icon for background layer
+			var visibile = active_terrain.get_layer_visibility(inputs[i])
+			if visibile:
+				heightmap_layers.set_item_icon(i,show_icon)
+			else:
+				heightmap_layers.set_item_icon(i,hide_icon)
 	heightmap_layers.select(select)
 	
 
@@ -250,7 +246,6 @@ func set_active_layer():
 
 
 func _on_heightmap_layer_item_selected(index):
-	print(index)
 	active_heightmap_layer = heightmap_layers.get_item_text(index)
 	if not active_terrain:
 		printerr("No active terrain")
@@ -323,11 +318,11 @@ func _input(event):
 					brush_id = to_height_brush_id
 				else:
 					brush_id = last_height_brush_id
-	if event.keycode == KEY_SHIFT:
-		if event.is_pressed():
-			is_grass_add = not is_grass_add
-		else:
-			is_grass_add = not is_grass_add
+		if event.keycode == KEY_SHIFT:
+			if event.is_pressed():
+				is_grass_add = not is_grass_add
+			else:
+				is_grass_add = not is_grass_add
 
 func set_mask_cutoff_value(value):
 	if active_terrain:

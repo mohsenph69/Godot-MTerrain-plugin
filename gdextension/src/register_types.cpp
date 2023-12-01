@@ -26,6 +26,7 @@
 #include "navmesh/mnavigation_region_3d.h"
 #include "navmesh/mnavigation_mesh_data.h"
 #include "mbrush_layers.h"
+#include "mterrain_material.h"
 
 using namespace godot;
 
@@ -47,6 +48,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MNavigationRegion3D>();
 	ClassDB::register_class<MNavigationMeshData>();
 	ClassDB::register_class<MBrushLayers>();
+	ClassDB::register_class<MTerrainMaterial>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {

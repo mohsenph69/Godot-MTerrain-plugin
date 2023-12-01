@@ -28,6 +28,7 @@
 #include "mbound.h"
 #include "mpixel_region.h"
 #include "mcollision.h"
+#include "mterrain_material.h"
 
 class MBrushManager;
 class MHeightBrush;
@@ -126,7 +127,7 @@ class MGrid : public Object {
     
     
 
-    Ref<ShaderMaterial> _material;
+    Ref<MTerrainMaterial> _terrain_material;
     uint64_t update_count=0;
     uint64_t total_remove=0;
     uint64_t total_add=0;
@@ -227,8 +228,7 @@ class MGrid : public Object {
     int8_t get_edge_num(const bool& left,const bool& right,const bool& top,const bool& bottom);
     void create_ordered_instances_distance();
 
-    void set_material(Ref<ShaderMaterial> material);
-    Ref<ShaderMaterial> get_material();
+    void set_terrain_material(Ref<MTerrainMaterial> input);
 
     MGridPos get_3d_grid_pos_by_middle_point(MGridPos input);
     real_t get_closest_height(const Vector3& pos);
@@ -267,7 +267,7 @@ class MGrid : public Object {
 
     void update_all_dirty_image_texture();
 
-    void set_active_layer(int input);
+    void set_active_layer(String input);
     void add_heightmap_layer(String lname);
     void merge_heightmap_layer();
     void remove_heightmap_layer();
@@ -280,6 +280,8 @@ class MGrid : public Object {
 
     void images_add_undo_stage(); // This will called before drawing or change happen
     void images_undo();
+
+    //void update_material_in_region();
 };
 
 #endif

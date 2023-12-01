@@ -35,10 +35,10 @@ class MRegion : public Object{
     GDCLASS(MRegion, Object);
 
     private:
-    Ref<ShaderMaterial> _material;
+    //Ref<ShaderMaterial> _material;
+    RID _material_rid = RID();
     MImage* heightmap = nullptr;
     MImage* normals = nullptr;
-    String shader_code;
     VSet<int8_t>* lods;
     int8_t last_lod = -2;
     RID physic_body;
@@ -69,9 +69,9 @@ class MRegion : public Object{
     
     MRegion();
     ~MRegion();
-    void set_material(const Ref<ShaderMaterial> input);
+    void set_material(RID input);
     RID get_material_rid();
-    void set_image_info(MImage* input);
+    void add_image(MImage* input);
     void configure();
     void update_region();
     void insert_lod(const int8_t& input);

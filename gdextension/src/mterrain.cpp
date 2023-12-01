@@ -54,9 +54,9 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_grid_create","val"), &MTerrain::set_create_grid);
     ClassDB::bind_method(D_METHOD("get_create_grid"), &MTerrain::get_create_grid);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "create_grid"), "set_grid_create", "get_create_grid");
-    ClassDB::bind_method(D_METHOD("get_material"), &MTerrain::get_material);
-    ClassDB::bind_method(D_METHOD("set_material", "terrain_material"), &MTerrain::set_material);
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "material", PROPERTY_HINT_RESOURCE_TYPE, "ShaderMaterial"), "set_material", "get_material");
+    ClassDB::bind_method(D_METHOD("set_terrain_material","input"), &MTerrain::set_terrain_material);
+    ClassDB::bind_method(D_METHOD("get_terrain_material"), &MTerrain::get_terrain_material);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"terrain_material",PROPERTY_HINT_RESOURCE_TYPE,"MTerrainMaterial"),"set_terrain_material","get_terrain_material");
     
     ClassDB::bind_method(D_METHOD("set_heightmap_layers", "input"), &MTerrain::set_heightmap_layers);
     ClassDB::bind_method(D_METHOD("get_heightmap_layers"), &MTerrain::get_heightmap_layers);
@@ -208,6 +208,7 @@ void MTerrain::start() {
 }
 
 void MTerrain::create_grid(){
+    ERR_FAIL_COND(grid->is_created());
     _chunks = memnew(MChunks);
     _chunks->create_chunks(size_list[min_size_index],size_list[max_size_index],h_scale_list[min_h_scale_index],h_scale_list[max_h_scale_index],size_info);
     grid->set_scenario(get_world_3d()->get_scenario());
@@ -216,17 +217,16 @@ void MTerrain::create_grid(){
     grid->dataDir = dataDir;
     grid->layersDataDir = layersDataDir;
     grid->region_size = region_size;
-    grid->heightmap_layers.push_back("background");
-    grid->heightmap_layers_visibility.push_back(true);
-    grid->heightmap_layers.append_array(heightmap_layers);
-    if(material.is_valid()){
-        grid->set_material(material);
+    set_heightmap_layers(grid->heightmap_layers); // To make sure we have everything currect including background image
+    if(terrain_material.is_valid()){
+        grid->set_terrain_material(terrain_material);
+    } else {
+        Ref<MTerrainMaterial> m = ResourceLoader::get_singleton()->load(M_DEAFAULT_MATERIAL_PATH);
+        grid->set_terrain_material(m);
     }
     grid->lod_distance = lod_distance;
     grid->create(terrain_size.x,terrain_size.y,_chunks);
     get_cam_pos();
-    update_uniforms();
-    grid->update_regions_uniforms(uniforms);
     grid->update_chunks(cam_pos);
     grid->apply_update_chunks();
     grid->update_physics(cam_pos);
@@ -404,14 +404,14 @@ bool MTerrain::is_finish_updating_physics(){
     return finish_updating_physics;
 }
 
-Array MTerrain::get_image_list(){
-    return grid->uniforms_id.keys();
+PackedStringArray MTerrain::get_image_list(){
+    ERR_FAIL_COND_V(!terrain_material.is_valid(),PackedStringArray());
+    return terrain_material->get_textures_list();
 }
 
 int MTerrain::get_image_id(String uniform_name){
-    if(!grid->is_created()) return -1;
-    if(!grid->uniforms_id.has(uniform_name)) return -1;
-    return grid->uniforms_id[uniform_name];
+    ERR_FAIL_COND_V(!terrain_material.is_valid(),-1);
+    return terrain_material->get_texture_id(uniform_name);
 }
 
 void MTerrain::save_image(int image_index, bool force_save) {
@@ -492,13 +492,6 @@ bool MTerrain::get_create_grid(){
 }
 
 
-Ref<ShaderMaterial> MTerrain::get_material(){
-    return material;
-}
-
-void MTerrain::set_material(Ref<ShaderMaterial> m){
-    material = m;
-}
 
 void MTerrain::set_save_generated_normals(bool input){
     grid->save_generated_normals = input;
@@ -616,43 +609,6 @@ void MTerrain::set_region_size(int32_t input) {
 
 int32_t MTerrain::get_region_size() {
     return region_size;
-}
-
-void MTerrain::update_uniforms() {
-    uniforms.clear();
-    ERR_FAIL_COND(!material.is_valid());
-    ERR_FAIL_COND(!material->get_shader().is_valid());
-    Array uniform_list = material->get_shader()->get_shader_uniform_list();
-    Ref<RegEx> reg_compression;
-    reg_compression.instantiate();
-    reg_compression->compile("mterrain_(\\d+)");
-    Ref<RegEx> reg_name;
-    reg_name.instantiate();
-    reg_name->compile("mterrain_\\d*_?(.*)");
-    for(int i=0; i<uniform_list.size();i++){
-        Dictionary u = uniform_list[i];
-        String u_name = u["name"];
-        int u_type = u["type"];
-        if(u_type==24 && u_name.begins_with("mterrain_")){
-            int compression = -1;
-            String name;
-            Ref<RegExMatch> res = reg_compression->search(u_name);
-            if(res.is_valid()){
-                PackedStringArray finds = res->get_strings();
-                compression = finds[1].to_int();
-            }
-            res = reg_name->search(u_name);
-            if(res.is_valid()){
-                PackedStringArray finds = res->get_strings();
-                name = finds[1];
-            }
-            Dictionary uniform_info;
-            uniform_info["uniform_name"] = u_name;
-            uniform_info["name"] = name;
-            uniform_info["compression"] = compression;
-            uniforms.append(uniform_info);
-        }
-    }
 }
 
 void MTerrain::recalculate_terrain_config(const bool& force_calculate) {
@@ -900,71 +856,56 @@ Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
 
 
 void MTerrain::set_heightmap_layers(PackedStringArray input){
-    heightmap_layers = input;
+    grid->heightmap_layers.clear();
+    if(input.size()==0){
+        input.push_back("background");
+    }
+    if(input[0] != "background"){
+        grid->heightmap_layers.clear();
+        grid->heightmap_layers.push_back("background");
+        grid->heightmap_layers.append_array(input);
+        return;
+    }
+    grid->heightmap_layers = input;
 }
 PackedStringArray MTerrain::get_heightmap_layers(){
-    return heightmap_layers;
+    return grid->heightmap_layers;
 }
 
 void MTerrain::set_active_layer_by_name(String lname){
     ERR_FAIL_COND(!grid->is_created());
-    // Zero is always background layer
-    if(lname=="background"){
-        grid->set_active_layer(0);
-    }
-    int index = grid->heightmap_layers.find(lname);
-    if(index>=0) {
-        grid->set_active_layer(index);
-        active_layer_name = lname;
-    }
+    grid->set_active_layer(lname);
 }
 
 bool MTerrain::get_layer_visibility(String lname){
-    ERR_FAIL_COND_V(!grid->is_created(),false);
-    // Zero is always background layer
-    if(lname=="background"){
-        return true;
-    }
     int index = grid->heightmap_layers.find(lname);
-    if(index>0) {
+    if(index==-1){
+        return false;
+    }
+    if(index < grid->heightmap_layers_visibility.size()){
         return grid->heightmap_layers_visibility[index];
     }
     return false;
 }
 
 void MTerrain::add_heightmap_layer(String lname){
-    ERR_FAIL_COND_EDMSG(heightmap_layers.find(lname)!=-1,"Layer name must be unique");
-    heightmap_layers.push_back(lname);
-    ERR_FAIL_COND(!grid->is_created());
-    grid->heightmap_layers.push_back(lname);
+    ERR_FAIL_COND_EDMSG(grid->heightmap_layers.find(lname)!=-1,"Layer name must be unique");
     grid->add_heightmap_layer(lname);
-    UtilityFunctions::print("Adding new layers ");
-    UtilityFunctions::print(grid->heightmap_layers);
+    grid->heightmap_layers.push_back(lname);
 }
 
 void MTerrain::merge_heightmap_layer(){
     ERR_FAIL_COND(!grid->is_created());
-    ERR_FAIL_COND_EDMSG(grid->active_heightmap_layer == 0,"Can't merge background layer");
     grid->merge_heightmap_layer();
-    int index = heightmap_layers.find(active_layer_name);
-    if(index>=0){
-        heightmap_layers.remove_at(index);
-    }
 }
 
 void MTerrain::remove_heightmap_layer(){
     ERR_FAIL_COND(!grid->is_created());
-    ERR_FAIL_COND_EDMSG(active_layer_name=="background", "Can not remove background layer");
     grid->remove_heightmap_layer();
-    int index = heightmap_layers.find(active_layer_name);
-    if(index>=0){
-        heightmap_layers.remove_at(index);
-    }
 }
 
 void MTerrain::toggle_heightmap_layer_visibile(){
     ERR_FAIL_COND(!grid->is_created());
-    ERR_FAIL_COND_EDMSG(active_layer_name=="background", "Can not Hide background layer");
     grid->toggle_heightmap_layer_visibile();
 }
 
@@ -1084,4 +1025,12 @@ void MTerrain::images_add_undo_stage(){
 }
 void MTerrain::images_undo(){
     grid->images_undo();
+}
+
+void MTerrain::set_terrain_material(Ref<MTerrainMaterial> input){
+    ERR_FAIL_COND_EDMSG(grid->is_created(),"You should destroy terrain to change terrain material");
+    terrain_material = input;
+}
+Ref<MTerrainMaterial> MTerrain::get_terrain_material(){
+    return terrain_material;
 }

@@ -3,6 +3,9 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/dir_access.hpp>
 #include <godot_cpp/classes/file_access.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
+
+#define RS RenderingServer::get_singleton()
 
 #include "mbound.h"
 #include "mregion.h"
@@ -19,12 +22,28 @@ MImage::MImage(const String& _file_path,const String& _layers_folder,const Strin
 	grid_pos = _grid_pos;
 }
 
+MImage::MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r){
+	file_path = _file_path;
+    name = _name;
+    uniform_name = _uniform_name;
+    region = r;
+	layerDataDir = _layers_folder;
+	grid_pos = _grid_pos;
+}
+
+
 MImage::~MImage(){
 	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){
 		it->value.free();
 	}
 	for(int i=1;i<image_layers.size();i++){
 		memdelete(image_layers[i]);
+	}
+	if(new_tex_rid.is_valid()){
+		RS->free_rid(new_tex_rid);
+	}
+	if(old_tex_rid.is_valid()){
+		RS->free_rid(old_tex_rid);
 	}
 }
 
@@ -87,37 +106,43 @@ void MImage::add_layer(String lname){
 void MImage::merge_layer(){
 	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	path = layerDataDir.path_join(path);
-	image_layers[active_layer]->resize(0);
-	layer_names[active_layer] = "null";
-	is_saved_layers.set(active_layer,true);
+	
 	if(FileAccess::file_exists(path)){
 		DirAccess::remove_absolute(path);
 	}
-	is_saved_layers.set(0,false);
+	is_saved_layers.set(0,false); // make the background layer save to be false
 	is_save = false;
 	remove_undo_data_in_layer(active_layer);
+	memdelete(image_layers[active_layer]);
+	image_layers.remove_at(active_layer);
+	is_saved_layers.remove_at(active_layer);
+	layer_names.remove_at(active_layer);
 	save(false);
 }
 
-void MImage::remove_layer(){
+void MImage::remove_layer(bool is_visible){
 	if(image_layers[active_layer]->size()==0){
 		return;
 	}
 	const uint8_t* ptr=image_layers[active_layer]->ptr();
-	for(uint32_t i=0;i<total_pixel_amount;i++){
-		((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+	if(is_visible){
+		for(uint32_t i=0;i<total_pixel_amount;i++){
+			((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+		}
+		is_dirty = true;
 	}
-	image_layers[active_layer]->resize(0);
+	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
+	path = layerDataDir.path_join(path);
 	is_saved_layers.set(active_layer,true);
 	is_saved_layers.set(0,false);
 	is_save = false;
-	is_dirty = true;
-	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
-	path = layerDataDir.path_join(path);
-	layer_names[active_layer] = "null";
 	if(FileAccess::file_exists(path)){
 		DirAccess::remove_absolute(path);
 	}
+	memdelete(image_layers[active_layer]);
+	image_layers.remove_at(active_layer);
+	is_saved_layers.remove_at(active_layer);
+	layer_names.remove_at(active_layer);
 	remove_undo_data_in_layer(active_layer);
 	save(false);
 }
@@ -171,53 +196,58 @@ void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
 	is_saved_layers.push_back(false);
 }
 
-PackedByteArray MImage::get_data(int scale) {
+void MImage::get_data(PackedByteArray* out,int scale){
     current_size = ((width - 1)/scale) + 1;
-	current_scale = scale;
-    PackedByteArray output;
-    output.resize(current_size*current_size*pixel_size);
+    out->resize(current_size*current_size*pixel_size);
     for(int32_t y=0; y < current_size; y++){
         for(int32_t x=0; x < current_size; x++){
             int32_t main_offset = (scale*x+width*y*scale)*pixel_size;
             int32_t new_offset = (x+y*current_size)*pixel_size;
             for(int32_t i=0; i < pixel_size; i++){
-                output[new_offset+i] = data[main_offset+i];
+                (*out)[new_offset+i] = data[main_offset+i];
             }
         }
     }
-    return output;
 }
 
 void MImage::update_texture(int scale,bool apply_update){
-	//update_mutex.lock();
-	/*
-	while (has_texture_to_apply)
-	{
-		update_mutex.unlock();
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-		update_mutex.lock();
-	}
-	*/
-	Ref<ImageTexture> new_tex;
 	if(scale > 0){
-		PackedByteArray scaled_data = get_data(scale);
-		Ref<Image> new_img = Image::create_from_data(current_size,current_size,false,format,scaled_data);
-		new_tex = ImageTexture::create_from_image(new_img);
+		Ref<Image> new_img;
+		if(scale!=0){
+			PackedByteArray scaled_data;
+			get_data(&scaled_data,scale);
+			new_img = Image::create_from_data(current_size,current_size,false,format,scaled_data);
+		} else {
+			new_img = Image::create_from_data(current_size,current_size,false,format,data);
+		}	
+		if(current_scale==scale && apply_update){ //This will improve the sculpting speed a little bit
+			RS->texture_2d_update(new_tex_rid,new_img,0);
+			return;
+		}
+		old_tex_rid = new_tex_rid;
+		new_tex_rid = RS->texture_2d_create(new_img);
+		current_scale = scale;
 	}
 	if(apply_update){
-		material->set_shader_parameter(uniform_name, new_tex);
+		if(old_tex_rid.is_valid()){
+			RS->call_deferred("free_rid",old_tex_rid);
+			old_tex_rid = RID();
+		}
+		RS->material_set_param(region->get_material_rid(),uniform_name,new_tex_rid);
 		is_dirty = false;
 	} else {
 		has_texture_to_apply = true;
-		texture_to_apply = new_tex;
 	}
-	//update_mutex.unlock();
 }
 
 void MImage::apply_update() {
 	//update_mutex.lock();
 	if(has_texture_to_apply){
-		material->set_shader_parameter(uniform_name, texture_to_apply);
+		if(old_tex_rid.is_valid()){
+			RS->call_deferred("free_rid",old_tex_rid);
+			old_tex_rid = RID();
+		}
+		RS->material_set_param(region->get_material_rid(),uniform_name,new_tex_rid);
 		has_texture_to_apply = false;
 		is_dirty = false;
 	}

@@ -124,7 +124,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 	else:
 		tools.disable_grass_lable()
 
-
+var last_draw_time:int=0
 func paint_mode_handle(event:InputEvent):
 	if ray_col.is_collided():
 		brush_decal.visible = true
@@ -156,6 +156,10 @@ func paint_mode_handle(event:InputEvent):
 					elif active_terrain:
 						pass
 		if event.button_mask == MOUSE_BUTTON_LEFT:
+			var t = Time.get_ticks_msec()
+			var dt = t - last_draw_time
+			#print("DT ",dt)
+			last_draw_time = t
 			if active_grass:
 				active_grass.draw_grass(ray_col.get_collision_position(),brush_decal.radius,paint_panel.is_grass_add)
 				return AFTER_GUI_INPUT_STOP

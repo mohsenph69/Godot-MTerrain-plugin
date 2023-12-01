@@ -29,6 +29,8 @@
 #define M_LRTB 9
 #define M_MAX_EDGE 10
 
+#define M_DEAFAULT_SHADER_PATH "res://addons/m_terrain/start.gdshader"
+#define M_DEAFAULT_MATERIAL_PATH "res://addons/m_terrain/start_material.res"
 
 
 #endif

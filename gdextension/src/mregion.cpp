@@ -4,6 +4,9 @@
 #include <godot_cpp/variant/color.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
+
+#define RS RenderingServer::get_singleton()
 
 #include "mgrid.h"
 
@@ -16,44 +19,37 @@ MRegion::MRegion(){
 MRegion::~MRegion(){
     memdelete(lods);
 	remove_physics();
-	for(int i=0;i<images.size();i++){
-		memdelete(images[i]);
-	}
 	images.clear();
 }
 
-void MRegion::set_material(const Ref<ShaderMaterial> input) {
+void MRegion::set_material(RID input) {
     if(!input.is_valid()){
         return;
     }
-    shader_code = input->get_shader()->get_code();
-    _material = input;
-    _material->set_shader_parameter("region_size", grid->region_size_meter);
-    _material->set_shader_parameter("region_world_position", world_pos);
+	_material_rid = input;
+	RS->material_set_param(_material_rid,"region_size",grid->region_size_meter);
+	RS->material_set_param(_material_rid,"region_world_position",world_pos);
 }
 
 RID MRegion::get_material_rid() {
-    if(_material.is_valid()){
-        return _material->get_rid();
-    }
-    return RID();
+	return _material_rid;
 }
 
-void MRegion::set_image_info(MImage* input) {
-	input->material = _material;
+void MRegion::add_image(MImage* input) {
     images.append(input);
-	if(input->name == "heightmap"){
+	if(input->name=="heightmap"){
 		heightmap = input;
-	} else if (input->name == "normals")
-	{
+	}
+	else if(input->name=="normals"){
 		normals = input;
 	}
 }
 
 void MRegion::configure() {
+	ERR_FAIL_COND_MSG(!heightmap,"Heightmap is not loaded check MTerrain Material");
+	ERR_FAIL_COND_MSG(!normals,"Normals is not loaded check MTerrain Material");
 	for(int i=0; i < images.size(); i++){
 		images[i]->region = this;
-		images[i]->load();
 		if(images[i]->name != "normals"){
 			images[i]->active_undo = true;
 		}
@@ -66,55 +62,31 @@ void MRegion::configure() {
 			ERR_FAIL_MSG("Region size not match for "+images[i]->name+ " please Check region size");
 		}
 	}
-	if(heightmap==nullptr){
-		String f_name = "heightmap_x"+itos(pos.x)+"_y"+itos(pos.z)+".res";
-		String f_path = grid->dataDir.path_join(f_name);
-		MImage* mimg = memnew(MImage(f_path,grid->layersDataDir,"heightmap","mterrain_heightmap",pos,-1));
-		mimg->material = _material;
-		mimg->active_undo = true;
-		mimg->create(grid->region_pixel_size, Image::FORMAT_RF);
-		heightmap = mimg;
-		heightmap->region = this;
-		images.push_back(mimg);
-		min_height = -0.1;
-		max_height = 0.1;
-	} else {
-		int64_t index = 0;
-		int64_t s = heightmap->data.size()/4;
-		float* ptr = ((float *)heightmap->data.ptr());
-		while (index < s)
-		{
-			float val = ptr[index];
-			if(val > max_height){
-				max_height = val;
-			}
-			if (val < min_height)
-			{
-				min_height = val;
-			}
-			index++;
+	int64_t index = 0;
+	int64_t s = heightmap->data.size()/4;
+	float* ptr = ((float *)heightmap->data.ptr());
+	while (index < s)
+	{
+		float val = ptr[index];
+		if(val > max_height){
+			max_height = val;
 		}
-	}
-	if(normals==nullptr){
-		String f_name = "normals_x"+itos(pos.x)+"_y"+itos(pos.z)+".res";
-		String f_path = grid->dataDir.path_join(f_name);
-		MImage* mimg = memnew(MImage(f_path,grid->layersDataDir,"normals","mterrain_normals",pos,-1));
-		mimg->material = _material;
-		mimg->create(grid->region_pixel_size, Image::FORMAT_RGB8);
-		normals = mimg;
-		normals->region = this;
-		images.push_back(mimg);
+		if (val < min_height)
+		{
+			min_height = val;
+		}
+		index++;
 	}
 	uint32_t ss = grid->region_pixel_size - 1;
 	normals_pixel_region.left = pos.x*ss;
 	normals_pixel_region.right = (pos.x + 1)*ss;
 	normals_pixel_region.top = pos.z*ss;
 	normals_pixel_region.bottom = (pos.z + 1)*ss;
-	normals_pixel_region.grow_all_side(grid->grid_pixel_region);
+	//normals_pixel_region.grow_all_side(grid->grid_pixel_region);
 }
 
 void MRegion::update_region() {
-	if(!_material.is_valid()){
+	if(!_material_rid.is_valid()){
 		return;
 	}
     int8_t curren_lod = (lods->is_empty()) ? -1 : (*lods)[0];
@@ -140,7 +112,7 @@ void MRegion::insert_lod(const int8_t& input) {
 }
 
 void MRegion::apply_update() {
-	if(!_material.is_valid()){
+	if(!_material_rid.is_valid()){
 		return;
 	}
 	for(int i=0; i < images.size(); i++){
@@ -148,9 +120,9 @@ void MRegion::apply_update() {
 		img->apply_update();
 	}
 	current_image_size = ((double)heightmap->current_size);
-	_material->set_shader_parameter("region_a", (current_image_size-1)/current_image_size);
-	_material->set_shader_parameter("region_b", 0.5/current_image_size);
-	_material->set_shader_parameter("min_lod", last_lod);
+	RS->material_set_param(_material_rid,"region_a",(current_image_size-1)/current_image_size);
+	RS->material_set_param(_material_rid,"region_b",0.5/current_image_size);
+	RS->material_set_param(_material_rid,"min_lod",last_lod);
 }
 
 void MRegion::create_physics() {
