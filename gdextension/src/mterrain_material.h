@@ -27,6 +27,7 @@ class MTerrainMaterial : public Resource {
     MGrid* grid=nullptr;
     Ref<Shader> shader;
     Ref<Shader> default_shader;
+    Ref<Shader> show_region_shader;
     Vector<StringName> uniforms_names;
     int active_region=-1;
     // Uniform key->-1 is the defaulte uniform
@@ -35,6 +36,8 @@ class MTerrainMaterial : public Resource {
     PackedStringArray terrain_textures_added; // Textures uniforms which already added
     HashMap<String,int> terrain_textures_ids;
     HashMap<int,RID> materials;
+
+    bool show_region = false;
 
     public:
     Vector<MImage*> all_images;
@@ -45,12 +48,19 @@ class MTerrainMaterial : public Resource {
     Ref<Shader> get_currect_shader();
     void set_uniforms(Dictionary input);
     Dictionary get_uniforms();
+    void set_clear_all(bool input);
+    bool get_clear_all();
+    void set_show_region(bool input);
+    bool get_show_region();
 
     void update_uniforms_list();
     void _get_property_list(List<PropertyInfo> *p_list) const;
     bool _get(const StringName &p_name, Variant &r_ret) const;
     bool _set(const StringName &p_name, const Variant &p_value);
     void _shader_code_changed();
+    void set_active_region(int input);
+    int get_active_region();
+
 
     void set_grid(MGrid* g); // if grid is nullptr it means the terrain has been destroyed
     // Each time this is called it is going to generate a new material for that region
@@ -63,6 +73,9 @@ class MTerrainMaterial : public Resource {
     PackedStringArray get_textures_list();
 
     void set_uniform(RID mat,StringName uname,Variant value);
-    void set_uniform_in_all_regions(StringName uname,Variant value);
+    void set_default_uniform(StringName uname,Variant value);
+    void back_to_default_uniform(int region_id,StringName uname);
+    void back_all_to_default_uniform(int region_id);
+    void refresh_all_uniform();
 };
 #endif

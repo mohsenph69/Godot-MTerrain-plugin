@@ -15,6 +15,16 @@ void MTerrainMaterial::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_shader","input"), &MTerrainMaterial::set_shader);
     ClassDB::bind_method(D_METHOD("get_shader"), &MTerrainMaterial::get_shader);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"shader",PROPERTY_HINT_RESOURCE_TYPE,"Shader"),"set_shader","get_shader");
+    ClassDB::bind_method(D_METHOD("set_show_region","input"), &MTerrainMaterial::set_show_region);
+    ClassDB::bind_method(D_METHOD("get_show_region"), &MTerrainMaterial::get_show_region);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"show_region",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),"set_show_region","get_show_region");
+    ClassDB::bind_method(D_METHOD("set_active_region","input"), &MTerrainMaterial::set_active_region);
+    ClassDB::bind_method(D_METHOD("get_active_region"), &MTerrainMaterial::get_active_region);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"active_region"),"set_active_region","get_active_region");
+    ClassDB::bind_method(D_METHOD("set_clear_all","input"),&MTerrainMaterial::set_clear_all);
+    ClassDB::bind_method(D_METHOD("get_clear_all"),&MTerrainMaterial::get_clear_all);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"clear_all",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),"set_clear_all","get_clear_all");
+
     ClassDB::bind_method(D_METHOD("_set_uniforms"), &MTerrainMaterial::set_uniforms);
     ClassDB::bind_method(D_METHOD("_get_uniforms"), &MTerrainMaterial::get_uniforms);
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"_uniforms",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_uniforms","_get_uniforms");
@@ -24,6 +34,9 @@ void MTerrainMaterial::_bind_methods() {
 
 
 void MTerrainMaterial::set_shader(Ref<Shader> input) {
+    if(show_region){
+        set_show_region(false);
+    }
     if(input.is_valid()){
         ERR_FAIL_COND(input->get_class() == "VisualShader");
     }
@@ -76,6 +89,10 @@ Dictionary MTerrainMaterial::get_uniforms(){
 }
 
 void MTerrainMaterial::update_uniforms_list(){
+    UtilityFunctions::print("Update all uniforms ");
+    if(!is_loaded){
+        active_region = -1;
+    }
     Vector<StringName> new_uniforms_names;
     PackedStringArray new_terrain_textures_names;
     if(shader.is_valid()){
@@ -92,19 +109,19 @@ void MTerrainMaterial::update_uniforms_list(){
             }
             new_uniforms_names.push_back(StringName(n));
         }
-        // Check if we a uniform is removed we remove its value Variant too
+        // Check if we a uniform is removed we remove its key and value Variant too
         if(uniforms_props.size()!=0){ // if the size is zero maybe the shader code can not be compiled, For now there is no way to check if it compiled or not here
-            for(int i=0;i<uniforms_names.size();i++){
-                if(!new_uniforms_names.has(uniforms_names[i])){
-                    Array keys = uniforms.keys();
-                    for(int i=0;i<keys.size();i++){
-                        Dictionary ureg = uniforms[keys[i]];
-                        ureg.erase(uniforms_names[i]); // Try to remove
-                        uniforms[keys[i]] = ureg;
+            Array reg_ids = uniforms.keys();
+            for(int r=0;r<reg_ids.size();r++){
+                Dictionary ureg = uniforms[reg_ids[r]];
+                Array unames = ureg.keys();
+                for(int n=0;n<unames.size();n++){
+                    if(!new_uniforms_names.has(unames[n])){
+                        ureg.erase(unames[n]);
                     }
                 }
+                uniforms[reg_ids[r]] = ureg;
             }
-                uniforms_names = new_uniforms_names;
         }
     }
     uniforms_names = new_uniforms_names;
@@ -113,6 +130,7 @@ void MTerrainMaterial::update_uniforms_list(){
 }
 
 void MTerrainMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
+    //Adding shader properties
     if(shader.is_valid()){
         p_list->push_back(PropertyInfo(Variant::INT,"Shader Parameters",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_SUBGROUP));
         Array uniforms_props = shader->get_shader_uniform_list();
@@ -141,6 +159,9 @@ bool MTerrainMaterial::_get(const StringName &p_name, Variant &r_ret) const {
 
 bool MTerrainMaterial::_set(const StringName &p_name, const Variant &p_value) {
     if(uniforms_names.find(p_name)!=-1){
+        if(show_region){
+            return false;
+        }
         Dictionary ureg;
         if(uniforms.has(active_region)){
             ureg = uniforms[active_region];
@@ -148,7 +169,11 @@ bool MTerrainMaterial::_set(const StringName &p_name, const Variant &p_value) {
         ureg[p_name] = p_value;
         uniforms[active_region] = ureg;
         if(active_region==-1){
-            set_uniform_in_all_regions(p_name,p_value);
+            set_default_uniform(p_name,p_value);
+        } else {
+            if(materials.has(active_region)){
+                set_uniform(materials[active_region],p_name,p_value);
+            }
         }
         return true;
     }
@@ -159,6 +184,56 @@ void MTerrainMaterial::_shader_code_changed(){
     update_uniforms_list();
 }
 
+void MTerrainMaterial::set_active_region(int input){
+    ERR_FAIL_COND_EDMSG(input!=-1 && !is_loaded,"You need to create the terrain to change this!");
+    ERR_FAIL_COND(!grid);
+    ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND(input<-1);
+    ERR_FAIL_COND_EDMSG(input>grid->get_regions_count()-1,"Active region can not bigger than the number of regions");
+    active_region = input;
+    UtilityFunctions::print(active_region,"->",uniforms[active_region]);
+    notify_property_list_changed();
+}
+int MTerrainMaterial::get_active_region(){
+    return active_region;
+}
+
+void MTerrainMaterial::set_clear_all(bool input){
+    if(active_region==-1){
+        return;
+    }
+    uniforms.erase(active_region);
+    back_all_to_default_uniform(active_region);
+}
+
+bool MTerrainMaterial::get_clear_all() {
+    return true;
+}
+
+void MTerrainMaterial::set_show_region(bool input){
+    if(!is_loaded){
+        show_region = false;
+        return;
+    }
+    show_region = input;
+    if(!show_region_shader.is_valid()){
+        show_region_shader = ResourceLoader::get_singleton()->load("res://show_region.gdshader");
+    }
+    if(show_region){
+        for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
+            RS->material_set_shader(it->value,show_region_shader->get_rid());
+        }
+    } else {
+        Ref<Shader> s = get_currect_shader();
+        for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
+            RS->material_set_shader(it->value,s->get_rid());
+        }
+        refresh_all_uniform();
+    }
+}
+bool MTerrainMaterial::get_show_region(){
+    return show_region;
+}
 
 void MTerrainMaterial::set_grid(MGrid* g) {
     grid = g;
@@ -212,10 +287,12 @@ void MTerrainMaterial::load_images(){
     if(!terrain_textures_added.has("normals")){
         create_empty_terrain_image("normals",Image::FORMAT_RGB8);
     }
+    show_region = false;
     is_loaded = true;
 }
 
 void MTerrainMaterial::clear(){
+    show_region = false;
 	for(int i=0;i<all_images.size();i++){
 		memdelete(all_images[i]);
 	}
@@ -228,6 +305,7 @@ void MTerrainMaterial::clear(){
     }
     materials.clear();
     is_loaded = false;
+    active_region = -1;
 }
 
 void MTerrainMaterial::add_terrain_image(String name) {
@@ -301,8 +379,71 @@ void MTerrainMaterial::set_uniform(RID mat,StringName uname,Variant value){
     RS->material_set_param(mat,uname,value);
 }
 
-void MTerrainMaterial::set_uniform_in_all_regions(StringName uname,Variant value){
+void MTerrainMaterial::set_default_uniform(StringName uname,Variant value){
     for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
+        if(uniforms.has(it->key)){
+            Dictionary ureg = uniforms[it->key];
+            if(ureg.has(uname)){
+                continue;
+            }
+        }
         set_uniform(it->value,uname,value);
+    }
+}
+
+void MTerrainMaterial::back_to_default_uniform(int region_id,StringName uname){
+    ERR_FAIL_COND(region_id==-1);
+    ERR_FAIL_COND(!materials.has(region_id));
+    ERR_FAIL_COND(!uniforms.has(-1));
+    Dictionary ureg = uniforms[-1];
+    if(ureg.has(uname)){
+        set_uniform(materials[region_id],uname,ureg[uname]);
+    } else {
+        set_uniform(materials[region_id],uname,Variant());
+    }
+}
+
+void MTerrainMaterial::back_all_to_default_uniform(int region_id){
+    ERR_FAIL_COND(region_id==-1);
+    ERR_FAIL_COND(!materials.has(region_id));
+    ERR_FAIL_COND(!uniforms.has(-1));
+    Dictionary ureg = uniforms[-1];
+    for(int i=0;i<uniforms_names.size();i++){
+        StringName uname = uniforms_names[i];
+        if(ureg.has(uname)){
+            set_uniform(materials[region_id],uname,ureg[uname]);
+        } else {
+            set_uniform(materials[region_id],uname,Variant());
+        }
+    }
+
+}
+
+void MTerrainMaterial::refresh_all_uniform(){
+    for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
+        RID m = it->value;
+        int region_id = it->key;
+        //Setting uniforms
+        Dictionary region_uniforms;
+        Dictionary default_uniforms;
+        if(uniforms.has(region_id)){
+            region_uniforms = uniforms[region_id];
+        }
+        if(uniforms.has(-1)){
+            default_uniforms = uniforms[-1];
+        }
+        for(int u=0;u<uniforms_names.size();u++){
+            StringName uname = uniforms_names[u];
+            if(region_uniforms.has(uname)){
+                Variant val = region_uniforms[uname];
+                set_uniform(m,uname,val);
+                continue;
+            }
+            if(default_uniforms.has(uname)){
+                Variant val = default_uniforms[uname];
+                set_uniform(m,uname,val);
+                continue;
+            }
+        }
     }
 }
