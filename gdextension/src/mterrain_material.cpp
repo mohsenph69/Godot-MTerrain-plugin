@@ -92,6 +92,7 @@ void MTerrainMaterial::update_uniforms_list(){
     if(!is_loaded){
         active_region = -1;
     }
+    PackedStringArray reserved = get_reserved_uniforms();
     Vector<StringName> new_uniforms_names;
     PackedStringArray new_terrain_textures_names;
     if(shader.is_valid()){
@@ -105,6 +106,9 @@ void MTerrainMaterial::update_uniforms_list(){
                     new_terrain_textures_names.push_back(parts[1]);
                     continue;
                 }
+            }
+            if(reserved.has(n)){
+                continue;
             }
             new_uniforms_names.push_back(StringName(n));
         }
@@ -125,10 +129,15 @@ void MTerrainMaterial::update_uniforms_list(){
     }
     uniforms_names = new_uniforms_names;
     terrain_textures_names = new_terrain_textures_names;
+    UtilityFunctions::print("-------");
+    for(int k=0;k<uniforms_names.size();++k){
+        UtilityFunctions::print("uname ",uniforms_names[k]);
+    }
     notify_property_list_changed();
 }
 
 void MTerrainMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
+    PackedStringArray reserved = get_reserved_uniforms();
     //Adding shader properties
     if(shader.is_valid()){
         p_list->push_back(PropertyInfo(Variant::INT,"Shader Parameters",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_SUBGROUP));
@@ -136,7 +145,7 @@ void MTerrainMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
         for(int i=0;i<uniforms_props.size();i++){
             Dictionary u = uniforms_props[i];
             String n = String(u["name"]);
-            if(n.begins_with("mterrain_")||n=="region_world_position"||n=="region_a"||n=="region_b"||n=="min_lod"||n=="region_size"){
+            if(reserved.has(n)){
                 continue;
             }
             Variant::Type type = static_cast<Variant::Type>((int)u["type"]);
@@ -460,4 +469,8 @@ void MTerrainMaterial::clear_all_uniform(){
             set_uniform(m,uname,Variant());
         }
     }
+}
+
+PackedStringArray MTerrainMaterial::get_reserved_uniforms() const{
+    return String(M_SHADER_RESERVE_UNIFORMS).split(",");
 }

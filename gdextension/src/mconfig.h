@@ -29,6 +29,9 @@
 #define M_LRTB 9
 #define M_MAX_EDGE 10
 
+//You should add also everything start with mterrain_ prefix to the list bellow
+#define M_SHADER_RESERVE_UNIFORMS "region_world_position,region_size,region_a,region_b,min_lod,world_pos,region_uv"
+
 #define M_DEAFAULT_SHADER_PATH "res://addons/m_terrain/start.gdshader"
 #define M_DEAFAULT_MATERIAL_PATH "res://addons/m_terrain/start_material.res"
 #define M_SHOW_REGION_SHADER_PATH "res://addons/m_terrain/show_region.gdshader"
