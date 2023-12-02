@@ -217,7 +217,7 @@ void MTerrainMaterial::set_show_region(bool input){
     }
     show_region = input;
     if(!show_region_shader.is_valid()){
-        show_region_shader = ResourceLoader::get_singleton()->load("res://show_region.gdshader");
+        show_region_shader = ResourceLoader::get_singleton()->load(M_SHOW_REGION_SHADER_PATH);
     }
     if(show_region){
         for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){

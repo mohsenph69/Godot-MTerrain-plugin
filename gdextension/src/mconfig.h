@@ -31,6 +31,6 @@
 
 #define M_DEAFAULT_SHADER_PATH "res://addons/m_terrain/start.gdshader"
 #define M_DEAFAULT_MATERIAL_PATH "res://addons/m_terrain/start_material.res"
-
+#define M_SHOW_REGION_SHADER_PATH "res://addons/m_terrain/show_region.gdshader"
 
 #endif
