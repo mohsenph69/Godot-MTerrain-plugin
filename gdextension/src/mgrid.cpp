@@ -67,6 +67,7 @@ void MGrid::clear() {
     active_heightmap_layer=0;
     current_undo_id =0;
     lowest_undo_id=0;
+    _regions_count = 0;
 }
 
 bool MGrid::is_created() {
@@ -279,6 +280,13 @@ MGridPos MGrid::get_region_pos_by_world_pos(Vector3 world_pos){
     p.x = (int32_t)(world_pos.x/((real_t)region_size_meter));
     p.z = (int32_t)(world_pos.z/((real_t)region_size_meter));
     return p;
+}
+
+int MGrid::get_region_id_by_world_pos(Vector3 world_pos){
+    world_pos -= offset;
+    int32_t x = (int32_t)(world_pos.x/((real_t)region_size_meter));
+    int32_t z = (int32_t)(world_pos.z/((real_t)region_size_meter));
+    return x + z*_region_grid_size.x;
 }
 
 Vector2 MGrid::get_point_region_offset_ratio(int32_t x,int32_t z){
@@ -1304,4 +1312,10 @@ void MGrid::images_undo(){
         _all_image_list[i]->remove_undo_data(current_undo_id);
     }
     update_all_dirty_image_texture();
+}
+
+void MGrid::refresh_all_regions_uniforms(){
+    for(int i=0;i<_regions_count;i++){
+        regions[i].refresh_all_uniforms();
+    }
 }

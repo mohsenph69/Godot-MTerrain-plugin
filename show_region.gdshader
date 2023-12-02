@@ -31,5 +31,5 @@ void vertex(){
 
 void fragment(){
 	vec2 r = clamp(vec2(0.),vec2(1.),region_uv);
-	ALBEDO = vec3(r,0.0)*0.3;
+	ALBEDO = vec3(r,0.0)*0.2;
 }

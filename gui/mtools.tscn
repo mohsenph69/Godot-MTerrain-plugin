@@ -51,6 +51,10 @@ text = "D: 620m"
 layout_mode = 2
 text = "G: 271543"
 
+[node name="r_lable" type="Label" parent="."]
+layout_mode = 2
+text = "R:2"
+
 [connection signal="toggled" from="paint_mode" to="." method="_on_paint_mode_toggled"]
 [connection signal="toggled" from="human_male" to="." method="_on_human_male_toggled"]
 [connection signal="pressed" from="save" to="." method="_on_save_pressed"]

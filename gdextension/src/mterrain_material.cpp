@@ -89,7 +89,6 @@ Dictionary MTerrainMaterial::get_uniforms(){
 }
 
 void MTerrainMaterial::update_uniforms_list(){
-    UtilityFunctions::print("Update all uniforms ");
     if(!is_loaded){
         active_region = -1;
     }
@@ -191,7 +190,6 @@ void MTerrainMaterial::set_active_region(int input){
     ERR_FAIL_COND(input<-1);
     ERR_FAIL_COND_EDMSG(input>grid->get_regions_count()-1,"Active region can not bigger than the number of regions");
     active_region = input;
-    UtilityFunctions::print(active_region,"->",uniforms[active_region]);
     notify_property_list_changed();
 }
 int MTerrainMaterial::get_active_region(){
@@ -223,6 +221,7 @@ void MTerrainMaterial::set_show_region(bool input){
         for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
             RS->material_set_shader(it->value,show_region_shader->get_rid());
         }
+        grid->refresh_all_regions_uniforms();
     } else {
         Ref<Shader> s = get_currect_shader();
         for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
@@ -444,6 +443,21 @@ void MTerrainMaterial::refresh_all_uniform(){
                 set_uniform(m,uname,val);
                 continue;
             }
+        }
+    }
+    grid->refresh_all_regions_uniforms();
+}
+
+void MTerrainMaterial::clear_all_uniform(){
+    for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
+        RID m = it->value;
+        int region_id = it->key;
+        //Setting uniforms
+        Dictionary region_uniforms;
+        Dictionary default_uniforms;
+        for(int u=0;u<uniforms_names.size();u++){
+            StringName uname = uniforms_names[u];
+            set_uniform(m,uname,Variant());
         }
     }
 }

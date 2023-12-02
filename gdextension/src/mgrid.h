@@ -120,7 +120,7 @@ class MGrid : public Object {
     int32_t num_chunks = 0;
     int32_t chunk_counter = 0;
     MGridPos _region_grid_size;
-    int32_t _regions_count;
+    int32_t _regions_count=0;
     Vector<MImage*> _all_image_list;
     Vector<MImage*> _all_heightmap_image_list;
     PackedVector3Array nvec8;
@@ -216,6 +216,7 @@ class MGrid : public Object {
     MRegion* get_region_by_point(const int32_t &x, const int32_t& z);
     MRegion* get_region(const int32_t &x, const int32_t& z);
     MGridPos get_region_pos_by_world_pos(Vector3 world_pos);
+    int get_region_id_by_world_pos(Vector3 world_pos);
     Vector2 get_point_region_offset_ratio(int32_t x,int32_t z);
     Vector3 get_region_world_pos_by_point(int32_t x,int32_t z);
     int8_t get_lod_by_distance(const int32_t& dis);
@@ -281,7 +282,7 @@ class MGrid : public Object {
     void images_add_undo_stage(); // This will called before drawing or change happen
     void images_undo();
 
-    //void update_material_in_region();
+    void refresh_all_regions_uniforms();
 };
 
 #endif

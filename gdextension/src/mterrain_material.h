@@ -77,5 +77,6 @@ class MTerrainMaterial : public Resource {
     void back_to_default_uniform(int region_id,StringName uname);
     void back_all_to_default_uniform(int region_id);
     void refresh_all_uniform();
+    void clear_all_uniform();
 };
 #endif

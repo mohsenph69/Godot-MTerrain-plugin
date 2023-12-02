@@ -146,6 +146,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_grass_list"), &MTerrain::update_grass_list);
     ClassDB::bind_method(D_METHOD("terrain_child_changed"), &MTerrain::terrain_child_changed);
     ClassDB::bind_method(D_METHOD("get_region_grid_size"), &MTerrain::get_region_grid_size);
+    ClassDB::bind_method(D_METHOD("get_region_id_by_world_pos","world_pos"), &MTerrain::get_region_id_by_world_pos);
     ClassDB::bind_method(D_METHOD("get_base_size"), &MTerrain::get_base_size);
     ClassDB::bind_method(D_METHOD("get_h_scale"), &MTerrain::get_h_scale);
 
@@ -938,6 +939,10 @@ void MTerrain::update_grass_list(){
 
 Vector2i MTerrain::get_region_grid_size(){
     return Vector2i(grid->get_region_grid_size().x,grid->get_region_grid_size().z);
+}
+
+int MTerrain::get_region_id_by_world_pos(const Vector3& world_pos){
+    return grid->get_region_id_by_world_pos(world_pos);
 }
 
 int32_t MTerrain::get_base_size(){

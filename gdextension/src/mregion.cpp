@@ -211,3 +211,14 @@ void MRegion::recalculate_normals(){
 	if(grid)
 		grid->generate_normals_thread(normals_pixel_region);
 }
+
+void MRegion::refresh_all_uniforms(){
+	if(_material_rid.is_valid()){
+		RS->material_set_param(_material_rid,"region_size",grid->region_size_meter);
+		RS->material_set_param(_material_rid,"region_world_position",world_pos);
+
+		RS->material_set_param(_material_rid,"region_a",(current_image_size-1)/current_image_size);
+		RS->material_set_param(_material_rid,"region_b",0.5/current_image_size);
+		RS->material_set_param(_material_rid,"min_lod",last_lod);
+	}
+}

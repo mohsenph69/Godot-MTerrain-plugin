@@ -212,6 +212,7 @@ class MTerrain : public  Node3D {
     void terrain_child_changed(Node* n);
     void update_grass_list();
     Vector2i get_region_grid_size();
+    int get_region_id_by_world_pos(const Vector3& world_pos);
     int32_t get_base_size();
     float get_h_scale();
 

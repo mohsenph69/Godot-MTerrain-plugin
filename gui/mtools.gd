@@ -5,6 +5,7 @@ class_name MTools
 @onready var height_lable := $h_lable
 @onready var distance_lable := $d_lable
 @onready var grass_lable := $g_lable
+@onready var region_lable :=$r_lable
 @onready var human_male_button:= $human_male
 @onready var save_button:= $save
 
@@ -38,6 +39,11 @@ func set_grass_label(input:int):
 func disable_grass_lable():
 	grass_lable.text = ""
 	
+func set_region_lable(input:int):
+	region_lable.text = "R:"+str(input)
+
+func disable_region_lable():
+	region_lable.text = ""
 
 func _on_human_male_toggled(button_pressed):
 	human_male_active = button_pressed

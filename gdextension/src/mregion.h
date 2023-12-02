@@ -90,5 +90,6 @@ class MRegion : public Object{
     void save_image(int index,bool force_save);
 
     void recalculate_normals();
+    void refresh_all_uniforms();
 };
 #endif

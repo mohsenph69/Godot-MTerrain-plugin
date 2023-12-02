@@ -79,6 +79,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 			col_dis = ray_col.get_collision_position().distance_to(pos)
 			tools.set_height_lable(ray_col.get_collision_position().y)
 			tools.set_distance_lable(col_dis)
+			tools.set_region_lable(active_terrain.get_region_id_by_world_pos(ray_col.get_collision_position()))
 			if tools.active_paint_mode:
 				if paint_mode_handle(event) == AFTER_GUI_INPUT_STOP:
 					return AFTER_GUI_INPUT_STOP
@@ -89,6 +90,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 			col_dis=1000000
 			tools.disable_height_lable()
 			tools.disable_distance_lable()
+			tools.disable_region_lable()
 		if col_dis<1000:
 			collision_ray_step = (col_dis + 50)/100
 		else:
