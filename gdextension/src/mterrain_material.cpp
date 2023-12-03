@@ -30,6 +30,7 @@ void MTerrainMaterial::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"_uniforms",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_uniforms","_get_uniforms");
     ClassDB::bind_method(D_METHOD("_shader_code_changed"), &MTerrainMaterial::_shader_code_changed);
     ClassDB::bind_method(D_METHOD("get_material"), &MTerrainMaterial::get_material);
+    ClassDB::bind_method(D_METHOD("get_reserved_uniforms"), &MTerrainMaterial::get_reserved_uniforms);
 }
 
 
@@ -95,7 +96,7 @@ void MTerrainMaterial::update_uniforms_list(){
     PackedStringArray reserved = get_reserved_uniforms();
     Vector<StringName> new_uniforms_names;
     PackedStringArray new_terrain_textures_names;
-    if(shader.is_valid()){
+    if(get_currect_shader().is_valid()){
         Array uniforms_props = get_currect_shader()->get_shader_uniform_list();
         for(int i=0;i<uniforms_props.size();i++){
             Dictionary u = uniforms_props[i];
