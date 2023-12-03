@@ -146,7 +146,7 @@ void MTerrainMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
         for(int i=0;i<uniforms_props.size();i++){
             Dictionary u = uniforms_props[i];
             String n = String(u["name"]);
-            if(reserved.has(n)){
+            if(reserved.has(n) || n.begins_with("mterrain_")){
                 continue;
             }
             Variant::Type type = static_cast<Variant::Type>((int)u["type"]);
