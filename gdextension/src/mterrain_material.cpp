@@ -130,10 +130,6 @@ void MTerrainMaterial::update_uniforms_list(){
     }
     uniforms_names = new_uniforms_names;
     terrain_textures_names = new_terrain_textures_names;
-    UtilityFunctions::print("-------");
-    for(int k=0;k<uniforms_names.size();++k){
-        UtilityFunctions::print("uname ",uniforms_names[k]);
-    }
     notify_property_list_changed();
 }
 
@@ -286,9 +282,13 @@ RID MTerrainMaterial::get_material(int region_id){
 void MTerrainMaterial::load_images(){
     ERR_FAIL_COND(!grid);
     ERR_FAIL_COND(!grid->is_created());
+    update_uniforms_list();
     //Adding textures
     for(int i=0;i<terrain_textures_names.size();i++){
         add_terrain_image(terrain_textures_names[i]);
+    }
+    if(!terrain_textures_added.has("heightmap")){
+        add_terrain_image("heightmap");
     }
     if(!terrain_textures_added.has("heightmap")){
         create_empty_terrain_image("heightmap",Image::FORMAT_RF);
