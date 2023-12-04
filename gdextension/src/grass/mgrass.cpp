@@ -274,7 +274,7 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                     //UtilityFunctions::print("Found some grass ",x," , ",y);
                     for(int r=0;r<grass_in_cell;r++){
                         index=count*BUFFER_STRID_FLOAT;
-                        int rand_index = y*grass_region_pixel_width_lod + x + r;
+                        int rand_index = y*grass_region_pixel_width_lod + x*grass_in_cell + r;
                         const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*BUFFER_STRID_FLOAT;
                         buffer.resize(buffer.size()+12);
                         float* ptrw = (float*)buffer.ptrw();
@@ -614,7 +614,7 @@ void MGrass::update_physics(Vector3 cam_pos){
                 }
                 int rx = (x/grass_region_pixel_width);
                 int ry = (y/grass_region_pixel_width);
-                int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width) + r;
+                int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width)*grass_in_cell + r;
                 //UtilityFunctions::print("grass_region_pixel_width ", grass_region_pixel_width);
                 //UtilityFunctions::print("X ",x, " Y ", y, " RX ",rx, " RY ", ry);
                 //UtilityFunctions::print("rand_index ",(rand_index));

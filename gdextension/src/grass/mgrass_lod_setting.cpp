@@ -3,6 +3,7 @@
 #include <godot_cpp/variant/transform3d.hpp>
 #include <godot_cpp/variant/basis.hpp>
 #include<cstdlib>
+#include <godot_cpp/classes/random_number_generator.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 
@@ -153,26 +154,11 @@ Vector3 MGrassLodSetting::get_rand_scale_end(){
     return rand_scale_end;
 }
 
-float MGrassLodSetting::rand_float(float a,float b,int seed){
-    srand(seed);
-    double r = (sin(double(seed)*3.512+13.23)*2.01*(double)seed);
-    if(r<0){
-        r*=-1.0;
-    }
-    r = r - floor(r);
-    r = (cos(r*63.341+3.29)*((double)seed+8362.3215));
-    if(r<0){
-        r*=-1.0;
-    }
-    r = r - floor(r);
-    r = (sin(double(r)*5.312+1.23)*23.01*(double)seed);
-    if(r<0){
-        r*=-1.0;
-    }
-    r = r - floor(r);
-    double diff = b - a;
-    r = r * diff + a;
-    return (float)(r);
+double MGrassLodSetting::rand_float(double a,double b,int seed){
+   Ref<RandomNumberGenerator> rand;
+   rand.instantiate();
+   rand->set_seed(seed);
+   return rand->randf_range(a,b);
 }
 
 

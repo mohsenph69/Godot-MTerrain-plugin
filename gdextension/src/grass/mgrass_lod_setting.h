@@ -12,7 +12,7 @@ using namespace godot;
 class MGrassLodSetting : public Resource {
     GDCLASS(MGrassLodSetting,Resource);
     private:
-    _FORCE_INLINE_ float rand_float(float a,float b,int seed);
+    _FORCE_INLINE_ double rand_float(double a,double b,int seed);
 
     protected:
     static void _bind_methods();
