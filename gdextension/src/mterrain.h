@@ -234,6 +234,9 @@ class MTerrain : public  Node3D {
 
     void set_terrain_material(Ref<MTerrainMaterial> input);
     Ref<MTerrainMaterial> get_terrain_material();
+
+    Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);
+    Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
 };
 
 

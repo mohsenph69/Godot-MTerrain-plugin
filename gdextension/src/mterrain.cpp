@@ -164,6 +164,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_mask_cutoff","val"), &MTerrain::set_mask_cutoff);
     ClassDB::bind_method(D_METHOD("images_add_undo_stage"), &MTerrain::images_add_undo_stage);
     ClassDB::bind_method(D_METHOD("images_undo"), &MTerrain::images_undo);
+    ClassDB::bind_method(D_METHOD("get_normal_by_pixel","x","y"),&MTerrain::get_normal_by_pixel);
+    ClassDB::bind_method(D_METHOD("get_normal_accurate_by_pixel","x","y"),&MTerrain::get_normal_accurate_by_pixel);
 }
 
 MTerrain::MTerrain() {
@@ -1038,4 +1040,13 @@ void MTerrain::set_terrain_material(Ref<MTerrainMaterial> input){
 }
 Ref<MTerrainMaterial> MTerrain::get_terrain_material(){
     return terrain_material;
+}
+
+Vector3 MTerrain::get_normal_by_pixel(uint32_t x,uint32_t y){
+    ERR_FAIL_COND_V(grid->is_created(),Vector3());
+    return grid->get_normal_by_pixel(x,y);
+}
+Vector3 MTerrain::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
+    ERR_FAIL_COND_V(grid->is_created(),Vector3());
+    return grid->get_normal_accurate_by_pixel(x,y);
 }

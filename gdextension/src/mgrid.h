@@ -250,6 +250,8 @@ class MGrid : public Object {
     bool has_pixel(const uint32_t& x,const uint32_t& y);
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
+    Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);
+    Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
     void save_image(int index,bool force_save);
     bool has_unsave_image();
     void save_all_dirty_images();

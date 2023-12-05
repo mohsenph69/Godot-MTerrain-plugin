@@ -956,6 +956,42 @@ void MGrid::generate_normals(MPixelRegion pxr) {
     }
 }
 
+Vector3 MGrid::get_normal_by_pixel(uint32_t x,uint32_t y) {
+    int id = _terrain_material->get_texture_id("normals");
+    ERR_FAIL_COND_V(id==-1,Vector3());
+    Color c = get_pixel(x,y,id);
+    Vector3 n(c.r,c.g,c.b);
+    n = n*2.0 - Vector3(1.0,1.0,1.0);
+    n.normalize();
+    return n;
+}
+
+Vector3 MGrid::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
+    Vector3 normal_vec;
+    Vector2i px(x,y);
+    real_t h = get_height_by_pixel(x,y);
+    // Caculating face normals around point
+    // and average them
+    // In total there are 8 face around each point
+    for(int i=0;i<nvec8.size()-1;i++){
+        Vector2i px1(nvec8[i].x,nvec8[i].z);
+        Vector2i px2(nvec8[i+1].x,nvec8[i+1].z);
+        px1 += px;
+        px2 += px;
+        // Edge of the terrain
+        if(!_has_pixel(px1.x,px1.y) || !_has_pixel(px2.x,px2.y)){
+            continue;
+        }
+        Vector3 vec1 = nvec8[i];
+        Vector3 vec2 = nvec8[i+1];
+        vec1.y = get_height_by_pixel(px1.x,px1.y) - h;
+        vec2.y = get_height_by_pixel(px2.x,px2.y) - h;
+        normal_vec += vec1.cross(vec2);
+    }
+    normal_vec.normalize();
+    return normal_vec;
+}
+
 void MGrid::save_image(int index,bool force_save){
     for(int i=0;i<_regions_count;i++){
         regions[i].save_image(index,force_save);
