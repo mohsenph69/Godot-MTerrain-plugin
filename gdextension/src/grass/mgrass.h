@@ -24,23 +24,6 @@ using namespace godot;
 
 class MGrid;
 
-struct MGrassPhysics
-{
-    RID physic_body;
-    MGrassPhysics(RID shape_rid,RID space_rid, Transform3D transform_3d){
-        physic_body = PhysicsServer3D::get_singleton()->body_create();
-        PhysicsServer3D::get_singleton()->body_set_mode(physic_body,PhysicsServer3D::BODY_MODE_STATIC);
-        PhysicsServer3D::get_singleton()->body_set_space(physic_body,space_rid);
-        PhysicsServer3D::get_singleton()->body_set_state(physic_body,PhysicsServer3D::BODY_STATE_TRANSFORM,transform_3d);
-        PhysicsServer3D::get_singleton()->body_add_shape(physic_body,shape_rid);
-    }
-    ~MGrassPhysics(){
-        PhysicsServer3D::get_singleton()->free_rid(physic_body);
-    }
-};
-
-
-
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
     private:
@@ -49,6 +32,8 @@ class MGrass : public Node3D {
     uint64_t final_count=0;
     int grass_count_limit=9000000;
     float nav_obstacle_radius=1.0;
+    int shape_type=-1;
+    Variant shape_data;
 
     protected:
     static void _bind_methods();
@@ -86,8 +71,11 @@ class MGrass : public Node3D {
     Ref<Shape3D> shape;
     MBound physics_search_bound;
     MBound last_physics_search_bound;
-    HashMap<uint64_t,MGrassPhysics*> physics;
+    RID main_physics_body;
+    Vector<uint64_t> shapes_ids;
+    HashMap<int,RID> shapes_rids; //Key is random Index (Each Random index will result the same shape) and value is the RID shape
     float collision_radius=64;
+    bool active_shape_resize=false;
 
     MGrass();
     ~MGrass();
@@ -131,10 +119,13 @@ class MGrass : public Node3D {
     Vector3 get_shape_offset();
     void set_shape(Ref<Shape3D> input);
     Ref<Shape3D> get_shape();
+    void set_active_shape_resize(bool input);
+    bool get_active_shape_resize();
     void set_nav_obstacle_radius(float input);
     float get_nav_obstacle_radius();
     void update_physics(Vector3 cam_pos);
     void remove_all_physics();
+    RID get_resized_shape(Vector3 scale);
     PackedVector3Array get_physic_positions(Vector3 cam_pos,float radius);
 
 

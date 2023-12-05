@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/resource_saver.hpp>
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
+#define PS PhysicsServer3D::get_singleton()
 
 
 void MGrass::_bind_methods() {
@@ -38,6 +39,9 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_shape","input"), &MGrass::set_shape);
     ClassDB::bind_method(D_METHOD("get_shape"), &MGrass::get_shape);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"shape",PROPERTY_HINT_RESOURCE_TYPE,"Shape3D"),"set_shape","get_shape");
+    ClassDB::bind_method(D_METHOD("set_active_shape_resize","input"), &MGrass::set_active_shape_resize);
+    ClassDB::bind_method(D_METHOD("get_active_shape_resize"), &MGrass::get_active_shape_resize);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"active_shape_resize"),"set_active_shape_resize","get_active_shape_resize");
     ClassDB::bind_method(D_METHOD("set_nav_obstacle_radius","input"), &MGrass::set_nav_obstacle_radius);
     ClassDB::bind_method(D_METHOD("get_nav_obstacle_radius"), &MGrass::get_nav_obstacle_radius);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"nav_obstacle_radius"),"set_nav_obstacle_radius","get_nav_obstacle_radius");
@@ -134,6 +138,15 @@ void MGrass::init_grass(MGrid* _grid) {
     update_grass();
     apply_update_grass();
     is_grass_init = true;
+    //Creating Main Physic Body
+    main_physics_body = PhysicsServer3D::get_singleton()->body_create();
+    PS->body_set_mode(main_physics_body,PhysicsServer3D::BODY_MODE_STATIC);
+    PS->body_set_space(main_physics_body,space);
+    //Setting the shape data
+    if(shape.is_valid()){
+        shape_type = PS->shape_get_type(shape->get_rid());
+        shape_data = PS->shape_get_data(shape->get_rid());
+    }
     emit_signal("grass_is_ready");
 }
 
@@ -151,6 +164,10 @@ void MGrass::clear_grass(){
     grid_to_grass.clear();
     is_grass_init = false;
     final_count = 0;
+    PS->body_clear_shapes(main_physics_body);
+    PS->free_rid(main_physics_body);
+    main_physics_body = RID();
+    shapes_ids.clear();
 }
 
 void MGrass::update_dirty_chunks(){
@@ -542,6 +559,15 @@ void MGrass::set_shape(Ref<Shape3D> input){
 Ref<Shape3D> MGrass::get_shape(){
     return shape;
 }
+
+void MGrass::set_active_shape_resize(bool input){
+    active_shape_resize = input;
+}
+
+bool MGrass::get_active_shape_resize(){
+    return active_shape_resize;
+}
+
 void MGrass::set_nav_obstacle_radius(float input){
     ERR_FAIL_COND(input<0.05);
     nav_obstacle_radius = input;
@@ -560,6 +586,7 @@ uint32_t rx = x/grass_region_pixel_width;
 uint32_t ry = y/grass_region_pixel_width;
 */
 void MGrass::update_physics(Vector3 cam_pos){
+    ERR_FAIL_COND(!main_physics_body.is_valid());
     if(!shape.is_valid()){
         return;
     }
@@ -582,17 +609,17 @@ void MGrass::update_physics(Vector3 cam_pos){
     }
     //UtilityFunctions::print("Left ",physics_search_bound.left," right ",physics_search_bound.right," top ",physics_search_bound.top," bottom ",physics_search_bound.bottom );
     // culling
+    /// Removing out of bound shapes
     int remove_count=0;
     for(int y=last_physics_search_bound.top;y<=last_physics_search_bound.bottom;y++){
         for(int x=last_physics_search_bound.left;x<=last_physics_search_bound.right;x++){
             if(!physics_search_bound.has_point(x,y)){
                 for(int r=0;r<grass_in_cell;r++){
                     uint64_t uid = y*width*grass_in_cell + x*grass_in_cell + r;
-                    if(physics.has(uid)){
-                        MGrassPhysics* ph = physics.get(uid);
-                        memdelete(ph);
-                        physics.erase(uid);
-                        remove_count++;
+                    int find_index = shapes_ids.find(uid);
+                    if(find_index!=-1){
+                        PS->body_remove_shape(main_physics_body,find_index);
+                        shapes_ids.remove_at(find_index);
                     }
                 }
             }
@@ -609,7 +636,7 @@ void MGrass::update_physics(Vector3 cam_pos){
             }
             for(int r=0;r<grass_in_cell;r++){
                 uint64_t uid = y*width*grass_in_cell + x*grass_in_cell + r;
-                if(physics.has(uid)){
+                if(shapes_ids.has(uid)){
                     continue;
                 }
                 int rx = (x/grass_region_pixel_width);
@@ -623,7 +650,6 @@ void MGrass::update_physics(Vector3 cam_pos){
                 //UtilityFunctions::print("Physic pos ",wpos);
                 wpos += grid->offset;
                 wpos.y = grid->get_height(wpos) + ptr[7];
-                wpos += shape_offset;
                 // Godot physics not work properly with collission transformation
                 // So for now we ignore transformation
                 Vector3 x_axis(ptr[0],ptr[4],ptr[8]);
@@ -633,14 +659,33 @@ void MGrass::update_physics(Vector3 cam_pos){
                 //Vector3 x_axis(1,0,0);
                 //Vector3 y_axis(0,1,0);
                 //Vector3 z_axis(0,0,1);
+                Basis b_no_normlized(x_axis,y_axis,z_axis);
                 x_axis.normalize();
                 y_axis.normalize();
                 z_axis.normalize();
                 Basis b(x_axis,y_axis,z_axis);
-                Transform3D t(b,wpos);
-                //UtilityFunctions::print(t);
-                MGrassPhysics* ph = memnew(MGrassPhysics(shape->get_rid(),space,t));
-                physics.insert(uid,ph);
+                if(active_shape_resize){
+                    RID s_rid;
+                    Vector3 scale = b_no_normlized.get_scale();
+                    Vector3 offset = shape_offset*scale; //If this has offset we should currect the offset
+                    Transform3D final_t(Basis(),offset);
+                    Transform3D t(b,wpos);
+                    final_t = t * final_t;
+                    if(shapes_rids.has(rand_index)){
+                        s_rid = shapes_rids[rand_index];
+                    } else {
+                        s_rid = get_resized_shape(scale);
+                        shapes_rids.insert(rand_index,s_rid);
+                    }
+                    PS->body_add_shape(main_physics_body,s_rid,final_t);
+                } else{
+                    Vector3 offset = shape_offset;
+                    Transform3D final_t(Basis(),offset);
+                    Transform3D t(b,wpos);
+                    final_t = t * final_t;
+                    PS->body_add_shape(main_physics_body,shape->get_rid(),final_t);
+                }
+                shapes_ids.push_back(uid);
                 update_count++;
             }
         }
@@ -652,10 +697,58 @@ void MGrass::update_physics(Vector3 cam_pos){
 }
 
 void MGrass::remove_all_physics(){
-    for(HashMap<uint64_t,MGrassPhysics*>::Iterator it=physics.begin();it!=physics.end();++it){
-        memdelete(it->value);
+    PS->body_clear_shapes(main_physics_body);
+    shapes_ids.clear();
+}
+
+RID MGrass::get_resized_shape(Vector3 scale){
+    UtilityFunctions::print("-----------------------");
+    UtilityFunctions::print("Orignal data ",shape_data);
+    RID new_shape;
+    ERR_FAIL_COND_V(!shape.is_valid(),new_shape);
+    if(shape_type==PhysicsServer3D::ShapeType::SHAPE_SPHERE){
+        float max_s = scale.x > scale.y ? scale.x : scale.y;
+        max_s = max_s > scale.z ? max_s : scale.z;
+        UtilityFunctions::print("max_s ",max_s);
+        float r = shape_data;
+        r = r*max_s;
+        new_shape = PS->sphere_shape_create();
+        UtilityFunctions::print("data ",r);
+        PS->shape_set_data(new_shape,r);
+    } else if(shape_type==PhysicsServer3D::ShapeType::SHAPE_BOX){
+        Vector3 d = shape_data;
+        d = d*scale;
+        new_shape = PS->box_shape_create();
+        PS->shape_set_data(new_shape,d);
+    } else if(shape_type==PhysicsServer3D::ShapeType::SHAPE_CYLINDER){
+        Dictionary d = shape_data;
+        float max_xz = scale.x > scale.y ? scale.x : scale.y;
+        float r = d["radius"];
+        r = r*max_xz;
+        float h = d["height"];
+        h = h*scale.y;
+        Dictionary new_d;
+        new_d["radius"] = r;
+        new_d["height"] = h;
+        new_shape = PS->cylinder_shape_create();
+        PS->shape_set_data(new_shape,new_d);
+    } else if(shape_type==PhysicsServer3D::ShapeType::SHAPE_CAPSULE){
+        Dictionary d = shape_data;
+        float max_xz = scale.x > scale.y ? scale.x : scale.y;
+        float r = d["radius"];
+        r = r*max_xz;
+        float h = d["height"];
+        h = h*scale.y;
+        Dictionary new_d;
+        new_d["radius"] = r;
+        new_d["height"] = h;
+        new_shape = PS->capsule_shape_create();
+        PS->shape_set_data(new_shape,new_d);
+    } else{
+        WARN_PRINT("Shape Type "+itos(shape_type)+" Does not support resizing");
+        new_shape = shape->get_rid();
     }
-    physics.clear();
+    return new_shape;
 }
 
 PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
