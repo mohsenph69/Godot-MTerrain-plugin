@@ -166,6 +166,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("images_undo"), &MTerrain::images_undo);
     ClassDB::bind_method(D_METHOD("get_normal_by_pixel","x","y"),&MTerrain::get_normal_by_pixel);
     ClassDB::bind_method(D_METHOD("get_normal_accurate_by_pixel","x","y"),&MTerrain::get_normal_accurate_by_pixel);
+    ClassDB::bind_method(D_METHOD("is_grid_created"), &MTerrain::is_grid_created);
 }
 
 MTerrain::MTerrain() {
@@ -1042,11 +1043,15 @@ Ref<MTerrainMaterial> MTerrain::get_terrain_material(){
     return terrain_material;
 }
 
+bool MTerrain::is_grid_created() {
+    return grid->is_created();
+}
+
 Vector3 MTerrain::get_normal_by_pixel(uint32_t x,uint32_t y){
-    ERR_FAIL_COND_V(grid->is_created(),Vector3());
+    ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal_by_pixel(x,y);
 }
 Vector3 MTerrain::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
-    ERR_FAIL_COND_V(grid->is_created(),Vector3());
+    ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal_accurate_by_pixel(x,y);
 }
