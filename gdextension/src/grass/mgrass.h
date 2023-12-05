@@ -110,6 +110,8 @@ class MGrass : public Node3D {
     Array get_meshes();
     void set_materials(Array input);
     Array get_materials();
+    uint32_t get_width();
+    uint32_t get_height();
 
     int64_t get_count();
 

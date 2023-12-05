@@ -14,6 +14,9 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks);
     ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add"), &MGrass::draw_grass);
     ClassDB::bind_method(D_METHOD("get_count"), &MGrass::get_count);
+    ClassDB::bind_method(D_METHOD("get_width"), &MGrass::get_width);
+    ClassDB::bind_method(D_METHOD("get_height"), &MGrass::get_height);
+    ClassDB::bind_method(D_METHOD("grass_px_to_grid_px","x","y"), &MGrass::grass_px_to_grid_px);
 
     ClassDB::bind_method(D_METHOD("set_active","input"), &MGrass::set_active);
     ClassDB::bind_method(D_METHOD("get_active"), &MGrass::get_active);
@@ -24,9 +27,6 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_grass_count_limit","input"), &MGrass::set_grass_count_limit);
     ClassDB::bind_method(D_METHOD("get_grass_count_limit"), &MGrass::get_grass_count_limit);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"grass_count_limit"),"set_grass_count_limit","get_grass_count_limit");
-    //ClassDB::bind_method(D_METHOD("set_grass_in_cell","input"), &MGrass::set_grass_in_cell);
-    //ClassDB::bind_method(D_METHOD("get_grass_in_cell"), &MGrass::get_grass_in_cell);
-    //ADD_PROPERTY(PropertyInfo(Variant::INT, "grass_in_cell"),"set_grass_in_cell","get_grass_in_cell");
     ClassDB::bind_method(D_METHOD("set_min_grass_cutoff","input"), &MGrass::set_min_grass_cutoff);
     ClassDB::bind_method(D_METHOD("get_min_grass_cutoff"), &MGrass::get_min_grass_cutoff);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "min_grass_cutoff"),"set_min_grass_cutoff","get_min_grass_cutoff");
@@ -168,6 +168,10 @@ void MGrass::clear_grass(){
     PS->free_rid(main_physics_body);
     main_physics_body = RID();
     shapes_ids.clear();
+    for(HashMap<int,RID>::Iterator it=shapes_rids.begin();it!=shapes_rids.end();++it){
+        PS->free_rid(it->value);
+    }
+    shapes_rids.clear();
 }
 
 void MGrass::update_dirty_chunks(){
@@ -531,6 +535,13 @@ void MGrass::set_materials(Array input){
 
 Array MGrass::get_materials(){
     return materials;
+}
+
+uint32_t MGrass::get_width(){
+    return width;
+}
+uint32_t MGrass::get_height(){
+    return height;
 }
 
 int64_t MGrass::get_count(){
