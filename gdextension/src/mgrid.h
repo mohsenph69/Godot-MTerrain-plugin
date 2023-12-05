@@ -252,6 +252,8 @@ class MGrid : public Object {
     void generate_normals(MPixelRegion pxr);
     Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);
     Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
+    Vector3 get_normal(Vector3 world_pos);
+    Vector3 get_normal_accurate(Vector3 world_pos);
     void save_image(int index,bool force_save);
     bool has_unsave_image();
     void save_all_dirty_images();

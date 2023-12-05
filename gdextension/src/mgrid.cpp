@@ -992,6 +992,44 @@ Vector3 MGrid::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
     return normal_vec;
 }
 
+Vector3 MGrid::get_normal(Vector3 world_pos){
+    world_pos -= offset;
+    world_pos = world_pos/_chunks->h_scale;
+    if(world_pos.x <0 || world_pos.z <0){
+        return Vector3(0,1,0);
+    }
+    uint32_t x = (uint32_t)world_pos.x;
+    uint32_t y = (uint32_t)world_pos.z;
+    Vector3 nx0z0 = get_normal_by_pixel(x,y);
+    Vector3 nx1z0 = get_normal_by_pixel(x+1,y);
+    Vector3 nx0z1 = get_normal_by_pixel(x,y+1);
+    Vector3 nx1z1 = get_normal_by_pixel(x+1,y+1);
+    real_t factor_x = world_pos.x - floor(world_pos.x);
+    real_t factor_z = world_pos.z - floor(world_pos.z);
+    Vector3 ivaltop = nx0z0.lerp(nx1z0,factor_x);
+    Vector3 ivalbottom = nx0z1.lerp(nx1z1,factor_x);
+    return ivaltop.lerp(ivalbottom,factor_z);
+}
+
+Vector3 MGrid::get_normal_accurate(Vector3 world_pos){
+    world_pos -= offset;
+    world_pos = world_pos/_chunks->h_scale;
+    if(world_pos.x <0 || world_pos.z <0){
+        return Vector3(0,1,0);
+    }
+    uint32_t x = (uint32_t)world_pos.x;
+    uint32_t y = (uint32_t)world_pos.z;
+    Vector3 nx0z0 = get_normal_accurate_by_pixel(x,y);
+    Vector3 nx1z0 = get_normal_accurate_by_pixel(x+1,y);
+    Vector3 nx0z1 = get_normal_accurate_by_pixel(x,y+1);
+    Vector3 nx1z1 = get_normal_accurate_by_pixel(x+1,y+1);
+    real_t factor_x = world_pos.x - floor(world_pos.x);
+    real_t factor_z = world_pos.z - floor(world_pos.z);
+    Vector3 ivaltop = nx0z0.lerp(nx1z0,factor_x);
+    Vector3 ivalbottom = nx0z1.lerp(nx1z1,factor_x);
+    return ivaltop.lerp(ivalbottom,factor_z);
+}
+
 void MGrid::save_image(int index,bool force_save){
     for(int i=0;i<_regions_count;i++){
         regions[i].save_image(index,force_save);

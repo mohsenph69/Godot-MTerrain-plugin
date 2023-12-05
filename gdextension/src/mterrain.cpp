@@ -166,6 +166,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("images_undo"), &MTerrain::images_undo);
     ClassDB::bind_method(D_METHOD("get_normal_by_pixel","x","y"),&MTerrain::get_normal_by_pixel);
     ClassDB::bind_method(D_METHOD("get_normal_accurate_by_pixel","x","y"),&MTerrain::get_normal_accurate_by_pixel);
+    ClassDB::bind_method(D_METHOD("get_normal","world_pos"), &MTerrain::get_normal);
+    ClassDB::bind_method(D_METHOD("get_normal_accurate","world_pos"), &MTerrain::get_normal_accurate);
     ClassDB::bind_method(D_METHOD("is_grid_created"), &MTerrain::is_grid_created);
 }
 
@@ -1054,4 +1056,14 @@ Vector3 MTerrain::get_normal_by_pixel(uint32_t x,uint32_t y){
 Vector3 MTerrain::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
     ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal_accurate_by_pixel(x,y);
+}
+
+Vector3 MTerrain::get_normal(const Vector3 world_pos){
+    ERR_FAIL_COND_V(!grid->is_created(),Vector3());
+    return grid->get_normal(world_pos);
+}
+
+Vector3 MTerrain::get_normal_accurate(Vector3 world_pos){
+    ERR_FAIL_COND_V(!grid->is_created(),Vector3());
+    return grid->get_normal_accurate(world_pos);
 }

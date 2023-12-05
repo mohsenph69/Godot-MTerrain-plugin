@@ -239,6 +239,8 @@ class MTerrain : public  Node3D {
 
     Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);
     Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
+    Vector3 get_normal(const Vector3 world_pos);
+    Vector3 get_normal_accurate(Vector3 world_pos);
 };
 
 
