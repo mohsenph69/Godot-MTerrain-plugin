@@ -18,6 +18,7 @@ class MGrassLodSetting : public Resource {
     static void _bind_methods();
 
     public:
+    bool is_dirty=false;
     int seed=1001;
     int divide=1;
     int grass_in_cell=1;

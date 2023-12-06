@@ -8,6 +8,7 @@
 
 
 void MGrassLodSetting::_bind_methods() {
+    ADD_SIGNAL(MethodInfo("lod_setting_changed"));
     ClassDB::bind_method(D_METHOD("set_seed","input"), &MGrassLodSetting::set_seed);
     ClassDB::bind_method(D_METHOD("get_seed"), &MGrassLodSetting::get_seed);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"seed"),"set_seed","get_seed");
@@ -55,6 +56,8 @@ void MGrassLodSetting::_bind_methods() {
 void MGrassLodSetting::set_seed(int input){
     ERR_FAIL_COND(input<0);
     seed = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 int MGrassLodSetting::get_seed(){
     return seed;
@@ -63,6 +66,8 @@ int MGrassLodSetting::get_seed(){
 void MGrassLodSetting::set_divide(int input){
     ERR_FAIL_COND(input<1);
     divide = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 int MGrassLodSetting::get_divide(){
     return divide;
@@ -71,6 +76,8 @@ int MGrassLodSetting::get_divide(){
 void MGrassLodSetting::set_grass_in_cell(int input){
     ERR_FAIL_COND(input<1);
     grass_in_cell = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 int MGrassLodSetting::get_grass_in_cell(){
     return grass_in_cell;
@@ -78,6 +85,8 @@ int MGrassLodSetting::get_grass_in_cell(){
 
 void MGrassLodSetting::set_force_lod_count(int input){
     force_lod_count = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 int MGrassLodSetting::get_force_lod_count(){
     return force_lod_count;
@@ -85,6 +94,8 @@ int MGrassLodSetting::get_force_lod_count(){
 
 void MGrassLodSetting::set_offset(Vector3 input){
     offset = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_offset(){
     return offset;
@@ -92,6 +103,8 @@ Vector3 MGrassLodSetting::get_offset(){
 
 void MGrassLodSetting::set_rot_offset(Vector3 input){
     rot_offset = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_rot_offset(){
     return rot_offset;
@@ -99,6 +112,8 @@ Vector3 MGrassLodSetting::get_rot_offset(){
 
 void MGrassLodSetting::set_rand_pos_start(Vector3 input){
     rand_pos_start = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_rand_pos_start(){
     return rand_pos_start;
@@ -106,6 +121,8 @@ Vector3 MGrassLodSetting::get_rand_pos_start(){
 
 void MGrassLodSetting::set_rand_pos_end(Vector3 input){
     rand_pos_end = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_rand_pos_end(){
     return rand_pos_end;
@@ -113,6 +130,8 @@ Vector3 MGrassLodSetting::get_rand_pos_end(){
 
 void MGrassLodSetting::set_rand_rot_start(Vector3 input){
     rand_rot_start = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_rand_rot_start(){
     return rand_rot_start;
@@ -120,6 +139,8 @@ Vector3 MGrassLodSetting::get_rand_rot_start(){
 
 void MGrassLodSetting::set_rand_rot_end(Vector3 input){
     rand_rot_end = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_rand_rot_end(){
     return rand_rot_end;
@@ -127,6 +148,8 @@ Vector3 MGrassLodSetting::get_rand_rot_end(){
 
 void MGrassLodSetting::set_uniform_rand_scale_start(float input){
     unifrom_rand_scale_start = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 float MGrassLodSetting::get_uniform_rand_scale_start(){
     return unifrom_rand_scale_start;
@@ -134,6 +157,8 @@ float MGrassLodSetting::get_uniform_rand_scale_start(){
 
 void MGrassLodSetting::set_uniform_rand_scale_end(float input){
     unifrom_rand_scale_end = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 
 float MGrassLodSetting::get_uniform_rand_scale_end(){
@@ -142,6 +167,8 @@ float MGrassLodSetting::get_uniform_rand_scale_end(){
 
 void MGrassLodSetting::set_rand_scale_start(Vector3 input){
     rand_scale_start = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_rand_scale_start(){
     return rand_scale_start;
@@ -149,6 +176,8 @@ Vector3 MGrassLodSetting::get_rand_scale_start(){
 
 void MGrassLodSetting::set_rand_scale_end(Vector3 input){
     rand_scale_end = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
 }
 Vector3 MGrassLodSetting::get_rand_scale_end(){
     return rand_scale_end;

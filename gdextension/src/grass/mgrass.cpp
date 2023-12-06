@@ -59,6 +59,7 @@ void MGrass::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("check_undo"), &MGrass::check_undo);
     ClassDB::bind_method(D_METHOD("undo"), &MGrass::undo);
+    ClassDB::bind_method(D_METHOD("_lod_setting_changed"), &MGrass::_lod_setting_changed);
 }
 
 MGrass::MGrass(){
@@ -127,6 +128,10 @@ void MGrass::init_grass(MGrid* _grid) {
         }
     }
     for(int i=0;i<settings.size();i++){
+        if(!settings[i]->is_connected("lod_setting_changed",Callable(this,"_lod_setting_changed")))
+        {
+            settings[i]->connect("lod_setting_changed",Callable(this,"_lod_setting_changed"));
+        }
         int lod_scale = pow(2,i);
         if(settings[i]->force_lod_count >=0){
             lod_scale = pow(2,settings[i]->force_lod_count);
@@ -901,9 +906,38 @@ godot::Error MGrass::save_grass_data(){
     return ERR_UNAVAILABLE;   
 }
 
-void MGrass::recreate_all_grass(){
+void MGrass::recreate_all_grass(int lod){
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
-        create_grass_chunk(-1,it->value);
+        if(lod==-1){
+            create_grass_chunk(-1,it->value);
+        } else if (lod==it->value->lod)
+        {
+            create_grass_chunk(-1,it->value);
+        }
+    }
+}
+
+void MGrass::update_random_buffer_pull(int lod){
+    ERR_FAIL_INDEX(lod,rand_buffer_pull.size());
+    memdelete(rand_buffer_pull[lod]);
+    int lod_scale = pow(2,lod);
+    float cdensity = grass_data->density*lod_scale;
+    rand_buffer_pull.set(lod,settings[lod]->generate_random_number(cdensity,100));
+}
+
+void MGrass::_lod_setting_changed(){
+    for(int i=0;i<lod_count;i++){
+        if(settings[i].is_valid()){
+            if(settings[i]->is_dirty){
+                update_random_buffer_pull(i);
+                recreate_all_grass(i);
+            }
+        }
+    }
+    for(int i=0;i<lod_count;i++){
+        if(settings[i].is_valid()){
+            settings[i]->is_dirty = false;
+        }
     }
 }
 

@@ -6,6 +6,7 @@
 
 #include <mutex>
 
+#include <godot_cpp/classes/timer.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/vset.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
@@ -85,7 +86,7 @@ class MGrass : public Node3D {
     void update_dirty_chunks();
     void apply_update_grass();
     void cull_out_of_bound();
-    void create_grass_chunk(int grid_index,MGrassChunk* grass_chunk=nullptr);
+    void create_grass_chunk(int grid_index,MGrassChunk* grass_chunk=nullptr); //If grid_index=-1 and grass_chunk is not null it will update grass chunk
     void recalculate_grass_config(int max_lod);
 
     void set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value);
@@ -137,7 +138,9 @@ class MGrass : public Node3D {
 
 
     godot::Error save_grass_data();
-    void recreate_all_grass();
+    void recreate_all_grass(int lod=-1); // LOD -1 means all grass
+    void update_random_buffer_pull(int lod);
+    void _lod_setting_changed();
     void check_undo(); // register a grass data stege for undo
     void undo();
 
