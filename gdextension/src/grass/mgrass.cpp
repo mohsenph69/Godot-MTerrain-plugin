@@ -949,7 +949,12 @@ void MGrass::recreate_all_grass(int lod){
 void MGrass::update_random_buffer_pull(int lod){
     ERR_FAIL_INDEX(lod,rand_buffer_pull.size());
     memdelete(rand_buffer_pull[lod]);
-    int lod_scale = pow(2,lod);
+    int lod_scale;
+    if(settings[lod]->force_lod_count >=0){
+        lod_scale = pow(2,settings[lod]->force_lod_count);
+    } else {
+        lod_scale = pow(2,lod);
+    }
     float cdensity = grass_data->density*lod_scale;
     rand_buffer_pull.set(lod,settings[lod]->generate_random_number(cdensity,100));
 }
