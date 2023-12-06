@@ -878,6 +878,15 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
             return false;
         }
         materials[index] = p_value;
+        if(is_grass_init){
+            Ref<Material> m = p_value;
+            if(m.is_valid()){
+                material_rids.set(index,m->get_rid());
+            } else {
+                material_rids.set(index,RID());
+            }
+            recreate_all_grass(index);
+        }
         return true;
     }
     if(p_name.begins_with("Mesh_LOD_")){
@@ -887,6 +896,15 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
             return false;
         }
         meshes[index] = p_value;
+        if(is_grass_init){
+            Ref<Mesh> m = p_value;
+            if(m.is_valid()){
+                meshe_rids.set(index,m->get_rid());
+            } else {
+                meshe_rids.set(index,RID());
+            }
+            recreate_all_grass(index);
+        }
         return true;
     }
     if(p_name.begins_with("Setting_LOD_")){
@@ -896,6 +914,15 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
             return false;
         }
         lod_settings[index] = p_value;
+        Ref<MGrassLodSetting> setting = p_value;
+        if(is_grass_init){
+            if(!setting.is_valid()){
+                setting = ResourceLoader::get_singleton()->load("res://addons/m_terrain/default_lod_setting.res");
+            }
+            settings.set(index,setting);
+            settings[index]->is_dirty = true;
+            _lod_setting_changed();
+        }
         return true;
     }
     return false;
