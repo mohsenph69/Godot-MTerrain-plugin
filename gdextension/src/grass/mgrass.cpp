@@ -339,7 +339,9 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
         total_count += count;
     }
     root_g->total_count = total_count;
-    //to_be_visible.push_back(root_g);
+    if(grass_chunk!=nullptr){ // This means updating not creating
+            root_g->unrelax();
+    }
 }
 
 
