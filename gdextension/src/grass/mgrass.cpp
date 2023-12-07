@@ -682,7 +682,14 @@ void MGrass::update_physics(Vector3 cam_pos){
                 y_axis.normalize();
                 z_axis.normalize();
                 Basis b(x_axis,y_axis,z_axis);
-                if(active_shape_resize){
+                if((shape_type==PhysicsServer3D::ShapeType::SHAPE_CONVEX_POLYGON || shape_type==PhysicsServer3D::ShapeType::SHAPE_CONCAVE_POLYGON)){
+                    //As tested godot physics is ok with scaling
+                    //So we make some exception here
+                    Transform3D final_t(Basis(),shape_offset);
+                    final_t = Transform3D(b_no_normlized,wpos)*final_t;
+                    PS->body_add_shape(main_physics_body,shape->get_rid(),final_t);
+                }
+                else if(active_shape_resize){
                     RID s_rid;
                     Vector3 scale = b_no_normlized.get_scale();
                     Vector3 offset = shape_offset*scale; //If this has offset we should currect the offset
@@ -708,10 +715,6 @@ void MGrass::update_physics(Vector3 cam_pos){
             }
         }
     }
-    //UtilityFunctions::print("----------------------------------------------------");
-    //UtilityFunctions::print("Grass Physics Update count ",update_count);
-    //UtilityFunctions::print("Grass Physics remove count ",remove_count);
-    //UtilityFunctions::print("Total Physics ",physics.size());
 }
 
 void MGrass::remove_all_physics(){
@@ -720,18 +723,14 @@ void MGrass::remove_all_physics(){
 }
 
 RID MGrass::get_resized_shape(Vector3 scale){
-    UtilityFunctions::print("-----------------------");
-    UtilityFunctions::print("Orignal data ",shape_data);
     RID new_shape;
     ERR_FAIL_COND_V(!shape.is_valid(),new_shape);
     if(shape_type==PhysicsServer3D::ShapeType::SHAPE_SPHERE){
         float max_s = scale.x > scale.y ? scale.x : scale.y;
         max_s = max_s > scale.z ? max_s : scale.z;
-        UtilityFunctions::print("max_s ",max_s);
         float r = shape_data;
         r = r*max_s;
         new_shape = PS->sphere_shape_create();
-        UtilityFunctions::print("data ",r);
         PS->shape_set_data(new_shape,r);
     } else if(shape_type==PhysicsServer3D::ShapeType::SHAPE_BOX){
         Vector3 d = shape_data;
