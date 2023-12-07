@@ -2,6 +2,10 @@
 #include "../mgrid.h"
 
 #include <godot_cpp/classes/resource_saver.hpp>
+#include <godot_cpp/classes/cylinder_mesh.hpp>
+#include <godot_cpp/classes/capsule_mesh.hpp>
+#include <godot_cpp/classes/box_mesh.hpp>
+#include <godot_cpp/classes/mesh_instance3d.hpp>
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
 #define PS PhysicsServer3D::get_singleton()
@@ -740,6 +744,7 @@ RID MGrass::get_resized_shape(Vector3 scale){
     } else if(shape_type==PhysicsServer3D::ShapeType::SHAPE_CYLINDER){
         Dictionary d = shape_data;
         float max_xz = scale.x > scale.y ? scale.x : scale.y;
+        max_xz /= 2.0;
         float r = d["radius"];
         r = r*max_xz;
         float h = d["height"];
