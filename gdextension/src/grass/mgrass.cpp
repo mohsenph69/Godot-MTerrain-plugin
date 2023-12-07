@@ -715,7 +715,6 @@ RID MGrass::get_resized_shape(Vector3 scale){
     } else if(shape_type==PhysicsServer3D::ShapeType::SHAPE_CYLINDER){
         Dictionary d = shape_data;
         float max_xz = scale.x > scale.y ? scale.x : scale.y;
-        max_xz /= 2.0;
         float r = d["radius"];
         r = r*max_xz;
         float h = d["height"];
