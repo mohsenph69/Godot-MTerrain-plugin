@@ -2,10 +2,6 @@
 #include "../mgrid.h"
 
 #include <godot_cpp/classes/resource_saver.hpp>
-#include <godot_cpp/classes/cylinder_mesh.hpp>
-#include <godot_cpp/classes/capsule_mesh.hpp>
-#include <godot_cpp/classes/box_mesh.hpp>
-#include <godot_cpp/classes/mesh_instance3d.hpp>
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
 #define PS PhysicsServer3D::get_singleton()
@@ -187,15 +183,12 @@ void MGrass::update_dirty_chunks(){
     ERR_FAIL_COND(!grass_data.is_valid());
     std::lock_guard<std::mutex> lock(update_mutex);
     for(int i=0;i<dirty_points_id->size();i++){
-        //UtilityFunctions::print("dirty_points ",(*dirty_points_id)[i]);
         int64_t terrain_instance_id = grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]);
-        //UtilityFunctions::print("terrain_instance_id ",terrain_instance_id);
         if(!grid_to_grass.has(terrain_instance_id)){
             WARN_PRINT("Dirty point not found "+itos((*dirty_points_id)[i])+ " instance is "+itos(terrain_instance_id));
             continue;
         }
         MGrassChunk* g = grid_to_grass[terrain_instance_id];
-        //UtilityFunctions::print("MGrassChunk count ",g->count, " right ",g->pixel_region.right);
         create_grass_chunk(-1,g);
     }
     memdelete(dirty_points_id);
@@ -267,7 +260,6 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
 
     const uint8_t* ptr = grass_data->data.ptr() + g->region_id*grass_region_pixel_size/8;
 
-    //UtilityFunctions::print("OFFSET ",g->region_id*grass_region_pixel_size/8 , " Region id ",g->region_id);
     MGrassChunk* root_g=g;
     MGrassChunk* last_g=g;
     uint32_t total_count=0;
@@ -285,7 +277,6 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
         uint32_t i=0;
         uint32_t j=1;
         PackedFloat32Array buffer;
-        //UtilityFunctions::print("Stage 3.1 k ",k);
         while (true)
         {
             while (true){
@@ -295,13 +286,9 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                 }
                 i++;
                 uint32_t offs = (y*grass_region_pixel_width + x);
-                //UtilityFunctions::print("OFFSET in region ", offs);
                 uint32_t ibyte = offs/8;
-                //UtilityFunctions::print("ibyte ", ibyte);
                 uint32_t ibit = offs%8;
-                //UtilityFunctions::print("ibit ", ibit);
                 if( (ptr[ibyte] & (1 << ibit)) != 0){
-                    //UtilityFunctions::print("Found some grass ",x," , ",y);
                     for(int r=0;r<grass_in_cell;r++){
                         index=count*BUFFER_STRID_FLOAT;
                         int rand_index = y*grass_region_pixel_width_lod + x*grass_in_cell + r;
@@ -317,12 +304,6 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                         ptrw[7] += grid->get_height(pos);
                         ptrw[11] = pos.z;
                         count++;
-                        //UtilityFunctions::print("Mesh --------------");
-                        //UtilityFunctions::print("x ",x, " y ",y);
-                        //UtilityFunctions::print("POS ",pos);
-                       // UtilityFunctions::print("rand_index ",(rand_index));
-                       // UtilityFunctions::print("R ",(rand_index));
-                       // UtilityFunctions::print("End Mesh --------------");
                     }
                 }
             }
@@ -333,7 +314,6 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
             }
             j++;
         }
-        //UtilityFunctions::print("Stage 4.1 k ",k);
         // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
         if(meshe_rids[root_g->lod] == RID() || count < min_grass_cutoff){
             g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
@@ -507,15 +487,6 @@ void MGrass::set_grass_count_limit(int input){
 int MGrass::get_grass_count_limit(){
     return grass_count_limit;
 }
-/*
-void MGrass::set_grass_in_cell(int input){
-    ERR_FAIL_COND(input<1);
-    grass_in_cell = input;
-}
-int MGrass::get_grass_in_cell(){
-    return grass_in_cell;
-}
-*/
 
 void MGrass::set_min_grass_cutoff(int input){
     ERR_FAIL_COND(input<0);
@@ -788,8 +759,6 @@ PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
     if(px_x < -col_r || px_y < -col_r){
         return positions;
     }
-    //MBound bound = MBound(MGridPos(px_x,0,px_y));
-    //bound.grow(grass_bound_limit,col_r,col_r);
     MPixelRegion bound;
     bound.left = px_x > col_r ? px_x - col_r : 0;
     bound.top = px_y > col_r ? px_y - col_r : 0;
