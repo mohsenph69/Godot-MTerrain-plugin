@@ -125,6 +125,12 @@ func _forward_3d_gui_input(viewport_camera, event):
 		tools.set_grass_label(active_grass.get_count())
 	else:
 		tools.disable_grass_lable()
+	## Fail paint attempt
+	## returning the stop so terrain will not be unselected
+	if tools.active_paint_mode:
+		if event is InputEventMouseButton:
+			if event.button_mask == MOUSE_BUTTON_LEFT:
+				return AFTER_GUI_INPUT_STOP
 
 var last_draw_time:int=0
 func paint_mode_handle(event:InputEvent):
