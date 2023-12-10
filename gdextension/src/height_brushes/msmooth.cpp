@@ -55,31 +55,33 @@ void MSmooth::before_draw(){
 
 }
 float MSmooth::get_height(const uint32_t& x,const uint32_t& y){
+    float h = grid->get_height_by_pixel(x,y);
+    if(std::isnan(h)){
+        return h;
+    }
     if(mode==0){
         float total = 1;
-        float h = grid->get_height_by_pixel(x,y);
         float toh = h;
-        if(grid->has_pixel(x-1,y-1)) { toh += grid->get_height_by_pixel(x-1,y-1); total+=1; }
-        if(grid->has_pixel(x,y-1)) { toh += grid->get_height_by_pixel(x,y-1); total+=1; }
-        if(grid->has_pixel(x+1,y-1)) { toh += grid->get_height_by_pixel(x+1,y-1); total+=1; }
-        if(grid->has_pixel(x-1,y)) { toh += grid->get_height_by_pixel(x-1,y); total+=1; }
-        if(grid->has_pixel(x+1,y)) { toh += grid->get_height_by_pixel(x+1,y); total+=1; }
-        if(grid->has_pixel(x-1,y+1)) { toh += grid->get_height_by_pixel(x-1,y+1); total+=1; }
-        if(grid->has_pixel(x,y+1)) { toh += grid->get_height_by_pixel(x,y+1); total+=1; }
-        if(grid->has_pixel(x+1,y+1)) { toh += grid->get_height_by_pixel(x+1,y+1); total+=1; }
+        if(grid->has_pixel(x-1,y-1)) {float oh = grid->get_height_by_pixel(x-1,y-1);if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x,y-1)) {float oh =grid->get_height_by_pixel(x,y-1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x+1,y-1)) {float oh =grid->get_height_by_pixel(x+1,y-1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x-1,y)) {float oh =grid->get_height_by_pixel(x-1,y) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x+1,y)) {float oh =grid->get_height_by_pixel(x+1,y) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x-1,y+1)) {float oh =grid->get_height_by_pixel(x-1,y+1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x,y+1)) {float oh =grid->get_height_by_pixel(x,y+1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x+1,y+1)) {float oh =grid->get_height_by_pixel(x+1,y+1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
         return (toh/total -h)*amount + h;
     } else {
         float total = 4;
-        float h = grid->get_height_by_pixel(x,y);
         float toh = h*4.0;
-        if(grid->has_pixel(x-1,y-1)) { toh += grid->get_height_by_pixel(x-1,y-1); total+=1; }
-        if(grid->has_pixel(x,y-1)) { toh += grid->get_height_by_pixel(x,y-1)*2.0; total+=2; }
-        if(grid->has_pixel(x+1,y-1)) { toh += grid->get_height_by_pixel(x+1,y-1); total+=1; }
-        if(grid->has_pixel(x-1,y)) { toh += grid->get_height_by_pixel(x-1,y)*2.0; total+=2; }
-        if(grid->has_pixel(x+1,y)) { toh += grid->get_height_by_pixel(x+1,y)*2.0; total+=2; }
-        if(grid->has_pixel(x-1,y+1)) { toh += grid->get_height_by_pixel(x-1,y+1); total+=1; }
-        if(grid->has_pixel(x,y+1)) { toh += grid->get_height_by_pixel(x,y+1)*2.0; total+=2; }
-        if(grid->has_pixel(x+1,y+1)) { toh += grid->get_height_by_pixel(x+1,y+1); total+=1; }
+        if(grid->has_pixel(x-1,y-1)) {float oh=grid->get_height_by_pixel(x-1,y-1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x,y-1)) {float oh=grid->get_height_by_pixel(x,y-1)*2.0 ;if(!std::isnan(oh)){ toh += oh; total+=2; }}
+        if(grid->has_pixel(x+1,y-1)) {float oh=grid->get_height_by_pixel(x+1,y-1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x-1,y)) {float oh=grid->get_height_by_pixel(x-1,y)*2.0 ;if(!std::isnan(oh)){ toh += oh; total+=2; }}
+        if(grid->has_pixel(x+1,y)) {float oh=grid->get_height_by_pixel(x+1,y)*2.0 ;if(!std::isnan(oh)){ toh += oh; total+=2; }}
+        if(grid->has_pixel(x-1,y+1)) {float oh=grid->get_height_by_pixel(x-1,y+1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
+        if(grid->has_pixel(x,y+1)) {float oh=grid->get_height_by_pixel(x,y+1)*2.0 ;if(!std::isnan(oh)){ toh += oh; total+=2; }}
+        if(grid->has_pixel(x+1,y+1)) {float oh=grid->get_height_by_pixel(x+1,y+1) ;if(!std::isnan(oh)){ toh += oh; total+=1; }}
         return (toh/total -h)*amount + h;
     }
 }
