@@ -26,6 +26,9 @@ struct MGridPos
     }
 
     int32_t get_distance(const MGridPos& other){
+        if(std::isnan(y) || std::isnan(other.y)){ // in case there is a hole on ground, solution for now
+            return sqrt(  pow((x - other.x),2) + pow((z-other.z),2) );
+        }
         return sqrt(  pow((x - other.x),2) + pow((y-other.y),2) + pow((z-other.z),2) );
     }
 };

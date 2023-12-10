@@ -680,14 +680,20 @@ Ref<MCollision> MGrid::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_ve
     ray_vector.normalize();
     Ref<MCollision> col;
     col.instantiate();
+    float last_hieght=0.0;
     for(int i=0;i<max_step;i++){
         ray_origin += ray_vector*step;
         real_t terrain_height = get_height(ray_origin);
         //real_t terrain_height = get_closest_height(ray_origin);
         if(terrain_height > ray_origin.y){
+            if(std::isnan(last_hieght)){
+                col->collided = false;
+                return col;
+            }
             col->collided = true;
             break;
         }
+        last_hieght = terrain_height;
     }
     if(col->collided){
         Vector3 las_pos = ray_origin - ray_vector*step;

@@ -4,6 +4,7 @@
 #include "height_brushes/mraise.h"
 #include "height_brushes/mtoheight.h"
 #include "height_brushes/msmooth.h"
+#include "height_brushes/mhole.h"
 
 #include "color_brushes/mpaint_color.h"
 #include "color_brushes/mchannel_painter.h"
@@ -16,6 +17,7 @@ MBrushManager::MBrushManager(){
     add_height_brush(memnew(MRaise));
     add_height_brush(memnew(MToHeight));
     add_height_brush(memnew(MSmooth));
+    add_height_brush(memnew(MHole));
 
     add_color_brush(memnew(MPaintColor));
     add_color_brush(memnew(MChannelPainter));
