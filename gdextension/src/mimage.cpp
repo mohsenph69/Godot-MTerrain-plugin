@@ -132,11 +132,8 @@ void MImage::merge_layer(){
 }
 
 void MImage::remove_layer(bool is_visible){
-	if(image_layers[active_layer]->size()==0){
-		return;
-	}
 	const uint8_t* ptr=image_layers[active_layer]->ptr();
-	if(is_visible){
+	if(is_visible && image_layers[active_layer]->size()!=0){
 		if(active_layer==holes_layer){
 			for(uint32_t i=0;i<total_pixel_amount;i++){
 				if(!std::isnan(((float *)ptr)[i])){
