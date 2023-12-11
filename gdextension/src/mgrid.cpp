@@ -160,7 +160,6 @@ void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) 
 }
 
 void MGrid::update_regions_uniforms(Array input) {
-    UtilityFunctions::print("unifrom array size ", input.size());
     for(int i=0;i<input.size();i++){
         Dictionary unifrom_info = input[i];
         update_regions_uniform(unifrom_info);
@@ -1100,6 +1099,9 @@ void MGrid::set_brush_start_point(Vector3 brush_pos,real_t radius){
 void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     ERR_FAIL_COND(_brush_manager==nullptr);
     ERR_FAIL_COND_EDMSG(!heightmap_layers_visibility[active_heightmap_layer], "Can not paint on invisible layer");
+    MHeightBrush* brush = _brush_manager->get_height_brush(brush_id);
+    ERR_FAIL_COND_EDMSG(active_heightmap_layer!=0 && heightmap_layers[active_heightmap_layer]!="holes" && brush->_get_name() == "Hole","Only background layer or a layer with the name of holes support holes");
+    ERR_FAIL_COND_EDMSG(heightmap_layers[active_heightmap_layer]=="holes" && brush->_get_name()!="Hole","In holes layer you can use only hole brush");
     Vector2i bpxpos = get_closest_pixel(brush_pos);
     if(bpxpos.x<0 || bpxpos.y<0 || bpxpos.x>grid_pixel_region.right || bpxpos.y>grid_pixel_region.bottom){
         return;
@@ -1116,7 +1118,6 @@ void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     uint32_t top = (brush_px_pos_y>brush_px_radius) ? brush_px_pos_y - brush_px_radius : 0;
     uint32_t bottom = brush_px_pos_y + brush_px_radius;
     bottom = (bottom>grid_pixel_region.bottom) ? grid_pixel_region.bottom : bottom;
-    MHeightBrush* brush = _brush_manager->get_height_brush(brush_id);
     brush->set_grid(this);
     brush->before_draw();
     MPixelRegion draw_pixel_region(left,right,top,bottom);
@@ -1287,14 +1288,12 @@ void MGrid::set_active_layer(String input){
     } else {
         active_heightmap_layer = 0;
     }
-    UtilityFunctions::print("Active Layer ",active_heightmap_layer);
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         _all_heightmap_image_list[i]->set_active_layer(active_heightmap_layer);
     }
 }
 
 void MGrid::add_heightmap_layer(String lname){
-    UtilityFunctions::print("_all_heightmap_image_list size ", _all_heightmap_image_list.size());
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         _all_heightmap_image_list[i]->add_layer(lname);
     }

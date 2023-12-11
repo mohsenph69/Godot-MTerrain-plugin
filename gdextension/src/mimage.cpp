@@ -91,8 +91,16 @@ void MImage::add_layer(String lname){
 		image_layers.push_back(img_layer_data);
 		layer_names.push_back(lname);
 		is_saved_layers.push_back(true);
-		for(uint32_t i=0;i<total_pixel_amount;i++){
-			((float *)data.ptrw())[i] += ((float *)img_layer_data->ptr())[i];
+		if(lname=="holes"){
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				if(!std::isnan(((float *)img_layer_data->ptr())[i])){
+					((float *)data.ptrw())[i] = std::numeric_limits<float>::quiet_NaN();
+				}
+			}
+		} else {
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				((float *)data.ptrw())[i] += ((float *)img_layer_data->ptr())[i];
+			}
 		}
 	} else {
 		PackedByteArray* new_layer = memnew(PackedByteArray);
@@ -100,6 +108,9 @@ void MImage::add_layer(String lname){
 		image_layers.push_back(new_layer);
 		layer_names.push_back(lname);
 		is_saved_layers.push_back(true);
+	}
+	if(lname=="holes"){
+		holes_layer = image_layers.size() - 1;
 	}
 }
 
@@ -126,8 +137,16 @@ void MImage::remove_layer(bool is_visible){
 	}
 	const uint8_t* ptr=image_layers[active_layer]->ptr();
 	if(is_visible){
-		for(uint32_t i=0;i<total_pixel_amount;i++){
-			((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+		if(active_layer==holes_layer){
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				if(!std::isnan(((float *)ptr)[i])){
+					((float *)data.ptrw())[i] = ((float *)ptr)[i];
+				}
+			}
+		} else {
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+			}
 		}
 		is_dirty = true;
 	}
@@ -157,12 +176,29 @@ void MImage::layer_visible(bool input){
 	save(false); // So we are sure in the save method we should do nothing
 	const uint8_t* ptr=image_layers[active_layer]->ptr();
 	if(input){
-		for(uint32_t i=0;i<total_pixel_amount;i++){
-			((float *)data.ptrw())[i] += ((float *)ptr)[i];
+		if(active_layer==holes_layer){
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				if(!std::isnan(((float *)ptr)[i])){
+					((float *)image_layers[active_layer]->ptrw())[i] = ((float *)data.ptrw())[i];
+					((float *)data.ptrw())[i] = std::numeric_limits<float>::quiet_NaN();
+				}
+			}
+		} else {
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				((float *)data.ptrw())[i] += ((float *)ptr)[i];
+			}
 		}
 	} else {
-		for(uint32_t i=0;i<total_pixel_amount;i++){
-			((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+		if(active_layer==holes_layer){
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				if(!std::isnan(((float *)ptr)[i])){
+					((float *)data.ptrw())[i] = ((float *)ptr)[i];
+				}
+			}
+		} else {
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				((float *)data.ptrw())[i] -= ((float *)ptr)[i];
+			}
 		}
 	}
 	is_dirty = true;
@@ -278,11 +314,27 @@ void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& valu
 	// Check if we the layer is empty we resize that
 	if(image_layers[active_layer]->size()!=data.size()){
 		image_layers[active_layer]->resize(data.size());
+		if(active_layer==holes_layer){ // Initialzation in case it is a holes layer
+			float* ptrw = (float*)image_layers[active_layer]->ptrw();
+			for(int i=0; i < total_pixel_amount; i++){
+				ptrw[i] = std::numeric_limits<float>::quiet_NaN();
+			}
+		}
 	}
 	is_saved_layers.set(active_layer,false);
-	float dif = value - ((float *)data.ptr())[ofs];
-	((float *)image_layers[active_layer]->ptrw())[ofs] += dif;
-	((float *)data.ptrw())[ofs] = value;
+	if(std::isnan(value)){
+		if(!std::isnan(((float *)data.ptr())[ofs])){
+			((float *)image_layers[active_layer]->ptrw())[ofs] = ((float *)data.ptr())[ofs];
+		}
+		((float *)data.ptrw())[ofs] = value;
+	} else if(std::isnan(((float *)data.ptr())[ofs])) {
+		((float *)data.ptrw())[ofs] = ((float *)image_layers[active_layer]->ptr())[ofs];
+		((float *)image_layers[active_layer]->ptrw())[ofs] = std::numeric_limits<float>::quiet_NaN();
+	} else {
+		float dif = value - ((float *)data.ptr())[ofs];
+		((float *)image_layers[active_layer]->ptrw())[ofs] += dif;
+		((float *)data.ptrw())[ofs] = value;
+	}
 	#else
 	((float *)data.ptrw())[ofs] = value;
 	#endif
@@ -331,8 +383,16 @@ void MImage::save(bool force_save) {
 			int total_pixel = width*height;
 			for(int i=1;i<image_layers.size();i++){
 				if(!image_layers[i]->is_empty()){
-					for(int j=0;j<total_pixel;j++){
-						((float *)background_data.ptrw())[j] -= ((float *)image_layers[i]->ptr())[j];
+					if(i==holes_layer){
+						for(int j=0;j<total_pixel;j++){
+							if(std::isnan(((float *)image_layers[i]->ptr())[j])){
+								((float *)background_data.ptrw())[j] = ((float *)image_layers[i]->ptr())[j];
+							}
+						}
+					} else {
+						for(int j=0;j<total_pixel;j++){
+							((float *)background_data.ptrw())[j] -= ((float *)image_layers[i]->ptr())[j];
+						}
 					}
 				}
 			}
@@ -397,8 +457,31 @@ void MImage::go_to_undo(int ur_id){
 		return; // noting to do here we don't have any data change corrispond to this undo redo
 	}
 	MImageUndoData ur = undo_data[ur_id];
+	if(ur.layer!=active_layer){
+		UtilityFunctions::print("Oh not equallllll active layer is ",active_layer);
+	}
 	if(ur.layer==0){
 		memcpy(data.ptrw(),ur.data,data.size());
+	} else if(ur.layer==holes_layer) {
+		const uint8_t* ptr=image_layers[active_layer]->ptr();
+		for(uint32_t i=0;i<total_pixel_amount;i++){
+			// First Remove all holes and get all heigh value
+			if(!std::isnan(((float *)ptr)[i])){
+				((float *)data.ptrw())[i] = ((float *)ptr)[i];
+			}
+		}
+		if(!ur.empty){ // if it is empty it means it was no hole in terrain before and the hole layer was empty in this region
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				//Now set the hole according to the last stage
+				if(!std::isnan(((float*)ur.data)[i]) ){
+					((float *)data.ptrw())[i] = std::numeric_limits<float>::quiet_NaN();
+				}
+			}
+			memcpy(image_layers[holes_layer]->ptrw(),ur.data,data.size());
+		} else {
+			UtilityFunctions::print("Arrive begining removing ");
+			image_layers[active_layer]->resize(0);
+		}
 	} else {
 		// First Remove the layer which we want to undo
 		const uint8_t* ptr=image_layers[active_layer]->ptr();
@@ -411,7 +494,7 @@ void MImage::go_to_undo(int ur_id){
 				((float *)data.ptrw())[i] += ((float *)ur.data)[i];
 			}
 			//And we copy the backup data into that layer
-			memcpy(image_layers[active_layer]->ptrw(),ur.data,data.size());
+			memcpy(image_layers[ur.layer]->ptrw(),ur.data,data.size());
 		}
 	}
 	if(name=="heightmap" && region){

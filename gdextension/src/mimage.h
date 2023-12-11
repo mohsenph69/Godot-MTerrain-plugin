@@ -50,6 +50,7 @@ struct MImage {
     PackedByteArray data;
     #ifdef M_IMAGE_LAYER_ON
     int active_layer=0;
+    int holes_layer=-1;
     PackedStringArray layer_names;
     Vector<PackedByteArray*> image_layers;
     Vector<bool> is_saved_layers;
