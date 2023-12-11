@@ -300,8 +300,12 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                         Vector3 pos;
                         pos.x = root_g->world_pos.x + x*grass_data->density + ptrw[3];
                         pos.z = root_g->world_pos.z + y*grass_data->density + ptrw[11];
-                        ptrw[3] = pos.x;
                         ptrw[7] += grid->get_height(pos);
+                        if(std::isnan(ptrw[7])){
+                            buffer.resize(buffer.size()-12);
+                            continue;
+                        }
+                        ptrw[3] = pos.x;
                         ptrw[11] = pos.z;
                         count++;
                     }
@@ -643,6 +647,9 @@ void MGrass::update_physics(Vector3 cam_pos){
                 //UtilityFunctions::print("Physic pos ",wpos);
                 wpos += grid->offset;
                 wpos.y = grid->get_height(wpos) + ptr[7];
+                if(std::isnan(wpos.y)){
+                    continue;
+                }
                 // Godot physics not work properly with collission transformation
                 // So for now we ignore transformation
                 Vector3 x_axis(ptr[0],ptr[4],ptr[8]);
