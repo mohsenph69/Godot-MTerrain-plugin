@@ -310,17 +310,20 @@ func _input(event):
 			last_height_brush_id = brush_list_option.get_selected_id()
 			if event.keycode == KEY_SHIFT:
 				if event.is_pressed():
-					brush_id = smooth_brush_id
+					if not event.echo:
+						brush_id = smooth_brush_id
 				else:
 					brush_id = last_height_brush_id
 			elif event.keycode == KEY_CTRL:
 				if event.is_pressed():
-					brush_id = to_height_brush_id
+					if not event.echo:
+						brush_id = to_height_brush_id
 				else:
 					brush_id = last_height_brush_id
 		if event.keycode == KEY_SHIFT:
 			if event.is_pressed():
-				is_grass_add = not is_grass_add
+				if not event.echo:
+					is_grass_add = not is_grass_add
 			else:
 				is_grass_add = not is_grass_add
 
