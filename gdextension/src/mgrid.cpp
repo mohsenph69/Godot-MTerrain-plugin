@@ -643,7 +643,7 @@ MGridPos MGrid::get_3d_grid_pos_by_middle_point(MGridPos input) {
     //Calculating middle point in chunks
     real_t half = ((real_t)_chunks->base_size_meter)/2;
     Vector3 middle_point_chunk = get_world_pos(input) + Vector3(half,0, half);
-    middle_point_chunk.y = r->get_closest_height(middle_point_chunk);
+    //middle_point_chunk.y = r->get_closest_height(middle_point_chunk);
     return get_grid_pos(middle_point_chunk);
 }
 

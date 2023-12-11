@@ -382,7 +382,7 @@ void MImage::save(bool force_save) {
 				if(!image_layers[i]->is_empty()){
 					if(i==holes_layer){
 						for(int j=0;j<total_pixel;j++){
-							if(std::isnan(((float *)image_layers[i]->ptr())[j])){
+							if(!std::isnan(((float *)image_layers[i]->ptr())[j])){
 								((float *)background_data.ptrw())[j] = ((float *)image_layers[i]->ptr())[j];
 							}
 						}
