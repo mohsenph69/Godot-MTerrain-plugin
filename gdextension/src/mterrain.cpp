@@ -42,10 +42,10 @@ void MTerrain::_bind_methods() {
     
     ClassDB::bind_method(D_METHOD("set_dataDir","dir"), &MTerrain::set_dataDir);
     ClassDB::bind_method(D_METHOD("get_dataDir"), &MTerrain::get_dataDir);
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "dataDir"), "set_dataDir", "get_dataDir");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING, "dataDir",PROPERTY_HINT_DIR), "set_dataDir", "get_dataDir");
     ClassDB::bind_method(D_METHOD("set_layersDataDir","input"), &MTerrain::set_layersDataDir);
     ClassDB::bind_method(D_METHOD("get_layersDataDir"), &MTerrain::get_layersDataDir);
-    ADD_PROPERTY(PropertyInfo(Variant::STRING, "layersDataDir"), "set_layersDataDir","get_layersDataDir");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING, "layersDataDir",PROPERTY_HINT_GLOBAL_DIR), "set_layersDataDir","get_layersDataDir");
 
     ClassDB::bind_method(D_METHOD("set_save_generated_normals","value"), &MTerrain::set_save_generated_normals);
     ClassDB::bind_method(D_METHOD("get_save_generated_normals"), &MTerrain::get_save_generated_normals);
