@@ -21,10 +21,12 @@ extends Window
 @onready var region_size_line:= $VBoxContainer/HBoxContainer2/region_size_line
 @onready var width_line:= $VBoxContainer/image_dimension/width
 @onready var height_line:= $VBoxContainer/image_dimension/height
-@onready var image_format_line:= $VBoxContainer/uniform_name2/image_format_line
+@onready var image_format_option:=$VBoxContainer/uniform_name2/image_format_option
 @onready var flips_container := $VBoxContainer/flips
 @onready var flip_x_checkbox := $VBoxContainer/flips/flip_x
 @onready var flip_y_checkbox := $VBoxContainer/flips/flip_y
+
+const format_RF_index = 8
 
 var file_path:String
 var ext:String
@@ -70,12 +72,14 @@ func _on_check_button_toggled(button_pressed):
 	min_height_root.visible = button_pressed
 	max_height_root.visible = button_pressed
 	unform_name_line.editable = not button_pressed
-	image_format_line.editable = not button_pressed
 	is_heightmap = button_pressed
 	if(button_pressed):
 		unform_name_line.text = "heightmap"
+		image_format_option.select(format_RF_index)
+		image_format_option.disabled = true
 	elif unform_name_line.text == "heightmap":
 		unform_name_line.text = ""
+		image_format_option.disabled = false
 
 
 func _on_save_folder_button_pressed():
@@ -110,7 +114,7 @@ func _on_import_pressed():
 	height = height_line.text.to_int()
 	min_height = min_height_line.text.to_float()
 	max_height = max_height_line.text.to_float()
-	image_format = image_format_line.text.to_int()
+	image_format = image_format_option.get_selected_id()
 	flip_x = flip_x_checkbox.button_pressed
 	flip_y = flip_y_checkbox.button_pressed
 	if unifrom_name == "":
