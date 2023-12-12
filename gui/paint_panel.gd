@@ -51,6 +51,7 @@ var is_grass_add:bool = true
 var smooth_brush_id:int
 var raise_brush_id:int
 var to_height_brush_id:int
+var hole_brush_id:int
 
 func _ready():
 	_on_brush_type_toggled(false)
@@ -58,6 +59,7 @@ func _ready():
 	smooth_brush_id = brush_manager.get_height_brush_id("Smooth")
 	raise_brush_id = brush_manager.get_height_brush_id("Raise")
 	to_height_brush_id = brush_manager.get_height_brush_id("To Height")
+	hole_brush_id = brush_manager.get_height_brush_id("Hole")
 
 func set_active_terrain(input:MTerrain):
 	active_terrain = input
@@ -252,7 +254,12 @@ func _on_heightmap_layer_item_selected(index):
 		return
 	print("active_heightmap_layer ",active_heightmap_layer)
 	active_terrain.set_active_layer_by_name(active_heightmap_layer)
-	
+	if active_heightmap_layer == "holes":
+		brush_list_option.select(hole_brush_id)
+		_on_brush_list_item_selected(hole_brush_id)
+	elif active_heightmap_layer != "holes" and brush_id == hole_brush_id:
+		brush_list_option.select(raise_brush_id)
+		_on_brush_list_item_selected(raise_brush_id)
 
 func _on_merge_bt_pressed():
 	set_active_layer()
