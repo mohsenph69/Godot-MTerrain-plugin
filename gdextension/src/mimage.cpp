@@ -128,6 +128,7 @@ void MImage::merge_layer(){
 	image_layers.remove_at(active_layer);
 	is_saved_layers.remove_at(active_layer);
 	layer_names.remove_at(active_layer);
+	holes_layer = layer_names.find("holes");
 	save(false);
 }
 
@@ -159,6 +160,7 @@ void MImage::remove_layer(bool is_visible){
 	image_layers.remove_at(active_layer);
 	is_saved_layers.remove_at(active_layer);
 	layer_names.remove_at(active_layer);
+	holes_layer = layer_names.find("holes");
 	remove_undo_data_in_layer(active_layer);
 	save(false);
 }
