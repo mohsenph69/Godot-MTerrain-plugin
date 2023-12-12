@@ -365,6 +365,8 @@ void MGrid::update_lods() {
     closest = get_3d_grid_pos_by_middle_point(closest);
     MBound m(closest);
     int8_t current_lod = 0;
+    _cam_pos.y=0;//Discarding y on distance calculation due to NAN y value on holes
+    //get_3d_grid_pos_by_middle_point function also return always point with y=0
     current_lod = get_lod_by_distance(m.center.get_distance(_cam_pos));
     if(!_grid_bound.has_point(_cam_pos))
     {
