@@ -911,6 +911,20 @@ void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value){
     }
 }
 
+real_t MGrid::get_height_by_pixel_in_layer(uint32_t x,uint32_t y){
+    if(!_has_pixel(x,y)){
+        return 0.0;
+    }
+    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
+    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - ex;
+    uint32_t ry = (y/rp) - ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    return r->get_height_by_pixel_in_layer(x,y);
+}
+
 void MGrid::generate_normals_thread(MPixelRegion pxr) {
     Vector<MPixelRegion> px_regions = pxr.devide(4);
     Vector<std::thread*> threads_pull;

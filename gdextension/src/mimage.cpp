@@ -341,6 +341,14 @@ void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& valu
 	is_save = false;
 }
 
+real_t MImage::get_pixel_RF_in_layer(const uint32_t&x, const uint32_t& y){
+	if(image_layers[active_layer]->size()==0){
+		return 0.0;
+	}
+	uint32_t ofs = (x + y*width);
+	return ((float *)image_layers[active_layer]->ptr())[ofs];
+}
+
 Color MImage::get_pixel(const uint32_t&x, const uint32_t& y) const {
 	uint32_t ofs = (x + y*width);
 	return _get_color_at_ofs(data.ptr(), ofs);

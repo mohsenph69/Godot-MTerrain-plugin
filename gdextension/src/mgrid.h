@@ -247,6 +247,7 @@ class MGrid : public Object {
     void set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t& index);
     real_t get_height_by_pixel(uint32_t x,uint32_t y);
     void set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value);
+    real_t get_height_by_pixel_in_layer(uint32_t x,uint32_t y);
     bool has_pixel(const uint32_t& x,const uint32_t& y);
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);

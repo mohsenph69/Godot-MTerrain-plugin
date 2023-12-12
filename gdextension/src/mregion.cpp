@@ -193,6 +193,9 @@ real_t MRegion::get_closest_height(Vector3 pos){
 	return heightmap->get_pixel_RF(x,y);
 }
 
+real_t MRegion::get_height_by_pixel_in_layer(const uint32_t& x, const uint32_t& y) const{
+	return heightmap->get_pixel_RF_in_layer(x,y);
+}
 
 void MRegion::update_all_dirty_image_texture(){
 	for(int i=0; i < images.size(); i++){

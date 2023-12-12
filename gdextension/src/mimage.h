@@ -87,6 +87,7 @@ struct MImage {
     // This works only for Format_RF
     real_t get_pixel_RF(const uint32_t&x, const uint32_t& y) const;
     void set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value);
+    real_t get_pixel_RF_in_layer(const uint32_t&x, const uint32_t& y);
     Color get_pixel(const uint32_t&x, const uint32_t& y) const;
     void set_pixel(const uint32_t&x, const uint32_t& y,const Color& color);
     void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
