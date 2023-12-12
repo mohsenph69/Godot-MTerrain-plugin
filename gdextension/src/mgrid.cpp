@@ -1382,7 +1382,7 @@ bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y){
 }
 
 void MGrid::images_add_undo_stage(){
-    if(current_undo_id - lowest_undo_id > 10){
+    if(current_undo_id - lowest_undo_id > 5){
         for(int i=0;i<_all_image_list.size();i++){
             _all_image_list[i]->remove_undo_data(lowest_undo_id);
         }
