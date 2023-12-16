@@ -36,6 +36,7 @@ class MTerrainMaterial : public Resource {
     PackedStringArray terrain_textures_added; // Textures uniforms which already added
     HashMap<String,int> terrain_textures_ids;
     HashMap<int,RID> materials;
+    Dictionary next_passes; // {region:{"override_next_pass":true/false,"next_pass":Material},next_region:{...},...}
 
     bool show_region = false;
 
@@ -48,6 +49,8 @@ class MTerrainMaterial : public Resource {
     Ref<Shader> get_currect_shader();
     void set_uniforms(Dictionary input);
     Dictionary get_uniforms();
+    void set_next_passes(Dictionary input);
+    Dictionary get_next_passes();
     void set_clear_all(bool input);
     bool get_clear_all();
     void set_show_region(bool input);
@@ -79,5 +82,7 @@ class MTerrainMaterial : public Resource {
     void refresh_all_uniform();
     void clear_all_uniform();
     PackedStringArray get_reserved_uniforms() const;
+    void set_next_pass(int region_id);
+    void set_all_next_passes();
 };
 #endif

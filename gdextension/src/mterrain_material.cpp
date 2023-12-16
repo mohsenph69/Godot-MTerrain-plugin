@@ -23,11 +23,14 @@ void MTerrainMaterial::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::INT,"active_region"),"set_active_region","get_active_region");
     ClassDB::bind_method(D_METHOD("set_clear_all","input"),&MTerrainMaterial::set_clear_all);
     ClassDB::bind_method(D_METHOD("get_clear_all"),&MTerrainMaterial::get_clear_all);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"clear_all",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),"set_clear_all","get_clear_all");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"clear_all",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_clear_all","get_clear_all");
 
     ClassDB::bind_method(D_METHOD("_set_uniforms"), &MTerrainMaterial::set_uniforms);
     ClassDB::bind_method(D_METHOD("_get_uniforms"), &MTerrainMaterial::get_uniforms);
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"_uniforms",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_uniforms","_get_uniforms");
+    ClassDB::bind_method(D_METHOD("_set_next_passes"), &MTerrainMaterial::set_next_passes);
+    ClassDB::bind_method(D_METHOD("_get_next_passes"), &MTerrainMaterial::get_next_passes);
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"_next_passes",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_next_passes","_get_next_passes");
     ClassDB::bind_method(D_METHOD("_shader_code_changed"), &MTerrainMaterial::_shader_code_changed);
     ClassDB::bind_method(D_METHOD("get_material"), &MTerrainMaterial::get_material);
     ClassDB::bind_method(D_METHOD("get_reserved_uniforms"), &MTerrainMaterial::get_reserved_uniforms);
@@ -89,6 +92,14 @@ Dictionary MTerrainMaterial::get_uniforms(){
     return uniforms;
 }
 
+void MTerrainMaterial::set_next_passes(Dictionary input){
+    next_passes = input;
+}
+
+Dictionary MTerrainMaterial::get_next_passes(){
+    return next_passes;
+}
+
 void MTerrainMaterial::update_uniforms_list(){
     if(!is_loaded){
         active_region = -1;
@@ -135,9 +146,15 @@ void MTerrainMaterial::update_uniforms_list(){
 
 void MTerrainMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
     PackedStringArray reserved = get_reserved_uniforms();
+    if(active_region!=-1){
+        p_list->push_back(PropertyInfo(Variant::BOOL,"Override Next Pass",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR));
+    }
+    p_list->push_back(PropertyInfo(Variant::OBJECT,"Next Pass",PROPERTY_HINT_RESOURCE_TYPE,"BaseMaterial3D,ShaderMaterial",PROPERTY_USAGE_EDITOR));
     //Adding shader properties
     if(shader.is_valid()){
         p_list->push_back(PropertyInfo(Variant::INT,"Shader Parameters",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_SUBGROUP));
+        // Clear ALL
+        p_list->push_back(PropertyInfo(Variant::BOOL,"clear_all",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR));
         Array uniforms_props = shader->get_shader_uniform_list();
         for(int i=0;i<uniforms_props.size();i++){
             Dictionary u = uniforms_props[i];
@@ -154,6 +171,22 @@ void MTerrainMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
 }
 
 bool MTerrainMaterial::_get(const StringName &p_name, Variant &r_ret) const {
+    if(p_name==StringName("Next Pass") && next_passes.has(active_region)){
+        Dictionary npm = next_passes[active_region];
+        if(npm.has("next_pass")){
+            r_ret = npm["next_pass"];
+            return true;
+        }
+        return false;
+    }
+    if(p_name==StringName("Override Next Pass") && next_passes.has(active_region)){
+        Dictionary npm = next_passes[active_region];
+        if(npm.has("override_next_pass")){
+            r_ret = npm["override_next_pass"];
+            return true;
+        }
+        return false;
+    }
     if(uniforms.has(active_region) && uniforms_names.find(p_name)!=-1){
         Dictionary ureg = uniforms[active_region];
         r_ret = ureg[p_name];
@@ -163,6 +196,26 @@ bool MTerrainMaterial::_get(const StringName &p_name, Variant &r_ret) const {
 }
 
 bool MTerrainMaterial::_set(const StringName &p_name, const Variant &p_value) {
+    if(p_name==StringName("Next Pass")){
+        Dictionary npm;
+        if(next_passes.has(active_region)){
+            npm = next_passes[active_region];
+        }
+        npm["next_pass"] = p_value;
+        next_passes[active_region] = npm;
+        set_next_pass(active_region);
+        return true;
+    }
+    if(p_name==StringName("Override Next Pass")){
+        Dictionary npm;
+        if(next_passes.has(active_region)){
+            npm = next_passes[active_region];
+        }
+        npm["override_next_pass"] = p_value;
+        next_passes[active_region] = npm;
+        set_next_pass(active_region);
+        return true;
+    }
     if(uniforms_names.find(p_name)!=-1){
         if(show_region){
             return false;
@@ -296,6 +349,7 @@ void MTerrainMaterial::load_images(){
     if(!terrain_textures_added.has("normals")){
         create_empty_terrain_image("normals",Image::FORMAT_RGB8);
     }
+    set_all_next_passes();
     show_region = false;
     is_loaded = true;
 }
@@ -474,4 +528,77 @@ void MTerrainMaterial::clear_all_uniform(){
 
 PackedStringArray MTerrainMaterial::get_reserved_uniforms() const{
     return String(M_SHADER_RESERVE_UNIFORMS).split(",");
+}
+
+void MTerrainMaterial::set_next_pass(int region_id){
+    if(region_id==-1){
+        for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
+            if(next_passes.has(it->key)){
+                Dictionary npm = next_passes[it->key];
+                if(npm.has("override_next_pass")){
+                    bool ov = npm["override_next_pass"];
+                    if(ov){
+                        continue;
+                    }
+                }
+            }
+            RID next_pass_rid;
+            if(next_passes.has(-1)){
+                Dictionary npm = next_passes[-1];
+                if(npm.has("next_pass")){
+                    next_pass_rid = npm["next_pass"];
+                }
+            }
+            RS->material_set_next_pass(it->value,next_pass_rid);
+        }
+        return;
+    }
+    RID next_pass_rid;
+    if(next_passes.has(region_id)){
+        Dictionary npm = next_passes[region_id];
+        if(npm.has("override_next_pass")){
+            bool ov = npm["override_next_pass"];
+            if(ov){
+                next_pass_rid = npm["next_pass"];
+                RS->material_set_next_pass(materials[region_id],next_pass_rid);
+                return;
+            }
+        }
+    }
+    if(next_passes.has(-1)){
+        Dictionary npm = next_passes[-1];
+        if(npm.has("next_pass")){
+            next_pass_rid = npm["next_pass"];
+        }
+    }
+    RS->material_set_next_pass(materials[region_id],next_pass_rid);
+}
+
+void MTerrainMaterial::set_all_next_passes() {
+    for(HashMap<int,RID>::Iterator it=materials.begin();it!=materials.end();++it){
+        if(next_passes.has(it->key)){
+            Dictionary npm = next_passes[it->key];
+            if(npm.has("override_next_pass")){
+                bool ov = npm["override_next_pass"];
+                if(ov){
+                    RID next_pass_rid;
+                    if(npm.has("next_pass")){
+                        next_pass_rid = npm["next_pass"];
+                    }
+                    RS->material_set_next_pass(it->value,next_pass_rid);
+                    continue;
+                }
+            }
+        }
+        if(next_passes.has(-1)){
+            Dictionary npm = next_passes[-1];
+            Ref<Material> mat = npm["next_pass"];
+            if(mat.is_valid()){
+                UtilityFunctions::print("Set defff");
+                RS->material_set_next_pass(it->value,mat->get_rid());
+                continue;
+            }
+        }
+        RS->material_set_next_pass(it->value,RID());
+    }
 }
