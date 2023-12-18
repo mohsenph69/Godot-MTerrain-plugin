@@ -136,7 +136,16 @@ void MRegion::create_physics() {
 	Dictionary d;
 	d["width"] = heightmap->width;
 	d["depth"] = heightmap->height;
+	#ifdef REAL_T_IS_DOUBLE
+	PackedFloat32Array hdata = heightmap->data.to_float32_array();
+	PackedFloat64Array hdata64;
+	for(int i=0;i<hdata.size();i++){
+		hdata64.push_back(hdata[i]);
+	}
+	d["heights"] = hdata64;
+	#else
 	d["heights"] = heightmap->data.to_float32_array();
+	#endif
 	d["min_height"] = min_height;
 	d["max_height"] = max_height;
 	Vector3 pos = world_pos + Vector3(grid->region_size_meter,0,grid->region_size_meter)/2;
