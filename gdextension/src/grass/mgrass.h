@@ -144,5 +144,7 @@ class MGrass : public Node3D {
     void check_undo(); // register a grass data stege for undo
     void undo();
 
+    void _grass_tree_exiting();
+
 };
 #endif

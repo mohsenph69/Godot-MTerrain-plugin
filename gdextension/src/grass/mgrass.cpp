@@ -60,10 +60,12 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("check_undo"), &MGrass::check_undo);
     ClassDB::bind_method(D_METHOD("undo"), &MGrass::undo);
     ClassDB::bind_method(D_METHOD("_lod_setting_changed"), &MGrass::_lod_setting_changed);
+    ClassDB::bind_method(D_METHOD("_grass_tree_exiting"), &MGrass::_grass_tree_exiting);
 }
 
 MGrass::MGrass(){
     dirty_points_id = memnew(VSet<int>);
+    connect("tree_exiting",Callable(this,"_grass_tree_exiting"));
 }
 MGrass::~MGrass(){
     memdelete(dirty_points_id);
@@ -140,15 +142,15 @@ void MGrass::init_grass(MGrid* _grid) {
         rand_buffer_pull.push_back(settings[i]->generate_random_number(cdensity,100));
     }
     // Done
+    is_grass_init = true;
     update_grass();
     apply_update_grass();
-    is_grass_init = true;
     //Creating Main Physic Body
-    main_physics_body = PhysicsServer3D::get_singleton()->body_create();
-    PS->body_set_mode(main_physics_body,PhysicsServer3D::BODY_MODE_STATIC);
-    PS->body_set_space(main_physics_body,space);
     //Setting the shape data
     if(shape.is_valid()){
+        main_physics_body = PhysicsServer3D::get_singleton()->body_create();
+        PS->body_set_mode(main_physics_body,PhysicsServer3D::BODY_MODE_STATIC);
+        PS->body_set_space(main_physics_body,space);
         shape_type = PS->shape_get_type(shape->get_rid());
         shape_data = PS->shape_get_data(shape->get_rid());
     }
@@ -163,20 +165,23 @@ void MGrass::clear_grass(){
     for(int i=0;i<rand_buffer_pull.size();i++){
         memdelete(rand_buffer_pull[i]);
     }
-    remove_all_physics();
     settings.clear();
     rand_buffer_pull.clear();
     grid_to_grass.clear();
     is_grass_init = false;
     final_count = 0;
-    PS->body_clear_shapes(main_physics_body);
-    PS->free_rid(main_physics_body);
-    main_physics_body = RID();
+    if(main_physics_body.is_valid()){
+        remove_all_physics();
+        PS->body_clear_shapes(main_physics_body);
+        PS->free_rid(main_physics_body);
+        main_physics_body = RID();
+    }
     shapes_ids.clear();
     for(HashMap<int,RID>::Iterator it=shapes_rids.begin();it!=shapes_rids.end();++it){
         PS->free_rid(it->value);
     }
     shapes_rids.clear();
+    to_be_visible.clear();
 }
 
 void MGrass::update_dirty_chunks(){
@@ -199,6 +204,9 @@ void MGrass::update_dirty_chunks(){
 void MGrass::update_grass(){
     int new_chunk_count = grid->grid_update_info.size();
     std::lock_guard<std::mutex> lock(update_mutex);
+    if(!is_grass_init){
+        return;
+    }
     update_id = grid->get_update_id();
     for(int i=0;i<new_chunk_count;i++){
         create_grass_chunk(i);
@@ -335,6 +343,9 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
 
 
 void MGrass::apply_update_grass(){
+    if(!is_grass_init){
+        return;
+    }
     for(int i=0;i<to_be_visible.size();i++){
         if(!to_be_visible[i]->is_out_of_range){
             to_be_visible[i]->unrelax();
@@ -700,8 +711,10 @@ void MGrass::update_physics(Vector3 cam_pos){
 }
 
 void MGrass::remove_all_physics(){
-    PS->body_clear_shapes(main_physics_body);
-    shapes_ids.clear();
+    if(shape.is_valid()){
+        PS->body_clear_shapes(main_physics_body);
+        shapes_ids.clear();
+    }
 }
 
 RID MGrass::get_resized_shape(Vector3 scale){
@@ -963,4 +976,8 @@ void MGrass::undo(){
     ERR_FAIL_COND(!grass_data.is_valid());
     grass_data->undo();
     recreate_all_grass();
+}
+
+void MGrass::_grass_tree_exiting(){
+    clear_grass();
 }
