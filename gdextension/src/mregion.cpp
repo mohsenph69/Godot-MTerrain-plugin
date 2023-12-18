@@ -137,10 +137,12 @@ void MRegion::create_physics() {
 	d["width"] = heightmap->width;
 	d["depth"] = heightmap->height;
 	#ifdef REAL_T_IS_DOUBLE
-	PackedFloat32Array hdata = heightmap->data.to_float32_array();
+	const float* hdata = (float*)heightmap->data.ptr();
 	PackedFloat64Array hdata64;
-	for(int i=0;i<hdata.size();i++){
-		hdata64.push_back(hdata[i]);
+	int size = heightmap->data.size()/4;
+	hdata64.resize(size);
+	for(int i=0;i<size;i++){
+		hdata64.set(i,hdata[i]);
 	}
 	d["heights"] = hdata64;
 	#else
