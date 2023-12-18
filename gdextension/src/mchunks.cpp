@@ -72,6 +72,7 @@ RID MChunks::get_mesh(int32_t size_meter, real_t h_scale, int8_t edge,const Ref<
 }
 
 MChunks::MChunks(){
+    MChunks::number_of_user++;
     #ifdef M_DEBUG
     ResourceLoader* res_loader = ResourceLoader::get_singleton();
     for(int i=0; i < 6; i++){
@@ -86,7 +87,6 @@ MChunks::~MChunks(){
 }
 
 void MChunks::create_chunks(int32_t _min_size, int32_t _max_size, real_t _min_h_scale, real_t _max_h_scale, Array info) {
-    MChunks::number_of_user++;
     base_size_meter = _min_size;
     h_scale = _min_h_scale;
     int8_t size = 0;
