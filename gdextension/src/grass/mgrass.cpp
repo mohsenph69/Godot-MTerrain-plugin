@@ -39,6 +39,20 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_shape","input"), &MGrass::set_shape);
     ClassDB::bind_method(D_METHOD("get_shape"), &MGrass::get_shape);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"shape",PROPERTY_HINT_RESOURCE_TYPE,"Shape3D"),"set_shape","get_shape");
+
+    ClassDB::bind_method(D_METHOD("set_physics_material","input"), &MGrass::set_physics_material);
+    ClassDB::bind_method(D_METHOD("get_physics_material"), &MGrass::get_physics_material);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"physics_material",PROPERTY_HINT_RESOURCE_TYPE,"PhysicsMaterial"),"set_physics_material","get_physics_material");
+
+    ClassDB::bind_method(D_METHOD("get_collision_layer"), &MGrass::get_collision_layer);
+    ClassDB::bind_method(D_METHOD("set_collision_layer","input"), &MGrass::set_collision_layer);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_layer",PROPERTY_HINT_LAYERS_3D_PHYSICS),"set_collision_layer","get_collision_layer");
+
+    ClassDB::bind_method(D_METHOD("set_collision_mask","input"), &MGrass::set_collision_mask);
+    ClassDB::bind_method(D_METHOD("get_collision_mask"), &MGrass::get_collision_mask);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_mask",PROPERTY_HINT_LAYERS_3D_PHYSICS),"set_collision_mask","get_collision_mask");
+
+
     ClassDB::bind_method(D_METHOD("set_active_shape_resize","input"), &MGrass::set_active_shape_resize);
     ClassDB::bind_method(D_METHOD("get_active_shape_resize"), &MGrass::get_active_shape_resize);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"active_shape_resize"),"set_active_shape_resize","get_active_shape_resize");
@@ -153,6 +167,14 @@ void MGrass::init_grass(MGrid* _grid) {
         PS->body_set_space(main_physics_body,space);
         shape_type = PS->shape_get_type(shape->get_rid());
         shape_data = PS->shape_get_data(shape->get_rid());
+        PS->body_set_collision_layer(main_physics_body,collision_layer);
+        PS->body_set_collision_mask(main_physics_body,collision_mask);
+        if(physics_material.is_valid()){
+            float friction = physics_material->is_rough() ? - physics_material->get_friction() : physics_material->get_friction();
+            float bounce = physics_material->is_absorbent() ? - physics_material->get_bounce() : physics_material->get_bounce();
+            PS->body_set_param(main_physics_body,PhysicsServer3D::BODY_PARAM_BOUNCE,bounce);
+            PS->body_set_param(main_physics_body,PhysicsServer3D::BODY_PARAM_FRICTION,friction);
+        }
     }
     emit_signal("grass_is_ready");
 }
@@ -566,6 +588,25 @@ void MGrass::set_shape(Ref<Shape3D> input){
 }
 Ref<Shape3D> MGrass::get_shape(){
     return shape;
+}
+
+int MGrass::get_collision_layer(){
+    return collision_layer;
+}
+void MGrass::set_collision_layer(int input){
+    collision_layer = input;
+}
+int MGrass::get_collision_mask(){
+    return collision_mask;
+}
+void MGrass::set_collision_mask(int input){
+    collision_mask = input;
+}
+Ref<PhysicsMaterial> MGrass::get_physics_material(){
+    return physics_material;
+}
+void MGrass::set_physics_material(Ref<PhysicsMaterial> input){
+    physics_material = input;
 }
 
 void MGrass::set_active_shape_resize(bool input){

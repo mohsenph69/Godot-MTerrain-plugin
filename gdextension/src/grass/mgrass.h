@@ -13,6 +13,7 @@
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/physics_server3d.hpp>
 #include <godot_cpp/classes/shape3d.hpp>
+#include <godot_cpp/classes/physics_material.hpp>
 #include "mgrass_data.h"
 #include "mgrass_lod_setting.h"
 #include "../mpixel_region.h"
@@ -28,6 +29,9 @@ class MGrid;
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
     private:
+    Ref<PhysicsMaterial> physics_material;
+    int collision_layer=1;
+    int collision_mask=1;
     int64_t update_id;
     std::mutex update_mutex;
     uint64_t final_count=0;
@@ -122,6 +126,12 @@ class MGrass : public Node3D {
     Vector3 get_shape_offset();
     void set_shape(Ref<Shape3D> input);
     Ref<Shape3D> get_shape();
+    int get_collision_layer();
+    void set_collision_layer(int input);
+    int get_collision_mask();
+    void set_collision_mask(int input);
+    Ref<PhysicsMaterial> get_physics_material();
+    void set_physics_material(Ref<PhysicsMaterial> input);
     void set_active_shape_resize(bool input);
     bool get_active_shape_resize();
     void set_nav_obstacle_radius(float input);
