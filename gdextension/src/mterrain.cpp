@@ -16,8 +16,7 @@ void MTerrain::_bind_methods() {
     //ADD_SIGNAL(MethodInfo("finish_updating"));
     //ADD_SIGNAL(MethodInfo("finish_updating_physics"));
 
-    ClassDB::bind_method(D_METHOD("finish_terrain"), &MTerrain::finish_terrain);
-    ClassDB::bind_method(D_METHOD("start"), &MTerrain::start);
+    ClassDB::bind_method(D_METHOD("_finish_terrain"), &MTerrain::_finish_terrain);
     ClassDB::bind_method(D_METHOD("create_grid"), &MTerrain::create_grid);
     ClassDB::bind_method(D_METHOD("remove_grid"), &MTerrain::remove_grid);
     ClassDB::bind_method(D_METHOD("restart_grid"), &MTerrain::restart_grid);
@@ -53,7 +52,7 @@ void MTerrain::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("set_grid_create","val"), &MTerrain::set_create_grid);
     ClassDB::bind_method(D_METHOD("get_create_grid"), &MTerrain::get_create_grid);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "create_grid"), "set_grid_create", "get_create_grid");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "create"), "set_grid_create", "get_create_grid");
     ClassDB::bind_method(D_METHOD("set_terrain_material","input"), &MTerrain::set_terrain_material);
     ClassDB::bind_method(D_METHOD("get_terrain_material"), &MTerrain::get_terrain_material);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"terrain_material",PROPERTY_HINT_RESOURCE_TYPE,"MTerrainMaterial"),"set_terrain_material","get_terrain_material");
@@ -177,7 +176,7 @@ MTerrain::MTerrain() {
     lod_distance.append(12);
     lod_distance.append(16);
     lod_distance.append(24);
-    connect("tree_exiting", Callable(this, "finish_terrain"));
+    connect("tree_exiting", Callable(this, "_finish_terrain"));
     recalculate_terrain_config(true);
     grid = memnew(MGrid);
     update_chunks_timer = memnew(Timer);
@@ -203,14 +202,10 @@ MTerrain::~MTerrain() {
 }
 
 
-void MTerrain::finish_terrain() {
+void MTerrain::_finish_terrain() {
     if(update_thread_chunks.valid()){
         update_thread_chunks.wait();
     }
-}
-
-void MTerrain::start() {
-    create_grid();
 }
 
 void MTerrain::create_grid(){

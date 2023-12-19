@@ -36,7 +36,7 @@ class MTerrain : public  Node3D {
     bool finish_updating=true;
     bool update_chunks_loop=true;
     Timer* update_chunks_timer;
-    float update_chunks_interval = 0.2;
+    float update_chunks_interval = 0.1;
     float distance_update_threshold=32;
     // -1 is Terrain grid update
     // >=0 is index of confirm grass list update
@@ -49,7 +49,7 @@ class MTerrain : public  Node3D {
     bool finish_updating_physics=true;
     bool update_physics_loop=true;
     Timer* update_physics_timer;
-    float update_physics_interval = 1.0;
+    float update_physics_interval = 0.5;
     //Physics update stage is same as chunk update but just for physics
     int update_stage_physics=-1;
 
@@ -107,8 +107,7 @@ class MTerrain : public  Node3D {
     Node3D* editor_camera = nullptr;
     MTerrain();
     ~MTerrain();
-    void finish_terrain();
-    void start();
+    void _finish_terrain();
     void create_grid();
     void remove_grid();
     void restart_grid();
