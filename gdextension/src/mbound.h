@@ -19,7 +19,7 @@ struct MGridPos
     int32_t y = 0;
     int32_t z = 0;
     MGridPos(){};
-    MGridPos(const int32_t& _x,const int32_t& _y,const int32_t& _z){
+    MGridPos(const int32_t _x,const int32_t _y,const int32_t _z){
         x = _x;
         y= _y;
         z=_z;
@@ -48,14 +48,14 @@ struct  MBound
     MGridPos cursor;
 
     MBound();
-    MBound(const int32_t& _left,const int32_t& _right,const int32_t& _top,const int32_t& _bottom);
-    MBound(const MGridPos& pos,const int32_t& radius, const MGridPos& gird_size);
+    MBound(const int32_t _left,const int32_t _right,const int32_t _top,const int32_t _bottom);
+    MBound(const MGridPos& pos,const int32_t radius, const MGridPos& gird_size);
     MBound(const MGridPos& pos);
-    MBound(const int32_t& x,const int32_t& z);
+    MBound(const int32_t x,const int32_t z);
     Rect2i get_rect2i();
     
     void clear();
-    bool has_point(const int32_t& x, const int32_t& y);
+    bool has_point(const int32_t x, const int32_t y);
     bool has_point(const MGridPos& p);
 
     bool operator==(const MBound& other);
@@ -63,16 +63,16 @@ struct  MBound
 
     MGridPos closest_point_on_ground(const MGridPos& pos);
     // Make sure to have a correct grow even when we are outside of terrain
-    void grow_when_outside(const real_t& diff_x, const real_t& diff_z,const MGridPos& _grid_pos, const MBound& limit_bound,const int32_t& base_grid_size);
+    void grow_when_outside(const real_t diff_x, const real_t diff_z,const MGridPos& _grid_pos, const MBound& limit_bound,const int32_t base_grid_size);
     // Grow only one unit untile reach the limit bound
     // When arrive at limit bound it is going to return false
-    bool grow(const MBound& limit_bound,const int32_t& amount_x,const int32_t& amount_y);
+    bool grow(const MBound& limit_bound,const int32_t amount_x,const int32_t amount_y);
     MGridPos get_edge_point();
 
-    bool grow_positive(const int32_t& amount, const MBound& limit_bound);
+    bool grow_positive(const int32_t amount, const MBound& limit_bound);
     //use to devide the image to different region
-    bool get_next_region(const int32_t& region_size, const MBound& limit_bound);
-    bool get_next_shared_edge_region(const int32_t& region_size, const MBound& limit_bound);
+    bool get_next_region(const int32_t region_size, const MBound& limit_bound);
+    bool get_next_shared_edge_region(const int32_t region_size, const MBound& limit_bound);
 
 };
 

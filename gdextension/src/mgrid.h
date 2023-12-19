@@ -54,7 +54,7 @@ struct MPoint
     bool has_instance=false;
 
    
-    void create_instance(const Vector3& pos,const RID& scenario,const RID& material){
+    void create_instance(const Vector3& pos,const RID scenario,const RID material){
         has_instance = true;
         Transform3D xform(Basis(), pos);
         RenderingServer* rs = RenderingServer::get_singleton();
@@ -133,7 +133,7 @@ class MGrid : public Object {
     uint64_t total_add=0;
     uint64_t total_chunks=0;
 
-    _FORCE_INLINE_ bool _has_pixel(const uint32_t& x,const uint32_t& y);
+    _FORCE_INLINE_ bool _has_pixel(const uint32_t x,const uint32_t y);
 
     
 
@@ -201,32 +201,32 @@ class MGrid : public Object {
     MGridPos get_size();
     void set_scenario(RID scenario);
     RID get_scenario();
-    void create(const int32_t &width,const int32_t& height, MChunks* chunks);
+    void create(const int32_t width,const int32_t height, MChunks* chunks);
     void update_regions_uniforms(Array input);
     void update_regions_uniform(Dictionary input);
     void update_all_image_list();
-    Vector3 get_world_pos(const int32_t &x,const int32_t& y,const int32_t& z);
+    Vector3 get_world_pos(const int32_t x,const int32_t y,const int32_t z);
     Vector3 get_world_pos(const MGridPos& pos);
     int get_point_id_by_non_offs_ws(const Vector2& input); // Get point id non offset world posiotion usefull for grass for now
     int64_t get_point_instance_id_by_point_id(int pid);
     MGridPos get_grid_pos(const Vector3& pos);
     int32_t get_regions_count();
     MGridPos get_region_grid_size();
-    int32_t get_region_id_by_point(const int32_t &x, const int32_t& z);
-    MRegion* get_region_by_point(const int32_t &x, const int32_t& z);
-    MRegion* get_region(const int32_t &x, const int32_t& z);
+    int32_t get_region_id_by_point(const int32_t x, const int32_t z);
+    MRegion* get_region_by_point(const int32_t x, const int32_t z);
+    MRegion* get_region(const int32_t x, const int32_t z);
     MGridPos get_region_pos_by_world_pos(Vector3 world_pos);
     int get_region_id_by_world_pos(Vector3 world_pos);
     Vector2 get_point_region_offset_ratio(int32_t x,int32_t z);
     Vector3 get_region_world_pos_by_point(int32_t x,int32_t z);
-    int8_t get_lod_by_distance(const int32_t& dis);
+    int8_t get_lod_by_distance(const int32_t dis);
     void set_cam_pos(const Vector3& cam_world_pos);
     void update_search_bound();
     void cull_out_of_bound();
     void update_lods();
     void merge_chunks();
-    bool check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t& region_id, const MBound& bound);
-    int8_t get_edge_num(const bool& left,const bool& right,const bool& top,const bool& bottom);
+    _FORCE_INLINE_ bool check_bigger_size(const int8_t lod,const int8_t size,const int32_t region_id, const MBound& bound);
+    _FORCE_INLINE_ int8_t get_edge_num(const bool left,const bool right,const bool top,const bool bottom);
     void create_ordered_instances_distance();
 
     void set_terrain_material(Ref<MTerrainMaterial> input);
@@ -240,15 +240,15 @@ class MGrid : public Object {
     void apply_update_chunks();
     void update_physics(const Vector3& cam_pos);
 
-    MImage* get_image_by_pixel(uint32_t& x,uint32_t& y, const int32_t& index);
-    Color get_pixel(uint32_t x,uint32_t y, const int32_t& index);
-    const uint8_t* get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t& index);
-    void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index);
-    void set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t& index);
+    MImage* get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index);
+    Color get_pixel(uint32_t x,uint32_t y, const int32_t index);
+    const uint8_t* get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t index);
+    void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index);
+    void set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t index);
     real_t get_height_by_pixel(uint32_t x,uint32_t y);
-    void set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value);
+    void set_height_by_pixel(uint32_t x,uint32_t y,const real_t value);
     real_t get_height_by_pixel_in_layer(uint32_t x,uint32_t y);
-    bool has_pixel(const uint32_t& x,const uint32_t& y);
+    bool has_pixel(const uint32_t x,const uint32_t y);
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
     Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);

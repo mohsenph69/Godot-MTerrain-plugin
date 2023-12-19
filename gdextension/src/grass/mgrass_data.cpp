@@ -28,7 +28,7 @@ void MGrassData::set_data(const PackedByteArray& d){
     data = d;
 }
 
-PackedByteArray MGrassData::get_data(){
+const PackedByteArray& MGrassData::get_data(){
     return data;
 }
 

@@ -34,7 +34,7 @@ class MGrassData : public Resource {
     float density=1;
 
     void set_data(const PackedByteArray& d);
-    PackedByteArray get_data();
+    const PackedByteArray& get_data();
     void set_density(int input);
     int get_density();
 

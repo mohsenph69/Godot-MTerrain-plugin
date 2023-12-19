@@ -71,7 +71,7 @@ void MRaise::before_draw(){
         final_amount *= -1.0;
     }
 }
-float MRaise::get_height(const uint32_t& x,const uint32_t& y){
+float MRaise::get_height(uint32_t x,uint32_t y){
     Vector3 world_pos = grid->get_pixel_world_pos(x,y);
     real_t dis = grid->brush_world_pos.distance_to(world_pos);
     dis = dis/grid->brush_radius;

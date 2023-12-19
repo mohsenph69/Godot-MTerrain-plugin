@@ -54,7 +54,7 @@ bool MSmooth::is_two_point_brush(){
 void MSmooth::before_draw(){
 
 }
-float MSmooth::get_height(const uint32_t& x,const uint32_t& y){
+float MSmooth::get_height(uint32_t x,uint32_t y){
     float h = grid->get_height_by_pixel(x,y);
     if(std::isnan(h)){
         return h;

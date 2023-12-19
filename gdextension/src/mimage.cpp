@@ -291,12 +291,12 @@ void MImage::apply_update() {
 
 
 // This works only for Format_RF
-real_t MImage::get_pixel_RF(const uint32_t&x, const uint32_t& y) const {
+real_t MImage::get_pixel_RF(const uint32_t x, const uint32_t  y) const {
 	uint32_t ofs = (x + y*width);
     return ((float *)data.ptr())[ofs];
 }
 
-void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value){
+void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value){
 	check_undo();
 	// not visibile layers should not be modified but as this called many times
 	// it is better to check that in upper level
@@ -341,7 +341,7 @@ void MImage::set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& valu
 	is_save = false;
 }
 
-real_t MImage::get_pixel_RF_in_layer(const uint32_t&x, const uint32_t& y){
+real_t MImage::get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y){
 	if(image_layers[active_layer]->size()==0){
 		return 0.0;
 	}
@@ -349,12 +349,12 @@ real_t MImage::get_pixel_RF_in_layer(const uint32_t&x, const uint32_t& y){
 	return ((float *)image_layers[active_layer]->ptr())[ofs];
 }
 
-Color MImage::get_pixel(const uint32_t&x, const uint32_t& y) const {
+Color MImage::get_pixel(const uint32_t x, const uint32_t  y) const {
 	uint32_t ofs = (x + y*width);
 	return _get_color_at_ofs(data.ptr(), ofs);
 }
 
-void MImage::set_pixel(const uint32_t&x, const uint32_t& y,const Color& color){
+void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
 	check_undo();
 	uint32_t ofs = (x + y*width);
 	_set_color_at_ofs(data.ptrw(), ofs, color);
@@ -706,7 +706,7 @@ int MImage::get_format_pixel_size(Image::Format p_format) {
 
 
 
-void MImage::set_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t channel,const float& value){
+void MImage::set_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel,const float value){
 	check_undo();
 	uint32_t ofs = (x + y*width);
 	uint8_t* ptr = data.ptrw();
@@ -820,7 +820,7 @@ void MImage::set_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t cha
 
 #define INVALID_CHANELL 0
 
-float MImage::get_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t channel){
+float MImage::get_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel){
 	uint32_t ofs = (x + y*width);
 	const uint8_t* ptr = data.ptr();
 	switch (format) {

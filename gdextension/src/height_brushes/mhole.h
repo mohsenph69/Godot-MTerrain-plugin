@@ -13,6 +13,6 @@ class MHole : public MHeightBrush {
     void _set_property(String prop_name, Variant value);
     bool is_two_point_brush();
     void before_draw();
-    float get_height(const uint32_t& x,const uint32_t& y);
+    float get_height(uint32_t x,uint32_t y);
 };
 #endif

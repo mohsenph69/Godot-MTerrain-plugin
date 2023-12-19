@@ -86,7 +86,7 @@ RID MGrid::get_scenario(){
     return _scenario;
 }
 
-void MGrid::create(const int32_t& width,const int32_t& height, MChunks* chunks) {
+void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
     if (width == 0 || height == 0) return;
     _chunks = chunks;
     _size.x = width;
@@ -222,7 +222,7 @@ void MGrid::update_all_image_list(){
     }
 }
 
-Vector3 MGrid::get_world_pos(const int32_t &x,const int32_t& y,const int32_t& z) {
+Vector3 MGrid::get_world_pos(const int32_t x,const int32_t y,const int32_t z) {
     return Vector3(x,y,z)*_chunks->base_size_meter + offset;
 }
 
@@ -259,16 +259,16 @@ MGridPos MGrid::get_region_grid_size(){
     return _region_grid_size;
 }
 
-int32_t MGrid::get_region_id_by_point(const int32_t &x, const int32_t& z) {
+int32_t MGrid::get_region_id_by_point(const int32_t x, const int32_t z) {
     return x/region_size + (z/region_size)*_region_grid_size.x;
 }
 
-MRegion* MGrid::get_region_by_point(const int32_t &x, const int32_t& z){
+MRegion* MGrid::get_region_by_point(const int32_t x, const int32_t z){
     int32_t id = x/region_size + (z/region_size)*_region_grid_size.x;
     return regions + id;
 }
 
-MRegion* MGrid::get_region(const int32_t &x, const int32_t& z){
+MRegion* MGrid::get_region(const int32_t x, const int32_t z){
     int32_t id = x + z*_region_grid_size.x;
     return regions + id;
 }
@@ -306,7 +306,7 @@ Vector3 MGrid::get_region_world_pos_by_point(int32_t x,int32_t z){
     return pos;
 }
 
-int8_t MGrid::get_lod_by_distance(const int32_t& dis) {
+int8_t MGrid::get_lod_by_distance(const int32_t dis) {
     for(int8_t i=0 ; i < lod_distance.size(); i++){
         if(dis < lod_distance[i]){
             return i;
@@ -467,7 +467,7 @@ void MGrid::merge_chunks() {
 // Also if All condition are correct then we can merge to bigger size
 // So this will set the size of all points except the first one to -1
 // Also Here we should detrmine the edge of each mesh
-bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t& region_id, const MBound& bound) {
+bool MGrid::check_bigger_size(const int8_t lod,const int8_t size,const int32_t region_id, const MBound& bound) {
     for(int32_t z=bound.top; z<=bound.bottom; z++){
         for(int32_t x=bound.left; x<=bound.right; x++){
             if (points[z][x].lod != lod || points[z][x].size == -1 || get_region_id_by_point(x,z) != region_id)
@@ -583,7 +583,7 @@ bool MGrid::check_bigger_size(const int8_t& lod,const int8_t& size,const int32_t
     return true;
 }
 
-int8_t MGrid::get_edge_num(const bool& left,const bool& right,const bool& top,const bool& bottom) {
+int8_t MGrid::get_edge_num(const bool left,const bool right,const bool top,const bool bottom) {
     if(!left && !right && !top && !bottom){
         return M_MAIN;
     }
@@ -753,7 +753,7 @@ void MGrid::update_physics(const Vector3& cam_pos){
     }
 }
 
-bool MGrid::_has_pixel(const uint32_t& x,const uint32_t& y){
+bool MGrid::_has_pixel(const uint32_t x,const uint32_t y){
     if(x>=pixel_width) return false;
     if(y>=pixel_height) return false;
     //if(x<0) return false; // There is no need for this as we use uint32
@@ -761,7 +761,7 @@ bool MGrid::_has_pixel(const uint32_t& x,const uint32_t& y){
     return true;
 }
 
-bool MGrid::has_pixel(const uint32_t& x,const uint32_t& y){
+bool MGrid::has_pixel(const uint32_t x,const uint32_t y){
     if(x>=pixel_width) return false;
     if(y>=pixel_height) return false;
     //if(x<0) return false;
@@ -769,7 +769,7 @@ bool MGrid::has_pixel(const uint32_t& x,const uint32_t& y){
     return true;
 }
 
-MImage* MGrid::get_image_by_pixel(uint32_t& x,uint32_t& y, const int32_t& index){
+MImage* MGrid::get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index){
     if(!_has_pixel(x,y)){
         return nullptr;
     }
@@ -783,7 +783,7 @@ MImage* MGrid::get_image_by_pixel(uint32_t& x,uint32_t& y, const int32_t& index)
     return r->images[index];
 }
 
-Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t& index) {
+Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t index) {
     if(!_has_pixel(x,y)){
         return Color();
     }
@@ -797,7 +797,7 @@ Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t& index) {
     return r->get_pixel(x,y,index);
 }
 
-const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t& index){
+const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t index){
     ERR_FAIL_COND_V(!_has_pixel(x,y),nullptr);
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
     uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
@@ -808,7 +808,7 @@ const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t&
     return get_region(rx,ry)->images[index]->get_pixel_by_data_pointer(x,y);
 }
 
-void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& index) {
+void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index) {
     if(!_has_pixel(x,y)){
         return;
     }
@@ -838,7 +838,7 @@ void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t& inde
     }
 }
 
-void MGrid::set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t& index){
+void MGrid::set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t index){
     if(!_has_pixel(x,y)){
         return;
     }
@@ -882,7 +882,7 @@ real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
     return r->get_height_by_pixel(x,y);
 }
 
-void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t& value){
+void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t value){
     if(!_has_pixel(x,y)){
         return;
     }

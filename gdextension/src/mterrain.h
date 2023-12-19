@@ -124,10 +124,10 @@ class MTerrain : public  Node3D {
     bool has_unsave_image();
     void save_all_dirty_images();
 
-    Color get_pixel(const uint32_t& x,const uint32_t& y, const int32_t& index);
-    void set_pixel(const uint32_t& x,const uint32_t& y,const Color& col,const int32_t& index);
-    real_t get_height_by_pixel(const uint32_t& x,const uint32_t& y);
-    void set_height_by_pixel(const uint32_t& x,const uint32_t& y,const real_t& value);
+    Color get_pixel(const uint32_t x,const uint32_t y, const int32_t index);
+    void set_pixel(const uint32_t x,const uint32_t y,const Color& col,const int32_t index);
+    real_t get_height_by_pixel(const uint32_t x,const uint32_t y);
+    void set_height_by_pixel(const uint32_t x,const uint32_t y,const real_t value);
 
     void get_cam_pos();
 
@@ -201,7 +201,7 @@ class MTerrain : public  Node3D {
     void draw_color(Vector3 brush_pos,real_t radius,String brush_name, String uniform_name);
     
     void set_heightmap_layers(PackedStringArray input);
-    PackedStringArray get_heightmap_layers();
+    const PackedStringArray& get_heightmap_layers();
 
     void set_active_layer_by_name(String lname);
     bool get_layer_visibility(String lname);

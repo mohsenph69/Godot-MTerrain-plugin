@@ -42,6 +42,6 @@ class MHeightBrush {
     virtual void before_draw()=0;
     // x,y -> position of current pixel to be modified
     // grid -> grid class in mterrain to access information about all pixel, normals, height or anything that you need for your brush
-    virtual float get_height(const uint32_t& x,const uint32_t& y)=0;
+    virtual float get_height(uint32_t x,uint32_t y)=0;
 };
 #endif

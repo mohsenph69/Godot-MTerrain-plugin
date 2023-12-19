@@ -5,7 +5,7 @@
 
 MPixelRegion::MPixelRegion(){}
 
-MPixelRegion::MPixelRegion(const uint32_t& _width,const uint32_t& _height) {
+MPixelRegion::MPixelRegion(const uint32_t _width,const uint32_t _height) {
     //Minus one becuase pixels id start from zero
     width = _width;
     height = _height;
@@ -13,7 +13,7 @@ MPixelRegion::MPixelRegion(const uint32_t& _width,const uint32_t& _height) {
     bottom = _height - 1;
 }
 
-MPixelRegion::MPixelRegion(const uint32_t& _left, const uint32_t& _right, const uint32_t& _top, const uint32_t& _bottom){
+MPixelRegion::MPixelRegion(const uint32_t _left, const uint32_t _right, const uint32_t _top, const uint32_t _bottom){
     left = _left;
     right = _right;
     top = _top;
@@ -49,7 +49,7 @@ void MPixelRegion::grow_all_side(const MPixelRegion& limit,uint32_t amount){
 }
 
 
-bool MPixelRegion::grow_positve(const uint32_t& xamount,const uint32_t& yamount,const MPixelRegion& limit){
+bool MPixelRegion::grow_positve(const uint32_t xamount,const uint32_t yamount,const MPixelRegion& limit){
     if(left>limit.right || top>limit.bottom){
         return false;
     }

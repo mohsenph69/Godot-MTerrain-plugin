@@ -85,11 +85,11 @@ struct MImage {
     void update_texture(int scale,bool apply_update);
     void apply_update();
     // This works only for Format_RF
-    real_t get_pixel_RF(const uint32_t&x, const uint32_t& y) const;
-    void set_pixel_RF(const uint32_t&x, const uint32_t& y,const real_t& value);
-    real_t get_pixel_RF_in_layer(const uint32_t&x, const uint32_t& y);
-    Color get_pixel(const uint32_t&x, const uint32_t& y) const;
-    void set_pixel(const uint32_t&x, const uint32_t& y,const Color& color);
+    real_t get_pixel_RF(const uint32_t x, const uint32_t  y) const;
+    void set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value);
+    real_t get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y);
+    Color get_pixel(const uint32_t x, const uint32_t  y) const;
+    void set_pixel(const uint32_t x, const uint32_t  y,const Color& color);
     void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
     const uint8_t* get_pixel_by_data_pointer(uint32_t x,uint32_t y);
     void save(bool force_save);
@@ -104,8 +104,8 @@ struct MImage {
 	_FORCE_INLINE_ void _set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color);
     static int get_format_pixel_size(Image::Format p_format);
 
-    void set_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t channel,const float& value);
-    float get_pixel_in_channel(const uint32_t&x, const uint32_t& y,int8_t channel);
+    void set_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel,const float value);
+    float get_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel);
 
 };
 

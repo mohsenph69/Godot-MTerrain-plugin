@@ -23,8 +23,8 @@ protected:
 public:
     MRaw16();
     ~MRaw16();
-    static Ref<Image> get_image(const String& file_path, const uint64_t& width, const uint64_t& height,double min_height, double max_height,const bool& is_half);
-    static Ref<ImageTexture> get_texture(const String& file_path, const uint64_t& width, const uint64_t& height,double min_height, double max_height,const bool& is_half);
+    static Ref<Image> get_image(const String& file_path, const uint64_t width, const uint64_t height,double min_height, double max_height,const bool is_half);
+    static Ref<ImageTexture> get_texture(const String& file_path, const uint64_t width, const uint64_t height,double min_height, double max_height,const bool is_half);
 };
 
 

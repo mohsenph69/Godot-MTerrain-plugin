@@ -42,7 +42,7 @@ bool MHole::is_two_point_brush(){
 void MHole::before_draw(){
 
 }
-float MHole::get_height(const uint32_t& x,const uint32_t& y){
+float MHole::get_height(uint32_t x,uint32_t y){
     uint32_t dx = abs(x - grid->brush_px_pos_x);
     uint32_t dy = abs(y - grid->brush_px_pos_y);
     float px_dis = (float)sqrt(dx*dx + dy*dy);

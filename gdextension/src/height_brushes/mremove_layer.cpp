@@ -56,7 +56,7 @@ bool MRemoveLayer::is_two_point_brush(){
 void MRemoveLayer::before_draw(){
 
 }
-float MRemoveLayer::get_height(const uint32_t& x,const uint32_t& y){
+float MRemoveLayer::get_height(uint32_t x,uint32_t y){
     float height = grid->get_height_by_pixel(x,y);
     float base_height = height - grid->get_height_by_pixel_in_layer(x,y);
     Vector3 world_pos = grid->get_pixel_world_pos(x,y);

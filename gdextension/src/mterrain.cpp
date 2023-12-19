@@ -436,16 +436,16 @@ void MTerrain::save_all_dirty_images(){
     }
 }
 
-Color MTerrain::get_pixel(const uint32_t& x,const uint32_t& y, const int32_t& index){
+Color MTerrain::get_pixel(const uint32_t x,const uint32_t y, const int32_t index){
     return grid->get_pixel(x,y,index);
 }
-void MTerrain::set_pixel(const uint32_t& x,const uint32_t& y,const Color& col,const int32_t& index){
+void MTerrain::set_pixel(const uint32_t x,const uint32_t y,const Color& col,const int32_t index){
     grid->set_pixel(x,y,col,index);
 }
-real_t MTerrain::get_height_by_pixel(const uint32_t& x,const uint32_t& y){
+real_t MTerrain::get_height_by_pixel(const uint32_t x,const uint32_t y){
     return grid->get_height_by_pixel(x,y);
 }
-void MTerrain::set_height_by_pixel(const uint32_t& x,const uint32_t& y,const real_t& value){
+void MTerrain::set_height_by_pixel(const uint32_t x,const uint32_t y,const real_t value){
     grid->set_height_by_pixel(x,y,value);
 }
 
@@ -874,7 +874,7 @@ void MTerrain::set_heightmap_layers(PackedStringArray input){
     }
     grid->heightmap_layers = input;
 }
-PackedStringArray MTerrain::get_heightmap_layers(){
+const PackedStringArray& MTerrain::get_heightmap_layers(){
     return grid->heightmap_layers;
 }
 

@@ -16,11 +16,11 @@ struct MPixelRegion {
     uint32_t height=0;
 
     MPixelRegion();
-    MPixelRegion(const uint32_t& _left, const uint32_t& _right, const uint32_t& _top, const uint32_t& _bottom);
-    MPixelRegion(const uint32_t& _width,const uint32_t& _height);
+    MPixelRegion(const uint32_t _left, const uint32_t _right, const uint32_t _top, const uint32_t _bottom);
+    MPixelRegion(const uint32_t _width,const uint32_t _height);
     void grow_all_side(const MPixelRegion& limit);
     void grow_all_side(const MPixelRegion& limit,uint32_t amount);
-    bool grow_positve(const uint32_t& xamount,const uint32_t& yamount,const MPixelRegion& limit);
+    bool grow_positve(const uint32_t xamount,const uint32_t yamount,const MPixelRegion& limit);
     Vector<MPixelRegion> devide(uint32_t amount);
     //Recieve another pixel region and return that in this region local position
     MPixelRegion get_local(MPixelRegion region);

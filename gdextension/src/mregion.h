@@ -74,18 +74,18 @@ class MRegion : public Object{
     void add_image(MImage* input);
     void configure();
     void update_region();
-    void insert_lod(const int8_t& input);
+    void insert_lod(const int8_t input);
     void apply_update();
     void create_physics();
     void remove_physics();
-    Color get_pixel(const uint32_t& x, const uint32_t& y, const int32_t& index) const;
-    void set_pixel(const uint32_t& x, const uint32_t& y,const Color& color,const int32_t& index);
-    Color get_normal_by_pixel(const uint32_t& x, const uint32_t& y) const;
-    void set_normal_by_pixel(const uint32_t& x, const uint32_t& y,const Color& value);
-    real_t get_height_by_pixel(const uint32_t& x, const uint32_t& y) const;
-    void set_height_by_pixel(const uint32_t& x, const uint32_t& y,const real_t& value);
+    Color get_pixel(const uint32_t x, const uint32_t y, const int32_t& index) const;
+    void set_pixel(const uint32_t x, const uint32_t y,const Color& color,const int32_t& index);
+    Color get_normal_by_pixel(const uint32_t x, const uint32_t y) const;
+    void set_normal_by_pixel(const uint32_t x, const uint32_t y,const Color& value);
+    real_t get_height_by_pixel(const uint32_t x, const uint32_t y) const;
+    void set_height_by_pixel(const uint32_t x, const uint32_t y,const real_t& value);
     real_t get_closest_height(Vector3 pos);
-    real_t get_height_by_pixel_in_layer(const uint32_t& x, const uint32_t& y) const;
+    real_t get_height_by_pixel_in_layer(const uint32_t x, const uint32_t y) const;
 
     void update_all_dirty_image_texture();
     void save_image(int index,bool force_save);

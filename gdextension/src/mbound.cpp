@@ -2,14 +2,14 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 MBound::MBound(){};
-MBound::MBound(const int32_t& _left,const int32_t& _right,const int32_t& _top,const int32_t& _bottom){
+MBound::MBound(const int32_t _left,const int32_t _right,const int32_t _top,const int32_t _bottom){
     left = _left;
     right = _right;
     top = _top;
     bottom = _bottom;
     center = MGridPos( (right - left)/2, 0, (bottom - top)/2 );
 }
-MBound::MBound(const MGridPos& pos,const int32_t& radius, const MGridPos& gird_size){
+MBound::MBound(const MGridPos& pos,const int32_t radius, const MGridPos& gird_size){
     left = CLAMP(pos.x - radius, 0, gird_size.x - 1);
     right = CLAMP(pos.x + radius, 0, gird_size.x - 1);
     top = CLAMP(pos.z - radius, 0, gird_size.z - 1);
@@ -24,7 +24,7 @@ MBound::MBound(const MGridPos& pos){
     center = pos;
 }
 
-MBound::MBound(const int32_t& x,const int32_t& z){
+MBound::MBound(const int32_t x,const int32_t z){
     left = x;
     right = x;
     top = z;
@@ -45,7 +45,7 @@ void MBound::clear() {
     bottom = 0;
 }
 
-bool MBound::has_point(const int32_t& x, const int32_t& y){
+bool MBound::has_point(const int32_t x, const int32_t y){
     if (x < left) return false;
     if (x > right) return false;
     if (y < top) return false;
@@ -98,7 +98,7 @@ MGridPos MBound::closest_point_on_ground(const MGridPos& pos) {
     return MGridPos(pos.x, 0 , bottom);
 }
 
-void MBound::grow_when_outside(const real_t& diff_x, const real_t& diff_z,const MGridPos& _grid_pos, const MBound& limit_bound,const int32_t& base_grid_size){
+void MBound::grow_when_outside(const real_t diff_x, const real_t diff_z,const MGridPos& _grid_pos, const MBound& limit_bound,const int32_t base_grid_size){
     int32_t amount_x;
     int32_t amount_z;
     // If is outside and not coordinated in angoles
@@ -128,7 +128,7 @@ void MBound::grow_when_outside(const real_t& diff_x, const real_t& diff_z,const 
     grow(limit_bound, amount_x, amount_z);
 }
 
-bool MBound::grow(const MBound& limit_bound,const int32_t& amount_x,const int32_t& amount_y) {
+bool MBound::grow(const MBound& limit_bound,const int32_t amount_x,const int32_t amount_y) {
     if (*this == limit_bound){
         grow_left = false;
         grow_right = false;
@@ -187,7 +187,7 @@ MGridPos MBound::get_edge_point() {
 }
 
 
-bool MBound::grow_positive(const int32_t& amount, const MBound& limit_bound) {
+bool MBound::grow_positive(const int32_t amount, const MBound& limit_bound) {
     right += amount;
     bottom += amount;
     if(right > limit_bound.right || bottom > limit_bound.bottom){
@@ -196,7 +196,7 @@ bool MBound::grow_positive(const int32_t& amount, const MBound& limit_bound) {
     return true;
 }
 
-bool MBound::get_next_region(const int32_t& region_size, const MBound& limit_bound) {
+bool MBound::get_next_region(const int32_t region_size, const MBound& limit_bound) {
     if(cursor.z == limit_bound.bottom){
         return false;
     }
@@ -216,7 +216,7 @@ bool MBound::get_next_region(const int32_t& region_size, const MBound& limit_bou
     return true;
 }
 
-bool MBound::get_next_shared_edge_region(const int32_t& region_size, const MBound& limit_bound){
+bool MBound::get_next_shared_edge_region(const int32_t region_size, const MBound& limit_bound){
     left = cursor.x;
     top = cursor.z;
     right = MIN(cursor.x + region_size, limit_bound.right);

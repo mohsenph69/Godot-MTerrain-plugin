@@ -18,7 +18,7 @@ MRaw16::~MRaw16()
 }
 
 
-Ref<Image> MRaw16::get_image(const String& file_path, const uint64_t& width, const uint64_t& height,double min_height, double max_height,const bool& is_half) {
+Ref<Image> MRaw16::get_image(const String& file_path, const uint64_t width, const uint64_t height,double min_height, double max_height,const bool is_half) {
     Ref<Image> img;
     UtilityFunctions::print("open: ", file_path);
     if(!FileAccess::file_exists(file_path)){
@@ -70,7 +70,7 @@ Ref<Image> MRaw16::get_image(const String& file_path, const uint64_t& width, con
 
 
 
-Ref<ImageTexture> MRaw16::get_texture(const String& file_path, const uint64_t& width, const uint64_t& height,double min_height, double max_height,const bool& is_half){
+Ref<ImageTexture> MRaw16::get_texture(const String& file_path, const uint64_t width, const uint64_t height,double min_height, double max_height,const bool is_half){
     Ref<Image> img = MRaw16::get_image(file_path, width, height,min_height,max_height,is_half);
     Ref<ImageTexture> tex;
     if(img.is_valid()){
