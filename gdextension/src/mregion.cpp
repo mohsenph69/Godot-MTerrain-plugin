@@ -157,6 +157,14 @@ void MRegion::create_physics() {
 	PhysicsServer3D::get_singleton()->body_add_shape(physic_body, heightmap_shape);
 	PhysicsServer3D::get_singleton()->body_set_space(physic_body, grid->space);
 	PhysicsServer3D::get_singleton()->body_set_state(physic_body, PhysicsServer3D::BodyState::BODY_STATE_TRANSFORM,transform);
+	PhysicsServer3D::get_singleton()->body_set_collision_layer(physic_body,grid->collision_layer);
+	PhysicsServer3D::get_singleton()->body_set_collision_mask(physic_body,grid->collision_mask);
+	if(grid->physics_material.is_valid()){
+		float friction = grid->physics_material->is_rough() ? - grid->physics_material->get_friction() : grid->physics_material->get_friction();
+		float bounce = grid->physics_material->is_absorbent() ? - grid->physics_material->get_bounce() : grid->physics_material->get_bounce();
+		PhysicsServer3D::get_singleton()->body_set_param(physic_body,PhysicsServer3D::BODY_PARAM_BOUNCE,bounce);
+		PhysicsServer3D::get_singleton()->body_set_param(physic_body,PhysicsServer3D::BODY_PARAM_FRICTION,friction);
+	}
 	has_physic = true;
 }
 

@@ -18,7 +18,7 @@
 #include <godot_cpp/classes/material.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
-
+#include <godot_cpp/classes/physics_material.hpp>
 
 
 
@@ -144,6 +144,9 @@ class MGrid : public Object {
     static void _bind_methods(){};
 
     public:
+    Ref<PhysicsMaterial> physics_material;
+    int collision_layer=1;
+    int collision_mask=1;
     MRegion* regions;
     // This can be removed in future but right now I keep it
     Vector<RID> update_mesh_list;

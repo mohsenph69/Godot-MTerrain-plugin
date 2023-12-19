@@ -128,6 +128,20 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_lod_distance"), &MTerrain::get_lod_distance);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY, "lod_distance",PROPERTY_HINT_NONE,"", PROPERTY_USAGE_STORAGE),"set_lod_distance","get_lod_distance");
 
+    ADD_SUBGROUP("Physics","");
+
+    ClassDB::bind_method(D_METHOD("set_physics_material","input"), &MTerrain::set_physics_material);
+    ClassDB::bind_method(D_METHOD("get_physics_material"), &MTerrain::get_physics_material);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"physics_material",PROPERTY_HINT_RESOURCE_TYPE,"PhysicsMaterial"),"set_physics_material","get_physics_material");
+
+    ClassDB::bind_method(D_METHOD("get_collision_layer"), &MTerrain::get_collision_layer);
+    ClassDB::bind_method(D_METHOD("set_collision_layer","input"), &MTerrain::set_collision_layer);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_layer",PROPERTY_HINT_LAYERS_3D_PHYSICS),"set_collision_layer","get_collision_layer");
+
+    ClassDB::bind_method(D_METHOD("set_collision_mask","input"), &MTerrain::set_collision_mask);
+    ClassDB::bind_method(D_METHOD("get_collision_mask"), &MTerrain::get_collision_mask);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_mask",PROPERTY_HINT_LAYERS_3D_PHYSICS),"set_collision_mask","get_collision_mask");
+
     ClassDB::bind_method(D_METHOD("get_pixel_world_pos", "x","y"), &MTerrain::get_pixel_world_pos);
     ClassDB::bind_method(D_METHOD("get_closest_pixel", "world_pos"), &MTerrain::get_closest_pixel);
     ClassDB::bind_method(D_METHOD("set_brush_manager", "brush_manager"), &MTerrain::set_brush_manager);
@@ -703,6 +717,24 @@ int MTerrain::get_max_h_scale(){
     return max_h_scale_index;
 }
 
+int MTerrain::get_collision_layer(){
+    return grid->collision_layer;
+}
+void MTerrain::set_collision_layer(int input){
+    grid->collision_layer = input;
+}
+int MTerrain::get_collision_mask(){
+    return grid->collision_mask;
+}
+void MTerrain::set_collision_mask(int input){
+    grid->collision_mask = input;
+}
+Ref<PhysicsMaterial> MTerrain::get_physics_material(){
+    return grid->physics_material;
+}
+void MTerrain::set_physics_material(Ref<PhysicsMaterial> input){
+    grid->physics_material = input;
+}
 
 void MTerrain::set_size_info(const Array& arr) {
     size_info = arr;

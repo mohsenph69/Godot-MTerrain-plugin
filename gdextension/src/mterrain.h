@@ -179,6 +179,12 @@ class MTerrain : public  Node3D {
     void set_min_h_scale(int index);
     int get_max_h_scale();
     void set_max_h_scale(int index);
+    int get_collision_layer();
+    void set_collision_layer(int input);
+    int get_collision_mask();
+    void set_collision_mask(int input);
+    Ref<PhysicsMaterial> get_physics_material();
+    void set_physics_material(Ref<PhysicsMaterial> input);
     void set_size_info(const Array& arr);
     Array get_size_info();
     void set_lod_distance(const PackedInt32Array& input);
