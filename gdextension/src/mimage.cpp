@@ -366,7 +366,7 @@ void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
 	check_undo();
 	uint32_t ofs = (x + y*width);
 	uint8_t* ptrw = data.ptrw() + ofs*pixel_size;
-	mempcpy(ptrw,ptr,pixel_size);
+	memcpy(ptrw,ptr,pixel_size);
 	is_dirty = true;
 	is_save = false;
 }

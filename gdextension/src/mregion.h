@@ -53,8 +53,8 @@ class MRegion : public Object{
 
     public:
     Vector<MImage*> images;
-    float min_height= 1000000000000000;	
-    float max_height=-1000000000000000;
+    float min_height= 100000;	
+    float max_height=-100000;
     MGrid* grid;
     MGridPos pos;
     Vector3 world_pos;

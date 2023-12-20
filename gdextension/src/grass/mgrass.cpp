@@ -326,7 +326,7 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                         buffer.resize(buffer.size()+12);
                         float* ptrw = (float*)buffer.ptrw();
                         ptrw += index;
-                        mempcpy(ptrw,ptr,BUFFER_STRID_BYTE);
+                        memcpy(ptrw,ptr,BUFFER_STRID_BYTE);
                         Vector3 pos;
                         pos.x = root_g->world_pos.x + x*grass_data->density + ptrw[3];
                         pos.z = root_g->world_pos.z + y*grass_data->density + ptrw[11];
@@ -494,8 +494,8 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
     uint32_t j=1;
     for(uint32_t y = px.top; y<=px.bottom;y++){
         for(uint32_t x = px.left; x<=px.right;x++){
-            uint32_t dif_x = abs(x - brush_px_pos_x);
-            uint32_t dif_y = abs(y - brush_px_pos_y);
+            uint32_t dif_x = UABS_DIFF(x,brush_px_pos_x);
+            uint32_t dif_y = UABS_DIFF(y,brush_px_pos_y);
             uint32_t dis = sqrt(dif_x*dif_x + dif_y*dif_y);
             Vector2i grid_px = grass_px_to_grid_px(x,y);
             if(dis<brush_px_radius && grid->get_brush_mask_value_bool(grid_px.x,grid_px.y))

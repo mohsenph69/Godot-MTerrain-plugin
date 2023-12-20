@@ -27,15 +27,15 @@ void MBitwiseBrush::before_draw(){
 }
 void MBitwiseBrush::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_t y,MImage* img){
     //Calculating w
-    uint32_t dx = abs(x - grid->brush_px_pos_x);
-    uint32_t dy = abs(y - grid->brush_px_pos_y);
+    uint32_t dx = UABS_DIFF(x,grid->brush_px_pos_x);
+    uint32_t dy = UABS_DIFF(y,grid->brush_px_pos_y);
     float px_dis = (float)sqrt(dx*dx + dy*dy);
     px_dis /= (float)grid->brush_px_radius;
     // setting color
     const uint8_t* ptr = grid->get_pixel_by_pointer(x,y,grid->current_paint_index);
     uint32_t ofs = (local_y*img->width + local_x)*img->pixel_size;
     uint8_t* ptrw = img->data.ptrw() + ofs;
-    mempcpy(ptrw, ptr, img->pixel_size);
+    memcpy(ptrw, ptr, img->pixel_size);
     if( bit>(img->pixel_size*8 - 1) ){
         return;
     }

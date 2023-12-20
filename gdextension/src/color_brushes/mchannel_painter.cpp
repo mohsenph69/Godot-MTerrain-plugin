@@ -51,8 +51,8 @@ void MChannelPainter::before_draw(){
 }
 void MChannelPainter::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uint32_t y,MImage* img){
     //Calculating w
-    uint32_t dx = abs(x - grid->brush_px_pos_x);
-    uint32_t dy = abs(y - grid->brush_px_pos_y);
+    uint32_t dx = UABS_DIFF(x,grid->brush_px_pos_x);
+    uint32_t dy = UABS_DIFF(y,grid->brush_px_pos_y);
     float px_dis = (float)sqrt(dx*dx + dy*dy);
     px_dis /= (float)grid->brush_px_radius;
     float w = UtilityFunctions::smoothstep(1,hardness,px_dis);
@@ -62,7 +62,7 @@ void MChannelPainter::set_color(uint32_t local_x,uint32_t local_y,uint32_t x,uin
     // setting color
     const uint8_t* ptr = grid->get_pixel_by_pointer(x,y,grid->current_paint_index);
     uint32_t ofs = local_y*img->width + local_x;
-    mempcpy(img->data.ptrw() + ofs*img->pixel_size, ptr, img->pixel_size);
+    memcpy(img->data.ptrw() + ofs*img->pixel_size, ptr, img->pixel_size);
     if(red){
         float bg = img->get_pixel_in_channel(local_x,local_y,0);
         float val = (red_value - bg)*w + bg;

@@ -36,4 +36,11 @@
 #define M_DEAFAULT_MATERIAL_PATH "res://addons/m_terrain/start_material.res"
 #define M_SHOW_REGION_SHADER_PATH "res://addons/m_terrain/show_region.gdshader"
 
+#ifdef ANDROID_ENABLED
+#define UABS_DIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
+#else
+#define UABS_DIFF(a, b) abs(a-b)
+#endif
+
+
 #endif

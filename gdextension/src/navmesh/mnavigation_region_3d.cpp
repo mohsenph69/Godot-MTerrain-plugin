@@ -607,8 +607,8 @@ void MNavigationRegion3D::draw_npoints(Vector3 brush_pos,real_t radius,bool add)
     uint32_t j=1;
     for(uint32_t y = px.top; y<=px.bottom;y++){
         for(uint32_t x = px.left; x<=px.right;x++){
-            uint32_t dif_x = abs(x - brush_px_pos_x);
-            uint32_t dif_y = abs(y - brush_px_pos_y);
+            uint32_t dif_x = UABS_DIFF(x,brush_px_pos_x);
+            uint32_t dif_y = UABS_DIFF(y,brush_px_pos_y);
             uint32_t dis = sqrt(dif_x*dif_x + dif_y*dif_y);
             if(dis<brush_px_radius)
                 set_npoint_by_pixel(x,y,add);
