@@ -224,6 +224,8 @@ void MTerrain::_finish_terrain() {
 
 void MTerrain::create_grid(){
     ERR_FAIL_COND(grid->is_created());
+    ERR_FAIL_COND_EDMSG(terrain_size.x%region_size!=0,"Terrain size X component is not divisible by region size");
+    ERR_FAIL_COND_EDMSG(terrain_size.y%region_size!=0,"Terrain size Y component is not divisible by region size");
     _chunks = memnew(MChunks);
     _chunks->create_chunks(size_list[min_size_index],size_list[max_size_index],h_scale_list[min_h_scale_index],h_scale_list[max_h_scale_index],size_info);
     grid->set_scenario(get_world_3d()->get_scenario());

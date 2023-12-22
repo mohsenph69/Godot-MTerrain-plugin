@@ -66,6 +66,9 @@ struct MImage {
     int current_undo_id;
     // Key is undo redo id
     HashMap<int,MImageUndoData> undo_data;
+    bool is_init=false;
+    bool is_corrupt_file = false;
+    bool is_null_image=true;
     
     MImage();
     MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,const int& _compression);

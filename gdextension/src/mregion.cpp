@@ -53,13 +53,11 @@ void MRegion::configure() {
 		if(images[i]->name != "normals"){
 			images[i]->active_undo = true;
 		}
-		if(images[i]->width != grid->region_pixel_size){
-			images[i]->create(grid->region_pixel_size, images[i]->format);
+		if(images[i]->is_null_image){
 			if(images[i]->name == "heightmap"){
-				min_height = -0.1;
-				max_height = 0.1;
+				min_height = -0.01;
+				max_height = 0.01;
 			}
-			ERR_FAIL_MSG("Region size not match for "+images[i]->name+ " please Check region size");
 		}
 	}
 	int64_t index = 0;
@@ -127,7 +125,7 @@ void MRegion::apply_update() {
 
 void MRegion::create_physics() {
 	ERR_FAIL_COND(heightmap == nullptr);
-	if(has_physic){
+	if(has_physic || heightmap->is_corrupt_file || heightmap->is_null_image){
 		return;
 	}
 	physic_body = PhysicsServer3D::get_singleton()->body_create();

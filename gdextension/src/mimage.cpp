@@ -9,6 +9,7 @@
 
 #include "mbound.h"
 #include "mregion.h"
+#include "mgrid.h"
 
 MImage::MImage(){
 	
@@ -33,6 +34,10 @@ MImage::MImage(const String& _file_path,const String& _layers_folder,const Strin
 
 
 MImage::~MImage(){
+	if(is_null_image){
+		UtilityFunctions::print("Null image returning ");
+		return;
+	}
 	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){
 		it->value.free();
 	}
@@ -48,21 +53,37 @@ MImage::~MImage(){
 }
 
 void MImage::load(){
+	ERR_FAIL_COND(is_init);
     Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
+	ERR_FAIL_COND(!img.is_valid());
     width = img->get_size().x;
 	height = img->get_size().x;
+	ERR_FAIL_COND(width!=height);
 	total_pixel_amount = width*height;
     format = img->get_format();
 	pixel_size = get_format_pixel_size(format);
+	if(pixel_size==0){
+		if(img->decompress() == godot::Error::OK){
+			pixel_size = get_format_pixel_size(format);
+			WARN_PRINT("Decompressing Image, MTerrain does not support the image format for "+file_path);
+		} else {
+			ERR_FAIL_MSG("Unsported image format for Mterrain");
+		}
+	}
     data = img->get_data();
     current_size = width;
-	if(pixel_size==0){
-		ERR_FAIL_EDMSG("Unsported image format for Mterrain");
-	}
 	is_save = true;
 	image_layers.push_back(&data);
 	layer_names.push_back("background");
 	is_saved_layers.push_back(true);
+	is_null_image = false;
+	is_init = true;
+	if(width!=region->grid->region_pixel_size){
+		data.resize(0);
+		is_corrupt_file = true;
+		is_null_image = true;
+		ERR_FAIL_MSG("Region width and height are "+itos(region->grid->region_pixel_size)+" According to the setting, But the image size in data directory is "+itos(width)+ " Change Terrain setting or images in data directory");
+	}
 }
 
 void MImage::set_active_layer(int l){
@@ -74,6 +95,9 @@ void MImage::set_active_layer(int l){
 
 // This must called alway after loading background image
 void MImage::add_layer(String lname){
+	if(is_null_image){
+		return;
+	}
 	ERR_FAIL_COND_EDMSG(data.size()==0,"You must first load the background image and then the layers");
 	ERR_FAIL_COND_EDMSG(name!="heightmap","Layers is supported only for heightmap images");
 	String ltname = lname +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
@@ -204,6 +228,7 @@ void MImage::layer_visible(bool input){
 }
 
 void MImage::create(uint32_t _size, Image::Format _format) {
+	ERR_FAIL_COND(is_init);
 	width = _size;
 	height =_size;
 	total_pixel_amount = width*height;
@@ -215,9 +240,12 @@ void MImage::create(uint32_t _size, Image::Format _format) {
 	image_layers.push_back(&data);
 	layer_names.push_back("Background");
 	is_saved_layers.push_back(false);
+	is_null_image = false;
+	is_init = true;
 }
 
 void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
+	ERR_FAIL_COND(is_init);
 	width = _width;
 	height =_height;
 	total_pixel_amount = width*height;
@@ -229,6 +257,8 @@ void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
 	image_layers.push_back(&data);
 	layer_names.push_back("Background");
 	is_saved_layers.push_back(false);
+	is_null_image = false;
+	is_init = true;
 }
 
 void MImage::get_data(PackedByteArray* out,int scale){
@@ -246,6 +276,9 @@ void MImage::get_data(PackedByteArray* out,int scale){
 }
 
 void MImage::update_texture(int scale,bool apply_update){
+	if(is_null_image){
+		return;
+	}
 	if(scale > 0){
 		Ref<Image> new_img;
 		if(scale!=0){
@@ -277,6 +310,9 @@ void MImage::update_texture(int scale,bool apply_update){
 
 void MImage::apply_update() {
 	//update_mutex.lock();
+	if(is_null_image){
+		return;
+	}
 	if(has_texture_to_apply){
 		if(old_tex_rid.is_valid()){
 			RS->call_deferred("free_rid",old_tex_rid);
@@ -292,11 +328,17 @@ void MImage::apply_update() {
 
 // This works only for Format_RF
 real_t MImage::get_pixel_RF(const uint32_t x, const uint32_t  y) const {
+	if(is_null_image){
+		return 0;
+	}
 	uint32_t ofs = (x + y*width);
     return ((float *)data.ptr())[ofs];
 }
 
 void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value){
+	if(is_null_image){
+		return;
+	}
 	check_undo();
 	// not visibile layers should not be modified but as this called many times
 	// it is better to check that in upper level
@@ -342,7 +384,7 @@ void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value
 }
 
 real_t MImage::get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y){
-	if(image_layers[active_layer]->size()==0){
+	if(image_layers[active_layer]->size()==0 || is_null_image){
 		return 0.0;
 	}
 	uint32_t ofs = (x + y*width);
@@ -350,11 +392,17 @@ real_t MImage::get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y){
 }
 
 Color MImage::get_pixel(const uint32_t x, const uint32_t  y) const {
+	if(is_null_image){
+		return Color();
+	}
 	uint32_t ofs = (x + y*width);
 	return _get_color_at_ofs(data.ptr(), ofs);
 }
 
 void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
+	if(is_null_image){
+		return;
+	}
 	check_undo();
 	uint32_t ofs = (x + y*width);
 	_set_color_at_ofs(data.ptrw(), ofs, color);
@@ -363,6 +411,9 @@ void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
 }
 
 void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
+	if(is_null_image){
+		return;
+	}
 	check_undo();
 	uint32_t ofs = (x + y*width);
 	uint8_t* ptrw = data.ptrw() + ofs*pixel_size;
@@ -372,11 +423,18 @@ void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
 }
 
 const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y){
+	if(is_null_image){
+		return nullptr;
+	}
 	uint32_t ofs = (x + y*width);
 	return data.ptr() + ofs*pixel_size;
 }
 
 void MImage::save(bool force_save) {
+	ERR_FAIL_COND(is_corrupt_file);
+	if(is_null_image){
+		return;
+	}
 	if(name!="heightmap"){
 		Ref<Image> img = Image::create_from_data(width,height,false,format,data);
 		godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
