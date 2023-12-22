@@ -162,6 +162,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_region_id_by_world_pos","world_pos"), &MTerrain::get_region_id_by_world_pos);
     ClassDB::bind_method(D_METHOD("get_base_size"), &MTerrain::get_base_size);
     ClassDB::bind_method(D_METHOD("get_h_scale"), &MTerrain::get_h_scale);
+    ClassDB::bind_method(D_METHOD("get_pixel_width"), &MTerrain::get_pixel_width);
+    ClassDB::bind_method(D_METHOD("get_pixel_height"), &MTerrain::get_pixel_height);
 
     ClassDB::bind_method(D_METHOD("set_brush_layers","input"), &MTerrain::set_brush_layers);
     ClassDB::bind_method(D_METHOD("get_brush_layers"), &MTerrain::get_brush_layers);
@@ -984,6 +986,24 @@ int32_t MTerrain::get_base_size(){
 }
 float MTerrain::get_h_scale(){
     return h_scale_list[min_h_scale_index];
+}
+
+int MTerrain::get_pixel_width(){
+    #ifdef DEBUG_ENABLED
+    if(!grid->is_created()){
+        WARN_PRINT("First create grid and then get the pixel width");
+    }
+    #endif
+    return grid->grid_pixel_region.width;
+}
+
+int MTerrain::get_pixel_height(){
+    #ifdef DEBUG_ENABLED
+    if(!grid->is_created()){
+        WARN_PRINT("First create grid and then get the pixel height");
+    }
+    #endif
+    return grid->grid_pixel_region.height;
 }
 
 #include <godot_cpp/classes/file_access.hpp>

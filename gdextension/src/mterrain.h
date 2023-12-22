@@ -220,6 +220,8 @@ class MTerrain : public  Node3D {
     int get_region_id_by_world_pos(const Vector3& world_pos);
     int32_t get_base_size();
     float get_h_scale();
+    int get_pixel_width();
+    int get_pixel_height();
 
     void set_brush_layers(Array input);
     Array get_brush_layers();

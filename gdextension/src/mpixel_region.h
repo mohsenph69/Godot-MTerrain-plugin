@@ -24,6 +24,7 @@ struct MPixelRegion {
     Vector<MPixelRegion> devide(uint32_t amount);
     //Recieve another pixel region and return that in this region local position
     MPixelRegion get_local(MPixelRegion region);
+    void clear();
 };
 
 #endif

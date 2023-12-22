@@ -604,7 +604,6 @@ void MTerrainMaterial::set_all_next_passes() {
             Dictionary npm = next_passes[-1];
             Ref<Material> mat = npm["next_pass"];
             if(mat.is_valid()){
-                UtilityFunctions::print("Set defff");
                 RS->material_set_next_pass(it->value,mat->get_rid());
                 continue;
             }

@@ -68,6 +68,7 @@ void MGrid::clear() {
     current_undo_id =0;
     lowest_undo_id=0;
     _regions_count = 0;
+    grid_pixel_region.clear();
 }
 
 bool MGrid::is_created() {
