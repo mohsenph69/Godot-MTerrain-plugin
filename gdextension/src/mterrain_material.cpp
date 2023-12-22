@@ -202,6 +202,16 @@ bool MTerrainMaterial::_set(const StringName &p_name, const Variant &p_value) {
             npm = next_passes[active_region];
         }
         npm["next_pass"] = p_value;
+        Ref<ShaderMaterial> shmat = p_value;
+        if(shmat.is_valid()){
+            if(!shmat->get_shader().is_valid()){
+                Ref<Shader> s;
+                s.instantiate();
+                String c = "shader_type spatial;\n\nvoid vertex(){\n\n}\n\nvoid fragment(){\n\n}";
+                s->set_code(c);
+                shmat->set_shader(s);
+            }
+        }
         next_passes[active_region] = npm;
         set_next_pass(active_region);
         return true;
