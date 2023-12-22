@@ -112,12 +112,4 @@ struct MImage {
 
 };
 
-
-enum MImageBlendMode {
-    mix,
-    add
-};
-
-
-
 #endif

@@ -35,7 +35,6 @@ MImage::MImage(const String& _file_path,const String& _layers_folder,const Strin
 
 MImage::~MImage(){
 	if(is_null_image){
-		UtilityFunctions::print("Null image returning ");
 		return;
 	}
 	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){

@@ -471,7 +471,7 @@ void MTerrain::get_cam_pos() {
     }
     Viewport* v = get_viewport();
     Camera3D* camera = v->get_camera_3d();
-    ERR_FAIL_COND_EDMSG(camera==nullptr, "No camera is detected, If you are in editor activate MTerrain plugin");
+    ERR_FAIL_COND_EDMSG(camera==nullptr, "No camera is detected, If you are in editor activate MTerrain plugin and click on terrain node");
     cam_pos = camera->get_global_position();
 }
 
