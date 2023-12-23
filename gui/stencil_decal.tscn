@@ -8,8 +8,8 @@
 noise = SubResource("FastNoiseLite_ejyee")
 
 [node name="stencil_decal" type="Decal"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.13528e-05, 0, 8.54326e-05)
-size = Vector3(8, 100, 8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.87774e-05, 0, 6.1725e-05)
+size = Vector3(8, 20000, 8)
 texture_albedo = SubResource("NoiseTexture2D_cuo2h")
 albedo_mix = 0.8
 script = ExtResource("1_8ow5o")

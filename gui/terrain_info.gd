@@ -62,12 +62,12 @@ func generate_info(_t:MTerrain,_version:String):
 	tsizeg.text += " %d X %d" % [terrain.terrain_size.x,terrain.terrain_size.y]
 	tsizem.text += " %dm X %dm" % [terrain_meter_size.x,terrain_meter_size.y]
 	takm.text += " %10.3f km2" % [float(terrain_area)/1000000.0]
-	tsizepx.text += " %dm X %dm" % [terrain_pixel_size.x,terrain_pixel_size.y]
+	tsizepx.text += " %d X %d" % [terrain_pixel_size.x,terrain_pixel_size.y]
 	tregioncount.text += " %d" % [region_count]
 	tregioncountX.text += " %d" % [region_grid_size.x]
 	tregioncountY.text += " %d" % [region_grid_size.y]
 	rsizem.text += " %dm" % [region_meter_size]
-	rsizepixel.text += " %dm" % [region_pixel_size]
+	rsizepixel.text += " %d" % [region_pixel_size]
 	var vc = (terrain.get_base_size()/terrain.get_h_scale())+1
 	vc *= vc
 	base_unit.text = base_unit.text % [terrain.get_base_size(),vc]

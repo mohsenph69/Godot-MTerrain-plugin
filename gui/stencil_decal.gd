@@ -53,11 +53,8 @@ func set_absolute_terrain_pos(pos:Vector3,terrain:MTerrain):
 func toggle_fix():
 	is_fix = not is_fix
 
-func increase_size(terrain:MTerrain):
-	change_size(1,terrain)
-
-func decrease_size(terrain:MTerrain):
-	change_size(-1,terrain)
+func increase_size(terrain:MTerrain,amount:int=1):
+	change_size(amount,terrain)
 
 func change_size(amount:float,terrain:MTerrain):
 	if is_fix: return

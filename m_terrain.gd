@@ -23,6 +23,11 @@ var is_paint_active:bool = false
 
 var action=""
 
+var paint_brush_resize_speed:float=1.0
+var paint_mask_resize_speed:float=1.0
+const max_paint_brush_resize_speed:float=8.0
+const max_mask_brush_resize_speed:float=16.0
+
 var current_window_info=null
 
 func _enter_tree():
@@ -102,17 +107,33 @@ func _forward_3d_gui_input(viewport_camera, event):
 	if tools.active_paint_mode:
 		if event is InputEventKey:
 			if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
-				var size = paint_panel.brush_size + 1
-				paint_panel.change_brush_size(size)
-				return AFTER_GUI_INPUT_STOP
+				if event.is_pressed():
+					paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
+					var size = paint_panel.brush_size + floor(paint_brush_resize_speed)
+					paint_panel.change_brush_size(size)
+					return AFTER_GUI_INPUT_STOP
+				else:
+					paint_brush_resize_speed=1
 			elif event.keycode == KEY_MINUS:
-				var size = paint_panel.brush_size - 1
-				paint_panel.change_brush_size(size)
-				return AFTER_GUI_INPUT_STOP
-			elif event.keycode == KEY_COMMA and event.pressed:
-				stencil_decal.decrease_size(active_terrain)
-			elif event.keycode == KEY_PERIOD and event.pressed:
-				stencil_decal.increase_size(active_terrain)
+				if event.is_pressed():
+					paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
+					var size = paint_panel.brush_size - floor(paint_brush_resize_speed)
+					paint_panel.change_brush_size(size)
+					return AFTER_GUI_INPUT_STOP
+				else:
+					paint_brush_resize_speed=1
+			elif event.keycode == KEY_COMMA:
+				if event.is_pressed():
+					paint_mask_resize_speed = min(paint_mask_resize_speed+0.2,max_mask_brush_resize_speed)
+					stencil_decal.increase_size(active_terrain,-paint_mask_resize_speed)
+				else:
+					paint_mask_resize_speed=1
+			elif event.keycode == KEY_PERIOD:
+				if event.is_pressed():
+					paint_mask_resize_speed = min(paint_mask_resize_speed+0.2,max_mask_brush_resize_speed)
+					stencil_decal.increase_size(active_terrain,paint_mask_resize_speed)
+				else:
+					paint_mask_resize_speed=1
 			elif event.keycode == KEY_K and event.pressed:
 				stencil_decal.rotate_image(-1)
 			elif event.keycode == KEY_L and event.pressed:
