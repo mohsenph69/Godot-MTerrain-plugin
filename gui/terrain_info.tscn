@@ -1,0 +1,173 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcvync03h4h35"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/gui/terrain_info.gd" id="1_wd31j"]
+[ext_resource type="StyleBox" uid="uid://cjys1hccuc4wx" path="res://addons/m_terrain/gui/styles/terrain_infor_lable_stylebox.tres" id="2_mc1wb"]
+
+[node name="Terrain_info" type="Window"]
+title = "M Terrain Info"
+initial_position = 1
+size = Vector2i(420, 280)
+script = ExtResource("1_wd31j")
+
+[node name="base" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TabContainer" type="TabContainer" parent="base"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Terrain" type="TabBar" parent="base/TabContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="base/TabContainer/Terrain"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Error" type="Label" parent="base/TabContainer/Terrain/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.172549, 0.219608, 1)
+theme_override_styles/normal = ExtResource("2_mc1wb")
+text = "Error: No Active Terrain"
+autowrap_mode = 2
+
+[node name="tsizeg" type="RichTextLabel" parent="base/TabContainer/Terrain/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Terrain Size in Grid unit: [/color]"
+fit_content = true
+
+[node name="tsizem" type="RichTextLabel" parent="base/TabContainer/Terrain/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Terrain size in meter: [/color]"
+fit_content = true
+
+[node name="takm" type="RichTextLabel" parent="base/TabContainer/Terrain/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Terrain area square km: [/color]"
+fit_content = true
+
+[node name="tsizepx" type="RichTextLabel" parent="base/TabContainer/Terrain/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Terrain pixel size:[/color]"
+fit_content = true
+
+[node name="tregioncount" type="RichTextLabel" parent="base/TabContainer/Terrain/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Terrain region count:[/color]"
+fit_content = true
+
+[node name="tregioncountX" type="RichTextLabel" parent="base/TabContainer/Terrain/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Terrain region count in X direction:[/color]"
+fit_content = true
+
+[node name="tregioncountZ" type="RichTextLabel" parent="base/TabContainer/Terrain/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Terrain region count in Z direction:[/color]"
+fit_content = true
+autowrap_mode = 2
+
+[node name="Region" type="TabBar" parent="base/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="base/TabContainer/Region"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="rsizem" type="RichTextLabel" parent="base/TabContainer/Region/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Region size in meter:[/color]"
+fit_content = true
+
+[node name="rsizepixel" type="RichTextLabel" parent="base/TabContainer/Region/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[color=green]Region size in pixel:[/color]"
+fit_content = true
+
+[node name="Warning" type="Label" parent="base/TabContainer/Region/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.4, 1)
+theme_override_styles/normal = ExtResource("2_mc1wb")
+text = "Please note: No Active TerrainPlease note: No Active TerrainPlease note: No Active Terrain"
+autowrap_mode = 2
+
+[node name="note" type="Label" parent="base/TabContainer/Region/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.729412, 0, 1)
+theme_override_styles/normal = ExtResource("2_mc1wb")
+text = "In case you change region size after initializing terrain data you should reimport heightmap data and adjust your heightmap data to region pixel "
+autowrap_mode = 2
+
+[node name="Base Size" type="TabBar" parent="base/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="base_unit" type="Label" parent="base/TabContainer/Base Size"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 29.0
+grow_horizontal = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+text = "Smallest grid unit
+
+size: %d meter
+vertex count: %d"
+
+[node name="info" type="TabBar" parent="base/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="info" type="RichTextLabel" parent="base/TabContainer/info"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 29.0
+grow_horizontal = 2
+theme_override_styles/normal = ExtResource("2_mc1wb")
+bbcode_enabled = true
+text = "[center]MTerrain %s
+
+For more information read [url=https://github.com/mohsenph69/Godot-MTerrain-plugin/wiki]wiki[/url] page
+on [url=https://github.com/mohsenph69/Godot-MTerrain-plugin]Github[/url]
+[/center]"
+fit_content = true
+
+[connection signal="close_requested" from="." to="." method="_on_close_requested"]
+[connection signal="meta_clicked" from="base/TabContainer/info/info" to="." method="_on_info_meta_clicked"]

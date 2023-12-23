@@ -11,6 +11,7 @@ class_name MTools
 
 signal toggle_paint_mode
 signal save_request
+signal info_window_open_request
 var active_paint_mode := false
 var human_male_active:=false
 
@@ -54,3 +55,7 @@ func set_save_button_disabled(input:bool):
 
 func _on_save_pressed():
 	emit_signal("save_request")
+
+
+func _on_info_btn_pressed():
+	emit_signal("info_window_open_request")

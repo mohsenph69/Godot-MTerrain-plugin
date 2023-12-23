@@ -1,6 +1,6 @@
 @tool
 extends EditorPlugin
-
+var version:String="0.9.4"
 var import_window_res = preload("res://addons/m_terrain/gui/import_window.tscn")
 var image_creator_window_res = preload("res://addons/m_terrain/gui/image_creator_window.tscn")
 var tools= null
@@ -23,6 +23,8 @@ var is_paint_active:bool = false
 
 var action=""
 
+var current_window_info=null
+
 func _enter_tree():
 	if Engine.is_editor_hint():
 		add_tool_menu_item("MTerrain importer", Callable(self,"show_import_window"))
@@ -30,6 +32,7 @@ func _enter_tree():
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
 		tools.toggle_paint_mode.connect(Callable(self,"toggle_paint_mode"))
 		tools.save_request.connect(Callable(self,"save_request"))
+		tools.info_window_open_request.connect(Callable(self,"info_window_open_request"))
 		tools.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		paint_panel = preload("res://addons/m_terrain/gui/paint_panel.tscn").instantiate()
@@ -257,3 +260,12 @@ func brush_size_changed(value):
 func _save_external_data():
 	if active_terrain:
 		active_terrain.save_all_dirty_images()
+
+func info_window_open_request():
+	if is_instance_valid(current_window_info):
+		current_window_info.queue_free()
+	current_window_info = load("res://addons/m_terrain/gui/terrain_info.tscn").instantiate()
+	add_child(current_window_info)
+	current_window_info.generate_info(active_terrain,version)
+	
+
