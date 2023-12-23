@@ -65,7 +65,7 @@ struct MGrassChunk // Rendering server multi mesh data
     }
     void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data){
         //UtilityFunctions::print("Buffer count ",_count, " c ", count);
-        if(_count!=0 && count == 0){
+        if(_count!=0 && count == 0){ //creating
             multimesh = RenderingServer::get_singleton()->multimesh_create();
             RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
             instance = RenderingServer::get_singleton()->instance_create();
@@ -74,7 +74,7 @@ struct MGrassChunk // Rendering server multi mesh data
             RenderingServer::get_singleton()->instance_set_base(instance, multimesh);
             RenderingServer::get_singleton()->instance_geometry_set_material_override(instance,material);
             RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
-        } else if(_count==0 && count!=0){
+        } else if(_count==0 && count!=0){ //destroying
             RenderingServer::get_singleton()->free_rid(multimesh);
             RenderingServer::get_singleton()->free_rid(instance);
             instance = RID();
@@ -83,6 +83,9 @@ struct MGrassChunk // Rendering server multi mesh data
             return;
         } else if(_count==0 && count==0){
             return;
+        } else if(count==_count){ // Can be Mesh or material update
+            RenderingServer::get_singleton()->multimesh_set_mesh(multimesh, mesh_rid);
+            RenderingServer::get_singleton()->instance_geometry_set_material_override(instance,material);
         }
         count = _count;
         RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);

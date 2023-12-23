@@ -1,5 +1,6 @@
 #include "mgrass.h"
 #include "../mgrid.h"
+#include "../mterrain.h"
 
 #include <godot_cpp/classes/resource_saver.hpp>
 
@@ -75,18 +76,20 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("undo"), &MGrass::undo);
     ClassDB::bind_method(D_METHOD("_lod_setting_changed"), &MGrass::_lod_setting_changed);
     ClassDB::bind_method(D_METHOD("_grass_tree_exiting"), &MGrass::_grass_tree_exiting);
+    ClassDB::bind_method(D_METHOD("_grass_tree_entered"), &MGrass::_grass_tree_entered);
 }
 
 MGrass::MGrass(){
     dirty_points_id = memnew(VSet<int>);
     connect("tree_exiting",Callable(this,"_grass_tree_exiting"));
+    connect("tree_entered",Callable(this,"_grass_tree_entered"));
 }
 MGrass::~MGrass(){
     memdelete(dirty_points_id);
 }
 
 void MGrass::init_grass(MGrid* _grid) {
-    ERR_FAIL_COND(!grass_data.is_valid());
+    ERR_FAIL_COND_EDMSG(!grass_data.is_valid(),"Grass \""+get_name()+"\" Data is invalid, Please set grass data and save that with .res ext");
     if(!active){
         return;
     }
@@ -113,7 +116,7 @@ void MGrass::init_grass(MGrid* _grid) {
         grass_data->data.resize(data_size);
     } else {
         // Data already created so we check if the data size is correct
-        ERR_FAIL_COND_EDMSG(grass_data->data.size()!=data_size,"Grass data not match, Some Terrain setting and grass density should not change after grass data creation, change back setting or create a new grass data");
+        ERR_FAIL_COND_EDMSG(grass_data->data.size()!=data_size,"Grass \""+get_name()+"\" data not match, Some Terrain setting and grass density should not change after grass data creation, change back setting or create a new grass data");
     }
     meshe_rids.clear();
     material_rids.clear();
@@ -1017,6 +1020,17 @@ void MGrass::undo(){
     ERR_FAIL_COND(!grass_data.is_valid());
     grass_data->undo();
     recreate_all_grass();
+}
+
+void MGrass::_grass_tree_entered(){
+    MTerrain* parent = Object::cast_to<MTerrain>(get_parent());
+    if(parent){
+        if(parent->is_grid_created()){
+            ERR_FAIL_EDMSG("You should restart the terrain to grass initialize correctly");
+        }
+    } else {
+        ERR_FAIL_EDMSG("Grass must be the direct children of MTerrain Node");
+    }
 }
 
 void MGrass::_grass_tree_exiting(){
