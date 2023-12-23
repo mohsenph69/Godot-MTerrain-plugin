@@ -951,6 +951,12 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
         }
         lod_settings[index] = p_value;
         Ref<MGrassLodSetting> setting = p_value;
+        if(setting.is_valid()){
+            if(!setting->is_connected("lod_setting_changed",Callable(this,"_lod_setting_changed")))
+            {
+                setting->connect("lod_setting_changed",Callable(this,"_lod_setting_changed"));
+            }
+        }
         if(is_grass_init){
             if(!setting.is_valid()){
                 setting = ResourceLoader::get_singleton()->load("res://addons/m_terrain/default_lod_setting.res");
