@@ -61,6 +61,10 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_heightmap_layers"), &MTerrain::get_heightmap_layers);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "heightmap_layers"), "set_heightmap_layers","get_heightmap_layers");
 
+    ClassDB::bind_method(D_METHOD("set_regions_limit","input"), &MTerrain::set_regions_limit);
+    ClassDB::bind_method(D_METHOD("get_regions_limit"), &MTerrain::get_regions_limit);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "regions_limit"), "set_regions_limit", "get_regions_limit");
+
     ClassDB::bind_method(D_METHOD("set_update_chunks_interval","interval"), &MTerrain::set_update_chunks_interval);
     ClassDB::bind_method(D_METHOD("get_update_chunks_interval"), &MTerrain::get_update_chunks_interval);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "update_chunks_interval"), "set_update_chunks_interval", "get_update_chunks_interval");
@@ -222,6 +226,7 @@ void MTerrain::_finish_terrain() {
     if(update_thread_chunks.valid()){
         update_thread_chunks.wait();
     }
+    grid->clear();
 }
 
 void MTerrain::create_grid(){
@@ -246,6 +251,9 @@ void MTerrain::create_grid(){
     grid->lod_distance = lod_distance;
     grid->create(terrain_size.x,terrain_size.y,_chunks);
     get_cam_pos();
+    grid->update_regions_bounds(cam_pos);
+    grid->update_regions();
+    grid->clear_region_bounds();
     grid->update_chunks(cam_pos);
     grid->apply_update_chunks();
     grid->update_physics(cam_pos);
@@ -326,9 +334,17 @@ void MTerrain::update() {
     finish_updating = false;
     // In case -1 is Terrain grid update turn
     if(update_stage==-1){
+        //Updating Regions
+        if(!is_update_regions_future_valid || update_regions_future.wait_for(std::chrono::microseconds(0))==std::future_status::ready){
+            grid->update_regions_bounds(cam_pos); //will clear old bound
+            update_regions_future = std::async(std::launch::async, &MGrid::update_regions, grid);
+            is_update_regions_future_valid=true;
+        }
+        // Finish update regions //
+
+        // Terrain update
         last_update_pos = cam_pos;
         update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
-        
     }
     else if(update_stage>=0){
         if(update_stage>=confirm_grass_list.size()){
@@ -519,6 +535,16 @@ void MTerrain::set_save_generated_normals(bool input){
 
 bool MTerrain::get_save_generated_normals(){
     return save_generated_normals;
+}
+
+void MTerrain::set_regions_limit(int input){
+    if(input<1){
+        return;
+    }
+    grid->region_limit = input;
+}
+int MTerrain::get_regions_limit(){
+    return grid->region_limit;
 }
 
 float MTerrain::get_update_chunks_interval(){
@@ -1115,4 +1141,11 @@ Vector3 MTerrain::get_normal(const Vector3 world_pos){
 Vector3 MTerrain::get_normal_accurate(Vector3 world_pos){
     ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal_accurate(world_pos);
+}
+
+
+void MTerrain::_notification(int32_t what){
+    if(what == NOTIFICATION_WM_CLOSE_REQUEST || what == NOTIFICATION_WM_GO_BACK_REQUEST){
+        _finish_terrain();
+    }
 }

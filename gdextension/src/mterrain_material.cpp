@@ -398,7 +398,6 @@ void MTerrainMaterial::add_terrain_image(String name) {
             MGridPos rpos(x,0,z);
             MImage* i = memnew(MImage(file_path,grid->layersDataDir,name,uniform_name,rpos,region));
             region->add_image(i);
-            i->load();
             all_images.push_back(i);
             if(name=="heightmap"){
                 all_heightmap_images.push_back(i);
@@ -419,8 +418,8 @@ void MTerrainMaterial::create_empty_terrain_image(String name,Image::Format form
             String file_path = grid->dataDir.path_join(file_name);
             MGridPos rpos(x,0,z);
             MImage* i = memnew(MImage(file_path,grid->layersDataDir,name,uniform_name,rpos,region));
+            i->format = format;
             region->add_image(i);
-            i->create(grid->region_pixel_size,format);
             all_images.push_back(i);
             if(name=="heightmap"){
                 all_heightmap_images.push_back(i);

@@ -25,6 +25,9 @@
 #include "mimage.h"
 #include "mpixel_region.h"
 
+#include <mutex>
+#include <atomic>
+
 class MGrid;
 
 using namespace godot;
@@ -35,7 +38,8 @@ class MRegion : public Object{
     GDCLASS(MRegion, Object);
 
     private:
-    //Ref<ShaderMaterial> _material;
+    Vector<bool> _images_init_status; // Defently should protected by mutex
+    bool _is_online=false;
     RID _material_rid = RID();
     MImage* heightmap = nullptr;
     MImage* normals = nullptr;
@@ -46,12 +50,18 @@ class MRegion : public Object{
     bool has_physic=false;
     double current_image_size = 5;
     int32_t current_scale=1;
+    bool is_min_max_height_calculated = false;
+    _FORCE_INLINE_ void _calculate_min_max_height();
+    std::mutex rload_mutex;
+    std::atomic<bool> is_data_loaded;
 
 
     protected:
     static void _bind_methods(){}
 
     public:
+    bool unconfirm_lod=false;
+    bool confirm_lod=false;
     Vector<MImage*> images;
     float min_height= 100000;	
     float max_height=-100000;
@@ -65,6 +75,7 @@ class MRegion : public Object{
     MRegion* top = nullptr;
     MRegion* bottom = nullptr;
     static Vector<Vector3> nvecs;
+    bool to_be_remove = false;
     
     
     MRegion();
@@ -73,6 +84,8 @@ class MRegion : public Object{
     RID get_material_rid();
     void add_image(MImage* input);
     void configure();
+    void load();
+    void unload();
     void update_region();
     void insert_lod(const int8_t input);
     void apply_update();
@@ -90,7 +103,13 @@ class MRegion : public Object{
     void update_all_dirty_image_texture();
     void save_image(int index,bool force_save);
 
-    void recalculate_normals();
+    void recalculate_normals(bool use_thread=true,bool use_extra_margin=false);
     void refresh_all_uniforms();
+    void make_normals_dirty();
+    void make_neighbors_normals_dirty();
+
+    void set_data_load_status(bool input);
+    bool get_data_load_status();
+    bool get_data_load_status_relax();
 };
 #endif

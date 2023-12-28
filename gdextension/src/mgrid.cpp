@@ -22,7 +22,7 @@ MGrid::MGrid(){
     nvec8.append(Vector3(0,0,-1));
 }
 MGrid::~MGrid() {
-    clear();
+    
 }
 
 uint64_t MGrid::get_update_id(){
@@ -30,6 +30,7 @@ uint64_t MGrid::get_update_id(){
 }
 
 void MGrid::clear() {
+    UtilityFunctions::print("clear grid");
     if(is_dirty){
         RenderingServer* rs = RenderingServer::get_singleton();
         for(int32_t z=_search_bound.top; z <=_search_bound.bottom; z++)
@@ -69,6 +70,10 @@ void MGrid::clear() {
     lowest_undo_id=0;
     _regions_count = 0;
     grid_pixel_region.clear();
+    if(is_update_regions_future_valid && update_regions_future.valid()){
+        update_regions_future.wait();
+        is_update_regions_future_valid = false;
+    }
 }
 
 bool MGrid::is_created() {
@@ -153,11 +158,12 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
     heightmap_layers_visibility.resize(heightmap_layers.size());
     for(int i=0;i<heightmap_layers.size();i++){
         heightmap_layers_visibility.set(i,true);
-        if(i!=0){ // Background layer will added automaticly in each image
-            add_heightmap_layer(heightmap_layers[i]);
-        }
+        add_heightmap_layer(heightmap_layers[i]);
     }
-    generate_normals_thread(grid_pixel_region);
+    //for(int i=0;i<_regions_count;i++){
+    //    regions[i].load();
+    //}
+    //generate_normals_thread(grid_pixel_region);
 }
 
 void MGrid::update_regions_uniforms(Array input) {
@@ -177,8 +183,8 @@ void MGrid::update_regions_uniforms(Array input) {
     update_all_image_list();
     // We start from one because we don\t want to add background layer
     // background layer will added in MImage automaticly
-    for(int i=1;i<heightmap_layers.size();i++){
-        UtilityFunctions::print(heightmap_layers[i]);
+    UtilityFunctions::print("heightmap_layers ",heightmap_layers);
+    for(int i=0;i<heightmap_layers.size();i++){
         add_heightmap_layer(heightmap_layers[i]);
     }
     if(!has_normals){
@@ -269,8 +275,18 @@ MRegion* MGrid::get_region_by_point(const int32_t x, const int32_t z){
     return regions + id;
 }
 
+MBound MGrid::region_bound_to_point_bound(const MBound& rbound){
+    MBound out;
+    out.left = rbound.left * region_size;
+    out.right = rbound.right * region_size;
+    out.top = rbound.top * region_size;
+    out.bottom = rbound.bottom * region_size;
+    return out;
+}
+
 MRegion* MGrid::get_region(const int32_t x, const int32_t z){
     int32_t id = x + z*_region_grid_size.x;
+    ERR_FAIL_INDEX_V(id,_regions_count,regions);
     return regions + id;
 }
 
@@ -325,13 +341,14 @@ void MGrid::set_cam_pos(const Vector3& cam_world_pos) {
 
 
 void MGrid::update_search_bound() {
-    num_chunks = 0;
-    update_mesh_list.clear();
-    remove_instance_list.clear();
-    grid_update_info.clear();
     MBound sb(_cam_pos, max_range, _size);
     _last_search_bound = _search_bound;
     _search_bound = sb;
+    MBound rbl = region_bound_to_point_bound(current_region_bound);
+    _search_bound.intersect(rbl);
+    if(_search_bound.left == _search_bound.right || _search_bound.top == _search_bound.bottom){
+        _search_bound.grow(_grid_bound,1,1);
+    }
 }
 
 void MGrid::cull_out_of_bound() {
@@ -434,9 +451,6 @@ void MGrid::update_lods() {
 ///////////////////////////////////////////////////////
 ////////////////// MERGE //////////////////////////////
 void MGrid::merge_chunks() {
-    for(int i=0; i < _regions_count; i++){
-        regions[i].update_region();
-    }
     for(int32_t z=_search_bound.top; z<=_search_bound.bottom; z++){
         for(int32_t x=_search_bound.left; x<=_search_bound.right; x++){
             int8_t lod = points[z][x].lod;
@@ -473,6 +487,15 @@ bool MGrid::check_bigger_size(const int8_t lod,const int8_t size,const int32_t r
         for(int32_t x=bound.left; x<=bound.right; x++){
             if (points[z][x].lod != lod || points[z][x].size == -1 || get_region_id_by_point(x,z) != region_id)
             {
+                return false;
+            }
+            // In this case region is not loaded or is going to be remove
+            if(!regions[region_id].get_data_load_status() || regions[region_id].to_be_remove){
+                if(points[z][x].has_instance){
+                    points[z][x].has_instance = false;
+                    remove_instance_list.push_back(points[z][x].instance);
+                    points[z][x].mesh = RID();
+                }
                 return false;
             }
         }
@@ -706,12 +729,37 @@ Ref<MCollision> MGrid::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_ve
 
 void MGrid::update_chunks(const Vector3& cam_pos) {
     _update_id++;
+    num_chunks = 0;
+    update_mesh_list.clear();
+    remove_instance_list.clear();
+    grid_update_info.clear();
     set_cam_pos(cam_pos);
     update_search_bound();
     cull_out_of_bound();
     update_lods();
+    for(int i=0; i < _regions_count; i++){
+        regions[i].update_region();
+    }
     merge_chunks();
     create_ordered_instances_distance();
+}
+
+void MGrid::update_regions(){
+    for(MRegion* reg : unload_region_list){
+        reg->unload();
+    }
+    if(load_region_list.size()!=0 || unload_region_list.size())
+        UtilityFunctions::print("LOAD/UNLOAD SIZE ",load_region_list.size()," , ", unload_region_list.size());
+    for(MRegion* reg : load_region_list){
+        reg->load();
+    }
+    for(MRegion* reg : load_region_list){
+        //Should run one by one (Not in thread) as can intresect each other
+        reg->recalculate_normals(true,true);
+    }
+    for(MRegion* reg : load_region_list){
+        reg->set_data_load_status(true);
+    }
 }
 
 void MGrid::apply_update_chunks() {
@@ -727,6 +775,54 @@ void MGrid::apply_update_chunks() {
     }
 }
 
+void MGrid::update_regions_bounds(const Vector3& cam_pos){
+    for(MRegion* reg : load_region_list){
+        reg->make_neighbors_normals_dirty();
+    }
+    for(MRegion* reg : unload_region_list){
+        reg->to_be_remove = false;
+    }
+    load_region_list.clear();
+    unload_region_list.clear();
+    MGridPos pos = get_region_pos_by_world_pos(cam_pos);
+    MBound bound(pos);
+    bound.left -= region_limit;
+    bound.right += region_limit;
+    bound.top -= region_limit;
+    bound.bottom += region_limit;
+    //Clear regions which are not in this bound but they where in last bound
+    for(int32_t z=_last_region_grid_bound.top; z<=_last_region_grid_bound.bottom;z++){
+        for(int32_t x=_last_region_grid_bound.left; x<=_last_region_grid_bound.right; x++){
+            MGridPos p(x,0,z);
+            if(_region_grid_bound.has_point(p) && !bound.has_point(p)){
+                MRegion* reg = get_region(x,z);
+                if(reg->get_data_load_status_relax()){
+                    unload_region_list.push_back(reg);
+                    reg->to_be_remove = true;
+                }
+            }
+        }
+    }
+    _last_region_grid_bound = bound;
+    for(int32_t z=bound.top; z<=bound.bottom;z++){
+        for(int32_t x=bound.left; x<=bound.right; x++){
+            MGridPos p(x,0,z);
+            if(_region_grid_bound.has_point(p)){
+                MRegion* reg = get_region(x,z);
+                if(!reg->get_data_load_status_relax()){
+                    load_region_list.push_back(reg);
+                }
+            }
+        }
+    }
+    current_region_bound = bound;
+}
+
+void MGrid::clear_region_bounds(){
+    load_region_list.clear();
+    unload_region_list.clear();
+}
+
 void MGrid::update_physics(const Vector3& cam_pos){
     MGridPos pos = get_region_pos_by_world_pos(cam_pos);
     MBound bound(pos);
@@ -735,15 +831,15 @@ void MGrid::update_physics(const Vector3& cam_pos){
     bound.top -= physics_update_limit;
     bound.bottom += physics_update_limit;
     //Clear last physics if they are not in the current bound
-    for(int32_t z=_last_region_grid_bound.top; z<=_last_region_grid_bound.bottom;z++){
-        for(int32_t x=_last_region_grid_bound.left; x<=_last_region_grid_bound.right; x++){
+    for(int32_t z=_last_physics_grid_bound.top; z<=_last_physics_grid_bound.bottom;z++){
+        for(int32_t x=_last_physics_grid_bound.left; x<=_last_physics_grid_bound.right; x++){
             MGridPos p(x,0,z);
             if(_region_grid_bound.has_point(p) && !bound.has_point(p)){
                 get_region(x,z)->remove_physics();
             }
         }
     }
-    _last_region_grid_bound = bound;
+    _last_physics_grid_bound = bound;
     for(int32_t z=bound.top; z<=bound.bottom;z++){
         for(int32_t x=bound.left; x<=bound.right; x++){
             MGridPos p(x,0,z);

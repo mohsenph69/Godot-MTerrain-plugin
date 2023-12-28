@@ -14,7 +14,7 @@ MBound::MBound(const MGridPos& pos,const int32_t radius, const MGridPos& gird_si
     right = CLAMP(pos.x + radius, 0, gird_size.x - 1);
     top = CLAMP(pos.z - radius, 0, gird_size.z - 1);
     bottom =CLAMP(pos.z + radius, 0, gird_size.z - 1);
-    center = MGridPos(gird_size.x/2, 0, gird_size.y/2);
+    center = pos;
 }
 MBound::MBound(const MGridPos& pos){
     left = pos.x;
@@ -36,6 +36,12 @@ MBound::MBound(const int32_t x,const int32_t z){
 Rect2i MBound::get_rect2i() {
     Rect2i rect(left, top, right - left, bottom - top);
     return rect;
+}
+
+void MBound::recalculate_center(){
+    //In case we have large number this is safer than (left+right)/2 ...
+    center.x = left + (right - left)/2;
+    center.z = top + (bottom - top)/2;
 }
 
 void MBound::clear() {
@@ -61,6 +67,20 @@ bool MBound::has_point(const MGridPos& p) {
     return true;
 }
 
+void MBound::intersect(const MBound& other){
+    left = std::max(other.left,left);
+    right = std::min(other.right,right);
+    top = std::max(other.top,top);
+    bottom = std::min(other.bottom,bottom);
+    if(left > right || top > bottom){
+        left = center.x;
+        right = center.x;
+        top = center.z;
+        bottom = center.z;
+        return;
+    }
+    recalculate_center();
+}
 
 bool MBound::operator==(const MBound& other) {
     return (left==other.left && right==other.right && top==other.top && bottom==other.bottom);

@@ -52,7 +52,20 @@ MImage::~MImage(){
 }
 
 void MImage::load(){
-	ERR_FAIL_COND(is_init);
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(is_init){
+		return;
+	}
+	if(!ResourceLoader::get_singleton()->exists(file_path)){
+		if(get_format_pixel_size(format)==0){
+			//Create a dumy format so GODOT not crash
+			create(region->grid->region_pixel_size,Image::Format::FORMAT_R8);
+			ERR_FAIL_MSG("Not valide Image Format in "+name);
+			return;
+		}
+		create(region->grid->region_pixel_size,format);
+		return;
+	}
     Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
 	ERR_FAIL_COND(!img.is_valid());
     width = img->get_size().x;
@@ -73,7 +86,6 @@ void MImage::load(){
     current_size = width;
 	is_save = true;
 	image_layers.push_back(&data);
-	layer_names.push_back("background");
 	is_saved_layers.push_back(true);
 	is_null_image = false;
 	is_init = true;
@@ -83,6 +95,41 @@ void MImage::load(){
 		is_null_image = true;
 		ERR_FAIL_MSG("Region width and height are "+itos(region->grid->region_pixel_size)+" According to the setting, But the image size in data directory is "+itos(width)+ " Change Terrain setting or images in data directory");
 	}
+	for(int s=1;s<layer_names.size();s++){
+		load_layer(layer_names[s]);
+	}
+	is_dirty = true; //So Image will be updated in update call in region
+}
+
+void MImage::unload(){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init){
+		return;
+	}
+	save(false);
+	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){
+		it->value.free();
+	}
+	undo_data.clear();
+	for(int i=1;i<image_layers.size();i++){
+		memdelete(image_layers[i]);
+	}
+	image_layers.clear();
+	//If material get remove before this should be deleted
+	RS->material_set_param(region->get_material_rid(),uniform_name,RID());
+	if(new_tex_rid.is_valid()){
+		RS->free_rid(new_tex_rid);
+	}
+	if(old_tex_rid.is_valid()){
+		RS->free_rid(old_tex_rid);
+	}
+	new_tex_rid = RID();
+	old_tex_rid = RID();
+	data.clear();
+	is_init = false;
+	has_texture_to_apply = false;
+	image_layers.clear();
+	is_saved_layers.clear();
 }
 
 void MImage::set_active_layer(int l){
@@ -94,6 +141,21 @@ void MImage::set_active_layer(int l){
 
 // This must called alway after loading background image
 void MImage::add_layer(String lname){
+	if(name!="heightmap"){
+		return;
+	}
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	layer_names.push_back(lname);
+	if(is_init && lname!="background"){ // If is not init load method will load the layer when is loaded
+		load_layer(lname);
+	}
+}
+
+void MImage::load_layer(String lname){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init){
+		return;
+	}
 	if(is_null_image){
 		return;
 	}
@@ -112,7 +174,6 @@ void MImage::add_layer(String lname){
 		}
 		file->close();
 		image_layers.push_back(img_layer_data);
-		layer_names.push_back(lname);
 		is_saved_layers.push_back(true);
 		if(lname=="holes"){
 			for(uint32_t i=0;i<total_pixel_amount;i++){
@@ -129,7 +190,6 @@ void MImage::add_layer(String lname){
 		PackedByteArray* new_layer = memnew(PackedByteArray);
 		//we empty the new layer but never remove this from Vector because this cause ID of other will change
 		image_layers.push_back(new_layer);
-		layer_names.push_back(lname);
 		is_saved_layers.push_back(true);
 	}
 	if(lname=="holes"){
@@ -138,6 +198,10 @@ void MImage::add_layer(String lname){
 }
 
 void MImage::merge_layer(){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init){
+		return;
+	}
 	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	path = layerDataDir.path_join(path);
 	
@@ -156,6 +220,12 @@ void MImage::merge_layer(){
 }
 
 void MImage::remove_layer(bool is_visible){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init){
+		layer_names.remove_at(active_layer);
+		is_saved_layers.remove_at(active_layer);
+		return;
+	}
 	const uint8_t* ptr=image_layers[active_layer]->ptr();
 	if(is_visible && image_layers[active_layer]->size()!=0){
 		if(active_layer==holes_layer){
@@ -189,9 +259,15 @@ void MImage::remove_layer(bool is_visible){
 }
 
 void MImage::layer_visible(bool input){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init){
+		return;
+	}
+	UtilityFunctions::print("image_layers[active_layer]->size() ",image_layers[active_layer]->size());
 	if(image_layers[active_layer]->size()==0){
 		return;
 	}
+	UtilityFunctions::print("layer visible ",input);
 	// There is no control if the layer is currently visibile or not
 	// These checks must be done in Grid Level
 	// We save before hiding the layer to not complicating the save system for now
@@ -227,6 +303,7 @@ void MImage::layer_visible(bool input){
 }
 
 void MImage::create(uint32_t _size, Image::Format _format) {
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	ERR_FAIL_COND(is_init);
 	width = _size;
 	height =_size;
@@ -237,13 +314,16 @@ void MImage::create(uint32_t _size, Image::Format _format) {
 	data.resize(width*width*pixel_size);
 	current_size = width;
 	image_layers.push_back(&data);
-	layer_names.push_back("Background");
 	is_saved_layers.push_back(false);
 	is_null_image = false;
 	is_init = true;
+	for(int s=1;s<layer_names.size();s++){
+		load_layer(layer_names[s]);
+	}
 }
 
 void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	ERR_FAIL_COND(is_init);
 	width = _width;
 	height =_height;
@@ -254,10 +334,12 @@ void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
 	data.resize(width*_height*pixel_size);
 	current_size = width;
 	image_layers.push_back(&data);
-	layer_names.push_back("Background");
 	is_saved_layers.push_back(false);
 	is_null_image = false;
 	is_init = true;
+	for(int s=1;s<layer_names.size();s++){
+		load_layer(layer_names[s]);
+	}
 }
 
 void MImage::get_data(PackedByteArray* out,int scale){
@@ -275,6 +357,10 @@ void MImage::get_data(PackedByteArray* out,int scale){
 }
 
 void MImage::update_texture(int scale,bool apply_update){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init){
+		return;
+	}
 	if(is_null_image){
 		return;
 	}
@@ -308,7 +394,10 @@ void MImage::update_texture(int scale,bool apply_update){
 }
 
 void MImage::apply_update() {
-	//update_mutex.lock();
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init){
+		return;
+	}
 	if(is_null_image){
 		return;
 	}
@@ -321,13 +410,12 @@ void MImage::apply_update() {
 		has_texture_to_apply = false;
 		is_dirty = false;
 	}
-	//update_mutex.unlock();
 }
 
 
 // This works only for Format_RF
 real_t MImage::get_pixel_RF(const uint32_t x, const uint32_t  y) const {
-	if(is_null_image){
+	if(is_null_image || !is_init){
 		return 0;
 	}
 	uint32_t ofs = (x + y*width);
@@ -335,7 +423,7 @@ real_t MImage::get_pixel_RF(const uint32_t x, const uint32_t  y) const {
 }
 
 void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value){
-	if(is_null_image){
+	if(is_null_image || !is_init){
 		return;
 	}
 	check_undo();
@@ -399,7 +487,7 @@ Color MImage::get_pixel(const uint32_t x, const uint32_t  y) const {
 }
 
 void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
-	if(is_null_image){
+	if(is_null_image || !is_init){
 		return;
 	}
 	check_undo();
@@ -410,7 +498,7 @@ void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
 }
 
 void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
-	if(is_null_image){
+	if(is_null_image || !is_init){
 		return;
 	}
 	check_undo();
@@ -422,7 +510,7 @@ void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
 }
 
 const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y){
-	if(is_null_image){
+	if(is_null_image || !is_init){
 		return nullptr;
 	}
 	uint32_t ofs = (x + y*width);
@@ -430,19 +518,24 @@ const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y){
 }
 
 void MImage::save(bool force_save) {
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	if(!is_init || name=="normals"){
+		return;
+	}
 	ERR_FAIL_COND(is_corrupt_file);
 	if(is_null_image){
 		return;
 	}
-	if(name!="heightmap"){
-		Ref<Image> img = Image::create_from_data(width,height,false,format,data);
-		godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
-		ERR_FAIL_COND_MSG(err,"Can not save image, image class erro: "+itos(err));
-		is_save = true;
-		return;
-	}
 	if(force_save || !is_save) {
+		if(name!="heightmap"){
+			Ref<Image> img = Image::create_from_data(width,height,false,format,data);
+			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+			ERR_FAIL_COND_MSG(err,"Can not save image, image class erro: "+itos(err));
+			is_save = true;
+			return;
+		}
 		if(!is_saved_layers[0]){
+			UtilityFunctions::print("Save layer 0");
 			PackedByteArray background_data = data;
 			int total_pixel = width*height;
 			for(int i=1;i<image_layers.size();i++){
@@ -467,6 +560,7 @@ void MImage::save(bool force_save) {
 		}
 		for(int i=1;i<image_layers.size();i++){
 			if(!is_saved_layers[i]){
+				UtilityFunctions::print("Save layer ",i);
 				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 				String layer_path = layerDataDir.path_join(lname);
 				Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::WRITE);
@@ -483,6 +577,7 @@ void MImage::save(bool force_save) {
 }
 
 void MImage::check_undo(){
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	update_mutex.lock();
 	if(undo_data.has(current_undo_id) || !active_undo){
 		update_mutex.unlock();

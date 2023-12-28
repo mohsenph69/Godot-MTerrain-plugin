@@ -4,6 +4,8 @@
 //#define NO_MERGE
 
 #include <thread>
+#include <future>
+#include <chrono>
 
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/rid.hpp>
@@ -111,6 +113,7 @@ class MGrid : public Object {
     MBound _grid_bound;
     MBound _region_grid_bound;
     MBound _last_region_grid_bound;
+    MBound _last_physics_grid_bound;
     MBound _search_bound;
     MBound _last_search_bound;
     MGridPos _cam_pos;
@@ -124,6 +127,9 @@ class MGrid : public Object {
     Vector<MImage*> _all_image_list;
     Vector<MImage*> _all_heightmap_image_list;
     PackedVector3Array nvec8;
+    Vector<MRegion*> load_region_list;
+    Vector<MRegion*> unload_region_list;
+    MBound current_region_bound;
     
     
 
@@ -135,7 +141,8 @@ class MGrid : public Object {
 
     _FORCE_INLINE_ bool _has_pixel(const uint32_t x,const uint32_t y);
 
-    
+    std::future<void> update_regions_future;
+    bool is_update_regions_future_valid = false;
 
 
 
@@ -162,6 +169,7 @@ class MGrid : public Object {
     bool save_generated_normals=false;
     Dictionary uniforms_id;
     int32_t physics_update_limit = 1;
+    int32_t region_limit = 1;
     RID space;
     String dataDir;
     String layersDataDir;
@@ -217,6 +225,7 @@ class MGrid : public Object {
     MGridPos get_region_grid_size();
     int32_t get_region_id_by_point(const int32_t x, const int32_t z);
     MRegion* get_region_by_point(const int32_t x, const int32_t z);
+    MBound region_bound_to_point_bound(const MBound& rbound);
     MRegion* get_region(const int32_t x, const int32_t z);
     MGridPos get_region_pos_by_world_pos(Vector3 world_pos);
     int get_region_id_by_world_pos(Vector3 world_pos);
@@ -239,8 +248,14 @@ class MGrid : public Object {
     real_t get_height(Vector3 pos);
     Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
 
+    // This will create the initiale region lod state, This is needed so two nested thread do a good job
+    // In update chunk update_point thread should finish but update region will check in the next
+    // update and if it is not finished we countiue with only update points and recheck region update again
     void update_chunks(const Vector3& cam_pos);
+    void update_regions(); // This one need camera pos as this thread can last more than one terrain update!
     void apply_update_chunks();
+    void update_regions_bounds(const Vector3& cam_pos);//Should be called in safe thread
+    void clear_region_bounds();
     void update_physics(const Vector3& cam_pos);
 
     MImage* get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index);

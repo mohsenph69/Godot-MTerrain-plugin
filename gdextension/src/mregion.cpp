@@ -12,7 +12,8 @@
 
 Vector<Vector3> MRegion::nvecs;
 
-MRegion::MRegion(){
+MRegion::MRegion()
+	:is_data_loaded(false) {
     lods = memnew(VSet<int8_t>);
 }
 
@@ -37,6 +38,7 @@ RID MRegion::get_material_rid() {
 
 void MRegion::add_image(MImage* input) {
     images.append(input);
+	_images_init_status.push_back(false);
 	if(input->name=="heightmap"){
 		heightmap = input;
 	}
@@ -50,6 +52,7 @@ void MRegion::configure() {
 	ERR_FAIL_COND_MSG(!normals,"Normals is not loaded check MTerrain Material");
 	for(int i=0; i < images.size(); i++){
 		images[i]->region = this;
+		images[i]->index = i;
 		if(images[i]->name != "normals"){
 			images[i]->active_undo = true;
 		}
@@ -60,21 +63,6 @@ void MRegion::configure() {
 			}
 		}
 	}
-	int64_t index = 0;
-	int64_t s = heightmap->data.size()/4;
-	float* ptr = ((float *)heightmap->data.ptr());
-	while (index < s)
-	{
-		float val = ptr[index];
-		if(val > max_height){
-			max_height = val;
-		}
-		if (val < min_height)
-		{
-			min_height = val;
-		}
-		index++;
-	}
 	uint32_t ss = grid->region_pixel_size - 1;
 	normals_pixel_region.left = pos.x*ss;
 	normals_pixel_region.right = (pos.x + 1)*ss;
@@ -83,7 +71,27 @@ void MRegion::configure() {
 	//normals_pixel_region.grow_all_side(grid->grid_pixel_region);
 }
 
+void MRegion::load(){
+	for(int i=0; i < images.size(); i++){
+		images[i]->load();
+	}
+	if(!is_min_max_height_calculated){
+		_calculate_min_max_height();
+	}
+	//is_data_loaded will be set by update region
+}
+
+void MRegion::unload(){
+	for(int i=0; i < images.size(); i++){
+		images[i]->unload();
+	}
+	is_data_loaded.store(false, std::memory_order_release);
+}
+
 void MRegion::update_region() {
+	if(!is_data_loaded.load(std::memory_order_acquire)){
+		return;
+	}
 	if(!_material_rid.is_valid()){
 		return;
 	}
@@ -110,6 +118,9 @@ void MRegion::insert_lod(const int8_t input) {
 }
 
 void MRegion::apply_update() {
+	if(!is_data_loaded.load(std::memory_order_acquire)){
+		return;
+	}
 	if(!_material_rid.is_valid()){
 		return;
 	}
@@ -125,7 +136,7 @@ void MRegion::apply_update() {
 
 void MRegion::create_physics() {
 	ERR_FAIL_COND(heightmap == nullptr);
-	if(has_physic || heightmap->is_corrupt_file || heightmap->is_null_image){
+	if(has_physic || heightmap->is_corrupt_file || heightmap->is_null_image || to_be_remove || !get_data_load_status()){
 		return;
 	}
 	physic_body = PhysicsServer3D::get_singleton()->body_create();
@@ -182,6 +193,9 @@ Color MRegion::get_pixel(const uint32_t x, const uint32_t y, const int32_t& inde
 }
 
 void MRegion::set_pixel(const uint32_t x, const uint32_t y,const Color& color,const int32_t& index){
+	if(to_be_remove){
+		return;
+	}
 	images[index]->set_pixel(x,y,color);
 }
 
@@ -198,6 +212,9 @@ real_t MRegion::get_height_by_pixel(const uint32_t x, const uint32_t y) const {
 }
 
 void MRegion::set_height_by_pixel(const uint32_t x, const uint32_t y,const real_t& value){
+	if(to_be_remove){
+		return;
+	}
 	heightmap->set_pixel_RF(x,y,value);
 }
 
@@ -227,9 +244,18 @@ void MRegion::save_image(int index,bool force_save) {
 	images[index]->save(force_save);
 }
 
-void MRegion::recalculate_normals(){
-	if(grid)
-		grid->generate_normals_thread(normals_pixel_region);
+void MRegion::recalculate_normals(bool use_thread,bool use_extra_margin){
+	if(grid){
+		MPixelRegion calculate_region = normals_pixel_region;
+		if(use_extra_margin){
+			calculate_region.grow_all_side(grid->grid_pixel_region);
+		}
+		if(use_thread){
+			grid->generate_normals_thread(calculate_region);
+		} else {
+			grid->generate_normals(calculate_region);
+		}
+	}
 }
 
 void MRegion::refresh_all_uniforms(){
@@ -241,4 +267,57 @@ void MRegion::refresh_all_uniforms(){
 		RS->material_set_param(_material_rid,"region_b",0.5/current_image_size);
 		RS->material_set_param(_material_rid,"min_lod",last_lod);
 	}
+}
+
+void MRegion::make_normals_dirty(){
+	if(normals){
+		normals->is_dirty = true;
+	}
+}
+
+void MRegion::make_neighbors_normals_dirty(){
+	if(top){
+		top->make_normals_dirty();
+	}
+	if(bottom){
+		bottom->make_normals_dirty();
+	}
+	if(left){
+		left->make_normals_dirty();
+	}
+	if(right){
+		right->make_normals_dirty();
+	}
+}
+
+
+_FORCE_INLINE_ void MRegion::_calculate_min_max_height(){
+	int64_t index = 0;
+	int64_t s = heightmap->data.size()/4;
+	float* ptr = ((float *)heightmap->data.ptr());
+	while (index < s)
+	{
+		float val = ptr[index];
+		if(val > max_height){
+			max_height = val;
+		}
+		if (val < min_height)
+		{
+			min_height = val;
+		}
+		index++;
+	}
+	is_min_max_height_calculated = true;
+}
+
+void MRegion::set_data_load_status(bool input){
+	is_data_loaded.store(input, std::memory_order_release);
+}
+
+bool MRegion::get_data_load_status(){
+	return is_data_loaded.load(std::memory_order_acquire);
+}
+
+bool MRegion::get_data_load_status_relax(){
+	return is_data_loaded.load(std::memory_order_relaxed);
 }

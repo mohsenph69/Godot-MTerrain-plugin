@@ -54,9 +54,11 @@ struct  MBound
     MBound(const int32_t x,const int32_t z);
     Rect2i get_rect2i();
     
+    void recalculate_center();
     void clear();
     bool has_point(const int32_t x, const int32_t y);
     bool has_point(const MGridPos& p);
+    void intersect(const MBound& other);
 
     bool operator==(const MBound& other);
     bool operator!=(const MBound& other);

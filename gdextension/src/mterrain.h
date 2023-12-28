@@ -93,6 +93,9 @@ class MTerrain : public  Node3D {
     bool is_ready=false;
     //Array of brush layers resource
     Array brush_layers;
+
+    std::future<void> update_regions_future;
+    bool is_update_regions_future_valid = false;
     
 
 
@@ -142,6 +145,8 @@ class MTerrain : public  Node3D {
 
     void set_save_generated_normals(bool input);
     bool get_save_generated_normals();
+    void set_regions_limit(int input);
+    int get_regions_limit();
     float get_update_chunks_interval();
     void set_update_chunks_interval(float input);
     float get_distance_update_threshold();
@@ -248,6 +253,8 @@ class MTerrain : public  Node3D {
     Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
     Vector3 get_normal(const Vector3 world_pos);
     Vector3 get_normal_accurate(Vector3 world_pos);
+
+    void _notification(int32_t what);
 };
 
 

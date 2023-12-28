@@ -34,6 +34,7 @@ struct MImageUndoData {
 };
 
 struct MImage {
+    int index=-1;
     MRegion* region=nullptr;
     String file_path;
     String layerDataDir;
@@ -46,7 +47,7 @@ struct MImage {
     uint32_t current_scale = 1;
     uint32_t pixel_size;
     uint32_t total_pixel_amount;
-    Image::Format format;
+    Image::Format format = Image::Format::FORMAT_MAX; //Setting an invalid format so in case it is not set we can generate error
     PackedByteArray data;
     #ifdef M_IMAGE_LAYER_ON
     int active_layer=0;
@@ -62,6 +63,7 @@ struct MImage {
     bool is_save = false;
     MGridPos grid_pos;
     std::mutex update_mutex;
+    std::recursive_mutex load_mutex;//Any method which read/write the data or layer data exept for pixel modification as that would be expensive, for pixel modifcation we should do some higher level lock 
     bool active_undo=false;
     int current_undo_id;
     // Key is undo redo id
@@ -75,6 +77,7 @@ struct MImage {
     MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r);
     ~MImage();
     void load();
+    void unload();
     void set_active_layer(int l);
     void add_layer(String lname);
     void merge_layer();
@@ -110,6 +113,9 @@ struct MImage {
     void set_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel,const float value);
     float get_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel);
 
+
+    private:
+    void load_layer(String lname);
 };
 
 #endif
