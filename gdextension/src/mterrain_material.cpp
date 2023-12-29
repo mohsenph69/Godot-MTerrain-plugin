@@ -345,19 +345,11 @@ RID MTerrainMaterial::get_material(int region_id){
 void MTerrainMaterial::load_images(){
     ERR_FAIL_COND(!grid);
     ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND(is_loaded);
     update_uniforms_list();
     //Adding textures
     for(int i=0;i<terrain_textures_names.size();i++){
         add_terrain_image(terrain_textures_names[i]);
-    }
-    if(!terrain_textures_added.has("heightmap")){
-        add_terrain_image("heightmap");
-    }
-    if(!terrain_textures_added.has("heightmap")){
-        create_empty_terrain_image("heightmap",Image::FORMAT_RF);
-    }
-    if(!terrain_textures_added.has("normals")){
-        create_empty_terrain_image("normals",Image::FORMAT_RGB8);
     }
     set_all_next_passes();
     show_region = false;
@@ -389,14 +381,13 @@ void MTerrainMaterial::add_terrain_image(String name) {
             MRegion* region = grid->get_region(x,z);
             String file_name = name +"_x"+itos(x)+"_y"+itos(z)+".res";
             String file_path = grid->dataDir.path_join(file_name);
-            if(!ResourceLoader::get_singleton()->exists(file_path)){
-                if (name != "normals"){
-                    WARN_PRINT("Can not find "+file_path);
-                }
-                return;
-            }
             MGridPos rpos(x,0,z);
             MImage* i = memnew(MImage(file_path,grid->layersDataDir,name,uniform_name,rpos,region));
+            if(!ResourceLoader::get_singleton()->exists(file_path)){
+                if (name == "normals"){
+                    i->format = Image::Format::FORMAT_RGB8;
+                }
+            }
             region->add_image(i);
             all_images.push_back(i);
             if(name=="heightmap"){
