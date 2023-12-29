@@ -252,7 +252,6 @@ func _on_heightmap_layer_item_selected(index):
 	if not active_terrain:
 		printerr("No active terrain")
 		return
-	print("active_heightmap_layer ",active_heightmap_layer)
 	active_terrain.set_active_layer_by_name(active_heightmap_layer)
 	if active_heightmap_layer == "holes":
 		brush_list_option.select(hole_brush_id)

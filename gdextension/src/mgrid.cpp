@@ -278,9 +278,9 @@ MRegion* MGrid::get_region_by_point(const int32_t x, const int32_t z){
 MBound MGrid::region_bound_to_point_bound(const MBound& rbound){
     MBound out;
     out.left = rbound.left * region_size;
-    out.right = rbound.right * region_size;
+    out.right = ((rbound.right + 1) * region_size) - 1;
     out.top = rbound.top * region_size;
-    out.bottom = rbound.bottom * region_size;
+    out.bottom = ((rbound.bottom + 1) * region_size) - 1;
     return out;
 }
 
@@ -748,8 +748,6 @@ void MGrid::update_regions(){
     for(MRegion* reg : unload_region_list){
         reg->unload();
     }
-    if(load_region_list.size()!=0 || unload_region_list.size())
-        UtilityFunctions::print("LOAD/UNLOAD SIZE ",load_region_list.size()," , ", unload_region_list.size());
     for(MRegion* reg : load_region_list){
         reg->load();
     }
@@ -1453,6 +1451,15 @@ void MGrid::toggle_heightmap_layer_visibile(){
     update_all_dirty_image_texture();
 }
 
+bool MGrid::is_layer_visible(int index){
+    return heightmap_layers_visibility[index];
+}
+
+bool MGrid::is_layer_visible(const String& lname){
+    int index = heightmap_layers.find(lname);
+    ERR_FAIL_COND_V(index==-1,false);
+    return heightmap_layers_visibility[index];
+}
 
 float MGrid::get_h_scale(){
     return _chunks->h_scale;

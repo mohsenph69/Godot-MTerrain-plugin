@@ -175,15 +175,17 @@ void MImage::load_layer(String lname){
 		file->close();
 		image_layers.push_back(img_layer_data);
 		is_saved_layers.push_back(true);
-		if(lname=="holes"){
-			for(uint32_t i=0;i<total_pixel_amount;i++){
-				if(!std::isnan(((float *)img_layer_data->ptr())[i])){
-					((float *)data.ptrw())[i] = std::numeric_limits<float>::quiet_NaN();
+		if(region->grid->is_layer_visible(lname)){
+			if(lname=="holes"){
+				for(uint32_t i=0;i<total_pixel_amount;i++){
+					if(!std::isnan(((float *)img_layer_data->ptr())[i])){
+						((float *)data.ptrw())[i] = std::numeric_limits<float>::quiet_NaN();
+					}
 				}
-			}
-		} else {
-			for(uint32_t i=0;i<total_pixel_amount;i++){
-				((float *)data.ptrw())[i] += ((float *)img_layer_data->ptr())[i];
+			} else {
+				for(uint32_t i=0;i<total_pixel_amount;i++){
+					((float *)data.ptrw())[i] += ((float *)img_layer_data->ptr())[i];
+				}
 			}
 		}
 	} else {
@@ -199,12 +201,37 @@ void MImage::load_layer(String lname){
 
 void MImage::merge_layer(){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
-	if(!is_init){
-		return;
-	}
 	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	path = layerDataDir.path_join(path);
-	
+	if(!is_init){
+		layer_names.remove_at(active_layer);
+		if(ResourceLoader::get_singleton()->exists(file_path) && FileAccess::file_exists(path)){
+			Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
+			if(!img.is_valid()){
+				return;
+			}
+			PackedByteArray tmp_data = img->get_data();
+			Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
+			ERR_FAIL_COND(file->get_length() != tmp_data.size());
+			PackedByteArray tmp_layer_data;
+			tmp_layer_data.resize(tmp_data.size());
+			// Loading
+			bool is_all_zero=true;
+			for(int s=0;s<tmp_data.size();s++){
+				tmp_layer_data.set(s,file->get_8());
+			}
+			file->close();
+			for(uint32_t i=0;i<total_pixel_amount;i++){
+				((float *)tmp_data.ptrw())[i] += ((float *)tmp_layer_data.ptr())[i];
+			}
+			img = Image::create_from_data(width,height,false,format,tmp_data);
+			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+			ERR_FAIL_COND_MSG(err!=godot::Error::OK,"Can not save merged layer "+path+" with godot save error "+itos(err)+" Layer data is preseve for this region you can get it back by adding the same layer name");
+			DirAccess::remove_absolute(path);
+			return;
+		}
+		return;
+	}
 	if(FileAccess::file_exists(path)){
 		DirAccess::remove_absolute(path);
 	}
@@ -221,9 +248,13 @@ void MImage::merge_layer(){
 
 void MImage::remove_layer(bool is_visible){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
+	path = layerDataDir.path_join(path);
 	if(!is_init){
 		layer_names.remove_at(active_layer);
-		is_saved_layers.remove_at(active_layer);
+		if(FileAccess::file_exists(path)){
+			DirAccess::remove_absolute(path);
+		}
 		return;
 	}
 	const uint8_t* ptr=image_layers[active_layer]->ptr();
@@ -241,8 +272,6 @@ void MImage::remove_layer(bool is_visible){
 		}
 		is_dirty = true;
 	}
-	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
-	path = layerDataDir.path_join(path);
 	is_saved_layers.set(active_layer,true);
 	is_saved_layers.set(0,false);
 	is_save = false;
@@ -263,11 +292,9 @@ void MImage::layer_visible(bool input){
 	if(!is_init){
 		return;
 	}
-	UtilityFunctions::print("image_layers[active_layer]->size() ",image_layers[active_layer]->size());
 	if(image_layers[active_layer]->size()==0){
 		return;
 	}
-	UtilityFunctions::print("layer visible ",input);
 	// There is no control if the layer is currently visibile or not
 	// These checks must be done in Grid Level
 	// We save before hiding the layer to not complicating the save system for now
@@ -315,6 +342,7 @@ void MImage::create(uint32_t _size, Image::Format _format) {
 	current_size = width;
 	image_layers.push_back(&data);
 	is_saved_layers.push_back(false);
+	is_save = false;
 	is_null_image = false;
 	is_init = true;
 	for(int s=1;s<layer_names.size();s++){
@@ -335,6 +363,7 @@ void MImage::create(uint32_t _width,uint32_t _height, Image::Format _format){
 	current_size = width;
 	image_layers.push_back(&data);
 	is_saved_layers.push_back(false);
+	is_save = false;
 	is_null_image = false;
 	is_init = true;
 	for(int s=1;s<layer_names.size();s++){
@@ -535,7 +564,6 @@ void MImage::save(bool force_save) {
 			return;
 		}
 		if(!is_saved_layers[0]){
-			UtilityFunctions::print("Save layer 0");
 			PackedByteArray background_data = data;
 			int total_pixel = width*height;
 			for(int i=1;i<image_layers.size();i++){
@@ -560,7 +588,6 @@ void MImage::save(bool force_save) {
 		}
 		for(int i=1;i<image_layers.size();i++){
 			if(!is_saved_layers[i]){
-				UtilityFunctions::print("Save layer ",i);
 				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 				String layer_path = layerDataDir.path_join(lname);
 				Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::WRITE);
@@ -578,9 +605,7 @@ void MImage::save(bool force_save) {
 
 void MImage::check_undo(){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
-	update_mutex.lock();
 	if(undo_data.has(current_undo_id) || !active_undo){
-		update_mutex.unlock();
 		return;
 	}
 	MImageUndoData ur;
@@ -592,7 +617,6 @@ void MImage::check_undo(){
 		memcpy(ur.data,image_layers[active_layer]->ptr(),image_layers[active_layer]->size());
 	}
 	undo_data.insert(current_undo_id,ur);
-	update_mutex.unlock();
 }
 
 void MImage::remove_undo_data(int ur_id){
@@ -638,7 +662,6 @@ void MImage::go_to_undo(int ur_id){
 			}
 			memcpy(image_layers[holes_layer]->ptrw(),ur.data,data.size());
 		} else {
-			UtilityFunctions::print("Arrive begining removing ");
 			image_layers[active_layer]->resize(0);
 		}
 	} else {

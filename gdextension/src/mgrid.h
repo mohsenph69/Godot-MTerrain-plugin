@@ -296,6 +296,8 @@ class MGrid : public Object {
     void merge_heightmap_layer();
     void remove_heightmap_layer();
     void toggle_heightmap_layer_visibile();
+    bool is_layer_visible(int index);
+    bool is_layer_visible(const String& lname);
 
     float get_h_scale();
 
