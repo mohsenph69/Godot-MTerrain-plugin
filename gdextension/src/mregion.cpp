@@ -72,6 +72,7 @@ void MRegion::configure() {
 }
 
 void MRegion::load(){
+	set_material(grid->_terrain_material->get_material(id));
 	for(int i=0; i < images.size(); i++){
 		images[i]->load();
 	}

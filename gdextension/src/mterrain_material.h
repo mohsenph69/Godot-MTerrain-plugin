@@ -68,6 +68,7 @@ class MTerrainMaterial : public Resource {
     void set_grid(MGrid* g); // if grid is nullptr it means the terrain has been destroyed
     // Each time this is called it is going to generate a new material for that region
     RID get_material(int region_id); // OR region Index in grid
+    void remove_material(int region_id);
     void load_images();
     void clear();
     void add_terrain_image(String name); // The order of adding image will determine image ID in each grid creation

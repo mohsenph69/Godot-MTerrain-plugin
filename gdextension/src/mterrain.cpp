@@ -251,7 +251,7 @@ void MTerrain::create_grid(){
     grid->lod_distance = lod_distance;
     grid->create(terrain_size.x,terrain_size.y,_chunks);
     get_cam_pos();
-    grid->update_regions_bounds(cam_pos);
+    grid->update_regions_bounds(cam_pos,false);
     grid->update_regions();
     grid->clear_region_bounds();
     grid->update_chunks(cam_pos);
@@ -336,7 +336,7 @@ void MTerrain::update() {
     if(update_stage==-1){
         //Updating Regions
         if(!is_update_regions_future_valid || update_regions_future.wait_for(std::chrono::microseconds(0))==std::future_status::ready){
-            grid->update_regions_bounds(cam_pos); //will clear old bound
+            grid->update_regions_bounds(cam_pos,true); //will clear old bound
             update_regions_future = std::async(std::launch::async, &MGrid::update_regions, grid);
             is_update_regions_future_valid=true;
         }

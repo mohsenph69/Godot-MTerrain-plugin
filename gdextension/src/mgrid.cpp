@@ -30,7 +30,6 @@ uint64_t MGrid::get_update_id(){
 }
 
 void MGrid::clear() {
-    UtilityFunctions::print("clear grid");
     if(is_dirty){
         RenderingServer* rs = RenderingServer::get_singleton();
         for(int32_t z=_search_bound.top; z <=_search_bound.bottom; z++)
@@ -125,6 +124,7 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
     int index = 0;
     for(int32_t z=0; z<_region_grid_size.z; z++){
         for(int32_t x=0; x<_region_grid_size.x; x++){
+            regions[index].id = index;
             regions[index].grid = this;
             regions[index].pos = MGridPos(x,0,z);
             regions[index].world_pos = get_world_pos(x*region_size,0,z*region_size);
@@ -140,9 +140,9 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
             if(z!=_region_grid_size.z-1){
                 regions[index].bottom = get_region(x,z+1);
             }
-            if(_terrain_material.is_valid()){
-                regions[index].set_material(_terrain_material->get_material(index));
-            }
+            //if(_terrain_material.is_valid()){
+            //    regions[index].set_material(_terrain_material->get_material(index));
+            //}
             index++;
         }
     }
@@ -773,11 +773,14 @@ void MGrid::apply_update_chunks() {
     }
 }
 
-void MGrid::update_regions_bounds(const Vector3& cam_pos){
-    for(MRegion* reg : load_region_list){
-        reg->make_neighbors_normals_dirty();
+void MGrid::update_regions_bounds(const Vector3& cam_pos,bool _make_neighbors_normals_dirty){
+    if(_make_neighbors_normals_dirty){
+        for(MRegion* reg : load_region_list){
+            reg->make_neighbors_normals_dirty();
+        }
     }
     for(MRegion* reg : unload_region_list){
+        _terrain_material->remove_material(reg->id);
         reg->to_be_remove = false;
     }
     load_region_list.clear();

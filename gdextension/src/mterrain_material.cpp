@@ -342,6 +342,14 @@ RID MTerrainMaterial::get_material(int region_id){
     return m;
 }
 
+void MTerrainMaterial::remove_material(int region_id){
+    if(!materials.has(region_id)){
+        return;
+    }
+    RS->free_rid(materials[region_id]);
+    materials.erase(region_id);
+}
+
 void MTerrainMaterial::load_images(){
     ERR_FAIL_COND(!grid);
     ERR_FAIL_COND(!grid->is_created());

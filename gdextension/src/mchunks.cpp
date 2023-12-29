@@ -114,5 +114,4 @@ void MChunks::create_chunks(int32_t _min_size, int32_t _max_size, real_t _min_h_
     }
     max_size = log2(_max_size/_min_size);
     max_lod = log2(_max_h_scale/_min_h_scale);
-    UtilityFunctions::print("total meshes: ", itos(meshes.size()) );
 }

@@ -60,8 +60,7 @@ class MRegion : public Object{
     static void _bind_methods(){}
 
     public:
-    bool unconfirm_lod=false;
-    bool confirm_lod=false;
+    int32_t id=-1;
     Vector<MImage*> images;
     float min_height= 100000;	
     float max_height=-100000;

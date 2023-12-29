@@ -169,7 +169,7 @@ class MGrid : public Object {
     bool save_generated_normals=false;
     Dictionary uniforms_id;
     int32_t physics_update_limit = 1;
-    int32_t region_limit = 1;
+    int32_t region_limit = 2;
     RID space;
     String dataDir;
     String layersDataDir;
@@ -254,7 +254,7 @@ class MGrid : public Object {
     void update_chunks(const Vector3& cam_pos);
     void update_regions(); // This one need camera pos as this thread can last more than one terrain update!
     void apply_update_chunks();
-    void update_regions_bounds(const Vector3& cam_pos);//Should be called in safe thread
+    void update_regions_bounds(const Vector3& cam_pos,bool _make_neighbors_normals_dirty);//Should be called in safe thread
     void clear_region_bounds();
     void update_physics(const Vector3& cam_pos);
 
