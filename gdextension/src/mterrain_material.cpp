@@ -386,6 +386,8 @@ void MTerrainMaterial::add_terrain_image(String name) {
             if(!ResourceLoader::get_singleton()->exists(file_path)){
                 if (name == "normals"){
                     i->format = Image::Format::FORMAT_RGB8;
+                } else if(name == "heightmap") {
+                    i->format = Image::Format::FORMAT_RF;
                 }
             }
             region->add_image(i);
