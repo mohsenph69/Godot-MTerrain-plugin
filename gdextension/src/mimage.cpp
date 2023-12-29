@@ -204,7 +204,6 @@ void MImage::merge_layer(){
 	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	path = layerDataDir.path_join(path);
 	if(!is_init){
-		layer_names.remove_at(active_layer);
 		if(ResourceLoader::get_singleton()->exists(file_path) && FileAccess::file_exists(path)){
 			Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
 			if(!img.is_valid()){
@@ -221,11 +220,20 @@ void MImage::merge_layer(){
 				tmp_layer_data.set(s,file->get_8());
 			}
 			file->close();
-			for(uint32_t i=0;i<total_pixel_amount;i++){
-				((float *)tmp_data.ptrw())[i] += ((float *)tmp_layer_data.ptr())[i];
+			if(layer_names[active_layer]==String("holes")){
+				for(uint32_t i=0;i<total_pixel_amount;i++){
+					if(!std::isnan(((float *)tmp_layer_data.ptr())[i])){
+						((float *)tmp_data.ptrw())[i] = std::numeric_limits<float>::quiet_NaN();
+					}
+				}
+			} else {
+				for(uint32_t i=0;i<total_pixel_amount;i++){
+					((float *)tmp_data.ptrw())[i] += ((float *)tmp_layer_data.ptr())[i];
+				}
 			}
 			img = Image::create_from_data(width,height,false,format,tmp_data);
 			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+			layer_names.remove_at(active_layer);
 			ERR_FAIL_COND_MSG(err!=godot::Error::OK,"Can not save merged layer "+path+" with godot save error "+itos(err)+" Layer data is preseve for this region you can get it back by adding the same layer name");
 			DirAccess::remove_absolute(path);
 			return;
@@ -402,7 +410,7 @@ void MImage::update_texture(int scale,bool apply_update){
 		} else {
 			new_img = Image::create_from_data(current_size,current_size,false,format,data);
 		}	
-		if(current_scale==scale && apply_update){ //This will improve the sculpting speed a little bit
+		if(current_scale==scale && apply_update && new_tex_rid.is_valid()){ //This will improve the sculpting speed a little bit
 			RS->texture_2d_update(new_tex_rid,new_img,0);
 			return;
 		}
