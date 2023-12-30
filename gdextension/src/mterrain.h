@@ -67,7 +67,7 @@ class MTerrain : public  Node3D {
     int32_t size_list[9] = M_SIZE_LIST;
     real_t h_scale_list[8]   = M_H_SCALE_LIST;
     Array size_info;
-    int32_t max_range=32;
+    int32_t max_range=1000;
     PackedInt32Array lod_distance;
     int32_t region_size=16;
     String dataDir;
