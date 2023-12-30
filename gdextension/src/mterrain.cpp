@@ -71,7 +71,7 @@ void MTerrain::_bind_methods() {
     
     ClassDB::bind_method(D_METHOD("set_distance_update_threshold","input"), &MTerrain::set_distance_update_threshold);
     ClassDB::bind_method(D_METHOD("get_distance_update_threshold"), &MTerrain::get_distance_update_threshold);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"distance_update_threshold"),"set_distance_update_threshold","get_distance_update_threshold");
+    //ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"distance_update_threshold"),"set_distance_update_threshold","get_distance_update_threshold");
 
     ClassDB::bind_method(D_METHOD("set_update_chunks_loop", "val"), &MTerrain::set_update_chunks_loop);
     ClassDB::bind_method(D_METHOD("get_update_chunks_loop"), &MTerrain::get_update_chunks_loop);
@@ -334,25 +334,18 @@ void MTerrain::update() {
     finish_updating = false;
     // In case -1 is Terrain grid update turn
     if(update_stage==-1){
-        //Updating Regions
-        bool has_region_update = !is_update_regions_future_valid || update_regions_future.wait_for(std::chrono::microseconds(0))==std::future_status::ready;
-        float dis = last_update_pos.distance_to(cam_pos);
-        if(has_region_update || dis < distance_update_threshold){
-            if(has_region_update){
-                grid->update_regions_bounds(cam_pos,true); //will clear old bound
+        if(!is_update_regions_future_valid || update_regions_future.wait_for(std::chrono::microseconds(0))==std::future_status::ready){
+            if(grid->update_regions_bounds(cam_pos,true)){
                 update_regions_future = std::async(std::launch::async, &MGrid::update_regions, grid);
                 is_update_regions_future_valid=true;
+            } else {
+                is_update_regions_future_valid=false;
             }
-            // Finish update regions //
-
-            // Terrain update
-            last_update_pos = cam_pos;
-            update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
-        } else {
-            update_stage = -2;
-            update_chunks_timer->start();
-            return;
         }
+        // Finish update regions //
+                // Terrain update
+        last_update_pos = cam_pos;
+        update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
     }
     else if(update_stage>=0){
         if(update_stage>=confirm_grass_list.size()){
@@ -368,10 +361,15 @@ void MTerrain::update() {
 void MTerrain::finish_update() {
     //UtilityFunctions::print("Finish update stage ", update_stage);
     if(update_stage == -2){
-        update_stage = -1;
-        call_deferred("update");
-        finish_updating = true;
-        return;
+        get_cam_pos();
+        float dis = last_update_pos.distance_to(cam_pos);
+        if(dis>distance_update_threshold || true){
+            update_stage = -1;
+            call_deferred("update");
+            return;
+        } else {
+            update_chunks_timer->start();
+        }
     }
     std::future_status status = update_thread_chunks.wait_for(std::chrono::microseconds(1));
     if(status == std::future_status::ready){

@@ -773,7 +773,7 @@ void MGrid::apply_update_chunks() {
     }
 }
 
-void MGrid::update_regions_bounds(const Vector3& cam_pos,bool _make_neighbors_normals_dirty){
+bool MGrid::update_regions_bounds(const Vector3& cam_pos,bool _make_neighbors_normals_dirty){
     if(_make_neighbors_normals_dirty){
         for(MRegion* reg : load_region_list){
             reg->make_neighbors_normals_dirty();
@@ -817,6 +817,7 @@ void MGrid::update_regions_bounds(const Vector3& cam_pos,bool _make_neighbors_no
         }
     }
     current_region_bound = bound;
+    return load_region_list.size()!=0 || unload_region_list.size()!=0;
 }
 
 void MGrid::clear_region_bounds(){
