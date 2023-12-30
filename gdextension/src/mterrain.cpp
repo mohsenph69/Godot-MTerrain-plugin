@@ -335,16 +335,24 @@ void MTerrain::update() {
     // In case -1 is Terrain grid update turn
     if(update_stage==-1){
         //Updating Regions
-        if(!is_update_regions_future_valid || update_regions_future.wait_for(std::chrono::microseconds(0))==std::future_status::ready){
-            grid->update_regions_bounds(cam_pos,true); //will clear old bound
-            update_regions_future = std::async(std::launch::async, &MGrid::update_regions, grid);
-            is_update_regions_future_valid=true;
-        }
-        // Finish update regions //
+        bool has_region_update = !is_update_regions_future_valid || update_regions_future.wait_for(std::chrono::microseconds(0))==std::future_status::ready;
+        float dis = last_update_pos.distance_to(cam_pos);
+        if(has_region_update || dis < distance_update_threshold){
+            if(has_region_update){
+                grid->update_regions_bounds(cam_pos,true); //will clear old bound
+                update_regions_future = std::async(std::launch::async, &MGrid::update_regions, grid);
+                is_update_regions_future_valid=true;
+            }
+            // Finish update regions //
 
-        // Terrain update
-        last_update_pos = cam_pos;
-        update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
+            // Terrain update
+            last_update_pos = cam_pos;
+            update_thread_chunks = std::async(std::launch::async, &MGrid::update_chunks, grid, cam_pos);
+        } else {
+            update_stage = -2;
+            update_chunks_timer->start();
+            return;
+        }
     }
     else if(update_stage>=0){
         if(update_stage>=confirm_grass_list.size()){
@@ -360,15 +368,10 @@ void MTerrain::update() {
 void MTerrain::finish_update() {
     //UtilityFunctions::print("Finish update stage ", update_stage);
     if(update_stage == -2){
-        get_cam_pos();
-        float dis = last_update_pos.distance_to(cam_pos);
-        if(dis>distance_update_threshold){
-            update_stage = -1;
-            call_deferred("update");
-            return;
-        } else {
-            update_chunks_timer->start();
-        }
+        update_stage = -1;
+        call_deferred("update");
+        finish_updating = true;
+        return;
     }
     std::future_status status = update_thread_chunks.wait_for(std::chrono::microseconds(1));
     if(status == std::future_status::ready){
