@@ -71,7 +71,7 @@ void MTerrain::_bind_methods() {
     
     ClassDB::bind_method(D_METHOD("set_distance_update_threshold","input"), &MTerrain::set_distance_update_threshold);
     ClassDB::bind_method(D_METHOD("get_distance_update_threshold"), &MTerrain::get_distance_update_threshold);
-    //ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"distance_update_threshold"),"set_distance_update_threshold","get_distance_update_threshold");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"distance_update_threshold"),"set_distance_update_threshold","get_distance_update_threshold");
 
     ClassDB::bind_method(D_METHOD("set_update_chunks_loop", "val"), &MTerrain::set_update_chunks_loop);
     ClassDB::bind_method(D_METHOD("get_update_chunks_loop"), &MTerrain::get_update_chunks_loop);
@@ -303,6 +303,9 @@ void MTerrain::remove_grid(){
         update_thread_chunks.wait();
         finish_updating = true;
     }
+    if(update_regions_future.valid()){
+        update_regions_future.wait();
+    }
     if(update_thread_physics.valid()){
         update_thread_physics.wait();
         finish_updating_physics = true;
@@ -361,15 +364,22 @@ void MTerrain::update() {
 void MTerrain::finish_update() {
     //UtilityFunctions::print("Finish update stage ", update_stage);
     if(update_stage == -2){
+        bool finish_update_region = false;
+        if(is_update_regions_future_valid && update_regions_future.wait_for(std::chrono::microseconds(0))==std::future_status::ready){
+            finish_update_region = true;
+            is_update_regions_future_valid = false;
+        }
         get_cam_pos();
         float dis = last_update_pos.distance_to(cam_pos);
-        if(dis>distance_update_threshold || true){
+        if(dis>distance_update_threshold || finish_update_region){
             update_stage = -1;
+            finish_updating = true;
             call_deferred("update");
             return;
         } else {
             update_chunks_timer->start();
         }
+        return;
     }
     std::future_status status = update_thread_chunks.wait_for(std::chrono::microseconds(1));
     if(status == std::future_status::ready){
