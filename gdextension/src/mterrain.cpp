@@ -306,6 +306,7 @@ void MTerrain::remove_grid(){
     if(update_regions_future.valid()){
         update_regions_future.wait();
     }
+    is_update_regions_future_valid = false;
     if(update_thread_physics.valid()){
         update_thread_physics.wait();
         finish_updating_physics = true;
