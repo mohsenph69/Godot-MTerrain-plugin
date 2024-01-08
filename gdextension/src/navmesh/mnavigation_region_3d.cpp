@@ -287,8 +287,11 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
     }
     for(int i=0;i<obstacles_infos.size();i++){
         PackedVector3Array obs_faces;
+        float bh = terrain->get_height(obstacles_infos[i].transform.origin);
         float h0=tmp_nav->get_agent_height()*0.5;
-        float h=tmp_nav->get_agent_height()*0.5;
+        float h=tmp_nav->get_agent_height()*0.6;
+        h0+=bh;
+        h+=bh;
         float w = obstacles_infos[i].width/2;
         float d = obstacles_infos[i].depth/2;
         Vector3 tl(-w,h0,-d);
@@ -311,11 +314,12 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
         obs_faces.push_back(tl);
         obs_faces.push_back(bl);
         obs_faces.push_back(u);
-        geo_data->add_faces(obs_faces,obstacles_infos[i].transform);
+        Transform3D _tt = obstacles_infos[i].transform;
+        _tt.origin.y = 0;
+        geo_data->add_faces(obs_faces,_tt);
     }
     NavigationServer3D::get_singleton()->bake_from_source_geometry_data(tmp_nav,geo_data);
     last_update_pos = cam_pos;
-    UtilityFunctions::print("Finish Thread ");
     obs_info.clear();
     obst_info.clear();
     call_deferred("_finish_update",tmp_nav);

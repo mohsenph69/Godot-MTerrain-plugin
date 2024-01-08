@@ -4,6 +4,7 @@ var version:String="0.9.4"
 var import_window_res = preload("res://addons/m_terrain/gui/import_window.tscn")
 var image_creator_window_res = preload("res://addons/m_terrain/gui/image_creator_window.tscn")
 var tools= null
+var tsnap = null
 var paint_panel=null
 var brush_decal=null
 var stencil_decal=null
@@ -14,6 +15,7 @@ var raw_tex_importer = null
 var active_terrain:MTerrain = null
 var active_grass:MGrass = null
 var active_nav_region:MNavigationRegion3D = null
+var active_snap_object:Node3D = null
 var last_camera_position:Vector3
 
 var collision_ray_step=0.2
@@ -40,6 +42,11 @@ func _enter_tree():
 		tools.info_window_open_request.connect(Callable(self,"info_window_open_request"))
 		tools.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
+		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
+		tsnap.connect("pressed",Callable(self,"tsnap_pressed"))
+		tsnap.visible = false
+		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)
+		
 		paint_panel = preload("res://addons/m_terrain/gui/paint_panel.tscn").instantiate()
 		paint_panel.brush_size_changed.connect(Callable(self,"brush_size_changed"))
 		## ADD and Remove so the ready function will be called
@@ -64,8 +71,11 @@ func _exit_tree():
 		remove_control_from_docks(paint_panel)
 		paint_panel.queue_free()
 		brush_decal.queue_free()
+		tools.queue_free()
+		tsnap.queue_free()
 		human_male.queue_free()
 		stencil_decal.queue_free()
+		
 
 func show_import_window():
 	var window = import_window_res.instantiate()
@@ -211,6 +221,8 @@ func paint_mode_handle(event:InputEvent):
 func _handles(object):
 	if not Engine.is_editor_hint():
 		return false
+	active_snap_object = null
+	tsnap.visible = false
 	if is_instance_valid(active_nav_region):
 		if active_nav_region != object:
 			if active_nav_region:
@@ -248,6 +260,9 @@ func _handles(object):
 			return true
 	active_grass = null
 	tools.visible = false
+	if object is Node3D and active_terrain:
+		active_snap_object = object
+		tsnap.visible = true
 	return false
 
 
@@ -290,3 +305,8 @@ func info_window_open_request():
 	current_window_info.generate_info(active_terrain,version)
 	
 
+
+func tsnap_pressed():
+	if active_terrain and active_snap_object and active_terrain.is_grid_created():
+		var h:float = active_terrain.get_height(active_snap_object.global_position)
+		active_snap_object.global_position.y = h
