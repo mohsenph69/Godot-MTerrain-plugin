@@ -22,7 +22,7 @@ android.release.arm64 = "res://addons/m_terrain/libs/libMTerrain.android.templat
 MTerrain = "res://addons/m_terrain/icons/M-terrain_icon.png"
 MGrass = "res://addons/m_terrain/icons/foilage_icon.png"
 MNavigationRegion3D = "res://addons/m_terrain/icons/MNavigationRegion3D.png"
-
+MObstacle = "res://addons/m_terrain/icons/obstacle_icon.png"
 
 
 

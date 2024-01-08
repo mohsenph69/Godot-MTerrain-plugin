@@ -18,6 +18,7 @@
 #include "../mterrain.h"
 #include "mnavigation_mesh_data.h"
 #include "../grass/mgrass_chunk.h"
+#include "mobstacle.h"
 
 #include <thread>
 #include <future>
@@ -67,6 +68,8 @@ class MNavigationRegion3D : public NavigationRegion3D{
     float h_scale;
     bool is_npoints_visible = false;
     int max_shown_lod=2;
+    static VSet<MObstacle*> obstacles;
+    
 
 
 
@@ -75,6 +78,13 @@ class MNavigationRegion3D : public NavigationRegion3D{
     static void _bind_methods();
 
     public:
+    struct ObstacleInfo
+    {
+        float width;
+        float depth;
+        Transform3D transform;
+    };
+    Vector<ObstacleInfo> obstacles_infos;
     bool is_nav_init = false;
     MNavigationRegion3D();
     ~MNavigationRegion3D();
@@ -124,5 +134,7 @@ class MNavigationRegion3D : public NavigationRegion3D{
 
     godot::Error save_nav_data();
 
+    static void add_obstacle(MObstacle* input);
+    static void remove_obstacle(MObstacle* input);
 };
 #endif

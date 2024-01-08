@@ -9,7 +9,7 @@
 
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
-
+VSet<MObstacle*> MNavigationRegion3D::obstacles;
 
 void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("update_navmesh","cam_pos"), &MNavigationRegion3D::update_navmesh);
@@ -159,6 +159,11 @@ void MNavigationRegion3D::update_navmesh(Vector3 cam_pos){
     }
     ERR_FAIL_COND(!get_navigation_mesh().is_valid());
     is_updating = true;
+    // Update obstacles info
+    obstacles_infos.clear();
+    for(int i=0; i<obstacles.size(); i++){
+        obstacles_infos.push_back({obstacles[i]->width,obstacles[i]->depth,obstacles[i]->get_global_transform()});
+    }
     update_thread = std::async(std::launch::async, &MNavigationRegion3D::_update_navmesh, this, cam_pos);
 }
 
@@ -271,14 +276,42 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
         geo_data->add_faces(faces,t);
 
         //Debug mesh
-        Array debug_arr;
-        debug_arr.resize(Mesh::ARRAY_MAX);
-        debug_arr[Mesh::ARRAY_VERTEX] = faces;
-        debug_mesh->call_deferred("clear_surfaces");
-        debug_mesh->call_deferred("add_surface_from_arrays",Mesh::PRIMITIVE_TRIANGLES,debug_arr);
+        //Array debug_arr;
+        //debug_arr.resize(Mesh::ARRAY_MAX);
+        //debug_arr[Mesh::ARRAY_VERTEX] = faces;
+        //debug_mesh->call_deferred("clear_surfaces");
+        //debug_mesh->call_deferred("add_surface_from_arrays",Mesh::PRIMITIVE_TRIANGLES,debug_arr);
         //debug_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, debug_arr);
-        debug_mesh->call_deferred("clear_surfaces");
-        debug_mesh->call_deferred("add_surface_from_arrays",Mesh::PRIMITIVE_TRIANGLES,debug_arr);
+        //debug_mesh->call_deferred("clear_surfaces");
+        //debug_mesh->call_deferred("add_surface_from_arrays",Mesh::PRIMITIVE_TRIANGLES,debug_arr);
+    }
+    for(int i=0;i<obstacles_infos.size();i++){
+        PackedVector3Array obs_faces;
+        float h0=tmp_nav->get_agent_height()*0.5;
+        float h=tmp_nav->get_agent_height()*0.5;
+        float w = obstacles_infos[i].width/2;
+        float d = obstacles_infos[i].depth/2;
+        Vector3 tl(-w,h0,-d);
+        Vector3 tr(w,h0,-d);
+        Vector3 br(w,h0,d);
+        Vector3 bl(-w,h0,d);
+        Vector3 u(0,h,0);
+        obs_faces.push_back(tr);
+        obs_faces.push_back(tl);
+        obs_faces.push_back(u);
+        //f2
+        obs_faces.push_back(br);
+        obs_faces.push_back(tr);
+        obs_faces.push_back(u);
+        //f3
+        obs_faces.push_back(bl);
+        obs_faces.push_back(br);
+        obs_faces.push_back(u);
+        //f4
+        obs_faces.push_back(tl);
+        obs_faces.push_back(bl);
+        obs_faces.push_back(u);
+        geo_data->add_faces(obs_faces,obstacles_infos[i].transform);
     }
     NavigationServer3D::get_singleton()->bake_from_source_geometry_data(tmp_nav,geo_data);
     last_update_pos = cam_pos;
@@ -639,4 +672,12 @@ godot::Error MNavigationRegion3D::save_nav_data(){
         return ResourceSaver::get_singleton()->save(nav_data,nav_data->get_path());
     }
     return ERR_UNAVAILABLE;   
+}
+
+
+void MNavigationRegion3D::add_obstacle(MObstacle* input){
+    obstacles.insert(input);
+}
+void MNavigationRegion3D::remove_obstacle(MObstacle* input){
+    obstacles.erase(input);
 }
