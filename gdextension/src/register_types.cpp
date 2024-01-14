@@ -13,6 +13,7 @@
 
 #include "mterrain.h"
 #include "mgrid.h"
+#include "mresource.h"
 #include "mchunk_generator.h"
 #include "mchunks.h"
 #include "mraw16.h"
@@ -37,6 +38,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	}
 	ClassDB::register_class<MTerrain>();
 	ClassDB::register_class<MGrid>();
+	ClassDB::register_class<MResource>();
 	ClassDB::register_class<MChunkGenerator>();
 	ClassDB::register_class<MChunks>();
 	ClassDB::register_class<MRegion>();

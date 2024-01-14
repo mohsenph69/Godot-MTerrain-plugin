@@ -1032,7 +1032,7 @@ int MTerrain::get_pixel_width(){
         WARN_PRINT("First create grid and then get the pixel width");
     }
     #endif
-    return grid->grid_pixel_region.width;
+    return grid->grid_pixel_region.get_width();
 }
 
 int MTerrain::get_pixel_height(){
@@ -1041,23 +1041,8 @@ int MTerrain::get_pixel_height(){
         WARN_PRINT("First create grid and then get the pixel height");
     }
     #endif
-    return grid->grid_pixel_region.height;
+    return grid->grid_pixel_region.get_height();
 }
-
-#include <godot_cpp/classes/file_access.hpp>
-
-struct Foo
-{
-    String name = "foo zad";
-    int dis;
-    friend bool operator<(const Foo& c1,Foo& c2){
-        return c1.dis<c2.dis;
-    }
-    friend bool operator>(const Foo& c1,Foo& c2){
-        return c1.dis>c2.dis;
-    }
-};
-
 
 void MTerrain::set_brush_layers(Array input){
     brush_layers = input;

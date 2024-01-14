@@ -7,8 +7,6 @@ MPixelRegion::MPixelRegion(){}
 
 MPixelRegion::MPixelRegion(const uint32_t _width,const uint32_t _height) {
     //Minus one becuase pixels id start from zero
-    width = _width;
-    height = _height;
     right = _width - 1;
     bottom = _height - 1;
 }
@@ -18,8 +16,6 @@ MPixelRegion::MPixelRegion(const uint32_t _left, const uint32_t _right, const ui
     right = _right;
     top = _top;
     bottom = _bottom;
-    width = right - left + 1;
-    height = bottom - top + 1;
 }
 
 void MPixelRegion::grow_all_side(const MPixelRegion& limit){
@@ -31,8 +27,6 @@ void MPixelRegion::grow_all_side(const MPixelRegion& limit){
     if(top<limit.top) top = limit.top;
     if(right>limit.right) right = limit.right;
     if(bottom>limit.bottom) bottom = limit.bottom;
-    width = right - left + 1;
-    height = bottom - top + 1;
 }
 
 void MPixelRegion::grow_all_side(const MPixelRegion& limit,uint32_t amount){
@@ -44,8 +38,6 @@ void MPixelRegion::grow_all_side(const MPixelRegion& limit,uint32_t amount){
     bottom += amount;
     right = right > limit.right ? limit.right : right;
     bottom = bottom > limit.bottom ? limit.bottom : bottom;
-    width = right - left + 1;
-    height = bottom - top + 1;
 }
 
 
@@ -100,11 +92,21 @@ MPixelRegion MPixelRegion::get_local(MPixelRegion region){
     return region;
 }
 
+uint32_t MPixelRegion::get_height(){
+    return bottom - top + 1;
+}
+
+uint32_t MPixelRegion::get_width(){
+    return right - left + 1;
+}
+
+uint32_t MPixelRegion::get_pixel_amount(){
+    return (right - left + 1)*(bottom - top + 1);
+}
+
 void MPixelRegion::clear(){
     left=0;
     right=0;
     top=0;
     bottom=0;
-    width=0;
-    height=0;
 }

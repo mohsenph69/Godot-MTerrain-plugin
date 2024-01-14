@@ -1239,7 +1239,7 @@ void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     //ERR_FAIL_COND_MSG(draw_pixel_region.width!=draw_pixel_region.height,"Non square brush is not supported");
     MImage* draw_image = memnew(MImage);
     {
-        draw_image->create(draw_pixel_region.width,draw_pixel_region.height,Image::Format::FORMAT_RF);
+        draw_image->create(draw_pixel_region.get_width(),draw_pixel_region.get_height(),Image::Format::FORMAT_RF);
         Vector<MPixelRegion> draw_pixel_regions = draw_pixel_region.devide(4);
         Vector<MPixelRegion> local_pixel_regions;
         for(int i=0;i<draw_pixel_regions.size();i++){
@@ -1323,7 +1323,7 @@ void MGrid::draw_color(Vector3 brush_pos,real_t radius,MColorBrush* brush, int32
     brush->before_draw();
     MImage* draw_image = memnew(MImage);
     {
-        draw_image->create(draw_pixel_region.width,draw_pixel_region.height,format);
+        draw_image->create(draw_pixel_region.get_width(),draw_pixel_region.get_height(),format);
         Vector<MPixelRegion> draw_pixel_regions = draw_pixel_region.devide(4);
         Vector<MPixelRegion> local_pixel_regions;
         for(int i=0;i<draw_pixel_regions.size();i++){

@@ -12,8 +12,8 @@ struct MPixelRegion {
     uint32_t right=0;
     uint32_t top=0;
     uint32_t bottom=0;
-    uint32_t width=0;
-    uint32_t height=0;
+    //uint32_t width=0;
+    //uint32_t height=0;
 
     MPixelRegion();
     MPixelRegion(const uint32_t _left, const uint32_t _right, const uint32_t _top, const uint32_t _bottom);
@@ -24,6 +24,9 @@ struct MPixelRegion {
     Vector<MPixelRegion> devide(uint32_t amount);
     //Recieve another pixel region and return that in this region local position
     MPixelRegion get_local(MPixelRegion region);
+    uint32_t get_height();
+    uint32_t get_width();
+    uint32_t get_pixel_amount();
     void clear();
 };
 
