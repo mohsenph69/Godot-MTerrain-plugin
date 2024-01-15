@@ -49,18 +49,21 @@ MResource::QuadTreeRF::~QuadTreeRF(){
 }
 
 void MResource::QuadTreeRF::update_min_max_height(){
+    uint32_t px_index_top_left = px_region.left + (px_region.top*window_width);
+    min_height = data[px_index_top_left];
+    max_height = data[px_index_top_left];
     for(uint32_t y=px_region.top;y<=px_region.bottom;y++){
         for(uint32_t x=px_region.left;x<=px_region.right;x++){
             uint32_t px_index = x + (y*window_width);
             float val = data[px_index];
-            if(std::isnan(val)){
+            if(IS_HOLE(val)){
                 has_hole = true;
                 continue;
             }
-            if(val>max_height){
+            if(IS_HOLE(max_height) || val>max_height){
                 max_height = val;
             }
-            if(val<min_height){
+            if(IS_HOLE(min_height)  || val<min_height){
                 min_height = val;
             }
         }
@@ -88,6 +91,10 @@ void MResource::QuadTreeRF::divide_upto_leaf(){
     nw->divide_upto_leaf();
     se->divide_upto_leaf();
     sw->divide_upto_leaf();
+}
+
+uint32_t MResource::QuadTreeRF::get_only_hole_head_size(){
+    return 1;
 }
 
 uint32_t MResource::QuadTreeRF::get_flat_head_size(){
@@ -125,8 +132,12 @@ uint32_t MResource::QuadTreeRF::get_block_head_size(){
 }
 
 uint32_t MResource::QuadTreeRF::get_optimal_non_divide_size(){
+    if(IS_HOLE(min_height) || IS_HOLE(max_height)){
+        data_encoding = DATA_ENCODE_ONLY_HOLE;
+        return get_only_hole_head_size(); // Only one as we don't have only meta block
+    }
     double dh = max_height - min_height;
-    if(dh<accuracy){ // Flat Mode
+    if(dh<accuracy && !has_hole){ // Flat Mode
         data_encoding = DATA_ENCODE_FLAT;
         // Size will remain the same as there is no data block here
         return get_flat_head_size();
@@ -198,7 +209,7 @@ uint32_t MResource::QuadTreeRF::get_optimal_size(){
 
 void MResource::QuadTreeRF::encode_min_max_height(PackedByteArray& save_data,uint32_t& save_index){
     ERR_FAIL_COND(data_encoding>=DATA_ENCODE_MAX);
-    if(data_encoding==DATA_ENCODE_FLOAT){
+    if(data_encoding==DATA_ENCODE_FLOAT || data_encoding==DATA_ENCODE_ONLY_HOLE){
         return;
     }
     double main_min_height = root ? root->min_height : min_height;
@@ -260,7 +271,7 @@ void MResource::QuadTreeRF::encode_min_max_height(PackedByteArray& save_data,uin
 
 void MResource::QuadTreeRF::decode_min_max_height(const PackedByteArray& compress_data,uint32_t& decompress_index){
     ERR_FAIL_COND(data_encoding>=DATA_ENCODE_MAX);
-    if(data_encoding==DATA_ENCODE_FLOAT){
+    if(data_encoding==DATA_ENCODE_FLOAT || data_encoding==DATA_ENCODE_ONLY_HOLE){
         return;
     }
     double main_min_height = root ? root->min_height : min_height;
@@ -347,7 +358,15 @@ void MResource::QuadTreeRF::save_quad_tree_data(PackedByteArray& save_data,uint3
         encode_data_float(save_data,save_index);
         return;
     }
-    if(data_encoding == DATA_ENCODE_FLAT){
+    if(data_encoding == DATA_ENCODE_FLAT || data_encoding == DATA_ENCODE_ONLY_HOLE){
+        #ifdef PRINT_DEBUG
+        if(data_encoding == DATA_ENCODE_FLAT){
+            UtilityFunctions::print("EncodeFLAT L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " save_index ",save_index, " ----- ");
+        }
+        else if(data_encoding == DATA_ENCODE_ONLY_HOLE){
+            UtilityFunctions::print("EncodeOnlyHole L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " save_index ",save_index, " ----- ");
+        }
+        #endif
         return;
     }
     // Otherwise on all condition the min and max height should be encoded
@@ -381,7 +400,7 @@ void MResource::QuadTreeRF::load_quad_tree_data(const PackedByteArray& compress_
         has_hole = meta & 0x1;
         decode_min_max_height(compress_data,decompress_index);
         if(data_encoding==DATA_ENCODE_FLAT){
-            decode_data_flat(compress_data,decompress_index);
+            decode_data_flat();
             return;
         }
         if(data_encoding==DATA_ENCODE_U2){
@@ -402,6 +421,10 @@ void MResource::QuadTreeRF::load_quad_tree_data(const PackedByteArray& compress_
         }
         if(data_encoding==DATA_ENCODE_FLOAT){
             decode_data_float(compress_data,decompress_index);
+            return;
+        }
+        if(data_encoding==DATA_ENCODE_ONLY_HOLE){
+            decode_data_only_hole();
             return;
         }
         ERR_FAIL_MSG("Not a valid data encoding "+itos(data_encoding));
@@ -431,19 +454,23 @@ void MResource::QuadTreeRF::encode_data_u2(PackedByteArray& save_data,uint32_t& 
     UtilityFunctions::print("EncodeU2 L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " save_index ",save_index, " ----- ");
     #endif
     double dh = max_height - min_height;
-    double h_step = has_hole ? dh/HU2_MAX : dh/U2_MAX;
+    uint8_t maxu2 = has_hole ? HU2_MAX : U2_MAX;
+    double h_step = dh/maxu2;
     uint8_t vals[4];
     uint8_t val_index =0;
     for(uint32_t y=px_region.top;y<=px_region.bottom;y++){
         for(uint32_t x=px_region.left;x<=px_region.right;x++){
             uint32_t px_index = x + (y*window_width);
             double val = data[px_index] - min_height;
-            vals[val_index] = std::isnan(val) ? U2_MAX : (uint8_t)(val/h_step);
-            vals[val_index] = std::min(vals[val_index],(uint8_t)U2_MAX);
+            if(IS_HOLE(val)){
+                vals[val_index] = U2_MAX;
+            } else {
+                vals[val_index] = (uint8_t)(val/h_step);
+                vals[val_index] = std::min(vals[val_index],maxu2);
+            }
             val_index++;
             if(val_index==4){
                 val_index=0;
-                //UtilityFunctions::print("Encoding2 ",vals[0]," , ",vals[1]," , ",vals[2]," , ",vals[3]);
                 encode_uint2(vals[0],vals[1],vals[2],vals[3],save_data.ptrw()+save_index);
                 save_index++;
             }
@@ -456,7 +483,8 @@ void MResource::QuadTreeRF::encode_data_u4(PackedByteArray& save_data,uint32_t& 
     UtilityFunctions::print("EncodeU4 L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " save_index ",save_index, " ----- ");
     #endif
     double dh = max_height - min_height;
-    double h_step = has_hole ? dh/HU4_MAX : dh/U4_MAX;
+    uint8_t maxu4 = has_hole ? HU4_MAX : U4_MAX;
+    double h_step = dh/maxu4;
     //UtilityFunctions::print("Encode4 h step ",h_step, " dh ",dh);
     uint8_t vals[2];
     uint8_t val_index =0;
@@ -464,8 +492,12 @@ void MResource::QuadTreeRF::encode_data_u4(PackedByteArray& save_data,uint32_t& 
         for(uint32_t x=px_region.left;x<=px_region.right;x++){
             uint32_t px_index = x + (y*window_width);
             double val = data[px_index] - min_height;
-            vals[val_index] = std::isnan(val) ? U4_MAX :(uint8_t)(val / h_step);
-            vals[val_index] = std::min(vals[val_index],(uint8_t)U4_MAX);
+            if(IS_HOLE(val)){
+                vals[val_index] = U4_MAX;
+            } else {
+                vals[val_index] = (uint8_t)(val / h_step);
+                vals[val_index] = std::min(vals[val_index],maxu4);
+            }
             //UtilityFunctions::print("Encode4 ",data[px_index]," -> ",vals[val_index]);
             val_index++;
             if(val_index==2){
@@ -483,12 +515,15 @@ void MResource::QuadTreeRF::encode_data_u8(PackedByteArray& save_data,uint32_t& 
     UtilityFunctions::print("EncodeU8 L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " save_index ",save_index, " ----- ");
     #endif
     double dh = max_height - min_height;
-    double h_step = has_hole ? dh/HU8_MAX : dh/U8_MAX;
+    double maxu8 = has_hole ? HU8_MAX : U8_MAX;
+    double h_step = dh/maxu8;
     for(uint32_t y=px_region.top;y<=px_region.bottom;y++){
         for(uint32_t x=px_region.left;x<=px_region.right;x++){
             uint32_t px_index = x + (y*window_width);
             double val = data[px_index] - min_height;
-            uint8_t sval = std::isnan(val) ? UINT8_MAX : val/h_step;
+            val /= h_step;
+            val = std::min(val,maxu8);
+            uint8_t sval = IS_HOLE(val) ? UINT8_MAX : val;
             sval = std::min(sval,(uint8_t)U8_MAX);
             //UtilityFunctions::print("Encode8 ",val," -> ",sval);
             save_data[save_index] = sval;
@@ -502,12 +537,15 @@ void MResource::QuadTreeRF::encode_data_u16(PackedByteArray& save_data,uint32_t&
     UtilityFunctions::print("EncodeU16 L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " save_index ",save_index, " ----- ");
     #endif
     double dh = max_height - min_height;
-    double h_step = has_hole ? dh/HU16_MAX : dh/U16_MAX;
+    double maxu16 = has_hole ? HU16_MAX : U16_MAX;
+    double h_step = dh/maxu16;
     for(uint32_t y=px_region.top;y<=px_region.bottom;y++){
         for(uint32_t x=px_region.left;x<=px_region.right;x++){
             uint32_t px_index = x + (y*window_width);
             double val = data[px_index] - min_height;
-            uint16_t sval = std::isnan(val) ? UINT16_MAX : val/h_step;
+            val /= h_step;
+            val = std::min(val,maxu16);
+            uint16_t sval = IS_HOLE(val) ? UINT16_MAX : val;
             sval = std::min(sval,(uint16_t)U16_MAX);
             //UtilityFunctions::print("Encode16 ",val," -> ",sval);
             encode_uint16(sval,save_data.ptrw()+save_index);
@@ -531,9 +569,9 @@ void MResource::QuadTreeRF::encode_data_float(PackedByteArray& save_data,uint32_
 }
 
 
-void MResource::QuadTreeRF::decode_data_flat(const PackedByteArray& compress_data,uint32_t& decompress_index){
+void MResource::QuadTreeRF::decode_data_flat(){
     #ifdef PRINT_DEBUG
-    UtilityFunctions::print("DecodeFlat L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " save_index ",decompress_index, " ----- ");
+    UtilityFunctions::print("DecodeFlat L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " ----- ");
     #endif
     for(uint32_t y=px_region.top;y<=px_region.bottom;y++){
         for(uint32_t x=px_region.left;x<=px_region.right;x++){
@@ -557,7 +595,11 @@ void MResource::QuadTreeRF::decode_data_u2(const PackedByteArray& compress_data,
                 decompress_index++;
             }
             uint32_t px_index = x + (y*window_width);
-            data[px_index] = min_height + vals[vals_index]*h_step;
+            if(has_hole && vals[vals_index]==U2_MAX){
+                data[px_index] = FLOAT_HOLE;
+            } else {
+                data[px_index] = min_height + vals[vals_index]*h_step;
+            }
             vals_index++;
             if(vals_index==4){
                 vals_index=0;
@@ -580,7 +622,11 @@ void MResource::QuadTreeRF::decode_data_u4(const PackedByteArray& compress_data,
                 decompress_index++;
             }
             uint32_t px_index = x + (y*window_width);
-            data[px_index] = min_height + vals[vals_index]*h_step;
+            if(has_hole && vals[vals_index] == U4_MAX){
+                data[px_index] = FLOAT_HOLE;
+            } else {
+                data[px_index] = min_height + vals[vals_index]*h_step;
+            }
             vals_index++;
             if(vals_index==2){
                 vals_index=0;
@@ -600,11 +646,10 @@ void MResource::QuadTreeRF::decode_data_u8(const PackedByteArray& compress_data,
             uint8_t val8 = compress_data[decompress_index];
             decompress_index++;
             uint32_t px_index = x + (y*window_width);
-            if(has_hole && val8==U16_MAX){
-                data[px_index] = std::numeric_limits<float>::quiet_NaN();
+            if(has_hole && val8==U8_MAX){
+                data[px_index] = FLOAT_HOLE;
                 continue;
             }
-            
             data[px_index] = min_height + (float)(val8*h_step);
         }
     }
@@ -621,7 +666,7 @@ void MResource::QuadTreeRF::decode_data_u16(const PackedByteArray& compress_data
             decompress_index+=2;
             uint32_t px_index = x + (y*window_width);
             if(has_hole && val16==U16_MAX){
-                data[px_index] = std::numeric_limits<float>::quiet_NaN();
+                data[px_index] = FLOAT_HOLE;
                 continue;
             }
             data[px_index] = min_height + (float)(val16*h_step);
@@ -631,13 +676,25 @@ void MResource::QuadTreeRF::decode_data_u16(const PackedByteArray& compress_data
 }
 void MResource::QuadTreeRF::decode_data_float(const PackedByteArray& compress_data,uint32_t& decompress_index){
     #ifdef PRINT_DEBUG
-    UtilityFunctions::print("DecodeFlat L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " decompress_index ",decompress_index, " ----- ");
+    UtilityFunctions::print("DecodeFloat L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " decompress_index ",decompress_index, " ----- ");
     #endif
     for(uint32_t y=px_region.top;y<=px_region.bottom;y++){
         for(uint32_t x=px_region.left;x<=px_region.right;x++){
             uint32_t px_index = x + (y*window_width);
             data[px_index] = decode_float(compress_data.ptr()+decompress_index);
             decompress_index+=4;
+        }
+    }
+}
+
+void MResource::QuadTreeRF::decode_data_only_hole(){
+    #ifdef PRINT_DEBUG
+    UtilityFunctions::print("DecodeOnlyHole L ",px_region.left," R ",px_region.right," T ",px_region.top, " B ",px_region.bottom, " ----- ");
+    #endif
+    for(uint32_t y=px_region.top;y<=px_region.bottom;y++){
+        for(uint32_t x=px_region.left;x<=px_region.right;x++){
+            uint32_t px_index = x + (y*window_width);
+            data[px_index] = FLOAT_HOLE;
         }
     }
 }
@@ -658,19 +715,19 @@ const Dictionary& MResource::get_compressed_data(){
     return compressed_data;
 }
 
-void MResource::dump_header(PackedByteArray& compress_data){
+void MResource::dump_header(const PackedByteArray& compress_data){
     ERR_FAIL_COND(compress_data.size()<MRESOURCE_HEADER_SIZE);
     UtilityFunctions::print("-----Header info-----");
     UtilityFunctions::print("Compress flag ",compress_data[0]);
     UtilityFunctions::print("image format ",compress_data[1]);
-    UtilityFunctions::print("Width ",decode_uint16(compress_data.ptrw()+2));
+    UtilityFunctions::print("Width ",decode_uint16(compress_data.ptr()+2));
 }
-void MResource::dump_qtq_header(PackedByteArray& compress_data){
+void MResource::dump_qtq_header(const PackedByteArray& compress_data){
     ERR_FAIL_COND(compress_data.size()<COMPRESSION_QTQ_HEADER_SIZE+MRESOURCE_HEADER_SIZE);
     UtilityFunctions::print("-----Header QTQ info-----");
-    UtilityFunctions::print("min ",decode_float(compress_data.ptrw()+4));
-    UtilityFunctions::print("max ",decode_float(compress_data.ptrw()+8));
-    UtilityFunctions::print("h_encoding ",decode_uint16(compress_data.ptrw()+12));
+    UtilityFunctions::print("min ",decode_float(compress_data.ptr()+4));
+    UtilityFunctions::print("max ",decode_float(compress_data.ptr()+8));
+    UtilityFunctions::print("h_encoding ",decode_uint16(compress_data.ptr()+12));
 }
 
 void MResource::insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,float accuracy){
@@ -733,6 +790,21 @@ PackedByteArray MResource::get_data(const StringName& name){
     ERR_FAIL_COND_V(pixel_size==0,out);
     out.resize(width*width*pixel_size);
     decompress_qtq_rf(comp_data,out,width,MRESOURCE_HEADER_SIZE);
+    PackedByteArray out_plus_one = add_empty_pixels_to_right_bottom(out,pixel_size,width);
+    return out_plus_one;
+}
+
+PackedByteArray MResource::add_empty_pixels_to_right_bottom(const PackedByteArray& data, uint8_t pixel_size, uint32_t width){
+    PackedByteArray out;
+    // Check if size of data match
+    ERR_FAIL_COND_V(data.size()!=width*width*pixel_size,out);
+    uint32_t new_width = width + 1;
+    out.resize(new_width*new_width*pixel_size);
+    for(uint32_t y=0;y<width;y++){
+        uint32_t old_index = y*width*pixel_size;
+        uint32_t new_index = y*new_width*pixel_size;
+        memcpy(out.ptrw()+new_index,data.ptr()+old_index,width*pixel_size);
+    }
     return out;
 }
 

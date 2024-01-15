@@ -40,7 +40,8 @@
 #define DATA_ENCODE_U8 3
 #define DATA_ENCODE_U16 4
 #define DATA_ENCODE_FLOAT 5
-#define DATA_ENCODE_MAX 6
+#define DATA_ENCODE_ONLY_HOLE 6
+#define DATA_ENCODE_MAX 7
 
 // one last number in each encoding is reserved for terrain holes
 #define U2_MAX 3
@@ -50,6 +51,8 @@
 
 #define MIN_U4(value) (((value)>U4_MAX) ? U4_MAX : value);
 
+// In case there is hole in terrain the last number of each data encoding is hole
+// This is only true for data_encoding not h_encoding
 #define HU2_MAX 2
 #define HU4_MAX 14
 #define HU8_MAX 254
@@ -73,6 +76,7 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/classes/image.hpp>
 #include "mpixel_region.h"
+#include "mconfig.h"
 
 using namespace godot;
 
@@ -97,15 +101,16 @@ class MResource : public Resource {
         uint8_t h_encoding;
         uint8_t data_encoding=255;
         float accuracy=-1;
-        float min_height=10000;
-        float max_height=-10000;
+        float min_height;
+        float max_height;
         QuadTreeRF* root=nullptr;
         QuadTreeRF(MPixelRegion _px_region,float* _data,uint32_t _window_width, float _accuracy, MResource::QuadTreeRF* _root=nullptr,uint8_t _depth=0,uint8_t _h_encoding=255);
         //Bellow constructor is used for decompression
         QuadTreeRF(MPixelRegion _px_region,float* _data,uint32_t _window_width,uint8_t _h_encoding,uint8_t _depth=0,MResource::QuadTreeRF* _root=nullptr);
         ~QuadTreeRF();
-        void update_min_max_height();
+        void update_min_max_height(); // If min max height remian NAN after this the entire section is hole
         void divide_upto_leaf();
+        _FORCE_INLINE_ uint32_t get_only_hole_head_size();
         _FORCE_INLINE_ uint32_t get_flat_head_size();
         _FORCE_INLINE_ uint32_t get_block_head_size();
         uint32_t get_optimal_non_divide_size(); // This will also determine data encoding
@@ -126,26 +131,29 @@ class MResource : public Resource {
         void encode_data_u16(PackedByteArray& save_data,uint32_t& save_index);
         void encode_data_float(PackedByteArray& save_data,uint32_t& save_index);
 
-        void decode_data_flat(const PackedByteArray& compress_data,uint32_t& decompress_index);
+        void decode_data_flat();
         void decode_data_u2(const PackedByteArray& compress_data,uint32_t& decompress_index);
         void decode_data_u4(const PackedByteArray& compress_data,uint32_t& decompress_index);
         void decode_data_u8(const PackedByteArray& compress_data,uint32_t& decompress_index);
         void decode_data_u16(const PackedByteArray& compress_data,uint32_t& decompress_index);
         void decode_data_float(const PackedByteArray& compress_data,uint32_t& decompress_index);
+        void decode_data_only_hole();
     };
     Dictionary compressed_data;
 
     public:
     void set_compressed_data(const Dictionary& data);
     const Dictionary& get_compressed_data();
-    void dump_header(PackedByteArray& compress_data);
-    void dump_qtq_header(PackedByteArray& compress_data);
+    void dump_header(const PackedByteArray& compress_data);
+    void dump_qtq_header(const PackedByteArray& compress_data);
 
     void insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,float accuracy);
     PackedByteArray get_data(const StringName& name);
 
 
     private:
+    //Will add on empty pixels rows and coulums to right and bottom
+    PackedByteArray add_empty_pixels_to_right_bottom(const PackedByteArray& data, uint8_t pixel_size, uint32_t width);
     // Compresion base on 
     void compress_qtq_rf(PackedByteArray& uncompress_data,PackedByteArray& compress_data,uint32_t window_width,uint32_t save_index,float accuracy);
     void decompress_qtq_rf(const PackedByteArray& compress_data,PackedByteArray& uncompress_data,uint32_t window_width,uint32_t decompress_index);

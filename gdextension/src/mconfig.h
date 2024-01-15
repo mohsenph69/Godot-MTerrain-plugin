@@ -36,6 +36,9 @@
 #define M_DEAFAULT_MATERIAL_PATH "res://addons/m_terrain/start_material.res"
 #define M_SHOW_REGION_SHADER_PATH "res://addons/m_terrain/show_region.gdshader"
 
+#define IS_HOLE(value) std::isnan(value)
+#define FLOAT_HOLE std::numeric_limits<float>::quiet_NaN()
+
 #if defined(LINUX_ENABLED) || defined(WINDOWS_ENABLED)
 #define UABS_DIFF(a, b) abs(a-b)
 #else
