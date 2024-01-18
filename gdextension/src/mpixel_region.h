@@ -28,6 +28,7 @@ struct MPixelRegion {
     uint32_t get_width();
     uint32_t get_pixel_amount();
     void clear();
+    void print_region(String prefix);
 };
 
 #endif

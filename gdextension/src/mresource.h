@@ -1,13 +1,30 @@
 #ifndef MRESOURCE
 #define MRESOURCE
 
-#define MRESOURCE_HEADER_SIZE 4
-// COMPRESS DATA HEADER --- in total 4 byte
-// uint8_t compressions -> Compressions applied, with each compression type change one bit from zero to one
-// The first byte shout never be compressed ass it determine which compression has been applied
-// so any compression except COMPRESSION_QTQ will be applied from here like huffman or LZ777
-// uint8_t image_format -> same as Image::Format in image class in Godot
-// uint16_t width (LE) -> width and height are equale so height is this
+#define CURRENT_MRESOURCE_VERSION 0 // Unless change which cause compatiblity break this will no change
+
+#define MRESOURCE_HEADER_SIZE 8
+#define MMAGIC_NUM 77
+#define FLAGS_INDEX 2
+// INDEX    DATA HEADER --- common in all formats
+// 0     uint8_t -> Magic num -> 77
+// 1     uint8_t -> Version NUMBER
+// 2     uint16_t FLAGS -> some flags for determining which compression is applied and whether data is heightmap or other image type
+// 4     uint8_t image_format -> same as Image::Format in image class in Godot
+// 6     uint16_t width (LE) -> width and height are equale so height is this
+
+
+// IF FLAG_IS_HEIGHT_MAP is active -> in total 4 byte
+// float min_height
+// float max_height
+
+// In case Flatten flag is active
+#define FLATTEN_MIN_HEIGHT_DIFF 10 //If difference between min and max height is less than this the FLATTEN will no be applied as heightmap is allready queit flat
+#define FLATTEN_SECTION_WIDTH 8 // must be in power of two
+#define FLATTEN_HEADER_SIZE 1 // two half floating
+#define FLATTEN_SECTION_HEADER_SIZE 4 // two half floating
+// next pos is the devision_log2 amount for FLATTEN in uint8_t format
+// DATA amount for FLATTEN section (devision*devision)*FLATTEN_SECTION_HEADER_SIZE + FLATTEN_HEADER_SIZE
 
 #define COMPRESSION_QTQ_HEADER_SIZE 9
 // COMPRESSION_QTQ header start from 4th-byte position (As always aplly first)
@@ -69,7 +86,9 @@
 
 // If more compression will be added in future
 // All compression must be be lossless except COMPRESSION_QTQ or any comression which is in first order
-#define COMPRESSION_QTQ 1 // QuadTreeRF Quantazation compression
+#define FLAG_IS_HEIGHT_MAP 1 // QuadTreeRF Quantazation compression
+#define FLAG_FLATTEN_OLS 2 // QuadTreeRF Quantazation compression
+#define FLAG_COMPRESSION_QTQ 4 // QuadTreeRF Quantazation compression
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
@@ -155,9 +174,16 @@ class MResource : public Resource {
     //Will add on empty pixels rows and coulums to right and bottom
     PackedByteArray add_empty_pixels_to_right_bottom(const PackedByteArray& data, uint8_t pixel_size, uint32_t width);
     // Compresion base on 
-    void compress_qtq_rf(PackedByteArray& uncompress_data,PackedByteArray& compress_data,uint32_t window_width,uint32_t save_index,float accuracy);
+    void compress_qtq_rf(PackedByteArray& uncompress_data,PackedByteArray& compress_data,uint32_t window_width,uint32_t& save_index,float accuracy);
     void decompress_qtq_rf(const PackedByteArray& compress_data,PackedByteArray& uncompress_data,uint32_t window_width,uint32_t decompress_index);
-
+    // Will add and remove Linear Regression with least square method
+    Vector<uint32_t> flatten_ols(float* data,uint32_t witdth,uint16_t devision); // Will ignore holes
+    void unflatten_ols(float* data,uint32_t witdth,uint8_t devision,const Vector<uint32_t>& headers); 
+    uint32_t flatten_section_ols(float* data,MPixelRegion px_region,uint32_t window_width,Basis matrix_a_invers);
+    void unflatten_section_ols(float* data,MPixelRegion px_region,uint32_t window_width,uint32_t header);
+    _FORCE_INLINE_ uint64_t get_sumx(uint64_t n);
+    _FORCE_INLINE_ uint64_t get_sumxy(uint64_t n);
+    _FORCE_INLINE_ uint64_t get_sumx2(uint64_t n);
     public:
     // Too much overhead if use these in PackedByteArray
     static _FORCE_INLINE_ void encode_uint2(uint8_t a,uint8_t b,uint8_t c,uint8_t d, uint8_t *p_arr);
@@ -172,5 +198,8 @@ class MResource : public Resource {
     static _FORCE_INLINE_ uint64_t decode_uint64(const uint8_t *p_arr);
     static _FORCE_INLINE_ void encode_float(float p_float, uint8_t *p_arr);
     static _FORCE_INLINE_ float decode_float(const uint8_t *p_arr);
+    static _FORCE_INLINE_ uint16_t float_to_half(float f);
+    static _FORCE_INLINE_ float half_to_float(uint16_t h);
+    static _FORCE_INLINE_ uint32_t half_to_uint32(uint16_t f);
 };
 #endif

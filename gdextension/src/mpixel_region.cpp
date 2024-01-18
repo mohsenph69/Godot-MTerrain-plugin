@@ -110,3 +110,7 @@ void MPixelRegion::clear(){
     top=0;
     bottom=0;
 }
+
+void MPixelRegion::print_region(String prefix){
+    UtilityFunctions::print(prefix+" left ",left," right ",right," top ",top," bottom ",bottom);
+}

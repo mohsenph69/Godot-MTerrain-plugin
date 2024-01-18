@@ -763,19 +763,67 @@ void MResource::insert_data(const PackedByteArray& data, const StringName& name,
         ERR_FAIL_MSG("Not a valid image size to compress");
         return;
     }
-
+    // Creating compress data
     PackedByteArray new_compressed_data;
+    // Creating header
+    uint16_t flags=0;
     new_compressed_data.resize(MRESOURCE_HEADER_SIZE);
-    //First byte for compression which each compression will add it by itself
-    uint8_t compression_flag = 0;
-    compression_flag |= COMPRESSION_QTQ;
-    new_compressed_data[0] = compression_flag;// 0
-    new_compressed_data[1] = (uint8_t)format;// 1
-    encode_uint16(width, new_compressed_data.ptrw()+2); // 2,3
+    {
+        new_compressed_data[0] = MMAGIC_NUM;
+        new_compressed_data[1] = CURRENT_MRESOURCE_VERSION;
+        // FALGS WILL BE ADDED AT THE END
+        new_compressed_data[4] = (uint8_t)format;
+        encode_uint16(width,new_compressed_data.ptrw()+6);
+    }
+    uint32_t save_index = MRESOURCE_HEADER_SIZE;
+    if(name==StringName("heightmap")) {
+        ERR_FAIL_COND_MSG(format!=Image::Format::FORMAT_RF,"You can insert heightmap only with this format: FORMAT_RF");
+        flags |= FLAG_IS_HEIGHT_MAP;
+        float* data_ptr = (float*)final_data.ptrw();
+        // Min and Max height
+        float min_height=data[0];
+        float max_height=data[0];
+        uint32_t px_amount = width*width;
+        for(uint32_t i=1;i<px_amount;i++){
+            if(min_height > data[i]){
+                min_height = data[i];
+            }
+            if(max_height < data[i]){
+                max_height = data[i];
+            }
+        }
+        new_compressed_data.resize(new_compressed_data.size()+8);
+        encode_float(min_height,new_compressed_data.ptrw()+save_index);
+        save_index+=4;
+        encode_float(max_height,new_compressed_data.ptrw()+save_index);
+        save_index+=4;
+        if(max_height-min_height > FLATTEN_MIN_HEIGHT_DIFF){
+            flags |= FLAG_FLATTEN_OLS;
+            /// FLATTEN OLS
+            uint32_t devision = width/FLATTEN_SECTION_WIDTH;
+            ERR_FAIL_COND_MSG(((devision & (devision - 1)) != 0),"Flatten OLS devision is not in power of two "+itos(devision));
+            uint32_t flatten_header_data_size = (devision*devision*FLATTEN_SECTION_HEADER_SIZE) + FLATTEN_HEADER_SIZE;
+            new_compressed_data.resize(new_compressed_data.size()+flatten_header_data_size);
+            uint8_t devision_log2 = log2(devision);
+            ERR_FAIL_COND_MSG(devision_log2>15,"The heightmap image dimension is too big");
+            new_compressed_data[save_index] = devision_log2;
+            save_index+=FLATTEN_HEADER_SIZE;
+            Vector<uint32_t> flatten_section_header = flatten_ols((float*)final_data.ptrw(),width,devision);
+            flatten_header_data_size-=FLATTEN_HEADER_SIZE; //resize to the header section data size only
+            ERR_FAIL_COND(flatten_section_header.size()*4!=flatten_header_data_size);
+            const uint8_t* flatten_section_header_ptr = (const uint8_t*)flatten_section_header.ptr();
+            memcpy(new_compressed_data.ptrw()+save_index,flatten_section_header_ptr,flatten_header_data_size);
+            flatten_section_header.resize(0);
+            save_index+=flatten_header_data_size;
+            // Finish setting FLATTEN OLS
+        }
+        flags |= FLAG_COMPRESSION_QTQ;
+        compress_qtq_rf(final_data,new_compressed_data,width,save_index,accuracy);
+    }
+    
 
-    compress_qtq_rf(final_data,new_compressed_data,width,MRESOURCE_HEADER_SIZE,accuracy);
-    compressed_data["heightmap"] = new_compressed_data;
-
+    new_compressed_data[FLAGS_INDEX] = flags;
+    compressed_data[name] = new_compressed_data;
 }
 
 
@@ -783,15 +831,45 @@ PackedByteArray MResource::get_data(const StringName& name){
     PackedByteArray out;
     ERR_FAIL_COND_V(!compressed_data.has(name),out);
     PackedByteArray comp_data = compressed_data[name];
-    uint8_t compression_flag = comp_data[0];
-    uint8_t format = comp_data[1];
-    uint16_t width = decode_uint16(comp_data.ptrw()+2);
-    uint8_t pixel_size = MImage::get_format_pixel_size((godot::Image::Format)format);
+    //Getting Header
+    ERR_FAIL_COND_V_MSG(comp_data[0]!=MMAGIC_NUM,out,"Magic number not found this file can be corrupted");
+    ERR_FAIL_COND_V_MSG(comp_data[1]!=CURRENT_MRESOURCE_VERSION,out,"Resource version not match, Please export your data with version "+itos(comp_data[1])+" of MResource to a raw format and reimport that here");
+    uint16_t flags = decode_uint16(comp_data.ptr()+FLAGS_INDEX);
+    Image::Format format = (Image::Format)comp_data[4];
+    uint16_t width = decode_uint16(comp_data.ptr()+6);
+    uint8_t pixel_size = MImage::get_format_pixel_size(format);
     ERR_FAIL_COND_V(pixel_size==0,out);
+    //Finish Getting Header
+    uint32_t decompress_index = MRESOURCE_HEADER_SIZE;
     out.resize(width*width*pixel_size);
-    decompress_qtq_rf(comp_data,out,width,MRESOURCE_HEADER_SIZE);
+    if(flags & FLAG_IS_HEIGHT_MAP){
+        //Getting min and max height
+        float min_height = decode_float(comp_data.ptrw()+decompress_index);
+        decompress_index+=4;
+        float max_height = decode_float(comp_data.ptrw()+decompress_index);
+        decompress_index+=4;
+        // Getting Flatten header if Flatten_OLS FLAG is active, This will also increate the decompress index
+        Vector<uint32_t> flatten_section_header;
+        uint16_t devision;
+        if(flags & FLAG_FLATTEN_OLS){ // This should be at bottom later
+            uint8_t devision_log2 = comp_data[decompress_index];
+            decompress_index += FLATTEN_HEADER_SIZE;
+            ERR_FAIL_COND_V(devision_log2==0 || devision_log2>15 ,out);
+            devision = 1 << devision_log2;
+            // Size bellow does not contain FLATTEN_HEADER_SIZE
+            uint32_t flatten_header_size = (devision*devision*FLATTEN_SECTION_HEADER_SIZE);
+            flatten_section_header.resize(flatten_header_size/FLATTEN_SECTION_HEADER_SIZE);
+            memcpy((uint8_t *)flatten_section_header.ptrw(),comp_data.ptr()+decompress_index,flatten_header_size);
+            decompress_index+=flatten_header_size;
+        }
+        decompress_qtq_rf(comp_data,out,width,decompress_index);
+        if(flags & FLAG_COMPRESSION_QTQ){ 
+            unflatten_ols((float*)out.ptrw(),width,devision,flatten_section_header);
+        }
+    }
     PackedByteArray out_plus_one = add_empty_pixels_to_right_bottom(out,pixel_size,width);
     return out_plus_one;
+
 }
 
 PackedByteArray MResource::add_empty_pixels_to_right_bottom(const PackedByteArray& data, uint8_t pixel_size, uint32_t width){
@@ -808,7 +886,7 @@ PackedByteArray MResource::add_empty_pixels_to_right_bottom(const PackedByteArra
     return out;
 }
 
-void MResource::compress_qtq_rf(PackedByteArray& uncompress_data,PackedByteArray& compress_data,uint32_t window_width,uint32_t save_index,float accuracy){
+void MResource::compress_qtq_rf(PackedByteArray& uncompress_data,PackedByteArray& compress_data,uint32_t window_width,uint32_t& save_index,float accuracy){
     //Building the QuadTree
     MPixelRegion window_px_region(window_width,window_width);
     float* ptr = (float*)uncompress_data.ptrw();
@@ -864,6 +942,194 @@ void MResource::decompress_qtq_rf(const PackedByteArray& compress_data,PackedByt
     #endif
 }
 
+// https://research.usq.edu.au/download/987c0abcd3777bef266467fee9e205061f6eb905c44526215eb21a7d6404aebf/272457/TS04D_scarmana_8433.pdf
+//--- z is height
+//--- x and y are position in x y plane
+/* MATRIX A
+sum_i x[i]*x[i],    sum_i x[i]*y[i],    sum_i x[i]
+sum_i x[i]*y[i],    sum_i y[i]*y[i],    sum_i y[i]
+sum_i x[i],         sum_i y[i],         n
+*/
+/* MATRIX C
+{sum_i x[i]*z[i],   sum_i y[i]*z[i],    sum_i z[i]}
+*/
+/* MATRIX B -> These are plane coefficient
+{b1, b2, b2} 
+*/
+// A*B = C -> Then -> B = A_INVERSE*C
+/* PLANE FORMULA
+    z = b1*x + b2*y + b3
+*/
+// As we have a uniform grid we have below rules
+// sumx2=sumy2
+// sumx=sumy
+// sumxy=sumyx
+Vector<uint32_t> MResource::flatten_ols(float* data,uint32_t witdth,uint16_t devision){
+    uint32_t section_width = witdth/devision;
+    Basis matrix_a_invers;
+    //As matrix A is same among all sections we calculate that here for better performance
+    {
+        uint64_t sumx = get_sumx(section_width);
+        uint64_t sumx2 = get_sumx2(section_width);
+        uint64_t sumxy = get_sumxy(section_width);
+        Vector3 row0(sumx2,sumxy,sumx);
+        Vector3 row1(sumxy,sumx2,sumx);
+        Vector3 row2(sumx,sumx,section_width*section_width);
+        matrix_a_invers = Basis(row0,row1,row2).inverse();
+    }
+    Vector<uint32_t> planes;
+    UtilityFunctions::print("Section width ",section_width);
+    for(uint32_t dy=0;dy<devision;dy++){
+        for(uint32_t dx=0;dx<devision;dx++){
+            MPixelRegion px_reg;
+            px_reg.left = dx*section_width;
+            px_reg.right = ((dx+1)*section_width) - 1;
+            px_reg.top = dy*section_width;
+            px_reg.bottom = ((dy+1)*section_width) - 1;
+            uint32_t p = flatten_section_ols(data,px_reg,witdth,matrix_a_invers);
+            planes.push_back(p);
+        }
+    }
+    return planes;
+}
+
+void MResource::unflatten_ols(float* data,uint32_t witdth,uint8_t devision,const Vector<uint32_t>& headers){
+    ERR_FAIL_COND(headers.size()!=devision*devision);
+    uint32_t section_width = witdth/devision;
+    uint32_t header_index = 0;
+    for(uint32_t dy=0;dy<devision;dy++){
+        for(uint32_t dx=0;dx<devision;dx++){
+            MPixelRegion px_reg;
+            px_reg.left = dx*section_width;
+            px_reg.right = ((dx+1)*section_width) - 1;
+            px_reg.top = dy*section_width;
+            px_reg.bottom = ((dy+1)*section_width) - 1;
+            unflatten_section_ols(data,px_reg,witdth,headers[header_index]);
+            header_index++;
+        }
+    }
+}
+uint32_t MResource::flatten_section_ols(float* data,MPixelRegion px_region,uint32_t window_width,Basis matrix_a_invers){
+    uint32_t header;
+    //Ignore if there is a hole in section
+    for(uint32_t gy=px_region.top;gy<=px_region.bottom;gy++){
+        for(uint32_t gx=px_region.left;gx<=px_region.right;gx++){
+            uint32_t index = gx + gy*window_width;
+            if(IS_HOLE(data[index])){
+                float af = FLOAT_HOLE;
+                uint16_t ah = float_to_half(ah);
+                uint8_t* header_ptr = (uint8_t*)&header;
+                encode_uint16(ah,header_ptr);
+                encode_uint16(ah,header_ptr+2);
+                return header;
+            }
+        }
+    }
+    // Calculating sum(xz)
+    double sumxz=0;
+    for(uint32_t gy=px_region.top;gy<=px_region.bottom;gy++){
+        for(uint32_t gx=px_region.left;gx<=px_region.right;gx++){
+            // Local x to this section
+            uint32_t x = gx - px_region.left;
+            uint32_t index = gx + gy*window_width;
+            sumxz += data[index]*x;
+        }
+    }
+    // Calculating sum(yz)
+    double sumyz=0;
+    for(uint32_t gy=px_region.top;gy<=px_region.bottom;gy++){
+        for(uint32_t gx=px_region.left;gx<=px_region.right;gx++){
+            // Local x to this section
+            uint32_t y = gy - px_region.top;
+            uint32_t index = gx + gy*window_width;
+            sumyz += data[index]*y;
+        }
+    }
+    // Calculating sum(z)
+    double sumz=0;
+    for(uint32_t gy=px_region.top;gy<=px_region.bottom;gy++){
+        for(uint32_t gx=px_region.left;gx<=px_region.right;gx++){
+            uint32_t index = gx + gy*window_width;
+            sumz += data[index];
+        }
+    }
+    // Creating C Matrix
+    Vector3 matrix_c(sumxz,sumyz,sumz);
+    // Claculating Matrix B
+    Vector3 matrix_b = matrix_a_invers.xform(matrix_c);
+
+    uint16_t b1_half = float_to_half(matrix_b.x);
+    uint16_t b2_half = float_to_half(matrix_b.y);
+    // We should convert back so to float so we get the same result when decompressing
+    // This is due to error while convert from half to float
+    float b1 = half_to_float(b1_half);
+    float b2 = half_to_float(b2_half);
+
+    for(uint32_t gy=px_region.top;gy<=px_region.bottom;gy++){
+        for(uint32_t gx=px_region.left;gx<=px_region.right;gx++){
+            uint32_t index = gx + gy*window_width;
+            // We should use local x and y
+            float x = (float)(gx - px_region.left);
+            float y = (float)(gy - px_region.top);
+            float plane_z = b1*x + b2*y;
+            //plane_z += matrix_b.z;
+            data[index] -= plane_z;
+        }
+    }
+    uint8_t* header_ptr = (uint8_t*)&header;
+    encode_uint16(b1_half,header_ptr);
+    encode_uint16(b2_half,header_ptr+2);
+    return header;
+}
+
+void MResource::unflatten_section_ols(float* data,MPixelRegion px_region,uint32_t window_width,uint32_t header){
+    float b1;
+    float b2;
+    {
+        const uint8_t* header_ptr = (const uint8_t*)&header;
+        uint16_t half_b1 = decode_uint16(header_ptr);
+        uint16_t half_b2 = decode_uint16(header_ptr+2);
+        b1 = half_to_float(half_b1);
+        b2 = half_to_float(half_b2);
+    }
+    if(IS_HOLE(b1) || IS_HOLE(b2)){
+        return; // Ignore in case there is hole or in case b1,b2 is NAN
+    }
+    for(uint32_t gy=px_region.top;gy<=px_region.bottom;gy++){
+        for(uint32_t gx=px_region.left;gx<=px_region.right;gx++){
+            uint32_t index = gx + gy*window_width;
+            // We should use local x and y
+            float x = (float)(gx - px_region.left);
+            float y = (float)(gy - px_region.top);
+            float plane_z = b1*x + b2*y;
+            data[index] += plane_z;
+        }
+    }
+}
+// x = 0,1,2,...,n -> sum(x) = n(n+1)/2 --> Gauss formula
+uint64_t MResource::get_sumx(uint64_t n){
+    n--; // as this n contain also x in zero position
+    uint64_t sum = (n*(n+1)/2); // only one row
+    return sum*(n+1);
+}
+
+uint64_t MResource::get_sumxy(uint64_t n){
+    uint64_t sum=0;
+    for(uint32_t i=0;i<n;i++){
+        for(uint32_t j=0;j<n;j++){
+            sum+=i*j;
+        }
+    }
+    return sum;
+}
+
+uint64_t MResource::get_sumx2(uint64_t n){
+    uint64_t sum=0;
+    for(uint32_t i=0;i<n;i++){
+        sum += i*i;
+    } // only one row
+    return sum*n;
+}
 
 
 void MResource::encode_uint2(uint8_t a,uint8_t b,uint8_t c,uint8_t d, uint8_t *p_arr){
@@ -951,4 +1217,93 @@ void MResource::encode_float(float p_float, uint8_t *p_arr){
 float MResource::decode_float(const uint8_t *p_arr){
     uint32_t u = decode_uint32(p_arr);
     return reinterpret_cast<float&>(u);
+}
+
+uint16_t MResource::float_to_half(float f) {
+	union {
+			float fv;
+			uint32_t ui;
+		} ci;
+		ci.fv = f;
+
+		uint32_t x = ci.ui;
+		uint32_t sign = (unsigned short)(x >> 31);
+		uint32_t mantissa;
+		uint32_t exponent;
+		uint16_t hf;
+
+		// get mantissa
+		mantissa = x & ((1 << 23) - 1);
+		// get exponent bits
+		exponent = x & (0xFF << 23);
+		if (exponent >= 0x47800000) {
+			// check if the original single precision float number is a NaN
+			if (mantissa && (exponent == (0xFF << 23))) {
+				// we have a single precision NaN
+				mantissa = (1 << 23) - 1;
+			} else {
+				// 16-bit half-float representation stores number as Inf
+				mantissa = 0;
+			}
+			hf = (((uint16_t)sign) << 15) | (uint16_t)((0x1F << 10)) |
+					(uint16_t)(mantissa >> 13);
+		}
+		// check if exponent is <= -15
+		else if (exponent <= 0x38000000) {
+			/*
+			// store a denorm half-float value or zero
+			exponent = (0x38000000 - exponent) >> 23;
+			mantissa >>= (14 + exponent);
+
+			hf = (((uint16_t)sign) << 15) | (uint16_t)(mantissa);
+			*/
+			hf = 0; //denormals do not work for 3D, convert to zero
+		} else {
+			hf = (((uint16_t)sign) << 15) |
+					(uint16_t)((exponent - 0x38000000) >> 13) |
+					(uint16_t)(mantissa >> 13);
+		}
+
+		return hf;
+}
+
+float MResource::half_to_float(uint16_t h){
+    union {
+        uint32_t u32;
+        float f32;
+    } u;
+
+    u.u32 = half_to_uint32(h);
+    return u.f32;
+}
+
+uint32_t MResource::half_to_uint32(uint16_t h){
+    uint16_t h_exp, h_sig;
+    uint32_t f_sgn, f_exp, f_sig;
+
+    h_exp = (h & 0x7c00u);
+    f_sgn = ((uint32_t)h & 0x8000u) << 16;
+    switch (h_exp) {
+        case 0x0000u: /* 0 or subnormal */
+            h_sig = (h & 0x03ffu);
+            /* Signed zero */
+            if (h_sig == 0) {
+                return f_sgn;
+            }
+            /* Subnormal */
+            h_sig <<= 1;
+            while ((h_sig & 0x0400u) == 0) {
+                h_sig <<= 1;
+                h_exp++;
+            }
+            f_exp = ((uint32_t)(127 - 15 - h_exp)) << 23;
+            f_sig = ((uint32_t)(h_sig & 0x03ffu)) << 13;
+            return f_sgn + f_exp + f_sig;
+        case 0x7c00u: /* inf or NaN */
+            /* All-ones exponent and a copy of the significand */
+            return f_sgn + 0x7f800000u + (((uint32_t)(h & 0x03ffu)) << 13);
+        default: /* normalized */
+            /* Just need to adjust the exponent and shift */
+            return f_sgn + (((uint32_t)(h & 0x7fffu) + 0x1c000u) << 13);
+    }
 }
