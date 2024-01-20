@@ -94,6 +94,11 @@
 #define FLAG_COMPRESSION_QTQ 4 // QuadTreeRF Quantazation compression
 #define FLAG_COMPRESSION_QOI 8
 #define FLAG_COMPRESSION_PNG 16
+#define FLAG_COMPRESSION_FASTLZ 32
+#define FLAG_COMPRESSION_DEFLATE 64
+#define FLAG_COMPRESSION_ZSTD 128
+#define FLAG_COMPRESSION_GZIP 256
+#define FLAG_COMPRESSION_BROTLI 512
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
@@ -179,6 +184,13 @@ class MResource : public Resource {
         COMPRESS_QOI = 1,
         COMPRESS_PNG = 2
     };
+    enum FileCompress {
+        FILE_COMPRESSION_NONE = 0,
+        FILE_COMPRESSION_FASTLZ = 1,
+        FILE_COMPRESSION_DEFLATE = 2,
+        FILE_COMPRESSION_ZSTD = 3,
+        FILE_COMPRESSION_GZIP = 4
+    };
     void set_compressed_data(const Dictionary& data);
     const Dictionary& get_compressed_data();
 
@@ -188,10 +200,10 @@ class MResource : public Resource {
     float get_min_height();
     float get_max_height();
 
-    void insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,MResource::Compress compress);
+    void insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,MResource::Compress compress,MResource::FileCompress file_compress);
     PackedByteArray get_data(const StringName& name);
 
-    void insert_heightmap_rf(const PackedByteArray& data,float accuracy,bool compress = true);
+    void insert_heightmap_rf(const PackedByteArray& data,float accuracy,bool compress_qtq = true,MResource::FileCompress file_compress=MResource::FileCompress::FILE_COMPRESSION_NONE);
     PackedByteArray get_heightmap_rf();
 
 
@@ -233,5 +245,6 @@ class MResource : public Resource {
 };
 
 VARIANT_ENUM_CAST(MResource::Compress);
+VARIANT_ENUM_CAST(MResource::FileCompress);
 
 #endif
