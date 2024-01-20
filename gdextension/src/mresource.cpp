@@ -1,7 +1,13 @@
 #include "mresource.h"
 
-//#define PRINT_DEBUG
 
+//  https://github.com/phoboslab/qoi
+#define QOI_IMPLEMENTATION
+#define QOI_NO_STDIO
+#include "thirdparty/qoi.h"
+
+//#define PRINT_DEBUG
+#include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include "mimage.h"
@@ -704,8 +710,21 @@ void MResource::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_compressed_data"), &MResource::get_compressed_data);
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"compressed_data"), "set_compressed_data","get_compressed_data");
 
-    ClassDB::bind_method(D_METHOD("compress_data","data","name","format","accuracy"), &MResource::insert_data);
+    ClassDB::bind_method(D_METHOD("get_data_format","name"), &MResource::get_data_format);
+    ClassDB::bind_method(D_METHOD("get_data_width","name"), &MResource::get_data_width);
+    ClassDB::bind_method(D_METHOD("get_heightmap_width"), &MResource::get_heightmap_width);
+    ClassDB::bind_method(D_METHOD("get_min_height"), &MResource::get_min_height);
+    ClassDB::bind_method(D_METHOD("get_max_height"), &MResource::get_max_height);
+
+    ClassDB::bind_method(D_METHOD("insert_heightmap_rf","data","accuracy","compress"), &MResource::insert_heightmap_rf);
+    ClassDB::bind_method(D_METHOD("get_heightmap_rf"), &MResource::get_heightmap_rf);
+
+    ClassDB::bind_method(D_METHOD("insert_data","data","name","format","compress"), &MResource::insert_data);
     ClassDB::bind_method(D_METHOD("get_data","name"), &MResource::get_data);
+
+    BIND_ENUM_CONSTANT(COMPRESS_NONE);
+    BIND_ENUM_CONSTANT(COMPRESS_QOI);
+    BIND_ENUM_CONSTANT(COMPRESS_PNG);
 }
 
 void MResource::set_compressed_data(const Dictionary& data){
@@ -715,22 +734,188 @@ const Dictionary& MResource::get_compressed_data(){
     return compressed_data;
 }
 
-void MResource::dump_header(const PackedByteArray& compress_data){
-    ERR_FAIL_COND(compress_data.size()<MRESOURCE_HEADER_SIZE);
-    UtilityFunctions::print("-----Header info-----");
-    UtilityFunctions::print("Compress flag ",compress_data[0]);
-    UtilityFunctions::print("image format ",compress_data[1]);
-    UtilityFunctions::print("Width ",decode_uint16(compress_data.ptr()+2));
-}
-void MResource::dump_qtq_header(const PackedByteArray& compress_data){
-    ERR_FAIL_COND(compress_data.size()<COMPRESSION_QTQ_HEADER_SIZE+MRESOURCE_HEADER_SIZE);
-    UtilityFunctions::print("-----Header QTQ info-----");
-    UtilityFunctions::print("min ",decode_float(compress_data.ptr()+4));
-    UtilityFunctions::print("max ",decode_float(compress_data.ptr()+8));
-    UtilityFunctions::print("h_encoding ",decode_uint16(compress_data.ptr()+12));
+Image::Format MResource::get_data_format(const StringName& name){
+    ERR_FAIL_COND_V(!compressed_data.has(name),Image::Format::FORMAT_MAX);
+    if(format_cache.has(name)){
+        return (Image::Format)format_cache[name];
+    }
+    PackedByteArray data = compressed_data[name];
+    format_cache.insert(name,data[FORMAT_INDEX]);
+    return (Image::Format)data[FORMAT_INDEX];
 }
 
-void MResource::insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,float accuracy){
+uint16_t MResource::get_data_width(const StringName& name){
+    ERR_FAIL_COND_V(!compressed_data.has(name),0);
+    if(width_cache.has(name)){
+        return width_cache[name];
+    }
+    PackedByteArray data = compressed_data[name];
+    uint32_t width = decode_uint16(data.ptrw()+WIDTH_INDEX);
+    width_cache.insert(name,width);
+    return width;
+}
+
+uint32_t MResource::get_heightmap_width(){
+    return get_data_width(StringName("heightmap"));
+}
+
+float MResource::get_min_height(){
+    if(!IS_HOLE(min_height_cache))
+    {
+        return min_height_cache;
+    }
+    StringName hname("heightmap");
+    ERR_FAIL_COND_V(compressed_data.has(hname),min_height_cache);
+    PackedByteArray data = compressed_data[hname];
+    min_height_cache = compressed_data[MIN_HEIGHT_INDEX];
+    return min_height_cache;
+}
+
+float MResource::get_max_height(){
+    if(!IS_HOLE(max_height_cache))
+    {
+        return max_height_cache;
+    }
+    StringName hname("heightmap");
+    ERR_FAIL_COND_V(compressed_data.has(hname),max_height_cache);
+    PackedByteArray data = compressed_data[hname];
+    max_height_cache = compressed_data[MAX_HEIGHT_INDEX];
+    return max_height_cache;
+}
+
+void MResource::insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,MResource::Compress compress){
+    {
+        const StringName& hname("heightmap");
+        ERR_FAIL_COND_MSG(name==hname,"Use insert_heightmap_rf function to insert heightmap");
+    }
+    uint32_t pixel_size = MImage::get_format_pixel_size(format);
+    ERR_FAIL_COND_MSG(!pixel_size,"Unsported format");
+    ERR_FAIL_COND(data.size() % pixel_size != 0);
+    uint32_t pixel_amount = data.size() / pixel_size;
+    uint32_t width = sqrt(pixel_amount);
+    ERR_FAIL_COND(width<1);
+    ERR_FAIL_COND(pixel_amount!=width*width);
+    PackedByteArray final_data;
+    if( ((width - 1) & (width - 2))==0 && width!=2){
+        uint32_t new_width = width - 1;
+        uint32_t new_size = new_width*new_width*pixel_size;
+        final_data.resize(new_size);
+        // Copy rows
+        uint32_t new_row_size = new_width*pixel_size;
+        for(int row=0;row<new_width;row++){
+            uint32_t pos_old = row * width * pixel_size;
+            uint32_t pos_new = row * new_width * pixel_size;
+            memcpy(final_data.ptrw()+pos_new,data.ptr()+pos_old,new_row_size);
+        }
+        width--;
+    } else if (((width & (width - 1)) == 0))
+    {
+        final_data = data;
+    } else {
+        ERR_FAIL_MSG("Image dimension should be in power of two");
+        return;
+    }
+    // Creating compress data
+    PackedByteArray new_compressed_data;
+    // Creating header
+    uint16_t flags=0;
+    new_compressed_data.resize(MRESOURCE_HEADER_SIZE);
+    {
+        new_compressed_data[0] = MMAGIC_NUM;
+        new_compressed_data[1] = CURRENT_MRESOURCE_VERSION;
+        // FALGS WILL BE ADDED AT THE END
+        new_compressed_data[4] = (uint8_t)format;
+        encode_uint16(width,new_compressed_data.ptrw()+6);
+    }
+    uint32_t save_index = MRESOURCE_HEADER_SIZE;
+    if(compress==Compress::COMPRESS_NONE){
+        new_compressed_data.append_array(final_data);
+        compressed_data[name]=new_compressed_data;
+        return;
+    }
+    if(compress==Compress::COMPRESS_QOI){
+        uint8_t channel_count = get_supported_qoi_format_channel_count(format);
+        ERR_FAIL_COND_MSG(channel_count==0,"QOI only support these two format: RGBA8 and RGB8");
+        flags |= FLAG_COMPRESSION_QOI;
+        // QOI compression
+        qoi_desc qoi_img;
+        qoi_img.width = width;
+        qoi_img.height = width;
+        qoi_img.channels = channel_count;
+        qoi_img.colorspace = 1;
+        void *input_data = (void *)final_data.ptrw();
+        int qoi_data_size;
+        void* qoi_data = qoi_encode(input_data,&qoi_img,&qoi_data_size);
+        new_compressed_data.resize(new_compressed_data.size()+qoi_data_size);
+        encode_uint16(flags,new_compressed_data.ptrw()+FLAGS_INDEX);
+        memcpy(new_compressed_data.ptrw()+save_index,qoi_data,qoi_data_size);
+        ::free(qoi_data);
+        compressed_data[name]=new_compressed_data;
+        return;
+    }
+    if(compress==Compress::COMPRESS_PNG){
+        ERR_FAIL_COND(!get_supported_png_format(format));
+        flags |= FLAG_COMPRESSION_PNG;
+        Ref<Image> img;
+        img = Image::create_from_data(width,width,false,format,final_data);
+        encode_uint16(flags,new_compressed_data.ptrw()+FLAGS_INDEX);
+        new_compressed_data.append_array(img->save_png_to_buffer());
+        compressed_data[name]=new_compressed_data;
+        return;
+    }
+}
+
+PackedByteArray MResource::get_data(const StringName& name){
+    PackedByteArray out;
+    {
+        StringName hname("heightmap");
+        ERR_FAIL_COND_V_MSG(name==hname,out,"Use get_heightmap_rf to get heightmap");
+    }
+    ERR_FAIL_COND_V(!compressed_data.has(name),out);
+    PackedByteArray comp_data = compressed_data[name];
+    //Getting Header
+    ERR_FAIL_COND_V_MSG(comp_data[0]!=MMAGIC_NUM,out,"Magic number not found this file can be corrupted");
+    ERR_FAIL_COND_V_MSG(comp_data[1]!=CURRENT_MRESOURCE_VERSION,out,"Resource version not match, Please export your data with version "+itos(comp_data[1])+" of MResource to a raw format and reimport that here");
+    uint16_t flags = decode_uint16(comp_data.ptr()+FLAGS_INDEX);
+    Image::Format format = (Image::Format)comp_data[4];
+    format_cache.insert(name,comp_data[4]);
+    uint16_t width = decode_uint16(comp_data.ptr()+6);
+    width_cache.insert(name,width);
+    uint8_t pixel_size = MImage::get_format_pixel_size(format);
+    ERR_FAIL_COND_V(pixel_size==0,out);
+    out.resize(width*width*pixel_size);
+    //Finish Getting Header
+    uint32_t decompress_index = MRESOURCE_HEADER_SIZE;
+    if(flags & FLAG_COMPRESSION_QOI){
+        uint8_t channel_count = get_supported_qoi_format_channel_count(format);
+        qoi_desc qoi_img;
+        qoi_img.width = width;
+        qoi_img.height = width;
+        qoi_img.channels = channel_count;
+        qoi_img.colorspace = 1;
+        void *comp_ptr = comp_data.ptrw() + decompress_index;
+        int size = comp_data.size() - decompress_index;
+        void *qoi_data = qoi_decode(comp_ptr,size,&qoi_img,channel_count);
+        memcpy((void*)out.ptrw(),qoi_data,out.size());
+        ::free(qoi_data);
+    }
+    if(flags & FLAG_COMPRESSION_PNG){
+        Ref<Image> img;
+        img = Image::create(width,width,false,format);
+        img->load_png_from_buffer(comp_data.slice(decompress_index));
+        out = img->get_data();
+    }
+    else {
+        ERR_FAIL_COND_V(comp_data.size()!=out.size()+MRESOURCE_HEADER_SIZE,out);
+        void *comp_ptr = comp_data.ptrw() + decompress_index;
+        memcpy(out.ptrw(),comp_ptr,out.size());
+    }
+    return out;
+}
+
+void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,bool compress){
+    const Image::Format format = Image::Format::FORMAT_RF;
+    const StringName& name("heightmap");
     uint32_t pixel_size = MImage::get_format_pixel_size(format);
     ERR_FAIL_COND_MSG(!pixel_size,"Unsported format");
     ERR_FAIL_COND(data.size() % pixel_size != 0);
@@ -776,59 +961,65 @@ void MResource::insert_data(const PackedByteArray& data, const StringName& name,
         encode_uint16(width,new_compressed_data.ptrw()+6);
     }
     uint32_t save_index = MRESOURCE_HEADER_SIZE;
-    if(name==StringName("heightmap")) {
-        ERR_FAIL_COND_MSG(format!=Image::Format::FORMAT_RF,"You can insert heightmap only with this format: FORMAT_RF");
-        flags |= FLAG_IS_HEIGHT_MAP;
-        float* data_ptr = (float*)final_data.ptrw();
-        // Min and Max height
-        float min_height=data[0];
-        float max_height=data[0];
-        uint32_t px_amount = width*width;
-        for(uint32_t i=1;i<px_amount;i++){
-            if(min_height > data[i]){
-                min_height = data[i];
-            }
-            if(max_height < data[i]){
-                max_height = data[i];
-            }
+    ERR_FAIL_COND_MSG(format!=Image::Format::FORMAT_RF,"You can insert heightmap only with this format: FORMAT_RF");
+    flags |= FLAG_IS_HEIGHT_MAP;
+    float* data_ptr = (float*)final_data.ptrw();
+    // Min and Max height
+    float min_height=data[0];
+    float max_height=data[0];
+    min_height_cache = min_height;
+    max_height_cache = max_height;
+    uint32_t px_amount = width*width;
+    for(uint32_t i=1;i<px_amount;i++){
+        if(min_height > data[i]){
+            min_height = data[i];
         }
-        new_compressed_data.resize(new_compressed_data.size()+8);
-        encode_float(min_height,new_compressed_data.ptrw()+save_index);
-        save_index+=4;
-        encode_float(max_height,new_compressed_data.ptrw()+save_index);
-        save_index+=4;
-        if(max_height-min_height > FLATTEN_MIN_HEIGHT_DIFF){
-            flags |= FLAG_FLATTEN_OLS;
-            /// FLATTEN OLS
-            uint32_t devision = width/FLATTEN_SECTION_WIDTH;
-            ERR_FAIL_COND_MSG(((devision & (devision - 1)) != 0),"Flatten OLS devision is not in power of two "+itos(devision));
-            uint32_t flatten_header_data_size = (devision*devision*FLATTEN_SECTION_HEADER_SIZE) + FLATTEN_HEADER_SIZE;
-            new_compressed_data.resize(new_compressed_data.size()+flatten_header_data_size);
-            uint8_t devision_log2 = log2(devision);
-            ERR_FAIL_COND_MSG(devision_log2>15,"The heightmap image dimension is too big");
-            new_compressed_data[save_index] = devision_log2;
-            save_index+=FLATTEN_HEADER_SIZE;
-            Vector<uint32_t> flatten_section_header = flatten_ols((float*)final_data.ptrw(),width,devision);
-            flatten_header_data_size-=FLATTEN_HEADER_SIZE; //resize to the header section data size only
-            ERR_FAIL_COND(flatten_section_header.size()*4!=flatten_header_data_size);
-            const uint8_t* flatten_section_header_ptr = (const uint8_t*)flatten_section_header.ptr();
-            memcpy(new_compressed_data.ptrw()+save_index,flatten_section_header_ptr,flatten_header_data_size);
-            flatten_section_header.resize(0);
-            save_index+=flatten_header_data_size;
-            // Finish setting FLATTEN OLS
+        if(max_height < data[i]){
+            max_height = data[i];
         }
-        flags |= FLAG_COMPRESSION_QTQ;
-        compress_qtq_rf(final_data,new_compressed_data,width,save_index,accuracy);
     }
-    
+    new_compressed_data.resize(new_compressed_data.size()+8);
+    encode_float(min_height,new_compressed_data.ptrw()+save_index);
+    save_index+=4;
+    encode_float(max_height,new_compressed_data.ptrw()+save_index);
+    save_index+=4;
+    if(!compress){
+        new_compressed_data[FLAGS_INDEX] = flags;
+        new_compressed_data.append_array(final_data);
+        compressed_data[name] = new_compressed_data;
+        return;
+    }
+    if(max_height-min_height > FLATTEN_MIN_HEIGHT_DIFF){
+        flags |= FLAG_FLATTEN_OLS;
+        /// FLATTEN OLS
+        uint32_t devision = width/FLATTEN_SECTION_WIDTH;
+        ERR_FAIL_COND_MSG(((devision & (devision - 1)) != 0),"Flatten OLS devision is not in power of two "+itos(devision));
+        uint32_t flatten_header_data_size = (devision*devision*FLATTEN_SECTION_HEADER_SIZE) + FLATTEN_HEADER_SIZE;
+        new_compressed_data.resize(new_compressed_data.size()+flatten_header_data_size);
+        uint8_t devision_log2 = log2(devision);
+        ERR_FAIL_COND_MSG(devision_log2>15,"The heightmap image dimension is too big");
+        new_compressed_data[save_index] = devision_log2;
+        save_index+=FLATTEN_HEADER_SIZE;
+        Vector<uint32_t> flatten_section_header = flatten_ols((float*)final_data.ptrw(),width,devision);
+        flatten_header_data_size-=FLATTEN_HEADER_SIZE; //resize to the header section data size only
+        ERR_FAIL_COND(flatten_section_header.size()*4!=flatten_header_data_size);
+        const uint8_t* flatten_section_header_ptr = (const uint8_t*)flatten_section_header.ptr();
+        memcpy(new_compressed_data.ptrw()+save_index,flatten_section_header_ptr,flatten_header_data_size);
+        flatten_section_header.resize(0);
+        save_index+=flatten_header_data_size;
+        // Finish setting FLATTEN OLS
+    }
+    flags |= FLAG_COMPRESSION_QTQ;
+    compress_qtq_rf(final_data,new_compressed_data,width,save_index,accuracy);
 
-    new_compressed_data[FLAGS_INDEX] = flags;
+    encode_uint16(flags,new_compressed_data.ptrw()+FLAGS_INDEX);
     compressed_data[name] = new_compressed_data;
 }
 
 
-PackedByteArray MResource::get_data(const StringName& name){
+PackedByteArray MResource::get_heightmap_rf(){
     PackedByteArray out;
+    StringName name("heightmap");
     ERR_FAIL_COND_V(!compressed_data.has(name),out);
     PackedByteArray comp_data = compressed_data[name];
     //Getting Header
@@ -836,36 +1027,43 @@ PackedByteArray MResource::get_data(const StringName& name){
     ERR_FAIL_COND_V_MSG(comp_data[1]!=CURRENT_MRESOURCE_VERSION,out,"Resource version not match, Please export your data with version "+itos(comp_data[1])+" of MResource to a raw format and reimport that here");
     uint16_t flags = decode_uint16(comp_data.ptr()+FLAGS_INDEX);
     Image::Format format = (Image::Format)comp_data[4];
+    ERR_FAIL_COND_V(format!=Image::Format::FORMAT_RF,out);
     uint16_t width = decode_uint16(comp_data.ptr()+6);
+    width_cache.insert(name,width);
     uint8_t pixel_size = MImage::get_format_pixel_size(format);
     ERR_FAIL_COND_V(pixel_size==0,out);
     //Finish Getting Header
     uint32_t decompress_index = MRESOURCE_HEADER_SIZE;
     out.resize(width*width*pixel_size);
-    if(flags & FLAG_IS_HEIGHT_MAP){
-        //Getting min and max height
-        float min_height = decode_float(comp_data.ptrw()+decompress_index);
-        decompress_index+=4;
-        float max_height = decode_float(comp_data.ptrw()+decompress_index);
-        decompress_index+=4;
-        // Getting Flatten header if Flatten_OLS FLAG is active, This will also increate the decompress index
-        Vector<uint32_t> flatten_section_header;
-        uint16_t devision;
-        if(flags & FLAG_FLATTEN_OLS){ // This should be at bottom later
-            uint8_t devision_log2 = comp_data[decompress_index];
-            decompress_index += FLATTEN_HEADER_SIZE;
-            ERR_FAIL_COND_V(devision_log2==0 || devision_log2>15 ,out);
-            devision = 1 << devision_log2;
-            // Size bellow does not contain FLATTEN_HEADER_SIZE
-            uint32_t flatten_header_size = (devision*devision*FLATTEN_SECTION_HEADER_SIZE);
-            flatten_section_header.resize(flatten_header_size/FLATTEN_SECTION_HEADER_SIZE);
-            memcpy((uint8_t *)flatten_section_header.ptrw(),comp_data.ptr()+decompress_index,flatten_header_size);
-            decompress_index+=flatten_header_size;
-        }
-        decompress_qtq_rf(comp_data,out,width,decompress_index);
-        if(flags & FLAG_COMPRESSION_QTQ){ 
-            unflatten_ols((float*)out.ptrw(),width,devision,flatten_section_header);
-        }
+    UtilityFunctions::print("Flag is flags");
+    //Getting min and max height
+    float min_height = decode_float(comp_data.ptrw()+decompress_index);
+    decompress_index+=4;
+    float max_height = decode_float(comp_data.ptrw()+decompress_index);
+    decompress_index+=4;
+    if(!(flags & FLAG_COMPRESSION_QTQ)){
+        memcpy(out.ptrw(),comp_data.ptrw()+decompress_index,out.size());
+        PackedByteArray out_plus_one = add_empty_pixels_to_right_bottom(out,pixel_size,width);
+        return out_plus_one;
+    }
+    // Getting Flatten header if Flatten_OLS FLAG is active, This will also increate the decompress index
+    Vector<uint32_t> flatten_section_header;
+    uint16_t devision;
+    if(flags & FLAG_FLATTEN_OLS){ // This should be at bottom later
+        uint8_t devision_log2 = comp_data[decompress_index];
+        decompress_index += FLATTEN_HEADER_SIZE;
+        ERR_FAIL_COND_V(devision_log2==0 || devision_log2>15 ,out);
+        devision = 1 << devision_log2;
+        // Size bellow does not contain FLATTEN_HEADER_SIZE
+        uint32_t flatten_header_size = (devision*devision*FLATTEN_SECTION_HEADER_SIZE);
+        flatten_section_header.resize(flatten_header_size/FLATTEN_SECTION_HEADER_SIZE);
+        memcpy((uint8_t *)flatten_section_header.ptrw(),comp_data.ptr()+decompress_index,flatten_header_size);
+        decompress_index+=flatten_header_size;
+    }
+    decompress_qtq_rf(comp_data,out,width,decompress_index);
+    if(flags & FLAG_FLATTEN_OLS){ 
+        UtilityFunctions::print("DE FLAG_FLATTEN_OLS");
+        unflatten_ols((float*)out.ptrw(),width,devision,flatten_section_header);
     }
     PackedByteArray out_plus_one = add_empty_pixels_to_right_bottom(out,pixel_size,width);
     return out_plus_one;
@@ -1306,4 +1504,28 @@ uint32_t MResource::half_to_uint32(uint16_t h){
             /* Just need to adjust the exponent and shift */
             return f_sgn + (((uint32_t)(h & 0x7fffu) + 0x1c000u) << 13);
     }
+}
+
+
+
+int MResource::get_supported_qoi_format_channel_count(Image::Format p_format) {
+	switch (p_format) {
+		case Image::FORMAT_RGB8:
+			return 3;
+		case Image::FORMAT_RGBA8:
+			return 4;
+	}
+	return 0;
+}
+
+bool MResource::get_supported_png_format(Image::Format format){
+	switch (format) {
+		case Image::FORMAT_RGB8:
+			return true;
+		case Image::FORMAT_RGBA8:
+			return true;
+        case Image::FORMAT_L8:
+            return true;
+	}
+	return false;
 }

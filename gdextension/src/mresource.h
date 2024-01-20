@@ -6,6 +6,8 @@
 #define MRESOURCE_HEADER_SIZE 8
 #define MMAGIC_NUM 77
 #define FLAGS_INDEX 2
+#define FORMAT_INDEX 4
+#define WIDTH_INDEX 6
 // INDEX    DATA HEADER --- common in all formats
 // 0     uint8_t -> Magic num -> 77
 // 1     uint8_t -> Version NUMBER
@@ -13,8 +15,9 @@
 // 4     uint8_t image_format -> same as Image::Format in image class in Godot
 // 6     uint16_t width (LE) -> width and height are equale so height is this
 
-
 // IF FLAG_IS_HEIGHT_MAP is active -> in total 4 byte
+#define MIN_HEIGHT_INDEX 8
+#define MAX_HEIGHT_INDEX 12
 // float min_height
 // float max_height
 
@@ -89,11 +92,14 @@
 #define FLAG_IS_HEIGHT_MAP 1 // QuadTreeRF Quantazation compression
 #define FLAG_FLATTEN_OLS 2 // QuadTreeRF Quantazation compression
 #define FLAG_COMPRESSION_QTQ 4 // QuadTreeRF Quantazation compression
+#define FLAG_COMPRESSION_QOI 8
+#define FLAG_COMPRESSION_PNG 16
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/classes/image.hpp>
+#include <godot_cpp/templates/hash_map.hpp>
 #include "mpixel_region.h"
 #include "mconfig.h"
 
@@ -159,15 +165,35 @@ class MResource : public Resource {
         void decode_data_only_hole();
     };
     Dictionary compressed_data;
+    //As if we want to grab these bellow from compress data we should copy them entire compress data
+    //Into packedByteArray we cache them for better performance
+    //In case in future there will possible to get data compressed_data[key] without coppy we can remove them
+    HashMap<StringName,uint8_t> format_cache;
+    HashMap<StringName,uint16_t> width_cache;
+    float min_height_cache = FLOAT_HOLE;
+    float max_height_cache = FLOAT_HOLE;
 
     public:
+    enum Compress {
+        COMPRESS_NONE = 0,
+        COMPRESS_QOI = 1,
+        COMPRESS_PNG = 2
+    };
     void set_compressed_data(const Dictionary& data);
     const Dictionary& get_compressed_data();
-    void dump_header(const PackedByteArray& compress_data);
-    void dump_qtq_header(const PackedByteArray& compress_data);
 
-    void insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,float accuracy);
+    Image::Format get_data_format(const StringName& name);
+    uint16_t get_data_width(const StringName& name);
+    uint32_t get_heightmap_width();
+    float get_min_height();
+    float get_max_height();
+
+    void insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,MResource::Compress compress);
     PackedByteArray get_data(const StringName& name);
+
+    void insert_heightmap_rf(const PackedByteArray& data,float accuracy,bool compress = true);
+    PackedByteArray get_heightmap_rf();
+
 
 
     private:
@@ -201,5 +227,11 @@ class MResource : public Resource {
     static _FORCE_INLINE_ uint16_t float_to_half(float f);
     static _FORCE_INLINE_ float half_to_float(uint16_t h);
     static _FORCE_INLINE_ uint32_t half_to_uint32(uint16_t f);
+
+    int get_supported_qoi_format_channel_count(Image::Format format);
+    bool get_supported_png_format(Image::Format format);
 };
+
+VARIANT_ENUM_CAST(MResource::Compress);
+
 #endif

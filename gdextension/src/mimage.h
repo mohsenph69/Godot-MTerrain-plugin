@@ -109,6 +109,7 @@ struct MImage {
 	_FORCE_INLINE_ Color _get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const;
 	_FORCE_INLINE_ void _set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color);
     static int get_format_pixel_size(Image::Format p_format);
+    static int get_format_uint_channel_count(Image::Format p_format);
 
     void set_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel,const float value);
     float get_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t channel);
