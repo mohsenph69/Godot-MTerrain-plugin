@@ -863,6 +863,7 @@ void MResource::insert_data(const PackedByteArray& data, const StringName& name,
         img = Image::create_from_data(width,width,false,format,final_data);
         data_part = img->save_png_to_buffer();
     }
+    uint32_t data_size_before_file_compress = data_part.size();
     /// FILE COMPRESS
     if(file_compress==FileCompress::FILE_COMPRESSION_FASTLZ){
         flags |= FLAG_COMPRESSION_FASTLZ;
@@ -880,8 +881,8 @@ void MResource::insert_data(const PackedByteArray& data, const StringName& name,
         flags |= FLAG_COMPRESSION_GZIP;
         data_part = data_part.compress(FileAccess::COMPRESSION_GZIP);
     }
-    UtilityFunctions::print("insert flag ",flags);
     encode_uint16(flags,new_compressed_data.ptrw()+FLAGS_INDEX);
+    encode_uint32(data_size_before_file_compress,new_compressed_data.ptrw()+DATA_SIZE_BEFORE_FILE_COMPRESS_INDEX);
     new_compressed_data.append_array(data_part);
     compressed_data[name] = new_compressed_data;
 }
@@ -901,6 +902,7 @@ PackedByteArray MResource::get_data(const StringName& name){
     Image::Format format = (Image::Format)comp_data[4];
     format_cache.insert(name,comp_data[4]);
     uint16_t width = decode_uint16(comp_data.ptr()+6);
+    uint32_t data_size_before_file_compress = decode_uint32(comp_data.ptr()+DATA_SIZE_BEFORE_FILE_COMPRESS_INDEX);
     width_cache.insert(name,width);
     uint8_t pixel_size = MImage::get_format_pixel_size(format);
     ERR_FAIL_COND_V(pixel_size==0,out);
@@ -910,16 +912,16 @@ PackedByteArray MResource::get_data(const StringName& name){
     uint32_t data_size = width*width*pixel_size;
     // FILE Compress
     if(flags & FLAG_COMPRESSION_FASTLZ){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_FASTLZ);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_FASTLZ);
     }
     else if(flags & FLAG_COMPRESSION_DEFLATE){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_DEFLATE);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_DEFLATE);
     }
     else if(flags & FLAG_COMPRESSION_ZSTD){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_ZSTD);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_ZSTD);
     }
     else if(flags & FLAG_COMPRESSION_GZIP){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_GZIP);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_GZIP);
     }
     //Compress
     if(flags & FLAG_COMPRESSION_QOI){
@@ -985,7 +987,7 @@ void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,b
     PackedByteArray new_compressed_data;
     // Creating header
     uint16_t flags=0;
-    new_compressed_data.resize(MRESOURCE_HEADER_SIZE);
+    new_compressed_data.resize(MRESOURCE_HEIGHTMAP_HEADER_SIZE);
     {
         new_compressed_data[0] = MMAGIC_NUM;
         new_compressed_data[1] = CURRENT_MRESOURCE_VERSION;
@@ -1011,11 +1013,8 @@ void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,b
             max_height = data[i];
         }
     }
-    new_compressed_data.resize(new_compressed_data.size()+8);
-    encode_float(min_height,new_compressed_data.ptrw()+save_index);
-    save_index+=4;
-    encode_float(max_height,new_compressed_data.ptrw()+save_index);
-    save_index+=4;
+    encode_float(min_height,new_compressed_data.ptrw()+MIN_HEIGHT_INDEX);
+    encode_float(max_height,new_compressed_data.ptrw()+MAX_HEIGHT_INDEX);
     PackedByteArray data_part;
     save_index=0;
     if(compress_qtq){
@@ -1046,6 +1045,7 @@ void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,b
     {
         data_part = final_data;
     }
+    uint32_t data_size_before_file_compress=data_part.size();
     /// FILE COMPRESS
     if(file_compress==FileCompress::FILE_COMPRESSION_FASTLZ){
         flags |= FLAG_COMPRESSION_FASTLZ;
@@ -1064,6 +1064,7 @@ void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,b
         data_part = data_part.compress(FileAccess::COMPRESSION_GZIP);
     }
     encode_uint16(flags,new_compressed_data.ptrw()+FLAGS_INDEX);
+    encode_uint32(data_size_before_file_compress,new_compressed_data.ptrw()+DATA_SIZE_BEFORE_FILE_COMPRESS_INDEX);
     new_compressed_data.append_array(data_part);
     compressed_data[name] = new_compressed_data;
 }
@@ -1081,32 +1082,31 @@ PackedByteArray MResource::get_heightmap_rf(){
     Image::Format format = (Image::Format)comp_data[4];
     ERR_FAIL_COND_V(format!=Image::Format::FORMAT_RF,out);
     uint16_t width = decode_uint16(comp_data.ptr()+6);
+    uint32_t data_size_before_file_compress = decode_uint32(comp_data.ptr()+DATA_SIZE_BEFORE_FILE_COMPRESS_INDEX);
     width_cache.insert(name,width);
     uint8_t pixel_size = MImage::get_format_pixel_size(format);
     ERR_FAIL_COND_V(pixel_size==0,out);
     //Finish Getting Header
-    uint32_t decompress_index = MRESOURCE_HEADER_SIZE;
     out.resize(width*width*pixel_size);
-    UtilityFunctions::print("Flag is flags");
     //Getting min and max height
-    float min_height = decode_float(comp_data.ptrw()+decompress_index);
-    decompress_index+=4;
-    float max_height = decode_float(comp_data.ptrw()+decompress_index);
-    decompress_index+=4;
-    comp_data = comp_data.slice(decompress_index);
-    decompress_index=0;
+    float min_height = decode_float(comp_data.ptrw()+MIN_HEIGHT_INDEX);
+    float max_height = decode_float(comp_data.ptrw()+MAX_HEIGHT_INDEX);
+    min_height_cache = min_height;
+    max_height_cache = max_height;
+    comp_data = comp_data.slice(MRESOURCE_HEIGHTMAP_HEADER_SIZE);
+    uint32_t decompress_index=0;
     uint32_t data_size = width*width*pixel_size;
     if(flags & FLAG_COMPRESSION_FASTLZ){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_FASTLZ);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_FASTLZ);
     }
     else if(flags & FLAG_COMPRESSION_DEFLATE){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_DEFLATE);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_DEFLATE);
     }
     else if(flags & FLAG_COMPRESSION_ZSTD){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_ZSTD);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_ZSTD);
     }
     else if(flags & FLAG_COMPRESSION_GZIP){
-        comp_data = comp_data.decompress(data_size,FileAccess::COMPRESSION_GZIP);
+        comp_data = comp_data.decompress(data_size_before_file_compress,FileAccess::COMPRESSION_GZIP);
     }
     ////////////// Compress QTQ
     if(!(flags & FLAG_COMPRESSION_QTQ)){
@@ -1130,7 +1130,6 @@ PackedByteArray MResource::get_heightmap_rf(){
     }
     decompress_qtq_rf(comp_data,out,width,decompress_index);
     if(flags & FLAG_FLATTEN_OLS){ 
-        UtilityFunctions::print("DE FLAG_FLATTEN_OLS");
         unflatten_ols((float*)out.ptrw(),width,devision,flatten_section_header);
     }
     PackedByteArray out_plus_one = add_empty_pixels_to_right_bottom(out,pixel_size,width);

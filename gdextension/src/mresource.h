@@ -3,21 +3,24 @@
 
 #define CURRENT_MRESOURCE_VERSION 0 // Unless change which cause compatiblity break this will no change
 
-#define MRESOURCE_HEADER_SIZE 8
+#define MRESOURCE_HEADER_SIZE 12
 #define MMAGIC_NUM 77
 #define FLAGS_INDEX 2
 #define FORMAT_INDEX 4
 #define WIDTH_INDEX 6
+#define DATA_SIZE_BEFORE_FILE_COMPRESS_INDEX 8
 // INDEX    DATA HEADER --- common in all formats
 // 0     uint8_t -> Magic num -> 77
 // 1     uint8_t -> Version NUMBER
 // 2     uint16_t FLAGS -> some flags for determining which compression is applied and whether data is heightmap or other image type
 // 4     uint8_t image_format -> same as Image::Format in image class in Godot
 // 6     uint16_t width (LE) -> width and height are equale so height is this
+// 8     uint32_t data_size (LE) -> data size before applying file compression
 
 // IF FLAG_IS_HEIGHT_MAP is active -> in total 4 byte
-#define MIN_HEIGHT_INDEX 8
-#define MAX_HEIGHT_INDEX 12
+#define MRESOURCE_HEIGHTMAP_HEADER_SIZE 20
+#define MIN_HEIGHT_INDEX 12
+#define MAX_HEIGHT_INDEX 16
 // float min_height
 // float max_height
 
