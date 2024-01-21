@@ -4,7 +4,7 @@
 #include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/texture2d.hpp>
-#include <iostream>
+#include <godot_cpp/classes/resource_saver.hpp>
 
 
 #include "mbrush_manager.h"
@@ -202,13 +202,13 @@ void MGrid::update_regions_uniform(Dictionary input) {
             String file_name = name+"_x"+itos(x)+"_y"+itos(z)+".res";
             String file_path = dataDir.path_join(file_name);
             if(!ResourceLoader::get_singleton()->exists(file_path)){
-                if (name != "normals"){
+                if (name != NORMALS_NAME){
                     WARN_PRINT("Can not find "+name);
                 }
                 continue;
             }
             MGridPos rpos(x,0,z);
-            has_normals = name=="normals";
+            has_normals = name==NORMALS_NAME;
             MImage* i = memnew(MImage(file_path,layersDataDir,name,uniform_name,rpos,compression));
             region->add_image(i);
         }
@@ -222,7 +222,7 @@ void MGrid::update_all_image_list(){
         Vector<MImage*> rimgs = regions[i].images;
         for(int j=0;j<rimgs.size();j++){
             _all_image_list.push_back(rimgs[j]);
-            if(rimgs[j]->name=="heightmap"){
+            if(rimgs[j]->name==HEIGHTMAP_NAME){
                 _all_heightmap_image_list.push_back(rimgs[j]);
             }
         }
@@ -1042,7 +1042,7 @@ void MGrid::generate_normals_thread(MPixelRegion pxr) {
 
 void MGrid::generate_normals(MPixelRegion pxr) {
     //if(!uniforms_id.has("normals")) return;
-    int id = _terrain_material->get_texture_id("normals");
+    int id = _terrain_material->get_texture_id(NORMALS_NAME);
     ERR_FAIL_COND(id==-1);
     for(uint32_t y=pxr.top; y<=pxr.bottom; y++){
         for(uint32_t x=pxr.left; x<=pxr.right; x++){
@@ -1077,7 +1077,7 @@ void MGrid::generate_normals(MPixelRegion pxr) {
 }
 
 Vector3 MGrid::get_normal_by_pixel(uint32_t x,uint32_t y) {
-    int id = _terrain_material->get_texture_id("normals");
+    int id = _terrain_material->get_texture_id(NORMALS_NAME);
     ERR_FAIL_COND_V(id==-1,Vector3());
     Color c = get_pixel(x,y,id);
     Vector3 n(c.r,c.g,c.b);
@@ -1152,13 +1152,22 @@ Vector3 MGrid::get_normal_accurate(Vector3 world_pos){
 
 void MGrid::save_image(int index,bool force_save){
     for(int i=0;i<_regions_count;i++){
-        regions[i].save_image(index,force_save);
+        MRegion* reg = regions + i;
+        String res_path = reg->get_res_path();
+        Ref<MResource> mres;
+        if(ResourceLoader::get_singleton()->exists(res_path)){
+            mres = ResourceLoader::get_singleton()->load(res_path);
+        }
+        if(!mres.is_valid()){
+            mres.instantiate();
+        }
+        reg->save_image(mres,index,force_save);
     }
 }
 
 bool MGrid::has_unsave_image(){
     for(int i=0;i<_all_image_list.size();i++){
-        if(_all_image_list[i]->name=="normals"){
+        if(_all_image_list[i]->name==NORMALS_NAME){
             if(!_all_image_list[i]->is_save && save_generated_normals){
                 return true;
             }
@@ -1172,15 +1181,22 @@ bool MGrid::has_unsave_image(){
 }
 
 void MGrid::save_all_dirty_images(){
-    for(int i=0;i<_all_image_list.size();i++){
-        if(_all_image_list[i]->name=="normals"){
-            if(save_generated_normals){
-                _all_image_list[i]->save(false);
-            }
-        } else {
-            _all_image_list[i]->save(false);
+   for(int i=0;i<_regions_count;i++){
+        MRegion* reg = regions + i;
+        String res_path = reg->get_res_path();
+        Ref<MResource> mres;
+        if(ResourceLoader::get_singleton()->exists(res_path)){
+            mres = ResourceLoader::get_singleton()->load(res_path);
         }
-    }
+        if(!mres.is_valid()){
+            mres.instantiate();
+        }
+        for(int j=0;j<reg->images.size();j++){
+            MImage* img = reg->images[j];
+            img->save(mres,true);
+        }
+        ResourceSaver::get_singleton()->save(mres,res_path);
+   }
 }
 
 Vector2i MGrid::get_closest_pixel(Vector3 world_pos){

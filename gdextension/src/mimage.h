@@ -16,6 +16,7 @@
 #include <godot_cpp/templates/hash_map.hpp>
 
 #include "mbound.h"
+#include "mresource.h"
 
 
 using namespace godot;
@@ -38,7 +39,7 @@ struct MImage {
     MRegion* region=nullptr;
     String file_path;
     String layerDataDir;
-    String name;
+    StringName name;
     String uniform_name;
     int compression=-1;
     uint32_t width;
@@ -76,8 +77,8 @@ struct MImage {
     MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,const int& _compression);
     MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r);
     ~MImage();
-    void load();
-    void unload();
+    void load(Ref<MResource> mres);
+    void unload(Ref<MResource> mres);
     void set_active_layer(int l);
     void add_layer(String lname);
     void merge_layer();
@@ -98,7 +99,7 @@ struct MImage {
     void set_pixel(const uint32_t x, const uint32_t  y,const Color& color);
     void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
     const uint8_t* get_pixel_by_data_pointer(uint32_t x,uint32_t y);
-    void save(bool force_save);
+    void save(Ref<MResource> mres,bool force_save);
     void check_undo(); // Register the state of image before the draw
     void remove_undo_data(int ur_id);
     void remove_undo_data_in_layer(int layer_index);

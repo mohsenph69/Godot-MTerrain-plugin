@@ -51,12 +51,20 @@ MImage::~MImage(){
 	}
 }
 
-void MImage::load(){
+void MImage::load(Ref<MResource> mres){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	if(is_init){
 		return;
 	}
-	if(!ResourceLoader::get_singleton()->exists(file_path)){
+	if(name==NORMALS_NAME){
+		create(region->grid->region_pixel_size,Image::Format::FORMAT_RGB8);
+		return;
+	}
+	if(!mres.is_valid()){
+		if(name==HEIGHTMAP_NAME){
+			create(region->grid->region_pixel_size,Image::Format::FORMAT_RF);
+			return;
+		}
 		if(get_format_pixel_size(format)==0){
 			//Create a dumy format so GODOT not crash
 			create(region->grid->region_pixel_size,Image::Format::FORMAT_R8);
@@ -66,23 +74,18 @@ void MImage::load(){
 		create(region->grid->region_pixel_size,format);
 		return;
 	}
-    Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
-	ERR_FAIL_COND(!img.is_valid());
-    width = img->get_size().x;
-	height = img->get_size().x;
-	ERR_FAIL_COND(width!=height);
-	total_pixel_amount = width*height;
-    format = img->get_format();
-	pixel_size = get_format_pixel_size(format);
-	if(pixel_size==0){
-		if(img->decompress() == godot::Error::OK){
-			pixel_size = get_format_pixel_size(format);
-			WARN_PRINT("Decompressing Image, MTerrain does not support the image format for "+file_path);
-		} else {
-			ERR_FAIL_MSG("Unsported image format for Mterrain");
-		}
+	if(name==HEIGHTMAP_NAME){
+		data = mres->get_heightmap_rf();
+		format = Image::Format::FORMAT_RF;
+	} else {
+		data = mres->get_data(name);
+		format = mres->get_data_format(name);
 	}
-    data = img->get_data();
+    width = mres->get_data_width(name) + 1;
+	height = width;
+	total_pixel_amount = width*height;
+	pixel_size = get_format_pixel_size(format);
+	ERR_FAIL_COND(pixel_size==0);
     current_size = width;
 	is_save = true;
 	image_layers.push_back(&data);
@@ -101,12 +104,12 @@ void MImage::load(){
 	is_dirty = true; //So Image will be updated in update call in region
 }
 
-void MImage::unload(){
+void MImage::unload(Ref<MResource> mres){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	if(!is_init){
 		return;
 	}
-	save(false);
+	save(mres,false);
 	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){
 		it->value.free();
 	}
@@ -141,7 +144,7 @@ void MImage::set_active_layer(int l){
 
 // This must called alway after loading background image
 void MImage::add_layer(String lname){
-	if(name!="heightmap"){
+	if(name!=HEIGHTMAP_NAME){
 		return;
 	}
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
@@ -160,7 +163,7 @@ void MImage::load_layer(String lname){
 		return;
 	}
 	ERR_FAIL_COND_EDMSG(data.size()==0,"You must first load the background image and then the layers");
-	ERR_FAIL_COND_EDMSG(name!="heightmap","Layers is supported only for heightmap images");
+	ERR_FAIL_COND_EDMSG(name!=HEIGHTMAP_NAME,"Layers is supported only for heightmap images");
 	String ltname = lname +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	String layer_path = layerDataDir.path_join(ltname);
 	if(FileAccess::file_exists(layer_path)){
@@ -251,7 +254,13 @@ void MImage::merge_layer(){
 	is_saved_layers.remove_at(active_layer);
 	layer_names.remove_at(active_layer);
 	holes_layer = layer_names.find("holes");
-	save(false);
+	// Here is Ok to load mres as we only want to save heightmap in this call
+	Ref<MResource> mres;
+	String res_path = region->get_res_path();
+	if(ResourceLoader::get_singleton()->exists(res_path)){
+		mres = ResourceLoader::get_singleton()->load(res_path);\
+		save(mres,false);
+	}
 }
 
 void MImage::remove_layer(bool is_visible){
@@ -292,7 +301,13 @@ void MImage::remove_layer(bool is_visible){
 	layer_names.remove_at(active_layer);
 	holes_layer = layer_names.find("holes");
 	remove_undo_data_in_layer(active_layer);
-	save(false);
+	// Here is Ok to load mres as we only want to save heightmap in this call
+	Ref<MResource> mres;
+	String res_path = region->get_res_path();
+	if(ResourceLoader::get_singleton()->exists(res_path)){
+		mres = ResourceLoader::get_singleton()->load(res_path);\
+		save(mres,false);
+	}
 }
 
 void MImage::layer_visible(bool input){
@@ -306,7 +321,14 @@ void MImage::layer_visible(bool input){
 	// There is no control if the layer is currently visibile or not
 	// These checks must be done in Grid Level
 	// We save before hiding the layer to not complicating the save system for now
-	save(false); // So we are sure in the save method we should do nothing
+	// So we are sure in the save method we should do nothing
+	// Here is Ok to load mres as we only want to save heightmap in this call
+	Ref<MResource> mres;
+	String res_path = region->get_res_path();
+	if(ResourceLoader::get_singleton()->exists(res_path)){
+		mres = ResourceLoader::get_singleton()->load(res_path);\
+		save(mres,false);
+	}
 	const uint8_t* ptr=image_layers[active_layer]->ptr();
 	if(input){
 		if(active_layer==holes_layer){
@@ -554,9 +576,10 @@ const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y){
 	return data.ptr() + ofs*pixel_size;
 }
 
-void MImage::save(bool force_save) {
+void MImage::save(Ref<MResource> mres,bool force_save) {
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
-	if(!is_init || name=="normals"){
+	ERR_FAIL_COND(!mres.is_valid());
+	if(!is_init || name==NORMALS_NAME){
 		return;
 	}
 	ERR_FAIL_COND(is_corrupt_file);
@@ -564,10 +587,8 @@ void MImage::save(bool force_save) {
 		return;
 	}
 	if(force_save || !is_save) {
-		if(name!="heightmap"){
-			Ref<Image> img = Image::create_from_data(width,height,false,format,data);
-			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
-			ERR_FAIL_COND_MSG(err,"Can not save image, image class erro: "+itos(err));
+		if(name!=HEIGHTMAP_NAME){
+			mres->insert_data(data,name,format,MResource::Compress::COMPRESS_QOI,MResource::FILE_COMPRESSION_NONE);
 			is_save = true;
 			return;
 		}
@@ -589,9 +610,10 @@ void MImage::save(bool force_save) {
 					}
 				}
 			}
-			Ref<Image> img = Image::create_from_data(width,height,false,format,background_data);
-			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
-			ERR_FAIL_COND_MSG(err,"Can not save background image, image class erro: "+itos(err));
+			//Ref<Image> img = Image::create_from_data(width,height,false,format,background_data);
+			//godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+			//ERR_FAIL_COND_MSG(err,"Can not save background image, image class erro: "+itos(err));
+			mres->insert_heightmap_rf(background_data,0.1,true,MResource::FILE_COMPRESSION_NONE);
 			is_saved_layers.set(0,true);
 		}
 		for(int i=1;i<image_layers.size();i++){
@@ -687,7 +709,7 @@ void MImage::go_to_undo(int ur_id){
 			memcpy(image_layers[ur.layer]->ptrw(),ur.data,data.size());
 		}
 	}
-	if(name=="heightmap" && region){
+	if(name==StringName("heightmap") && region){
 		region->recalculate_normals();
 	}
 	is_dirty = true;

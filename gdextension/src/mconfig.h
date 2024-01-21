@@ -29,6 +29,9 @@
 #define M_LRTB 9
 #define M_MAX_EDGE 10
 
+#define HEIGHTMAP_NAME StringName("heightmap")
+#define NORMALS_NAME StringName("normals")
+
 //You should add also everything start with mterrain_ prefix to the list bellow
 #define M_SHADER_RESERVE_UNIFORMS "region_world_position,region_size,region_a,region_b,min_lod,world_pos,region_uv"
 

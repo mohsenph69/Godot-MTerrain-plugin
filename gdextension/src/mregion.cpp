@@ -39,10 +39,10 @@ RID MRegion::get_material_rid() {
 void MRegion::add_image(MImage* input) {
     images.append(input);
 	_images_init_status.push_back(false);
-	if(input->name=="heightmap"){
+	if(input->name==HEIGHTMAP_NAME){
 		heightmap = input;
 	}
-	else if(input->name=="normals"){
+	else if(input->name==NORMALS_NAME){
 		normals = input;
 	}
 }
@@ -53,11 +53,11 @@ void MRegion::configure() {
 	for(int i=0; i < images.size(); i++){
 		images[i]->region = this;
 		images[i]->index = i;
-		if(images[i]->name != "normals"){
+		if(images[i]->name != NORMALS_NAME){
 			images[i]->active_undo = true;
 		}
 		if(images[i]->is_null_image){
-			if(images[i]->name == "heightmap"){
+			if(images[i]->name == HEIGHTMAP_NAME){
 				min_height = -0.01;
 				max_height = 0.01;
 			}
@@ -73,8 +73,13 @@ void MRegion::configure() {
 
 void MRegion::load(){
 	set_material(grid->_terrain_material->get_material(id));
+	String res_path = get_res_path();
+	Ref<MResource> mres;
+	if(ResourceLoader::get_singleton()->exists(res_path)){
+		mres = ResourceLoader::get_singleton()->load(get_res_path());
+	}
 	for(int i=0; i < images.size(); i++){
-		images[i]->load();
+		images[i]->load(mres);
 	}
 	if(!is_min_max_height_calculated){
 		_calculate_min_max_height();
@@ -83,10 +88,20 @@ void MRegion::load(){
 }
 
 void MRegion::unload(){
+	Ref<MResource> mres;
+	String res_path = get_res_path();
+	if(ResourceLoader::get_singleton()->exists(res_path)){
+		mres = ResourceLoader::get_singleton()->load(get_res_path());
+	}
 	for(int i=0; i < images.size(); i++){
-		images[i]->unload();
+		images[i]->unload(mres);
 	}
 	is_data_loaded.store(false, std::memory_order_release);
+}
+
+String MRegion::get_res_path(){
+	String res_name = String("x") + itos(pos.x) + String("_y") + itos(pos.z)+String(".res");
+	return grid->dataDir.path_join(res_name);
 }
 
 void MRegion::update_region() {
@@ -241,8 +256,8 @@ void MRegion::update_all_dirty_image_texture(){
 }
 
 
-void MRegion::save_image(int index,bool force_save) {
-	images[index]->save(force_save);
+void MRegion::save_image(Ref<MResource> mres,int index,bool force_save) {
+	images[index]->save(mres,force_save);
 }
 
 void MRegion::recalculate_normals(bool use_thread,bool use_extra_margin){

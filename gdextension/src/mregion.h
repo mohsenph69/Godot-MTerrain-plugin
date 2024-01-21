@@ -24,6 +24,7 @@
 #include "mbound.h"
 #include "mimage.h"
 #include "mpixel_region.h"
+#include "mresource.h"
 
 #include <mutex>
 #include <atomic>
@@ -85,6 +86,7 @@ class MRegion : public Object{
     void configure();
     void load();
     void unload();
+    String get_res_path();
     void update_region();
     void insert_lod(const int8_t input);
     void apply_update();
@@ -100,7 +102,7 @@ class MRegion : public Object{
     real_t get_height_by_pixel_in_layer(const uint32_t x, const uint32_t y) const;
 
     void update_all_dirty_image_texture();
-    void save_image(int index,bool force_save);
+    void save_image(Ref<MResource> mres,int index,bool force_save);
 
     void recalculate_normals(bool use_thread=true,bool use_extra_margin=false);
     void refresh_all_uniforms();
