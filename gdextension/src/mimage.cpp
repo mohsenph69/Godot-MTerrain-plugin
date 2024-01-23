@@ -613,7 +613,7 @@ void MImage::save(Ref<MResource> mres,bool force_save) {
 			//Ref<Image> img = Image::create_from_data(width,height,false,format,background_data);
 			//godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
 			//ERR_FAIL_COND_MSG(err,"Can not save background image, image class erro: "+itos(err));
-			mres->insert_heightmap_rf(background_data,0.1,true,MResource::FILE_COMPRESSION_NONE);
+			mres->insert_heightmap_rf(background_data,DEFAULT_ACCURACY,true,MResource::FILE_COMPRESSION_NONE);
 			is_saved_layers.set(0,true);
 		}
 		for(int i=1;i<image_layers.size();i++){

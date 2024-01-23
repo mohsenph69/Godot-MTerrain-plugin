@@ -98,7 +98,7 @@ struct InstanceDistance
 
 struct MSaveConfig
 {
-    float accuracy=0.1;
+    float accuracy=DEFAULT_ACCURACY;
     bool heightmap_compress_qtq=true;
     MResource::FileCompress heightmap_file_compress=MResource::FileCompress::FILE_COMPRESSION_NONE;
     HashMap<StringName,MResource::Compress> data_compress;

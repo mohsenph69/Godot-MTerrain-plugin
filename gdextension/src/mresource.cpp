@@ -722,6 +722,7 @@ void MResource::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("insert_data","data","name","format","compress","file_compress"), &MResource::insert_data);
     ClassDB::bind_method(D_METHOD("get_data","name"), &MResource::get_data);
+    ClassDB::bind_method(D_METHOD("remove_data","name"), &MResource::remove_data);
 
     ClassDB::bind_method(D_METHOD("get_compress","name"), &MResource::get_compress);
     ClassDB::bind_method(D_METHOD("get_file_compress","name"), &MResource::get_file_compress);
@@ -951,6 +952,11 @@ PackedByteArray MResource::get_data(const StringName& name){
     }
     ERR_FAIL_COND_V(comp_data.size()!=data_size,comp_data);
     return comp_data;
+}
+
+void MResource::remove_data(const StringName& name){
+    ERR_FAIL_COND(!compressed_data.has(name));
+    compressed_data.erase(name);
 }
 
 void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,bool compress_qtq,MResource::FileCompress file_compress){

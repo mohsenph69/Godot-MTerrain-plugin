@@ -51,7 +51,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-scroll_vertical = 100
 
 [node name="VBoxContainer" type="VBoxContainer" parent="base/TabContainer/Save config/scroll"]
 layout_mode = 2
@@ -98,7 +97,7 @@ text = "Compression accuracy"
 
 [node name="LineEdit" type="LineEdit" parent="base/TabContainer/Save config/scroll/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
-text = "0.1"
+text = "0.02"
 
 [node name="hfilecomrpess" type="HBoxContainer" parent="base/TabContainer/Save config/scroll/VBoxContainer"]
 layout_mode = 2

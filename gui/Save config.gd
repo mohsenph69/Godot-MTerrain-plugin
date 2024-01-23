@@ -13,7 +13,7 @@ extends TabBar
 @onready var is_force_apply_checkbox:=$scroll/VBoxContainer/force_apply_all
 
 
-const default_accuracy:=0.1
+const default_accuracy:=0.02
 const config_file_name:=".save_config.ini"
 
 var is_init = false
@@ -138,7 +138,6 @@ func is_changed_image_state(dname:StringName):
 	if state_init["compress_qtq"] != compress_qtq.button_pressed:
 		return true
 	if abs(state_init["accuracy"] - float(accuracy.text)) > 0.0001:
-		print("AAA change ",abs(state_init["accuracy"] - float(accuracy.text)))
 		return true
 	if state_init["file_compress"] != hfile_compress.selected:
 		return true

@@ -204,6 +204,7 @@ class MResource : public Resource {
 
     void insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,MResource::Compress compress,MResource::FileCompress file_compress);
     PackedByteArray get_data(const StringName& name);
+    void remove_data(const StringName& name);
 
     void insert_heightmap_rf(const PackedByteArray& data,float accuracy,bool compress_qtq = true,MResource::FileCompress file_compress=MResource::FileCompress::FILE_COMPRESSION_NONE);
     PackedByteArray get_heightmap_rf();

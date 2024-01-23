@@ -49,4 +49,6 @@
 #endif
 
 
+#define DEFAULT_ACCURACY 0.02
+
 #endif
