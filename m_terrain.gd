@@ -35,7 +35,7 @@ var current_window_info=null
 func _enter_tree():
 	if Engine.is_editor_hint():
 		add_tool_menu_item("MTerrain importer", Callable(self,"show_import_window"))
-		add_tool_menu_item("MTerrain image creator", Callable(self,"show_image_creator_window"))
+		add_tool_menu_item("MTerrain image create/remove", Callable(self,"show_image_creator_window"))
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
 		tools.toggle_paint_mode.connect(Callable(self,"toggle_paint_mode"))
 		tools.save_request.connect(Callable(self,"save_request"))

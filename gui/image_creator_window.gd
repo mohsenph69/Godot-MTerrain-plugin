@@ -6,8 +6,8 @@ extends Window
 @onready var format_option := $VBoxContainer/uniform_name2/OptionButton
 @onready var uniform_name_empty_error:=$VBoxContainer/no_terrain2
 @onready var def_color_picker:= $VBoxContainer/def_color/ColorPickerButton
-@onready var file_compress_option:=$VBoxContainer/hb2/data_compress_option
-@onready var compress_option:=$VBoxContainer/hb3/file_compress
+@onready var file_compress_option:=$VBoxContainer/hb3/file_compress
+@onready var compress_option:=$VBoxContainer/hb2/data_compress_option
 @onready var remove_uniform_list:= $VBoxContainer/uniform_name3/remove_uniform_list
 
 const config_file_name:=".save_config.ini"
@@ -93,6 +93,7 @@ func _on_remove_button_up():
 		if file_name.get_extension() == "res":
 			res_names.append(file_name)
 		file_name = dir.get_next()
+	remove_config_file(dname)
 	for res_name in res_names:
 		var path = data_dir.path_join(res_name)
 		var mres = load(path)
@@ -117,4 +118,19 @@ func update_config_file():
 	
 	config.set_value(uniform_name,"compress",compress)
 	config.set_value(uniform_name,"file_compress",file_compress)
+	config.save(path)
+
+
+func remove_config_file(dname):
+	var path = data_dir.path_join(config_file_name)
+	var config = ConfigFile.new()
+	if FileAccess.file_exists(path):
+		var err = config.load(path)
+		if err != OK:
+			printerr("Can not load config with err ",err)
+			return
+	else:
+		return
+	
+	config.erase_section(dname)
 	config.save(path)
