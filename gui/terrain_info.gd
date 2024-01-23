@@ -18,6 +18,8 @@ extends Window
 
 @onready var info:=$base/TabContainer/info/info
 
+@onready var save_config:=$"base/TabContainer/Save config"
+
 var version:String
 
 var terrain:MTerrain=null
@@ -32,6 +34,7 @@ var terrain_pixel_size:Vector2
 
 
 func generate_info(_t:MTerrain,_version:String):
+	save_config.init_save_config(_t)
 	terrain = _t
 	version = _version
 	if not _t:
@@ -78,3 +81,4 @@ func _on_info_meta_clicked(meta):
 
 func _on_close_requested():
 	queue_free()
+

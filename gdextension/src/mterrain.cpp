@@ -26,6 +26,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("finish_update_physics"), &MTerrain::finish_update_physics);
     ClassDB::bind_method(D_METHOD("get_image_list"), &MTerrain::get_image_list);
     ClassDB::bind_method(D_METHOD("get_image_id", "uniform_name"), &MTerrain::get_image_id);
+    ClassDB::bind_method(D_METHOD("set_save_config","conf"), &MTerrain::set_save_config);
     ClassDB::bind_method(D_METHOD("save_image","image_index","force_save"), &MTerrain::save_image);
     ClassDB::bind_method(D_METHOD("has_unsave_image"), &MTerrain::has_unsave_image);
     ClassDB::bind_method(D_METHOD("save_all_dirty_images"), &MTerrain::save_all_dirty_images);
@@ -459,6 +460,14 @@ PackedStringArray MTerrain::get_image_list(){
 int MTerrain::get_image_id(String uniform_name){
     ERR_FAIL_COND_V(!terrain_material.is_valid(),-1);
     return terrain_material->get_texture_id(uniform_name);
+}
+
+void MTerrain::set_save_config(Ref<ConfigFile> conf){
+    ERR_FAIL_COND(!grid);
+    PackedStringArray sections = conf->get_sections();
+    for(String section : sections){
+        UtilityFunctions::print("Section ",section);
+    }
 }
 
 void MTerrain::save_image(int image_index, bool force_save) {

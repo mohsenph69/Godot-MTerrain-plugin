@@ -122,6 +122,7 @@ class MTerrain : public  Node3D {
     bool is_finish_updating_physics();
     PackedStringArray get_image_list();
     int get_image_id(String uniform_name);
+    void set_save_config(Ref<ConfigFile> conf);
     void save_image(int image_index, bool force_save);
     bool has_unsave_image();
     void save_all_dirty_images();

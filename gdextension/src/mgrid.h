@@ -21,6 +21,7 @@
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/classes/physics_material.hpp>
+#include <godot_cpp/classes/config_file.hpp>
 
 
 
@@ -95,6 +96,14 @@ struct InstanceDistance
     }
 };
 
+struct MSaveConfig
+{
+    float accuracy=0.1;
+    bool heightmap_compress_qtq=true;
+    MResource::FileCompress heightmap_file_compress=MResource::FileCompress::FILE_COMPRESSION_NONE;
+    HashMap<StringName,MResource::Compress> data_compress;
+    HashMap<StringName,MResource::FileCompress> data_file_compress;
+};
 
 class MGrid : public Object {
     GDCLASS(MGrid, Object);
@@ -151,6 +160,7 @@ class MGrid : public Object {
     static void _bind_methods(){};
 
     public:
+    MSaveConfig save_config;
     Ref<PhysicsMaterial> physics_material;
     int collision_layer=1;
     int collision_mask=1;

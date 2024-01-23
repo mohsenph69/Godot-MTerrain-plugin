@@ -723,6 +723,11 @@ void MResource::_bind_methods(){
     ClassDB::bind_method(D_METHOD("insert_data","data","name","format","compress","file_compress"), &MResource::insert_data);
     ClassDB::bind_method(D_METHOD("get_data","name"), &MResource::get_data);
 
+    ClassDB::bind_method(D_METHOD("get_compress","name"), &MResource::get_compress);
+    ClassDB::bind_method(D_METHOD("get_file_compress","name"), &MResource::get_file_compress);
+    ClassDB::bind_method(D_METHOD("is_compress_qtq"), &MResource::is_compress_qtq);
+
+
     BIND_ENUM_CONSTANT(COMPRESS_NONE);
     BIND_ENUM_CONSTANT(COMPRESS_QOI);
     BIND_ENUM_CONSTANT(COMPRESS_PNG);
@@ -1594,4 +1599,53 @@ bool MResource::get_supported_png_format(Image::Format format){
             return true;
 	}
 	return false;
+}
+
+
+MResource::Compress MResource::get_compress(const StringName& name){
+    ERR_FAIL_COND_V(!compressed_data.has(name),MResource::Compress::COMPRESS_NONE);
+    uint16_t flag;
+    {
+        const PackedByteArray data = compressed_data[name];
+        flag = decode_uint16(data.ptr()+FLAGS_INDEX);
+    }
+    if(flag & FLAG_COMPRESSION_QOI){
+        return MResource::Compress::COMPRESS_QOI;
+    }
+    if(flag & FLAG_COMPRESSION_PNG){
+        return MResource::Compress::COMPRESS_PNG;
+    }
+    return MResource::Compress::COMPRESS_NONE;
+}
+
+MResource::FileCompress MResource::get_file_compress(const StringName& name){
+    ERR_FAIL_COND_V(!compressed_data.has(name),MResource::FileCompress::FILE_COMPRESSION_NONE);
+    uint16_t flag;
+    {
+        const PackedByteArray data = compressed_data[name];
+        flag = decode_uint16(data.ptr()+FLAGS_INDEX);
+    }
+    if(flag & FLAG_COMPRESSION_FASTLZ){
+       return MResource::FileCompress::FILE_COMPRESSION_FASTLZ;
+    }
+    if(flag & FLAG_COMPRESSION_DEFLATE){
+        return MResource::FileCompress::FILE_COMPRESSION_DEFLATE;
+    }
+    if(flag & FLAG_COMPRESSION_ZSTD){
+        return MResource::FileCompress::FILE_COMPRESSION_ZSTD;
+    }
+    if(flag & FLAG_COMPRESSION_GZIP){
+        return MResource::FileCompress::FILE_COMPRESSION_GZIP;
+    }
+    return MResource::FileCompress::FILE_COMPRESSION_NONE;
+}
+
+bool MResource::is_compress_qtq(){
+    ERR_FAIL_COND_V(!compressed_data.has(HEIGHTMAP_NAME),false);
+    uint16_t flag;
+    {
+        const PackedByteArray data = compressed_data[HEIGHTMAP_NAME];
+        flag = decode_uint16(data.ptr()+FLAGS_INDEX);
+    }
+    return flag & FLAG_COMPRESSION_QTQ;
 }

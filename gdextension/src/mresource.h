@@ -101,7 +101,6 @@
 #define FLAG_COMPRESSION_DEFLATE 64
 #define FLAG_COMPRESSION_ZSTD 128
 #define FLAG_COMPRESSION_GZIP 256
-#define FLAG_COMPRESSION_BROTLI 512
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
@@ -245,6 +244,10 @@ class MResource : public Resource {
 
     int get_supported_qoi_format_channel_count(Image::Format format);
     bool get_supported_png_format(Image::Format format);
+
+    MResource::Compress get_compress(const StringName& name);
+    MResource::FileCompress get_file_compress(const StringName& name);
+    bool is_compress_qtq();
 };
 
 VARIANT_ENUM_CAST(MResource::Compress);
