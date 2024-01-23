@@ -166,6 +166,7 @@ func _on_apply_button_up():
 			has_change = true
 			break
 	if not has_change:
+		print("Nothing to change")
 		return
 	var dir = DirAccess.open(terrain.dataDir)
 	if not dir:

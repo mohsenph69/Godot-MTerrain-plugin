@@ -82,3 +82,6 @@ func _on_info_meta_clicked(meta):
 func _on_close_requested():
 	queue_free()
 
+
+
+

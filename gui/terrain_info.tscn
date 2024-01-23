@@ -1,8 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://bcvync03h4h35"]
+[gd_scene load_steps=11 format=3 uid="uid://bcvync03h4h35"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/terrain_info.gd" id="1_wd31j"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/Save config.gd" id="2_iihim"]
 [ext_resource type="StyleBox" uid="uid://cjys1hccuc4wx" path="res://addons/m_terrain/gui/styles/terrain_infor_lable_stylebox.tres" id="2_mc1wb"]
+[ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="3_41fbb"]
+[ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="4_cuomh"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_283b4"]
 content_margin_left = 5.0
@@ -155,16 +157,8 @@ layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_g3do0")
 text = "Compress"
 
-[node name="data_compress_option" type="OptionButton" parent="base/TabContainer/Save config/scroll/VBoxContainer/hb2"]
+[node name="data_compress_option" parent="base/TabContainer/Save config/scroll/VBoxContainer/hb2" instance=ExtResource("3_41fbb")]
 layout_mode = 2
-item_count = 3
-selected = 0
-popup/item_0/text = "COMPRESS_NONE"
-popup/item_0/id = 0
-popup/item_1/text = "COMPRESS_QOI"
-popup/item_1/id = 1
-popup/item_2/text = "COMPRESS_PNG"
-popup/item_2/id = 2
 
 [node name="hb3" type="HBoxContainer" parent="base/TabContainer/Save config/scroll/VBoxContainer"]
 layout_mode = 2
@@ -174,20 +168,8 @@ layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_g3do0")
 text = "File Compress"
 
-[node name="file_compress" type="OptionButton" parent="base/TabContainer/Save config/scroll/VBoxContainer/hb3"]
+[node name="file_compress" parent="base/TabContainer/Save config/scroll/VBoxContainer/hb3" instance=ExtResource("4_cuomh")]
 layout_mode = 2
-item_count = 5
-selected = 0
-popup/item_0/text = "FILE_COMPRESSION_NONE"
-popup/item_0/id = 0
-popup/item_1/text = "FILE_COMPRESSION_FASTLZ"
-popup/item_1/id = 1
-popup/item_2/text = "FILE_COMPRESSION_DEFLATE"
-popup/item_2/id = 2
-popup/item_3/text = "FILE_COMPRESSION_ZSTD"
-popup/item_3/id = 3
-popup/item_4/text = "FILE_COMPRESSION_GZIP"
-popup/item_4/id = 4
 
 [node name="HSeparator6" type="HSeparator" parent="base/TabContainer/Save config/scroll/VBoxContainer"]
 layout_mode = 2

@@ -1,6 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://gsibulkr5nt"]
+[gd_scene load_steps=6 format=3 uid="uid://gsibulkr5nt"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/image_creator_window.gd" id="1_ietn6"]
+[ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="2_ty6od"]
+[ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="3_ldhh5"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bk6nk"]
 content_margin_left = 5.0
@@ -91,16 +93,8 @@ layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_bk6nk")
 text = "Compress"
 
-[node name="data_compress_option" type="OptionButton" parent="VBoxContainer/hb2"]
+[node name="data_compress_option" parent="VBoxContainer/hb2" instance=ExtResource("2_ty6od")]
 layout_mode = 2
-item_count = 3
-selected = 0
-popup/item_0/text = "COMPRESS_NONE"
-popup/item_0/id = 0
-popup/item_1/text = "COMPRESS_QOI"
-popup/item_1/id = 1
-popup/item_2/text = "COMPRESS_PNG"
-popup/item_2/id = 2
 
 [node name="hb3" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -110,20 +104,8 @@ layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_h7iju")
 text = "File Compress"
 
-[node name="file_compress" type="OptionButton" parent="VBoxContainer/hb3"]
+[node name="file_compress" parent="VBoxContainer/hb3" instance=ExtResource("3_ldhh5")]
 layout_mode = 2
-item_count = 5
-selected = 0
-popup/item_0/text = "FILE_COMPRESSION_NONE"
-popup/item_0/id = 0
-popup/item_1/text = "FILE_COMPRESSION_FASTLZ"
-popup/item_1/id = 1
-popup/item_2/text = "FILE_COMPRESSION_DEFLATE"
-popup/item_2/id = 2
-popup/item_3/text = "FILE_COMPRESSION_ZSTD"
-popup/item_3/id = 3
-popup/item_4/text = "FILE_COMPRESSION_GZIP"
-popup/item_4/id = 4
 
 [node name="create" type="Button" parent="VBoxContainer"]
 layout_mode = 2

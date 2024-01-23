@@ -66,7 +66,7 @@ func _enter_tree():
 func _exit_tree():
 	if Engine.is_editor_hint():
 		remove_tool_menu_item("MTerrain importer")
-		remove_tool_menu_item("MTerrain image creator")
+		remove_tool_menu_item("MTerrain image create/remove")
 		remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		remove_control_from_docks(paint_panel)
 		paint_panel.queue_free()
@@ -286,6 +286,9 @@ func toggle_paint_mode(input):
 		remove_control_from_docks(paint_panel)
 
 func save_request():
+	if not is_instance_valid(active_terrain):
+		active_terrain = null
+		return
 	if active_terrain:
 		active_terrain.save_all_dirty_images()
 
@@ -294,6 +297,9 @@ func brush_size_changed(value):
 
 
 func _save_external_data():
+	if not is_instance_valid(active_terrain):
+		active_terrain = null
+		return
 	if active_terrain:
 		active_terrain.save_all_dirty_images()
 

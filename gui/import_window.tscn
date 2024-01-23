@@ -1,6 +1,12 @@
-[gd_scene load_steps=2 format=3 uid="uid://bi64wdm5e26po"]
+[gd_scene load_steps=5 format=3 uid="uid://bi64wdm5e26po"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/import_window.gd" id="1_1yy7h"]
+[ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="2_7c003"]
+[ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="3_6huwx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cs33g"]
+content_margin_left = 5.0
+bg_color = Color(0.141176, 0.160784, 0.105882, 1)
 
 [node name="import_window" type="Window"]
 title = "MTerrain Importer"
@@ -8,118 +14,125 @@ initial_position = 1
 size = Vector2i(550, 400)
 script = ExtResource("1_1yy7h")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="scroll" type="ScrollContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 6.0
-offset_right = -6.0
-offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="scroll"]
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="err" type="Label" parent="scroll/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.580392, 0.580392, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_cs33g")
+autowrap_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="scroll/VBoxContainer"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="scroll/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "select"
 
-[node name="filepath_line" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+[node name="filepath_line" type="LineEdit" parent="scroll/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "File Path"
 
-[node name="image_dimension" type="HBoxContainer" parent="VBoxContainer"]
+[node name="image_dimension" type="HBoxContainer" parent="scroll/VBoxContainer"]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Label" parent="VBoxContainer/image_dimension"]
+[node name="Button" type="Label" parent="scroll/VBoxContainer/image_dimension"]
 layout_mode = 2
 text = "Image Dimension "
 
-[node name="width" type="LineEdit" parent="VBoxContainer/image_dimension"]
+[node name="width" type="LineEdit" parent="scroll/VBoxContainer/image_dimension"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "width"
 
-[node name="height" type="LineEdit" parent="VBoxContainer/image_dimension"]
+[node name="height" type="LineEdit" parent="scroll/VBoxContainer/image_dimension"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "height"
 
-[node name="flips" type="HBoxContainer" parent="VBoxContainer"]
+[node name="flips" type="HBoxContainer" parent="scroll/VBoxContainer"]
 visible = false
 layout_mode = 2
 
-[node name="flip_x" type="CheckBox" parent="VBoxContainer/flips"]
+[node name="flip_x" type="CheckBox" parent="scroll/VBoxContainer/flips"]
 layout_mode = 2
 text = "Flip X"
 
-[node name="flip_y" type="CheckBox" parent="VBoxContainer/flips"]
+[node name="flip_y" type="CheckBox" parent="scroll/VBoxContainer/flips"]
 layout_mode = 2
 button_pressed = true
 text = "Flip Y"
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="scroll/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer2"]
+[node name="Label" type="Label" parent="scroll/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
 text = "Region Size in pixel:"
 
-[node name="region_size_line" type="LineEdit" parent="VBoxContainer/HBoxContainer2"]
+[node name="region_size_line" type="LineEdit" parent="scroll/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
 text = "0"
 
-[node name="is_heightmap_checkbox" type="CheckButton" parent="VBoxContainer"]
+[node name="is_heightmap_checkbox" type="CheckButton" parent="scroll/VBoxContainer"]
 layout_mode = 2
 text = "Is Heightmap"
 
-[node name="min_height" type="HBoxContainer" parent="VBoxContainer"]
+[node name="min_height" type="HBoxContainer" parent="scroll/VBoxContainer"]
 visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/min_height"]
+[node name="Label" type="Label" parent="scroll/VBoxContainer/min_height"]
 layout_mode = 2
 text = "min height:"
 
-[node name="min_height_line" type="LineEdit" parent="VBoxContainer/min_height"]
+[node name="min_height_line" type="LineEdit" parent="scroll/VBoxContainer/min_height"]
 layout_mode = 2
 text = "0"
 
-[node name="max_height" type="HBoxContainer" parent="VBoxContainer"]
+[node name="max_height" type="HBoxContainer" parent="scroll/VBoxContainer"]
 visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/max_height"]
+[node name="Label" type="Label" parent="scroll/VBoxContainer/max_height"]
 layout_mode = 2
 text = "max height:"
 
-[node name="max_height_line" type="LineEdit" parent="VBoxContainer/max_height"]
+[node name="max_height_line" type="LineEdit" parent="scroll/VBoxContainer/max_height"]
 layout_mode = 2
 text = "1"
 
-[node name="uniform_name" type="HBoxContainer" parent="VBoxContainer"]
+[node name="uniform_name" type="HBoxContainer" parent="scroll/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/uniform_name"]
+[node name="Label" type="Label" parent="scroll/VBoxContainer/uniform_name"]
 layout_mode = 2
 text = "Uniform name:"
 
-[node name="uniform_name_line" type="LineEdit" parent="VBoxContainer/uniform_name"]
+[node name="uniform_name_line" type="LineEdit" parent="scroll/VBoxContainer/uniform_name"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="uniform_name2" type="HBoxContainer" parent="VBoxContainer"]
+[node name="uniform_name2" type="HBoxContainer" parent="scroll/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/uniform_name2"]
+[node name="Label" type="Label" parent="scroll/VBoxContainer/uniform_name2"]
 layout_mode = 2
 text = "Format Enum number"
 
-[node name="image_format_option" type="OptionButton" parent="VBoxContainer/uniform_name2"]
+[node name="image_format_option" type="OptionButton" parent="scroll/VBoxContainer/uniform_name2"]
 layout_mode = 2
 item_count = 12
 popup/item_0/text = "FORMAT_L8"
@@ -147,31 +160,43 @@ popup/item_10/id = 10
 popup/item_11/text = "FORMAT_RGBAF"
 popup/item_11/id = 11
 
-[node name="tmp" type="HBoxContainer" parent="VBoxContainer"]
+[node name="compress_qtq" type="CheckBox" parent="scroll/VBoxContainer"]
+visible = false
+layout_mode = 2
+button_pressed = true
+text = "compress_qtq"
+
+[node name="uniform_name3" type="HBoxContainer" parent="scroll/VBoxContainer"]
+visible = false
 layout_mode = 2
 
-[node name="tmp_folder_button" type="Button" parent="VBoxContainer/tmp"]
+[node name="Label" type="Label" parent="scroll/VBoxContainer/uniform_name3"]
+layout_mode = 2
+text = "Accuracy"
+
+[node name="accuracy" type="LineEdit" parent="scroll/VBoxContainer/uniform_name3"]
+layout_mode = 2
+text = "0.02"
+
+[node name="data_compress_option" parent="scroll/VBoxContainer" instance=ExtResource("2_7c003")]
+layout_mode = 2
+
+[node name="file_compress" parent="scroll/VBoxContainer" instance=ExtResource("3_6huwx")]
+layout_mode = 2
+
+[node name="save" type="HBoxContainer" parent="scroll/VBoxContainer"]
+layout_mode = 2
+
+[node name="save_folder_button" type="Button" parent="scroll/VBoxContainer/save"]
 layout_mode = 2
 text = "select"
 
-[node name="tmp_folder_line" type="LineEdit" parent="VBoxContainer/tmp"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "tmp folder"
-
-[node name="save" type="HBoxContainer" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="save_folder_button" type="Button" parent="VBoxContainer/save"]
-layout_mode = 2
-text = "select"
-
-[node name="save_folder_line" type="LineEdit" parent="VBoxContainer/save"]
+[node name="save_folder_line" type="LineEdit" parent="scroll/VBoxContainer/save"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Save folder"
 
-[node name="import" type="Button" parent="VBoxContainer"]
+[node name="import" type="Button" parent="scroll/VBoxContainer"]
 layout_mode = 2
 text = "Import"
 
@@ -184,14 +209,6 @@ file_mode = 1
 access = 2
 filters = PackedStringArray("*.r16", "*.exr", "*.png", "*.bmp", "*.webp", "*.jpg", "*.jpeg")
 
-[node name="FileDialog_tmp" type="FileDialog" parent="."]
-title = "Open a Directory"
-initial_position = 1
-size = Vector2i(508, 450)
-ok_button_text = "Select Current Folder"
-file_mode = 2
-access = 2
-
 [node name="FileDialog_save" type="FileDialog" parent="."]
 title = "Open a Directory"
 initial_position = 1
@@ -200,13 +217,11 @@ ok_button_text = "Select Current Folder"
 file_mode = 2
 
 [connection signal="close_requested" from="." to="." method="_on_close_requested"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/Button" to="." method="_on_button_button_down"]
-[connection signal="text_changed" from="VBoxContainer/HBoxContainer/filepath_line" to="." method="_on_filepath_line_text_changed"]
-[connection signal="toggled" from="VBoxContainer/is_heightmap_checkbox" to="." method="_on_check_button_toggled"]
-[connection signal="pressed" from="VBoxContainer/tmp/tmp_folder_button" to="." method="_on_tmp_folder_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/save/save_folder_button" to="." method="_on_save_folder_button_pressed"]
-[connection signal="text_changed" from="VBoxContainer/save/save_folder_line" to="." method="_on_filepath_line_text_changed"]
-[connection signal="pressed" from="VBoxContainer/import" to="." method="_on_import_pressed"]
+[connection signal="button_down" from="scroll/VBoxContainer/HBoxContainer/Button" to="." method="_on_button_button_down"]
+[connection signal="text_changed" from="scroll/VBoxContainer/HBoxContainer/filepath_line" to="." method="_on_filepath_line_text_changed"]
+[connection signal="toggled" from="scroll/VBoxContainer/is_heightmap_checkbox" to="." method="_on_check_button_toggled"]
+[connection signal="pressed" from="scroll/VBoxContainer/save/save_folder_button" to="." method="_on_save_folder_button_pressed"]
+[connection signal="text_changed" from="scroll/VBoxContainer/save/save_folder_line" to="." method="_on_filepath_line_text_changed"]
+[connection signal="pressed" from="scroll/VBoxContainer/import" to="." method="_on_import_pressed"]
 [connection signal="files_selected" from="FileDialog" to="." method="_on_file_dialog_files_selected"]
-[connection signal="dir_selected" from="FileDialog_tmp" to="." method="_on_file_dialog_tmp_dir_selected"]
 [connection signal="dir_selected" from="FileDialog_save" to="." method="_on_file_dialog_save_dir_selected"]
