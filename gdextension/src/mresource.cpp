@@ -1268,7 +1268,7 @@ Vector<uint32_t> MResource::flatten_ols(float* data,uint32_t witdth,uint16_t dev
     return planes;
 }
 
-void MResource::unflatten_ols(float* data,uint32_t witdth,uint8_t devision,const Vector<uint32_t>& headers){
+void MResource::unflatten_ols(float* data,uint32_t witdth,uint16_t devision,const Vector<uint32_t>& headers){
     ERR_FAIL_COND(headers.size()!=devision*devision);
     uint32_t section_width = witdth/devision;
     uint32_t header_index = 0;
