@@ -204,7 +204,7 @@ func apply_update_heightmap(mres:MResource):
 	var ac = float(accuracy.text)
 	var qtq = compress_qtq.button_pressed
 	var fcompress = hfile_compress.selected
-	var data = mres.get_heightmap_rf()
+	var data = mres.get_heightmap_rf(false)
 	mres.insert_heightmap_rf(data,ac,qtq,fcompress)
 
 func apply_update_data(dname:StringName,mres:MResource):
@@ -212,7 +212,7 @@ func apply_update_data(dname:StringName,mres:MResource):
 	var fcompress = state["file_compress"]
 	var compress = state["compress"]
 	var format = state["format"]
-	var data = mres.get_data(dname)
+	var data = mres.get_data(dname,false)
 	mres.insert_data(data,dname,format,compress,fcompress)
 
 

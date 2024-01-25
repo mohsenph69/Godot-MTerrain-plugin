@@ -34,7 +34,7 @@ var current_window_info=null
 
 func _enter_tree():
 	if Engine.is_editor_hint():
-		add_tool_menu_item("MTerrain importer", Callable(self,"show_import_window"))
+		add_tool_menu_item("MTerrain import/export", Callable(self,"show_import_window"))
 		add_tool_menu_item("MTerrain image create/remove", Callable(self,"show_image_creator_window"))
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
 		tools.toggle_paint_mode.connect(Callable(self,"toggle_paint_mode"))
@@ -65,7 +65,7 @@ func _enter_tree():
 
 func _exit_tree():
 	if Engine.is_editor_hint():
-		remove_tool_menu_item("MTerrain importer")
+		remove_tool_menu_item("MTerrain import/export")
 		remove_tool_menu_item("MTerrain image create/remove")
 		remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		remove_control_from_docks(paint_panel)
@@ -80,6 +80,8 @@ func _exit_tree():
 func show_import_window():
 	var window = import_window_res.instantiate()
 	add_child(window)
+	if active_terrain:
+		window.init_export(active_terrain)
 
 func show_image_creator_window():
 	var window = image_creator_window_res.instantiate()

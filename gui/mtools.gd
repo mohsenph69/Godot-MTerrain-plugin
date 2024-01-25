@@ -1,6 +1,5 @@
 @tool
 extends HBoxContainer
-class_name MTools
 
 @onready var height_lable := $h_lable
 @onready var distance_lable := $d_lable

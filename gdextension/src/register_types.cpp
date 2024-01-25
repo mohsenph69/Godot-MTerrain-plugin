@@ -16,7 +16,7 @@
 #include "mresource.h"
 #include "mchunk_generator.h"
 #include "mchunks.h"
-#include "mraw16.h"
+#include "mtool.h"
 #include "mregion.h"
 #include "mbrush_manager.h"
 #include "mcollision.h"
@@ -42,7 +42,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MChunkGenerator>();
 	ClassDB::register_class<MChunks>();
 	ClassDB::register_class<MRegion>();
-	ClassDB::register_class<MRaw16>();
+	ClassDB::register_class<MTool>();
 	ClassDB::register_class<MBrushManager>();
 	ClassDB::register_class<MCollision>();
 	ClassDB::register_class<MGrass>();

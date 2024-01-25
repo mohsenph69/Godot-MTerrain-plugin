@@ -718,10 +718,10 @@ void MResource::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_max_height"), &MResource::get_max_height);
 
     ClassDB::bind_method(D_METHOD("insert_heightmap_rf","data","accuracy","compress_qtq","file_compress"), &MResource::insert_heightmap_rf);
-    ClassDB::bind_method(D_METHOD("get_heightmap_rf"), &MResource::get_heightmap_rf);
+    ClassDB::bind_method(D_METHOD("get_heightmap_rf","two_plus_one"), &MResource::get_heightmap_rf);
 
     ClassDB::bind_method(D_METHOD("insert_data","data","name","format","compress","file_compress"), &MResource::insert_data);
-    ClassDB::bind_method(D_METHOD("get_data","name"), &MResource::get_data);
+    ClassDB::bind_method(D_METHOD("get_data","name","two_plus_one"), &MResource::get_data);
     ClassDB::bind_method(D_METHOD("remove_data","name"), &MResource::remove_data);
 
     ClassDB::bind_method(D_METHOD("get_compress","name"), &MResource::get_compress);
@@ -778,9 +778,10 @@ float MResource::get_min_height(){
         return min_height_cache;
     }
     StringName hname("heightmap");
-    ERR_FAIL_COND_V(compressed_data.has(hname),min_height_cache);
+    ERR_FAIL_COND_V(!compressed_data.has(hname),min_height_cache);
     PackedByteArray data = compressed_data[hname];
-    min_height_cache = compressed_data[MIN_HEIGHT_INDEX];
+    min_height_cache = decode_float(data.ptr()+MIN_HEIGHT_INDEX);
+    max_height_cache = decode_float(data.ptr()+MAX_HEIGHT_INDEX);
     return min_height_cache;
 }
 
@@ -790,9 +791,10 @@ float MResource::get_max_height(){
         return max_height_cache;
     }
     StringName hname("heightmap");
-    ERR_FAIL_COND_V(compressed_data.has(hname),max_height_cache);
+    ERR_FAIL_COND_V(!compressed_data.has(hname),max_height_cache);
     PackedByteArray data = compressed_data[hname];
-    max_height_cache = compressed_data[MAX_HEIGHT_INDEX];
+    min_height_cache = decode_float(data.ptr()+MIN_HEIGHT_INDEX);
+    max_height_cache = decode_float(data.ptr()+MAX_HEIGHT_INDEX);
     return max_height_cache;
 }
 
@@ -893,7 +895,7 @@ void MResource::insert_data(const PackedByteArray& data, const StringName& name,
     compressed_data[name] = new_compressed_data;
 }
 
-PackedByteArray MResource::get_data(const StringName& name){
+PackedByteArray MResource::get_data(const StringName& name,bool two_plus_one){
     PackedByteArray out;
     {
         StringName hname("heightmap");
@@ -951,6 +953,9 @@ PackedByteArray MResource::get_data(const StringName& name){
         comp_data = img->get_data();
     }
     ERR_FAIL_COND_V(comp_data.size()!=data_size,comp_data);
+    if(two_plus_one){
+        comp_data = add_empty_pixels_to_right_bottom(comp_data,pixel_size,width);
+    }
     return comp_data;
 }
 
@@ -1017,11 +1022,11 @@ void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,b
     max_height_cache = max_height;
     uint32_t px_amount = width*width;
     for(uint32_t i=1;i<px_amount;i++){
-        if(min_height > data[i]){
-            min_height = data[i];
+        if(min_height > data_ptr[i]){
+            min_height = data_ptr[i];
         }
-        if(max_height < data[i]){
-            max_height = data[i];
+        if(max_height < data_ptr[i]){
+            max_height = data_ptr[i];
         }
     }
     encode_float(min_height,new_compressed_data.ptrw()+MIN_HEIGHT_INDEX);
@@ -1081,7 +1086,7 @@ void MResource::insert_heightmap_rf(const PackedByteArray& data,float accuracy,b
 }
 
 
-PackedByteArray MResource::get_heightmap_rf(){
+PackedByteArray MResource::get_heightmap_rf(bool two_plus_one){
     PackedByteArray out;
     StringName name("heightmap");
     ERR_FAIL_COND_V(!compressed_data.has(name),out);
@@ -1143,9 +1148,11 @@ PackedByteArray MResource::get_heightmap_rf(){
     if(flags & FLAG_FLATTEN_OLS){ 
         unflatten_ols((float*)out.ptrw(),width,devision,flatten_section_header);
     }
-    PackedByteArray out_plus_one = add_empty_pixels_to_right_bottom(out,pixel_size,width);
-    return out_plus_one;
-
+    if(two_plus_one){
+        PackedByteArray out_plus_one = add_empty_pixels_to_right_bottom(out,pixel_size,width);
+        return out_plus_one;
+    }
+    return out;
 }
 
 PackedByteArray MResource::add_empty_pixels_to_right_bottom(const PackedByteArray& data, uint8_t pixel_size, uint32_t width){

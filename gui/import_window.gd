@@ -1,35 +1,35 @@
 @tool
 extends Window
 
-@onready var err := $scroll/VBoxContainer/err
+@onready var err := $tab/import/err
 
 @onready var fileDialog = $FileDialog
 @onready var fileDialog_save_folder = $FileDialog_save
-@onready var region_container = $scroll/VBoxContainer/HBoxContainer2
-@onready var save_folder_line = $scroll/VBoxContainer/save/save_folder_line
-@onready var select_file_line: = $scroll/VBoxContainer/HBoxContainer/filepath_line
-@onready var image_dimension_root: = $scroll/VBoxContainer/image_dimension
-@onready var image_width_line: = $scroll/VBoxContainer/image_dimension/width
-@onready var image_height_line: = $scroll/VBoxContainer/image_dimension/height
-@onready var min_height_root:= $scroll/VBoxContainer/min_height
-@onready var max_height_root:= $scroll/VBoxContainer/max_height
-@onready var unform_name_line:=$scroll/VBoxContainer/uniform_name/uniform_name_line
-@onready var is_heightmap_checkbox:= $scroll/VBoxContainer/is_heightmap_checkbox
-@onready var min_height_line := $scroll/VBoxContainer/min_height/min_height_line
-@onready var max_height_line := $scroll/VBoxContainer/max_height/max_height_line
-@onready var region_size_line:= $scroll/VBoxContainer/HBoxContainer2/region_size_line
-@onready var width_line:= $scroll/VBoxContainer/image_dimension/width
-@onready var height_line:= $scroll/VBoxContainer/image_dimension/height
-@onready var image_format_option:=$scroll/VBoxContainer/uniform_name2/image_format_option
-@onready var flips_container := $scroll/VBoxContainer/flips
-@onready var flip_x_checkbox := $scroll/VBoxContainer/flips/flip_x
-@onready var flip_y_checkbox := $scroll/VBoxContainer/flips/flip_y
+@onready var region_container = $tab/import/HBoxContainer2
+@onready var save_folder_line = $tab/import/save/save_folder_line
+@onready var select_file_line: = $tab/import/HBoxContainer/filepath_line
+@onready var image_dimension_root: = $tab/import/image_dimension
+@onready var image_width_line: = $tab/import/image_dimension/width
+@onready var image_height_line: = $tab/import/image_dimension/height
+@onready var min_height_root:= $tab/import/min_height
+@onready var max_height_root:= $tab/import/max_height
+@onready var unform_name_line:=$tab/import/uniform_name/uniform_name_line
+@onready var is_heightmap_checkbox:= $tab/import/is_heightmap_checkbox
+@onready var min_height_line := $tab/import/min_height/min_height_line
+@onready var max_height_line := $tab/import/max_height/max_height_line
+@onready var region_size_line:= $tab/import/HBoxContainer2/region_size_line
+@onready var width_line:= $tab/import/image_dimension/width
+@onready var height_line:= $tab/import/image_dimension/height
+@onready var image_format_option:=$tab/import/uniform_name2/image_format_option
+@onready var flips_container := $tab/import/flips
+@onready var flip_x_checkbox := $tab/import/flips/flip_x
+@onready var flip_y_checkbox := $tab/import/flips/flip_y
 
-@onready var accuracy_container := $scroll/VBoxContainer/uniform_name3
-@onready var accuracy_line := $scroll/VBoxContainer/uniform_name3/accuracy
-@onready var compress_qtq_checkbox := $scroll/VBoxContainer/compress_qtq
-@onready var data_compress_option := $scroll/VBoxContainer/data_compress_option
-@onready var file_compress_option := $scroll/VBoxContainer/file_compress
+@onready var accuracy_container := $tab/import/uniform_name3
+@onready var accuracy_line := $tab/import/uniform_name3/accuracy
+@onready var compress_qtq_checkbox := $tab/import/compress_qtq
+@onready var data_compress_option := $tab/import/data_compress_option
+@onready var file_compress_option := $tab/import/file_compress
 
 const format_RF_index = 8
 const config_file_name := ".save_config.ini"
@@ -140,9 +140,6 @@ func _on_import_pressed():
 	if(x==-1 or y==-1):
 		import_no_tile()
 	else: #And in this case there is tiled already and regions size will ignored
-		if not DirAccess.dir_exists_absolute(tmp_path) or tmp_path.is_empty():
-			perr("tmp folder does not exist")
-			return
 		import_tile()
 
 func is_valid_2n_plus_one(input:int):
@@ -176,7 +173,7 @@ func import_no_tile():
 		return
 	var img:Image
 	if ext=="r16":
-		img=MRaw16.get_image(file_path,width,height,min_height,max_height,false)
+		img=MTool.get_r16_image(file_path,width,height,min_height,max_height,false)
 	else:
 		img = Image.load_from_file(file_path)
 	if not img:
@@ -208,6 +205,8 @@ func import_no_tile():
 			var r_path:String = save_path.path_join(r_save_name)
 			var pos:=Vector2i(x,y)
 			pos *= (region_size)
+			if abs(pos.x - img_size.x) < 2 or abs(pos.y - img_size.y) < 2:
+				continue
 			var rect = Rect2i(pos, Vector2i(region_size,region_size));
 			var region_img:= img.get_region(rect)
 			if(image_format>=0 and not is_heightmap):
@@ -260,6 +259,9 @@ func import_tile():
 			y += 1
 			r_path = get_file_path(x,y,file_path)
 			if(r_path == ""):
+				if tiled_files.is_empty():
+					perr("Can't find first tile x=0 and y=0")
+					return
 				break
 		tiled_files[Vector2i(x,y)] = r_path
 		if x > x_size: x_size = x
@@ -292,7 +294,7 @@ func import_tile():
 			var r_save_path:String = save_path.path_join(r_save_name)
 			var img:Image
 			if ext == "r16":
-				img=MRaw16.get_image(r_path,0,0,min_height,max_height,false)
+				img=MTool.get_r16_image(r_path,0,0,min_height,max_height,false)
 			else:
 				img = Image.load_from_file(r_path)
 			if not img:
@@ -408,3 +410,230 @@ func update_config_file_for_data():
 	conf.set_value(unifrom_name,"compress",compress)
 	conf.set_value(unifrom_name,"file_compress",file_compress)
 	conf.save(path)
+
+
+###################### Export
+func _ready():
+	init_export($MTerrain)
+@onready var export_err := $tab/export/export_err
+@onready var einfo := $tab/export/einfo
+@onready var edata_name_option := $tab/export/edata_name_option
+@onready var eformat_option := $tab/export/eformat_option
+@onready var export_hc := $tab/export/export_hc
+@onready var emin_line := $tab/export/export_hc/min
+@onready var emax_line := $tab/export/export_hc/max
+@onready var export_path_line := $tab/export/HBoxContainer/LineEdit
+@onready var file_dialog_export := $FileDialog_export
+
+var active_terrain:MTerrain
+const format_for_heightmap := ["OpenEXR","raw16","Godot res"]
+const format_for_data := ["PNG","Godot res"]
+const format_for_all := ["Godot res"]
+
+var ednames:PackedStringArray
+
+func init_export(_t:MTerrain):
+	edata_name_option.clear()
+	eformat_option.clear()
+	export_err.visible = false
+	einfo.visible = false
+	var first_path = _t.dataDir.path_join("x0_y0.res")
+	if not ResourceLoader.exists(first_path):
+		print_export_err("Can not find Data "+first_path)
+		return
+	var mres:MResource
+	var mres_load = ResourceLoader.load(first_path)
+	if not mres_load:
+		print_export_err("Can not load "+first_path)
+		return
+	if not(mres_load is MResource):
+		print_export_err(first_path+" is not a MResource type")
+		return
+	mres = mres_load
+	var data_names = mres.compressed_data.keys()
+	for dname in data_names:
+		edata_name_option.add_item(dname)
+		ednames.push_back(dname)
+	edata_name_option.add_item("all")
+	edata_name_option.select(-1)
+	active_terrain = _t 
+
+
+
+func _on_edata_name_option_item_selected(index):
+	if index < 0: return
+	var dname = edata_name_option.get_item_text(index)
+	eformat_option.clear()
+	var is_h = dname == "heightmap"
+	export_hc.visible = is_h
+	einfo.visible = true
+	if is_h:
+		einfo.text="Min and Max height are used for normalizing heightmap before export, Godot res format does need this, Auto detect can take a while"
+	elif dname != "all":
+		einfo.text="PNG only support: L8,RGB8,RGBA8 using other format will automatically converted to these"
+	else:
+		einfo.visible = false
+	if is_h:
+		for o in format_for_heightmap:
+			eformat_option.add_item(o)
+	elif dname == "all":
+		einfo.visible
+		for o in format_for_all:
+			eformat_option.add_item(o)
+	else:
+		for o in format_for_data:
+			eformat_option.add_item(o)
+	eformat_option.select(-1)
+
+func _on_auto_min_max_detect_button_up():
+	if not active_terrain:
+		print_export_err("No active Terrain")
+		return
+	var first_path = active_terrain.dataDir.path_join("x0_y0.res")
+	if not ResourceLoader.exists(first_path):
+		print_export_err("Can not find Data "+first_path)
+		return
+	var mres:MResource
+	var mres_load = ResourceLoader.load(first_path)
+	if not mres_load:
+		print_export_err("Can not load "+first_path)
+		return
+	if not(mres_load is MResource):
+		print_export_err(first_path+" is not a MResource type")
+		return
+	mres = mres_load
+	var min_height:float=mres.get_min_height()
+	var max_height:float=mres.get_max_height()
+	var x:int=1
+	var y:int=0
+	while true:
+		var path = active_terrain.dataDir.path_join("x"+str(x)+"_y"+str(y)+".res")
+		if not ResourceLoader.exists(path):
+			y+=1
+			x=0
+			path = active_terrain.dataDir.path_join("x"+str(x)+"_y"+str(y)+".res")
+			if not ResourceLoader.exists(path):
+				break
+		x+=1
+		mres_load = ResourceLoader.load(path)
+		if not mres_load:
+			continue
+		if not (mres_load is MResource):
+			continue
+		mres = mres_load
+		if min_height > mres.get_min_height():
+			min_height = mres.get_min_height()
+		if max_height < mres.get_max_height():
+			max_height = mres.get_max_height()
+	emin_line.text = str(min_height)
+	emax_line.text = str(max_height)
+
+func _on_export_path_btn_button_up():
+	file_dialog_export.visible = true
+
+func _on_file_dialog_export_dir_selected(dir):
+	export_path_line.text = dir
+
+func _on_export_btn_button_up():
+	if edata_name_option.selected < 0:
+		print_export_err("No data name selected")
+		return
+	var selected_dname = edata_name_option.get_item_text(edata_name_option.selected)
+	if selected_dname.is_empty():
+		print_export_err("data name is empty")
+		return
+	if eformat_option.selected < 0:
+		print_export_err("No export format selected")
+		return
+	var export_format = eformat_option.get_item_text(eformat_option.selected)
+	if export_format.is_empty():
+		print_export_err("Format name is empty")
+		return
+	if not active_terrain:
+		print_export_err("No active Terrain")
+		return
+	if selected_dname == "all":
+		for ee in ednames:
+			export_data(ee,export_format)
+	else:
+		export_data(selected_dname,export_format)
+	queue_free()
+
+func export_data(dname:String,eformat:String):
+	var export_path :String = export_path_line.text
+	var min_height:float = float(emin_line.text)
+	var max_height:float = float(emax_line.text)
+	if (max_height - min_height <=0.000001) and dname == "heightmap" and eformat != "Godot res":
+		print_export_err("Min and Max height are not set")
+		return
+	if export_path.is_empty():
+		print_export_err("Export path is empty")
+		return
+	if not export_path.is_absolute_path():
+		print_export_err("Export path is not a valid absoulute path")
+		return
+	var mres_load
+	var mres:MResource
+	var x:int=0
+	var y:int=0
+	while true:
+		var path = active_terrain.dataDir.path_join("x"+str(x)+"_y"+str(y)+".res")
+		if not ResourceLoader.exists(path):
+			y+=1
+			x=0
+			path = active_terrain.dataDir.path_join("x"+str(x)+"_y"+str(y)+".res")
+			if not ResourceLoader.exists(path):
+				break
+		mres_load = ResourceLoader.load(path)
+		if not mres_load:
+			print_export_err("Can not load "+path)
+			continue
+		if not (mres_load is MResource):
+			print_export_err(path+" is not MResource type")
+			continue
+		mres = mres_load
+		var data:PackedByteArray
+		var img_format:int=-1
+		var width:int
+		if dname == "heightmap":
+			data = mres.get_heightmap_rf(false)
+			img_format = Image.FORMAT_RF
+		else:
+			data = mres.get_data(dname,false)
+		if data.size() == 0:
+			print_export_err("Something wrong can not save "+path)
+			continue
+		width = mres.get_data_width(dname)
+		if dname != "heightmap":
+			img_format = mres.get_data_format(dname)
+		var path_no_ext = export_path.path_join(dname+"_x"+str(x)+"_y"+str(y))
+		if eformat == "raw16":
+			var final_epath = path_no_ext + ".r16"
+			MTool.write_r16(final_epath,data,min_height,max_height)
+		elif eformat == "OpenEXR":
+			var final_epath = path_no_ext + ".exr"
+			if dname == "heightmap":
+				data = MTool.normalize_rf_data(data,min_height,max_height)
+			var img:=Image.create_from_data(width,width,false,img_format,data)
+			if dname == "heightmap":
+				img.save_exr(final_epath,true)
+			else:
+				img.save_exr(final_epath)
+		elif eformat == "PNG":
+			var final_epath = path_no_ext + ".png"
+			var img:=Image.create_from_data(width,width,false,img_format,data)
+			img.save_png(final_epath)
+		elif eformat == "Godot res":
+			var final_epath = path_no_ext + ".res"
+			var img:=Image.create_from_data(width,width,false,img_format,data)
+			ResourceSaver.save(img,final_epath)
+		else:
+			print_export_err("Unknow export format")
+			return
+		x+=1
+
+
+func print_export_err(msg:String):
+	export_err.visible = true
+	export_err.text = msg
+	printerr(msg)

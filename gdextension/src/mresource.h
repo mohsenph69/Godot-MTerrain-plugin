@@ -203,11 +203,11 @@ class MResource : public Resource {
     float get_max_height();
 
     void insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,MResource::Compress compress,MResource::FileCompress file_compress);
-    PackedByteArray get_data(const StringName& name);
+    PackedByteArray get_data(const StringName& name,bool two_plus_one=true);
     void remove_data(const StringName& name);
 
     void insert_heightmap_rf(const PackedByteArray& data,float accuracy,bool compress_qtq = true,MResource::FileCompress file_compress=MResource::FileCompress::FILE_COMPRESSION_NONE);
-    PackedByteArray get_heightmap_rf();
+    PackedByteArray get_heightmap_rf(bool two_plus_one=true);
 
 
 
