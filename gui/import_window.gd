@@ -413,8 +413,6 @@ func update_config_file_for_data():
 
 
 ###################### Export
-func _ready():
-	init_export($MTerrain)
 @onready var export_err := $tab/export/export_err
 @onready var einfo := $tab/export/einfo
 @onready var edata_name_option := $tab/export/edata_name_option

@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://bi64wdm5e26po"]
+[gd_scene load_steps=7 format=3 uid="uid://bi64wdm5e26po"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/import_window.gd" id="1_1yy7h"]
 [ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="2_7c003"]
 [ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="3_6huwx"]
+[ext_resource type="Script" path="res://addons/m_terrain/gui/import Godot res.gd" id="4_wj43a"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cs33g"]
 content_margin_left = 5.0
@@ -303,6 +304,132 @@ layout_mode = 2
 layout_mode = 2
 text = "Export"
 
+[node name="import Godot res" type="VBoxContainer" parent="tab"]
+visible = false
+layout_mode = 2
+script = ExtResource("4_wj43a")
+
+[node name="title2" type="Label" parent="tab/import Godot res"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.65098, 0.423529, 1)
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("StyleBoxFlat_unhvj")
+text = "Import Godot res"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="import_err" type="Label" parent="tab/import Godot res"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.580392, 0.580392, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_cs33g")
+autowrap_mode = 2
+
+[node name="einfo" type="Label" parent="tab/import Godot res"]
+visible = false
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="tab/import Godot res"]
+layout_mode = 2
+
+[node name="source_dir" type="Button" parent="tab/import Godot res/HBoxContainer"]
+layout_mode = 2
+text = "Source Dir"
+
+[node name="source_line" type="LineEdit" parent="tab/import Godot res/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Godot res Directory"
+
+[node name="hcontainer" type="VBoxContainer" parent="tab/import Godot res"]
+visible = false
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="tab/import Godot res/hcontainer"]
+layout_mode = 2
+
+[node name="HLabel" type="Label" parent="tab/import Godot res/hcontainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 0.219608, 1)
+theme_override_font_sizes/font_size = 22
+text = "Heightmap"
+
+[node name="HSeparator5" type="HSeparator" parent="tab/import Godot res/hcontainer"]
+layout_mode = 2
+
+[node name="compress_qtq_checkbox" type="CheckBox" parent="tab/import Godot res/hcontainer"]
+layout_mode = 2
+button_pressed = true
+text = "Compress_qtq"
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="tab/import Godot res/hcontainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="tab/import Godot res/hcontainer/HBoxContainer3"]
+layout_mode = 2
+text = " accuracy"
+
+[node name="accuracy_line" type="LineEdit" parent="tab/import Godot res/hcontainer/HBoxContainer3"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "0.02"
+
+[node name="file_compress" parent="tab/import Godot res/hcontainer" instance=ExtResource("3_6huwx")]
+layout_mode = 2
+
+[node name="dcontainer" type="VBoxContainer" parent="tab/import Godot res"]
+visible = false
+layout_mode = 2
+
+[node name="HSeparator6" type="HSeparator" parent="tab/import Godot res/dcontainer"]
+layout_mode = 2
+
+[node name="Dlable3" type="Label" parent="tab/import Godot res/dcontainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 0.219608, 1)
+theme_override_font_sizes/font_size = 22
+text = "Data"
+
+[node name="dnames_option" type="OptionButton" parent="tab/import Godot res/dcontainer"]
+layout_mode = 2
+
+[node name="HSeparator3" type="HSeparator" parent="tab/import Godot res/dcontainer"]
+layout_mode = 2
+
+[node name="data_compress_option" parent="tab/import Godot res/dcontainer" instance=ExtResource("2_7c003")]
+layout_mode = 2
+
+[node name="dfile_compress" parent="tab/import Godot res/dcontainer" instance=ExtResource("3_6huwx")]
+layout_mode = 2
+
+[node name="HSeparator4" type="HSeparator" parent="tab/import Godot res/dcontainer"]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="tab/import Godot res"]
+layout_mode = 2
+
+[node name="save_dir" type="Button" parent="tab/import Godot res/HBoxContainer2"]
+layout_mode = 2
+text = "save"
+
+[node name="LineEdit" type="LineEdit" parent="tab/import Godot res/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Save Directory"
+
+[node name="HSeparator" type="HSeparator" parent="tab/import Godot res"]
+layout_mode = 2
+
+[node name="import_res_btn" type="Button" parent="tab/import Godot res"]
+layout_mode = 2
+text = "Import"
+
 [node name="FileDialog" type="FileDialog" parent="."]
 title = "Open File(s)"
 initial_position = 1
@@ -327,8 +454,21 @@ ok_button_text = "Select Current Folder"
 file_mode = 2
 access = 2
 
-[node name="MTerrain" type="MTerrain" parent="."]
-dataDir = "res://tdata"
+[node name="FileDialog_res_source" type="FileDialog" parent="."]
+title = "Open a Directory"
+initial_position = 1
+size = Vector2i(508, 450)
+ok_button_text = "Select Current Folder"
+file_mode = 2
+access = 2
+
+[node name="FileDialog_res_save" type="FileDialog" parent="."]
+title = "Open a Directory"
+initial_position = 1
+size = Vector2i(508, 450)
+ok_button_text = "Select Current Folder"
+file_mode = 2
+access = 2
 
 [connection signal="close_requested" from="." to="." method="_on_close_requested"]
 [connection signal="button_down" from="tab/import/HBoxContainer/Button" to="." method="_on_button_button_down"]
@@ -341,6 +481,15 @@ dataDir = "res://tdata"
 [connection signal="button_up" from="tab/export/export_hc/auto_min_max_detect" to="." method="_on_auto_min_max_detect_button_up"]
 [connection signal="button_up" from="tab/export/HBoxContainer/export_path_btn" to="." method="_on_export_path_btn_button_up"]
 [connection signal="button_up" from="tab/export/export_btn" to="." method="_on_export_btn_button_up"]
+[connection signal="button_up" from="tab/import Godot res/HBoxContainer/source_dir" to="tab/import Godot res" method="_on_source_dir_button_up"]
+[connection signal="text_changed" from="tab/import Godot res/HBoxContainer/source_line" to="tab/import Godot res" method="_on_source_line_text_changed"]
+[connection signal="item_selected" from="tab/import Godot res/dcontainer/dnames_option" to="tab/import Godot res" method="_on_dnames_option_item_selected"]
+[connection signal="item_selected" from="tab/import Godot res/dcontainer/data_compress_option" to="tab/import Godot res" method="_on_data_compress_option_item_selected"]
+[connection signal="item_selected" from="tab/import Godot res/dcontainer/dfile_compress" to="tab/import Godot res" method="_on_dfile_compress_item_selected"]
+[connection signal="button_up" from="tab/import Godot res/HBoxContainer2/save_dir" to="tab/import Godot res" method="_on_save_dir_button_up"]
+[connection signal="button_up" from="tab/import Godot res/import_res_btn" to="tab/import Godot res" method="_on_import_res_btn_button_up"]
 [connection signal="files_selected" from="FileDialog" to="." method="_on_file_dialog_files_selected"]
 [connection signal="dir_selected" from="FileDialog_save" to="." method="_on_file_dialog_save_dir_selected"]
 [connection signal="dir_selected" from="FileDialog_export" to="." method="_on_file_dialog_export_dir_selected"]
+[connection signal="dir_selected" from="FileDialog_res_source" to="tab/import Godot res" method="_on_file_dialog_res_source_dir_selected"]
+[connection signal="dir_selected" from="FileDialog_res_save" to="tab/import Godot res" method="_on_file_dialog_res_save_dir_selected"]

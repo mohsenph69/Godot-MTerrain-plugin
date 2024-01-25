@@ -70,7 +70,7 @@ func init_save_config(_t:MTerrain):
 			if config_file.has_section_key("heightmap","file_compress"):
 				state["file_compress"]=int(config_file.get_value("heightmap","file_compress"))
 			else:
-				state["file_compress"]=0
+				state["file_compress"]=res_file_compress
 		else:
 			var res_compress = mres.get_compress(dname)
 			if config_file.has_section_key(dname,"file_compress"):

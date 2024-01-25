@@ -60,7 +60,7 @@ func generate_info(_t:MTerrain,_version:String):
 	region_grid_size = (terrain.terrain_size) / terrain.region_size
 	region_count = region_grid_size.x * region_grid_size.y
 	var warnstr:String=""
-	warnstr = "Images in data directory should be width=height=%d if not change Terrain setting OR change data images."%region_pixel_size
+	warnstr = "Images in data directory should be width=height=%d one common edge pixel between regions will be created at load time."%(region_pixel_size-1)
 	Rwarning.text = warnstr
 	tsizeg.text += " %d X %d" % [terrain.terrain_size.x,terrain.terrain_size.y]
 	tsizem.text += " %dm X %dm" % [terrain_meter_size.x,terrain_meter_size.y]
