@@ -799,6 +799,10 @@ float MResource::get_max_height(){
 }
 
 void MResource::insert_data(const PackedByteArray& data, const StringName& name,Image::Format format,MResource::Compress compress,MResource::FileCompress file_compress){
+    if(format==Image::Format::FORMAT_R8 && compress==MResource::Compress::COMPRESS_PNG){
+        format=Image::Format::FORMAT_L8;
+        WARN_PRINT("PNG support format L8, so format R8 in "+String(name)+" will convert to L8");
+    }
     {
         const StringName& hname("heightmap");
         ERR_FAIL_COND_MSG(name==hname,"Use insert_heightmap_rf function to insert heightmap");
@@ -865,7 +869,7 @@ void MResource::insert_data(const PackedByteArray& data, const StringName& name,
         ::free(qoi_data);
     }
     else if(compress==Compress::COMPRESS_PNG){
-        ERR_FAIL_COND(!get_supported_png_format(format));
+        ERR_FAIL_COND_MSG(!get_supported_png_format(format),"PNG support only RGB8, RGBA8 and L8");
         flags |= FLAG_COMPRESSION_PNG;
         Ref<Image> img;
         img = Image::create_from_data(width,width,false,format,final_data);
