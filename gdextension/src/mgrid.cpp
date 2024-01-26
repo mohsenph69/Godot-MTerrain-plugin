@@ -285,6 +285,9 @@ MBound MGrid::region_bound_to_point_bound(const MBound& rbound){
 }
 
 MRegion* MGrid::get_region(const int32_t x, const int32_t z){
+    if(x < 0 || z < 0 || x >= _region_grid_size.x || z >= _region_grid_size.z ){
+        return nullptr;
+    }
     int32_t id = x + z*_region_grid_size.x;
     ERR_FAIL_INDEX_V(id,_regions_count,regions);
     return regions + id;
@@ -747,11 +750,19 @@ void MGrid::update_chunks(const Vector3& cam_pos) {
 void MGrid::update_regions(){
     for(MRegion* reg : unload_region_list){
         reg->unload();
+        reg->is_data_loaded_reg_thread = false;
     }
     for(MRegion* reg : load_region_list){
         reg->load();
+        reg->is_data_loaded_reg_thread = true;
     }
     for(MRegion* reg : load_region_list){
+        //Should run one by one (Not in thread) as can intresect each other
+        UtilityFunctions::print("Correcting edge ",reg->pos.x," , ",reg->pos.z," ---------");
+        reg->correct_edges();
+    }
+    for(MRegion* reg : load_region_list){
+        reg->is_edge_corrected = false;// This is use only correct_edges loop and out of that loop should be false
         //Should run one by one (Not in thread) as can intresect each other
         reg->recalculate_normals(true,true);
     }

@@ -61,6 +61,9 @@ class MRegion : public Object{
     static void _bind_methods(){}
 
     public:
+    bool is_data_loaded_reg_thread = false; // Must use only in region update thread
+    bool is_edge_corrected = false; // Same as above only in region update thread
+    bool to_be_remove = false;
     int32_t id=-1;
     Vector<MImage*> images;
     float min_height= 100000;	
@@ -75,7 +78,6 @@ class MRegion : public Object{
     MRegion* top = nullptr;
     MRegion* bottom = nullptr;
     static Vector<Vector3> nvecs;
-    bool to_be_remove = false;
     
     
     MRegion();
@@ -112,5 +114,18 @@ class MRegion : public Object{
     void set_data_load_status(bool input);
     bool get_data_load_status();
     bool get_data_load_status_relax();
+    void correct_edges();
+    private:
+    //Each region right and bottom edge pixel is copied from other region
+    //All correct edges methods should be called in the same thread, After load
+    //Top-Left and Bottom pixel will not correctet by bellow 
+    //Those pixel will be corrected in corner pixel correcting
+    void correct_left_edge();
+    void correct_right_edge();
+    void correct_top_edge();
+    void correct_bottom_edge();
+    //Cornert correcting
+    void correct_bottom_right_corner();
+    void correct_top_left_corner();
 };
 #endif

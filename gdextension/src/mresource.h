@@ -181,6 +181,8 @@ class MResource : public Resource {
     float max_height_cache = FLOAT_HOLE;
 
     public:
+    MResource();
+    ~MResource();
     enum Compress {
         COMPRESS_NONE = 0,
         COMPRESS_QOI = 1,

@@ -740,6 +740,11 @@ void MResource::_bind_methods(){
     BIND_ENUM_CONSTANT(FILE_COMPRESSION_GZIP);
 }
 
+MResource::MResource(){
+}
+MResource::~MResource(){
+}
+
 void MResource::set_compressed_data(const Dictionary& data){
     compressed_data = data;
 }
@@ -1169,6 +1174,22 @@ PackedByteArray MResource::add_empty_pixels_to_right_bottom(const PackedByteArra
         uint32_t old_index = y*width*pixel_size;
         uint32_t new_index = y*new_width*pixel_size;
         memcpy(out.ptrw()+new_index,data.ptr()+old_index,width*pixel_size);
+        //Correcting edges in each of row
+        uint32_t old_end_row_index = old_index + (width - 1)*pixel_size;
+        uint32_t new_end_row_index = new_index + (new_width - 1)*pixel_size;
+        memcpy(out.ptrw()+new_end_row_index,data.ptr()+old_end_row_index,pixel_size);
+    }
+    {
+        // Correcting edge in last row
+        uint32_t old_last_row_index = (width - 1)*width*pixel_size;
+        uint32_t new_last_row_index = (new_width - 1)*new_width*pixel_size;
+        memcpy(out.ptrw()+new_last_row_index,data.ptr()+old_last_row_index,width*pixel_size);
+    }
+    {
+        // Correcting bottom right corner
+        uint32_t old_last_index = ((width - 1) + (width - 1)*width)*pixel_size;
+        uint32_t new_last_index = ((new_width - 1) + (new_width - 1)*new_width)*pixel_size;
+        memcpy(out.ptrw()+new_last_index,data.ptr()+old_last_index,pixel_size);
     }
     return out;
 }
@@ -1203,6 +1224,7 @@ void MResource::compress_qtq_rf(PackedByteArray& uncompress_data,PackedByteArray
     #ifdef PRINT_DEBUG
     UtilityFunctions::print("End saving ----------------------------------------------",save_index);
     #endif
+    memdelete(quad_tree);
 }
 
 void MResource::decompress_qtq_rf(const PackedByteArray& compress_data,PackedByteArray& uncompress_data,uint32_t window_width,uint32_t decompress_index){
@@ -1227,6 +1249,7 @@ void MResource::decompress_qtq_rf(const PackedByteArray& compress_data,PackedByt
     #ifdef PRINT_DEBUG
     UtilityFunctions::print("End Loading ----------------------------------------------",decompress_index);
     #endif
+    memdelete(quad_tree);
 }
 
 // https://research.usq.edu.au/download/987c0abcd3777bef266467fee9e205061f6eb905c44526215eb21a7d6404aebf/272457/TS04D_scarmana_8433.pdf
