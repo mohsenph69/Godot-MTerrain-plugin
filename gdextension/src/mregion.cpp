@@ -82,8 +82,15 @@ void MRegion::load(){
 	for(int i=0; i < images.size(); i++){
 		images[i]->load(mres);
 	}
-	if(!is_min_max_height_calculated){
-		_calculate_min_max_height();
+	if(!mres.is_valid()){
+		min_height=0.0;
+		max_height=0.0001;
+	} else if(!is_min_max_height_calculated){
+		// This value might change while correcting edge
+		min_height = mres->get_min_height();
+		max_height = mres->get_max_height();
+		is_min_max_height_calculated = true;
+		//_calculate_min_max_height();
 	}
 	//is_data_loaded will be set by update region
 }
@@ -368,6 +375,22 @@ void MRegion::correct_left_edge(){
 			memcpy(left_img->data.ptrw()+left_index,img->data.ptr()+index,img->pixel_size);
 		}
 	}
+	if(!left->is_min_max_right_considered){
+		uint32_t wi = heightmap->width - 1;
+		const float* ptr = (const float*)heightmap->data.ptr();
+		for(uint32_t y=0;y<wi;y++){
+			// index in byte array
+			uint32_t index = (y*heightmap->width);
+			if(left->min_height > ptr[index]){
+				left->min_height = ptr[index];
+				
+			}
+			if(left->max_height < ptr[index]){
+				left->max_height = ptr[index];
+			}
+		}
+		left->is_min_max_right_considered = true;
+	}
 }
 
 void MRegion::correct_right_edge(){
@@ -389,6 +412,21 @@ void MRegion::correct_right_edge(){
 			memcpy(img->data.ptrw()+index,right_img->data.ptr()+right_index,img->pixel_size);
 		}
 	}
+	if(!is_min_max_right_considered){
+		uint32_t wi = heightmap->width - 1;
+		const float* ptr = (const float*)right->heightmap->data.ptr();
+		for(uint32_t y=0;y<wi;y++){ // one last pixel is corner pixel
+			// index in byte array
+			uint32_t index = (y*heightmap->width);
+			if(min_height > ptr[index]){
+				min_height = ptr[index];
+			}
+			if(max_height < ptr[index]){
+				max_height = ptr[index];
+			}
+		}
+		is_min_max_right_considered = true;
+	}
 }
 
 void MRegion::correct_top_edge(){
@@ -405,6 +443,19 @@ void MRegion::correct_top_edge(){
 		uint32_t row_size = img->width*img->pixel_size;
 		uint32_t top_index = (img->width -1)*img->width*img->pixel_size;
 		memcpy(top_img->data.ptrw()+top_index,img->data.ptr(),row_size);
+	}
+	if(!top->is_min_max_bottom_considered){
+		uint32_t wi = heightmap->width - 1;
+		const float* ptr = (const float*)heightmap->data.ptr();
+		for(uint32_t x=0;x<wi;x++){
+			if(top->min_height > ptr[x]){
+				top->min_height = ptr[x];
+			}
+			if(top->max_height < ptr[x]){
+				top->max_height = ptr[x];
+			}
+		}
+		top->is_min_max_bottom_considered = true;
 	}
 }
 
@@ -423,6 +474,19 @@ void MRegion::correct_bottom_edge(){
 		uint32_t index = img->width*(img->width -1)*img->pixel_size;
 		memcpy(img->data.ptrw()+index,bottom_img->data.ptr(),row_size);
 	}
+	if(!is_min_max_bottom_considered){
+		uint32_t wi = heightmap->width - 1;
+		const float* ptr = (const float*)bottom->heightmap->data.ptr();
+		for(uint32_t x=0;x<wi;x++){
+			if(min_height > ptr[x]){
+				min_height = ptr[x];
+			}
+			if(max_height < ptr[x]){
+				max_height = ptr[x];
+			}
+		}
+		is_min_max_bottom_considered = true;
+	}
 }
 
 void MRegion::correct_bottom_right_corner(){
@@ -440,6 +504,15 @@ void MRegion::correct_bottom_right_corner(){
 		uint32_t index = (wi + (wi)*img->width)*img->pixel_size;
 		memcpy(img->data.ptrw()+index,bt_img->data.ptr(),img->pixel_size);
 	}
+	{
+		float val = ((const float*)br_reg->heightmap->data.ptr())[0];
+		if (min_height > val){
+			min_height = val;
+		}
+		if(max_height < val){
+			max_height = val;
+		}
+	}
 }
 
 void MRegion::correct_top_left_corner(){
@@ -456,5 +529,14 @@ void MRegion::correct_top_left_corner(){
 		uint32_t wi = img->width - 1;
 		uint32_t index = (wi + (wi)*img->width)*img->pixel_size;
 		memcpy(tl_img->data.ptrw()+index,img->data.ptr(),img->pixel_size);
+	}
+	{
+		float val = ((const float*)heightmap->data.ptr())[0];
+		if (tl_reg->min_height > val){
+			tl_reg->min_height = val;
+		}
+		if(tl_reg->max_height < val){
+			tl_reg->max_height = val;
+		}
 	}
 }

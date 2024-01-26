@@ -63,6 +63,9 @@ class MRegion : public Object{
     public:
     bool is_data_loaded_reg_thread = false; // Must use only in region update thread
     bool is_edge_corrected = false; // Same as above only in region update thread
+    //Bellow will be written in update region thread and only read in physics update thread to create warning
+    bool is_min_max_bottom_considered = false; // region update thread
+    bool is_min_max_right_considered = false; // region update thread
     bool to_be_remove = false;
     int32_t id=-1;
     Vector<MImage*> images;
