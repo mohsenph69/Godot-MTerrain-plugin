@@ -353,7 +353,6 @@ void MRegion::correct_left_edge(){
 	if(!left || !left->is_data_loaded_reg_thread || left->is_edge_corrected){
 		return;
 	}
-	UtilityFunctions::print("correct left ",pos.x, " , ",pos.z);
 	for(uint32_t ii=0;ii<images.size();ii++){
 		MImage* img = images[ii];
 		if(img->name==NORMALS_NAME){
@@ -375,7 +374,6 @@ void MRegion::correct_right_edge(){
 	if(!right || !right->is_data_loaded_reg_thread || right->is_edge_corrected){
 		return;
 	}
-	UtilityFunctions::print("correct right ",pos.x, " , ",pos.z);
 	for(uint32_t ii=0;ii<images.size();ii++){
 		MImage* img = images[ii];
 		if(img->name==NORMALS_NAME){
@@ -397,7 +395,6 @@ void MRegion::correct_top_edge(){
 	if(!top || !top->is_data_loaded_reg_thread || top->is_edge_corrected){
 		return;
 	}
-	UtilityFunctions::print("correct top ",pos.x, " , ",pos.z);
 	for(uint32_t ii=0;ii<images.size();ii++){
 		MImage* img = images[ii];
 		if(img->name==NORMALS_NAME){
@@ -415,7 +412,6 @@ void MRegion::correct_bottom_edge(){
 	if(!bottom || !bottom->is_data_loaded_reg_thread || bottom->is_edge_corrected){
 		return;
 	}
-	UtilityFunctions::print("correct bottom ",pos.x, " , ",pos.z);
 	for(uint32_t ii=0;ii<images.size();ii++){
 		MImage* img = images[ii];
 		if(img->name==NORMALS_NAME){
@@ -428,45 +424,6 @@ void MRegion::correct_bottom_edge(){
 		memcpy(img->data.ptrw()+index,bottom_img->data.ptr(),row_size);
 	}
 }
-
-/*
-	if(left->top && left->top->is_data_loaded_reg_thread && !left->top->is_edge_corrected){
-		for(uint32_t ii=0;ii<images.size();ii++){
-			MImage* img = images[ii];
-			if(img->name==NORMALS_NAME){
-				continue;
-			}
-			MImage* left_top_img = left->top->images[ii];
-			left_top_img->is_dirty = true;
-			uint32_t wi = img->width - 1;
-			uint32_t left_top_index = (wi + (wi)*img->width)*img->pixel_size;
-			//memcpy(left_top_img->data.ptrw()+left_top_index,img->data.ptr(),img->pixel_size);
-		}
-	}
-*/
-
-/*
-	if(right->bottom && right->bottom->is_data_loaded_reg_thread && !right->bottom->is_edge_corrected){
-		UtilityFunctions::print("correct right bottom");
-		for(uint32_t ii=0;ii<images.size();ii++){
-			MImage* img = images[ii];
-			if(img->name==NORMALS_NAME){
-				continue;
-			}
-			img->is_dirty = true;
-			MImage* right_bottom_img = right->bottom->images[ii];
-			uint32_t wi = img->width - 1;
-			uint32_t index = (wi + wi*img->width)*img->pixel_size;
-			UtilityFunctions::print(wi);
-			UtilityFunctions::print(wi + wi*img->width);
-			float val = img->get_pixel_RF(wi,wi);
-			float new_val = right_bottom_img->get_pixel_RF(0,0);
-			UtilityFunctions::print("-------- ",val, " , new val ",new_val);
-			memcpy(img->data.ptrw()+index,right_bottom_img->data.ptr(),img->pixel_size);
-			UtilityFunctions::print("After copy vale ",img->get_pixel_RF(wi,wi));
-		}
-	}
-*/
 
 void MRegion::correct_bottom_right_corner(){
 	MRegion* br_reg = grid->get_region(pos.x+1,pos.z+1);

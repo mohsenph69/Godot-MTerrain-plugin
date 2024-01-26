@@ -758,7 +758,6 @@ void MGrid::update_regions(){
     }
     for(MRegion* reg : load_region_list){
         //Should run one by one (Not in thread) as can intresect each other
-        UtilityFunctions::print("Correcting edge ",reg->pos.x," , ",reg->pos.z," ---------");
         reg->correct_edges();
     }
     for(MRegion* reg : load_region_list){
