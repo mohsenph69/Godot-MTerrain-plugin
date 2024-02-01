@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/reg_ex.hpp>
 #include <godot_cpp/classes/reg_ex_match.hpp>
+#include <godot_cpp/classes/file_access.hpp>
 
 #include "mbrush_manager.h"
 #include "navmesh/mnavigation_region_3d.h"
@@ -242,6 +243,20 @@ void MTerrain::create_grid(){
     grid->dataDir = dataDir;
     grid->layersDataDir = layersDataDir;
     grid->region_size = region_size;
+    // Loading save config if there is any
+    grid->save_config.clear();
+    String save_config_path = dataDir.path_join(M_SAVE_CONFIG_NAME);
+    if(FileAccess::file_exists(save_config_path)){
+        Ref<ConfigFile> save_config;
+        save_config.instantiate();
+        if(save_config->load(save_config_path) == godot::Error::OK){
+            set_save_config(save_config);
+        } else {
+            WARN_PRINT("Error loading save config "+save_config_path);
+        }
+    } else {
+        WARN_PRINT("Can not find save config "+save_config_path);
+    }
     set_heightmap_layers(grid->heightmap_layers); // To make sure we have everything currect including background image
     if(terrain_material.is_valid()){
         grid->set_terrain_material(terrain_material);
@@ -466,7 +481,34 @@ void MTerrain::set_save_config(Ref<ConfigFile> conf){
     ERR_FAIL_COND(!grid);
     PackedStringArray sections = conf->get_sections();
     for(String section : sections){
-        UtilityFunctions::print("Section ",section);
+        if(section == "heightmap"){
+            if(conf->has_section_key(section, "accuracy")){
+                grid->save_config.accuracy = conf->get_value(section,"accuracy");
+            } else {
+                WARN_PRINT("Can not find accuraccy in save config file");
+            }
+            if(conf->has_section_key(section, "file_compress")){
+                grid->save_config.heightmap_file_compress = (MResource::FileCompress)((int)conf->get_value(section,"file_compress"));
+            } else {
+                WARN_PRINT("Can not find file_compress for heightmap in save config file");
+            }
+            if(conf->has_section_key(section, "compress_qtq")){
+                grid->save_config.heightmap_compress_qtq = ((bool)conf->get_value(section,"compress_qtq"));
+            } else {
+                WARN_PRINT("Can not find compress_qtq for heightmap in save config file");
+            }
+        } else {
+            if(conf->has_section_key(section, "compress")){
+                grid->save_config.data_compress.insert(section,(MResource::Compress((int)conf->get_value(section,"compress"))));
+            } else {
+                WARN_PRINT(section + ": can not find compress in save config");
+            }
+            if(conf->has_section_key(section, "file_compress")){
+                grid->save_config.data_file_compress.insert(section,(MResource::FileCompress((int)conf->get_value(section,"file_compress"))));
+            } else {
+                WARN_PRINT(section + ": can not find file_compress in save config");
+            }
+        }
     }
 }
 

@@ -1203,7 +1203,7 @@ void MGrid::save_all_dirty_images(){
         }
         for(int j=0;j<reg->images.size();j++){
             MImage* img = reg->images[j];
-            img->save(mres,true);
+            img->save(mres,false);
         }
         ResourceSaver::get_singleton()->save(mres,res_path);
    }

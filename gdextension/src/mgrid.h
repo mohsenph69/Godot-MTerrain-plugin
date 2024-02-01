@@ -103,6 +103,22 @@ struct MSaveConfig
     MResource::FileCompress heightmap_file_compress=MResource::FileCompress::FILE_COMPRESSION_NONE;
     HashMap<StringName,MResource::Compress> data_compress;
     HashMap<StringName,MResource::FileCompress> data_file_compress;
+
+    MResource::Compress get_data_compress(const StringName& dname){
+        return data_compress.has(dname) ? data_compress[dname] : MResource::Compress::COMPRESS_NONE;
+    }
+
+    MResource::FileCompress get_data_file_compress(const StringName& dname){
+        return data_file_compress.has(dname) ? data_file_compress[dname] : MResource::FileCompress::FILE_COMPRESSION_NONE;
+    }
+
+    void clear(){
+        data_compress.clear();
+        data_file_compress.clear();
+        heightmap_file_compress=MResource::FileCompress::FILE_COMPRESSION_NONE;
+        heightmap_compress_qtq=true;
+        accuracy=DEFAULT_ACCURACY;
+    }
 };
 
 class MGrid : public Object {

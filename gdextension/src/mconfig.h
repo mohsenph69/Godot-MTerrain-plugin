@@ -39,6 +39,8 @@
 #define M_DEAFAULT_MATERIAL_PATH "res://addons/m_terrain/start_material.res"
 #define M_SHOW_REGION_SHADER_PATH "res://addons/m_terrain/show_region.gdshader"
 
+#define M_SAVE_CONFIG_NAME ".save_config.ini"
+
 #define IS_HOLE(value) std::isnan(value)
 #define FLOAT_HOLE std::numeric_limits<float>::quiet_NaN()
 

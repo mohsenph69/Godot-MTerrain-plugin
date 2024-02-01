@@ -587,8 +587,11 @@ void MImage::save(Ref<MResource> mres,bool force_save) {
 		return;
 	}
 	if(force_save || !is_save) {
+		UtilityFunctions::print(name," force save ",force_save," is_save ",is_save);
 		if(name!=HEIGHTMAP_NAME){
-			mres->insert_data(data,name,format,MResource::Compress::COMPRESS_QOI,MResource::FILE_COMPRESSION_NONE);
+			MResource::Compress cmp = region->grid->save_config.get_data_compress(name);
+			MResource::FileCompress fcmp = region->grid->save_config.get_data_file_compress(name);
+			mres->insert_data(data,name,format,cmp,fcmp);
 			is_save = true;
 			return;
 		}
@@ -613,7 +616,10 @@ void MImage::save(Ref<MResource> mres,bool force_save) {
 			//Ref<Image> img = Image::create_from_data(width,height,false,format,background_data);
 			//godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
 			//ERR_FAIL_COND_MSG(err,"Can not save background image, image class erro: "+itos(err));
-			mres->insert_heightmap_rf(background_data,DEFAULT_ACCURACY,true,MResource::FILE_COMPRESSION_NONE);
+			float accq = region->grid->save_config.accuracy;
+			bool cmp_qtq = region->grid->save_config.heightmap_compress_qtq;
+			MResource::FileCompress fcmp = region->grid->save_config.heightmap_file_compress;
+			mres->insert_heightmap_rf(background_data,accq,cmp_qtq,fcmp);
 			is_saved_layers.set(0,true);
 		}
 		for(int i=1;i<image_layers.size();i++){
