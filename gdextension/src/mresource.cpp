@@ -745,6 +745,10 @@ MResource::MResource(){
 MResource::~MResource(){
 }
 
+bool MResource::has_data(const StringName& name){
+    return compressed_data.has(name);
+}
+
 void MResource::set_compressed_data(const Dictionary& data){
     compressed_data = data;
 }

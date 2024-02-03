@@ -1201,11 +1201,16 @@ void MGrid::save_all_dirty_images(){
         if(!mres.is_valid()){
             mres.instantiate();
         }
+        bool is_something_saved = false;
         for(int j=0;j<reg->images.size();j++){
             MImage* img = reg->images[j];
-            img->save(mres,false);
+            if(img->save(mres,false)){
+                is_something_saved = true;
+            }
         }
-        ResourceSaver::get_singleton()->save(mres,res_path);
+        if(is_something_saved){
+            ResourceSaver::get_singleton()->save(mres,res_path);
+        }
    }
 }
 

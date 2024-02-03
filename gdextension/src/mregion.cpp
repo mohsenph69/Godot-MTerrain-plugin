@@ -82,7 +82,7 @@ void MRegion::load(){
 	for(int i=0; i < images.size(); i++){
 		images[i]->load(mres);
 	}
-	if(!mres.is_valid()){
+	if(!mres.is_valid() || !mres->has_data(HEIGHTMAP_NAME)){
 		min_height=0.0;
 		max_height=0.0001;
 	} else if(!is_min_max_height_calculated){
@@ -366,6 +366,9 @@ void MRegion::correct_left_edge(){
 			continue;
 		}
 		MImage* left_img = left->images[ii];
+		if(!img->is_init || !left_img->is_init){
+			return;
+		}
 		left_img->is_dirty = true;
 		uint32_t wi = img->width - 1;
 		for(uint32_t y=0;y<img->width;y++){
@@ -403,6 +406,9 @@ void MRegion::correct_right_edge(){
 			continue;
 		}
 		MImage* right_img = right->images[ii];
+		if(!img->is_init || !right_img->is_init){
+			return;
+		}
 		img->is_dirty = true;
 		uint32_t wi = img->width - 1;
 		for(uint32_t y=0;y<img->width;y++){
@@ -439,6 +445,9 @@ void MRegion::correct_top_edge(){
 			continue;
 		}
 		MImage* top_img = top->images[ii];
+		if(!img->is_init || !top_img->is_init){
+			return;
+		}
 		top_img->is_dirty = true;
 		uint32_t row_size = img->width*img->pixel_size;
 		uint32_t top_index = (img->width -1)*img->width*img->pixel_size;
@@ -469,6 +478,9 @@ void MRegion::correct_bottom_edge(){
 			continue;
 		}
 		MImage* bottom_img = bottom->images[ii];
+		if(!img->is_init || !bottom_img->is_init){
+			return;
+		}
 		img->is_dirty = true;
 		uint32_t row_size = (img->width - 1)*img->pixel_size;
 		uint32_t index = img->width*(img->width -1)*img->pixel_size;
@@ -500,6 +512,9 @@ void MRegion::correct_bottom_right_corner(){
 			continue;
 		}
 		MImage* bt_img = br_reg->images[ii];
+		if(!img->is_init || !bt_img->is_init){
+			return;
+		}
 		uint32_t wi = img->width - 1;
 		uint32_t index = (wi + (wi)*img->width)*img->pixel_size;
 		memcpy(img->data.ptrw()+index,bt_img->data.ptr(),img->pixel_size);
@@ -526,6 +541,9 @@ void MRegion::correct_top_left_corner(){
 			continue;
 		}
 		MImage* tl_img = tl_reg->images[ii];
+		if(!img->is_init || !tl_img->is_init){
+			return;
+		}
 		uint32_t wi = img->width - 1;
 		uint32_t index = (wi + (wi)*img->width)*img->pixel_size;
 		memcpy(tl_img->data.ptrw()+index,img->data.ptr(),img->pixel_size);

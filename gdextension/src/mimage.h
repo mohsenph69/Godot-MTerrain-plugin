@@ -99,7 +99,7 @@ struct MImage {
     void set_pixel(const uint32_t x, const uint32_t  y,const Color& color);
     void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
     const uint8_t* get_pixel_by_data_pointer(uint32_t x,uint32_t y);
-    void save(Ref<MResource> mres,bool force_save);
+    bool save(Ref<MResource> mres,bool force_save);
     void check_undo(); // Register the state of image before the draw
     void remove_undo_data(int ur_id);
     void remove_undo_data_in_layer(int layer_index);

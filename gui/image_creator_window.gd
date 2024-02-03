@@ -19,6 +19,12 @@ var is_init = false
 
 
 func set_terrain(input:MTerrain):
+	if input.terrain_size.x % input.region_size !=0:
+		printerr("Terrain size.x is not divisible by its region size")
+		return
+	if input.terrain_size.x % input.region_size !=0:
+		printerr("Terrain size.y is not divisible by its region size")
+		return
 	region_grid_size.x = input.terrain_size.x/input.region_size
 	region_grid_size.y = input.terrain_size.x/input.region_size
 	image_width = ((input.region_size*input.get_base_size())/input.get_h_scale())
@@ -42,6 +48,9 @@ func _on_close_requested():
 	
 
 func _on_create_button_up():
+	if not is_init:
+		printerr("Image create/remove is not init")
+		return
 	var format:int = format_option.get_selected_id()
 	var uniform_name:String = uniform_name_line.text
 	var def_color:Color=def_color_picker.color
@@ -58,26 +67,26 @@ func _on_create_button_up():
 	if not dir:
 		printerr("Can not open ",data_dir)
 		return
-	dir.list_dir_begin()
-	var file_name :String= dir.get_next()
-	var res_names:PackedStringArray
-	update_config_file()
-	while file_name != "":
-		if file_name.get_extension() == "res":
-			res_names.append(file_name)
-		file_name = dir.get_next()
-	for res_name in res_names:
-		var path = data_dir.path_join(res_name)
-		var mres = load(path)
-		if not (mres is MResource):
-			continue
-		var img:Image = Image.create(image_width,image_width,false,format)
-		img.fill(def_color)
-		mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
-		ResourceSaver.save(mres,path)
+	for j in range(region_grid_size.y):
+		for i in range(region_grid_size.x):
+			var path = data_dir.path_join("x"+str(i)+"_y"+str(j)+".res")
+			var mres:MResource
+			if ResourceLoader.exists(path):
+				mres = ResourceLoader.load(path)
+			else:
+				mres = MResource.new()
+			if not (mres is MResource):
+				continue
+			var img:Image = Image.create(image_width,image_width,false,format)
+			img.fill(def_color)
+			mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
+			ResourceSaver.save(mres,path)
 	queue_free()
 
 func _on_remove_button_up():
+	if not is_init:
+		printerr("Image create/remove is not init")
+		return
 	var index = remove_uniform_list.selected
 	if index < 0:
 		return

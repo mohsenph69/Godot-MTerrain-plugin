@@ -65,19 +65,19 @@ void MImage::load(Ref<MResource> mres){
 			create(region->grid->region_pixel_size,Image::Format::FORMAT_RF);
 			return;
 		}
-		if(get_format_pixel_size(format)==0){
-			//Create a dumy format so GODOT not crash
-			create(region->grid->region_pixel_size,Image::Format::FORMAT_R8);
-			ERR_FAIL_MSG("Not valide Image Format in "+name);
-			return;
-		}
-		create(region->grid->region_pixel_size,format);
+		ERR_FAIL_MSG("Can not find data "+name+" in "+region->get_res_path());
 		return;
 	}
 	if(name==HEIGHTMAP_NAME){
-		data = mres->get_heightmap_rf();
-		format = Image::Format::FORMAT_RF;
+		if(mres->has_data(HEIGHTMAP_NAME)){
+			data = mres->get_heightmap_rf();
+			format = Image::Format::FORMAT_RF;
+		} else {
+			create(region->grid->region_pixel_size,Image::Format::FORMAT_RF);
+			return;
+		}
 	} else {
+		ERR_FAIL_COND_MSG(!mres->has_data(name),"Can not find data "+name+" in "+region->get_res_path());
 		data = mres->get_data(name);
 		format = mres->get_data_format(name);
 	}
@@ -576,24 +576,25 @@ const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y){
 	return data.ptr() + ofs*pixel_size;
 }
 
-void MImage::save(Ref<MResource> mres,bool force_save) {
+bool MImage::save(Ref<MResource> mres,bool force_save) {
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
-	ERR_FAIL_COND(!mres.is_valid());
-	if(!is_init || name==NORMALS_NAME){
-		return;
+	if(!mres.is_valid()){
+		return false;
 	}
-	ERR_FAIL_COND(is_corrupt_file);
+	if(!is_init || name==NORMALS_NAME){
+		return false;
+	}
+	ERR_FAIL_COND_V(is_corrupt_file,false);
 	if(is_null_image){
-		return;
+		return true;
 	}
 	if(force_save || !is_save) {
-		UtilityFunctions::print(name," force save ",force_save," is_save ",is_save);
 		if(name!=HEIGHTMAP_NAME){
 			MResource::Compress cmp = region->grid->save_config.get_data_compress(name);
 			MResource::FileCompress fcmp = region->grid->save_config.get_data_file_compress(name);
 			mres->insert_data(data,name,format,cmp,fcmp);
 			is_save = true;
-			return;
+			return true;
 		}
 		if(!is_saved_layers[0]){
 			PackedByteArray background_data = data;
@@ -636,7 +637,9 @@ void MImage::save(Ref<MResource> mres,bool force_save) {
 			}
 		}
 		is_save = true;
+		return true;
 	}
+	return false;
 }
 
 void MImage::check_undo(){
