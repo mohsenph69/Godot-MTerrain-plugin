@@ -48,10 +48,6 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_layersDataDir"), &MTerrain::get_layersDataDir);
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "layersDataDir",PROPERTY_HINT_GLOBAL_DIR), "set_layersDataDir","get_layersDataDir");
 
-    ClassDB::bind_method(D_METHOD("set_save_generated_normals","value"), &MTerrain::set_save_generated_normals);
-    ClassDB::bind_method(D_METHOD("get_save_generated_normals"), &MTerrain::get_save_generated_normals);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "save_generated_normals"), "set_save_generated_normals", "get_save_generated_normals");
-
     ClassDB::bind_method(D_METHOD("set_grid_create","val"), &MTerrain::set_create_grid);
     ClassDB::bind_method(D_METHOD("get_create_grid"), &MTerrain::get_create_grid);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "create"), "set_grid_create", "get_create_grid");
@@ -304,11 +300,6 @@ void MTerrain::create_grid(){
     }
     if(update_chunks_loop){
         update();
-    }
-    if(!grid->has_normals && save_generated_normals){
-        int normals_index = get_image_id("normals");
-        UtilityFunctions::print("Saving normals");
-        save_image(normals_index, true);
     }
 }
 
@@ -587,17 +578,6 @@ void MTerrain::set_create_grid(bool input){
 
 bool MTerrain::get_create_grid(){
     return grid->is_created();
-}
-
-
-
-void MTerrain::set_save_generated_normals(bool input){
-    grid->save_generated_normals = input;
-    save_generated_normals = input;
-}
-
-bool MTerrain::get_save_generated_normals(){
-    return save_generated_normals;
 }
 
 void MTerrain::set_regions_limit(int input){

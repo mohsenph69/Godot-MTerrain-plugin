@@ -1178,7 +1178,7 @@ void MGrid::save_image(int index,bool force_save){
 bool MGrid::has_unsave_image(){
     for(int i=0;i<_all_image_list.size();i++){
         if(_all_image_list[i]->name==NORMALS_NAME){
-            if(!_all_image_list[i]->is_save && save_generated_normals){
+            if(!_all_image_list[i]->is_save){
                 return true;
             }
         } else {

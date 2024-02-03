@@ -72,7 +72,6 @@ class MTerrain : public  Node3D {
     int32_t region_size=16;
     String dataDir;
     String layersDataDir;
-    bool save_generated_normals = false;
     // Top Level for heightmap layers
     // Heightmap layers index here are not the active layer id, but in grid they are
     // Also we record the active layer by it's name here not its id
@@ -144,8 +143,6 @@ class MTerrain : public  Node3D {
     bool get_create_grid();
 
 
-    void set_save_generated_normals(bool input);
-    bool get_save_generated_normals();
     void set_regions_limit(int input);
     int get_regions_limit();
     float get_update_chunks_interval();

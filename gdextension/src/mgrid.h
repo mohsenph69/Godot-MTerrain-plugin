@@ -192,7 +192,6 @@ class MGrid : public Object {
     Vector<bool> heightmap_layers_visibility;
     PackedStringArray heightmap_layers;
     bool has_normals = false;
-    bool save_generated_normals=false;
     Dictionary uniforms_id;
     int32_t physics_update_limit = 1;
     int32_t region_limit = 2;
