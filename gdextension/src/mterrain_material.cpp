@@ -381,26 +381,22 @@ void MTerrainMaterial::clear(){
     active_region = -1;
 }
 
-void MTerrainMaterial::add_terrain_image(String name) {
+void MTerrainMaterial::add_terrain_image(StringName name) {
     String uniform_name = "mterrain_" + name;
     MGridPos region_grid_size = grid->get_region_grid_size();
     for(int z=0; z<region_grid_size.z;z++){
         for(int x=0; x<region_grid_size.x;x++){
             MRegion* region = grid->get_region(x,z);
-            String file_name = name +"_x"+itos(x)+"_y"+itos(z)+".res";
-            String file_path = grid->dataDir.path_join(file_name);
             MGridPos rpos(x,0,z);
-            MImage* i = memnew(MImage(file_path,grid->layersDataDir,name,uniform_name,rpos,region));
-            if(!ResourceLoader::get_singleton()->exists(file_path)){
-                if (name == "normals"){
-                    i->format = Image::Format::FORMAT_RGB8;
-                } else if(name == "heightmap") {
-                    i->format = Image::Format::FORMAT_RF;
-                }
+            MImage* i = memnew(MImage(grid->layersDataDir,name,uniform_name,rpos,region));
+            if (name == NORMALS_NAME){
+                i->format = Image::Format::FORMAT_RGB8;
+            } else if(name == HEIGHTMAP_NAME) {
+                i->format = Image::Format::FORMAT_RF;
             }
             region->add_image(i);
             all_images.push_back(i);
-            if(name=="heightmap"){
+            if(name==HEIGHTMAP_NAME){
                 all_heightmap_images.push_back(i);
             }
         }
@@ -409,20 +405,18 @@ void MTerrainMaterial::add_terrain_image(String name) {
     terrain_textures_ids.insert(name,terrain_textures_added.size()-1);
 }
 
-void MTerrainMaterial::create_empty_terrain_image(String name,Image::Format format){
+void MTerrainMaterial::create_empty_terrain_image(StringName name,Image::Format format){
     String uniform_name = "mterrain_" + name;
     MGridPos region_grid_size = grid->get_region_grid_size();
     for(int z=0; z<region_grid_size.z;z++){
         for(int x=0; x<region_grid_size.x;x++){
             MRegion* region = grid->get_region(x,z);
-            String file_name = name +"_x"+itos(x)+"_y"+itos(z)+".res";
-            String file_path = grid->dataDir.path_join(file_name);
             MGridPos rpos(x,0,z);
-            MImage* i = memnew(MImage(file_path,grid->layersDataDir,name,uniform_name,rpos,region));
+            MImage* i = memnew(MImage(grid->layersDataDir,name,uniform_name,rpos,region));
             i->format = format;
             region->add_image(i);
             all_images.push_back(i);
-            if(name=="heightmap"){
+            if(name==HEIGHTMAP_NAME){
                 all_heightmap_images.push_back(i);
             }
         }

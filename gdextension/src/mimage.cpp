@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/dir_access.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/dir_access.hpp>
 
 #define RS RenderingServer::get_singleton()
 
@@ -14,17 +15,8 @@
 MImage::MImage(){
 	
 }
-MImage::MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,const int& _compression){
-    file_path = _file_path;
-    name = _name;
-    uniform_name = _uniform_name;
-    compression = _compression;
-	layerDataDir = _layers_folder;
-	grid_pos = _grid_pos;
-}
 
-MImage::MImage(const String& _file_path,const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r){
-	file_path = _file_path;
+MImage::MImage(const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r){
     name = _name;
     uniform_name = _uniform_name;
     region = r;
@@ -206,13 +198,19 @@ void MImage::merge_layer(){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 	path = layerDataDir.path_join(path);
+	String file_path = region->get_res_path();
 	if(!is_init){
 		if(ResourceLoader::get_singleton()->exists(file_path) && FileAccess::file_exists(path)){
-			Ref<Image> img = ResourceLoader::get_singleton()->load(file_path);
-			if(!img.is_valid()){
+			Ref<MResource> mres = ResourceLoader::get_singleton()->load(file_path);
+			if(!mres.is_valid()){
 				return;
 			}
-			PackedByteArray tmp_data = img->get_data();
+			PackedByteArray tmp_data;
+			if(mres->has_data(HEIGHTMAP_NAME)){
+				tmp_data = mres->get_heightmap_rf();
+			} else {
+				tmp_data.resize(region->grid->region_pixel_size*region->grid->region_pixel_size*get_format_pixel_size(Image::FORMAT_RF));
+			}
 			Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
 			ERR_FAIL_COND(file->get_length() != tmp_data.size());
 			PackedByteArray tmp_layer_data;
@@ -234,8 +232,8 @@ void MImage::merge_layer(){
 					((float *)tmp_data.ptrw())[i] += ((float *)tmp_layer_data.ptr())[i];
 				}
 			}
-			img = Image::create_from_data(width,height,false,format,tmp_data);
-			godot::Error err = ResourceSaver::get_singleton()->save(img,file_path);
+			mres->insert_heightmap_rf(tmp_data,region->grid->save_config.accuracy,region->grid->save_config.heightmap_compress_qtq,region->grid->save_config.heightmap_file_compress);
+			godot::Error err = ResourceSaver::get_singleton()->save(mres,file_path);
 			layer_names.remove_at(active_layer);
 			ERR_FAIL_COND_MSG(err!=godot::Error::OK,"Can not save merged layer "+path+" with godot save error "+itos(err)+" Layer data is preseve for this region you can get it back by adding the same layer name");
 			DirAccess::remove_absolute(path);
@@ -258,9 +256,12 @@ void MImage::merge_layer(){
 	Ref<MResource> mres;
 	String res_path = region->get_res_path();
 	if(ResourceLoader::get_singleton()->exists(res_path)){
-		mres = ResourceLoader::get_singleton()->load(res_path);\
-		save(mres,false);
+		mres = ResourceLoader::get_singleton()->load(res_path);
+	} else {
+		mres.instantiate();
 	}
+	save(mres,false);
+	ResourceSaver::get_singleton()->save(mres, res_path);
 }
 
 void MImage::remove_layer(bool is_visible){
@@ -625,6 +626,8 @@ bool MImage::save(Ref<MResource> mres,bool force_save) {
 		}
 		for(int i=1;i<image_layers.size();i++){
 			if(!is_saved_layers[i]){
+				ERR_CONTINUE_MSG(layerDataDir.is_empty(),"Layer Directory is empty");
+				ERR_CONTINUE_MSG(!DirAccess::dir_exists_absolute(layerDataDir),"Layer Directory does not exist");
 				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
 				String layer_path = layerDataDir.path_join(lname);
 				Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::WRITE);

@@ -238,8 +238,6 @@ class MGrid : public Object {
     void set_scenario(RID scenario);
     RID get_scenario();
     void create(const int32_t width,const int32_t height, MChunks* chunks);
-    void update_regions_uniforms(Array input);
-    void update_regions_uniform(Dictionary input);
     void update_all_image_list();
     Vector3 get_world_pos(const int32_t x,const int32_t y,const int32_t z);
     Vector3 get_world_pos(const MGridPos& pos);

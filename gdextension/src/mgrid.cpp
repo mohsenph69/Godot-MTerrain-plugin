@@ -166,55 +166,6 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
     //generate_normals_thread(grid_pixel_region);
 }
 
-void MGrid::update_regions_uniforms(Array input) {
-    for(int i=0;i<input.size();i++){
-        Dictionary unifrom_info = input[i];
-        update_regions_uniform(unifrom_info);
-    }
-    for(int i=0; i<_regions_count; i++){
-        regions[i].configure();
-    }
-    if(_regions_count > 0 ){
-        for(int i=0;i<regions[0].images.size();i++){
-            MImage* img = regions[0].images[i];
-            uniforms_id[img->name] = i;
-        }
-    }
-    update_all_image_list();
-    // We start from one because we don\t want to add background layer
-    // background layer will added in MImage automaticly
-    UtilityFunctions::print("heightmap_layers ",heightmap_layers);
-    for(int i=0;i<heightmap_layers.size();i++){
-        add_heightmap_layer(heightmap_layers[i]);
-    }
-    if(!has_normals){
-        generate_normals_thread(grid_pixel_region);
-    }
-}
-
-void MGrid::update_regions_uniform(Dictionary input) {
-    String name = input["name"];
-    String uniform_name = input["uniform_name"];
-    int compression = input["compression"];
-    for(int z=0; z<_region_grid_size.z;z++){
-        for(int x=0; x<_region_grid_size.x;x++){
-            MRegion* region= get_region(x,z);
-            String file_name = name+"_x"+itos(x)+"_y"+itos(z)+".res";
-            String file_path = dataDir.path_join(file_name);
-            if(!ResourceLoader::get_singleton()->exists(file_path)){
-                if (name != NORMALS_NAME){
-                    WARN_PRINT("Can not find "+name);
-                }
-                continue;
-            }
-            MGridPos rpos(x,0,z);
-            has_normals = name==NORMALS_NAME;
-            MImage* i = memnew(MImage(file_path,layersDataDir,name,uniform_name,rpos,compression));
-            region->add_image(i);
-        }
-    }
-}
-
 void MGrid::update_all_image_list(){
     _all_image_list.clear();
     UtilityFunctions::print("Region count is ",_regions_count );

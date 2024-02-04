@@ -71,8 +71,8 @@ class MTerrainMaterial : public Resource {
     void remove_material(int region_id);
     void load_images();
     void clear();
-    void add_terrain_image(String name); // The order of adding image will determine image ID in each grid creation
-    void create_empty_terrain_image(String name,Image::Format format);
+    void add_terrain_image(StringName name); // The order of adding image will determine image ID in each grid creation
+    void create_empty_terrain_image(StringName name,Image::Format format);
     int get_texture_id(const String& name);
     PackedStringArray get_textures_list();
 
