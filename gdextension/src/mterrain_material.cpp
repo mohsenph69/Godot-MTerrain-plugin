@@ -388,7 +388,7 @@ void MTerrainMaterial::add_terrain_image(StringName name) {
         for(int x=0; x<region_grid_size.x;x++){
             MRegion* region = grid->get_region(x,z);
             MGridPos rpos(x,0,z);
-            MImage* i = memnew(MImage(grid->layersDataDir,name,uniform_name,rpos,region));
+            MImage* i = memnew(MImage(name,uniform_name,rpos,region));
             if (name == NORMALS_NAME){
                 i->format = Image::Format::FORMAT_RGB8;
             } else if(name == HEIGHTMAP_NAME) {
@@ -412,7 +412,7 @@ void MTerrainMaterial::create_empty_terrain_image(StringName name,Image::Format 
         for(int x=0; x<region_grid_size.x;x++){
             MRegion* region = grid->get_region(x,z);
             MGridPos rpos(x,0,z);
-            MImage* i = memnew(MImage(grid->layersDataDir,name,uniform_name,rpos,region));
+            MImage* i = memnew(MImage(name,uniform_name,rpos,region));
             i->format = format;
             region->add_image(i);
             all_images.push_back(i);

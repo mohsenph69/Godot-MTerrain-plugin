@@ -16,11 +16,10 @@ MImage::MImage(){
 	
 }
 
-MImage::MImage(const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r){
+MImage::MImage(const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r){
     name = _name;
     uniform_name = _uniform_name;
     region = r;
-	layerDataDir = _layers_folder;
 	grid_pos = _grid_pos;
 }
 
@@ -157,7 +156,7 @@ void MImage::load_layer(String lname){
 	ERR_FAIL_COND_EDMSG(data.size()==0,"You must first load the background image and then the layers");
 	ERR_FAIL_COND_EDMSG(name!=HEIGHTMAP_NAME,"Layers is supported only for heightmap images");
 	String ltname = lname +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
-	String layer_path = layerDataDir.path_join(ltname);
+	String layer_path = get_layer_data_dir().path_join(ltname);
 	if(FileAccess::file_exists(layer_path)){
 		Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::READ);
 		ERR_FAIL_COND(file->get_length() != data.size());
@@ -197,7 +196,7 @@ void MImage::load_layer(String lname){
 void MImage::merge_layer(){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
-	path = layerDataDir.path_join(path);
+	path = get_layer_data_dir().path_join(path);
 	String file_path = region->get_res_path();
 	if(!is_init){
 		if(ResourceLoader::get_singleton()->exists(file_path) && FileAccess::file_exists(path)){
@@ -267,7 +266,7 @@ void MImage::merge_layer(){
 void MImage::remove_layer(bool is_visible){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	String path = layer_names[active_layer] +"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
-	path = layerDataDir.path_join(path);
+	path = get_layer_data_dir().path_join(path);
 	if(!is_init){
 		layer_names.remove_at(active_layer);
 		if(FileAccess::file_exists(path)){
@@ -626,10 +625,10 @@ bool MImage::save(Ref<MResource> mres,bool force_save) {
 		}
 		for(int i=1;i<image_layers.size();i++){
 			if(!is_saved_layers[i]){
-				ERR_CONTINUE_MSG(layerDataDir.is_empty(),"Layer Directory is empty");
-				ERR_CONTINUE_MSG(!DirAccess::dir_exists_absolute(layerDataDir),"Layer Directory does not exist");
+				ERR_CONTINUE_MSG(get_layer_data_dir().is_empty(),"Layer Directory is empty");
+				ERR_CONTINUE_MSG(!DirAccess::dir_exists_absolute(get_layer_data_dir()),"Layer Directory does not exist");
 				String lname = layer_names[i]+"_x"+itos(grid_pos.x)+"_y"+itos(grid_pos.z)+ ".r32";
-				String layer_path = layerDataDir.path_join(lname);
+				String layer_path = get_layer_data_dir().path_join(lname);
 				Ref<FileAccess> file = FileAccess::open(layer_path, FileAccess::WRITE);
 				const uint8_t* ptr = image_layers[i]->ptr();
 				for(int j=0;j<image_layers[i]->size();j++){
@@ -1119,4 +1118,10 @@ float MImage::get_pixel_in_channel(const uint32_t x, const uint32_t  y,int8_t ch
 			ERR_FAIL_V_MSG(INVALID_CHANELL, "Unsportet format for Mterrain");
 		}
 	}
+}
+
+
+String MImage::get_layer_data_dir(){
+	ERR_FAIL_COND_V(!region,String());
+	return region->grid->layersDataDir;
 }

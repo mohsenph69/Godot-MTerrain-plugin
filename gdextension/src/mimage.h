@@ -37,7 +37,6 @@ struct MImageUndoData {
 struct MImage {
     int index=-1;
     MRegion* region=nullptr;
-    String layerDataDir;
     StringName name;
     String uniform_name;
     int compression=-1;
@@ -73,7 +72,7 @@ struct MImage {
     bool is_null_image=true;
     
     MImage();
-    MImage(const String& _layers_folder,const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r);
+    MImage(const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r);
     ~MImage();
     void load(Ref<MResource> mres);
     void unload(Ref<MResource> mres);
@@ -116,6 +115,7 @@ struct MImage {
 
     private:
     void load_layer(String lname);
+    _FORCE_INLINE_ String get_layer_data_dir();
 };
 
 #endif
