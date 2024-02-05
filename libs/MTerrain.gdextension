@@ -4,7 +4,8 @@ entry_symbol = "test_library_init"
 compatibility_minimum = 4.1
 
 [libraries]
-
+macos.debug = "res://addons/m_terrain/libs/libMTerrain.macos.template_debug.universal.dylib"
+macos.release = "res://addons/m_terrain/libs/libMTerrain.macos.template_release.universal.dylib"
 linux.debug.x86_64 = "res://addons/m_terrain/libs/libMTerrain.linux.template_debug.x86_64.so"
 linux.release.x86_64 = "res://addons/m_terrain/libs/libMTerrain.linux.template_release.x86_64.so"
 linux.debug.x86_32 = "res://addons/m_terrain/libs/libMTerrain.linux.template_debug.x86_32.so"
