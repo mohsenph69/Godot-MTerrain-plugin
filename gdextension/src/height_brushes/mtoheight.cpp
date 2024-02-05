@@ -39,8 +39,8 @@ Array MToHeight::_get_property_list(){
     p3["hint"] = "";
     p3["hint_string"] = "";
     p3["default_value"] = offset;
-    p3["min"] = -10000000000;
-    p3["max"] = 100000000000;
+    p3["min"] = -1000;
+    p3["max"] = 1000;
     // p5
     Dictionary p5;
     p5["name"] = "mode";
