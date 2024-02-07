@@ -119,9 +119,9 @@ func _on_import_res_btn_button_up():
 	
 	var source_path:String = source_line.text
 	
-	if save_config.is_empty():
-		perr("Save config is empty, Please select a directory with Godot res exported with MTerrain")
-		return
+	#if save_config.is_empty():
+	#	perr("Save config is empty, Please select a directory with Godot res exported with MTerrain")
+	#	return
 	if dnames.is_empty():
 		perr("No data detectet in this Directory, Please select a directory with Godot res exported with MTerrain")
 		return
