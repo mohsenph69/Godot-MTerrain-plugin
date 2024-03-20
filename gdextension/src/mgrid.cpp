@@ -1007,31 +1007,35 @@ void MGrid::generate_normals(MPixelRegion pxr) {
     ERR_FAIL_COND(id==-1);
     for(uint32_t y=pxr.top; y<=pxr.bottom; y++){
         for(uint32_t x=pxr.left; x<=pxr.right; x++){
-            Vector3 normal_vec;
             Vector2i px(x,y);
             real_t h = get_height_by_pixel(x,y);
             // Caculating face normals around point
             // and average them
             // In total there are 8 face around each point
-            for(int i=0;i<nvec8.size()-1;i++){
-                Vector2i px1(nvec8[i].x,nvec8[i].z);
-                Vector2i px2(nvec8[i+1].x,nvec8[i+1].z);
-                px1 += px;
-                px2 += px;
-                // Edge of the terrain
-                if(!_has_pixel(px1.x,px1.y) || !_has_pixel(px2.x,px2.y)){
-                    continue;
-                }
-                Vector3 vec1 = nvec8[i];
-                Vector3 vec2 = nvec8[i+1];
-                vec1.y = get_height_by_pixel(px1.x,px1.y) - h;
-                vec2.y = get_height_by_pixel(px2.x,px2.y) - h;
-                normal_vec += vec1.cross(vec2);
-            }
-            normal_vec.normalize();
+            float heightL = _has_pixel(x-1,y) ? get_height_by_pixel(x-1,y) : h;
+            float heightR = _has_pixel(x+1,y) ? get_height_by_pixel(x+1,y) : h;
+            float heightU = _has_pixel(x,y-1) ? get_height_by_pixel(x,y-1) : h;
+            float heightD = _has_pixel(x,y+1) ? get_height_by_pixel(x,y+1) : h;
+
+            float heightTL = _has_pixel(x-1,y-1) ? get_height_by_pixel(x-1,y-1) : h;
+            float heightTR = _has_pixel(x+1,y-1) ? get_height_by_pixel(x+1,y-1) : h;
+            float heightBL = _has_pixel(x-1,y+1) ? get_height_by_pixel(x-1,y+1) : h;
+            float heightBR = _has_pixel(x+1,y+1) ? get_height_by_pixel(x+1,y+1) : h;
+
+            float nx = heightTL - heightBR + 2.0f * (heightL - heightR) + heightBL - heightTR;
+            //float ny = 8.0f;
+            float nz = heightTL - heightBR + 2.0f * (heightU - heightD) + heightTR - heightBL;
+            float nl = sqrt(nx*nx + 64.0f + nz*nz);
+            
+            nx /= nl;
+            float ny = 8.0f/nl;
+            nz /= nl;
+
+            nx = nx/2.0 + 0.5;
+            nz = nz/2.0 + 0.5;
+
             // packing normals for image
-            normal_vec = normal_vec*0.5 + Vector3(0.5,0.5,0.5);
-            Color col(normal_vec.x,normal_vec.y,normal_vec.z);
+            Color col(nx,ny,nz);
             set_pixel(x,y,col,id);
         }
     }
@@ -1041,9 +1045,7 @@ Vector3 MGrid::get_normal_by_pixel(uint32_t x,uint32_t y) {
     int id = _terrain_material->get_texture_id(NORMALS_NAME);
     ERR_FAIL_COND_V(id==-1,Vector3());
     Color c = get_pixel(x,y,id);
-    Vector3 n(c.r,c.g,c.b);
-    n = n*2.0 - Vector3(1.0,1.0,1.0);
-    n.normalize();
+    Vector3 n(c.r*2.0 -1.0,c.g,c.b*2.0 -1.0);
     return n;
 }
 
