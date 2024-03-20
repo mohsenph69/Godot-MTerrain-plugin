@@ -1002,6 +1002,9 @@ void MGrass::update_random_buffer_pull(int lod){
 }
 
 void MGrass::_lod_setting_changed(){
+    if(!grid->is_created()){
+        return;
+    }
     for(int i=0;i<lod_count;i++){
         if(settings[i].is_valid()){
             if(settings[i]->is_dirty){
