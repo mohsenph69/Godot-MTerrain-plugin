@@ -2,6 +2,7 @@
 #define MGRASSCHUNK
 
 #include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 struct MGrassChunk // Rendering server multi mesh data
 {
@@ -56,7 +57,34 @@ struct MGrassChunk // Rendering server multi mesh data
         if(count!=0){
             RenderingServer::get_singleton()->instance_geometry_set_cast_shadows_setting(instance,setting);
         }
+        if(next!=nullptr){
+            next->set_shadow_setting(setting);
+        }
     }
+    
+    void set_gi_mode(GeometryInstance3D::GIMode p_mode){
+        if(count!=0){
+            switch (p_mode) {
+                case GeometryInstance3D::GI_MODE_DISABLED: {
+                    RenderingServer::get_singleton()->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, false);
+                    RenderingServer::get_singleton()->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, false);
+                } break;
+                case GeometryInstance3D::GI_MODE_STATIC: {
+                    RenderingServer::get_singleton()->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, true);
+                    RenderingServer::get_singleton()->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, false);
+
+                } break;
+                case GeometryInstance3D::GI_MODE_DYNAMIC: {
+                    RenderingServer::get_singleton()->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, false);
+                    RenderingServer::get_singleton()->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, true);
+                } break;
+            }
+        }
+        if(next!=nullptr){
+            next->set_gi_mode(p_mode);
+        }
+    }
+
     void clear_tree(){
         if(next!=nullptr){
             memdelete(next);

@@ -51,6 +51,16 @@ void MGrassLodSetting::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_rand_scale_end","input"), &MGrassLodSetting::set_rand_scale_end);
     ClassDB::bind_method(D_METHOD("get_rand_scale_end"), &MGrassLodSetting::get_rand_scale_end);
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR3,"rand_scale_end"),"set_rand_scale_end","get_rand_scale_end");
+
+    ADD_SUBGROUP("Geometry setting","");
+    ClassDB::bind_method(D_METHOD("set_shadow_setting","input"), &MGrassLodSetting::set_shadow_setting);
+    ClassDB::bind_method(D_METHOD("get_shadow_setting"), &MGrassLodSetting::get_shadow_setting);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"shadow_setting",PropertyHint::PROPERTY_HINT_ENUM,"OFF,ON,DOUBLE_SIDED,SHADOWS_ONLY"),"set_shadow_setting","get_shadow_setting");
+
+    ClassDB::bind_method(D_METHOD("set_gi_mode","input"), &MGrassLodSetting::set_gi_mode);
+    ClassDB::bind_method(D_METHOD("get_gi_mode"), &MGrassLodSetting::get_gi_mode);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"gi_mode",PropertyHint::PROPERTY_HINT_ENUM,"Disabled,Static (VoxelGI/SDFGI/LightmapGI),Dynamic (VoxelGI only)"),"set_gi_mode","get_gi_mode");
+
 }
 
 void MGrassLodSetting::set_seed(int input){
@@ -256,4 +266,24 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
 
     }
     return out;
+}
+
+
+void MGrassLodSetting::set_shadow_setting(RenderingServer::ShadowCastingSetting input){
+    shadow_setting = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
+}
+RenderingServer::ShadowCastingSetting MGrassLodSetting::get_shadow_setting(){
+    return shadow_setting;
+}
+
+void MGrassLodSetting::set_gi_mode(GeometryInstance3D::GIMode input){
+    gi_mode = input;
+    is_dirty = true;
+    emit_signal("lod_setting_changed");
+}
+
+GeometryInstance3D::GIMode MGrassLodSetting::get_gi_mode(){
+    return gi_mode;
 }

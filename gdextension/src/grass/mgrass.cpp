@@ -359,6 +359,8 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
         g->set_buffer(count,scenario,meshe_rids[root_g->lod],material_rids[root_g->lod],buffer);
         total_count += count;
     }
+    root_g->set_shadow_setting(settings[root_g->lod]->shadow_setting);
+    root_g->set_gi_mode(settings[root_g->lod]->gi_mode);
     root_g->total_count = total_count;
     if(grass_chunk!=nullptr){ // This means updating not creating
             root_g->unrelax();

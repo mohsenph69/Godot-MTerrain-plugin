@@ -4,7 +4,8 @@
 
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/variant/vector3.hpp>
-
+#include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/geometry_instance3d.hpp>
 
 using namespace godot;
 
@@ -33,6 +34,9 @@ class MGrassLodSetting : public Resource {
     float unifrom_rand_scale_end=1.0;
     Vector3 rand_scale_start = Vector3(1,1,1);
     Vector3 rand_scale_end = Vector3(1,1,1);
+
+    RenderingServer::ShadowCastingSetting shadow_setting = RenderingServer::ShadowCastingSetting::SHADOW_CASTING_SETTING_OFF;
+    GeometryInstance3D::GIMode gi_mode = GeometryInstance3D::GIMode::GI_MODE_DISABLED;
 
     void set_seed(int input);
     int get_seed();
@@ -77,5 +81,12 @@ class MGrassLodSetting : public Resource {
     Vector3 get_rand_scale_end();
 
     PackedFloat32Array* generate_random_number(float density,int amount);
+
+
+    //Geometry setting
+    void set_shadow_setting(RenderingServer::ShadowCastingSetting input);
+    RenderingServer::ShadowCastingSetting get_shadow_setting();
+    void set_gi_mode(GeometryInstance3D::GIMode input);
+    GeometryInstance3D::GIMode get_gi_mode();
 };
 #endif
