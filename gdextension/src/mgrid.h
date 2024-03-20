@@ -276,6 +276,7 @@ class MGrid : public Object {
     // update and if it is not finished we countiue with only update points and recheck region update again
     void update_chunks(const Vector3& cam_pos);
     void update_regions(); // This one need camera pos as this thread can last more than one terrain update!
+    void update_regions_at_load();
     void apply_update_chunks();
     bool update_regions_bounds(const Vector3& cam_pos,bool _make_neighbors_normals_dirty);//Should be called in safe thread
     void clear_region_bounds();

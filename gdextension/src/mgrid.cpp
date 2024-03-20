@@ -721,6 +721,29 @@ void MGrid::update_regions(){
     }
 }
 
+void MGrid::update_regions_at_load(){
+    for(MRegion* reg : unload_region_list){
+        reg->unload();
+        reg->is_data_loaded_reg_thread = false;
+    }
+    Vector<std::thread*> threads_pull;
+    for(MRegion* reg : load_region_list){
+        reg->is_data_loaded_reg_thread = true;
+        std::thread* t = new std::thread(&MRegion::load,reg);
+        threads_pull.push_back(t);
+    }
+    for(std::thread* t : threads_pull){
+        t->join();
+        delete t;
+    }
+    for(MRegion* reg : load_region_list){
+        reg->recalculate_normals(true,false);
+    }
+    for(MRegion* reg : load_region_list){
+        reg->set_data_load_status(true);
+    }
+}
+
 void MGrid::apply_update_chunks() {
     for(int i=0; i < _regions_count; i++){
         regions[i].apply_update();

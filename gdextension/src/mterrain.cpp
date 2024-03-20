@@ -264,7 +264,7 @@ void MTerrain::create_grid(){
     grid->create(terrain_size.x,terrain_size.y,_chunks);
     get_cam_pos();
     grid->update_regions_bounds(cam_pos,false);
-    grid->update_regions();
+    grid->update_regions_at_load();
     grid->clear_region_bounds();
     grid->update_chunks(cam_pos);
     grid->apply_update_chunks();
