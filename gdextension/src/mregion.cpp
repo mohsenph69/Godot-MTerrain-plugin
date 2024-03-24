@@ -159,6 +159,7 @@ void MRegion::apply_update() {
 }
 
 void MRegion::create_physics() {
+	std::lock_guard<std::mutex> lock(physics_mutex);
 	ERR_FAIL_COND(heightmap == nullptr);
 	if(has_physic || heightmap->is_corrupt_file || heightmap->is_null_image || to_be_remove || !get_data_load_status()){
 		return;
@@ -201,7 +202,33 @@ void MRegion::create_physics() {
 	has_physic = true;
 }
 
+void MRegion::update_physics(){
+	std::lock_guard<std::mutex> lock(physics_mutex);
+	if(!has_physic){
+		return;
+	}
+	Dictionary d;
+	d["width"] = heightmap->width;
+	d["depth"] = heightmap->height;
+	#ifdef REAL_T_IS_DOUBLE
+	const float* hdata = (float*)heightmap->data.ptr();
+	PackedFloat64Array hdata64;
+	int size = heightmap->data.size()/4;
+	hdata64.resize(size);
+	for(int i=0;i<size;i++){
+		hdata64.set(i,hdata[i]);
+	}
+	d["heights"] = hdata64;
+	#else
+	d["heights"] = heightmap->data.to_float32_array();
+	#endif
+	d["min_height"] = min_height;
+	d["max_height"] = max_height;
+	PhysicsServer3D::get_singleton()->shape_set_data(heightmap_shape, d);
+}
+
 void MRegion::remove_physics(){
+	std::lock_guard<std::mutex> lock(physics_mutex);
 	if(!has_physic){
 		return;
 	}

@@ -186,6 +186,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_normal","world_pos"), &MTerrain::get_normal);
     ClassDB::bind_method(D_METHOD("get_normal_accurate","world_pos"), &MTerrain::get_normal_accurate);
     ClassDB::bind_method(D_METHOD("is_grid_created"), &MTerrain::is_grid_created);
+    ClassDB::bind_method(D_METHOD("update_all_dirty_image_texture","update_physics"), &MTerrain::update_all_dirty_image_texture);
+    ClassDB::bind_method(D_METHOD("update_normals","left","right","top","bottom"), &MTerrain::update_normals);
 }
 
 MTerrain::MTerrain() {
@@ -1171,6 +1173,16 @@ Vector3 MTerrain::get_normal_accurate(Vector3 world_pos){
     return grid->get_normal_accurate(world_pos);
 }
 
+
+void MTerrain::update_all_dirty_image_texture(bool update_physics){
+    ERR_FAIL_COND(!grid->is_created());
+    grid->update_all_dirty_image_texture(update_physics);
+}
+
+void MTerrain::update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom){
+    ERR_FAIL_COND(!grid->is_created());
+    grid->update_normals(left, right, top,bottom);
+}
 
 void MTerrain::_notification(int32_t what){
     if(what == NOTIFICATION_WM_CLOSE_REQUEST || what == NOTIFICATION_WM_GO_BACK_REQUEST){

@@ -252,6 +252,9 @@ class MTerrain : public  Node3D {
     Vector3 get_normal(const Vector3 world_pos);
     Vector3 get_normal_accurate(Vector3 world_pos);
 
+    void update_all_dirty_image_texture(bool update_physics);
+    void update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom);
+
     void _notification(int32_t what);
 };
 

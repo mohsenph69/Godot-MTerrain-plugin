@@ -293,6 +293,7 @@ class MGrid : public Object {
     bool has_pixel(const uint32_t x,const uint32_t y);
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
+    void update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom);
     Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);
     Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
     Vector3 get_normal(Vector3 world_pos);
@@ -313,7 +314,7 @@ class MGrid : public Object {
     void draw_color(Vector3 brush_pos,real_t radius,MColorBrush* brush, int32_t index);
     void draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixelRegion local_pixel_region, MColorBrush* brush);
 
-    void update_all_dirty_image_texture();
+    void update_all_dirty_image_texture(bool update_physics=false);
 
     void set_active_layer(String input);
     void add_heightmap_layer(String lname);

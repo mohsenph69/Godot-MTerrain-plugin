@@ -96,6 +96,7 @@
         "__memory": "cpp",
         "__availability": "cpp",
         "any": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "hash_set": "cpp"
     }
 }

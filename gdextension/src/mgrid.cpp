@@ -1067,6 +1067,11 @@ void MGrid::generate_normals(MPixelRegion pxr) {
     }
 }
 
+void MGrid::update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom){
+    MPixelRegion pxr(left,right,top,bottom);
+    generate_normals(pxr);
+}
+
 Vector3 MGrid::get_normal_by_pixel(uint32_t x,uint32_t y) {
     int id = _terrain_material->get_texture_id(NORMALS_NAME);
     ERR_FAIL_COND_V(id==-1,Vector3());
@@ -1390,13 +1395,18 @@ void MGrid::draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixe
 }
 
 //&MGrid::generate_normals,this, px_regions[i]
-void MGrid::update_all_dirty_image_texture(){
+void MGrid::update_all_dirty_image_texture(bool update_physics){
     Vector<std::thread*> threads_pull;
     for(int i=0;i<_all_image_list.size();i++){
         if(_all_image_list[i]->is_dirty){
             //_all_image_list[i]->update_texture(_all_image_list[i]->current_scale,true);
             std::thread* t = new std::thread(&MImage::update_texture,_all_image_list[i],_all_image_list[i]->current_scale,true);
             threads_pull.push_back(t);
+            if(_all_image_list[i]->name == HEIGHTMAP_NAME && update_physics){
+                MRegion* reg = _all_image_list[i]->region;
+                std::thread* pt = new std::thread(&MRegion::update_physics,reg);
+                threads_pull.push_back(pt);
+            }
         }
     }
     for(int i=0;i<threads_pull.size();i++){
