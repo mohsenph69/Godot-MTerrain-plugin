@@ -87,6 +87,7 @@ class MGrass : public Node3D {
     void init_grass(MGrid* _grid);
     void clear_grass();
     void update_grass();
+    void update_dirty_chunks_gd();
     void update_dirty_chunks(bool update_lock=true);
     void apply_update_grass();
     void cull_out_of_bound();

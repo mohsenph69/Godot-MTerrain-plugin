@@ -12,7 +12,7 @@ void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
     ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
-    ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks);
+    ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks_gd);
     ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add"), &MGrass::draw_grass);
     ClassDB::bind_method(D_METHOD("get_count"), &MGrass::get_count);
     ClassDB::bind_method(D_METHOD("get_width"), &MGrass::get_width);
@@ -208,6 +208,10 @@ void MGrass::clear_grass(){
     }
     shapes_rids.clear();
     to_be_visible.clear();
+}
+
+void MGrass::update_dirty_chunks_gd(){
+    update_dirty_chunks(true);
 }
 
 void MGrass::update_dirty_chunks(bool update_lock){
