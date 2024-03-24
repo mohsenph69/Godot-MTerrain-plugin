@@ -737,6 +737,9 @@ void MGrid::update_regions_at_load(){
         delete t;
     }
     for(MRegion* reg : load_region_list){
+        reg->correct_edges();
+    }
+    for(MRegion* reg : load_region_list){
         reg->recalculate_normals(true,false);
     }
     for(MRegion* reg : load_region_list){
