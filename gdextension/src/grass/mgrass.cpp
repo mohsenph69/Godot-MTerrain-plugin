@@ -18,6 +18,7 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_width"), &MGrass::get_width);
     ClassDB::bind_method(D_METHOD("get_height"), &MGrass::get_height);
     ClassDB::bind_method(D_METHOD("grass_px_to_grid_px","x","y"), &MGrass::grass_px_to_grid_px);
+    ClassDB::bind_method(D_METHOD("get_closest_pixel","world_pos"), &MGrass::get_closest_pixel);
 
     ClassDB::bind_method(D_METHOD("set_active","input"), &MGrass::set_active);
     ClassDB::bind_method(D_METHOD("get_active"), &MGrass::get_active);
@@ -209,9 +210,14 @@ void MGrass::clear_grass(){
     to_be_visible.clear();
 }
 
-void MGrass::update_dirty_chunks(){
+void MGrass::update_dirty_chunks(bool update_lock){
     ERR_FAIL_COND(!grass_data.is_valid());
-    std::lock_guard<std::mutex> lock(update_mutex);
+    if(update_lock){
+        std::lock_guard<std::mutex> lock(update_mutex);
+    }
+    if(update_id!=grid->get_update_id()){
+        return; // will be called after grid update will finish
+    }
     for(int i=0;i<dirty_points_id->size();i++){
         int64_t terrain_instance_id = grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]);
         if(!grid_to_grass.has(terrain_instance_id)){
@@ -231,6 +237,10 @@ void MGrass::update_grass(){
     std::lock_guard<std::mutex> lock(update_mutex);
     if(!is_grass_init){
         return;
+    }
+    if(dirty_points_id->size()!=0){
+        // Now in grid there is a valid point to instance
+        update_dirty_chunks(false);
     }
     update_id = grid->get_update_id();
     for(int i=0;i<new_chunk_count;i++){
@@ -471,7 +481,7 @@ Vector2i MGrass::grass_px_to_grid_px(uint32_t px, uint32_t py){
 // And I don't think that we need to do that because it is not a huge process
 void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
     ERR_FAIL_COND(!is_grass_init);
-    ERR_FAIL_COND(update_id!=grid->get_update_id());
+    //ERR_FAIL_COND(update_id!=grid->get_update_id());
     Vector2i px_pos = get_closest_pixel(brush_pos);
     if(px_pos.x<0 || px_pos.y<0 || px_pos.x>width || px_pos.y>height){
         return;

@@ -87,7 +87,7 @@ class MGrass : public Node3D {
     void init_grass(MGrid* _grid);
     void clear_grass();
     void update_grass();
-    void update_dirty_chunks();
+    void update_dirty_chunks(bool update_lock=true);
     void apply_update_grass();
     void cull_out_of_bound();
     void create_grass_chunk(int grid_index,MGrassChunk* grass_chunk=nullptr); //If grid_index=-1 and grass_chunk is not null it will update grass chunk
