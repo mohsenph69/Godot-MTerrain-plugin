@@ -728,8 +728,8 @@ void MGrid::update_regions_at_load(){
     }
     Vector<std::thread*> threads_pull;
     for(MRegion* reg : load_region_list){
-        reg->is_data_loaded_reg_thread = true;
         std::thread* t = new std::thread(&MRegion::load,reg);
+        reg->is_data_loaded_reg_thread = true;
         threads_pull.push_back(t);
     }
     for(std::thread* t : threads_pull){
@@ -740,6 +740,7 @@ void MGrid::update_regions_at_load(){
         reg->correct_edges();
     }
     for(MRegion* reg : load_region_list){
+        reg->is_edge_corrected = false;
         reg->recalculate_normals(true,false);
     }
     for(MRegion* reg : load_region_list){
