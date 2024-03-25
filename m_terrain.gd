@@ -1,6 +1,6 @@
 @tool
 extends EditorPlugin
-var version:String="0.11.0 alpha 2"
+var version:String="0.11.0 alpha 3"
 var import_window_res = preload("res://addons/m_terrain/gui/import_window.tscn")
 var image_creator_window_res = preload("res://addons/m_terrain/gui/image_creator_window.tscn")
 var tools= null
