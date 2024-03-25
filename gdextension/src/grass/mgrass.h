@@ -93,7 +93,7 @@ class MGrass : public Node3D {
     void cull_out_of_bound();
     void create_grass_chunk(int grid_index,MGrassChunk* grass_chunk=nullptr); //If grid_index=-1 and grass_chunk is not null it will update grass chunk
     void recalculate_grass_config(int max_lod);
-
+    void make_grass_dirty_by_pixel(uint32_t px, uint32_t py);
     void set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value);
     bool get_grass_by_pixel(uint32_t px, uint32_t py);
     Vector2i get_closest_pixel(Vector3 pos);

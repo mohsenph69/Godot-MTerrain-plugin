@@ -10,6 +10,7 @@
 
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
+    ClassDB::bind_method(D_METHOD("make_grass_dirty_by_pixel","x","y"), &MGrass::make_grass_dirty_by_pixel);
     ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks_gd);
@@ -417,6 +418,14 @@ void MGrass::recalculate_grass_config(int max_lod){
         lod_settings.resize(lod_count);
     }
     notify_property_list_changed();
+}
+
+void MGrass::make_grass_dirty_by_pixel(uint32_t px, uint32_t py){
+    ERR_FAIL_INDEX(px, width);
+    ERR_FAIL_INDEX(py, height);
+    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
+    dirty_points_id->insert(point_id);
 }
 
 void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
