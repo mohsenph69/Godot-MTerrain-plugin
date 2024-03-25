@@ -981,7 +981,7 @@ const PackedStringArray& MTerrain::get_heightmap_layers(){
 }
 
 void MTerrain::set_active_layer_by_name(String lname){
-    ERR_FAIL_COND(!grid->is_created());
+    ERR_FAIL_COND_MSG(!grid->is_created(),"Please call set_active_layer_by_name function after creating grid");
     grid->set_active_layer(lname);
 }
 

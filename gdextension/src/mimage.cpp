@@ -621,7 +621,6 @@ bool MImage::save(Ref<MResource> mres,bool force_save) {
 			bool cmp_qtq = region->grid->save_config.heightmap_compress_qtq;
 			MResource::FileCompress fcmp = region->grid->save_config.heightmap_file_compress;
 			mres->insert_heightmap_rf(background_data,accq,cmp_qtq,fcmp);
-			is_saved_layers.set(0,true);
 		}
 		for(int i=1;i<image_layers.size();i++){
 			if(!is_saved_layers[i]){
@@ -639,7 +638,10 @@ bool MImage::save(Ref<MResource> mres,bool force_save) {
 			}
 		}
 		is_save = true;
-		return true;
+		if(!is_saved_layers[0]){
+			is_saved_layers.set(0,true);
+			return true;
+		}
 	}
 	return false;
 }

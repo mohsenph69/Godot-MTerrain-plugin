@@ -1422,6 +1422,7 @@ void MGrid::set_active_layer(String input){
     if(index != -1){
         active_heightmap_layer = index;
     } else {
+        ERR_FAIL_MSG("Active Layer "+input+"is not found");
         active_heightmap_layer = 0;
     }
     for(int i=0;i<_all_heightmap_image_list.size();i++){
