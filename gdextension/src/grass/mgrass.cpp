@@ -223,13 +223,16 @@ void MGrass::update_dirty_chunks(bool update_lock){
     if(update_id!=grid->get_update_id()){
         return; // will be called after grid update will finish
     }
+    VSet<int64_t> dirty_instances;
     for(int i=0;i<dirty_points_id->size();i++){
-        int64_t terrain_instance_id = grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]);
-        if(!grid_to_grass.has(terrain_instance_id)){
-            WARN_PRINT("Dirty point not found "+itos((*dirty_points_id)[i])+ " instance is "+itos(terrain_instance_id));
+        dirty_instances.insert(grid->get_point_instance_id_by_point_id((*dirty_points_id)[i]));
+    }
+    for(int i=0;i<dirty_instances.size();i++){
+        if(!grid_to_grass.has(dirty_instances[i])){
+            WARN_PRINT("Dirty instance is not found "+itos(dirty_instances[i]));
             continue;
         }
-        MGrassChunk* g = grid_to_grass[terrain_instance_id];
+        MGrassChunk* g = grid_to_grass[dirty_instances[i]];
         create_grass_chunk(-1,g);
     }
     memdelete(dirty_points_id);
