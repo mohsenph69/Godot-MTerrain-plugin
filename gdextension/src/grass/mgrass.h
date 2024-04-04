@@ -29,7 +29,7 @@ class MGrid;
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
     private:
-    float time_rollover_secs = 3600;
+    static float time_rollover_secs;
     double current_shader_time=0;
     Ref<PhysicsMaterial> physics_material;
     int collision_layer=1;
@@ -165,6 +165,7 @@ class MGrass : public Node3D {
     void _grass_tree_entered();
     void _grass_tree_exiting();
 
+    static float get_shader_time();
     _FORCE_INLINE_ void update_shader_time();
     _FORCE_INLINE_ float get_shader_time(uint32_t grass_cell_index);
 };

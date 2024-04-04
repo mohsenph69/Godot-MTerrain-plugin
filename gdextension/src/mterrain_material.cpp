@@ -428,7 +428,7 @@ void MTerrainMaterial::create_empty_terrain_image(StringName name,Image::Format 
 int MTerrainMaterial::get_texture_id(const String& name){
     if(!terrain_textures_ids.has(name)){
         if(name.is_empty()){
-            WARN_PRINT("Texture name is empty");
+            //WARN_PRINT("Texture name is empty");
             return -1;
         }
         WARN_PRINT("Texture "+name+" does not exist");

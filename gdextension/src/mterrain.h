@@ -95,6 +95,7 @@ class MTerrain : public  Node3D {
 
     std::future<void> update_regions_future;
     bool is_update_regions_future_valid = false;
+    bool set_mtime=false;
     
 
 
@@ -218,7 +219,7 @@ class MTerrain : public  Node3D {
     void remove_heightmap_layer();
     void toggle_heightmap_layer_visibile();
     void terrain_child_changed(Node* n);
-    void update_grass_list();
+    void terrain_ready_signal();
     Vector2i get_region_grid_size();
     int get_region_id_by_world_pos(const Vector3& world_pos);
     int32_t get_base_size();
@@ -230,6 +231,9 @@ class MTerrain : public  Node3D {
     Array get_brush_layers();
     void set_brush_layers_num(int input);
     int get_brush_layers_num();
+
+    void set_set_mtime(bool input);
+    bool get_set_mtime();
 
     Array get_layers_info();
     void set_color_layer(int index,int group_index,String brush_name);

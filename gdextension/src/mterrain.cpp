@@ -158,7 +158,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("toggle_heightmap_layer_visibile"), &MTerrain::toggle_heightmap_layer_visibile);
     ClassDB::bind_method(D_METHOD("get_layer_visibility","input"), &MTerrain::get_layer_visibility);
 
-    ClassDB::bind_method(D_METHOD("update_grass_list"), &MTerrain::update_grass_list);
+    ClassDB::bind_method(D_METHOD("_terrain_ready_signal"), &MTerrain::terrain_ready_signal);
     ClassDB::bind_method(D_METHOD("terrain_child_changed"), &MTerrain::terrain_child_changed);
     ClassDB::bind_method(D_METHOD("get_region_grid_size"), &MTerrain::get_region_grid_size);
     ClassDB::bind_method(D_METHOD("get_region_id_by_world_pos","world_pos"), &MTerrain::get_region_id_by_world_pos);
@@ -173,6 +173,13 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_brush_layers_num","input"), &MTerrain::set_brush_layers_num);
     ClassDB::bind_method(D_METHOD("get_brush_layers_num"), &MTerrain::get_brush_layers_num);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"brush_layers_groups_num",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_brush_layers_num","get_brush_layers_num");
+    
+    ADD_SUBGROUP("util","");
+    ClassDB::bind_method(D_METHOD("set_set_mtime","input"), &MTerrain::set_set_mtime);
+    ClassDB::bind_method(D_METHOD("get_set_mtime"), &MTerrain::get_set_mtime);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"set_mtime"),"set_set_mtime","get_set_mtime");
+    
+    
     ClassDB::bind_method(D_METHOD("get_layers_info"), &MTerrain::get_layers_info);
     ClassDB::bind_method(D_METHOD("set_color_layer","index","group_index","brush_name"), &MTerrain::set_color_layer);
     ClassDB::bind_method(D_METHOD("disable_brush_mask"), &MTerrain::disable_brush_mask);
@@ -212,7 +219,7 @@ MTerrain::MTerrain() {
     update_physics_timer->connect("timeout", Callable(this, "finish_update_physics"));
 
     // Grass List update conditions
-    connect("ready",Callable(this,"update_grass_list"));
+    connect("ready",Callable(this,"_terrain_ready_signal"));
     connect("child_exiting_tree",Callable(this,"terrain_child_changed"));
     connect("child_entered_tree",Callable(this,"terrain_child_changed"));
 }
@@ -273,7 +280,7 @@ void MTerrain::create_grid(){
     grid->update_physics(cam_pos);
     last_update_pos = cam_pos;
     // Grass Part
-    update_grass_list();
+    terrain_ready_signal();
     for(int i=0;i<grass_list.size();i++){
         grass_list[i]->init_grass(grid);
         if(grass_list[i]->is_grass_init){
@@ -1024,12 +1031,16 @@ void MTerrain::terrain_child_changed(Node* n){
     if(n->is_class("MGrass")){
         MGrass* g = Object::cast_to<MGrass>(n);
         if(grass_list.find(g)==-1){
-            update_grass_list();
+            terrain_ready_signal();
         }
     }
 }
 
-void MTerrain::update_grass_list(){
+void MTerrain::terrain_ready_signal(){
+    if(set_mtime){
+        RenderingServer::get_singleton()->global_shader_parameter_add("mtime",RenderingServer::GlobalShaderParameterType::GLOBAL_VAR_TYPE_FLOAT,0.0);
+        set_process(true);
+    }
     // Grass part
     grass_list.clear(); // First make sure grass list is clear
     int child_count = get_child_count();
@@ -1090,6 +1101,13 @@ void MTerrain::set_brush_layers_num(int input){
 }
 int MTerrain::get_brush_layers_num(){
     return brush_layers.size();
+}
+
+void MTerrain::set_set_mtime(bool input){
+    set_mtime = true;
+}
+bool MTerrain::get_set_mtime(){
+    return set_mtime;
 }
 
 Array MTerrain::get_layers_info(){
@@ -1185,7 +1203,15 @@ void MTerrain::update_normals(uint32_t left, uint32_t right, uint32_t top, uint3
 }
 
 void MTerrain::_notification(int32_t what){
+    if(what == NOTIFICATION_PROCESS){
+        if(set_mtime){
+            RenderingServer::get_singleton()->global_shader_parameter_set("mtime",MGrass::get_shader_time());
+        }
+        return;
+    }
     if(what == NOTIFICATION_WM_CLOSE_REQUEST || what == NOTIFICATION_WM_GO_BACK_REQUEST){
         _finish_terrain();
+        return;
     }
+    
 }

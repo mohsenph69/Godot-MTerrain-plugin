@@ -10,6 +10,9 @@
 #define PS PhysicsServer3D::get_singleton()
 
 
+float MGrass::time_rollover_secs = 3600;
+
+
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
     ClassDB::bind_method(D_METHOD("make_grass_dirty_by_pixel","x","y"), &MGrass::make_grass_dirty_by_pixel);
@@ -1206,11 +1209,15 @@ void MGrass::_grass_tree_exiting(){
     clear_grass();
 }
 
-void MGrass::update_shader_time(){
+float MGrass::get_shader_time(){
     double t = double(Time::get_singleton()->get_ticks_msec());
     t /= 1000.0;
     t = fmod(t,time_rollover_secs);
-    current_shader_time = t;
+    return t;
+}
+
+void MGrass::update_shader_time(){
+    current_shader_time = get_shader_time() - 0.07;
 }
 
 float MGrass::get_shader_time(uint32_t grass_cell_index){
