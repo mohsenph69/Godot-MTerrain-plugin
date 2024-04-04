@@ -265,6 +265,7 @@ class MGrid : public Object {
     void create_ordered_instances_distance();
 
     void set_terrain_material(Ref<MTerrainMaterial> input);
+    Ref<MTerrainMaterial> get_terrain_material();
 
     MGridPos get_3d_grid_pos_by_middle_point(MGridPos input);
     real_t get_closest_height(const Vector3& pos);

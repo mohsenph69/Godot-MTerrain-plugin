@@ -617,6 +617,10 @@ void MGrid::set_terrain_material(Ref<MTerrainMaterial> m) {
     _terrain_material = m;
 }
 
+Ref<MTerrainMaterial> MGrid::get_terrain_material(){
+    return _terrain_material;
+}
+
 
 MGridPos MGrid::get_3d_grid_pos_by_middle_point(MGridPos input) {
     MRegion* r = get_region_by_point(input.x,input.z);

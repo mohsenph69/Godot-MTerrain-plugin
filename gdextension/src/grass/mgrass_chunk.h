@@ -91,7 +91,7 @@ struct MGrassChunk // Rendering server multi mesh data
             next=nullptr;
         }
     }
-    void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data){
+    void set_buffer(int _count,RID scenario, RID mesh_rid, RID material ,const PackedFloat32Array& data,bool has_color_data=false, bool has_custom_data=false){
         //UtilityFunctions::print("Buffer count ",_count, " c ", count);
         if(_count!=0 && count == 0){ //creating
             multimesh = RenderingServer::get_singleton()->multimesh_create();
@@ -116,7 +116,7 @@ struct MGrassChunk // Rendering server multi mesh data
             RenderingServer::get_singleton()->instance_geometry_set_material_override(instance,material);
         }
         count = _count;
-        RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, false, false);
+        RenderingServer::get_singleton()->multimesh_allocate_data(multimesh, _count, RenderingServer::MULTIMESH_TRANSFORM_3D, has_color_data, has_custom_data);
         RenderingServer::get_singleton()->multimesh_set_buffer(multimesh, data);
     }
 };

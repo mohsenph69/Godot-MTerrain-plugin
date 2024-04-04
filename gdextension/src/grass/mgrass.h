@@ -1,8 +1,8 @@
 #ifndef MGRASS
 #define MGRASS
 
-#define BUFFER_STRID_FLOAT 12
-#define BUFFER_STRID_BYTE 48
+//#define BUFFER_STRID_FLOAT 12
+//#define BUFFER_STRID_BYTE 48
 
 #include <mutex>
 
@@ -29,6 +29,8 @@ class MGrid;
 class MGrass : public Node3D {
     GDCLASS(MGrass,Node3D);
     private:
+    float time_rollover_secs = 3600;
+    double current_shader_time=0;
     Ref<PhysicsMaterial> physics_material;
     int collision_layer=1;
     int collision_mask=1;
@@ -36,6 +38,7 @@ class MGrass : public Node3D {
     std::mutex update_mutex;
     uint64_t final_count=0;
     int grass_count_limit=9000000;
+    int cell_creation_time_data_limit = 10000;
     float nav_obstacle_radius=1.0;
     int shape_type=-1;
     Variant shape_data;
@@ -72,6 +75,8 @@ class MGrass : public Node3D {
     HashMap<int64_t,MGrassChunk*> grid_to_grass;
     Vector<MGrassChunk*> to_be_visible;
     VSet<int>* dirty_points_id;
+    HashMap<uint32_t,float> cell_creation;
+    Vector<uint32_t> cell_creation_order; // use for set a limit for cell_creation, just remove the first element after a limit
     Vector3 shape_offset;
     Ref<Shape3D> shape;
     MBound physics_search_bound;
@@ -104,6 +109,8 @@ class MGrass : public Node3D {
     bool get_active();
     void set_grass_data(Ref<MGrassData> d);
     Ref<MGrassData> get_grass_data();
+    void set_cell_creation_time_data_limit(int input);
+    int get_cell_creation_time_data_limit();
     void set_grass_count_limit(int input);
     int get_grass_count_limit();
     //void set_grass_in_cell(int input);
@@ -158,5 +165,7 @@ class MGrass : public Node3D {
     void _grass_tree_entered();
     void _grass_tree_exiting();
 
+    _FORCE_INLINE_ void update_shader_time();
+    _FORCE_INLINE_ float get_shader_time(uint32_t grass_cell_index);
 };
 #endif

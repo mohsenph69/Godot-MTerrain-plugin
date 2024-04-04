@@ -1,6 +1,8 @@
 #ifndef MNAVIGATIONREGION3D
 #define MNAVIGATIONREGION3D
 
+#define BUFFER_STRID_FLOAT 12
+
 #include <godot_cpp/classes/navigation_server3d.hpp>
 #include <godot_cpp/classes/navigation_region3d.hpp>
 #include <godot_cpp/classes/navigation_mesh.hpp>
