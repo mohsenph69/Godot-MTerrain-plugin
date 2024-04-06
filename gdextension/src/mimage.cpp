@@ -684,9 +684,9 @@ void MImage::remove_undo_data_in_layer(int layer_index){
 	}
 }
 
-void MImage::go_to_undo(int ur_id){
+bool MImage::go_to_undo(int ur_id){
 	if(!undo_data.has(ur_id)){
-		return; // noting to do here we don't have any data change corrispond to this undo redo
+		return false; // noting to do here we don't have any data change corrispond to this undo redo
 	}
 	MImageUndoData ur = undo_data[ur_id];
 	if(ur.layer!=active_layer){
@@ -732,6 +732,7 @@ void MImage::go_to_undo(int ur_id){
 		region->recalculate_normals();
 	}
 	is_dirty = true;
+	return true;
 }
 
 bool MImage::has_undo(int ur_id){

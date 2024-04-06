@@ -965,6 +965,23 @@ void MTerrain::draw_color(Vector3 brush_pos,real_t radius,String brush_name, Str
     int id = get_image_id(uniform_name);
     ERR_FAIL_COND(id==-1);
     grid->draw_color(brush_pos,radius,brush,id);
+    for(MGrass* g : confirm_grass_list){
+        if(g->is_depend_on_image(id)){
+            Vector2i px_pos = g->get_closest_pixel(brush_pos);
+            int l = ceil(radius/g->grass_data->density);
+            int left = px_pos.x - l;
+            int right = px_pos.x + l;
+            int top = px_pos.y - l;
+            int bottom = px_pos.y + l;
+
+            for(int x=left;x<=right;x++){
+                for(int y=top;y<=bottom;y++){
+                    g->make_grass_dirty_by_pixel(x,y);
+                }
+            }
+            g->update_dirty_chunks();
+        }
+    }
 }
 
 Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
@@ -1161,6 +1178,18 @@ void MTerrain::images_add_undo_stage(){
 }
 void MTerrain::images_undo(){
     grid->images_undo();
+    VSet<int> changed_images;
+    for(MImage* img : grid->last_images_undo_affected_list){
+        changed_images.insert(img->index);
+    }
+    for(int i=0;i<changed_images.size();i++){
+        int index = changed_images[i];
+        for(MGrass* g : confirm_grass_list){
+            if(g->is_depend_on_image(index)){
+                g->recreate_all_grass();
+            }
+        }
+    }
 }
 
 void MTerrain::set_terrain_material(Ref<MTerrainMaterial> input){

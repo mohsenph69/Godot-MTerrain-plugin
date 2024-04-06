@@ -168,6 +168,7 @@ void MGrass::init_grass(MGrid* _grid) {
         }
         float cdensity = grass_data->density*lod_scale;
         rand_buffer_pull.push_back(settings[i]->generate_random_number(cdensity,100));
+        set_lod_setting_image_index(settings[i]);
     }
     // Done
     is_grass_init = true;
@@ -336,14 +337,8 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     ////////////////////////////////////////
     bool process_color_data = settings[g->lod]->process_color_data();
     bool process_custom_data = settings[g->lod]->process_custom_data();
-    int color_img_id = -1;
-    int custom_img_id = -1;
-    if(settings[g->lod]->process_color_data()){
-        color_img_id = grid->get_terrain_material()->get_texture_id(settings[g->lod]->color_img);
-    }
-    if(settings[g->lod]->has_custom_img()){
-        custom_img_id = grid->get_terrain_material()->get_texture_id(settings[g->lod]->custom_img);
-    }
+    int color_img_id = settings[g->lod]->color_img_index;
+    int custom_img_id = settings[g->lod]->custom_img_index;
     
     
 
@@ -658,6 +653,16 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
     }
     update_dirty_chunks();
 }
+
+void MGrass::set_lod_setting_image_index(Ref<MGrassLodSetting> lod_setting){
+    if(lod_setting->has_color_img()){
+        lod_setting->color_img_index = grid->get_terrain_material()->get_texture_id(lod_setting->color_img);
+    }
+    if(lod_setting->has_custom_img()){
+        lod_setting->custom_img_index = grid->get_terrain_material()->get_texture_id(lod_setting->custom_img);
+    }
+}
+
 void MGrass::set_active(bool input){
     active = input;
 }
@@ -1162,6 +1167,7 @@ void MGrass::update_random_buffer_pull(int lod){
     }
     float cdensity = grass_data->density*lod_scale;
     rand_buffer_pull.set(lod,settings[lod]->generate_random_number(cdensity,100));
+    set_lod_setting_image_index(settings[lod]);
 }
 
 void MGrass::_lod_setting_changed(){
@@ -1192,6 +1198,16 @@ void MGrass::undo(){
     ERR_FAIL_COND(!grass_data.is_valid());
     grass_data->undo();
     recreate_all_grass();
+}
+
+bool MGrass::is_depend_on_image(int image_index){
+    for(int i=0;i<settings.size();i++){
+        Ref<MGrassLodSetting> s = settings[i];
+        if(s->color_img_index == image_index || s->custom_img_index){
+            return true;
+        }
+    }
+    return false;
 }
 
 void MGrass::_grass_tree_entered(){

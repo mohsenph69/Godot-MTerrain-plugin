@@ -1545,14 +1545,18 @@ void MGrid::images_add_undo_stage(){
 }
 
 void MGrid::images_undo(){
+    last_images_undo_affected_list.clear();
     if(current_undo_id <= lowest_undo_id){
         // No more undo data
         return;
     }
     current_undo_id--;
     for(int i=0;i<_all_image_list.size();i++){
-        _all_image_list[i]->go_to_undo(current_undo_id);
+        if(_all_image_list[i]->go_to_undo(current_undo_id)) {
+            last_images_undo_affected_list.push_back(_all_image_list[i]);
+        }
         _all_image_list[i]->remove_undo_data(current_undo_id);
+        
     }
     update_all_dirty_image_texture();
 }

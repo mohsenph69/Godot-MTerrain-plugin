@@ -228,6 +228,7 @@ class MGrid : public Object {
     // Undo Redo stuff
     int current_undo_id=0;
     int lowest_undo_id=0;
+    Vector<MImage*> last_images_undo_affected_list;
     // End
     MGrid();
     ~MGrid();

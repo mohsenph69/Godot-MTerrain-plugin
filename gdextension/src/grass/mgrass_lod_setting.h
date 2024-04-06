@@ -57,6 +57,7 @@ class MGrassLodSetting : public Resource {
     };
     bool active_color_data=false;
     String color_img;
+    int color_img_index=-1;
     Vector4 color_rand_start = Vector4(0,0,0,0);
     Vector4 color_rand_end = Vector4(1,1,1,1);
     CUSTOM color_r = RANDOM;
@@ -65,6 +66,7 @@ class MGrassLodSetting : public Resource {
     CUSTOM color_a = RANDOM;
     bool active_custom_data=false;
     String custom_img;
+    int custom_img_index=-1;
     Vector4 custom_rand_start = Vector4(0,0,0,0);
     Vector4 custom_rand_end = Vector4(1,1,1,1);
     CUSTOM custom_r = RANDOM;

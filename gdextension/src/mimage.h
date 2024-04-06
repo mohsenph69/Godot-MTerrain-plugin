@@ -101,7 +101,7 @@ struct MImage {
     void check_undo(); // Register the state of image before the draw
     void remove_undo_data(int ur_id);
     void remove_undo_data_in_layer(int layer_index);
-    void go_to_undo(int ur_id);
+    bool go_to_undo(int ur_id);
     bool has_undo(int ur_id);
 
     // This functions exist in godot source code

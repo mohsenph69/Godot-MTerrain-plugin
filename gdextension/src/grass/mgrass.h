@@ -105,6 +105,7 @@ class MGrass : public Node3D {
     Vector3 get_pixel_world_pos(uint32_t px, uint32_t py);
     Vector2i grass_px_to_grid_px(uint32_t px, uint32_t py);
     void draw_grass(Vector3 brush_pos,real_t radius,bool add);
+    _FORCE_INLINE_ void set_lod_setting_image_index(Ref<MGrassLodSetting> lod_setting); // Should be called after generate_random_number
     void set_active(bool input);
     bool get_active();
     void set_grass_data(Ref<MGrassData> d);
@@ -161,6 +162,7 @@ class MGrass : public Node3D {
     void _lod_setting_changed();
     void check_undo(); // register a grass data stege for undo
     void undo();
+    bool is_depend_on_image(int image_index);
 
     void _grass_tree_entered();
     void _grass_tree_exiting();
