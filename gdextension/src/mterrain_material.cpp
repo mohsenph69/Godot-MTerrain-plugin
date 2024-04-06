@@ -354,7 +354,7 @@ void MTerrainMaterial::remove_material(int region_id){
     materials.erase(region_id);
 }
 
-void MTerrainMaterial::load_images(Array images_names){
+void MTerrainMaterial::load_images(Array images_names,Ref<MResource> first_res){
     /*
         terrain_textures_names come from shader uniform which has mterrain_ prefix
         images_names come from data directory
@@ -378,7 +378,12 @@ void MTerrainMaterial::load_images(Array images_names){
         }
     }
     for(int i=0;i<pimages_names.size();i++){
-        add_terrain_image(pimages_names[i], !terrain_textures_names.has(pimages_names[i]));
+        Image::Format _f = Image::Format::FORMAT_MAX;
+        if(first_res.is_valid()){
+            _f = first_res->get_data_format(pimages_names[i]);
+        }
+        _f = _f == Image::Format::FORMAT_MAX ? Image::Format::FORMAT_L8 : _f;
+        add_terrain_image(pimages_names[i], !terrain_textures_names.has(pimages_names[i]), _f);
     }
     set_all_next_passes();
     show_region = false;
@@ -402,7 +407,7 @@ void MTerrainMaterial::clear(){
     active_region = -1;
 }
 
-void MTerrainMaterial::add_terrain_image(StringName name, bool is_ram_image) {
+void MTerrainMaterial::add_terrain_image(StringName name, bool is_ram_image, Image::Format _f) {
     String uniform_name = "mterrain_" + name;
     MGridPos region_grid_size = grid->get_region_grid_size();
     for(int z=0; z<region_grid_size.z;z++){
@@ -415,6 +420,8 @@ void MTerrainMaterial::add_terrain_image(StringName name, bool is_ram_image) {
                 i->format = Image::Format::FORMAT_RGB8;
             } else if(name == HEIGHTMAP_NAME) {
                 i->format = Image::Format::FORMAT_RF;
+            } else {
+                i->format = _f;
             }
             region->add_image(i);
             all_images.push_back(i);

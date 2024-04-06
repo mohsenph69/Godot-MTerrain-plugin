@@ -116,8 +116,9 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
     /// Also grabing the images name from the first terrain resource
     String first_res_path = dataDir.path_join("x0_y0.res");
     Array images_names;
+    Ref<MResource> first_res;
     if(ResourceLoader::get_singleton()->exists(first_res_path)){  // if not exist data directory is empty and a empty data will be created
-        Ref<MResource> first_res = ResourceLoader::get_singleton()->load(first_res_path);
+        first_res = ResourceLoader::get_singleton()->load(first_res_path);
         ERR_FAIL_COND_EDMSG(!first_res.is_valid(), "Data x0_y0.res is not valid MResource file ");
         images_names = first_res->get_data_names();
         for(int i=0; i < images_names.size(); i++){
@@ -160,7 +161,7 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
         }
     }
     is_dirty = true;
-    _terrain_material->load_images(images_names);
+    _terrain_material->load_images(images_names,first_res);
     for(int i=0; i<_regions_count; i++){
         regions[i].configure();
     }
