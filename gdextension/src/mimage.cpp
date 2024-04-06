@@ -416,6 +416,9 @@ void MImage::get_data(PackedByteArray* out,int scale){
 }
 
 void MImage::update_texture(int scale,bool apply_update){
+	if(is_ram_image){
+		return;
+	}
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	if(!is_init){
 		return;
@@ -453,6 +456,9 @@ void MImage::update_texture(int scale,bool apply_update){
 }
 
 void MImage::apply_update() {
+	if(is_ram_image){
+		return;
+	}
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	if(!is_init){
 		return;

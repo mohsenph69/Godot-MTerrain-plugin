@@ -115,7 +115,11 @@ void MTerrainMaterial::update_uniforms_list(){
             if(n.begins_with("mterrain_") && String(u["hint_string"]) == "Texture2D"){
                 PackedStringArray parts = n.split("_");
                 if(parts.size()>0){
-                    new_terrain_textures_names.push_back(parts[1]);
+                    String _n = parts[1];
+                    for(int i=2; i<parts.size(); i++){
+                        _n += "_" + parts[i];
+                    }
+                    new_terrain_textures_names.push_back(_n);
                     continue;
                 }
             }
@@ -350,14 +354,31 @@ void MTerrainMaterial::remove_material(int region_id){
     materials.erase(region_id);
 }
 
-void MTerrainMaterial::load_images(){
+void MTerrainMaterial::load_images(Array images_names){
+    /*
+        terrain_textures_names come from shader uniform which has mterrain_ prefix
+        images_names come from data directory
+        if an image exist only in images_names not in terrain_textures_names, that image is flaged as RAM image which
+        exist only in RAM side not VRAM side
+    */
     ERR_FAIL_COND(!grid);
     ERR_FAIL_COND(!grid->is_created());
     ERR_FAIL_COND(is_loaded);
     update_uniforms_list();
     //Adding textures
+    //Making sure images names are string not stringName
+    PackedStringArray pimages_names;
+    for(int i=0; i < images_names.size(); i++){
+        pimages_names.push_back(String(images_names[i]));
+    }
+    //Combine
     for(int i=0;i<terrain_textures_names.size();i++){
-        add_terrain_image(terrain_textures_names[i]);
+        if(!pimages_names.has(terrain_textures_names[i])){
+            pimages_names.push_back(terrain_textures_names[i]);
+        }
+    }
+    for(int i=0;i<pimages_names.size();i++){
+        add_terrain_image(pimages_names[i], !terrain_textures_names.has(pimages_names[i]));
     }
     set_all_next_passes();
     show_region = false;
@@ -381,7 +402,7 @@ void MTerrainMaterial::clear(){
     active_region = -1;
 }
 
-void MTerrainMaterial::add_terrain_image(StringName name) {
+void MTerrainMaterial::add_terrain_image(StringName name, bool is_ram_image) {
     String uniform_name = "mterrain_" + name;
     MGridPos region_grid_size = grid->get_region_grid_size();
     for(int z=0; z<region_grid_size.z;z++){
@@ -389,6 +410,7 @@ void MTerrainMaterial::add_terrain_image(StringName name) {
             MRegion* region = grid->get_region(x,z);
             MGridPos rpos(x,0,z);
             MImage* i = memnew(MImage(name,uniform_name,rpos,region));
+            i->is_ram_image = is_ram_image;
             if (name == NORMALS_NAME){
                 i->format = Image::Format::FORMAT_RGB8;
             } else if(name == HEIGHTMAP_NAME) {

@@ -271,6 +271,9 @@ void MTerrain::create_grid(){
     }
     grid->lod_distance = lod_distance;
     grid->create(terrain_size.x,terrain_size.y,_chunks);
+    if(!grid->is_created()){
+        return;
+    }
     get_cam_pos();
     grid->update_regions_bounds(cam_pos,false);
     grid->update_regions_at_load();
@@ -1104,7 +1107,7 @@ int MTerrain::get_brush_layers_num(){
 }
 
 void MTerrain::set_set_mtime(bool input){
-    set_mtime = true;
+    set_mtime = input;
 }
 bool MTerrain::get_set_mtime(){
     return set_mtime;

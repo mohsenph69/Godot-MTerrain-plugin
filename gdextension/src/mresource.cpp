@@ -745,6 +745,10 @@ MResource::MResource(){
 MResource::~MResource(){
 }
 
+Array MResource::get_data_names(){
+    return compressed_data.keys();
+}
+
 bool MResource::has_data(const StringName& name){
     return compressed_data.has(name);
 }

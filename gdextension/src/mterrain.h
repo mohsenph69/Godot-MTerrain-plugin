@@ -260,6 +260,7 @@ class MTerrain : public  Node3D {
     void update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom);
 
     void _notification(int32_t what);
+    void _frame_draw();
 };
 
 

@@ -112,6 +112,19 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
     region_size_meter = region_size*_chunks->base_size_meter;
     rp = (region_size_meter/_chunks->h_scale);
     region_pixel_size = rp + 1;
+    /// Checking if region pixel size is correct
+    /// Also grabing the images name from the first terrain resource
+    String first_res_path = dataDir.path_join("x0_y0.res");
+    Array images_names;
+    if(ResourceLoader::get_singleton()->exists(first_res_path)){  // if not exist data directory is empty and a empty data will be created
+        Ref<MResource> first_res = ResourceLoader::get_singleton()->load(first_res_path);
+        ERR_FAIL_COND_EDMSG(!first_res.is_valid(), "Data x0_y0.res is not valid MResource file ");
+        images_names = first_res->get_data_names();
+        for(int i=0; i < images_names.size(); i++){
+            StringName _n = images_names[i];
+            ERR_FAIL_COND_EDMSG(first_res->get_data_width(_n)!=region_pixel_size-1,String(_n)+" width "+itos(first_res->get_heightmap_width())+" in data directory does not match the your region size in pixel "+itos(region_pixel_size-1)+" Please change your regions size width so it match with data directory");
+        }
+    }
     _grid_bound = MBound(0,width-1, 0, height-1);
     regions = memnew_arr(MRegion, _regions_count);
     int total_points = _size.z*_size.x;
@@ -147,7 +160,7 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
         }
     }
     is_dirty = true;
-    _terrain_material->load_images();
+    _terrain_material->load_images(images_names);
     for(int i=0; i<_regions_count; i++){
         regions[i].configure();
     }

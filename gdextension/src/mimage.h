@@ -70,6 +70,7 @@ struct MImage {
     bool is_init=false;
     bool is_corrupt_file = false;
     bool is_null_image=true;
+    bool is_ram_image=false; // in case the image exist only on RAM not VRAM
     
     MImage();
     MImage(const String& _name,const String& _uniform_name,MGridPos _grid_pos,MRegion* r);
