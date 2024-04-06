@@ -125,6 +125,7 @@ class MGrid : public Object {
     GDCLASS(MGrid, Object);
     friend class MRegion;
     private:
+    bool _is_opengl=false;
     uint8_t _update_id=0; // Only for mesh update not for physics
     MBrushManager* _brush_manager = nullptr;
     MPoint** points;
@@ -335,6 +336,9 @@ class MGrid : public Object {
     void images_undo();
 
     void refresh_all_regions_uniforms();
+
+    void update_renderer_info();
+    bool is_opengl();
 };
 
 #endif

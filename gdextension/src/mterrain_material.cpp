@@ -67,7 +67,12 @@ Ref<Shader> MTerrainMaterial::get_shader() {
 }
 
 Ref<Shader> MTerrainMaterial::get_default_shader(){
-   Ref<Shader> s = ResourceLoader::get_singleton()->load(M_DEAFAULT_SHADER_PATH);
+    Ref<Shader> s;
+    if(grid->is_opengl()){
+        s = ResourceLoader::get_singleton()->load(M_DEAFAULT_SHADER_OPENGL_PATH);
+    } else {
+        s = ResourceLoader::get_singleton()->load(M_DEAFAULT_SHADER_PATH);
+    }
    ERR_FAIL_COND_V_EDMSG(!s.is_valid(),s,"Default shader is not valid");
    return s;
 }

@@ -92,6 +92,7 @@ RID MGrid::get_scenario(){
 }
 
 void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
+    update_renderer_info();
     if (width == 0 || height == 0) return;
     _chunks = chunks;
     _size.x = width;
@@ -1565,4 +1566,12 @@ void MGrid::refresh_all_regions_uniforms(){
     for(int i=0;i<_regions_count;i++){
         regions[i].refresh_all_uniforms();
     }
+}
+
+void MGrid::update_renderer_info(){
+    _is_opengl = RenderingServer::get_singleton()->get_rendering_device() == nullptr;
+}
+
+bool MGrid::is_opengl(){
+    return _is_opengl;
 }

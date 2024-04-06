@@ -241,6 +241,7 @@ void MTerrain::create_grid(){
     ERR_FAIL_COND_EDMSG(terrain_size.x%region_size!=0,"Terrain size X component is not divisible by region size");
     ERR_FAIL_COND_EDMSG(terrain_size.y%region_size!=0,"Terrain size Y component is not divisible by region size");
     _chunks = memnew(MChunks);
+    grid->update_renderer_info();
     _chunks->create_chunks(size_list[min_size_index],size_list[max_size_index],h_scale_list[min_h_scale_index],h_scale_list[max_h_scale_index],size_info);
     grid->set_scenario(get_world_3d()->get_scenario());
     grid->space = get_world_3d()->get_space();
@@ -266,7 +267,12 @@ void MTerrain::create_grid(){
     if(terrain_material.is_valid()){
         grid->set_terrain_material(terrain_material);
     } else {
-        Ref<MTerrainMaterial> m = ResourceLoader::get_singleton()->load(M_DEAFAULT_MATERIAL_PATH);
+        Ref<MTerrainMaterial> m;
+        if(grid->is_opengl()){
+            m = ResourceLoader::get_singleton()->load(M_DEAFAULT_MATERIAL_OPENGL_PATH);
+        } else {
+            m = ResourceLoader::get_singleton()->load(M_DEAFAULT_MATERIAL_PATH);
+        }
         grid->set_terrain_material(m);
     }
     grid->lod_distance = lod_distance;
