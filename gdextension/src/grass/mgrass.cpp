@@ -317,28 +317,29 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
         g->clear_tree();
         px = grass_chunk->pixel_region;
     }
+    int lod = g->lod;
     int lod_scale;
-    const float* rand_buffer =(float*)rand_buffer_pull[g->lod]->ptr();
-    if(settings[g->lod]->force_lod_count >=0 && settings[g->lod]->force_lod_count < lod_count){
-        lod_scale = pow(2,settings[g->lod]->force_lod_count);
+    const float* rand_buffer =(float*)rand_buffer_pull[lod]->ptr();
+    if(settings[lod]->force_lod_count >=0 && settings[lod]->force_lod_count < lod_count){
+        lod_scale = pow(2,settings[lod]->force_lod_count);
     } else {
-        lod_scale = pow(2,g->lod);
+        lod_scale = pow(2,lod);
     }
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
-    uint32_t divide_amount= (uint32_t)settings[g->lod]->divide;
+    uint32_t divide_amount= (uint32_t)settings[lod]->divide;
     Vector<MPixelRegion> pixel_regions = px.devide(divide_amount);
-    int grass_in_cell = settings[g->lod]->grass_in_cell;
-    uint32_t buffer_strid_float = settings[g->lod]->get_buffer_strid_float();
-    uint32_t buffer_strid_byte = settings[g->lod]->get_buffer_strid_byte();
-    int rand_buffer_size = rand_buffer_pull[g->lod]->size()/buffer_strid_float;
+    int grass_in_cell = settings[lod]->grass_in_cell;
+    uint32_t buffer_strid_float = settings[lod]->get_buffer_strid_float();
+    uint32_t buffer_strid_byte = settings[lod]->get_buffer_strid_byte();
+    int rand_buffer_size = rand_buffer_pull[lod]->size()/buffer_strid_float;
     ////////////////////////////////////////
     /// Color data and Custom data
     ////////////////////////////////////////
-    bool process_color_data = settings[g->lod]->process_color_data();
-    bool process_custom_data = settings[g->lod]->process_custom_data();
-    int color_img_id = settings[g->lod]->color_img_index;
-    int custom_img_id = settings[g->lod]->custom_img_index;
+    bool process_color_data = settings[lod]->process_color_data();
+    bool process_custom_data = settings[lod]->process_custom_data();
+    int color_img_id = settings[lod]->color_img_index;
+    int custom_img_id = settings[lod]->custom_img_index;
     
     
 
@@ -403,30 +404,30 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                                 color_img = grid->get_pixel(px_pos.x,px_pos.y,color_img_id);
                             }
                             //Red
-                            if(settings[g->lod]->color_r == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->color_r == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = color_img.r;
-                            } else if(settings[g->lod]->color_r == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->color_r == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                             dindex++;
                             //Green
-                            if(settings[g->lod]->color_g == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->color_g == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = color_img.g;
-                            } else if(settings[g->lod]->color_g == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->color_g == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                             dindex++;
                             //Blue
-                            if(settings[g->lod]->color_b == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->color_b == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = color_img.b;
-                            } else if(settings[g->lod]->color_b == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->color_b == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                             dindex++;
                             //Alpha
-                            if(settings[g->lod]->color_a == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->color_a == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = color_img.a;
-                            } else if(settings[g->lod]->color_a == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->color_a == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                             dindex++;
@@ -439,30 +440,30 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                                 custom_img = grid->get_pixel(px_pos.x,px_pos.y,custom_img_id);
                             }
                             //Red
-                            if(settings[g->lod]->custom_r == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->custom_r == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = custom_img.r;
-                            } else if(settings[g->lod]->custom_r == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->custom_r == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                             dindex++;
                             //Green
-                            if(settings[g->lod]->custom_g == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->custom_g == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = custom_img.g;
-                            } else if(settings[g->lod]->custom_g == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->custom_g == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                             dindex++;
                             //Blue
-                            if(settings[g->lod]->custom_b == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->custom_b == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = custom_img.b;
-                            } else if(settings[g->lod]->custom_b == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->custom_b == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                             dindex++;
                             //Alpha
-                            if(settings[g->lod]->custom_a == MGrassLodSetting::CUSTOM::IMAGE){
+                            if(settings[lod]->custom_a == MGrassLodSetting::CUSTOM::IMAGE){
                                 ptrw[dindex] = custom_img.a;
-                            } else if(settings[g->lod]->custom_a == MGrassLodSetting::CUSTOM::CREATION_TIME){
+                            } else if(settings[lod]->custom_a == MGrassLodSetting::CUSTOM::CREATION_TIME){
                                 ptrw[dindex] = get_shader_time(cell_id);
                             }
                         }
@@ -477,16 +478,16 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
             j++;
         }
         // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
-        if(meshe_rids[root_g->lod] == RID() || count < min_grass_cutoff){
+        if(meshe_rids[lod] == RID() || count < min_grass_cutoff){
             g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
             continue;
         }
-        g->set_buffer(count,scenario,meshe_rids[root_g->lod],material_rids[root_g->lod],buffer,settings[root_g->lod]->active_color_data,settings[root_g->lod]->active_custom_data);
+        g->set_buffer(count,scenario,meshe_rids[lod],material_rids[lod],buffer,settings[lod]->active_color_data,settings[lod]->active_custom_data);
         //UtilityFunctions::print("buffer ",buffer);
         total_count += count;
     }
-    root_g->set_shadow_setting(settings[root_g->lod]->shadow_setting);
-    root_g->set_gi_mode(settings[root_g->lod]->gi_mode);
+    root_g->set_shadow_setting(settings[lod]->shadow_setting);
+    root_g->set_gi_mode(settings[lod]->gi_mode);
     root_g->total_count = total_count;
     if(grass_chunk!=nullptr){ // This means updating not creating
         root_g->unrelax();
