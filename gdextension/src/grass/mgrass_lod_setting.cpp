@@ -293,6 +293,8 @@ PackedFloat32Array* MGrassLodSetting::generate_random_number(float density,int a
     // if data contain only random number grass should not worry about that 
     _process_color_data = color_r!=RANDOM || color_g!=RANDOM || color_b!=RANDOM || color_a!=RANDOM;
     _process_custom_data = custom_r!=RANDOM || custom_g!=RANDOM || custom_b!=RANDOM || custom_a!=RANDOM;
+    _process_color_data = _process_color_data && active_color_data;
+     _process_custom_data = _process_custom_data && active_custom_data;
     _has_color_img = (color_r==IMAGE || color_g==IMAGE || color_b==IMAGE || color_a==IMAGE) && !color_img.is_empty();
     _has_custom_img = (custom_r==IMAGE || custom_g==IMAGE || custom_b==IMAGE || custom_a==IMAGE) && !custom_img.is_empty();
 
