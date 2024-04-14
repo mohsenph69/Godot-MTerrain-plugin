@@ -1,11 +1,8 @@
 #include "mgrass_data.h"
 
-#include <godot_cpp/variant/utility_functions.hpp>
-
 
 void MGrassData::_bind_methods(){
     ClassDB::bind_method(D_METHOD("add","d"), &MGrassData::add);
-    ClassDB::bind_method(D_METHOD("print_all_data"), &MGrassData::print_all_data);
 
     ClassDB::bind_method(D_METHOD("set_data","input"), &MGrassData::set_data);
     ClassDB::bind_method(D_METHOD("get_data"), &MGrassData::get_data);
@@ -45,13 +42,6 @@ int MGrassData::get_density(){
 void MGrassData::add(int d) {
     data.push_back((uint8_t)d);
 }
-
-void MGrassData::print_all_data() {
-    for(int i=0; i< data.size();i++){
-        UtilityFunctions::print("i ",itos(i), " --> ", itos(data[i]));
-    }
-}
-
 
 void MGrassData::check_undo(){
     if(current_undo_id - lowest_undo_id > 6){

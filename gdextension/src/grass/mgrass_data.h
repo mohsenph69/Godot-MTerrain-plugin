@@ -39,7 +39,6 @@ class MGrassData : public Resource {
     int get_density();
 
     void add(int d);
-    void print_all_data();
 
     void check_undo(); // register a stage for undo
     void undo();

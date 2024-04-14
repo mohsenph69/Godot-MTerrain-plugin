@@ -228,7 +228,7 @@ void MGrass::update_dirty_chunks_gd(){
 }
 
 void MGrass::update_dirty_chunks(bool update_lock){
-    ERR_FAIL_COND(!grass_data.is_valid());
+    ERR_FAIL_COND(!is_grass_init);
     update_shader_time();
     if(update_lock){
         std::lock_guard<std::mutex> lock(update_mutex);
@@ -533,14 +533,16 @@ void MGrass::recalculate_grass_config(int max_lod){
 }
 
 void MGrass::make_grass_dirty_by_pixel(uint32_t px, uint32_t py){
-    ERR_FAIL_INDEX(px, width);
-    ERR_FAIL_INDEX(py, height);
+    if(!is_grass_init) return;
+    if(px>width) return;
+    if(py>height) return;
     Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
     int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
     dirty_points_id->insert(point_id);
 }
 
 void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
+    if(!is_grass_init) return;
     if(px>width) return;
     if(py>height) return;
     //ERR_FAIL_INDEX(px, width);
@@ -575,6 +577,7 @@ void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
 }
 
 bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) {
+    if(!is_grass_init) return false;
     ERR_FAIL_INDEX_V(px, width,false);
     ERR_FAIL_INDEX_V(py, height,false);
     uint32_t rx = px/grass_region_pixel_width;
@@ -589,7 +592,8 @@ bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) {
 }
 
 Vector2i MGrass::get_closest_pixel(Vector3 pos){
-    ERR_FAIL_COND_V(!grid,Vector2i());
+    if(!is_grass_init) return Vector2i();
+    if(!grid) return Vector2i();
     pos -= grid->offset;
     pos = pos / grass_data->density;
     return Vector2i(round(pos.x),round(pos.z));
