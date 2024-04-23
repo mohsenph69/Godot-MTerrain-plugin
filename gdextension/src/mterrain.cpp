@@ -1078,6 +1078,7 @@ void MTerrain::terrain_ready_signal(){
         }
     }
     is_ready = true;
+    grid->update_renderer_info();
     /// Finish initlaztion start update
 }
 
@@ -1201,6 +1202,9 @@ void MTerrain::images_undo(){
 void MTerrain::set_terrain_material(Ref<MTerrainMaterial> input){
     ERR_FAIL_COND_EDMSG(grid->is_created(),"You should destroy terrain to change terrain material");
     terrain_material = input;
+    if(terrain_material.is_valid()){
+        terrain_material->set_grid(grid);
+    }
 }
 Ref<MTerrainMaterial> MTerrain::get_terrain_material(){
     return terrain_material;
@@ -1247,7 +1251,7 @@ void MTerrain::_notification(int32_t what){
         }
         return;
     }
-    if(what == NOTIFICATION_WM_CLOSE_REQUEST || what == NOTIFICATION_WM_GO_BACK_REQUEST){
+    else if(what == NOTIFICATION_WM_CLOSE_REQUEST || what == NOTIFICATION_WM_GO_BACK_REQUEST){
         _finish_terrain();
         return;
     }
