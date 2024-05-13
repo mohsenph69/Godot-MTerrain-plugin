@@ -1,0 +1,205 @@
+#ifndef __MOCTTREE
+#define __MOCTTREE
+
+#define EXTRA_BOUND_MARGIN 1000 //This should be alway some number bigger than zero, otherwise cause some points to not be inserted
+#define MAX_CAPACITY 10000
+#define INVALID_OCT_POINT_ID -1
+
+#include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/templates/vector.hpp>
+#include <godot_cpp/templates/vset.hpp>
+#include <godot_cpp/templates/hash_map.hpp>
+#include <godot_cpp/variant/packed_vector3_array.hpp>
+#include <godot_cpp/variant/packed_int32_array.hpp>
+#include <godot_cpp/variant/packed_float32_array.hpp>
+#include <godot_cpp/classes/array_mesh.hpp>
+#include <godot_cpp/templates/pair.hpp>
+#include <godot_cpp/templates/rb_set.hpp>
+#include <godot_cpp/classes/time.hpp>
+
+
+#include <godot_cpp/classes/worker_thread_pool.hpp>
+#include <mutex>
+
+using namespace godot;
+
+
+class MOctTree : public Node3D {
+    GDCLASS(MOctTree,Node3D);
+    protected:
+    static void _bind_methods();
+
+    private:
+    /*
+    Octant number according to coordinate bellow (y is toward screen)
+    ->x
+    |z
+    V
+    First Floor or lower y
+    |0|1|
+    |2|3|
+    Second Floor or upper y
+    |4|5|
+    |6|7|
+    */
+    struct OctPoint
+    {
+        int8_t lod = -1;
+        uint8_t update_id = 0;
+        uint16_t oct_id = 0;
+        int32_t id;
+        Vector3 position;
+        OctPoint(){}
+        OctPoint(const int32_t _id,const Vector3& _position,uint8_t _oct_id):
+        id(_id),position(_position),oct_id(_oct_id){}
+    };
+    public:
+
+    struct PointUpdate
+    {
+        int8_t lod;
+        int8_t last_lod;
+        int32_t id;
+    };
+
+    struct PointMoveReq
+    {
+        int32_t p_id;
+        uint16_t oct_id;
+        Vector3 old_pos;
+        Vector3 new_pos;
+        PointMoveReq();
+        PointMoveReq(int32_t _p_id,uint16_t _oct_id,Vector3 _old_pos,Vector3 _new_pos);
+        _FORCE_INLINE_ uint64_t hash() const;
+        bool operator<(const PointMoveReq& other) const;
+    };
+
+    private:
+    struct OctUpdateInfo {
+        uint8_t update_id;
+        int8_t lod;
+        Pair<Vector3,Vector3> bound;
+        Pair<Vector3,Vector3> exclude_bound;
+    };
+    
+    
+    struct Octant
+    {
+        Vector<OctPoint> points;
+        Vector3 start;
+        Vector3 end;
+        Octant* octs = nullptr; // pointer to the fist child oct other octs will be in row next to this
+        
+        Octant();
+        ~Octant();
+        bool insert_point(const Vector3& p_point,int32_t p_id,uint16_t oct_id , const uint16_t capacity);
+        bool insert_point(const OctPoint& p_point, const uint16_t capacity);
+        Octant* find_octant_by_point(const int32_t id,const uint16_t oct_id,Vector3 pos,int& point_index);
+
+
+        void get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids);
+        void get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids);
+        //Bellow only for lod zero which has no exclude
+        void update_lod_zero(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info);
+        //Bellow function must be called by LOD order from zero to max lod number
+        void update_lod(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info);
+        void get_all_bounds(Vector<Pair<Vector3,Vector3>>& bounds);
+        void get_all_data(Vector<OctPoint>& data);
+        void append_all_ids_to(PackedInt32Array& _ids);
+        void get_points_count(int& count);
+        void get_oct_id_points_count(uint16_t oct_id,int& count);
+        bool check_id_exist_classic(int32_t id);
+        void get_point(int32_t id, Vector3 pos,Pair<Octant*,int>& pinfo);
+        bool remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
+        void clear();
+        void remove_points_with_oct_id(uint16_t oct_id);
+        _FORCE_INLINE_ bool has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point) const;
+        _FORCE_INLINE_ bool has_point(const Vector3& point) const; //if the point is in ourt bound
+        private:
+        _FORCE_INLINE_ void divide();
+        _FORCE_INLINE_ bool intersects(const Pair<Vector3,Vector3>& bound) const;
+        _FORCE_INLINE_ bool encloses_by(const Pair<Vector3,Vector3>& bound) const;
+        _FORCE_INLINE_ bool encloses_between(const Pair<Vector3,Vector3>& include, const Pair<Vector3,Vector3>& exclude) const;
+
+    };
+    uint8_t update_id=0; //Update id zero always is for init state
+    uint16_t custom_capacity = 0;
+    uint16_t last_oct_id = 0;
+    uint32_t point_count = 0;
+    Octant root;
+    Node3D* camera_node = nullptr;
+    Node3D* auto_camera_found = nullptr;
+    RID scenario;
+    Vector3 camera_position;
+    PackedFloat32Array lod_setting;
+    HashMap<uint16_t,Vector<PointUpdate>> update_change_info;
+    Pair<Vector3,Vector3> last_update_boundary;
+    VSet<uint16_t> oct_ids;
+    VSet<uint16_t> waiting_oct_ids;
+    RBSet<PointMoveReq> moves_req_cache;
+    RBSet<PointMoveReq> moves_req;
+
+    bool update_lod_include_root_bound = true;
+    bool is_updating = false;
+    bool is_point_process_wait = false;
+    bool is_first_update = true;
+
+    std::mutex oct_mutex;
+    std::mutex move_req_mutex;
+    WorkerThreadPool::TaskID tid;
+
+    bool is_camera_warn_print = false;
+    bool is_ready = false;
+    bool is_octmesh_updater = false;
+
+
+    public:
+    MOctTree();
+    ~MOctTree();
+    int get_oct_id();
+    void clear_oct_id(int oct_id);
+    void remove_oct_id(int oct_id);
+    bool remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
+    void set_camera_node(Node3D* camera);
+    void update_camera_position();
+    uint32_t get_capacity(int p_count);
+    //Insert point and id is point index
+    void insert_points(const PackedVector3Array& points,const PackedInt32Array ids, int oct_id);
+    // bellow insert a single point and update it lod
+    // good for adding point after initilazation
+    bool insert_point(const Vector3& pos,const int32_t id, int oct_id);
+    void move_point(const PointMoveReq& mp); // should be called with update_mutex protection
+    
+    void add_move_req(const PointMoveReq& mv_data);
+    void release_move_req_cache();
+    
+    int8_t get_pos_lod_classic(const Vector3& pos);
+    PackedInt32Array get_ids(const AABB& search_bound);
+    PackedInt32Array get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound);
+    void update_lod(bool include_root_bound);
+    _FORCE_INLINE_ void clear_update_change_info();
+
+    int get_points_count();
+    int get_oct_id_points_count(int oct_id);
+
+    void set_lod_setting(const PackedFloat32Array _lod_setting);
+    void set_custom_capacity(int input);
+    
+    void set_is_octmesh_updater(bool input);
+    bool get_is_octmesh_updater();
+    bool is_valid_octmesh_updater();
+    static void thread_update(void* instance);
+    void _notification(int p_what);
+    void process_tick();
+    void point_process_finished(int oct_id);
+    void check_point_process_finished();
+    void send_update_signal();
+    Array get_point_update_dictionary_array(int oct_id);
+
+    void update_scenario();
+    RID get_scenario();
+
+
+};
+#endif

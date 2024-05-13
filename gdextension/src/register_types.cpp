@@ -30,6 +30,11 @@
 #include "mbrush_layers.h"
 #include "mterrain_material.h"
 
+#include "mocttree.h"
+#include "octmesh/mmesh_lod.h"
+#include "octmesh/moctmesh.h"
+
+
 using namespace godot;
 
 void initialize_test_module(ModuleInitializationLevel p_level) {
@@ -53,6 +58,12 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MObstacle>();
 	ClassDB::register_class<MBrushLayers>();
 	ClassDB::register_class<MTerrainMaterial>();
+
+	ClassDB::register_class<MOctTree>();
+	ClassDB::register_class<MMeshLod>();
+	ClassDB::register_class<MOctMesh>();
+
+	
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {

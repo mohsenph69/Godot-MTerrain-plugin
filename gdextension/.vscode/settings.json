@@ -97,6 +97,7 @@
         "__availability": "cpp",
         "any": "cpp",
         "stack": "cpp",
-        "hash_set": "cpp"
+        "hash_set": "cpp",
+        "shared_mutex": "cpp"
     }
 }
