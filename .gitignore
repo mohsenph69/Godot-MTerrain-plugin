@@ -1,3 +1,5 @@
+gdextension/.vscode/*
+
 *sconsign.dblite
 *.dblite
 *.os
