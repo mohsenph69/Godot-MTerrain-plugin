@@ -155,6 +155,7 @@ class MOctTree : public Node3D {
     bool is_camera_warn_print = false;
     bool is_ready = false;
     bool is_octmesh_updater = false;
+    bool disable_octtree = false;
 
 
     public:

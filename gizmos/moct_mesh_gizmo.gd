@@ -82,7 +82,8 @@ func on_selection_change():
 	while i >= 0:
 		var find = snodes.find(selected_mesh[i])
 		if find == -1:
-			selected_mesh[i].update_gizmos()
+			if is_instance_valid(selected_mesh[i]):
+				selected_mesh[i].update_gizmos()
 			selected_mesh.remove_at(i)
 		i-=1
 	for n in snodes:

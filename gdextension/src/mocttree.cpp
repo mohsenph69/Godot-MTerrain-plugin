@@ -585,7 +585,6 @@ MOctTree::MOctTree(){
 }
 
 MOctTree::~MOctTree(){
-	UtilityFunctions::print("remove oct tree ----------------");
 	if(is_updating){
 		WorkerThreadPool::get_singleton()->wait_for_task_completion(tid);
 	}
@@ -609,6 +608,9 @@ void MOctTree::clear_oct_id(int oct_id){
 void MOctTree::remove_oct_id(int oct_id){
 	ERR_FAIL_COND(!oct_ids.has(oct_id));
 	std::lock_guard<std::mutex> lock(oct_mutex);
+	if(disable_octtree){
+		return;
+	}
 	if(waiting_oct_ids.has(oct_id)){
 		waiting_oct_ids.erase(oct_id);
 	}
@@ -619,15 +621,15 @@ void MOctTree::remove_oct_id(int oct_id){
 
 bool MOctTree::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
-	UtilityFunctions::print("remove ");
+	if(disable_octtree){
+		return true;
+	}
 	bool res = root.remove_point(id,pos,oct_id);
 	if(unlikely(!res)){
 		WARN_PRINT("Can not find point with ID "+itos(id)+" OCT_ID "+itos(oct_id)+" to remove!");
 	} else {
 		point_count--;
 	}
-	UtilityFunctions::print("end remove ",res, " , ",point_count);
-	UtilityFunctions::print("final size ",get_points_count());
 	return res;
 }
 
@@ -681,7 +683,7 @@ uint32_t MOctTree::get_capacity(int p_count){
 }
 
 void MOctTree::insert_points(const PackedVector3Array& points,const PackedInt32Array ids, int oct_id){
-	if(points.size()==0){
+	if(points.size()==0 || disable_octtree){
 		return;
 	}
 	std::lock_guard<std::mutex> lock(oct_mutex);
@@ -769,6 +771,9 @@ void MOctTree::insert_points(const PackedVector3Array& points,const PackedInt32A
 // Insert a point and claculate its LOD and return that! in case of error it will return -1
 bool MOctTree::insert_point(const Vector3& pos,const int32_t id, int oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
+	if(disable_octtree){
+		return true;
+	}
 	if(get_pos_lod_classic(pos) >= lod_setting.size()){
 		update_lod_include_root_bound = true;
 	}
@@ -877,6 +882,9 @@ void MOctTree::move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t upda
 
 void MOctTree::add_move_req(const PointMoveReq& mv_data){
 	std::lock_guard<std::mutex> lock(move_req_mutex);
+	if(disable_octtree){
+		return;
+	}
 	if(moves_req_cache.has(mv_data)){
 		auto el = moves_req_cache.find(mv_data);
 		el->get().new_pos = mv_data.new_pos;
@@ -1068,6 +1076,7 @@ void MOctTree::process_tick(){
 	if(is_updating){
 		if(WorkerThreadPool::get_singleton()->is_task_completed(tid)){
 			is_updating = false;
+			WorkerThreadPool::get_singleton()->wait_for_task_completion(tid);
 			is_point_process_wait = true;
 			waiting_oct_ids = oct_ids;
 			send_update_signal();
@@ -1109,6 +1118,13 @@ void MOctTree::_notification(int p_what){
 			ERR_FAIL_EDMSG("Make sure to activate MTerrain plugin otherwise gizmo selction will not work!");
 		}
 		break;
+	case NOTIFICATION_EXIT_TREE:
+		disable_octtree = true;
+		if(is_updating){
+			is_updating = false;
+			WorkerThreadPool::get_singleton()->wait_for_task_completion(tid);
+		}
+		break;
 	}
 }
 
@@ -1120,12 +1136,15 @@ void MOctTree::point_process_finished(int oct_id){
 }
 
 void MOctTree::check_point_process_finished(){
+	if(disable_octtree){
+		return;
+	}
 	if(is_point_process_wait && waiting_oct_ids.size()==0){
 		release_move_req_cache();
 		update_camera_position();
-		is_updating = true;
 		is_point_process_wait = false;
 		tid = WorkerThreadPool::get_singleton()->add_native_task(&MOctTree::thread_update,(void*)this,true);
+		is_updating = true;
 	}
 }
 

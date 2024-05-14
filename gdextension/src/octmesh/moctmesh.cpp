@@ -85,7 +85,6 @@ int32_t MOctMesh::add_octmesh(MOctMesh* input){
 }
 
 void MOctMesh::remove_octmesh(int32_t id){
-    std::lock_guard<std::mutex> lock(update_mutex);
     ERR_FAIL_COND(!octpoint_to_octmesh.has(id));
     MOctMesh* m = octpoint_to_octmesh[id];
     m->oct_point_id = INVALID_OCT_POINT_ID;
@@ -162,6 +161,9 @@ MOctMesh::MOctMesh(){
 
 MOctMesh::~MOctMesh(){
     update_mutex.lock();
+    if(has_valid_oct_point_id()){
+        MOctMesh::remove_octmesh(oct_point_id);
+    }
     lod = -3;
     if(instance.is_valid()){
         RS->free_rid(instance);
@@ -270,9 +272,7 @@ void MOctMesh::_notification(int p_what){
         }
         break;
     case NOTIFICATION_EXIT_TREE:
-        if(has_valid_oct_point_id()){
-            MOctMesh::remove_octmesh(oct_point_id);
-        }
+        break;
     default:
         break;
     }
