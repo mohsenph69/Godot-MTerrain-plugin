@@ -79,22 +79,22 @@ bool MOctTree::Octant::insert_point(const Vector3& p_point,int32_t p_id, uint16_
 				return true;
 			}
 		}
-		ERR_FAIL_V_MSG("Arrive end without consuming point!", false);
+		ERR_FAIL_V_MSG(false,"Arrive end without consuming point!");
 	}
-	if(points.size()>=capacity){
+	if(points.size()>capacity){
 		divide();
 		// Clearing our points and putting them inside child
 		for(uint32_t j=0; j < points.size(); j++){
-			//bool consume = false;
+			bool consume = false;
 			for(uint8_t i=0; i<8; i++){
 				if(octs[i].insert_point(points[j],capacity)){
-					//consume = true;
+					consume = true;
 					break;
 				}
 			}
-			//if(!consume){
-			//	WARN_PRINT("Child Octant don't consume point"); // Only for now for debug
-			//}
+			if(!consume){
+				WARN_PRINT("Child Octant don't consume point"); // Only for now for debug
+			}
 		}
 		points.clear();
 		//Adding current point
@@ -103,7 +103,7 @@ bool MOctTree::Octant::insert_point(const Vector3& p_point,int32_t p_id, uint16_
 				return true;
 			}
 		}
-		ERR_FAIL_V_MSG("Arrive end without consuming point", false);
+		ERR_FAIL_V_MSG(false,"Arrive end without consuming point");
 	}
 	points.push_back(OctPoint(p_id,p_point,oct_id));
 	return true;
@@ -119,9 +119,50 @@ bool MOctTree::Octant::insert_point(const OctPoint& p_point, const uint16_t capa
 				return true;
 			}
 		}
-		ERR_FAIL_V_MSG("Arrive end without consuming point!", false);
+		ERR_FAIL_V_MSG(false,"Arrive end without consuming point!");
 	}
-	if(points.size()>=capacity){
+	if(points.size()>capacity){
+		divide();
+		// Clearing our points and putting them inside child
+		for(uint32_t j=0; j < points.size(); j++){
+			bool consume = false;
+			for(uint8_t i=0; i<8; i++){
+				if(octs[i].insert_point(points[j],capacity)){
+					consume = true;
+					break;
+				}
+			}
+			if(!consume){
+				WARN_PRINT("Child Octant don't consume point"); // Only for now for debug
+			}
+		}
+		points.clear();
+		//Adding current point
+		for(uint8_t i=0; i<8; i++){
+			if(octs[i].insert_point(p_point,capacity)){
+				return true;
+			}
+		}
+		ERR_FAIL_V_MSG(false,"Arrive end without consuming point");
+	}
+	points.push_back(p_point);
+	return true;
+}
+
+MOctTree::OctPoint* MOctTree::Octant::insert_point_ret_octpoint(const OctPoint& p_point, const uint16_t capacity){
+	if(!has_point(p_point.position)){
+		return nullptr;
+	}
+	if(octs){
+		for(uint8_t i=0; i < 8; i++){
+			OctPoint* res = octs[i].insert_point_ret_octpoint(p_point,capacity);
+			if(res!=nullptr){
+				return res;
+			}
+		}
+		ERR_FAIL_V_MSG(nullptr,"Arrive end without consuming point!");
+	}
+	if(points.size()>capacity){
 		divide();
 		// Clearing our points and putting them inside child
 		for(uint32_t j=0; j < points.size(); j++){
@@ -139,14 +180,15 @@ bool MOctTree::Octant::insert_point(const OctPoint& p_point, const uint16_t capa
 		points.clear();
 		//Adding current point
 		for(uint8_t i=0; i<8; i++){
-			if(octs[i].insert_point(p_point,capacity)){
-				return true;
+			OctPoint* res = octs[i].insert_point_ret_octpoint(p_point,capacity);
+			if(res!=nullptr){
+				return res;
 			}
 		}
-		ERR_FAIL_V_MSG("Arrive end without consuming point", false);
+		ERR_FAIL_V_MSG(nullptr,"Arrive end without consuming point");
 	}
 	points.push_back(p_point);
-	return true;
+	return points.ptrw() + points.size() - 1;
 }
 
 
@@ -173,30 +215,50 @@ MOctTree::Octant* MOctTree::Octant::find_octant_by_point(const int32_t id,const 
 	return nullptr;
 }
 
+MOctTree::Octant* MOctTree::Octant::find_octant_by_point_classic(const int32_t id,const uint16_t oct_id,int& point_index){
+	if(octs){
+		for(uint8_t i=0; i < 8; i++){
+			MOctTree::Octant* res = octs[i].find_octant_by_point_classic(id,oct_id,point_index);
+			if(res != nullptr){
+				return res;
+			}
+		}
+		return nullptr;
+	}
+	for(int i=0;i<points.size();i++){
+		OctPoint p = points[i];
+		if( p.id==id && p.oct_id==oct_id){
+			point_index = i;
+			return this;
+		}
+	}
+	return nullptr;
+}
+
 void MOctTree::Octant::divide(){
 	octs = memnew_arr(Octant, 8);
-	Vector3 half_size = (end - start)/2;
+	//Vector3 half_size;
+	Vector3 middle = start + (end - start)/2;
 	// First Level
 	octs[0].start = start;
-	octs[1].start = start + Vector3(half_size.x,0,0);
-	octs[2].start = start + Vector3(0,0,half_size.z);
-	octs[3].start = start + Vector3(half_size.x,0,half_size.z);
+	octs[1].start = Vector3(middle.x,start.y,start.z);
+	octs[2].start = Vector3(start.x,start.y,middle.z);
+	octs[3].start = Vector3(middle.x,start.y,middle.z);
 	// Second Level
-	octs[4].start = start + Vector3(0,half_size.y,0);
-	octs[5].start = start + Vector3(half_size.x,half_size.y,0);
-	octs[6].start = start + Vector3(0,half_size.y,half_size.z);
-	octs[7].start = start + Vector3(half_size.x,half_size.y,half_size.z);
+	octs[4].start = Vector3(start.x,middle.y,start.z);
+	octs[5].start = Vector3(middle.x,middle.y,start.z);
+	octs[6].start = Vector3(start.x,middle.y,middle.z);
+	octs[7].start = middle;
 	// Seting size
-	half_size += half_size*0.00001; // Safe margin
-	octs[0].end = half_size + octs[0].start;
-	octs[1].end = half_size + octs[1].start;
-	octs[2].end = half_size + octs[2].start;
-	octs[3].end = half_size + octs[3].start;
+	octs[0].end = middle;
+	octs[1].end = Vector3(end.x,middle.y,middle.z);
+	octs[2].end = Vector3(middle.x,middle.y,end.z);
+	octs[3].end = Vector3(end.x,middle.y,end.z);
 	// Second Level
-	octs[4].end = half_size + octs[4].start;
-	octs[5].end = half_size + octs[5].start;
-	octs[6].end = half_size + octs[6].start;
-	octs[7].end = half_size + octs[7].start;
+	octs[4].end = Vector3(middle.x,end.y,middle.z);
+	octs[5].end = Vector3(end.x,end.y,middle.z);
+	octs[6].end = Vector3(middle.x,end.y,end.z);
+	octs[7].end = end;
 
 }
 
@@ -239,7 +301,7 @@ _FORCE_INLINE_ bool MOctTree::Octant::encloses_between(const Pair<Vector3,Vector
 	return has_point(include,start) && has_point(include,end) && !has_point(exclude,start) && !has_point(exclude,end);
 }
 
-_FORCE_INLINE_ bool MOctTree::Octant::has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point) const{
+bool MOctTree::Octant::has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point) {
 	if (point.x <= bound.first.x) {
 		return false;
 	}
@@ -557,10 +619,15 @@ void MOctTree::remove_oct_id(int oct_id){
 
 bool MOctTree::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
+	UtilityFunctions::print("remove ");
 	bool res = root.remove_point(id,pos,oct_id);
 	if(unlikely(!res)){
 		WARN_PRINT("Can not find point with ID "+itos(id)+" OCT_ID "+itos(oct_id)+" to remove!");
+	} else {
+		point_count--;
 	}
+	UtilityFunctions::print("end remove ",res, " , ",point_count);
+	UtilityFunctions::print("final size ",get_points_count());
 	return res;
 }
 
@@ -734,29 +801,39 @@ bool MOctTree::insert_point(const Vector3& pos,const int32_t id, int oct_id){
 			WARN_PRINT("Point "+itos(rpoints[i].id)+" at position "+UtilityFunctions::str(rpoints[i].position)+" Did not inserted!");
 		}
 	}
-	/*
-	int8_t lod = lod_setting.size();
-	real_t dis = camera_position.distance_to(pos);
-	for(int8_t i=0; i < lod_setting.size(); i++){
-		if(dis < lod_setting[i]){
-			lod = i;
-			break;
-		}
-	}
-	p.lod = lod;
-	*/
+
 	OctPoint p(id,pos,oct_id);
-	return root.insert_point(p,fcapacity);
+	bool res = root.insert_point(p,fcapacity);
+	ERR_FAIL_COND_V_MSG(!res,res,"Can not re-insert point at move");
+	ERR_FAIL_COND_V(get_points_count()!=point_count,res);
+	return res;
 }
 
-//Must be called with update mutex protection
-void MOctTree::move_point(const PointMoveReq& mp){
+//Must be called only in update_lod
+//in case it is not updated updated_lod = -1
+void MOctTree::move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t update_id){
 	int point_index = -1;
-	Octant* poct = root.find_octant_by_point(mp.p_id,mp.oct_id,mp.old_pos,point_index);
+	Octant* poct = nullptr;
+	poct = root.find_octant_by_point(mp.p_id,mp.oct_id,mp.old_pos,point_index);
+	if(poct==nullptr){
+		poct = root.find_octant_by_point_classic(mp.p_id,mp.oct_id,point_index);
+		if(poct!=nullptr){
+			WARN_PRINT("Used Classic method to find octant of move point! Maybe you not provide the excat oct_tree position for move");
+		}
+	}
 	ERR_FAIL_COND_MSG(poct==nullptr,"can not find octant of moved point!");
 	if(poct->has_point(mp.new_pos)){ // No Octant change just update new_pos
 		OctPoint* p = poct->points.ptrw() + point_index;
 		p->position = mp.new_pos;
+		if(updated_lod!=-1 && updated_lod!=p->lod){
+			PointUpdate up;
+			up.id = p->id;
+			up.last_lod = p->lod;
+			up.lod = updated_lod;
+			update_change_info[p->oct_id].push_back(up);
+			p->lod = updated_lod;
+		}
+		p->update_id = update_id;
 		return;
 	}
 	OctPoint p = poct->points[point_index];
@@ -778,12 +855,24 @@ void MOctTree::move_point(const PointMoveReq& mp){
 		root.start = root.start - Vector3(EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN);
 		root.end = root.end + Vector3(EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN);
 	}
-	uint32_t fcapacity = get_capacity(rpoints.size() + 1);
+	uint32_t fcapacity = get_capacity(point_count);
 	for(OctPoint tree_p : rpoints){
-		root.insert_point(tree_p,fcapacity);
+		bool _res = root.insert_point(tree_p,fcapacity);
+		if(!_res){
+			UtilityFunctions::print("Can not consume point.",root.has_point(tree_p.position));
+		}
 	}
+	if(updated_lod!=-1 && updated_lod!=p.lod){
+		PointUpdate up;
+		up.id = p.id;
+		up.last_lod = p.lod;
+		up.lod = updated_lod;
+		update_change_info[p.oct_id].push_back(up);
+		p.lod = updated_lod;
+	}
+	p.update_id = update_id;
+	//UtilityFunctions::print("oct change ",p.position);
 	bool res = root.insert_point(p,fcapacity);
-	ERR_FAIL_COND_MSG(!res,"Can not re-insert point at move");
 }
 
 void MOctTree::add_move_req(const PointMoveReq& mv_data){
@@ -838,14 +927,36 @@ void MOctTree::update_lod(bool include_root_bound){
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	ERR_FAIL_COND(lod_setting.size()==0);
 	ERR_FAIL_COND(lod_setting[0] < 0.1);
-	for(PointMoveReq p : moves_req){
-		move_point(p);
-	}
 	clear_update_change_info();
 	update_id++;
 	if(update_id==0){
 		update_id=1;
 	}
+	///////////////////////////////////////////////
+	//              Moving points
+	///////////////////////////////////////////////
+	// Only Max Lod will not get updated further down
+	// So move_point with max lod will get updated in move function
+	// In case it is not in max_lod_exclude we leave that to be updated down
+	// Also in case its not get updated here update id should not be equale to current update ID
+	// in case it is not updated it update lod will remain -1
+	float half = lod_setting[lod_setting.size()-1]/2.0;
+	Pair<Vector3,Vector3> max_lod_exclude;
+	max_lod_exclude.first = camera_position - Vector3(half,half,half);
+	max_lod_exclude.second = camera_position + Vector3(half,half,half);
+	for(PointMoveReq mp : moves_req){
+		int8_t _update_lod = -1;
+		uint8_t _updated_id = update_id - 1;
+		if(!Octant::has_point(max_lod_exclude,mp.new_pos)){
+			_update_lod = lod_setting.size();
+			_updated_id = update_id;
+		}
+		move_point(mp,_update_lod,_updated_id);
+		
+	}
+	///////////////////////////////////////////////
+	//              updating LOD points
+	///////////////////////////////////////////////
 	Pair<Vector3,Vector3> last_bound;
 	// Updating LOD 0 -> as it does not need exclude region we do that differently here
 	{
@@ -883,8 +994,6 @@ void MOctTree::update_lod(bool include_root_bound){
 	} else {
 		final_boundary = last_update_boundary;
 	}
-	last_update_boundary = last_bound;
-
 	OctUpdateInfo update_info;
 	update_info.lod = final_lod;
 	update_info.update_id = update_id;
@@ -892,7 +1001,7 @@ void MOctTree::update_lod(bool include_root_bound){
 	update_info.exclude_bound = last_bound;
 
 	root.update_lod(update_info, update_change_info);
-
+	last_update_boundary = last_bound;
 	update_lod_include_root_bound = false;
 }
 

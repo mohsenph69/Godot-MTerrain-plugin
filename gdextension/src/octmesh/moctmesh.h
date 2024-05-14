@@ -22,6 +22,8 @@ using namespace godot;
 class MOctMesh : public Node3D {
     GDCLASS(MOctMesh,Node3D);
 
+    friend class MOctTree;
+    
     protected:
     static void _bind_methods();    
     
@@ -46,7 +48,7 @@ class MOctMesh : public Node3D {
     static void insert_points();
     static int32_t add_octmesh(MOctMesh* input); // use update_mutex
     static void remove_octmesh(int32_t id); // use update_mutex
-    static void move_octmesh(int32_t id,Vector3 old_pos,Vector3 new_pos);
+    static void move_octmesh(MOctMesh* input);
     static void octtree_update(const Vector<MOctTree::PointUpdate>* update_info);
     static void octtree_thread_update(void* input); // use update_mutex
     static void update_tick();
@@ -69,7 +71,8 @@ class MOctMesh : public Node3D {
     MOctMesh();
     ~MOctMesh();
 
-    // -2 means update current mesh without changing LOD 
+    // -2 means update current mesh without changing LOD
+    // -3 is invalide object, or it will removed
     void update_lod_mesh(int8_t new_lod=-2); // must be called with update_mutex protection
     Ref<Mesh> get_active_mesh();
 

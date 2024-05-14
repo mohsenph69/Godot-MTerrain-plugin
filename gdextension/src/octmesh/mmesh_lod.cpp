@@ -49,6 +49,7 @@ bool MMeshLod::_set(const StringName &p_name, const Variant &p_value){
         if(new_size > 0 && new_size < 127 && new_size!=meshes.size()){
             meshes.resize(new_size);
             notify_property_list_changed();
+            UtilityFunctions::print("Emit mesh change!");
             emit_signal("meshes_changed");
             return true;
         }

@@ -21,6 +21,8 @@
 
 #include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <mutex>
+#include <thread>
+#include <chrono>
 
 using namespace godot;
 
@@ -95,8 +97,9 @@ class MOctTree : public Node3D {
         ~Octant();
         bool insert_point(const Vector3& p_point,int32_t p_id,uint16_t oct_id , const uint16_t capacity);
         bool insert_point(const OctPoint& p_point, const uint16_t capacity);
+        OctPoint* insert_point_ret_octpoint(const OctPoint& p_point, const uint16_t capacity);
         Octant* find_octant_by_point(const int32_t id,const uint16_t oct_id,Vector3 pos,int& point_index);
-
+        Octant* find_octant_by_point_classic(const int32_t id,const uint16_t oct_id,int& point_index);
 
         void get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids);
         void get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids);
@@ -114,7 +117,7 @@ class MOctTree : public Node3D {
         bool remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
         void clear();
         void remove_points_with_oct_id(uint16_t oct_id);
-        _FORCE_INLINE_ bool has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point) const;
+        _FORCE_INLINE_ static bool has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point);
         _FORCE_INLINE_ bool has_point(const Vector3& point) const; //if the point is in ourt bound
         private:
         _FORCE_INLINE_ void divide();
@@ -169,7 +172,8 @@ class MOctTree : public Node3D {
     // bellow insert a single point and update it lod
     // good for adding point after initilazation
     bool insert_point(const Vector3& pos,const int32_t id, int oct_id);
-    void move_point(const PointMoveReq& mp); // should be called with update_mutex protection
+    // Move point and return its confirm OctPoint
+    _FORCE_INLINE_ void move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t update_id); // Must be called only in update_lod
     
     void add_move_req(const PointMoveReq& mv_data);
     void release_move_req_cache();

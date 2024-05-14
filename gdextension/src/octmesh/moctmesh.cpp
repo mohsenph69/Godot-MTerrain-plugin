@@ -53,9 +53,6 @@ bool MOctMesh::set_octtree(MOctTree* input){
 }
 
 void MOctMesh::remove_octtree(MOctTree* input){
-    if(input){
-        UtilityFunctions::print("removing ocTtree");
-    }
     if(input == octtree){
         octtree->remove_oct_id(oct_id);
         octtree = nullptr;
@@ -98,9 +95,14 @@ void MOctMesh::remove_octmesh(int32_t id){
     }
 }
 
-void MOctMesh::move_octmesh(int32_t id,Vector3 old_pos,Vector3 new_pos){
-    if(octtree && is_octtree_inserted){
-        octtree->add_move_req(MOctTree::PointMoveReq(id,oct_id,old_pos,new_pos));
+void MOctMesh::move_octmesh(MOctMesh* input){
+    ERR_FAIL_COND(input->oct_point_id == INVALID_OCT_POINT_ID);
+    ERR_FAIL_COND(!octpoint_to_octmesh.has(input->oct_point_id));
+    Vector3 old_pos = input->oct_position;
+    Vector3 new_pos = input->get_global_position();
+    if(octtree && is_octtree_inserted && old_pos!=new_pos){
+        octtree->add_move_req(MOctTree::PointMoveReq(input->oct_point_id,oct_id,old_pos,new_pos));
+        input->oct_position = new_pos;
     }
 }
 
@@ -153,17 +155,27 @@ void MOctMesh::_update_visibilty(){
     }
     update_mutex.unlock();
 }
-#include <stdio.h>
+
 MOctMesh::MOctMesh(){
     set_notify_transform(true);
 }
 
 MOctMesh::~MOctMesh(){
-    MOctMesh::remove_octmesh(oct_point_id);
+    update_mutex.lock();
+    lod = -3;
+    if(instance.is_valid()){
+        RS->free_rid(instance);
+        instance = RID();
+    }
+    update_mutex.unlock();
 }
 
 // -2 means update current mesh without changing LOD
+// -3 is invalide object, or it will removed
 void MOctMesh::update_lod_mesh(int8_t new_lod){
+    if(new_lod==-3){
+        return;
+    }
     if(new_lod!=-2){
         lod.store(new_lod,std::memory_order_relaxed);
     }
@@ -233,10 +245,7 @@ void MOctMesh::_notification(int p_what){
     {
     case NOTIFICATION_TRANSFORM_CHANGED:
         update_mutex.lock();
-        if(oct_position!=get_global_position()){
-            MOctMesh::move_octmesh(oct_point_id,oct_position,get_global_position());
-            oct_position = get_global_position();
-        }
+        MOctMesh::move_octmesh(this);
         if(instance.is_valid()){
             RS->instance_set_transform(instance, get_global_transform());
         }
