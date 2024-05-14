@@ -4,6 +4,8 @@
 
 
 #define OCT_POINT_ID_START 0
+#define CURRENT_LOD -2
+#define INVALID_LOD -3
 
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/mesh.hpp>
@@ -71,9 +73,9 @@ class MOctMesh : public Node3D {
     MOctMesh();
     ~MOctMesh();
 
-    // -2 means update current mesh without changing LOD
-    // -3 is invalide object, or it will removed
-    void update_lod_mesh(int8_t new_lod=-2); // must be called with update_mutex protection
+    // CURRENT_LOD means update current mesh without changing LOD
+    // INVALID_LOD is invalide object, or it will removed
+    void update_lod_mesh(int8_t new_lod=CURRENT_LOD); // must be called with update_mutex protection
     Ref<Mesh> get_active_mesh();
 
     void set_mesh_lod(Ref<MMeshLod> input); // use update_mutex

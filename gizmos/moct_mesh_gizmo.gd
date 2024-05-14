@@ -87,7 +87,7 @@ func on_selection_change():
 			selected_mesh.remove_at(i)
 		i-=1
 	for n in snodes:
-		if n.is_class("MOctMesh"):
+		if n.is_class("MOctMesh") and n.is_inside_tree():
 			n.update_gizmos()
 			if not selected_mesh.has(n):
 				selected_mesh.push_back(n)

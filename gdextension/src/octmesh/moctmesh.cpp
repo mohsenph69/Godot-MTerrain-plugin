@@ -39,7 +39,6 @@ uint16_t MOctMesh::get_oct_id(){
 
 bool MOctMesh::set_octtree(MOctTree* input){
     ERR_FAIL_COND_V(input==nullptr,false);
-    UtilityFunctions::print("set oc tree ");
     if(octtree){
         WARN_PRINT("OctTree "+octtree->get_name()+" is already assigned! Only one OctTree can be assing to update MOctMesh!");
         return false;
@@ -73,7 +72,6 @@ void MOctMesh::insert_points(){
 }
 
 int32_t MOctMesh::add_octmesh(MOctMesh* input){
-    std::lock_guard<std::mutex> lock(update_mutex);
     last_oct_point_id++;
     if(octtree!=nullptr && is_octtree_inserted){
         bool res = octtree->insert_point(input->get_global_position(),last_oct_point_id,oct_id);
@@ -88,6 +86,7 @@ void MOctMesh::remove_octmesh(int32_t id){
     ERR_FAIL_COND(!octpoint_to_octmesh.has(id));
     MOctMesh* m = octpoint_to_octmesh[id];
     m->oct_point_id = INVALID_OCT_POINT_ID;
+    m->lod = INVALID_LOD;
     octpoint_to_octmesh.erase(id);
     if(octtree!=nullptr && is_octtree_inserted){
         octtree->remove_point(id,m->oct_position,oct_id);
@@ -145,15 +144,12 @@ void MOctMesh::update_tick(){
 ////////////////////////////////////////////////////////////////
 
 void MOctMesh::_update_visibilty(){
-    update_mutex.lock();
     if(!is_inside_tree()){
-        update_mutex.unlock();
         return;
     }
     if(instance.is_valid()){
         RS->instance_set_visible(instance,is_visible_in_tree());
     }
-    update_mutex.unlock();
 }
 
 MOctMesh::MOctMesh(){
@@ -173,18 +169,24 @@ MOctMesh::~MOctMesh(){
     update_mutex.unlock();
 }
 
-// -2 means update current mesh without changing LOD
-// -3 is invalide object, or it will removed
+// CURRENT_LOD means update current mesh without changing LOD
+// INVALID_LOD is invalide object, or it will removed
 void MOctMesh::update_lod_mesh(int8_t new_lod){
-    if(new_lod==-3){
+    if(new_lod==CURRENT_LOD){
+        new_lod = lod;
+    }
+    if(new_lod==INVALID_LOD){
         return;
     }
-    if(new_lod!=-2){
-        lod.store(new_lod,std::memory_order_relaxed);
+    lod.store(new_lod,std::memory_order_relaxed);
+    // if is not in tree return but just update lod
+    // then call this function when enter the tree to update the mesh in case re enter the tree
+    if(!is_inside_tree()){
+        return;
     }
     RID new_mesh_rid ;
     if(mesh_lod.is_valid()){
-        new_mesh_rid = mesh_lod->get_mesh_rid(lod);
+        new_mesh_rid = mesh_lod->get_mesh_rid(new_lod);
     } else {
         new_mesh_rid = RID();
     }
@@ -231,7 +233,9 @@ void MOctMesh::set_mesh_lod(Ref<MMeshLod> input){
     }
     mesh_lod = input;
     std::lock_guard<std::mutex> lock(MOctMesh::update_mutex);
-    update_lod_mesh();
+    if(has_valid_oct_point_id()){
+        update_lod_mesh();
+    }
 }
 
 Ref<MMeshLod> MOctMesh::get_mesh_lod(){
@@ -254,25 +258,26 @@ void MOctMesh::_notification(int p_what){
         }
         update_mutex.unlock();
         break;
-    case NOTIFICATION_EXIT_WORLD:
+    case NOTIFICATION_VISIBILITY_CHANGED:
         update_mutex.lock();
-        if(is_inside_tree() && instance.is_valid()){
-            RS->instance_set_visible(instance,false);
-        }
+        _update_visibilty();
         update_mutex.unlock();
         break;
-    case NOTIFICATION_ENTER_WORLD:
-        _update_visibilty();
-        break;
-    case NOTIFICATION_VISIBILITY_CHANGED:
-        _update_visibilty();
-        break;
     case NOTIFICATION_ENTER_TREE:
+        update_mutex.lock();
         if(!has_valid_oct_point_id()){
             oct_point_id = MOctMesh::add_octmesh(this);
         }
+        update_lod_mesh();
+        _update_visibilty();
+        update_mutex.unlock();
         break;
     case NOTIFICATION_EXIT_TREE:
+        update_mutex.lock();
+        if(instance.is_valid()){
+            RS->instance_set_visible(instance,false);
+        }
+        update_mutex.unlock();
         break;
     default:
         break;
