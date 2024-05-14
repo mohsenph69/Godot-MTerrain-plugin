@@ -131,8 +131,9 @@ void MOctMesh::octtree_thread_update(void* input){
 void MOctMesh::update_tick(){
     if(is_updating){
         if(WorkerThreadPool::get_singleton()->is_task_completed(thread_task_id)){
-            ERR_FAIL_COND(octtree==nullptr);
             is_updating = false;
+            WorkerThreadPool::get_singleton()->wait_for_task_completion(thread_task_id);
+            ERR_FAIL_COND(octtree==nullptr);
             octtree->point_process_finished(oct_id);
         }
     }

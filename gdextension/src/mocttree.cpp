@@ -1124,6 +1124,12 @@ void MOctTree::_notification(int p_what){
 			is_updating = false;
 			WorkerThreadPool::get_singleton()->wait_for_task_completion(tid);
 		}
+		if(is_valid_octmesh_updater()){
+			if(MOctMesh::is_updating){
+				MOctMesh::is_updating = false;
+				WorkerThreadPool::get_singleton()->wait_for_task_completion(MOctMesh::thread_task_id);
+			}
+		}
 		break;
 	}
 }
