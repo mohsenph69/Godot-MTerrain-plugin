@@ -1,8 +1,9 @@
 #ifndef __MOCTTREE
 #define __MOCTTREE
 
-#define EXTRA_BOUND_MARGIN 1000 //This should be alway some number bigger than zero, otherwise cause some points to not be inserted
+#define EXTRA_BOUND_MARGIN 200 //This should be alway some number bigger than zero, otherwise cause some points to not be inserted
 #define MAX_CAPACITY 10000
+#define MIN_CAPACITY 10
 #define INVALID_OCT_POINT_ID -1
 
 #include <godot_cpp/classes/object.hpp>
@@ -92,7 +93,8 @@ class MOctTree : public Node3D {
         Vector3 start;
         Vector3 end;
         Octant* octs = nullptr; // pointer to the fist child oct other octs will be in row next to this
-        
+        Octant* parent = nullptr;
+
         Octant();
         ~Octant();
         bool insert_point(const Vector3& p_point,int32_t p_id,uint16_t oct_id , const uint16_t capacity);
@@ -105,20 +107,23 @@ class MOctTree : public Node3D {
         void get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids);
         //Bellow only for lod zero which has no exclude
         void update_lod_zero(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info);
-        //Bellow function must be called by LOD order from zero to max lod number
+        //Bellow function must be called by LOD order from One to max lod number
         void update_lod(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info);
         void get_all_bounds(Vector<Pair<Vector3,Vector3>>& bounds);
         void get_all_data(Vector<OctPoint>& data);
         void append_all_ids_to(PackedInt32Array& _ids);
         void get_points_count(int& count);
         void get_oct_id_points_count(uint16_t oct_id,int& count);
-        bool check_id_exist_classic(int32_t id);
-        void get_point(int32_t id, Vector3 pos,Pair<Octant*,int>& pinfo);
-        bool remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
+        Octant* get_mergeable(int capacity);
+        Octant* remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
         void clear();
         void remove_points_with_oct_id(uint16_t oct_id);
         _FORCE_INLINE_ static bool has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point);
         _FORCE_INLINE_ bool has_point(const Vector3& point) const; //if the point is in ourt bound
+        //For Debug
+        bool check_id_exist_classic(int32_t id);
+        void get_tree_lines(PackedVector3Array& lines);
+        void merge_octs();
         private:
         _FORCE_INLINE_ void divide();
         _FORCE_INLINE_ bool intersects(const Pair<Vector3,Vector3>& bound) const;
@@ -126,6 +131,9 @@ class MOctTree : public Node3D {
         _FORCE_INLINE_ bool encloses_between(const Pair<Vector3,Vector3>& include, const Pair<Vector3,Vector3>& exclude) const;
 
     };
+    bool is_world_boundary_set = false;
+    Vector3 world_start;
+    Vector3 world_end;
     uint8_t update_id=0; //Update id zero always is for init state
     uint16_t custom_capacity = 0;
     uint16_t last_oct_id = 0;
@@ -165,7 +173,10 @@ class MOctTree : public Node3D {
     void clear_oct_id(int oct_id);
     void remove_oct_id(int oct_id);
     bool remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
+    bool check_for_mergeable(Octant* start_point);
     void set_camera_node(Node3D* camera);
+    void set_world_boundary(const Vector3& start,const Vector3& end);
+    void enable_as_octmesh_updater();
     void update_camera_position();
     uint32_t get_capacity(int p_count);
     //Insert point and id is point index
@@ -187,12 +198,11 @@ class MOctTree : public Node3D {
 
     int get_points_count();
     int get_oct_id_points_count(int oct_id);
+    PackedVector3Array get_tree_lines();
 
     void set_lod_setting(const PackedFloat32Array _lod_setting);
     void set_custom_capacity(int input);
     
-    void set_is_octmesh_updater(bool input);
-    bool get_is_octmesh_updater();
     bool is_valid_octmesh_updater();
     static void thread_update(void* instance);
     void _notification(int p_what);
