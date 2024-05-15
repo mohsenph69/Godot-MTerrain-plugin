@@ -103,8 +103,8 @@ class MOctTree : public Node3D {
         Octant* find_octant_by_point(const int32_t id,const uint16_t oct_id,Vector3 pos,int& point_index);
         Octant* find_octant_by_point_classic(const int32_t id,const uint16_t oct_id,int& point_index);
 
-        void get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids);
-        void get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids);
+        void get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids,uint16_t oct_id);
+        void get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids,uint16_t oct_id);
         //Bellow only for lod zero which has no exclude
         void update_lod_zero(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info);
         //Bellow function must be called by LOD order from One to max lod number
@@ -191,8 +191,8 @@ class MOctTree : public Node3D {
     void release_move_req_cache();
     
     int8_t get_pos_lod_classic(const Vector3& pos);
-    PackedInt32Array get_ids(const AABB& search_bound);
-    PackedInt32Array get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound);
+    PackedInt32Array get_ids(const AABB& search_bound,int oct_id);
+    PackedInt32Array get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound,int oct_id);
     void update_lod(bool include_root_bound);
     _FORCE_INLINE_ void clear_update_change_info();
 

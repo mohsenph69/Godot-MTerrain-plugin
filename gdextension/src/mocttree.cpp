@@ -409,7 +409,7 @@ bool MOctTree::Octant::has_point(const Vector3& point) const{
 	return true;
 }
 
-void MOctTree::Octant::get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids){
+void MOctTree::Octant::get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids,uint16_t oct_id){
 	if(!octs){
 		if(encloses_by(bound)){
 			for(uint32_t i=0; i < points.size(); i++){
@@ -421,17 +421,42 @@ void MOctTree::Octant::get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Ar
 	if(intersects(bound)){
 		if(octs){
 			for(uint8_t i=0; i < 8; i++){
-				octs[i].get_ids(bound, _ids);
+				octs[i].get_ids(bound, _ids,oct_id);
 			}
 		} else {
 			for(uint32_t i=0; i < points.size(); i++){
-				if(has_point(bound,points[i].position)){
+				if(points[i].oct_id == oct_id && has_point(bound,points[i].position)){
 					_ids.push_back(points[i].id);
 				}
 			}
 		}
 	}
 	// If not intersect do nothing
+}
+
+void MOctTree::Octant::get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids,uint16_t oct_id){
+	if(!octs){
+		if(encloses_between(bound,exclude_bound)){
+			for(uint32_t i=0; i < points.size(); i++){
+				_ids.push_back(points[i].id);
+			}
+			return;
+		}
+	}
+	if(intersects(bound) && !encloses_by(exclude_bound)){
+		if(octs){
+			for(uint8_t i=0; i < 8; i++){
+				octs[i].get_ids_exclude(bound,exclude_bound, _ids,oct_id);
+			}
+		} else {
+			for(uint32_t i=0; i < points.size(); i++){
+				//_ids.push_back(points[i].id);
+				if(points[i].oct_id == oct_id && has_point(bound,points[i].position) && !has_point(exclude_bound,points[i].position)){
+					_ids.push_back(points[i].id);
+				}
+			}
+		}
+	}
 }
 
 void MOctTree::Octant::update_lod_zero(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info){
@@ -487,31 +512,6 @@ void MOctTree::Octant::update_lod(const OctUpdateInfo& update_info,HashMap<uint1
 
 						p->lod = update_info.lod;
 					}
-				}
-			}
-		}
-	}
-}
-
-void MOctTree::Octant::get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids){
-	if(!octs){
-		if(encloses_between(bound,exclude_bound)){
-			for(uint32_t i=0; i < points.size(); i++){
-				_ids.push_back(points[i].id);
-			}
-			return;
-		}
-	}
-	if(intersects(bound) && !encloses_by(exclude_bound)){
-		if(octs){
-			for(uint8_t i=0; i < 8; i++){
-				octs[i].get_ids_exclude(bound,exclude_bound, _ids);
-			}
-		} else {
-			for(uint32_t i=0; i < points.size(); i++){
-				//_ids.push_back(points[i].id);
-				if(has_point(bound,points[i].position) && !has_point(exclude_bound,points[i].position)){
-					_ids.push_back(points[i].id);
 				}
 			}
 		}
@@ -574,6 +574,8 @@ void MOctTree::Octant::get_oct_id_points_count(uint16_t oct_id,int& count){
 	start from itself and check if it can be undevided and it gobackward until
 	find the last undevidable Octant and return its pointer!
 	in case it is not undevidable it will return nullptr
+	If you use return Octant* of this function after tree structure changed! that octant could be invalide
+	fo example root.clear() is one of them!
 */
 MOctTree::Octant* MOctTree::Octant::get_mergeable(int capacity){
 	int count = 0;
@@ -1026,21 +1028,19 @@ int8_t MOctTree::get_pos_lod_classic(const Vector3& pos){
 	return lod;
 }
 
-PackedInt32Array MOctTree::get_ids(const AABB& search_bound){
-	Time* time = Time::get_singleton();
-	float t0 = time->get_ticks_usec();
+PackedInt32Array MOctTree::get_ids(const AABB& search_bound,int oct_id){
+	std::lock_guard<std::mutex> lock(oct_mutex);
 	PackedInt32Array out;
 	Pair<Vector3,Vector3> search_b = {search_bound.position, search_bound.position + search_bound.size};
-	root.get_ids(std::move(search_b), out);
-	float t1 = time->get_ticks_usec();
-	UtilityFunctions::print("Fount with OctTree ",out.size(), " DT ",t1-t0);
+	root.get_ids(search_b, out,(uint16_t)oct_id);
 	return out;
 }
 
-PackedInt32Array MOctTree::get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound){
+PackedInt32Array MOctTree::get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound,int oct_id){
+	std::lock_guard<std::mutex> lock(oct_mutex);
 	PackedInt32Array out;
 	root.get_ids_exclude({search_bound.position, search_bound.position + search_bound.size},
-	                    	{exclude_bound.position, exclude_bound.position + exclude_bound.size},out);
+	                    	{exclude_bound.position, exclude_bound.position + exclude_bound.size},out,(uint16_t)oct_id);
 	return out;
 }
 
