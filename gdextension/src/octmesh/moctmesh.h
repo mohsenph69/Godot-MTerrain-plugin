@@ -12,6 +12,7 @@
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/classes/worker_thread_pool.hpp>
+#include <godot_cpp/classes/material.hpp>
 
 #include <atomic>
 #include <mutex>
@@ -65,6 +66,7 @@ class MOctMesh : public Node3D {
     RID instance; // use with update_mutex protection
     RID current_mesh; // use with update_mutex protection
     Ref<MMeshLod> mesh_lod;
+    Ref<Material> material_override;
 
     void _update_visibilty();
 
@@ -80,6 +82,9 @@ class MOctMesh : public Node3D {
 
     void set_mesh_lod(Ref<MMeshLod> input); // use update_mutex
     Ref<MMeshLod> get_mesh_lod();
+
+    void set_material_override(Ref<Material> input);
+    Ref<Material> get_material_override();
 
     
 

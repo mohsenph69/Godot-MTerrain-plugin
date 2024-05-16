@@ -13,6 +13,10 @@ void MOctMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_mesh_lod"), &MOctMesh::get_mesh_lod);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"mesh_lod",PROPERTY_HINT_RESOURCE_TYPE,"MMeshLod"),"set_mesh_lod","get_mesh_lod");
 
+    ClassDB::bind_method(D_METHOD("set_material_override","input"), &MOctMesh::set_material_override);
+    ClassDB::bind_method(D_METHOD("get_material_override"), &MOctMesh::get_material_override);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"material_override",PROPERTY_HINT_RESOURCE_TYPE,"BaseMaterial3D,ShaderMaterial"),"set_material_override","get_material_override");
+
     ClassDB::bind_method(D_METHOD("_lod_mesh_changed"), &MOctMesh::_lod_mesh_changed);
 }
 
@@ -65,8 +69,12 @@ void MOctMesh::insert_points(){
     PackedInt32Array points_ids;
     for(HashMap<int32_t,MOctMesh*>::Iterator it=octpoint_to_octmesh.begin();it!=octpoint_to_octmesh.end();++it){
         points_ids.push_back(it->key);
-        points_pos.push_back(it->value->get_global_position());
-        it->value->oct_position = it->value->get_global_position();
+        Vector3 oct_pos;
+        if(it->value->is_inside_tree()){
+            oct_pos = it->value->get_global_position();
+        }
+        it->value->oct_position = oct_pos;
+        points_pos.push_back(oct_pos);
     }
     octtree->insert_points(points_pos,points_ids,oct_id);
 }
@@ -76,8 +84,9 @@ int32_t MOctMesh::add_octmesh(MOctMesh* input){
     if(octtree!=nullptr && is_octtree_inserted){
         bool res = octtree->insert_point(input->get_global_position(),last_oct_point_id,oct_id);
         ERR_FAIL_COND_V_MSG(!res,INVALID_OCT_POINT_ID,"Single point can't be inserted!");
+        input->oct_position = input->get_global_position();
     }
-    input->oct_position = input->get_global_position();
+
     octpoint_to_octmesh.insert(last_oct_point_id,input);
     return last_oct_point_id;
 }
@@ -202,6 +211,9 @@ void MOctMesh::update_lod_mesh(int8_t new_lod){
             RID scenario = MOctMesh::octtree->get_scenario();
             RS->instance_set_scenario(instance,scenario);
             RS->instance_set_transform(instance, get_global_transform());
+            if(material_override.is_valid()){
+                RS->instance_geometry_set_material_override(instance,material_override->get_rid());
+            }
         }
         RS->instance_set_base(instance,current_mesh);
         
@@ -242,6 +254,22 @@ Ref<MMeshLod> MOctMesh::get_mesh_lod(){
     return mesh_lod;
 }
 
+void MOctMesh::set_material_override(Ref<Material> input){
+    material_override = input;
+    return;
+    std::lock_guard<std::mutex> lock(update_mutex);
+    if(instance.is_valid()){
+        if(material_override.is_valid()){
+            RS->instance_geometry_set_material_override(instance,material_override->get_rid());
+        } else {
+            RS->instance_geometry_set_material_override(instance,RID());
+        }
+    }
+}
+
+Ref<Material> MOctMesh::get_material_override(){
+    return material_override;
+}
 
 bool MOctMesh::has_valid_oct_point_id(){
     return oct_point_id != INVALID_OCT_POINT_ID;
@@ -265,7 +293,7 @@ void MOctMesh::_notification(int p_what){
         break;
     case NOTIFICATION_ENTER_TREE:
         update_mutex.lock();
-        if(!has_valid_oct_point_id()){
+        if(!has_valid_oct_point_id() && is_inside_tree()){
             oct_point_id = MOctMesh::add_octmesh(this);
         }
         update_lod_mesh();

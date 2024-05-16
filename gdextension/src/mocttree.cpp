@@ -80,8 +80,7 @@ bool MOctTree::Octant::insert_point(const Vector3& p_point,int32_t p_id, uint16_
 		}
 		ERR_FAIL_V_MSG(false,"Arrive end without consuming point!");
 	}
-	if(points.size()>capacity){
-		divide();
+	if(points.size()>capacity && divide()){
 		// Clearing our points and putting them inside child
 		for(uint32_t j=0; j < points.size(); j++){
 			bool consume = false;
@@ -120,8 +119,7 @@ bool MOctTree::Octant::insert_point(const OctPoint& p_point, const uint16_t capa
 		}
 		ERR_FAIL_V_MSG(false,"Arrive end without consuming point!");
 	}
-	if(points.size()>capacity){
-		divide();
+	if(points.size()>capacity && divide()){
 		// Clearing our points and putting them inside child
 		for(uint32_t j=0; j < points.size(); j++){
 			bool consume = false;
@@ -161,8 +159,7 @@ MOctTree::OctPoint* MOctTree::Octant::insert_point_ret_octpoint(const OctPoint& 
 		}
 		ERR_FAIL_V_MSG(nullptr,"Arrive end without consuming point!");
 	}
-	if(points.size()>capacity){
-		divide();
+	if(points.size()>capacity && divide()){
 		// Clearing our points and putting them inside child
 		for(uint32_t j=0; j < points.size(); j++){
 			//bool consume = false;
@@ -295,10 +292,14 @@ void MOctTree::Octant::merge_octs(){
 	}
 }
 
-void MOctTree::Octant::divide(){
+bool MOctTree::Octant::divide(){
+	Vector3 half = (end - start)/2;
+	if(half.x < MIN_OCTANT_EDGE_LENGTH || half.y < MIN_OCTANT_EDGE_LENGTH || half.z < MIN_OCTANT_EDGE_LENGTH || octs!=nullptr){
+		return false;
+	}
 	octs = memnew_arr(Octant, 8);
 	//Vector3 half_size;
-	Vector3 middle = start + (end - start)/2;
+	Vector3 middle = start + half;
 	// First Level
 	octs[0].start = start;
 	octs[1].start = Vector3(middle.x,start.y,start.z);
@@ -322,6 +323,7 @@ void MOctTree::Octant::divide(){
 	for(int8_t i=0; i < 8 ; i++){
 		octs[i].parent = this;
 	}
+	return true;
 }
 
 bool MOctTree::Octant::intersects(const Pair<Vector3,Vector3>& bound) const {
@@ -855,7 +857,6 @@ void MOctTree::insert_points(const PackedVector3Array& points,const PackedInt32A
 			WARN_PRINT("Point "+itos(ids[i])+" at position "+UtilityFunctions::str(points[i])+" Did not inserted!");
 		}
 	}
-
 	/*
 	int no_insert_count = 0;
 	for(int32_t id : ids){

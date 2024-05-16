@@ -1,6 +1,7 @@
 #ifndef __MOCTTREE
 #define __MOCTTREE
 
+#define MIN_OCTANT_EDGE_LENGTH 0.2
 #define EXTRA_BOUND_MARGIN 200 //This should be alway some number bigger than zero, otherwise cause some points to not be inserted
 #define MAX_CAPACITY 10000
 #define MIN_CAPACITY 10
@@ -125,7 +126,7 @@ class MOctTree : public Node3D {
         void get_tree_lines(PackedVector3Array& lines);
         void merge_octs();
         private:
-        _FORCE_INLINE_ void divide();
+        _FORCE_INLINE_ bool divide();
         _FORCE_INLINE_ bool intersects(const Pair<Vector3,Vector3>& bound) const;
         _FORCE_INLINE_ bool encloses_by(const Pair<Vector3,Vector3>& bound) const;
         _FORCE_INLINE_ bool encloses_between(const Pair<Vector3,Vector3>& include, const Pair<Vector3,Vector3>& exclude) const;
