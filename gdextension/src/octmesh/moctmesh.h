@@ -68,6 +68,7 @@ class MOctMesh : public Node3D {
     bool ignore_occlusion_culling = false;
     RenderingServer::ShadowCastingSetting shadow_setting = RenderingServer::ShadowCastingSetting::SHADOW_CASTING_SETTING_ON;
     float transparency = 0.0;
+    float lod_bias = 1.0;
     float extra_cull_margin = 0.0;
     AABB custom_aabb;
     
@@ -107,6 +108,12 @@ class MOctMesh : public Node3D {
 
     void set_transparency(float input);
     float get_transparency();
+
+    void set_lod_bias(float input);
+    float get_lod_bias();
+
+    void set_extra_cull_margin(float input);
+    float get_extra_cull_margin();
 
     void set_custom_aabb(AABB input);
     AABB get_custom_aabb();

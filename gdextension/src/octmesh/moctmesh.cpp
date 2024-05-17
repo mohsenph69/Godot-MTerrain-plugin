@@ -24,6 +24,22 @@ void MOctMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_ignore_occlusion_culling"), &MOctMesh::get_ignore_occlusion_culling);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"ignore_occlusion_culling"),"set_ignore_occlusion_culling","get_ignore_occlusion_culling");
 
+    ClassDB::bind_method(D_METHOD("set_transparency","input"), &MOctMesh::set_transparency);
+    ClassDB::bind_method(D_METHOD("get_transparency"), &MOctMesh::get_transparency);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"transparency",PROPERTY_HINT_RANGE,"0,1"),"set_transparency","get_transparency");
+
+    ClassDB::bind_method(D_METHOD("set_lod_bias","input"), &MOctMesh::set_lod_bias);
+    ClassDB::bind_method(D_METHOD("get_lod_bias"), &MOctMesh::get_lod_bias);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"lod_bias",PROPERTY_HINT_RANGE,"0.001,128"),"set_lod_bias","get_lod_bias");
+
+    ClassDB::bind_method(D_METHOD("set_extra_cull_margin","input"), &MOctMesh::set_extra_cull_margin);
+    ClassDB::bind_method(D_METHOD("get_extra_cull_margin"), &MOctMesh::get_extra_cull_margin);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"extra_cull_margin",PROPERTY_HINT_RANGE,"0,16384"),"set_extra_cull_margin","get_extra_cull_margin");
+
+    ClassDB::bind_method(D_METHOD("set_custom_aabb","input"), &MOctMesh::set_custom_aabb);
+    ClassDB::bind_method(D_METHOD("get_custom_aabb"), &MOctMesh::get_custom_aabb);
+    ADD_PROPERTY(PropertyInfo(Variant::AABB,"custom_aabb"),"set_custom_aabb","get_custom_aabb");
+
     ClassDB::bind_method(D_METHOD("set_enable_global_illumination","input"), &MOctMesh::set_enable_global_illumination);
     ClassDB::bind_method(D_METHOD("get_enable_global_illumination"), &MOctMesh::get_enable_global_illumination);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"enable_global_illumination"),"set_enable_global_illumination","get_enable_global_illumination");
@@ -228,9 +244,12 @@ void MOctMesh::update_lod_mesh(int8_t new_lod){
             RS->instance_geometry_set_cast_shadows_setting(instance,shadow_setting);
             RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, enable_global_illumination);
             RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_IGNORE_OCCLUSION_CULLING, ignore_occlusion_culling);
+            RS->instance_geometry_set_lod_bias(instance, lod_bias);
+            RS->instance_geometry_set_transparency(instance, transparency);
+            RS->instance_set_extra_visibility_margin(instance, extra_cull_margin);
         }
         RS->instance_set_base(instance,current_mesh);
-        
+        RS->instance_set_custom_aabb(instance, custom_aabb);
     } else {
         if(instance.is_valid()){
             RS->free_rid(instance);
@@ -251,6 +270,7 @@ Ref<Mesh> MOctMesh::get_active_mesh(){
 
 
 void MOctMesh::set_mesh_lod(Ref<MMeshLod> input){
+    std::lock_guard<std::mutex> lock(MOctMesh::update_mutex);
     if(mesh_lod.is_valid()){
         mesh_lod->disconnect("meshes_changed", Callable(this,"_lod_mesh_changed"));
     }
@@ -258,7 +278,6 @@ void MOctMesh::set_mesh_lod(Ref<MMeshLod> input){
         input->connect("meshes_changed", Callable(this,"_lod_mesh_changed"));
     }
     mesh_lod = input;
-    std::lock_guard<std::mutex> lock(MOctMesh::update_mutex);
     if(has_valid_oct_point_id()){
         update_lod_mesh();
     }
@@ -269,8 +288,8 @@ Ref<MMeshLod> MOctMesh::get_mesh_lod(){
 }
 
 void MOctMesh::set_material_override(Ref<Material> input){
-    material_override = input;
     std::lock_guard<std::mutex> lock(update_mutex);
+    material_override = input;
     if(instance.is_valid()){
         if(material_override.is_valid()){
             RS->instance_geometry_set_material_override(instance,material_override->get_rid());
@@ -285,16 +304,20 @@ Ref<Material> MOctMesh::get_material_override(){
 }
 
 void MOctMesh::set_shadow_setting(RenderingServer::ShadowCastingSetting input){
-    shadow_setting = input;
     std::lock_guard<std::mutex> lock(update_mutex);
+    shadow_setting = input;
     if(instance.is_valid()){
         RS->instance_geometry_set_cast_shadows_setting(instance, shadow_setting);
     }
 }
 
+RenderingServer::ShadowCastingSetting MOctMesh::get_shadow_setting(){
+    return shadow_setting;
+}
+
 void MOctMesh::set_ignore_occlusion_culling(bool input){
-    ignore_occlusion_culling = input;
     std::lock_guard<std::mutex> lock(update_mutex);
+    ignore_occlusion_culling = input;
     if(instance.is_valid()){
         RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_IGNORE_OCCLUSION_CULLING, input);
     }
@@ -304,8 +327,8 @@ bool MOctMesh::get_ignore_occlusion_culling(){
 }
 
 void MOctMesh::set_enable_global_illumination(bool input){
-    enable_global_illumination = input;
     std::lock_guard<std::mutex> lock(update_mutex);
+    enable_global_illumination = input;
     if(instance.is_valid()){
         RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, input);
     }
@@ -316,22 +339,52 @@ bool MOctMesh::get_enable_global_illumination(){
 }
 
 void MOctMesh::set_transparency(float input){
+    std::lock_guard<std::mutex> lock(update_mutex);
     transparency = input;
+    if(instance.is_valid()){
+        RS->instance_geometry_set_transparency(instance, transparency);
+    }
 }
 float MOctMesh::get_transparency(){
     return transparency;
 }
 
+void MOctMesh::set_lod_bias(float input){
+    std::lock_guard<std::mutex> lock(update_mutex);
+    lod_bias = input;
+    if(instance.is_valid()){
+        RS->instance_geometry_set_lod_bias(instance,lod_bias);
+    }
+}
+
+float MOctMesh::get_lod_bias(){
+    return lod_bias;
+}
+
+void MOctMesh::set_extra_cull_margin(float input){
+    std::lock_guard<std::mutex> lock(update_mutex);
+    extra_cull_margin = input;
+    if(instance.is_valid()){
+        RS->instance_set_extra_visibility_margin(instance,extra_cull_margin);
+    }
+}
+
+float MOctMesh::get_extra_cull_margin(){
+    return extra_cull_margin;
+}
+
 void MOctMesh::set_custom_aabb(AABB input){
+    std::lock_guard<std::mutex> lock(update_mutex);
     custom_aabb = input;
+    if(instance.is_valid()){
+        RS->instance_set_custom_aabb(instance,custom_aabb);
+    }
 }
 AABB MOctMesh::get_custom_aabb(){
     return custom_aabb;
 }
 
-RenderingServer::ShadowCastingSetting MOctMesh::get_shadow_setting(){
-    return shadow_setting;
-}
+
 
 bool MOctMesh::has_valid_oct_point_id(){
     return oct_point_id != INVALID_OCT_POINT_ID;
