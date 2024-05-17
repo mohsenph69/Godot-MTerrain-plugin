@@ -26,6 +26,9 @@
 #include <thread>
 #include <chrono>
 
+#include <godot_cpp/classes/array_mesh.hpp>
+#include <godot_cpp/classes/standard_material3d.hpp>
+
 using namespace godot;
 
 
@@ -166,6 +169,11 @@ class MOctTree : public Node3D {
     bool is_octmesh_updater = false;
     bool disable_octtree = false;
 
+    bool debug_draw = false;
+    uint64_t last_draw_time=0;
+    RID debug_instance;
+    Ref<ArrayMesh> debug_mesh;
+    Ref<StandardMaterial3D> debug_material;
 
     public:
     MOctTree();
@@ -203,7 +211,12 @@ class MOctTree : public Node3D {
 
     void set_lod_setting(const PackedFloat32Array _lod_setting);
     void set_custom_capacity(int input);
+
+    void set_debug_draw(bool input);
+    bool get_debug_draw();
     
+    void update_debug_gizmo();
+
     bool is_valid_octmesh_updater();
     static void thread_update(void* instance);
     void _notification(int p_what);

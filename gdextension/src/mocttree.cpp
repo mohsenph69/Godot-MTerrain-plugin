@@ -10,6 +10,7 @@
 
 #include "mtool.h"
 #include "octmesh/moctmesh.h"
+#define RS RenderingServer::get_singleton()
 
 
 //MOctTree::Octant* MOctTree::Octant::octs141 = nullptr;
@@ -37,6 +38,10 @@ void MOctTree::_bind_methods(){
 	ClassDB::bind_method(D_METHOD("set_custom_capacity","input"), &MOctTree::set_custom_capacity);
 	ClassDB::bind_method(D_METHOD("set_world_boundary","start","end"), &MOctTree::set_world_boundary);
 	ClassDB::bind_method(D_METHOD("enable_as_octmesh_updater"), &MOctTree::enable_as_octmesh_updater);
+
+	ClassDB::bind_method(D_METHOD("set_debug_draw","input"), &MOctTree::set_debug_draw);
+	ClassDB::bind_method(D_METHOD("get_debug_draw"), &MOctTree::get_debug_draw);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL,"debug_draw"), "set_debug_draw", "get_debug_draw");
 }
 
 MOctTree::PointMoveReq::PointMoveReq(){
@@ -1170,6 +1175,53 @@ void MOctTree::set_custom_capacity(int input){
 	custom_capacity = input;
 }
 
+void MOctTree::set_debug_draw(bool input){
+	if(input==debug_draw){
+		return;
+	}
+	if(!input){
+		if(debug_mesh.is_valid()){
+			debug_mesh->clear_surfaces();
+		}
+		if(debug_instance.is_valid()){
+			RS->free_rid(debug_instance);
+			debug_instance = RID();
+		}
+	} else {
+		if(!debug_mesh.is_valid()){
+			debug_mesh.instantiate();
+		}
+		if(!debug_material.is_valid()){
+			debug_material.instantiate();
+			debug_material->set_albedo(Color(0.2,0.2,0.8));
+			debug_material->set_shading_mode(BaseMaterial3D::SHADING_MODE_UNSHADED);
+		}
+		debug_instance = RS->instance_create();
+		if(is_inside_tree()){
+			RID scenario = get_world_3d()->get_scenario();
+			RS->instance_set_scenario(debug_instance,scenario);
+		}
+		RS->instance_set_base(debug_instance,debug_mesh->get_rid());
+		RS->instance_geometry_set_material_override(debug_instance,debug_material->get_rid());	
+	}
+	debug_draw = input;
+}
+
+bool MOctTree::get_debug_draw(){
+	return debug_draw;
+}
+
+void MOctTree::update_debug_gizmo(){
+	ERR_FAIL_COND(!debug_mesh.is_valid());
+	PackedVector3Array lines;
+	root.get_tree_lines(lines);
+	Array adata;
+	adata.resize(Mesh::ARRAY_MAX);
+	adata[Mesh::ARRAY_VERTEX] = lines;
+	debug_mesh->clear_surfaces();
+	debug_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_LINES,adata);
+}
+
 void MOctTree::thread_update(void* instance){
 	MOctTree* _oct = static_cast<MOctTree*>(instance);
 	_oct->update_lod(_oct->update_lod_include_root_bound);
@@ -1187,6 +1239,12 @@ void MOctTree::process_tick(){
 			is_point_process_wait = true;
 			waiting_oct_ids = oct_ids;
 			send_update_signal();
+			if(debug_draw){
+				if(Time::get_singleton()->get_ticks_msec() - last_draw_time > 500){
+					last_draw_time = Time::get_singleton()->get_ticks_msec();
+					update_debug_gizmo();
+				}
+			}
 		}
 		return;
 	} else {
@@ -1223,6 +1281,9 @@ void MOctTree::_notification(int p_what){
 		}
 		if(!MTool::is_editor_plugin_active() && Engine::get_singleton()->is_editor_hint()){
 			ERR_FAIL_EDMSG("Make sure to activate MTerrain plugin otherwise gizmo selction will not work!");
+		}
+		if(debug_draw && debug_instance.is_valid()){
+			RS->instance_set_scenario(debug_instance,scenario);
 		}
 		break;
 	case NOTIFICATION_EXIT_TREE:
