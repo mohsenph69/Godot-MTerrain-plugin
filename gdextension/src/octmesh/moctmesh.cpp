@@ -44,6 +44,10 @@ void MOctMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_enable_global_illumination"), &MOctMesh::get_enable_global_illumination);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"enable_global_illumination"),"set_enable_global_illumination","get_enable_global_illumination");
 
+    ClassDB::bind_method(D_METHOD("set_instance_shader_parameters","input"), &MOctMesh::set_instance_shader_parameters);
+    ClassDB::bind_method(D_METHOD("get_instance_shader_parameters"), &MOctMesh::get_instance_shader_parameters);
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"instance_shader_parameters",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_instance_shader_parameters","get_instance_shader_parameters");
+
     ClassDB::bind_method(D_METHOD("_lod_mesh_changed"), &MOctMesh::_lod_mesh_changed);
 }
 
@@ -247,6 +251,10 @@ void MOctMesh::update_lod_mesh(int8_t new_lod){
             RS->instance_geometry_set_lod_bias(instance, lod_bias);
             RS->instance_geometry_set_transparency(instance, transparency);
             RS->instance_set_extra_visibility_margin(instance, extra_cull_margin);
+            Array keys = instance_shader_parameters.keys();
+            for(int i=0; i < keys.size(); i++){
+                RS->instance_geometry_set_shader_parameter(instance,keys[i],instance_shader_parameters[keys[i]]);
+            }
         }
         RS->instance_set_base(instance,current_mesh);
         RS->instance_set_custom_aabb(instance, custom_aabb);
@@ -289,7 +297,13 @@ Ref<MMeshLod> MOctMesh::get_mesh_lod(){
 
 void MOctMesh::set_material_override(Ref<Material> input){
     std::lock_guard<std::mutex> lock(update_mutex);
+    if(material_override.is_valid()){
+        material_override->disconnect("property_list_changed",Callable(this,"notify_property_list_changed"));
+    }
     material_override = input;
+    if(material_override.is_valid()){
+        material_override->connect("property_list_changed",Callable(this,"notify_property_list_changed"));
+    }
     if(instance.is_valid()){
         if(material_override.is_valid()){
             RS->instance_geometry_set_material_override(instance,material_override->get_rid());
@@ -384,7 +398,31 @@ AABB MOctMesh::get_custom_aabb(){
     return custom_aabb;
 }
 
+void MOctMesh::set_instance_shader_parameters(Dictionary input){
+    instance_shader_parameters = input;
+}
 
+Dictionary MOctMesh::get_instance_shader_parameters(){
+    {
+        std::lock_guard<std::mutex> lock(update_mutex);
+        if(instance.is_valid()){
+            Dictionary ret;
+            TypedArray<Dictionary> prop_list = RS->instance_geometry_get_shader_parameter_list(instance);
+            VSet<String> s_names;
+            for(int i=0; i < prop_list.size(); i++){
+                s_names.insert(prop_list[i].get("name"));
+            }
+            Array keys = instance_shader_parameters.keys();
+            for(int i=0; i < keys.size(); i++){
+                String key = keys[i];
+                if(!s_names.has(key) || instance_shader_parameters[key].get_type()==Variant::NIL){
+                    instance_shader_parameters.erase(keys[i]);
+                }
+            }
+        }
+    }
+    return instance_shader_parameters;
+}
 
 bool MOctMesh::has_valid_oct_point_id(){
     return oct_point_id != INVALID_OCT_POINT_ID;
@@ -430,4 +468,54 @@ void MOctMesh::_notification(int p_what){
 void MOctMesh::_lod_mesh_changed(){
     std::lock_guard<std::mutex> lock(MOctMesh::update_mutex);
     update_lod_mesh();
+}
+
+bool MOctMesh::_set(const StringName &p_name, const Variant &p_value){
+    if(p_name.begins_with("instance_shader_parameters/")){
+        String s_name = p_name.replace("instance_shader_parameters/","");
+        instance_shader_parameters[s_name] = p_value;
+        std::lock_guard<std::mutex> lock(update_mutex);
+        if(instance.is_valid()){
+            RS->instance_geometry_set_shader_parameter(instance,s_name,p_value);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool MOctMesh::_get(const StringName &p_name, Variant &r_ret) const{
+    if(p_name.begins_with("instance_shader_parameters/")){
+        String s_name = p_name.replace("instance_shader_parameters/","");
+        if(instance_shader_parameters.has(s_name)){
+            r_ret = instance_shader_parameters[s_name];
+            return true;
+        }
+        std::lock_guard<std::mutex> lock(MOctMesh::update_mutex);
+        if(instance.is_valid()){
+            Variant def = RS->instance_geometry_get_shader_parameter_default_value(instance,s_name);
+            if(def.get_type()!=Variant::NIL){
+                r_ret = def;
+                return true;
+            }
+        }
+        return false;
+    }
+    return false;
+}
+
+void MOctMesh::_get_property_list(List<PropertyInfo> *p_list) const{
+    std::lock_guard<std::mutex> lock(update_mutex);
+    if(!instance.is_valid()){
+        return;
+    }
+    TypedArray<Dictionary> shader_params = RS->instance_geometry_get_shader_parameter_list(instance);
+    for(int i=0; i < shader_params.size(); i++){
+        Dictionary param = shader_params[i];
+        String s_name = String(param["name"]);
+        PropertyInfo p((Variant::Type)((int)param["type"]),"instance_shader_parameters/"+s_name,PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR);
+        p_list->push_back(p);
+        if(instance_shader_parameters.has(s_name)){
+            RS->instance_geometry_set_shader_parameter(instance,s_name,instance_shader_parameters[s_name]);
+        }
+    }
 }

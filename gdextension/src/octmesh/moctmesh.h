@@ -78,6 +78,7 @@ class MOctMesh : public Node3D {
     RID current_mesh; // use with update_mutex protection
     Ref<MMeshLod> mesh_lod;
     Ref<Material> material_override;
+    mutable Dictionary instance_shader_parameters;
 
     void _update_visibilty();
 
@@ -118,12 +119,17 @@ class MOctMesh : public Node3D {
     void set_custom_aabb(AABB input);
     AABB get_custom_aabb();
 
+    void set_instance_shader_parameters(Dictionary input);
+    Dictionary get_instance_shader_parameters();
 
-
+    
     _FORCE_INLINE_ bool has_valid_oct_point_id();
 
     void _notification(int p_what); // some part use update_mutex
     void _lod_mesh_changed(); // use update_mutex
+	bool _set(const StringName &p_name, const Variant &p_value);
+	bool _get(const StringName &p_name, Variant &r_ret) const;
+    void _get_property_list(List<PropertyInfo> *p_list) const;
 
 };
 #endif
