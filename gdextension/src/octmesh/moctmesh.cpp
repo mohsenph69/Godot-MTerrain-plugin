@@ -1,6 +1,5 @@
 #include "moctmesh.h"
 
-#include <godot_cpp/classes/rendering_server.hpp>
 #define RS RenderingServer::get_singleton()
 #include <godot_cpp/classes/world3d.hpp>
 
@@ -16,6 +15,18 @@ void MOctMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_material_override","input"), &MOctMesh::set_material_override);
     ClassDB::bind_method(D_METHOD("get_material_override"), &MOctMesh::get_material_override);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"material_override",PROPERTY_HINT_RESOURCE_TYPE,"BaseMaterial3D,ShaderMaterial"),"set_material_override","get_material_override");
+
+    ClassDB::bind_method(D_METHOD("set_shadow_setting","input"), &MOctMesh::set_shadow_setting);
+    ClassDB::bind_method(D_METHOD("get_shadow_setting"), &MOctMesh::get_shadow_setting);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"shadow_setting",PROPERTY_HINT_ENUM,"Off,On,Double-Sided,Shadows Only"),"set_shadow_setting","get_shadow_setting");
+
+    ClassDB::bind_method(D_METHOD("set_ignore_occlusion_culling","input"), &MOctMesh::set_ignore_occlusion_culling);
+    ClassDB::bind_method(D_METHOD("get_ignore_occlusion_culling"), &MOctMesh::get_ignore_occlusion_culling);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"ignore_occlusion_culling"),"set_ignore_occlusion_culling","get_ignore_occlusion_culling");
+
+    ClassDB::bind_method(D_METHOD("set_enable_global_illumination","input"), &MOctMesh::set_enable_global_illumination);
+    ClassDB::bind_method(D_METHOD("get_enable_global_illumination"), &MOctMesh::get_enable_global_illumination);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"enable_global_illumination"),"set_enable_global_illumination","get_enable_global_illumination");
 
     ClassDB::bind_method(D_METHOD("_lod_mesh_changed"), &MOctMesh::_lod_mesh_changed);
 }
@@ -214,6 +225,9 @@ void MOctMesh::update_lod_mesh(int8_t new_lod){
             if(material_override.is_valid()){
                 RS->instance_geometry_set_material_override(instance,material_override->get_rid());
             }
+            RS->instance_geometry_set_cast_shadows_setting(instance,shadow_setting);
+            RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, enable_global_illumination);
+            RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_IGNORE_OCCLUSION_CULLING, ignore_occlusion_culling);
         }
         RS->instance_set_base(instance,current_mesh);
         
@@ -256,7 +270,6 @@ Ref<MMeshLod> MOctMesh::get_mesh_lod(){
 
 void MOctMesh::set_material_override(Ref<Material> input){
     material_override = input;
-    return;
     std::lock_guard<std::mutex> lock(update_mutex);
     if(instance.is_valid()){
         if(material_override.is_valid()){
@@ -269,6 +282,55 @@ void MOctMesh::set_material_override(Ref<Material> input){
 
 Ref<Material> MOctMesh::get_material_override(){
     return material_override;
+}
+
+void MOctMesh::set_shadow_setting(RenderingServer::ShadowCastingSetting input){
+    shadow_setting = input;
+    std::lock_guard<std::mutex> lock(update_mutex);
+    if(instance.is_valid()){
+        RS->instance_geometry_set_cast_shadows_setting(instance, shadow_setting);
+    }
+}
+
+void MOctMesh::set_ignore_occlusion_culling(bool input){
+    ignore_occlusion_culling = input;
+    std::lock_guard<std::mutex> lock(update_mutex);
+    if(instance.is_valid()){
+        RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_IGNORE_OCCLUSION_CULLING, input);
+    }
+}
+bool MOctMesh::get_ignore_occlusion_culling(){
+    return ignore_occlusion_culling;
+}
+
+void MOctMesh::set_enable_global_illumination(bool input){
+    enable_global_illumination = input;
+    std::lock_guard<std::mutex> lock(update_mutex);
+    if(instance.is_valid()){
+        RS->instance_geometry_set_flag(instance, RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, input);
+    }
+}
+
+bool MOctMesh::get_enable_global_illumination(){
+    return enable_global_illumination;
+}
+
+void MOctMesh::set_transparency(float input){
+    transparency = input;
+}
+float MOctMesh::get_transparency(){
+    return transparency;
+}
+
+void MOctMesh::set_custom_aabb(AABB input){
+    custom_aabb = input;
+}
+AABB MOctMesh::get_custom_aabb(){
+    return custom_aabb;
+}
+
+RenderingServer::ShadowCastingSetting MOctMesh::get_shadow_setting(){
+    return shadow_setting;
 }
 
 bool MOctMesh::has_valid_oct_point_id(){

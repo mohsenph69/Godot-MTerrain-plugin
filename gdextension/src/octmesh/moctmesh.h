@@ -13,6 +13,9 @@
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <godot_cpp/classes/material.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
+
+#include<godot_cpp/classes/voxel_gi.hpp>
 
 #include <atomic>
 #include <mutex>
@@ -56,11 +59,18 @@ class MOctMesh : public Node3D {
     static void octtree_thread_update(void* input); // use update_mutex
     static void update_tick();
 
-
-
+    public:
+    
     // Non static part
     private:
     std::atomic<int8_t> lod{-1};
+    bool enable_global_illumination = true;
+    bool ignore_occlusion_culling = false;
+    RenderingServer::ShadowCastingSetting shadow_setting = RenderingServer::ShadowCastingSetting::SHADOW_CASTING_SETTING_ON;
+    float transparency = 0.0;
+    float extra_cull_margin = 0.0;
+    AABB custom_aabb;
+    
     //int8_t lod = -1;
     int32_t oct_point_id = INVALID_OCT_POINT_ID;
     RID instance; // use with update_mutex protection
@@ -86,7 +96,22 @@ class MOctMesh : public Node3D {
     void set_material_override(Ref<Material> input);
     Ref<Material> get_material_override();
 
-    
+    void set_shadow_setting(RenderingServer::ShadowCastingSetting input);
+    RenderingServer::ShadowCastingSetting get_shadow_setting();
+
+    void set_ignore_occlusion_culling(bool input);
+    bool get_ignore_occlusion_culling();
+
+    void set_enable_global_illumination(bool input);
+    bool get_enable_global_illumination();
+
+    void set_transparency(float input);
+    float get_transparency();
+
+    void set_custom_aabb(AABB input);
+    AABB get_custom_aabb();
+
+
 
     _FORCE_INLINE_ bool has_valid_oct_point_id();
 
