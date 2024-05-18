@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhesd47xvfv6m"
-path="res://.godot/imported/MOctTree.svg-6b1aeb932d4982ab3a87b2cba08b06a5.ctex"
+uid="uid://cwc46klnknbkx"
+path="res://.godot/imported/MOctree.svg-35b9165c170786a3b9b40f8572d27ba9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/m_terrain/icons/MOctTree.svg"
-dest_files=["res://.godot/imported/MOctTree.svg-6b1aeb932d4982ab3a87b2cba08b06a5.ctex"]
+source_file="res://addons/m_terrain/icons/MOctree.svg"
+dest_files=["res://.godot/imported/MOctree.svg-35b9165c170786a3b9b40f8572d27ba9.ctex"]
 
 [params]
 

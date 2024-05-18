@@ -25,6 +25,6 @@ MGrass = "res://addons/m_terrain/icons/foilage_icon.png"
 MNavigationRegion3D = "res://addons/m_terrain/icons/MNavigationRegion3D.png"
 MObstacle = "res://addons/m_terrain/icons/obstacle_icon.png"
 MOctMesh = "res://addons/m_terrain/icons/MOctMesh.svg"
-MOctTree = "res://addons/m_terrain/icons/MOctTree.svg"
+MOctree = "res://addons/m_terrain/icons/MOctree.svg"
 
 
