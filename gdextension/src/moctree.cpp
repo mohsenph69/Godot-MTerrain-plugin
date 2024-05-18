@@ -1067,10 +1067,10 @@ void MOctree::update_lod(bool include_root_bound){
 	// In case it is not in max_lod_exclude we leave that to be updated down
 	// Also in case its not get updated here update id should not be equale to current update ID
 	// in case it is not updated it update lod will remain -1
-	float half = lod_setting[lod_setting.size()-1]/2.0;
+	float lod_dis = lod_setting[lod_setting.size()-1];
 	Pair<Vector3,Vector3> max_lod_exclude;
-	max_lod_exclude.first = camera_position - Vector3(half,half,half);
-	max_lod_exclude.second = camera_position + Vector3(half,half,half);
+	max_lod_exclude.first = camera_position - Vector3(lod_dis,lod_dis,lod_dis);
+	max_lod_exclude.second = camera_position + Vector3(lod_dis,lod_dis,lod_dis);
 	for(PointMoveReq mp : moves_req){
 		int8_t _update_lod = -1;
 		uint8_t _updated_id = update_id - 1;
@@ -1087,9 +1087,9 @@ void MOctree::update_lod(bool include_root_bound){
 	Pair<Vector3,Vector3> last_bound;
 	// Updating LOD 0 -> as it does not need exclude region we do that differently here
 	{
-		float half = lod_setting[0]/2.0;
-		last_bound.first = camera_position - Vector3(half,half,half);
-		last_bound.second = camera_position + Vector3(half,half,half);
+		float lod_dis = lod_setting[0];
+		last_bound.first = camera_position - Vector3(lod_dis,lod_dis,lod_dis);
+		last_bound.second = camera_position + Vector3(lod_dis,lod_dis,lod_dis);
 		OctUpdateInfo update_info;
 		update_info.bound = last_bound;
 		// No exclude bound for LOD0
@@ -1101,9 +1101,9 @@ void MOctree::update_lod(bool include_root_bound){
 	for(uint16_t i=1; i < lod_setting.size() ; i++){
 		OctUpdateInfo update_info;
 		update_info.exclude_bound = last_bound;
-		float half = lod_setting[i]/2.0;
-		update_info.bound.first = camera_position - Vector3(half,half,half);
-		update_info.bound.second = camera_position + Vector3(half,half,half);
+		float lod_dis = lod_setting[i];
+		update_info.bound.first = camera_position - Vector3(lod_dis,lod_dis,lod_dis);
+		update_info.bound.second = camera_position + Vector3(lod_dis,lod_dis,lod_dis);
 		update_info.update_id = update_id;
 		update_info.lod = i;
 		root.update_lod(update_info, update_change_info);
