@@ -55,16 +55,16 @@ void MOctMesh::_bind_methods(){
 ///STATIC PART
 WorkerThreadPool::TaskID MOctMesh::thread_task_id;
 std::mutex MOctMesh::update_mutex;
-bool MOctMesh::is_octtree_inserted = false;
+bool MOctMesh::is_octree_inserted = false;
 bool MOctMesh::is_updating = false;
 uint16_t MOctMesh::oct_id = 0;
 int32_t MOctMesh::last_oct_point_id = OCT_POINT_ID_START;
 HashMap<int32_t,MOctMesh*> MOctMesh::octpoint_to_octmesh;
-MOctTree* MOctMesh::octtree = nullptr;
+MOctree* MOctMesh::octree = nullptr;
 
 
-bool MOctMesh::is_my_octtree(MOctTree* input){
-    return input == MOctMesh::octtree;
+bool MOctMesh::is_my_octree(MOctree* input){
+    return input == MOctMesh::octree;
 }
 
 uint16_t MOctMesh::get_oct_id(){
@@ -72,30 +72,30 @@ uint16_t MOctMesh::get_oct_id(){
 }
 
 
-bool MOctMesh::set_octtree(MOctTree* input){
+bool MOctMesh::set_octree(MOctree* input){
     ERR_FAIL_COND_V(input==nullptr,false);
-    if(octtree){
-        WARN_PRINT("OctTree "+octtree->get_name()+" is already assigned! Only one OctTree can be assing to update MOctMesh!");
+    if(octree){
+        WARN_PRINT("octree "+octree->get_name()+" is already assigned! Only one octree can be assing to update MOctMesh!");
         return false;
     }
-    octtree = input;
-    if(octtree!=nullptr){
-        oct_id = octtree->get_oct_id();
+    octree = input;
+    if(octree!=nullptr){
+        oct_id = octree->get_oct_id();
         // Here we insert all points
     }
     return true;
 }
 
-void MOctMesh::remove_octtree(MOctTree* input){
-    if(input == octtree){
-        octtree->remove_oct_id(oct_id);
-        octtree = nullptr;
+void MOctMesh::remove_octree(MOctree* input){
+    if(input == octree){
+        octree->remove_oct_id(oct_id);
+        octree = nullptr;
     }
 }
 
 void MOctMesh::insert_points(){
-    ERR_FAIL_COND(octtree==nullptr);
-    is_octtree_inserted = true;
+    ERR_FAIL_COND(octree==nullptr);
+    is_octree_inserted = true;
     PackedVector3Array points_pos;
     PackedInt32Array points_ids;
     for(HashMap<int32_t,MOctMesh*>::Iterator it=octpoint_to_octmesh.begin();it!=octpoint_to_octmesh.end();++it){
@@ -107,13 +107,13 @@ void MOctMesh::insert_points(){
         it->value->oct_position = oct_pos;
         points_pos.push_back(oct_pos);
     }
-    octtree->insert_points(points_pos,points_ids,oct_id);
+    octree->insert_points(points_pos,points_ids,oct_id);
 }
 
 int32_t MOctMesh::add_octmesh(MOctMesh* input){
     last_oct_point_id++;
-    if(octtree!=nullptr && is_octtree_inserted){
-        bool res = octtree->insert_point(input->get_global_position(),last_oct_point_id,oct_id);
+    if(octree!=nullptr && is_octree_inserted){
+        bool res = octree->insert_point(input->get_global_position(),last_oct_point_id,oct_id);
         ERR_FAIL_COND_V_MSG(!res,INVALID_OCT_POINT_ID,"Single point can't be inserted!");
         input->oct_position = input->get_global_position();
     }
@@ -128,8 +128,8 @@ void MOctMesh::remove_octmesh(int32_t id){
     m->oct_point_id = INVALID_OCT_POINT_ID;
     m->lod = INVALID_LOD;
     octpoint_to_octmesh.erase(id);
-    if(octtree!=nullptr && is_octtree_inserted){
-        octtree->remove_point(id,m->oct_position,oct_id);
+    if(octree!=nullptr && is_octree_inserted){
+        octree->remove_point(id,m->oct_position,oct_id);
     }
 }
 
@@ -138,26 +138,26 @@ void MOctMesh::move_octmesh(MOctMesh* input){
     ERR_FAIL_COND(!octpoint_to_octmesh.has(input->oct_point_id));
     Vector3 old_pos = input->oct_position;
     Vector3 new_pos = input->get_global_position();
-    if(octtree && is_octtree_inserted && old_pos!=new_pos){
-        octtree->add_move_req(MOctTree::PointMoveReq(input->oct_point_id,oct_id,old_pos,new_pos));
+    if(octree && is_octree_inserted && old_pos!=new_pos){
+        octree->add_move_req(MOctree::PointMoveReq(input->oct_point_id,oct_id,old_pos,new_pos));
         input->oct_position = new_pos;
     }
 }
 
-void MOctMesh::octtree_update(const Vector<MOctTree::PointUpdate>* update_info){
+void MOctMesh::octree_update(const Vector<MOctree::PointUpdate>* update_info){
     if(update_info->size() > 0) {
         is_updating = true;
-        thread_task_id = WorkerThreadPool::get_singleton()->add_native_task(&MOctMesh::octtree_thread_update,(void*)update_info,true);
+        thread_task_id = WorkerThreadPool::get_singleton()->add_native_task(&MOctMesh::octree_thread_update,(void*)update_info,true);
     } else {
-        octtree->point_process_finished(oct_id);
+        octree->point_process_finished(oct_id);
     }
 }
 
-void MOctMesh::octtree_thread_update(void* input){
-    const Vector<MOctTree::PointUpdate>* update_info = (const Vector<MOctTree::PointUpdate>*)input;
+void MOctMesh::octree_thread_update(void* input){
+    const Vector<MOctree::PointUpdate>* update_info = (const Vector<MOctree::PointUpdate>*)input;
     for(int i=0; i < update_info->size(); i++){
         std::lock_guard<std::mutex> lock(MOctMesh::update_mutex);
-        MOctTree::PointUpdate p = update_info->get(i);
+        MOctree::PointUpdate p = update_info->get(i);
         if(!octpoint_to_octmesh.has(p.id)){
             continue;
         }
@@ -172,8 +172,8 @@ void MOctMesh::update_tick(){
         if(WorkerThreadPool::get_singleton()->is_task_completed(thread_task_id)){
             is_updating = false;
             WorkerThreadPool::get_singleton()->wait_for_task_completion(thread_task_id);
-            ERR_FAIL_COND(octtree==nullptr);
-            octtree->point_process_finished(oct_id);
+            ERR_FAIL_COND(octree==nullptr);
+            octree->point_process_finished(oct_id);
         }
     }
     
@@ -239,7 +239,7 @@ void MOctMesh::update_lod_mesh(int8_t new_lod){
             RID created_instance = RS->instance_create();
             RS->instance_attach_object_instance_id(created_instance,get_instance_id());
             instance = created_instance;
-            RID scenario = MOctMesh::octtree->get_scenario();
+            RID scenario = MOctMesh::octree->get_scenario();
             RS->instance_set_scenario(instance,scenario);
             RS->instance_set_transform(instance, get_global_transform());
             if(material_override.is_valid()){

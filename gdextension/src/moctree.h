@@ -1,5 +1,5 @@
-#ifndef __MOCTTREE
-#define __MOCTTREE
+#ifndef __MOctree
+#define __MOctree
 
 #define MIN_OCTANT_EDGE_LENGTH 0.2
 #define EXTRA_BOUND_MARGIN 200 //This should be alway some number bigger than zero, otherwise cause some points to not be inserted
@@ -32,8 +32,8 @@
 using namespace godot;
 
 
-class MOctTree : public Node3D {
-    GDCLASS(MOctTree,Node3D);
+class MOctree : public Node3D {
+    GDCLASS(MOctree,Node3D);
     protected:
     static void _bind_methods();
 
@@ -167,7 +167,7 @@ class MOctTree : public Node3D {
     bool is_camera_warn_print = false;
     bool is_ready = false;
     bool is_octmesh_updater = false;
-    bool disable_octtree = false;
+    bool disable_octree = false;
 
     bool debug_draw = false;
     uint64_t last_draw_time=0;
@@ -176,8 +176,8 @@ class MOctTree : public Node3D {
     Ref<StandardMaterial3D> debug_material;
 
     public:
-    MOctTree();
-    ~MOctTree();
+    MOctree();
+    ~MOctree();
     int get_oct_id();
     void clear_oct_id(int oct_id);
     void remove_oct_id(int oct_id);

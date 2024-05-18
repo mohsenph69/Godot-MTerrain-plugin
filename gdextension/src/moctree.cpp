@@ -1,4 +1,4 @@
-#include "mocttree.h"
+#include "moctree.h"
 
 
 #include <godot_cpp/classes/engine.hpp>
@@ -13,67 +13,67 @@
 #define RS RenderingServer::get_singleton()
 
 
-//MOctTree::Octant* MOctTree::Octant::octs141 = nullptr;
+//MOctree::Octant* MOctree::Octant::octs141 = nullptr;
 
-void MOctTree::_bind_methods(){
+void MOctree::_bind_methods(){
 	ADD_SIGNAL(MethodInfo("update_finished"));
 
-	ClassDB::bind_method(D_METHOD("get_oct_id"), &MOctTree::get_oct_id);
-	ClassDB::bind_method(D_METHOD("clear_oct_id"), &MOctTree::clear_oct_id);
-	ClassDB::bind_method(D_METHOD("remove_oct_id"), &MOctTree::remove_oct_id);
+	ClassDB::bind_method(D_METHOD("get_oct_id"), &MOctree::get_oct_id);
+	ClassDB::bind_method(D_METHOD("clear_oct_id"), &MOctree::clear_oct_id);
+	ClassDB::bind_method(D_METHOD("remove_oct_id"), &MOctree::remove_oct_id);
 	
-	ClassDB::bind_method(D_METHOD("point_process_finished"), &MOctTree::point_process_finished);
-	ClassDB::bind_method(D_METHOD("get_point_update_dictionary_array","oct_id"), &MOctTree::get_point_update_dictionary_array);
-	ClassDB::bind_method(D_METHOD("insert_points","points","ids","oct_id"), &MOctTree::insert_points);
-	ClassDB::bind_method(D_METHOD("get_ids","search_bound"), &MOctTree::get_ids);
-	ClassDB::bind_method(D_METHOD("get_ids_exclude","search_bound","exclude_bound"), &MOctTree::get_ids_exclude);
-	ClassDB::bind_method(D_METHOD("set_camera_node"), &MOctTree::set_camera_node);
+	ClassDB::bind_method(D_METHOD("point_process_finished"), &MOctree::point_process_finished);
+	ClassDB::bind_method(D_METHOD("get_point_update_dictionary_array","oct_id"), &MOctree::get_point_update_dictionary_array);
+	ClassDB::bind_method(D_METHOD("insert_points","points","ids","oct_id"), &MOctree::insert_points);
+	ClassDB::bind_method(D_METHOD("get_ids","search_bound"), &MOctree::get_ids);
+	ClassDB::bind_method(D_METHOD("get_ids_exclude","search_bound","exclude_bound"), &MOctree::get_ids_exclude);
+	ClassDB::bind_method(D_METHOD("set_camera_node"), &MOctree::set_camera_node);
 
 
-	ClassDB::bind_method(D_METHOD("get_points_count"), &MOctTree::get_points_count);
-	ClassDB::bind_method(D_METHOD("get_oct_id_points_count","oct_id"), &MOctTree::get_oct_id_points_count);
-	ClassDB::bind_method(D_METHOD("get_tree_lines"), &MOctTree::get_tree_lines);
-	ClassDB::bind_method(D_METHOD("set_lod_setting","lod"), &MOctTree::set_lod_setting);
+	ClassDB::bind_method(D_METHOD("get_points_count"), &MOctree::get_points_count);
+	ClassDB::bind_method(D_METHOD("get_oct_id_points_count","oct_id"), &MOctree::get_oct_id_points_count);
+	ClassDB::bind_method(D_METHOD("get_tree_lines"), &MOctree::get_tree_lines);
+	ClassDB::bind_method(D_METHOD("set_lod_setting","lod"), &MOctree::set_lod_setting);
 
-	ClassDB::bind_method(D_METHOD("set_custom_capacity","input"), &MOctTree::set_custom_capacity);
-	ClassDB::bind_method(D_METHOD("set_world_boundary","start","end"), &MOctTree::set_world_boundary);
-	ClassDB::bind_method(D_METHOD("enable_as_octmesh_updater"), &MOctTree::enable_as_octmesh_updater);
+	ClassDB::bind_method(D_METHOD("set_custom_capacity","input"), &MOctree::set_custom_capacity);
+	ClassDB::bind_method(D_METHOD("set_world_boundary","start","end"), &MOctree::set_world_boundary);
+	ClassDB::bind_method(D_METHOD("enable_as_octmesh_updater"), &MOctree::enable_as_octmesh_updater);
 
-	ClassDB::bind_method(D_METHOD("set_debug_draw","input"), &MOctTree::set_debug_draw);
-	ClassDB::bind_method(D_METHOD("get_debug_draw"), &MOctTree::get_debug_draw);
+	ClassDB::bind_method(D_METHOD("set_debug_draw","input"), &MOctree::set_debug_draw);
+	ClassDB::bind_method(D_METHOD("get_debug_draw"), &MOctree::get_debug_draw);
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL,"debug_draw"), "set_debug_draw", "get_debug_draw");
 }
 
-MOctTree::PointMoveReq::PointMoveReq(){
+MOctree::PointMoveReq::PointMoveReq(){
 	
 }
 
-MOctTree::PointMoveReq::PointMoveReq(int32_t _p_id,uint16_t _oct_id,Vector3 _old_pos,Vector3 _new_pos):
+MOctree::PointMoveReq::PointMoveReq(int32_t _p_id,uint16_t _oct_id,Vector3 _old_pos,Vector3 _new_pos):
 p_id(_p_id),oct_id(_oct_id),old_pos(_old_pos),new_pos(_new_pos)
 {
 
 }
 
-uint64_t MOctTree::PointMoveReq::hash() const{
+uint64_t MOctree::PointMoveReq::hash() const{
 	uint64_t uid = (uint64_t)((uint32_t)p_id) << 16;
 	return uid | (uint64_t)oct_id;
 }
 
-bool MOctTree::PointMoveReq::operator<(const PointMoveReq& other) const{
+bool MOctree::PointMoveReq::operator<(const PointMoveReq& other) const{
 	return hash() < other.hash();
 }
 
 
-MOctTree::Octant::Octant(){
+MOctree::Octant::Octant(){
 }
 
-MOctTree::Octant::~Octant(){
+MOctree::Octant::~Octant(){
 	if(octs){
 		memdelete_arr(octs);
 	}
 }
 
-bool MOctTree::Octant::insert_point(const Vector3& p_point,int32_t p_id, uint16_t oct_id, const uint16_t capacity){
+bool MOctree::Octant::insert_point(const Vector3& p_point,int32_t p_id, uint16_t oct_id, const uint16_t capacity){
 	if(!has_point(p_point)){
 		return false;
 	}
@@ -112,7 +112,7 @@ bool MOctTree::Octant::insert_point(const Vector3& p_point,int32_t p_id, uint16_
 	return true;
 }
 
-bool MOctTree::Octant::insert_point(const OctPoint& p_point, const uint16_t capacity){
+bool MOctree::Octant::insert_point(const OctPoint& p_point, const uint16_t capacity){
 	if(!has_point(p_point.position)){
 		return false;
 	}
@@ -151,7 +151,7 @@ bool MOctTree::Octant::insert_point(const OctPoint& p_point, const uint16_t capa
 	return true;
 }
 
-MOctTree::OctPoint* MOctTree::Octant::insert_point_ret_octpoint(const OctPoint& p_point, const uint16_t capacity){
+MOctree::OctPoint* MOctree::Octant::insert_point_ret_octpoint(const OctPoint& p_point, const uint16_t capacity){
 	if(!has_point(p_point.position)){
 		return nullptr;
 	}
@@ -193,13 +193,13 @@ MOctTree::OctPoint* MOctTree::Octant::insert_point_ret_octpoint(const OctPoint& 
 }
 
 
-MOctTree::Octant* MOctTree::Octant::find_octant_by_point(const int32_t id,const uint16_t oct_id,Vector3 pos,int& point_index){
+MOctree::Octant* MOctree::Octant::find_octant_by_point(const int32_t id,const uint16_t oct_id,Vector3 pos,int& point_index){
 	if(!has_point(pos)){
 		return nullptr;
 	}
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
-			MOctTree::Octant* res = octs[i].find_octant_by_point(id,oct_id,pos,point_index);
+			MOctree::Octant* res = octs[i].find_octant_by_point(id,oct_id,pos,point_index);
 			if(res != nullptr){
 				return res;
 			}
@@ -216,10 +216,10 @@ MOctTree::Octant* MOctTree::Octant::find_octant_by_point(const int32_t id,const 
 	return nullptr;
 }
 
-MOctTree::Octant* MOctTree::Octant::find_octant_by_point_classic(const int32_t id,const uint16_t oct_id,int& point_index){
+MOctree::Octant* MOctree::Octant::find_octant_by_point_classic(const int32_t id,const uint16_t oct_id,int& point_index){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
-			MOctTree::Octant* res = octs[i].find_octant_by_point_classic(id,oct_id,point_index);
+			MOctree::Octant* res = octs[i].find_octant_by_point_classic(id,oct_id,point_index);
 			if(res != nullptr){
 				return res;
 			}
@@ -236,7 +236,7 @@ MOctTree::Octant* MOctTree::Octant::find_octant_by_point_classic(const int32_t i
 	return nullptr;
 }
 
-bool MOctTree::Octant::check_id_exist_classic(int32_t id){
+bool MOctree::Octant::check_id_exist_classic(int32_t id){
 	bool found = false;
 	if(octs!=nullptr){
 		for(uint8_t i=0; i < 8; i++){
@@ -254,7 +254,7 @@ bool MOctTree::Octant::check_id_exist_classic(int32_t id){
 	return false;
 }
 
-void MOctTree::Octant::get_tree_lines(PackedVector3Array& lines){
+void MOctree::Octant::get_tree_lines(PackedVector3Array& lines){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
 			octs[i].get_tree_lines(lines);
@@ -289,7 +289,7 @@ void MOctTree::Octant::get_tree_lines(PackedVector3Array& lines){
 	lines[sindex+23] = Vector3(start.x,start.y,end.z);
 }
 
-void MOctTree::Octant::merge_octs(){
+void MOctree::Octant::merge_octs(){
 	if(octs){
 		get_all_data(points);
 		memdelete_arr(octs);
@@ -297,7 +297,7 @@ void MOctTree::Octant::merge_octs(){
 	}
 }
 
-bool MOctTree::Octant::divide(){
+bool MOctree::Octant::divide(){
 	Vector3 half = (end - start)/2;
 	if(half.x < MIN_OCTANT_EDGE_LENGTH || half.y < MIN_OCTANT_EDGE_LENGTH || half.z < MIN_OCTANT_EDGE_LENGTH || octs!=nullptr){
 		return false;
@@ -331,7 +331,7 @@ bool MOctTree::Octant::divide(){
 	return true;
 }
 
-bool MOctTree::Octant::intersects(const Pair<Vector3,Vector3>& bound) const {
+bool MOctree::Octant::intersects(const Pair<Vector3,Vector3>& bound) const {
 	if (start.x >= bound.second.x) {
 		return false;
 	}
@@ -353,7 +353,7 @@ bool MOctTree::Octant::intersects(const Pair<Vector3,Vector3>& bound) const {
 	return true;
 }
 
-_FORCE_INLINE_ bool MOctTree::Octant::encloses_by(const Pair<Vector3,Vector3>& bound) const{
+_FORCE_INLINE_ bool MOctree::Octant::encloses_by(const Pair<Vector3,Vector3>& bound) const{
 	return has_point(bound,start) && has_point(bound,end);
 	/*
 	return (
@@ -366,11 +366,11 @@ _FORCE_INLINE_ bool MOctTree::Octant::encloses_by(const Pair<Vector3,Vector3>& b
 	*/
 }
 
-_FORCE_INLINE_ bool MOctTree::Octant::encloses_between(const Pair<Vector3,Vector3>& include, const Pair<Vector3,Vector3>& exclude) const{
+_FORCE_INLINE_ bool MOctree::Octant::encloses_between(const Pair<Vector3,Vector3>& include, const Pair<Vector3,Vector3>& exclude) const{
 	return has_point(include,start) && has_point(include,end) && !has_point(exclude,start) && !has_point(exclude,end);
 }
 
-bool MOctTree::Octant::has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point) {
+bool MOctree::Octant::has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point) {
 	if (point.x <= bound.first.x) {
 		return false;
 	}
@@ -393,7 +393,7 @@ bool MOctTree::Octant::has_point(const Pair<Vector3,Vector3>& bound, const Vecto
 	return true;
 }
 
-bool MOctTree::Octant::has_point(const Vector3& point) const{
+bool MOctree::Octant::has_point(const Vector3& point) const{
 	if (point.x <= start.x) {
 		return false;
 	}
@@ -416,7 +416,7 @@ bool MOctTree::Octant::has_point(const Vector3& point) const{
 	return true;
 }
 
-void MOctTree::Octant::get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids,uint16_t oct_id){
+void MOctree::Octant::get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Array& _ids,uint16_t oct_id){
 	if(!octs){
 		if(encloses_by(bound)){
 			for(uint32_t i=0; i < points.size(); i++){
@@ -441,7 +441,7 @@ void MOctTree::Octant::get_ids(const Pair<Vector3,Vector3>& bound, PackedInt32Ar
 	// If not intersect do nothing
 }
 
-void MOctTree::Octant::get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids,uint16_t oct_id){
+void MOctree::Octant::get_ids_exclude(const Pair<Vector3,Vector3>& bound,const Pair<Vector3,Vector3>& exclude_bound, PackedInt32Array& _ids,uint16_t oct_id){
 	if(!octs){
 		if(encloses_between(bound,exclude_bound)){
 			for(uint32_t i=0; i < points.size(); i++){
@@ -466,7 +466,7 @@ void MOctTree::Octant::get_ids_exclude(const Pair<Vector3,Vector3>& bound,const 
 	}
 }
 
-void MOctTree::Octant::update_lod_zero(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info){
+void MOctree::Octant::update_lod_zero(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info){
 	if(intersects(update_info.bound)){
 		if(octs){
 			for(uint8_t i=0; i < 8; i++){
@@ -495,7 +495,7 @@ void MOctTree::Octant::update_lod_zero(const OctUpdateInfo& update_info,HashMap<
 	}
 }
 
-void MOctTree::Octant::update_lod(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info){
+void MOctree::Octant::update_lod(const OctUpdateInfo& update_info,HashMap<uint16_t,Vector<PointUpdate>>& u_info){
 	if(intersects(update_info.bound) && !encloses_by(update_info.exclude_bound)){
 		if(octs){
 			for(uint8_t i=0; i < 8; i++){
@@ -525,7 +525,7 @@ void MOctTree::Octant::update_lod(const OctUpdateInfo& update_info,HashMap<uint1
 	}
 }
 
-void MOctTree::Octant::get_all_bounds(Vector<Pair<Vector3,Vector3>>& bounds){
+void MOctree::Octant::get_all_bounds(Vector<Pair<Vector3,Vector3>>& bounds){
 	bounds.push_back({start,end});
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
@@ -534,7 +534,7 @@ void MOctTree::Octant::get_all_bounds(Vector<Pair<Vector3,Vector3>>& bounds){
 	}
 }
 
-void MOctTree::Octant::get_all_data(Vector<OctPoint>& data){
+void MOctree::Octant::get_all_data(Vector<OctPoint>& data){
 	data.append_array(points);
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
@@ -543,7 +543,7 @@ void MOctTree::Octant::get_all_data(Vector<OctPoint>& data){
 	}
 }
 
-void MOctTree::Octant::append_all_ids_to(PackedInt32Array& _ids){
+void MOctree::Octant::append_all_ids_to(PackedInt32Array& _ids){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
 			octs[i].append_all_ids_to(_ids);
@@ -555,7 +555,7 @@ void MOctTree::Octant::append_all_ids_to(PackedInt32Array& _ids){
 	}
 }
 
-void MOctTree::Octant::get_points_count(int& count){
+void MOctree::Octant::get_points_count(int& count){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
 			octs[i].get_points_count(count);
@@ -564,7 +564,7 @@ void MOctTree::Octant::get_points_count(int& count){
 	}
 	count += points.size();
 }
-void MOctTree::Octant::get_oct_id_points_count(uint16_t oct_id,int& count){
+void MOctree::Octant::get_oct_id_points_count(uint16_t oct_id,int& count){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
 			octs[i].get_oct_id_points_count(oct_id,count);
@@ -584,7 +584,7 @@ void MOctTree::Octant::get_oct_id_points_count(uint16_t oct_id,int& count){
 	If you use return Octant* of this function after tree structure changed! that octant could be invalide
 	fo example root.clear() is one of them!
 */
-MOctTree::Octant* MOctTree::Octant::get_mergeable(int capacity){
+MOctree::Octant* MOctree::Octant::get_mergeable(int capacity){
 	int count = 0;
 	get_points_count(count);
 	//UtilityFunctions::print("Check mergable ",count," --- ", capacity, " res ",count < capacity);
@@ -602,10 +602,10 @@ MOctTree::Octant* MOctTree::Octant::get_mergeable(int capacity){
 	return nullptr;
 }
 
-MOctTree::Octant* MOctTree::Octant::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
+MOctree::Octant* MOctree::Octant::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
-			MOctTree::Octant* res = octs[i].remove_point(id,pos,oct_id);
+			MOctree::Octant* res = octs[i].remove_point(id,pos,oct_id);
 			if(res!=nullptr){
 				return res;
 			}
@@ -621,7 +621,7 @@ MOctTree::Octant* MOctTree::Octant::remove_point(int32_t id,Vector3& pos,uint16_
 	return nullptr;
 }
 
-void MOctTree::Octant::clear(){
+void MOctree::Octant::clear(){
 	if(octs){
 		memdelete_arr(octs);
 		octs = nullptr;
@@ -629,7 +629,7 @@ void MOctTree::Octant::clear(){
 	points.clear();
 }
 
-void MOctTree::Octant::remove_points_with_oct_id(uint16_t oct_id){
+void MOctree::Octant::remove_points_with_oct_id(uint16_t oct_id){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
 			octs[i].remove_points_with_oct_id(oct_id);
@@ -644,10 +644,10 @@ void MOctTree::Octant::remove_points_with_oct_id(uint16_t oct_id){
 }
 
 ///////////////////////////////////////////////
-//// Main MOctTree ////////////////////////////
+//// Main MOctree ////////////////////////////
 ///////////////////////////////////////////////
 
-MOctTree::MOctTree(){
+MOctree::MOctree(){
 	lod_setting.push_back(100);
 	lod_setting.push_back(200);
 	lod_setting.push_back(600);
@@ -656,13 +656,13 @@ MOctTree::MOctTree(){
 	set_process(true);
 }
 
-MOctTree::~MOctTree(){
+MOctree::~MOctree(){
 	if(is_updating){
 		WorkerThreadPool::get_singleton()->wait_for_task_completion(tid);
 	}
 }
 
-int MOctTree::get_oct_id(){
+int MOctree::get_oct_id(){
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	last_oct_id++;
 	int new_oct_id = last_oct_id;
@@ -671,16 +671,16 @@ int MOctTree::get_oct_id(){
 	return new_oct_id;
 }
 
-void MOctTree::clear_oct_id(int oct_id){
+void MOctree::clear_oct_id(int oct_id){
 	ERR_FAIL_COND(!oct_ids.has(oct_id));
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	root.remove_points_with_oct_id(oct_id);
 }
 
-void MOctTree::remove_oct_id(int oct_id){
+void MOctree::remove_oct_id(int oct_id){
 	ERR_FAIL_COND(!oct_ids.has(oct_id));
 	std::lock_guard<std::mutex> lock(oct_mutex);
-	if(disable_octtree){
+	if(disable_octree){
 		return;
 	}
 	if(waiting_oct_ids.has(oct_id)){
@@ -691,9 +691,9 @@ void MOctTree::remove_oct_id(int oct_id){
 	check_point_process_finished();
 }
 
-bool MOctTree::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
+bool MOctree::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
-	if(disable_octtree){
+	if(disable_octree){
 		return true;
 	}
 	Octant* res = root.remove_point(id,pos,oct_id);
@@ -709,7 +709,7 @@ bool MOctTree::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
 	I you pass the octant pointer and you call root.clear or merge octs
 	this  will crash, this cause to intiale octant pointer will be removed!
 */
-bool MOctTree::check_for_mergeable(Octant* start_point){
+bool MOctree::check_for_mergeable(Octant* start_point){
 	if(start_point->parent==nullptr){
 		return false;
 	}
@@ -722,22 +722,22 @@ bool MOctTree::check_for_mergeable(Octant* start_point){
 	return false;
 }
 
-void MOctTree::set_camera_node(Node3D* camera){
+void MOctree::set_camera_node(Node3D* camera){
 	camera_node = camera;
 }
 
-void MOctTree::set_world_boundary(const Vector3& start,const Vector3& end){
+void MOctree::set_world_boundary(const Vector3& start,const Vector3& end){
 	world_start = start;
 	world_end = end;
 	is_world_boundary_set = true;
 }
 
-void MOctTree::enable_as_octmesh_updater(){
+void MOctree::enable_as_octmesh_updater(){
 	is_octmesh_updater = true;
-	MOctMesh::set_octtree(this);
+	MOctMesh::set_octree(this);
 }
 
-void MOctTree::update_camera_position(){
+void MOctree::update_camera_position(){
 	if(camera_node && UtilityFunctions::is_instance_valid(camera_node) && camera_node->is_inside_tree()){
 		camera_position = camera_node->get_global_position();
 		return;
@@ -771,7 +771,7 @@ void MOctTree::update_camera_position(){
 	camera_position = cam->get_global_position();
 }
 
-uint32_t MOctTree::get_capacity(int p_count){
+uint32_t MOctree::get_capacity(int p_count){
 	uint32_t fcapacity;
 	if(custom_capacity==0){
 		fcapacity = pow(point_count, 0.365)/2;
@@ -782,8 +782,8 @@ uint32_t MOctTree::get_capacity(int p_count){
 	return fcapacity;
 }
 
-void MOctTree::insert_points(const PackedVector3Array& points,const PackedInt32Array ids, int oct_id){
-	if(points.size()==0 || disable_octtree){
+void MOctree::insert_points(const PackedVector3Array& points,const PackedInt32Array ids, int oct_id){
+	if(points.size()==0 || disable_octree){
 		return;
 	}
 	std::lock_guard<std::mutex> lock(oct_mutex);
@@ -877,9 +877,9 @@ void MOctTree::insert_points(const PackedVector3Array& points,const PackedInt32A
 	*/
 }
 // Insert a point and claculate its LOD and return that! in case of error it will return -1
-bool MOctTree::insert_point(const Vector3& pos,const int32_t id, int oct_id){
+bool MOctree::insert_point(const Vector3& pos,const int32_t id, int oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
-	if(disable_octtree){
+	if(disable_octree){
 		return true;
 	}
 	if(get_pos_lod_classic(pos) >= lod_setting.size()){
@@ -933,7 +933,7 @@ bool MOctTree::insert_point(const Vector3& pos,const int32_t id, int oct_id){
 
 //Must be called only in update_lod
 //in case it is not updated updated_lod = -1
-void MOctTree::move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t update_id){
+void MOctree::move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t update_id){
 	int point_index = -1;
 	Octant* poct = nullptr;
 	poct = root.find_octant_by_point(mp.p_id,mp.oct_id,mp.old_pos,point_index);
@@ -963,7 +963,7 @@ void MOctTree::move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t upda
 	p.position = mp.new_pos;
 	Vector<OctPoint> rpoints;
 	bool is_reacreate = false;
-	if(!root.has_point(p.position)){ // in case this go outside of the root bound we need to re-create the entire octtree
+	if(!root.has_point(p.position)){ // in case this go outside of the root bound we need to re-create the entire octree
 		is_reacreate = true;	
 		root.get_all_data(rpoints);
 		root.clear();
@@ -1001,9 +1001,9 @@ void MOctTree::move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t upda
 	}
 }
 
-void MOctTree::add_move_req(const PointMoveReq& mv_data){
+void MOctree::add_move_req(const PointMoveReq& mv_data){
 	std::lock_guard<std::mutex> lock(move_req_mutex);
-	if(disable_octtree){
+	if(disable_octree){
 		return;
 	}
 	if(moves_req_cache.has(mv_data)){
@@ -1016,13 +1016,13 @@ void MOctTree::add_move_req(const PointMoveReq& mv_data){
 	}
 }
 
-void MOctTree::release_move_req_cache(){
+void MOctree::release_move_req_cache(){
 	std::lock_guard<std::mutex> lock(move_req_mutex);
 	moves_req = moves_req_cache;
 	moves_req_cache.clear();
 }
 
-int8_t MOctTree::get_pos_lod_classic(const Vector3& pos){
+int8_t MOctree::get_pos_lod_classic(const Vector3& pos){
 	real_t dis = camera_position.distance_to(pos);
 	int8_t lod = lod_setting.size();
 	for(int8_t i=0;i<lod_setting.size();i++){
@@ -1034,7 +1034,7 @@ int8_t MOctTree::get_pos_lod_classic(const Vector3& pos){
 	return lod;
 }
 
-PackedInt32Array MOctTree::get_ids(const AABB& search_bound,int oct_id){
+PackedInt32Array MOctree::get_ids(const AABB& search_bound,int oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	PackedInt32Array out;
 	Pair<Vector3,Vector3> search_b = {search_bound.position, search_bound.position + search_bound.size};
@@ -1042,7 +1042,7 @@ PackedInt32Array MOctTree::get_ids(const AABB& search_bound,int oct_id){
 	return out;
 }
 
-PackedInt32Array MOctTree::get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound,int oct_id){
+PackedInt32Array MOctree::get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound,int oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	PackedInt32Array out;
 	root.get_ids_exclude({search_bound.position, search_bound.position + search_bound.size},
@@ -1050,7 +1050,7 @@ PackedInt32Array MOctTree::get_ids_exclude(const AABB& search_bound, const AABB&
 	return out;
 }
 
-void MOctTree::update_lod(bool include_root_bound){
+void MOctree::update_lod(bool include_root_bound){
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	ERR_FAIL_COND(lod_setting.size()==0);
 	ERR_FAIL_COND(lod_setting[0] < 0.1);
@@ -1132,34 +1132,34 @@ void MOctTree::update_lod(bool include_root_bound){
 	update_lod_include_root_bound = false;
 }
 
-void MOctTree::clear_update_change_info(){
+void MOctree::clear_update_change_info(){
 	for(HashMap<uint16_t,Vector<PointUpdate>>::Iterator it=update_change_info.begin();it != update_change_info.end(); ++it){
 		it->value.clear();
 	}
 }
 
 
-int MOctTree::get_points_count(){
+int MOctree::get_points_count(){
 	int count = 0;
 	root.get_points_count(count);
 	return count;
 }
 
-int MOctTree::get_oct_id_points_count(int oct_id){
+int MOctree::get_oct_id_points_count(int oct_id){
 	ERR_FAIL_COND_V(!oct_ids.has(oct_id),0);
 	int count = 0;
 	root.get_oct_id_points_count(oct_id,count);
 	return count;
 }
 
-PackedVector3Array MOctTree::get_tree_lines(){
+PackedVector3Array MOctree::get_tree_lines(){
 	PackedVector3Array out;
 	root.get_tree_lines(out);
 	return out;
 }
 
 
-void MOctTree::set_lod_setting(const PackedFloat32Array _lod_setting){
+void MOctree::set_lod_setting(const PackedFloat32Array _lod_setting){
 	ERR_FAIL_COND(_lod_setting.size() > 255);
 	ERR_FAIL_COND(_lod_setting.size() < 1);
 	ERR_FAIL_COND(_lod_setting[0] < 0.01);
@@ -1170,12 +1170,12 @@ void MOctTree::set_lod_setting(const PackedFloat32Array _lod_setting){
 	lod_setting = _lod_setting;
 }
 
-void MOctTree::set_custom_capacity(int input){
+void MOctree::set_custom_capacity(int input){
 	input = CLAMP(input, 0 , MAX_CAPACITY);
 	custom_capacity = input;
 }
 
-void MOctTree::set_debug_draw(bool input){
+void MOctree::set_debug_draw(bool input){
 	if(input==debug_draw){
 		return;
 	}
@@ -1207,11 +1207,11 @@ void MOctTree::set_debug_draw(bool input){
 	debug_draw = input;
 }
 
-bool MOctTree::get_debug_draw(){
+bool MOctree::get_debug_draw(){
 	return debug_draw;
 }
 
-void MOctTree::update_debug_gizmo(){
+void MOctree::update_debug_gizmo(){
 	ERR_FAIL_COND(!debug_mesh.is_valid());
 	PackedVector3Array lines;
 	root.get_tree_lines(lines);
@@ -1222,16 +1222,16 @@ void MOctTree::update_debug_gizmo(){
 	debug_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_LINES,adata);
 }
 
-void MOctTree::thread_update(void* instance){
-	MOctTree* _oct = static_cast<MOctTree*>(instance);
+void MOctree::thread_update(void* instance){
+	MOctree* _oct = static_cast<MOctree*>(instance);
 	_oct->update_lod(_oct->update_lod_include_root_bound);
 }
 
-bool MOctTree::is_valid_octmesh_updater(){
-	return is_octmesh_updater && MOctMesh::is_my_octtree(this);
+bool MOctree::is_valid_octmesh_updater(){
+	return is_octmesh_updater && MOctMesh::is_my_octree(this);
 }
 
-void MOctTree::process_tick(){
+void MOctree::process_tick(){
 	if(is_updating){
 		if(WorkerThreadPool::get_singleton()->is_task_completed(tid)){
 			is_updating = false;
@@ -1266,18 +1266,18 @@ void MOctTree::process_tick(){
 	}
 }
 
-void MOctTree::_notification(int p_what){
+void MOctree::_notification(int p_what){
 	switch (p_what)
 	{
 	case NOTIFICATION_PROCESS:
 		process_tick();
 		break;
 	case NOTIFICATION_READY:
-		ERR_BREAK_MSG(!is_inside_tree(),"MoctTree Condition ready with with not inside tree");
+		ERR_BREAK_MSG(!is_inside_tree(),"MOctree Condition ready with with not inside tree");
 		update_scenario();
 		is_ready = true;
 		if(!get_parent()->is_class("Window")){
-			ERR_FAIL_EDMSG("MOctTree should be added as singlton with active tool mode! Create a gdscript which inherit from MOctTree with active tool mode and add that as singlton in project setting");
+			ERR_FAIL_EDMSG("MOctree should be added as singlton with active tool mode! Create a gdscript which inherit from MOctree with active tool mode and add that as singlton in project setting");
 		}
 		if(!MTool::is_editor_plugin_active() && Engine::get_singleton()->is_editor_hint()){
 			ERR_FAIL_EDMSG("Make sure to activate MTerrain plugin otherwise gizmo selction will not work!");
@@ -1287,7 +1287,7 @@ void MOctTree::_notification(int p_what){
 		}
 		break;
 	case NOTIFICATION_EXIT_TREE:
-		disable_octtree = true;
+		disable_octree = true;
 		if(is_updating){
 			is_updating = false;
 			WorkerThreadPool::get_singleton()->wait_for_task_completion(tid);
@@ -1302,36 +1302,36 @@ void MOctTree::_notification(int p_what){
 	}
 }
 
-void MOctTree::point_process_finished(int oct_id){
+void MOctree::point_process_finished(int oct_id){
 	ERR_FAIL_COND(!waiting_oct_ids.has(oct_id));
 	ERR_FAIL_COND(!is_point_process_wait);
 	waiting_oct_ids.erase(oct_id);
 	check_point_process_finished();
 }
 
-void MOctTree::check_point_process_finished(){
-	if(disable_octtree){
+void MOctree::check_point_process_finished(){
+	if(disable_octree){
 		return;
 	}
 	if(is_point_process_wait && waiting_oct_ids.size()==0){
 		release_move_req_cache();
 		update_camera_position();
 		is_point_process_wait = false;
-		tid = WorkerThreadPool::get_singleton()->add_native_task(&MOctTree::thread_update,(void*)this,true);
+		tid = WorkerThreadPool::get_singleton()->add_native_task(&MOctree::thread_update,(void*)this,true);
 		is_updating = true;
 	}
 }
 
-void MOctTree::send_update_signal(){
+void MOctree::send_update_signal(){
 	update_scenario();
 	if(is_valid_octmesh_updater()){
-		MOctMesh::octtree_update(&update_change_info[MOctMesh::get_oct_id()]);
+		MOctMesh::octree_update(&update_change_info[MOctMesh::get_oct_id()]);
 	}
 	emit_signal("update_finished");
 }
 
 
-Array MOctTree::get_point_update_dictionary_array(int oct_id){
+Array MOctree::get_point_update_dictionary_array(int oct_id){
 	Array arr;
 	uint16_t id = oct_id;
 	ERR_FAIL_COND_V(!update_change_info.has(id), arr);
@@ -1348,11 +1348,11 @@ Array MOctTree::get_point_update_dictionary_array(int oct_id){
 }
 
 
-void MOctTree::update_scenario(){
+void MOctree::update_scenario(){
 	scenario = get_world_3d()->get_scenario();
 }
 
-RID MOctTree::get_scenario(){
+RID MOctree::get_scenario(){
 	return scenario;
 }
 

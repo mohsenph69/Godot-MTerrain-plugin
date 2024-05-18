@@ -20,7 +20,7 @@
 #include <atomic>
 #include <mutex>
 #include "mmesh_lod.h"
-#include "../mocttree.h"
+#include "../moctree.h"
 
 using namespace godot;
 
@@ -28,7 +28,7 @@ using namespace godot;
 class MOctMesh : public Node3D {
     GDCLASS(MOctMesh,Node3D);
 
-    friend class MOctTree;
+    friend class MOctree;
     
     protected:
     static void _bind_methods();    
@@ -39,24 +39,24 @@ class MOctMesh : public Node3D {
     static WorkerThreadPool::TaskID thread_task_id;
     static std::mutex update_mutex;
     static bool is_updating;
-    static bool is_octtree_inserted;
+    static bool is_octree_inserted;
     static uint16_t oct_id;
     static int32_t last_oct_point_id;
     static HashMap<int32_t,MOctMesh*> octpoint_to_octmesh;
-    static MOctTree* octtree;
+    static MOctree* octree;
     
 
     public:
-    static bool is_my_octtree(MOctTree* input);
+    static bool is_my_octree(MOctree* input);
     static uint16_t get_oct_id();
-    static bool set_octtree(MOctTree* input);
-    static void remove_octtree(MOctTree* input);
+    static bool set_octree(MOctree* input);
+    static void remove_octree(MOctree* input);
     static void insert_points();
     static int32_t add_octmesh(MOctMesh* input); // use update_mutex
     static void remove_octmesh(int32_t id); // use update_mutex
     static void move_octmesh(MOctMesh* input);
-    static void octtree_update(const Vector<MOctTree::PointUpdate>* update_info);
-    static void octtree_thread_update(void* input); // use update_mutex
+    static void octree_update(const Vector<MOctree::PointUpdate>* update_info);
+    static void octree_thread_update(void* input); // use update_mutex
     static void update_tick();
 
     public:
