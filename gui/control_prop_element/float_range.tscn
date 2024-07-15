@@ -19,9 +19,12 @@ custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-min_value = -100.0
+min_value = -1.0
+max_value = 1.0
 step = 0.1
 
 [connection signal="focus_exited" from="value" to="." method="_on_value_focus_exited"]
 [connection signal="text_submitted" from="value" to="." method="_on_value_text_submitted"]
+[connection signal="drag_ended" from="slide" to="." method="_on_slide_drag_ended"]
+[connection signal="drag_started" from="slide" to="." method="_on_slide_drag_started"]
 [connection signal="value_changed" from="slide" to="." method="_on_slide_value_changed"]

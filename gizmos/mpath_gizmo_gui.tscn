@@ -1,0 +1,191 @@
+[gd_scene load_steps=12 format=3 uid="uid://btfhp7mnhc5nj"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_ufvdf"]
+[ext_resource type="Texture2D" uid="uid://ch4p2bk5wx574" path="res://addons/m_terrain/icons/collapse_normal.svg" id="2_2am03"]
+[ext_resource type="Texture2D" uid="uid://cqh311apccvi3" path="res://addons/m_terrain/icons/M-terrain_icon.png" id="2_kkk5j"]
+[ext_resource type="Texture2D" uid="uid://c5ca7hy0hp07k" path="res://addons/m_terrain/icons/collapse_pressed.svg" id="3_ardhu"]
+[ext_resource type="Texture2D" uid="uid://b2edfbh3q6uh2" path="res://addons/m_terrain/icons/depth_test.svg" id="3_n0m75"]
+[ext_resource type="PackedScene" uid="uid://cjjqtr6xhktp4" path="res://addons/m_terrain/gui/control_prop_element/float_range.tscn" id="6_bsspt"]
+[ext_resource type="Texture2D" uid="uid://byodukiddauai" path="res://addons/m_terrain/icons/handle01.png" id="7_wgbfp"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7loo7"]
+content_margin_left = 6.0
+bg_color = Color(0, 0.419608, 0, 0.188235)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cwina"]
+content_margin_left = 2.0
+content_margin_right = 2.0
+bg_color = Color(0.576471, 0.619608, 0.6, 0.52549)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_he1tx"]
+content_margin_left = 2.0
+content_margin_right = 2.0
+bg_color = Color(0.85098, 0.4, 0.847059, 0.52549)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nkgdj"]
+content_margin_left = 2.0
+content_margin_right = 2.0
+bg_color = Color(0, 0.85098, 0.207843, 0.52549)
+
+[node name="mpath_gizmo_gui" type="VBoxContainer"]
+clip_contents = true
+anchors_preset = 10
+anchor_right = 1.0
+size_flags_horizontal = 3
+script = ExtResource("1_ufvdf")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="mirror_checkbox" type="CheckBox" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Mirror-Controls
+Hot-key: M"
+button_pressed = true
+text = "M"
+alignment = 1
+icon_alignment = 1
+
+[node name="mirror_l_checkbox" type="CheckBox" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Mirror-Controls-Lenght
+Hot-key: L"
+button_pressed = true
+text = "ML"
+alignment = 1
+icon_alignment = 1
+
+[node name="snap" type="CheckBox" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Snap to Terrain"
+button_pressed = true
+text = "snap"
+icon = ExtResource("2_kkk5j")
+
+[node name="mode" type="OptionButton" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Change Mode
+Hot-keys: grave accent(`)"
+theme_override_styles/normal = SubResource("StyleBoxFlat_7loo7")
+item_count = 2
+selected = 0
+popup/item_0/text = "Edit"
+popup/item_0/id = 0
+popup/item_1/text = "Create"
+popup/item_1/id = 1
+
+[node name="collapse" type="TextureButton" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Collapse point"
+texture_normal = ExtResource("2_2am03")
+texture_pressed = ExtResource("3_ardhu")
+stretch_mode = 3
+
+[node name="toggle_connection" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Toggle Connection
+Hot-key: T"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
+theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
+text = "-T-"
+
+[node name="Connect" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Connect
+Hot-key: C"
+theme_override_colors/font_color = Color(0.14902, 1, 0.25098, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
+theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
+text = "-C-"
+
+[node name="Disconnect" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Disconnect
+Hot-key: X"
+theme_override_colors/font_color = Color(0.717647, 0.952941, 0, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
+theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
+text = "-D-"
+
+[node name="remove" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Remove
+Hot-key: Backspace"
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
+theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
+text = "-D-"
+
+[node name="show_rest" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = ">"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="tilt" parent="HBoxContainer2" instance=ExtResource("6_bsspt")]
+layout_mode = 2
+tooltip_text = "Change Tilt
+Hotkey: R"
+
+[node name="scale" parent="HBoxContainer2" instance=ExtResource("6_bsspt")]
+layout_mode = 2
+tooltip_text = "Change Tilt
+Hotkey: E"
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="depth_test" type="CheckBox" parent="HBoxContainer3"]
+layout_mode = 2
+tooltip_text = "gizmo line depth test"
+text = "depth"
+icon = ExtResource("3_n0m75")
+
+[node name="xz_handle_lock" type="CheckBox" parent="HBoxContainer3"]
+layout_mode = 2
+tooltip_text = "XY Handle lock"
+button_pressed = true
+text = "XY LOCK"
+icon = ExtResource("7_wgbfp")
+
+[node name="swap_points" type="Button" parent="HBoxContainer3"]
+layout_mode = 2
+tooltip_text = "Toggle Connection
+Hot-key: shift+T"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
+theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
+text = "Swap"
+
+[node name="sort_increasing" type="Button" parent="HBoxContainer3"]
+layout_mode = 2
+tooltip_text = "sort increasing"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
+theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
+text = "sort"
+
+[node name="sort_decreasing" type="Button" parent="HBoxContainer3"]
+layout_mode = 2
+tooltip_text = "Toggle Connection
+sort decreasing"
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
+theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
+text = "sort rev"
+
+[connection signal="pressed" from="HBoxContainer/show_rest" to="." method="_on_show_rest_pressed"]

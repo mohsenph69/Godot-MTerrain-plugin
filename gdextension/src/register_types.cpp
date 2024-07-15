@@ -34,6 +34,12 @@
 #include "octmesh/mmesh_lod.h"
 #include "octmesh/moctmesh.h"
 
+#include "path/mpath.h"
+#include "path/mcurve.h"
+#include "path/mintersection.h"
+#include "path/mcurve_mesh.h"
+#include "path/mcurve_mesh_override.h"
+
 
 using namespace godot;
 
@@ -41,6 +47,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+	
 	ClassDB::register_class<MTerrain>();
 	ClassDB::register_class<MGrid>();
 	ClassDB::register_class<MResource>();
@@ -63,7 +70,11 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MMeshLod>();
 	ClassDB::register_class<MOctMesh>();
 
-	
+	ClassDB::register_class<MPath>();
+	ClassDB::register_class<MCurve>();
+	ClassDB::register_class<MIntersection>();
+	ClassDB::register_class<MCurveMesh>();
+	ClassDB::register_class<MCurveMeshOverride>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {

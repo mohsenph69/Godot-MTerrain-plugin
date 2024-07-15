@@ -18,6 +18,7 @@ void MTool::_bind_methods() {
    ClassDB::bind_static_method("MTool", D_METHOD("normalize_rf_data","data","min_height","max_height"), &MTool::normalize_rf_data);
    ClassDB::bind_static_method("MTool", D_METHOD("find_camera","changed_camera"), &MTool::find_editor_camera);
    ClassDB::bind_static_method("MTool", D_METHOD("enable_editor_plugin"), &MTool::enable_editor_plugin);
+   ClassDB::bind_static_method("MTool", D_METHOD("ray_collision_y_zero_plane","ray_origin","ray"), &MTool::ray_collision_y_zero_plane);
 }
 
 
@@ -184,4 +185,16 @@ void MTool::enable_editor_plugin(){
 
 bool MTool::is_editor_plugin_active(){
     return editor_plugin_active;
+}
+
+Ref<MCollision> MTool::ray_collision_y_zero_plane(const Vector3& ray_origin,const Vector3& ray){
+    Ref<MCollision> col;
+    col.instantiate();
+    UtilityFunctions::print("ray ",ray);
+    if(ray.y > -0.001){
+        return col;
+    }
+    col->collision_position = ray_origin - (ray_origin.y/ray.y)*ray;
+    col->collided = true;
+    return col;
 }

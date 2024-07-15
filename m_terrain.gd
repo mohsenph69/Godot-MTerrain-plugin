@@ -33,10 +33,16 @@ const max_mask_brush_resize_speed:float=16.0
 var current_window_info=null
 
 
-var gizmo_moctmesh = preload("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
+var gizmo_moctmesh
+var gizmo_mpath
+var gizmo_mpath_gui
+var mcurve_mesh_gui
+
+var inspector_mpath
 
 func _enter_tree():
 	if Engine.is_editor_hint():
+		scene_changed.connect(Callable(self,"on_scene_changed"))
 		add_tool_menu_item("MTerrain import/export", Callable(self,"show_import_window"))
 		add_tool_menu_item("MTerrain image create/remove", Callable(self,"show_image_creator_window"))
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
@@ -67,9 +73,21 @@ func _enter_tree():
 		paint_panel.brush_masks.load_images(stencil_decal)
 		MTool.enable_editor_plugin()
 		###### GIZMO
+		gizmo_moctmesh = load("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
+		gizmo_mpath = load("res://addons/m_terrain/gizmos/mpath_gizmo.gd").new()
+		gizmo_mpath_gui = load("res://addons/m_terrain/gizmos/mpath_gizmo_gui.tscn").instantiate()
+		mcurve_mesh_gui = load("res://addons/m_terrain/gizmos/mcurve_mesh_gui.tscn").instantiate()
 		add_node_3d_gizmo_plugin(gizmo_moctmesh)
-
-
+		gizmo_mpath.ur = get_undo_redo()
+		add_node_3d_gizmo_plugin(gizmo_mpath)
+		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,gizmo_mpath_gui)
+		gizmo_mpath.set_gui(gizmo_mpath_gui)
+		gizmo_mpath.mterrain_plugin = self
+		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,mcurve_mesh_gui)
+		#### Inspector
+		inspector_mpath = load("res://addons/m_terrain/inspector/mpath.gd").new()
+		inspector_mpath.gizmo = gizmo_mpath
+		add_inspector_plugin(inspector_mpath)
 
 func _exit_tree():
 	if Engine.is_editor_hint():
@@ -85,6 +103,11 @@ func _exit_tree():
 		stencil_decal.queue_free()
 		###### GIZMO
 		remove_node_3d_gizmo_plugin(gizmo_moctmesh)
+		remove_node_3d_gizmo_plugin(gizmo_mpath)
+		remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,gizmo_mpath_gui)
+		remove_control_from_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,mcurve_mesh_gui)
+		### Inspector
+		remove_inspector_plugin(inspector_mpath)
 
 func show_import_window():
 	var window = import_window_res.instantiate()
@@ -99,6 +122,8 @@ func show_image_creator_window():
 		window.set_terrain(active_terrain)
 
 func _forward_3d_gui_input(viewport_camera, event):
+	if not active_terrain:
+		ray_col = null
 	if active_terrain and event is InputEventMouse:
 		active_terrain.set_editor_camera(viewport_camera)
 		var ray:Vector3=viewport_camera.project_ray_normal(event.position)
@@ -109,7 +134,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 			tools.set_height_lable(ray_col.get_collision_position().y)
 			tools.set_distance_lable(col_dis)
 			tools.set_region_lable(active_terrain.get_region_id_by_world_pos(ray_col.get_collision_position()))
-			if tools.active_paint_mode:
+			if tools.active_paint_mode and not gizmo_mpath_gui.visible:
 				if paint_mode_handle(event) == AFTER_GUI_INPUT_STOP:
 					return AFTER_GUI_INPUT_STOP
 			if tools.human_male_active:
@@ -125,6 +150,10 @@ func _forward_3d_gui_input(viewport_camera, event):
 		else:
 			collision_ray_step = 3
 		tools.set_save_button_disabled(not active_terrain.has_unsave_image())
+	######################## HANDLE CURVE GIZMO ##############################
+	if gizmo_mpath_gui.visible:
+		return gizmo_mpath._forward_3d_gui_input(viewport_camera, event, ray_col)
+	######################## HANDLE CURVE GIZMO FINSH ########################
 	if tools.active_paint_mode:
 		if event is InputEventKey:
 			if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
@@ -232,6 +261,16 @@ func paint_mode_handle(event:InputEvent):
 func _handles(object):
 	if not Engine.is_editor_hint():
 		return false
+	if object is MPath:
+		gizmo_mpath_gui.visible = true
+		return true
+	elif gizmo_mpath_gui:
+		gizmo_mpath_gui.visible = false
+	if object is MCurveMesh:
+		mcurve_mesh_gui.set_curve_mesh(object)
+		return true
+	else:
+		mcurve_mesh_gui.set_curve_mesh(null)
 	active_snap_object = null
 	tsnap.visible = false
 	if is_instance_valid(active_nav_region):
@@ -278,7 +317,12 @@ func _handles(object):
 
 
 func selection_changed():
-	var selection := get_editor_interface().get_selection()
+	var selection := get_editor_interface().get_selection().get_selected_nodes()
+	if selection.size() != 1:
+		tools.visible = false
+		gizmo_mpath_gui.visible = false
+		mcurve_mesh_gui.set_curve_mesh(null)
+		return
 
 func toggle_paint_mode(input):
 	is_paint_active = input
@@ -320,8 +364,23 @@ func info_window_open_request():
 	current_window_info = load("res://addons/m_terrain/gui/terrain_info.tscn").instantiate()
 	add_child(current_window_info)
 	current_window_info.generate_info(active_terrain,version)
-	
 
+
+func find_mterrain()->MTerrain:
+	var root = get_editor_interface().get_edited_scene_root()
+	var process_nodes:Array = [root]
+	while process_nodes.size() > 0:
+		var cnode = process_nodes[process_nodes.size() - 1]
+		process_nodes.remove_at(process_nodes.size() - 1)
+		if not cnode or not is_instance_valid(cnode):
+			continue
+		if cnode is MTerrain:
+			return cnode
+		process_nodes.append_array(cnode.get_children())
+	return null
+
+func on_scene_changed(scene_root):
+	active_terrain = find_mterrain()
 
 func tsnap_pressed():
 	if active_terrain and active_snap_object and active_terrain.is_grid_created():

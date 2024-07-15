@@ -656,10 +656,13 @@ real_t MGrid::get_closest_height(const Vector3& pos) {
 }
 
 real_t MGrid::get_height(Vector3 pos){
+    if(!is_created()){
+        return 0.0;
+    }
     pos -= offset;
     pos = pos/_chunks->h_scale;
     if(pos.x <0 || pos.z <0){
-        return 0;
+        return 0.0;
     }
     uint32_t x = (uint32_t)pos.x;
     uint32_t y = (uint32_t)pos.z;

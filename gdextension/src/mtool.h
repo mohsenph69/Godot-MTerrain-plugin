@@ -11,6 +11,7 @@
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include "mconfig.h"
+#include "mcollision.h"
 
 using namespace godot;
 
@@ -34,12 +35,8 @@ public:
     static Node3D* find_editor_camera(bool changed_camera);
     static void enable_editor_plugin();
     static bool is_editor_plugin_active();
+    static Ref<MCollision> ray_collision_y_zero_plane(const Vector3& ray_origin,const Vector3& ray);
 };
-
-
-
-
-
 
 
 #endif

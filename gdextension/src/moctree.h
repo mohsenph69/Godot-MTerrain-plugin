@@ -6,6 +6,7 @@
 #define MAX_CAPACITY 10000
 #define MIN_CAPACITY 10
 #define INVALID_OCT_POINT_ID -1
+#define MAX_LOD 125
 
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/classes/node3d.hpp>
@@ -119,7 +120,7 @@ class MOctree : public Node3D {
         void get_points_count(int& count);
         void get_oct_id_points_count(uint16_t oct_id,int& count);
         Octant* get_mergeable(int capacity);
-        Octant* remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
+        Octant* remove_point(int32_t id,const Vector3& pos,uint16_t oct_id);
         void clear();
         void remove_points_with_oct_id(uint16_t oct_id);
         _FORCE_INLINE_ static bool has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point);
@@ -160,13 +161,14 @@ class MOctree : public Node3D {
     bool is_point_process_wait = false;
     bool is_first_update = true;
 
-    std::mutex oct_mutex;
-    std::mutex move_req_mutex;
+    std::mutex oct_mutex; // work with octtree data
+    std::mutex move_req_mutex; // work with this data -> moves_req_cache
     WorkerThreadPool::TaskID tid;
 
     bool is_camera_warn_print = false;
     bool is_ready = false;
     bool is_octmesh_updater = false;
+    bool is_path_updater = false;
     bool disable_octree = false;
 
     bool debug_draw = false;
@@ -181,11 +183,12 @@ class MOctree : public Node3D {
     int get_oct_id();
     void clear_oct_id(int oct_id);
     void remove_oct_id(int oct_id);
-    bool remove_point(int32_t id,Vector3& pos,uint16_t oct_id);
+    bool remove_point(int32_t id, const Vector3& pos,uint16_t oct_id);
     bool check_for_mergeable(Octant* start_point);
     void set_camera_node(Node3D* camera);
     void set_world_boundary(const Vector3& start,const Vector3& end);
     void enable_as_octmesh_updater();
+    void enable_as_curve_updater();
     void update_camera_position();
     uint32_t get_capacity(int p_count);
     //Insert point and id is point index
@@ -193,6 +196,7 @@ class MOctree : public Node3D {
     // bellow insert a single point and update it lod
     // good for adding point after initilazation
     bool insert_point(const Vector3& pos,const int32_t id, int oct_id);
+    void change_point_id(int16_t oct_id,const Vector3& point_pos,int32_t old_id,int32_t new_id);
     // Move point and return its confirm OctPoint
     _FORCE_INLINE_ void move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t update_id); // Must be called only in update_lod
     
@@ -224,6 +228,7 @@ class MOctree : public Node3D {
     void point_process_finished(int oct_id);
     void check_point_process_finished();
     void send_update_signal();
+    Vector<PointUpdate> get_point_update(uint16_t oct_id);
     Array get_point_update_dictionary_array(int oct_id);
 
     void update_scenario();

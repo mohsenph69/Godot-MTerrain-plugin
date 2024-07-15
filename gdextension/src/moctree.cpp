@@ -10,6 +10,7 @@
 
 #include "mtool.h"
 #include "octmesh/moctmesh.h"
+#include "path/mcurve.h"
 #define RS RenderingServer::get_singleton()
 
 
@@ -22,7 +23,7 @@ void MOctree::_bind_methods(){
 	ClassDB::bind_method(D_METHOD("clear_oct_id"), &MOctree::clear_oct_id);
 	ClassDB::bind_method(D_METHOD("remove_oct_id"), &MOctree::remove_oct_id);
 	
-	ClassDB::bind_method(D_METHOD("point_process_finished"), &MOctree::point_process_finished);
+	ClassDB::bind_method(D_METHOD("point_process_finished","oct_id"), &MOctree::point_process_finished);
 	ClassDB::bind_method(D_METHOD("get_point_update_dictionary_array","oct_id"), &MOctree::get_point_update_dictionary_array);
 	ClassDB::bind_method(D_METHOD("insert_points","points","ids","oct_id"), &MOctree::insert_points);
 	ClassDB::bind_method(D_METHOD("get_ids","search_bound"), &MOctree::get_ids);
@@ -38,6 +39,7 @@ void MOctree::_bind_methods(){
 	ClassDB::bind_method(D_METHOD("set_custom_capacity","input"), &MOctree::set_custom_capacity);
 	ClassDB::bind_method(D_METHOD("set_world_boundary","start","end"), &MOctree::set_world_boundary);
 	ClassDB::bind_method(D_METHOD("enable_as_octmesh_updater"), &MOctree::enable_as_octmesh_updater);
+	ClassDB::bind_method(D_METHOD("enable_as_curve_updater"), &MOctree::enable_as_curve_updater);
 
 	ClassDB::bind_method(D_METHOD("set_debug_draw","input"), &MOctree::set_debug_draw);
 	ClassDB::bind_method(D_METHOD("get_debug_draw"), &MOctree::get_debug_draw);
@@ -602,7 +604,7 @@ MOctree::Octant* MOctree::Octant::get_mergeable(int capacity){
 	return nullptr;
 }
 
-MOctree::Octant* MOctree::Octant::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
+MOctree::Octant* MOctree::Octant::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
 			MOctree::Octant* res = octs[i].remove_point(id,pos,oct_id);
@@ -674,12 +676,15 @@ int MOctree::get_oct_id(){
 void MOctree::clear_oct_id(int oct_id){
 	ERR_FAIL_COND(!oct_ids.has(oct_id));
 	std::lock_guard<std::mutex> lock(oct_mutex);
+	uint32_t p_count = get_oct_id_points_count(oct_id);
 	root.remove_points_with_oct_id(oct_id);
+	point_count -= p_count;
 }
 
 void MOctree::remove_oct_id(int oct_id){
 	ERR_FAIL_COND(!oct_ids.has(oct_id));
 	std::lock_guard<std::mutex> lock(oct_mutex);
+	uint32_t p_count = get_oct_id_points_count(oct_id);
 	if(disable_octree){
 		return;
 	}
@@ -688,10 +693,11 @@ void MOctree::remove_oct_id(int oct_id){
 	}
 	oct_ids.erase(oct_id);
 	root.remove_points_with_oct_id(oct_id);
+	point_count -= p_count;
 	check_point_process_finished();
 }
 
-bool MOctree::remove_point(int32_t id,Vector3& pos,uint16_t oct_id){
+bool MOctree::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	if(disable_octree){
 		return true;
@@ -735,6 +741,11 @@ void MOctree::set_world_boundary(const Vector3& start,const Vector3& end){
 void MOctree::enable_as_octmesh_updater(){
 	is_octmesh_updater = true;
 	MOctMesh::set_octree(this);
+}
+
+void MOctree::enable_as_curve_updater(){
+	is_path_updater = true;
+	MCurve::set_octree(this);
 }
 
 void MOctree::update_camera_position(){
@@ -929,6 +940,19 @@ bool MOctree::insert_point(const Vector3& pos,const int32_t id, int oct_id){
 	ERR_FAIL_COND_V_MSG(!res,res,"Can not re-insert point at move");
 	ERR_FAIL_COND_V(get_points_count()!=point_count,res);
 	return res;
+}
+
+void MOctree::change_point_id(int16_t oct_id,const Vector3& point_pos,int32_t old_id,int32_t new_id){
+	std::lock_guard<std::mutex> lock(oct_mutex);
+	int point_index = -1;
+	Octant* poct = nullptr;
+	poct = root.find_octant_by_point(old_id,oct_id,point_pos,point_index);
+	if(poct==nullptr){
+		poct = root.find_octant_by_point_classic(old_id,oct_id,point_index);
+		ERR_FAIL_COND(poct==nullptr);
+		WARN_PRINT("Used Classic method to find octant of move point! Maybe you not provide the excat oct_tree position for move");
+	}
+	poct->points.ptrw()[point_index].id = new_id;
 }
 
 //Must be called only in update_lod
@@ -1160,7 +1184,7 @@ PackedVector3Array MOctree::get_tree_lines(){
 
 
 void MOctree::set_lod_setting(const PackedFloat32Array _lod_setting){
-	ERR_FAIL_COND(_lod_setting.size() > 255);
+	ERR_FAIL_COND(_lod_setting.size() >= MAX_LOD);
 	ERR_FAIL_COND(_lod_setting.size() < 1);
 	ERR_FAIL_COND(_lod_setting[0] < 0.01);
 	for(int i=1; i < _lod_setting.size(); i++){
@@ -1330,6 +1354,10 @@ void MOctree::send_update_signal(){
 	emit_signal("update_finished");
 }
 
+Vector<MOctree::PointUpdate> MOctree::get_point_update(uint16_t oct_id){
+	ERR_FAIL_COND_V(!update_change_info.has(oct_id), Vector<MOctree::PointUpdate>());
+	return update_change_info[oct_id];
+}
 
 Array MOctree::get_point_update_dictionary_array(int oct_id){
 	Array arr;

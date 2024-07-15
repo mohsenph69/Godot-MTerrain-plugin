@@ -89,6 +89,17 @@
         "__verbose_abort": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "__hash": "cpp"
-    }
+        "__hash": "cpp",
+        "cfenv": "cpp",
+        "complex": "cpp",
+        "filesystem": "cpp",
+        "charconv": "cpp",
+        "codecvt": "cpp",
+        "coroutine": "cpp",
+        "numeric": "cpp",
+        "shared_mutex": "cpp",
+        "stdfloat": "cpp",
+        "text_encoding": "cpp"
+    },
+    "cmake.configureOnOpen": false
 }
