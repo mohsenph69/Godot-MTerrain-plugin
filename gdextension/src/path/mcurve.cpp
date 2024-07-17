@@ -841,13 +841,13 @@ float MCurve::get_closest_ratio_to_point(int64_t conn_id,Vector3 pos){
             b_control = b->out;
         }
     }
-    float low = 0.0f;
-    float high = 1.0;
+    real_t low = 0.0f;
+    real_t high = 1.0;
     while (high - low > 0.005f)
     {
-        float step = (high - low)/8.0;
+        real_t step = (high - low)/8.0;
         //samples
-        float s[9] {low,
+        real_t s[9] {low,
                     low + step,
                     low + step * 2.0f,
                     low + step * 3.0f,
@@ -866,7 +866,7 @@ float MCurve::get_closest_ratio_to_point(int64_t conn_id,Vector3 pos){
         Vector3 p6 = a->position.bezier_interpolate(a_control,b_control,b->position,s[6]);
         Vector3 p7 = a->position.bezier_interpolate(a_control,b_control,b->position,s[7]);
         Vector3 p8 = a->position.bezier_interpolate(a_control,b_control,b->position,s[8]);
-        float dis[9] = {
+        real_t dis[9] = {
             pos.distance_squared_to(p0),
             pos.distance_squared_to(p1),
             pos.distance_squared_to(p2),
@@ -877,7 +877,7 @@ float MCurve::get_closest_ratio_to_point(int64_t conn_id,Vector3 pos){
             pos.distance_squared_to(p7),
             pos.distance_squared_to(p8)
         };
-        float smallest = dis[0];
+        real_t smallest = dis[0];
         int smallest_index = 0;
         for(int i=1; i < 9; i++){
             if(dis[i] < smallest){

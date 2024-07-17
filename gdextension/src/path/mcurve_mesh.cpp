@@ -225,7 +225,6 @@ void MCurveMesh::_generate_all_mesh_sliced_info(){
             Ref<MeshSlicedInfo> s = _generate_mesh_sliced_info(p_mesh);
             info_array->set(j,s);
             mesh_to_mesh_slice.insert(p_mesh->get_rid(),s);
-            UtilityFunctions::print("Generating ",p_mesh->get_path());
         }
     }
 }
