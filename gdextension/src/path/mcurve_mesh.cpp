@@ -467,6 +467,10 @@ void MCurveMesh::_generate_connection(const MCurve::ConnUpdateInfo& update_info,
     ERR_FAIL_COND(mesh_slice_array.size() == 0);
     lod = std::min(lod,mesh_slice_array.size() - 1);
     Ref<MeshSlicedInfo> mesh_sliced = mesh_slice_array.get(lod);
+    if(mesh_sliced.is_null()){
+        _remove_instance(cid);
+        return;
+    }
     if(!curve_mesh_instances.has(cid)){
         MCurveMesh::Instance c_instance;
         c_instance.instance = RS->instance_create();
@@ -658,6 +662,10 @@ void MCurveMesh::_generate_intersection(const MCurve::PointUpdateInfo& update_in
     }
     lod = std::min(lod,finter->get_mesh_count()-1);
     Ref<MIntersectionInfo> inter_info = finter->get_mesh_info(lod);
+    if(inter_info.is_null()){
+        _remove_instance(point_id,true);
+        return;
+    }
     if(!curve_mesh_instances.has(point_id)){
         MCurveMesh::Instance c_instance;
         c_instance.instance = RS->instance_create();

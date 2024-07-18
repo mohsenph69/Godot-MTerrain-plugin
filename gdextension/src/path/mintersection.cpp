@@ -45,7 +45,6 @@ void MIntersection::generate_mesh_info(){
                 hm.insert(m->get_rid(),ii);
             }
             mesh_info.set(i,ii);
-            break;
         }
     }
     _is_init = true;

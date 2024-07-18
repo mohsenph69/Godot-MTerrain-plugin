@@ -47,7 +47,7 @@ func set_curve_mesh(input:MCurveMesh):
 	for i in range(0,obj.intersections.size()):
 		var seg:MIntersection = obj.intersections[i]
 		segment_select_option.add_item("Seg "+str(i),i)
-	if obj.intersections.size() > 1:
+	if obj.intersections.size() >= 1:
 		_on_segment_select_item_selected(0)
 		segment_select_option.select(0)
 	update_scenario()
