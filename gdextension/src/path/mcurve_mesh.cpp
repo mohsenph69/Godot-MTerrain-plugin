@@ -470,7 +470,6 @@ void MCurveMesh::_generate_connection(const MCurve::ConnUpdateInfo& update_info,
     if(!curve_mesh_instances.has(cid)){
         MCurveMesh::Instance c_instance;
         c_instance.instance = RS->instance_create();
-        c_instance.original_mesh_rid = mesh_sliced->mesh_rid;
         RS->instance_set_scenario(c_instance.instance,path->get_scenario());
         curve_mesh_instances.insert(cid,c_instance);
     } else { // Checking the last generated mesh if is the same exiting unless force_update is true
@@ -617,7 +616,6 @@ void MCurveMesh::_generate_connection(const MCurve::ConnUpdateInfo& update_info,
         if(!ii.mesh.is_valid()){
             ii.mesh = RS->mesh_create();
             RS->instance_set_base(ii.instance,ii.mesh);
-            curve_mesh_instances.insert(cid,ii);
         } else {
             RS->mesh_clear(ii.mesh);
         }
@@ -627,6 +625,8 @@ void MCurveMesh::_generate_connection(const MCurve::ConnUpdateInfo& update_info,
         RS->mesh_add_surface_from_arrays(mesh,RenderingServer::PRIMITIVE_TRIANGLES,mesh_data);
         mesh_updated_list.push_back({cid,mesh});
     }
+    ii.original_mesh_rid = mesh_sliced->mesh_rid;
+    curve_mesh_instances.insert(cid,ii);
 }
 
 void MCurveMesh::_generate_intersection(const MCurve::PointUpdateInfo& update_info,bool immediate_update){
@@ -661,7 +661,6 @@ void MCurveMesh::_generate_intersection(const MCurve::PointUpdateInfo& update_in
     if(!curve_mesh_instances.has(point_id)){
         MCurveMesh::Instance c_instance;
         c_instance.instance = RS->instance_create();
-        c_instance.original_mesh_rid = inter_info->mesh_rid;
         RS->instance_set_scenario(c_instance.instance,path->get_scenario());
         curve_mesh_instances.insert(point_id,c_instance);
     } else { // Checking the last generated mesh if is the same exiting unless force_update is true
@@ -834,7 +833,6 @@ void MCurveMesh::_generate_intersection(const MCurve::PointUpdateInfo& update_in
         if(!ii.mesh.is_valid()){
             ii.mesh = RS->mesh_create();
             RS->instance_set_base(ii.instance,ii.mesh);
-            curve_mesh_instances.insert(point_id,ii);
         } else {
             RS->mesh_clear(ii.mesh);
         }
@@ -844,6 +842,8 @@ void MCurveMesh::_generate_intersection(const MCurve::PointUpdateInfo& update_in
         RS->mesh_add_surface_from_arrays(new_mesh,RenderingServer::PRIMITIVE_TRIANGLES,data_arr);
         mesh_updated_list.push_back({point_id,new_mesh});
     }
+    ii.original_mesh_rid = inter_info->mesh_rid;
+    curve_mesh_instances.insert(point_id,ii);
 }
 
 void MCurveMesh::_process_tick(){
