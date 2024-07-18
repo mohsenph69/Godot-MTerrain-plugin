@@ -388,7 +388,6 @@ void MCurve::init_insert(){
         return;
     }
     ERR_FAIL_COND_MSG(octree==nullptr,"No octree asigned to update curves, please asign a octree by calling enable_as_curve_updater and restart Godot");
-    UtilityFunctions::print("init insert for curve");
     // inserting points into octree
     PackedVector3Array positions;
     PackedInt32Array ids;
@@ -402,7 +401,6 @@ void MCurve::init_insert(){
     oct_id = octree->get_oct_id();
     is_init_insert = true;
     octree->connect("update_finished", Callable(this,"_octree_update_finish"));
-    UtilityFunctions::print("insert size ",positions.size());
     octree->insert_points(positions,ids,oct_id);
 }
 
@@ -1504,7 +1502,6 @@ void MCurve::_set_data(const PackedByteArray& data){
     uint32_t points_buffer_count = data.decode_u32(12);
     size_t size_free_indicies_byte = free_indicies_count * sizeof(int32_t);
     size_t size_points_buffer_byte = points_buffer_count * sizeof(MCurve::PointSave);
-    UtilityFunctions::print("set points_buff ",points_buffer_count," , ", free_indicies_count);
     ERR_FAIL_COND(data.size()!= MCURVE_DATA_HEADER_SIZE + size_free_indicies_byte + size_points_buffer_byte);
 
     // Finish header

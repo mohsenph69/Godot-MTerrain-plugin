@@ -250,7 +250,6 @@ Ref<MeshSlicedInfo> MCurveMesh::_generate_mesh_sliced_info(Ref<Mesh> mesh){
     ERR_FAIL_COND_V(s->vertex.size() != s->color.size() && s->color.size()!=0,s);
     ERR_FAIL_COND_V(s->vertex.size() != s->uv.size() && s->uv.size()!=0,s);
     ERR_FAIL_COND_V(s->vertex.size() != s->uv2.size() && s->uv2.size()!=0,s);
-    UtilityFunctions::print("Vertex count ",s->vertex.size());
     // Merging vertecies
     s->merge_vertex_by_distance();
     // Creating slices
