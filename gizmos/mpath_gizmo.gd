@@ -81,8 +81,6 @@ func _init():
 	var controls = hmat.duplicate()
 	add_material("controls",controls)
 	controls.albedo_texture = handle01_tex
-	var img:Image= controls.albedo_texture.get_image()
-	img.save_png("res://foo.png")
 	var active_p_math = get_material("points").duplicate()
 	active_p_math.albedo_color = Color(0.9,0.9,0.1)
 	active_p_math.render_priority = 100
