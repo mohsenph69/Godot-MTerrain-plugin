@@ -140,7 +140,6 @@ class MCurve : public Resource{
     bool is_waiting_for_user = false;
     int8_t active_lod_limit = 2;
     uint16_t oct_id = 0;
-    MPath* path_owner = nullptr;
     PackedInt32Array free_buffer_indicies;
     void _increase_points_buffer_size(size_t q);
     //PackedInt32Array root_ids;
@@ -164,9 +163,6 @@ class MCurve : public Resource{
     MCurve();
     ~MCurve();
     float interval = 0.2;
-
-    bool set_path_owner(MPath* input);
-    void remove_path_owner(MPath* input);
 
     // Users
     int32_t get_curve_users_id();

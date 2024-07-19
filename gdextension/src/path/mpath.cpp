@@ -27,18 +27,15 @@ MPath::~MPath(){
 void MPath::set_curve(Ref<MCurve> input){
     if(!input.is_valid()){
         if(curve.is_valid()){
-            curve->remove_path_owner(this);
             curve->disconnect("curve_updated",Callable(this,"update_gizmos"));
         }
         curve = input;
         emit_signal("curve_changed");
         return;
     }
-    if(input->set_path_owner(this)){
-        curve = input;
-        if(is_inside_tree()){
-            input->init_insert();
-        }
+    curve = input;
+    if(is_inside_tree()){
+        input->init_insert();
     }
     curve->connect("curve_updated",Callable(this,"update_gizmos"));
     emit_signal("curve_changed");
@@ -62,18 +59,6 @@ void MPath::_notification(int p_what){
         break;
     case NOTIFICATION_TRANSFORM_CHANGED:
         set_global_transform(Transform3D());
-        break;
-    case NOTIFICATION_ENTER_TREE:
-        if(curve.is_valid()){
-            if(!curve->set_path_owner(this)){
-                curve = Ref<MCurve>();
-            }
-        }
-        break;
-    case NOTIFICATION_EXIT_TREE:
-        if(curve.is_valid()){
-            curve->remove_path_owner(this);
-        }
         break;
     case NOTIFICATION_EDITOR_PRE_SAVE:
         if(curve.is_valid()){

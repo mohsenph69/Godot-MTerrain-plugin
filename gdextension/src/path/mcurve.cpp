@@ -154,25 +154,6 @@ void MCurve::_increase_points_buffer_size(size_t q){
     }
 }
 
-bool MCurve::set_path_owner(MPath* input){
-    if(input==path_owner){
-        return true;
-    }
-    if(path_owner!=nullptr){
-        if(!UtilityFunctions::is_instance_valid(path_owner) || !path_owner->is_inside_tree()){
-            path_owner == nullptr;
-        }
-    }
-    ERR_FAIL_COND_V_EDMSG(path_owner!=nullptr,false,"Only one path can own this MCurve, currently path \""+path_owner->get_name()+"\" own this MCurve!");
-    path_owner = input;
-    return true;
-}
-
-void MCurve::remove_path_owner(MPath* input){
-    ERR_FAIL_COND(path_owner!=input);
-    path_owner = nullptr;
-}
-
 int32_t MCurve::get_curve_users_id(){
     last_curve_id++;
     curve_users.push_back(last_curve_id);
