@@ -357,7 +357,7 @@ void MCurveMesh::_remove_mesh(int64_t id,bool is_intersection){
 void MCurveMesh::restart(){
     _generate_all_mesh_sliced_info();
     _generate_all_intersections_info();
-    reload();
+    recreate();
 }
 
 void MCurveMesh::reload(){

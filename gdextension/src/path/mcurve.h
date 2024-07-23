@@ -251,7 +251,7 @@ class MCurve : public Resource{
     private:
     _FORCE_INLINE_ float  get_length_between_basic(const Point* a, const Point* b,const Vector3& a_control, const Vector3& b_control);
     
-    #define BEZIER_EPSILON 0.001f
+    #define BEZIER_EPSILON 0.1f
     _FORCE_INLINE_ Vector3 _get_bezier_extreme_t(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control){
         return (2*a_control - (b_control + a))/(b - a + 3*(a_control - b_control));
     }

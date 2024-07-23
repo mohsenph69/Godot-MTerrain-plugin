@@ -192,10 +192,11 @@ int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector
     }
     points_buffer.set(free_index,new_point);
     free_buffer_indicies.remove_at(free_buffer_indicies.size() - 1);
-    UtilityFunctions::print("Finish creating points");
     if(is_init_insert && octree != nullptr){
         octree->insert_point(position,free_index,oct_id);
     }
+    emit_signal("force_update_point",prev_conn);
+    emit_signal("force_update_point",free_index);
     return free_index;
 }
 
@@ -324,13 +325,13 @@ void MCurve::remove_point(const int32_t point_index){
     // Removing from conn
     for(int8_t i=0; i < MAX_CONN; i++){
         if(p->conn[i]!=INVALID_POINT_INDEX){
-            int32_t conn_id = std::abs(p->conn[i]);
-            ERR_FAIL_INDEX(conn_id, points_buffer.size());
-            Conn conn(point_index,conn_id);
+            int32_t conn_point_id = std::abs(p->conn[i]);
+            ERR_FAIL_INDEX(conn_point_id, points_buffer.size());
+            Conn conn(point_index,conn_point_id);
             active_conn.erase(conn.id);
             conn_list.erase(conn.id);
             conn_distances.erase(conn.id);
-            Point* conn_p = points_buffer.ptrw() + conn_id;
+            Point* conn_p = points_buffer.ptrw() + conn_point_id;
             for(int8_t c=0; c < MAX_CONN; c++){
                 if(std::abs(conn_p->conn[c]) == point_index){
                     conn_p->conn[c] = INVALID_POINT_INDEX;
@@ -346,6 +347,11 @@ void MCurve::remove_point(const int32_t point_index){
     }
     free_buffer_indicies.push_back(point_index);
     active_points.erase(point_index);
+    for(int8_t i=0; i < MAX_CONN; i++){
+        if(p->conn[i]!=INVALID_POINT_INDEX){
+            emit_signal("force_update_point",std::abs(p->conn[i]));
+        }
+    }
     emit_signal("curve_updated");
     emit_signal("remove_point",point_index);
 }
