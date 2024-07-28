@@ -153,6 +153,12 @@ class MCurve : public Resource{
     HashMap<int64_t,int8_t> conn_list; // Key -> conn, Value -> LOD
     HashMap<int64_t,ConnDistances> conn_distances;
 
+    float bake_interval = 0.2;
+
+    // Only editor and in debug version
+    //#ifdef DEBUG_ENABLED
+    HashMap<int64_t,PackedVector3Array> baked_lines;
+    //#endif
 
     public:
     Vector<ConnUpdateInfo> conn_update;
@@ -162,7 +168,6 @@ class MCurve : public Resource{
     Vector<MCurve::Point> points_buffer;
     MCurve();
     ~MCurve();
-    float interval = 0.2;
 
     // Users
     int32_t get_curve_users_id();
@@ -189,7 +194,8 @@ class MCurve : public Resource{
     PackedInt32Array get_active_points();
     PackedVector3Array get_active_points_positions();
     PackedInt64Array get_active_conns();
-    PackedVector3Array get_conn_baked_points(int64_t input_conn,float interval);
+    PackedVector3Array get_conn_baked_points(int64_t input_conn);
+    PackedVector3Array get_conn_baked_line(int64_t input_conn);
 
     public:
     void toggle_conn_type(int32_t point, int64_t conn_id);
@@ -245,6 +251,8 @@ class MCurve : public Resource{
     void _set_data(const PackedByteArray& input);
     PackedByteArray _get_data();
 
+    void set_bake_interval(float input);
+    float get_bake_interval();
     void set_active_lod_limit(int input);
     int get_active_lod_limit();
     

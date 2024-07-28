@@ -16,6 +16,8 @@ extends VBoxContainer
 @onready var scale_num:=$HBoxContainer2/scale
 @onready var depth_test_checkbox:=$HBoxContainer3/depth_test
 @onready var xz_handle_lock:=$HBoxContainer3/xz_handle_lock
+@onready var select_lock:=$HBoxContainer3/select_lock
+@onready var debug_col:=$HBoxContainer3/debug_col
 @onready var sort_increasing_btn:=$HBoxContainer3/sort_increasing
 @onready var sort_decreasing_btn:=$HBoxContainer3/sort_decreasing
 
@@ -72,6 +74,12 @@ func toggle_mode():
 		mode_option.selected = 1
 	else:
 		mode_option.selected = 0
+
+func is_select_lock()->bool:
+	return select_lock.button_pressed
+
+func is_debug_col()->bool:
+	return debug_col.button_pressed
 
 func _on_show_rest_pressed():
 	is_show_rest = not is_show_rest

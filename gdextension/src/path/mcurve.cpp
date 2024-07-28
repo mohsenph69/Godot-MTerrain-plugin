@@ -46,7 +46,8 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_active_points"), &MCurve::get_active_points);
     ClassDB::bind_method(D_METHOD("get_active_points_positions"), &MCurve::get_active_points_positions);
     ClassDB::bind_method(D_METHOD("get_active_conns"), &MCurve::get_active_conns);
-    ClassDB::bind_method(D_METHOD("get_conn_baked_points","conn","interval"), &MCurve::get_conn_baked_points);
+    ClassDB::bind_method(D_METHOD("get_conn_baked_points","conn"), &MCurve::get_conn_baked_points);
+    ClassDB::bind_method(D_METHOD("get_conn_baked_line","conn"), &MCurve::get_conn_baked_line);
 
     ClassDB::bind_method(D_METHOD("_octree_update_finish"), &MCurve::_octree_update_finish);
 
@@ -88,6 +89,10 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MCurve::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MCurve::_get_data);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"_data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_data","_get_data");
+
+    ClassDB::bind_method(D_METHOD("set_bake_interval","input"), &MCurve::set_bake_interval);
+    ClassDB::bind_method(D_METHOD("get_bake_interval"), &MCurve::get_bake_interval);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"bake_interval"),"set_bake_interval","get_bake_interval");
 
     ClassDB::bind_method(D_METHOD("set_active_lod_limit","input"), &MCurve::set_active_lod_limit);
     ClassDB::bind_method(D_METHOD("get_active_lod_limit"), &MCurve::get_active_lod_limit);
@@ -315,6 +320,7 @@ bool MCurve::disconnect_points(int32_t p0,int32_t p1){
     active_conn.erase(conn.id);
     emit_signal("curve_updated");
     emit_signal("remove_connection",conn.id);
+    baked_lines.erase(conn.id);
     return is_removed;
 }
 
@@ -331,6 +337,7 @@ void MCurve::remove_point(const int32_t point_index){
             active_conn.erase(conn.id);
             conn_list.erase(conn.id);
             conn_distances.erase(conn.id);
+            baked_lines.erase(conn.id);
             Point* conn_p = points_buffer.ptrw() + conn_point_id;
             for(int8_t c=0; c < MAX_CONN; c++){
                 if(std::abs(conn_p->conn[c]) == point_index){
@@ -454,6 +461,7 @@ void MCurve::_octree_update_finish(){
                 if(new_lod == INVALID_OCT_POINT_ID){
                     active_conn.erase(conn.id);
                     conn_distances.erase(conn.id);
+                    baked_lines.erase(conn.id);
                 } else {
                     active_conn.insert(conn.id);
                 }
@@ -551,7 +559,7 @@ PackedInt64Array MCurve::get_active_conns(){
     return out;
 }
 
-PackedVector3Array MCurve::get_conn_baked_points(int64_t input_conn,float interval){
+PackedVector3Array MCurve::get_conn_baked_points(int64_t input_conn){
     PackedVector3Array out;
     Conn conn(input_conn);
     ERR_FAIL_COND_V(!has_point(conn.p.a),out);
@@ -570,7 +578,8 @@ PackedVector3Array MCurve::get_conn_baked_points(int64_t input_conn,float interv
         }
     }
     float lenght = get_length_between_basic(a,b,a_control,b_control);
-    int pcount = lenght/interval; // This is only for middle points
+    int pcount = lenght/bake_interval; // This is only for middle points
+    pcount = pcount == 0 ? 1 : pcount;
     out.resize(pcount + 1); // including start and end pos
     out.set(0,a->position);
     float nl = 1.0 / (float)pcount; // normalized_interval
@@ -579,6 +588,24 @@ PackedVector3Array MCurve::get_conn_baked_points(int64_t input_conn,float interv
     }
     out.set(pcount,b->position);
     return out;
+}
+
+PackedVector3Array MCurve::get_conn_baked_line(int64_t input_conn){
+    if(baked_lines.has(input_conn)){
+        return baked_lines[input_conn];
+    }
+    PackedVector3Array points = get_conn_baked_points(input_conn);
+    PackedVector3Array line;
+    line.resize((points.size()-1)*2);
+    int lc = 0;
+    for(int i=0; i < points.size() - 1; i++){
+        line.set(lc,points[i]);
+        lc++;
+        line.set(lc,points[i+1]);
+        lc++;
+    }
+    baked_lines.insert(input_conn,line);
+    return line;
 }
 
 bool MCurve::has_point(int p_index) const{
@@ -1264,6 +1291,7 @@ void MCurve::validate_conn(int64_t conn_id,bool send_signal){
         emit_signal("remove_connection",conn_id);
     }
     conn_distances.erase(conn_id);
+    baked_lines.erase(conn_id);
     if(!has_conn(conn_id)){
         active_conn.erase(conn_id);
         conn_list.erase(conn_id);
@@ -1441,6 +1469,12 @@ void MCurve::move_point(int p_index,const Vector3& pos){
     p->position = pos;
     p->in += diff;
     p->out += diff;
+    for(int i=0 ; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn cc(std::abs(p->conn[i]),p_index);
+            baked_lines.erase(cc.id);
+        }
+    }
     emit_signal("curve_updated");
 }
 
@@ -1448,6 +1482,12 @@ void MCurve::move_point_in(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
     Point* p = points_buffer.ptrw() + p_index;
     p->in = pos;
+    for(int i=0 ; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn cc(std::abs(p->conn[i]),p_index);
+            baked_lines.erase(cc.id);
+        }
+    }
     emit_signal("curve_updated");
 }
 
@@ -1455,6 +1495,12 @@ void MCurve::move_point_out(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
     Point* p = points_buffer.ptrw() + p_index;
     p->out = pos;
+    for(int i=0 ; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn cc(std::abs(p->conn[i]),p_index);
+            baked_lines.erase(cc.id);
+        }
+    }
     emit_signal("curve_updated");
 }
 
@@ -1465,6 +1511,18 @@ int32_t MCurve::ray_active_point_collision(const Vector3& org,Vector3 dir,float 
         Vector3 pto = points_buffer[active_points[i]].position - org;
         pto.normalize();
         float dot = pto.dot(dir);
+        if (dot > threshold){
+            return active_points[i];
+        }
+        pto = points_buffer[active_points[i]].in - org;
+        pto.normalize();
+        dot = pto.dot(dir);
+        if (dot > threshold){
+            return active_points[i];
+        }
+        pto = points_buffer[active_points[i]].out - org;
+        pto.normalize();
+        dot = pto.dot(dir);
         if (dot > threshold){
             return active_points[i];
         }
@@ -1531,6 +1589,15 @@ PackedByteArray MCurve::_get_data(){
     }
     memcpy(data.ptrw()+byte_offset,points_save.ptr(),size_points_buffer_byte);
    return data;
+}
+
+void MCurve::set_bake_interval(float input){
+    bake_interval = input;
+    baked_lines.clear();
+}
+
+float MCurve::get_bake_interval(){
+    return bake_interval;
 }
 
 void MCurve::set_active_lod_limit(int input){

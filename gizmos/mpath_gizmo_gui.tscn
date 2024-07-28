@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://c5ca7hy0hp07k" path="res://addons/m_terrain/icons/collapse_pressed.svg" id="3_ardhu"]
 [ext_resource type="Texture2D" uid="uid://b2edfbh3q6uh2" path="res://addons/m_terrain/icons/depth_test.svg" id="3_n0m75"]
 [ext_resource type="PackedScene" uid="uid://cjjqtr6xhktp4" path="res://addons/m_terrain/gui/control_prop_element/float_range.tscn" id="6_bsspt"]
-[ext_resource type="Texture2D" uid="uid://byodukiddauai" path="res://addons/m_terrain/icons/handle01.png" id="7_wgbfp"]
+[ext_resource type="Texture2D" uid="uid://jw6maiih4qf8" path="res://addons/m_terrain/icons/lock.svg" id="7_0ucgh"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7loo7"]
 content_margin_left = 6.0
@@ -149,15 +149,30 @@ layout_mode = 2
 [node name="depth_test" type="CheckBox" parent="HBoxContainer3"]
 layout_mode = 2
 tooltip_text = "gizmo line depth test"
-text = "depth"
 icon = ExtResource("3_n0m75")
 
 [node name="xz_handle_lock" type="CheckBox" parent="HBoxContainer3"]
 layout_mode = 2
 tooltip_text = "XY Handle lock"
 button_pressed = true
-text = "XY LOCK"
-icon = ExtResource("7_wgbfp")
+text = "XY"
+icon = ExtResource("7_0ucgh")
+
+[node name="select_lock" type="CheckBox" parent="HBoxContainer3"]
+layout_mode = 2
+tooltip_text = "Keep the Path node selected!"
+button_pressed = true
+text = "select"
+icon = ExtResource("7_0ucgh")
+
+[node name="debug_col" type="CheckBox" parent="HBoxContainer3"]
+layout_mode = 2
+tooltip_text = "Collission for debug line in editor!
+If activated by clicking on line it will select path node
+but it will take more processing power,
+So if you have a huge path deactive this!"
+button_pressed = true
+text = "COL"
 
 [node name="swap_points" type="Button" parent="HBoxContainer3"]
 layout_mode = 2

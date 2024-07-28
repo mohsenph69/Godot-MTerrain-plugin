@@ -104,27 +104,19 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 		return
 	var active_connections:PackedInt64Array = curve.get_active_conns()
 	for conn in active_connections:
-		var baked_points = curve.get_conn_baked_points(conn,bake_interval)
-		var i:int=0
-		var end = baked_points.size() - 1
 		if selected_connections.has(conn):
-			while i < end:
-				selected_lines.push_back(baked_points[i])
-				selected_lines.push_back(baked_points[i+1])
-				i+=1
+			selected_lines.append_array(curve.get_conn_baked_line(conn))
 		else:
-			while i < end:
-				lines.push_back(baked_points[i])
-				lines.push_back(baked_points[i+1])
-				i+=1
+			lines.append_array(curve.get_conn_baked_line(conn))
 	if lines.size() > 2:
 		gizmo.add_lines(lines,get_material("line_mat"))
-		gizmo.add_collision_segments(lines)
+		if gui.is_debug_col():
+			gizmo.add_collision_segments(lines)
 	if selected_lines.size() > 2:
 		gizmo.add_lines(selected_lines,get_material("selected_lines_mat"))
-	lines.clear()
 	if not gui or not gui.visible: ## In case is not selected no need for handls
 		return
+	lines.clear()
 	## pointss
 	## Main points control point position points_id = point_index
 	## point in is secondary=true and points_id = point_index * 2 -> Always even
@@ -256,6 +248,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 					dir = dir.normalized()
 					var out_pos = point_pos + dir * out_lenght
 					curve.move_point_out(points_id,out_pos)
+			change_active_point(points_id)
 		else: # is odd
 			points_id = (points_id - 1)/2
 			var out_pos:Vector3 = curve.get_point_out(points_id)
@@ -273,6 +266,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 					dir = dir.normalized()
 					var in_pos = point_pos +  dir * in_lenght
 					curve.move_point_in(points_id,in_pos)
+		change_active_point(points_id)
 
 func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
 	match lock_mode:
@@ -563,6 +557,9 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 			gui.scale_num.set_value(new_scale)
 		curve.commit_point_update(active_point)
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
+	if event is InputEventMouseButton:
+		if event.button_mask == MOUSE_BUTTON_LEFT and gui.is_select_lock():
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
 
 
 func find_mpath()->MPath:
