@@ -912,6 +912,8 @@ bool MOctree::insert_point(const Vector3& pos,const int32_t id, int oct_id){
 			root.end.x = std::max(root.end.x, pos.x);
 			root.end.y = std::max(root.end.y, pos.y);
 			root.end.z = std::max(root.end.z, pos.z);	
+			root.start = root.start - Vector3(EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN);
+			root.end = root.end + Vector3(EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN);
 		}
 	} else {
 		root.start = pos - Vector3(EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN,EXTRA_BOUND_MARGIN);
