@@ -32,6 +32,8 @@ void MCurve::_bind_methods(){
     ADD_SIGNAL(MethodInfo("recreate"));
     // end of signals
 
+    ClassDB::bind_method(D_METHOD("get_points_count"), &MCurve::get_points_count);
+
     ClassDB::bind_method(D_METHOD("add_point","position","in","out","prev_conn"), &MCurve::add_point);
     ClassDB::bind_method(D_METHOD("add_point_conn_point","position","in","out","conn_types","conn_points"), &MCurve::add_point_conn_point);
     ClassDB::bind_method(D_METHOD("connect_points","p0","p1","conn_type"), &MCurve::connect_points);
@@ -142,6 +144,11 @@ MCurve::MCurve(){
 
 MCurve::~MCurve(){
 
+}
+
+int MCurve::get_points_count(){
+    // -1 because 0 index is always empty
+    return points_buffer.size() - free_buffer_indicies.size() - 1;
 }
 
 void MCurve::_increase_points_buffer_size(size_t q){

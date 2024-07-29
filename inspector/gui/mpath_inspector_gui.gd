@@ -1,11 +1,15 @@
 @tool
 extends Control
 
+
+@onready var point_count_lable:=$point_count_lable
+
 var is_started:=false
 
 var gizmo:EditorNode3DGizmoPlugin
 
 var current_path:MPath
+var current_curve:MCurve
 var current_curve_mesh:MCurveMesh=null
 
 var connection_mode :=true
@@ -34,6 +38,7 @@ func start():
 func set_path(input:MPath)->void:
 	start()
 	current_path = input
+	current_curve = current_path.curve
 	child_selector.clear()
 	child_selector.add_item("ovveride")
 	if not input: return
@@ -169,3 +174,9 @@ func mesh_mode_selected(index:int):
 	mesh_mode = index == 0
 	update_curve_mesh_items()
 
+
+func _on_update_info_timer_timeout():
+	var point_count:int = 0
+	if current_curve:
+		point_count = current_curve.get_points_count()
+	point_count_lable.text = "Point count " + str(point_count)

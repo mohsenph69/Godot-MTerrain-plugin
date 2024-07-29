@@ -169,6 +169,7 @@ class MCurve : public Resource{
     MCurve();
     ~MCurve();
 
+    int get_points_count();
     // Users
     int32_t get_curve_users_id();
     void remove_curve_user_id(int32_t user_id);
