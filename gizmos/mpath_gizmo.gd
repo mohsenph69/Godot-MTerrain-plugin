@@ -507,7 +507,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 				var new_pos:Vector3
 				var is_new_pos_set = false
 				if gui.is_terrain_snap():
-					if false:
+					if mterrain_plugin.active_terrain.is_grid_created():
 						if terrain_col.is_collided():
 							new_pos = terrain_col.get_collision_position()
 							is_new_pos_set = true
