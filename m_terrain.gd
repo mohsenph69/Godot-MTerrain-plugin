@@ -1,6 +1,6 @@
 @tool
 extends EditorPlugin
-var version:String="0.14.1 alpha"
+var version:String="0.13.0 alpha"
 var import_window_res = preload("res://addons/m_terrain/gui/import_window.tscn")
 var image_creator_window_res = preload("res://addons/m_terrain/gui/image_creator_window.tscn")
 var tools= null
@@ -40,28 +40,53 @@ var mcurve_mesh_gui
 
 var inspector_mpath
 
+const keyboard_actions = [
+		{"name": "toggle_mpath_mode", "keycode": KEY_QUOTELEFT, "pressed": true}
+]
+const setting_path = 'addons/MTerrain/keymap/'
+
+func add_keymap():
+	for action in keyboard_actions:
+		var path = setting_path + action.name
+		if not ProjectSettings.has_setting(path):
+			var a = InputEventKey.new()
+			a.keycode = action.keycode
+			a.pressed = action.pressed
+			ProjectSettings.set_setting(path, [a])
+		var events = ProjectSettings.get_setting(path)
+		if not InputMap.has_action(action.name):
+			InputMap.add_action(action.name)
+		for e in events:
+			InputMap.action_add_event(action.name, e)
+	
+func remove_keymap():
+	for action in keyboard_actions:
+		InputMap.erase_action(action.name)
+	
 func _enter_tree():
+	add_keymap()
 	if Engine.is_editor_hint():
-		scene_changed.connect(Callable(self,"on_scene_changed"))
-		add_tool_menu_item("MTerrain import/export", Callable(self,"show_import_window"))
-		add_tool_menu_item("MTerrain image create/remove", Callable(self,"show_image_creator_window"))
+		scene_changed.connect(on_scene_changed)
+		add_tool_menu_item("MTerrain import/export", show_import_window)
+		add_tool_menu_item("MTerrain image create/remove", show_image_creator_window)
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
-		tools.toggle_paint_mode.connect(Callable(self,"toggle_paint_mode"))
-		tools.save_request.connect(Callable(self,"save_request"))
-		tools.info_window_open_request.connect(Callable(self,"info_window_open_request"))
+		tools.toggle_paint_mode.connect(toggle_paint_mode)
+		tools.save_request.connect(save_request)
+		tools.create_request.connect(create_request)
+		tools.info_window_open_request.connect(info_window_open_request)
 		tools.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
 		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
-		tsnap.connect("pressed",Callable(self,"tsnap_pressed"))
+		tsnap.connect("pressed",tsnap_pressed)
 		tsnap.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)
 		
 		paint_panel = preload("res://addons/m_terrain/gui/paint_panel.tscn").instantiate()
-		paint_panel.brush_size_changed.connect(Callable(self,"brush_size_changed"))
+		paint_panel.brush_size_changed.connect(brush_size_changed)
 		## ADD and Remove so the ready function will be called
 		add_control_to_dock(EditorPlugin.DOCK_SLOT_RIGHT_UL,paint_panel)
 		remove_control_from_docks(paint_panel)
-		get_editor_interface().get_selection().selection_changed.connect(Callable(self,"selection_changed"))
+		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
 		brush_decal = preload("res://addons/m_terrain/gui/brush_decal.tscn").instantiate()
 		brush_decal.visible = false
 		get_editor_interface().get_editor_main_screen().add_child(brush_decal)
@@ -90,6 +115,7 @@ func _enter_tree():
 		add_inspector_plugin(inspector_mpath)
 
 func _exit_tree():
+	remove_keymap()
 	if Engine.is_editor_hint():
 		remove_tool_menu_item("MTerrain import/export")
 		remove_tool_menu_item("MTerrain image create/remove")
@@ -340,6 +366,9 @@ func toggle_paint_mode(input):
 		stencil_decal.visible = false
 		remove_control_from_docks(paint_panel)
 
+func create_request():
+	find_mterrain().create_grid()
+	
 func save_request():
 	if not is_instance_valid(active_terrain):
 		active_terrain = null
