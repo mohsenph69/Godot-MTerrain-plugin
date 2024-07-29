@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cl1dbmg2xmtro"]
+[gd_scene load_steps=11 format=3 uid="uid://b7mbj5dt5y1y8"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
 [ext_resource type="Texture2D" uid="uid://dok8ugsvea2hg" path="res://addons/m_terrain/icons/paint-normal.png" id="2_4m4r2"]
@@ -9,28 +9,35 @@
 [ext_resource type="Texture2D" uid="uid://c0lxruofvkcr" path="res://addons/m_terrain/icons/human_button_pressed.png" id="5_507tw"]
 [ext_resource type="Texture2D" uid="uid://balqs3xpw1e3p" path="res://addons/m_terrain/icons/save_active.png" id="6_22i4d"]
 [ext_resource type="Texture2D" uid="uid://vj2s60luchw7" path="res://addons/m_terrain/icons/save_deactive.png" id="7_0jks8"]
+[ext_resource type="Texture2D" uid="uid://cjs22nfbjl71l" path="res://addons/m_terrain/icons/rotation.svg" id="10_6k50j"]
 
 [node name="mtools" type="HBoxContainer"]
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 32.0
+grow_horizontal = 2
+alignment = 1
 script = ExtResource("1_l6paa")
 
 [node name="info_btn" type="TextureButton" parent="."]
 layout_mode = 2
 texture_normal = ExtResource("2_gaimq")
 texture_pressed = ExtResource("3_1h0ws")
+stretch_mode = 5
 
 [node name="paint_mode" type="TextureButton" parent="."]
 layout_mode = 2
 toggle_mode = true
 texture_normal = ExtResource("2_4m4r2")
 texture_pressed = ExtResource("3_vfilu")
+stretch_mode = 5
 
 [node name="human_male" type="TextureButton" parent="."]
 layout_mode = 2
 toggle_mode = true
 texture_normal = ExtResource("4_mec0g")
 texture_pressed = ExtResource("5_507tw")
+stretch_mode = 5
 
 [node name="VSeparator" type="VSeparator" parent="."]
 custom_minimum_size = Vector2(10, 0)
@@ -41,6 +48,13 @@ layout_mode = 2
 toggle_mode = true
 texture_normal = ExtResource("6_22i4d")
 texture_disabled = ExtResource("7_0jks8")
+stretch_mode = 5
+
+[node name="reload" type="TextureButton" parent="."]
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("10_6k50j")
+stretch_mode = 5
 
 [node name="VSeparator2" type="VSeparator" parent="."]
 custom_minimum_size = Vector2(10, 0)
@@ -66,3 +80,4 @@ text = "R:2"
 [connection signal="toggled" from="paint_mode" to="." method="_on_paint_mode_toggled"]
 [connection signal="toggled" from="human_male" to="." method="_on_human_male_toggled"]
 [connection signal="pressed" from="save" to="." method="_on_save_pressed"]
+[connection signal="pressed" from="reload" to="." method="_on_reload_pressed"]
