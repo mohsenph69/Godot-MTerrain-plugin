@@ -11,6 +11,7 @@ extends HBoxContainer
 signal toggle_paint_mode
 signal save_request
 signal info_window_open_request
+signal create_request
 var active_paint_mode := false
 var human_male_active:=false
 
@@ -58,3 +59,7 @@ func _on_save_pressed():
 
 func _on_info_btn_pressed():
 	emit_signal("info_window_open_request")
+
+
+func _on_reload_pressed() -> void:
+	emit_signal("create_request")
