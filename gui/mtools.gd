@@ -9,6 +9,7 @@ signal request_image_creator
 signal edit_mode_changed
 #endregion
 
+<<<<<<< HEAD
 #region UI Controls
 @onready var status_bar: Control = find_child("status_bar")
 @onready var save_button: Control = find_child("save_button")
@@ -24,6 +25,14 @@ signal edit_mode_changed
 
 @onready var mpath_gizmo_gui = find_child("mpath_gizmo_gui")
 @onready var mcurve_mesh = find_child("mpath_gizmo_gui")
+=======
+signal toggle_paint_mode
+signal save_request
+signal info_window_open_request
+signal create_request
+var active_paint_mode := false
+var human_male_active:=false
+>>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 
 
 @onready var brush_size_control: Control = find_child("brush_size")
@@ -321,6 +330,7 @@ func _on_save_pressed():
 	
 
 func _on_info_btn_pressed():
+<<<<<<< HEAD
 	request_info_window.emit()
 
 func _on_reload_pressed() -> void:
@@ -338,3 +348,10 @@ func _on_splatmap_import_button_pressed() -> void:
 func _on_image_creator_button_pressed() -> void:
 	request_image_creator.emit()
 #endregion	
+=======
+	emit_signal("info_window_open_request")
+
+
+func _on_reload_pressed() -> void:
+	emit_signal("create_request")
+>>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92

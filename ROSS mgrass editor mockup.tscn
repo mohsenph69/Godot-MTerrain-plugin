@@ -16,11 +16,16 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+<<<<<<< HEAD
+=======
+offset_bottom = -441.0
+>>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="LOD Settings" type="Panel" parent="."]
 layout_mode = 1
+<<<<<<< HEAD
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
@@ -35,6 +40,21 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 589.0
 grow_horizontal = 2
+=======
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="LOD Settings"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+>>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 theme_override_constants/separation = 10
 
 [node name="VBoxContainer" type="VBoxContainer" parent="LOD Settings/HBoxContainer"]
