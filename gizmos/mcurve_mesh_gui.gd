@@ -79,6 +79,7 @@ func _on_active_toggled(button_pressed):
 	segment_select_option.visible = button_pressed
 	socket_select_option.visible = button_pressed
 	if not button_pressed and obj:
+		selection.clear()
 		selection.add_node(obj)
 
 func update_mesh():

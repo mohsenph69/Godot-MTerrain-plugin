@@ -224,8 +224,9 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
 		if gui.is_terrain_snap() and lock_mode == LOCK_MODE.NONE:
-			if mterrain_plugin.active_terrain and mterrain_plugin.active_terrain.is_grid_created():
-				drag.y = mterrain_plugin.active_terrain.get_height(drag)
+			var active_terrain = mterrain_plugin.tools.get_active_mterrain()
+			if active_terrain and active_terrain.is_grid_created():
+				drag.y = active_terrain.get_height(drag)
 			else:
 				drag.y = 0.0
 		curve.move_point(points_id,drag)

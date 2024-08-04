@@ -23,7 +23,7 @@ content_margin_left = 5.0
 [node name="Terrain_info" type="Window"]
 title = "M Terrain Info"
 initial_position = 1
-size = Vector2i(620, 320)
+size = Vector2i(450, 500)
 script = ExtResource("1_wd31j")
 
 [node name="base" type="Control" parent="."]

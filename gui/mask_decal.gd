@@ -101,10 +101,10 @@ func set_mask(img:Image,tex:Texture2D):
 		albedo_mix = 0.8
 	else:
 		texture_albedo = wpx
-		albedo_mix = 0.0
-	print("setting new brush mask : ")
-	update_active_image()
-	active_terrain.set_brush_mask(active_image)
+		albedo_mix = 0.0	
+	if active_terrain:
+		update_active_image()
+		active_terrain.set_brush_mask(active_image)
 	
 
 func reset_image_rotation():

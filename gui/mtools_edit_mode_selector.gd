@@ -64,30 +64,7 @@ func init_edit_mode_options(all_mterrain):
 					exit_edit_mode_button.show()
 					text = "Paint " + child.name
 				)
-			if child is MPath:
-				button = Button.new()
-				button.text = "Edit " + child.name				
-				button.mouse_filter = Control.MOUSE_FILTER_PASS
-				button.alignment = button_alignment
-				item_container.add_child(button)
-				biggest_button_size = max(biggest_button_size, button.size.x)
-				button.pressed.connect(func():
-					edit_mode_changed.emit(child, &"mpath")
-					exit_edit_mode_button.show()
-					text = "Edit " + child.name
-				)
-			if child is MCurveMesh:
-				button = Button.new()
-				button.text = "Edit " + child.name				
-				button.mouse_filter = Control.MOUSE_FILTER_PASS
-				button.alignment = button_alignment
-				item_container.add_child(button)
-				biggest_button_size = max(biggest_button_size, button.size.x)
-				button.pressed.connect(func():
-					edit_mode_changed.emit(child, &"mcurve_mesh")
-					exit_edit_mode_button.show()
-					text = "Edit " + child.name
-				)
+			
 			if child is MNavigationRegion3D:
 				button = Button.new()
 				button.text = "Paint " + child.name				
@@ -97,6 +74,36 @@ func init_edit_mode_options(all_mterrain):
 				biggest_button_size = max(biggest_button_size, button.size.x)
 				button.pressed.connect(switch_to_mnavigation_paint.bind(child))
 				button.pressed.connect(exit_edit_mode_button.show)
+	
+	var all_nodes = EditorInterface.get_edited_scene_root().find_children("*")
+	print(all_nodes.size())
+	for child in all_nodes:
+		var button
+		if child is MPath:
+			button = Button.new()
+			button.text = "Edit " + child.name				
+			button.mouse_filter = Control.MOUSE_FILTER_PASS
+			button.alignment = button_alignment
+			item_container.add_child(button)
+			biggest_button_size = max(biggest_button_size, button.size.x)
+			button.pressed.connect(func():
+				edit_mode_changed.emit(child, &"mpath")
+				exit_edit_mode_button.show()
+				text = "Edit " + child.name
+			)
+		if child is MCurveMesh:
+			button = Button.new()
+			button.text = "Edit " + child.name				
+			button.mouse_filter = Control.MOUSE_FILTER_PASS
+			button.alignment = button_alignment
+			item_container.add_child(button)
+			biggest_button_size = max(biggest_button_size, button.size.x)
+			button.pressed.connect(func():
+				edit_mode_changed.emit(child, &"mcurve_mesh")
+				exit_edit_mode_button.show()
+				text = "Edit " + child.name
+			)
+	
 	get_child(0).size. x = biggest_button_size + 12	
 	
 func switch_to_mnavigation_paint(nav):

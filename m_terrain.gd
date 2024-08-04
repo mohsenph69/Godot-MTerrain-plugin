@@ -1,6 +1,6 @@
 @tool
 extends EditorPlugin
-var version:String="0.13.0 alpha"
+var version:String="0.14.1 alpha"
 
 var tools= null
 
@@ -183,21 +183,33 @@ func selection_changed():
 	if selection.size() != 1:		
 		tools.request_hide()
 		gizmo_mpath_gui.visible = false
-		mcurve_mesh_gui.set_curve_mesh(null)
+		mcurve_mesh_gui.set_curve_mesh(null)		
 		return
 		
 	if not tools or not is_instance_valid(EditorInterface.get_edited_scene_root()): return
 	if not current_main_screen_name == "3D":
 		tools.request_hide()
 		return	
-	if selection	[0] is MTerrain or selection	[0].get_parent() is MTerrain	:
+	if selection[0] is MTerrain:
 		tools.request_show()	
-	else:		
-		tools.request_hide()
+		return
+	if selection[0].get_parent() is MTerrain:
+		if selection[0] is MGrass or selection[0] is MNavigationRegion3D:
+			tools.request_show()	
+			return
+	if selection[0] is MPath or selection[0] is MCurveMesh:
+		tools.request_show()	
+		return
+	if mcurve_mesh_gui.obj and mcurve_mesh_gui.is_active():
+		tools.request_show()	
+		return
+	tools.request_hide()
 
 func _handles(object):
 	if not Engine.is_editor_hint(): return false
-		
+	
+	if mcurve_mesh_gui.obj and mcurve_mesh_gui.is_active(): return false
+	
 	active_snap_object = null
 	tsnap.visible = false
 	
