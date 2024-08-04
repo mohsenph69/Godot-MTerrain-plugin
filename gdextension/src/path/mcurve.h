@@ -231,6 +231,8 @@ class MCurve : public Resource{
     public:
     /// Function bellow should be thread safe in case is called from another thread
     Vector3 get_conn_position(int64_t conn_id,float t);
+    AABB get_conn_aabb(int64_t conn_id);
+    AABB get_conns_aabb(const PackedInt64Array& conn_ids);
     float get_closest_ratio_to_point(int64_t conn_id,Vector3 pos);
     Vector3 get_point_order_tangent(int32_t point_a,int32_t point_b,float t);
     Vector3 get_conn_tangent(int64_t conn_id,float t);
