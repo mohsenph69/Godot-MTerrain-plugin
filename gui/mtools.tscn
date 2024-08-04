@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://bdxfu7h15wijq"]
+[gd_scene load_steps=26 format=3 uid="uid://bdxfu7h15wijq"]
 
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="1_bamv0"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
@@ -15,9 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://b6wfdaqojnwju" path="res://addons/m_terrain/gui/brush_masks.tscn" id="12_x7iwb"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_layers.gd" id="13_1tujl"]
 [ext_resource type="PackedScene" uid="uid://yyvmuhqx1jgi" path="res://addons/m_terrain/gui/mtools_layer_item.tscn" id="14_j3rha"]
-[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="15_fmp8l"]
 [ext_resource type="Texture2D" uid="uid://tow1rj13cxaw" path="res://addons/m_terrain/icons/merge_down_icon.svg" id="15_sjvca"]
-[ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_brush_settings.gd" id="16_bxaiu"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_masks.gd" id="16_h7wnm"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_slider_value.gd" id="18_vmcc8"]
 [ext_resource type="Texture2D" uid="uid://b8xvuorm57o1s" path="res://addons/m_terrain/icons/invert_icon_normal.svg" id="20_8anom"]
@@ -442,26 +440,91 @@ toggle_mode = true
 text = "Brush"
 script = ExtResource("11_c6bj1")
 
-[node name="Panel2" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_button"]
-visible = false
-clip_contents = true
-custom_minimum_size = Vector2(550, 100)
-layout_mode = 2
-offset_left = -2.0
-offset_top = -100.0
-offset_right = 1605.0
+[node name="Control" type="Control" parent="Panel/hbox/PaintControls/paint_panel/brush_button"]
+anchors_preset = 0
 mouse_filter = 1
 
-[node name="scroll_container" type="ScrollContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Panel2"]
+[node name="brush_settings_panel" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control"]
+clip_contents = true
+layout_mode = 1
+offset_left = -344.0
+offset_top = -224.0
+offset_right = -1.0
+offset_bottom = -2.0
+mouse_filter = 1
+
+[node name="brush_settings" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control/brush_settings_panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+alignment = 2
+
+[node name="brush_size_panel" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control"]
+clip_contents = true
+layout_mode = 1
+offset_top = -224.0
+offset_right = 51.0
+offset_bottom = -2.0
+mouse_filter = 1
+metadata/_edit_group_ = true
+
+[node name="brush_size" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control/brush_size_panel"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("18_vmcc8")
+
+[node name="VSlider" type="VSlider" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control/brush_size_panel/brush_size"]
+layout_mode = 2
+size_flags_horizontal = 1
+size_flags_vertical = 3
+mouse_filter = 1
+max_value = 500.0
+step = 0.1
+value = 50.0
+
+[node name="LineEdit" type="LineEdit" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control/brush_size_panel/brush_size"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+mouse_filter = 1
+theme_override_constants/minimum_character_width = 0
+text = "21.5"
+middle_mouse_paste_enabled = false
+
+[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control/brush_size_panel/brush_size"]
+layout_mode = 2
+text = "size"
+horizontal_alignment = 1
+
+[node name="brush_brushes_panel" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control"]
+clip_contents = true
+layout_mode = 1
+offset_left = 52.0
+offset_top = -224.0
+offset_right = 801.0
+offset_bottom = -2.0
+mouse_filter = 1
+
+[node name="scroll_container" type="ScrollContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control/brush_brushes_panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="brush_container" type="ItemList" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Panel2/scroll_container"]
+[node name="brush_container" type="ItemList" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control/brush_brushes_panel/scroll_container"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -479,7 +542,7 @@ script = ExtResource("16_h7wnm")
 visible = false
 layout_mode = 1
 offset_top = -236.0
-offset_right = 1607.0
+offset_right = 1623.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2"]
@@ -489,6 +552,60 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="mask_size" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+script = ExtResource("18_vmcc8")
+
+[node name="VSlider" type="VSlider" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_size"]
+layout_mode = 2
+size_flags_horizontal = 1
+size_flags_vertical = 3
+mouse_filter = 1
+max_value = 500.0
+step = 0.1
+value = 50.0
+
+[node name="LineEdit" type="LineEdit" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_size"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+mouse_filter = 1
+theme_override_constants/minimum_character_width = 0
+text = "21.5"
+middle_mouse_paste_enabled = false
+
+[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_size"]
+layout_mode = 2
+text = "size"
+horizontal_alignment = 1
+
+[node name="mask_rotation" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+script = ExtResource("18_vmcc8")
+
+[node name="VSlider" type="VSlider" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_rotation"]
+layout_mode = 2
+size_flags_horizontal = 1
+size_flags_vertical = 3
+mouse_filter = 1
+max_value = 500.0
+step = 0.1
+value = 50.0
+
+[node name="LineEdit" type="LineEdit" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_rotation"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+mouse_filter = 1
+theme_override_constants/minimum_character_width = 0
+text = "21.5"
+middle_mouse_paste_enabled = false
+
+[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_rotation"]
+layout_mode = 2
+text = "rotation"
+horizontal_alignment = 1
 
 [node name="mask_cutoff" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
 custom_minimum_size = Vector2(50, 0)
@@ -514,8 +631,7 @@ middle_mouse_paste_enabled = false
 
 [node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_cutoff"]
 layout_mode = 2
-text = "mask
-cutoff"
+text = "cutoff"
 horizontal_alignment = 1
 
 [node name="invert_mask" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
@@ -551,61 +667,6 @@ metadata/_edit_group_ = true
 [node name="HScrollBar" type="HScrollBar" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
 layout_mode = 2
 mouse_filter = 1
-
-[node name="brush_settings_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-toggle_mode = true
-icon = ExtResource("15_fmp8l")
-expand_icon = true
-script = ExtResource("16_bxaiu")
-
-[node name="Panel" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button"]
-visible = false
-layout_mode = 1
-offset_top = -278.0
-offset_right = 1607.0
-mouse_filter = 1
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="brush_size" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2"]
-custom_minimum_size = Vector2(40, 0)
-layout_mode = 2
-script = ExtResource("18_vmcc8")
-
-[node name="VSlider" type="VSlider" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/brush_size"]
-layout_mode = 2
-size_flags_horizontal = 1
-size_flags_vertical = 3
-mouse_filter = 1
-max_value = 500.0
-step = 0.1
-value = 50.0
-
-[node name="LineEdit" type="LineEdit" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/brush_size"]
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-mouse_filter = 1
-theme_override_constants/minimum_character_width = 0
-text = "21.5"
-middle_mouse_paste_enabled = false
-
-[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/brush_size"]
-layout_mode = 2
-text = "brush
-size"
-horizontal_alignment = 1
-
-[node name="brush_settings" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2"]
-layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="mpath_gizmo_gui" parent="Panel/hbox" instance=ExtResource("23_i5qr3")]
 visible = false

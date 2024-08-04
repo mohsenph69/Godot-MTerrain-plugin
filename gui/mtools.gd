@@ -20,7 +20,6 @@ signal edit_mode_changed
 @onready var layers_popup_button: Button = find_child("layers_button")
 @onready var brush_popup_button: Button = find_child("brush_button")
 @onready var mask_popup_button: Button = find_child("mask_button")
-@onready var brush_settings_popup_button: Button = find_child("brush_settings_button")
 
 @onready var mpath_gizmo_gui = find_child("mpath_gizmo_gui")
 @onready var mcurve_mesh = find_child("mpath_gizmo_gui")
@@ -35,7 +34,6 @@ signal edit_mode_changed
 	layers_popup_button,
 	brush_popup_button, 	
 	mask_popup_button,
-	brush_settings_popup_button,	
 ]
 
 var current_popup_button: Button = null
@@ -59,8 +57,7 @@ func _ready():
 	for button in popup_buttons:
 		init_popup_button_signals(button)	
 
-	edit_mode_button.edit_mode_changed.connect(set_edit_mode)	
-	brush_popup_button.brush_settings_container = brush_settings_popup_button.brush_settings_container
+	edit_mode_button.edit_mode_changed.connect(set_edit_mode)		
 
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
@@ -70,7 +67,7 @@ func set_brush_decal(new_brush_decal):
 func set_mask_decal(new_mask):
 	mask_decal = new_mask
 	mask_decal.visible = false
-	mask_popup_button.init_masks(mask_decal, find_child("mask_cutoff"), find_child("invert_mask_button"))			
+	mask_popup_button.init_masks(mask_decal,  find_child("mask_size"), find_child("mask_rotation"),find_child("mask_cutoff"), find_child("invert_mask_button"))			
 
 func on_node_modified(node):	
 	if node is MTerrain or node is MGrass or node is MPath:
@@ -249,19 +246,25 @@ func deactivate_editing():
 	edit_mode_button.exit_edit_mode()
 	brush_decal.visible = false
 	mask_decal.visible = false		
+	for mterrain in get_all_mterrain():
+		mterrain.disable_brush_mask()
 	paint_panel.visible = false
 	mpath_gizmo_gui.visible = false
 	mcurve_mesh.visible = false
 	brush_popup_button.clear_brushes()
+	active_object = null
+	current_edit_mode = &""
 	
 func set_edit_mode(object = active_object, mode=current_edit_mode):	
 	if object == active_object and current_edit_mode == mode:	
 		return
-	active_object = object	
-	current_edit_mode = mode
+	
 	if object==null or mode ==&"": 
 		deactivate_editing()
 		return
+	
+	active_object = object	
+	current_edit_mode = mode
 	var active_mterrain = get_active_mterrain()
 	active_mterrain.set_brush_manager(brush_manager)
 	mask_popup_button.mterrain = active_mterrain

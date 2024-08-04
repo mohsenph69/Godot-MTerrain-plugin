@@ -71,6 +71,19 @@ func change_size(amount:float):
 	is_dirty = true
 	set_absolute_terrain_pos(position)
 
+func set_size(value):	
+	if current_size < active_terrain.get_h_scale():
+		current_size = active_terrain.min_h_scale
+	current_size = value * active_terrain.get_h_scale()
+	if current_size < active_terrain.get_h_scale():
+		current_size = active_terrain.get_h_scale()
+	size.x = current_size
+	size.z = current_size
+	var last_pos = position
+	angle_offset = Vector3(size.x/2,0,size.z/2)
+	is_dirty = true
+	set_absolute_terrain_pos(position)
+
 func _process(delta):
 	if (desire_position - position).length() < 0.01:
 		set_process(false)
@@ -78,7 +91,7 @@ func _process(delta):
 
 
 func set_mask(img:Image,tex:Texture2D):
-	image_rotation = 0
+	#image_rotation = 0
 	active_tex = tex
 	orignal_image = img
 	original_tex = tex
@@ -89,6 +102,9 @@ func set_mask(img:Image,tex:Texture2D):
 	else:
 		texture_albedo = wpx
 		albedo_mix = 0.0
+	print("setting new brush mask : ")
+	update_active_image()
+	active_terrain.set_brush_mask(active_image)
 	
 
 func reset_image_rotation():

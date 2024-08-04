@@ -2,7 +2,7 @@
 extends Button
 
 @onready var brush_container:ItemList = find_child("brush_container")
-@onready var brush_settings_container
+@onready var brush_settings_container = find_child("brush_settings")
 
 var height_brush_id = 0
 
@@ -24,6 +24,7 @@ var smooth_brush_id
 var raise_brush_id
 var to_height_brush_id
 var hole_brush_id
+var reverse_property_control
 
 var color_layer_group_id:int
 var color_brush_index:int
@@ -120,6 +121,9 @@ func create_props(dic:Dictionary):
 	element.set_value(dic["default_value"])
 	element.set_name(dic["name"])
 	property_element_list.append(element)
+	print()
+	if element.prop_name.to_lower() == "revers":
+		reverse_property_control = element
 
 func clear_property_element():
 	for e in property_element_list:
@@ -227,28 +231,33 @@ func on_mnavigation_brush_select(id):
 #region Input
 
 func process_input(event):		
-	if brush_mode == &"sculpt":		
-		last_height_brush_id = height_brush_id
-		if event.keycode == KEY_SHIFT:
-			print("brushes input processing keys shift")
+	if brush_mode == &"sculpt":				
+		if event.keycode == KEY_SHIFT:			
 			if event.is_pressed():
 				if not event.echo:
-					height_brush_id = smooth_brush_id
-					
+					last_height_brush_id = height_brush_id
+					height_brush_id = smooth_brush_id		
+					print("making smmooth brush. last brush: ", last_height_brush_id)			
 			else:
+				print("making original brush brush ", last_height_brush_id)			
 				height_brush_id = last_height_brush_id
 		elif event.keycode == KEY_CTRL:
 			if event.is_pressed():
 				if not event.echo:
+					last_height_brush_id = height_brush_id
 					height_brush_id = to_height_brush_id
 			else:
 				height_brush_id = last_height_brush_id
+		elif event.keycode == KEY_ALT:			
+			if not event.echo:					
+				reverse_property_control.set_value(not reverse_property_control.value)
+				
 	elif brush_mode == &"paint":
 		#to do: add remove paint?
 		pass
 	
 	elif brush_mode == &"grass": 		
-		if event.keycode == KEY_SHIFT:
+		if event.keycode == KEY_ALT:
 			if event.is_pressed():
 				if not event.echo:
 					is_grass_add = not is_grass_add
