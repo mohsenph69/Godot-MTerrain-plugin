@@ -57,7 +57,6 @@ func add_keymap():
 func remove_keymap():
 	for action in keyboard_actions:
 		InputMap.erase_action(action.name)
-<<<<<<< HEAD
 
 func _on_main_screen_changed(screen_name):
 	current_main_screen_name = screen_name	
@@ -93,34 +92,6 @@ func _enter_tree():
 		
 		brush_decal = preload("res://addons/m_terrain/gui/brush_decal.tscn").instantiate()		
 		main_screen.add_child(brush_decal)
-=======
-	
-func _enter_tree():
-	add_keymap()
-	if Engine.is_editor_hint():
-		scene_changed.connect(on_scene_changed)
-		add_tool_menu_item("MTerrain import/export", show_import_window)
-		add_tool_menu_item("MTerrain image create/remove", show_image_creator_window)
-		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()
-		tools.toggle_paint_mode.connect(toggle_paint_mode)
-		tools.save_request.connect(save_request)
-		tools.create_request.connect(create_request)
-		tools.info_window_open_request.connect(info_window_open_request)
-		tools.visible = false
-		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tools)
-		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
-		tsnap.connect("pressed",tsnap_pressed)
-		tsnap.visible = false
-		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)
-		
-		paint_panel = preload("res://addons/m_terrain/gui/paint_panel.tscn").instantiate()
-		paint_panel.brush_size_changed.connect(brush_size_changed)
-		## ADD and Remove so the ready function will be called
-		add_control_to_dock(EditorPlugin.DOCK_SLOT_RIGHT_UL,paint_panel)
-		remove_control_from_docks(paint_panel)
-		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
-		brush_decal = preload("res://addons/m_terrain/gui/brush_decal.tscn").instantiate()
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 		brush_decal.visible = false
 		tools.set_brush_decal(brush_decal)
 		
@@ -150,18 +121,12 @@ func _enter_tree():
 		inspector_mpath = load("res://addons/m_terrain/inspector/mpath.gd").new()
 		inspector_mpath.gizmo = gizmo_mpath
 		add_inspector_plugin(inspector_mpath)
-<<<<<<< HEAD
 		
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
 	EditorInterface.set_main_screen_editor("3D")
 	
 func _exit_tree():	
-=======
-
-func _exit_tree():
-	remove_keymap()
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 	if Engine.is_editor_hint():
 		remove_keymap()	
 		remove_tool_menu_item("MTerrain import/export")
@@ -318,48 +283,7 @@ func selection_changed():
 	else:		
 		tools.request_hide()
 
-<<<<<<< HEAD
 func show_info_window(active_terrain:MTerrain):
-=======
-func toggle_paint_mode(input):
-	is_paint_active = input
-	if active_nav_region:
-		active_nav_region.set_npoints_visible(input)
-	if input and active_terrain:
-		add_control_to_dock(EditorPlugin.DOCK_SLOT_RIGHT_UL,paint_panel)
-		paint_panel.set_active_terrain(active_terrain)
-		if active_grass or active_nav_region:
-			paint_panel.set_grass_mode(true)
-		else:
-			paint_panel.set_grass_mode(false)
-	else:
-		brush_decal.visible = false
-		stencil_decal.visible = false
-		remove_control_from_docks(paint_panel)
-
-func create_request():
-	find_mterrain().create_grid()
-	
-func save_request():
-	if not is_instance_valid(active_terrain):
-		active_terrain = null
-		return
-	if active_terrain:
-		active_terrain.save_all_dirty_images()
-
-func brush_size_changed(value):
-	brush_decal.set_brush_size(value)
-
-
-func _save_external_data():
-	if not is_instance_valid(active_terrain):
-		active_terrain = null
-		return
-	if active_terrain:
-		active_terrain.save_all_dirty_images()
-
-func info_window_open_request():
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 	if is_instance_valid(current_window_info):
 		current_window_info.queue_free()
 	current_window_info = load("res://addons/m_terrain/gui/terrain_info.tscn").instantiate()

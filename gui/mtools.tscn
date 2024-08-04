@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 [gd_scene load_steps=28 format=3 uid="uid://bdxfu7h15wijq"]
-=======
-[gd_scene load_steps=11 format=3 uid="uid://b7mbj5dt5y1y8"]
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="1_bamv0"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
-<<<<<<< HEAD
 [ext_resource type="Texture2D" uid="uid://cyftv3kygv5b7" path="res://addons/m_terrain/icons/info_icon_pressed.png" id="2_ovrit"]
 [ext_resource type="Texture2D" uid="uid://dgjegrn8jhlf6" path="res://addons/m_terrain/icons/human_disabled.svg" id="4_rgpuu"]
 [ext_resource type="Texture2D" uid="uid://lhctvyd5qpxt" path="res://addons/m_terrain/icons/human.svg" id="5_dvso0"]
@@ -80,31 +75,6 @@ anchor_bottom = 1.0
 offset_top = -59.0
 grow_horizontal = 2
 grow_vertical = 0
-=======
-[ext_resource type="Texture2D" uid="uid://dok8ugsvea2hg" path="res://addons/m_terrain/icons/paint-normal.png" id="2_4m4r2"]
-[ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="2_gaimq"]
-[ext_resource type="Texture2D" uid="uid://cyftv3kygv5b7" path="res://addons/m_terrain/icons/info_icon_pressed.png" id="3_1h0ws"]
-[ext_resource type="Texture2D" uid="uid://dc8xvtd03qq1j" path="res://addons/m_terrain/icons/paint-pressed.png" id="3_vfilu"]
-[ext_resource type="Texture2D" uid="uid://b72iot2bj8ls" path="res://addons/m_terrain/icons/human_button_normal.png" id="4_mec0g"]
-[ext_resource type="Texture2D" uid="uid://c0lxruofvkcr" path="res://addons/m_terrain/icons/human_button_pressed.png" id="5_507tw"]
-[ext_resource type="Texture2D" uid="uid://balqs3xpw1e3p" path="res://addons/m_terrain/icons/save_active.png" id="6_22i4d"]
-[ext_resource type="Texture2D" uid="uid://vj2s60luchw7" path="res://addons/m_terrain/icons/save_deactive.png" id="7_0jks8"]
-[ext_resource type="Texture2D" uid="uid://cjs22nfbjl71l" path="res://addons/m_terrain/icons/rotation.svg" id="10_6k50j"]
-
-[node name="mtools" type="HBoxContainer"]
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 32.0
-grow_horizontal = 2
-alignment = 1
-script = ExtResource("1_l6paa")
-
-[node name="info_btn" type="TextureButton" parent="."]
-layout_mode = 2
-texture_normal = ExtResource("2_gaimq")
-texture_pressed = ExtResource("3_1h0ws")
-stretch_mode = 5
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 
 [node name="hbox" type="HBoxContainer" parent="Panel"]
 layout_mode = 1
@@ -118,14 +88,8 @@ grow_horizontal = 2
 [node name="options_button" type="Button" parent="Panel/hbox"]
 layout_mode = 2
 toggle_mode = true
-<<<<<<< HEAD
 text = "|||"
 script = SubResource("GDScript_g5baw")
-=======
-texture_normal = ExtResource("2_4m4r2")
-texture_pressed = ExtResource("3_vfilu")
-stretch_mode = 5
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 
 [node name="Panel" type="Panel" parent="Panel/hbox/options_button"]
 visible = false
@@ -163,13 +127,8 @@ stretch_mode = 5
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
-<<<<<<< HEAD
 texture_normal = ExtResource("4_rgpuu")
 texture_pressed = ExtResource("5_dvso0")
-=======
-texture_normal = ExtResource("4_mec0g")
-texture_pressed = ExtResource("5_507tw")
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 stretch_mode = 5
 
 [node name="hide_status" type="CheckButton" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
@@ -317,19 +276,8 @@ layout_mode = 2
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
-<<<<<<< HEAD
 texture_normal = ExtResource("6_di4ov")
 texture_disabled = ExtResource("7_nh28h")
-=======
-texture_normal = ExtResource("6_22i4d")
-texture_disabled = ExtResource("7_0jks8")
-stretch_mode = 5
-
-[node name="reload" type="TextureButton" parent="."]
-layout_mode = 2
-toggle_mode = true
-texture_normal = ExtResource("10_6k50j")
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92
 stretch_mode = 5
 
 [node name="reload" type="TextureButton" parent="Panel/hbox"]
@@ -363,7 +311,6 @@ text = "G: 271543"
 layout_mode = 2
 text = "R:2"
 
-<<<<<<< HEAD
 [node name="VSeparator3" type="VSeparator" parent="Panel/hbox/status_bar"]
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
@@ -668,10 +615,3 @@ layout_mode = 2
 [connection signal="pressed" from="Panel/hbox/options_button/Panel/VBoxContainer/image_creator_button" to="." method="_on_image_creator_button_pressed"]
 [connection signal="pressed" from="Panel/hbox/save_button" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="Panel/hbox/reload" to="." method="_on_reload_pressed"]
-=======
-[connection signal="pressed" from="info_btn" to="." method="_on_info_btn_pressed"]
-[connection signal="toggled" from="paint_mode" to="." method="_on_paint_mode_toggled"]
-[connection signal="toggled" from="human_male" to="." method="_on_human_male_toggled"]
-[connection signal="pressed" from="save" to="." method="_on_save_pressed"]
-[connection signal="pressed" from="reload" to="." method="_on_reload_pressed"]
->>>>>>> f34e0d2ab77b1b4b0426312c7eb97c6e846d2c92

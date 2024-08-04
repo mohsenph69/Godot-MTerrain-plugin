@@ -82,8 +82,6 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("move_point_out","p_index","pos"), &MCurve::move_point_out);
 
     ClassDB::bind_method(D_METHOD("get_conn_position","conn_id","t"), &MCurve::get_conn_position);
-    ClassDB::bind_method(D_METHOD("get_conn_aabb","conn_id"), &MCurve::get_conn_aabb);
-    ClassDB::bind_method(D_METHOD("get_conns_aabb","conn_ids"), &MCurve::get_conns_aabb);
     ClassDB::bind_method(D_METHOD("get_closest_ratio_to_point","conn_id","pos"), &MCurve::get_closest_ratio_to_point);
     ClassDB::bind_method(D_METHOD("get_conn_transform","conn_id","t"), &MCurve::get_conn_transform);
     ClassDB::bind_method(D_METHOD("get_conn_lenght","conn_id"), &MCurve::get_conn_lenght);
@@ -845,97 +843,6 @@ Vector3 MCurve::get_conn_position(int64_t conn_id,float t){
         }
     }
     return a->position.bezier_interpolate(a_control,b_control,b->position,t);
-}
-
-////////
-// https://iquilezles.org/articles/bezierbbox/
-////////
-AABB MCurve::get_conn_aabb(int64_t conn_id){
-    ERR_FAIL_COND_V(!has_conn(conn_id),AABB());
-    Conn cc(conn_id);
-    const Point* a = points_buffer.ptr() + cc.p.a;
-    const Point* b = points_buffer.ptr() + cc.p.b;
-    Vector3 a_control = a->in; 
-    Vector3 b_control = b->in;
-    for(int8_t i=0; i < MAX_CONN; i++){
-        if(a->conn[i] == cc.p.b){
-            a_control = a->out;
-        }
-        if(b->conn[i] == cc.p.a){
-            b_control = b->out;
-        }
-    }
-    //////// min max
-    Vector3 mi = a->position.min(b->position);
-    Vector3 ma = a->position.max(b->position);
-
-    Vector3 _c = a_control - a->position;
-    Vector3 _b = a->position - 2.0*a_control + b_control;
-    Vector3 _a = -1.0*a->position + 3.0*a_control - 3.0*b_control + b->position;
-
-    Vector3 h = _b*_b - _a*_c;
-    if(h.x > 0.0){
-        h.x = sqrt(h.x);
-        float t = (-_b.x - h.x)/_a.x;
-        if(t > 0.0 && t < 1.0){
-            float s = 1.0f - t;
-            float q = s*s*s*a->position.x + 3.0*s*s*t*a_control.x + 3.0*s*t*t*b_control.x + t*t*t*b->position.x;
-            mi.x = MIN(mi.x,q);
-            ma.x = MAX(ma.x,q);
-        }
-        t = (-_b.x + h.x)/_a.x;
-        if(t > 0.0 && t < 1.0){
-            float s = 1.0f - t;
-            float q = s*s*s*a->position.x + 3.0*s*s*t*a_control.x + 3.0*s*t*t*b_control.x + t*t*t*b->position.x;
-            mi.x = MIN(mi.x,q);
-            ma.x = MAX(ma.x,q);
-        }
-    }
-    if(h.y > 0.0){
-        h.y = sqrt(h.y);
-        float t = (-_b.y - h.y)/_a.y;
-        if(t > 0.0 && t < 1.0){
-            float s = 1.0f - t;
-            float q = s*s*s*a->position.y + 3.0*s*s*t*a_control.y + 3.0*s*t*t*b_control.y + t*t*t*b->position.y;
-            mi.y = MIN(mi.y,q);
-            ma.y = MAX(ma.y,q);
-        }
-        t = (-_b.y + h.y)/_a.y;
-        if(t > 0.0 && t < 1.0){
-            float s = 1.0f - t;
-            float q = s*s*s*a->position.y + 3.0*s*s*t*a_control.y + 3.0*s*t*t*b_control.y + t*t*t*b->position.y;
-            mi.y = MIN(mi.y,q);
-            ma.y = MAX(ma.y,q);
-        }
-    }
-    if(h.z > 0.0){
-        h.z = sqrt(h.z);
-        float t = (-_b.z - h.z)/_a.z;
-        if(t > 0.0 && t < 1.0){
-            float s = 1.0f - t;
-            float q = s*s*s*a->position.z + 3.0*s*s*t*a_control.z + 3.0*s*t*t*b_control.z + t*t*t*b->position.z;
-            mi.z = MIN(mi.z,q);
-            ma.z = MAX(ma.z,q);
-        }
-        t = (-_b.z + h.z)/_a.z;
-        if(t > 0.0 && t < 1.0){
-            float s = 1.0f - t;
-            float q = s*s*s*a->position.z + 3.0*s*s*t*a_control.z + 3.0*s*t*t*b_control.z + t*t*t*b->position.z;
-            mi.z = MIN(mi.z,q);
-            ma.z = MAX(ma.z,q);
-        }
-    }
-    return AABB(mi, ma - mi);
-}
-
-AABB MCurve::get_conns_aabb(const PackedInt64Array& conn_ids){
-    ERR_FAIL_COND_V(conn_ids.size()==0,AABB());
-    AABB faabb = get_conn_aabb(conn_ids[0]);
-    for(int i=1; i < conn_ids.size(); i++){
-        AABB taabb = get_conn_aabb(conn_ids[i]);
-        faabb = faabb.merge(taabb);
-    }
-    return faabb;
 }
 
 float MCurve::get_closest_ratio_to_point(int64_t conn_id,Vector3 pos){
