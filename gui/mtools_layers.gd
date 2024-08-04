@@ -112,7 +112,8 @@ func init_color_layers(mterrain:MTerrain, brush_button):
 		#layer_item.layer_index_changed.connect(????)
 		#layer_item.layer_removed.connect(remove_heightmap_layer)			
 		layer_group_id += 1
-	layers_container.get_child(0).select_color_layer()
+	if layer_group_id>0:
+		layers_container.get_child(0).select_color_layer()
 
 func change_color_layer_selection(layer_id):	
 	brush_control.init_color_brushes(active_terrain, layer_id)

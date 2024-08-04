@@ -144,6 +144,7 @@ func _on_main_screen_changed(screen_name):
 
 #select_object is called when tools changes edit mode
 func select_object(object, mode):
+	print("select object is called")
 	EditorInterface.get_selection().clear()
 	EditorInterface.get_selection().add_node(object)
 
@@ -175,7 +176,7 @@ func _handles(object):
 	if object is MPath:
 		tools.set_active_object(object)
 		tools.request_show()		
-		gizmo_mpath_gui.visible = true		
+		#gizmo_mpath_gui.visible = true		
 		return true
 	elif gizmo_mpath_gui:
 		gizmo_mpath_gui.visible = false
@@ -202,7 +203,7 @@ func _handles(object):
 		tools.request_show()
 		return true
 	
-	if object is MCurve and  object.get_parent() is MTerrain:
+	if object is MCurveMesh and object.get_parent() is MTerrain:
 		tools.set_active_object(object)
 		tools.request_show()
 		return true
@@ -255,10 +256,8 @@ func _forward_3d_gui_input(viewport_camera, event):
 		else:
 			collision_ray_step = 3
 		tools.set_save_button_disabled(not active_terrain.has_unsave_image())
-		
 	if tools.process_input(event):
 		return AFTER_GUI_INPUT_STOP
-		
 	## Fail paint attempt
 	## returning the stop so terrain will not be unselected
 	#if tools.current_edit_mode == &"paint":		
@@ -274,7 +273,7 @@ func paint_mode_handle(event:InputEvent):
 	if ray_col.is_collided():
 		tools.brush_decal.visible = true
 		tools.brush_decal.set_position(ray_col.get_collision_position())		
-		if tools.stencil_decal.visible:
+		if tools.stencil_decal.is_being_edited:			
 			tools.stencil_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -300,7 +299,7 @@ func paint_mode_handle(event:InputEvent):
 				elif tools.active_object is MNavigationRegion3D:
 					tools.active_object.save_nav_data()
 				elif tools.active_object is MTerrain:
-					pass
+					tools.active_object.save_all_dirty_images()
 		if event.button_mask == MOUSE_BUTTON_LEFT:			
 			var t = Time.get_ticks_msec()
 			var dt = t - last_draw_time			
@@ -328,12 +327,12 @@ func show_import_window():
 		window.init_export(tools.get_active_mterrain())
 
 func show_image_creator_window():	
-	if tools.get_active_mterrain() is MTerrain:
+	if tools.get_active_mterrain() is MTerrain:	
 		var window = preload("res://addons/m_terrain/gui/image_creator_window.tscn").instantiate()
 		add_child(window)
-		window.set_terrain(tools.get_active_mterrain() )
+		window.set_terrain(tools.get_active_mterrain())
 
-func show_info_window(active_terrain:MTerrain):
+func show_info_window(active_terrain:MTerrain = tools.get_active_mterrain()):
 	if is_instance_valid(current_window_info):
 		current_window_info.queue_free()
 	current_window_info = load("res://addons/m_terrain/gui/terrain_info.tscn").instantiate()

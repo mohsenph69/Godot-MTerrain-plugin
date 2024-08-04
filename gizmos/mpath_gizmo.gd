@@ -56,42 +56,47 @@ var is_mouse_init_set:=false
 var active_path:MPath
 
 
-func _init():
-	var ed = EditorScript.new()
-	var interface = ed.get_editor_interface()
-	selection = interface.get_selection()
+func _init():	
+	selection = EditorInterface.get_selection()
+	
 	var line_mat = StandardMaterial3D.new()
 	line_mat.albedo_color = Color(0.3,0.3,1.0)
 	line_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	line_mat.render_priority = 10
 	line_mat.no_depth_test = true
-	var control_line_mat = line_mat.duplicate()
-	control_line_mat.albedo_color = Color(0.5,0.8,1.0)
 	add_material("line_mat",line_mat)
+	
+	var control_line_mat = line_mat.duplicate()
+	control_line_mat.albedo_color = Color(0.5,0.8,1.0)	
+	add_material("control_line_mat",control_line_mat)
+	
 	var selected_lines_mat = line_mat.duplicate()
 	selected_lines_mat.albedo_color = Color(0.2,1.0,0.2)
 	add_material("selected_lines_mat",selected_lines_mat)
-	add_material("control_line_mat",control_line_mat)
+	
 	create_handle_material("points")
 	var hmat = get_material("points")
 	hmat.albedo_texture = handle00_tex
 	hmat.render_priority = 10
 	hmat.no_depth_test = true
 	hmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
 	var controls = hmat.duplicate()
 	add_material("controls",controls)
 	controls.albedo_texture = handle01_tex
+	
 	var active_p_math = get_material("points").duplicate()
 	active_p_math.albedo_color = Color(0.9,0.9,0.1)
 	active_p_math.render_priority = 100
 	active_p_math.no_depth_test = true
 	add_material("active_point",active_p_math)
+	
 	var selected_points_math = active_p_math.duplicate()
 	selected_points_math.albedo_color = Color(1.0,0.2,2)
 	add_material("selected_points",selected_points_math)
 
 
-func _redraw(gizmo: EditorNode3DGizmo) -> void:
+func _redraw(gizmo: EditorNode3DGizmo) -> void:	
 	gizmo.clear()
 	var node:MPath= gizmo.get_node_3d()
 	var curve:MCurve= node.curve
@@ -172,9 +177,6 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 		gizmo.add_handles(secondary_pointss,get_material("controls",gizmo),secondary_ids,false,true)
 	if lines.size() > 2:
 		gizmo.add_lines(lines,get_material("control_line_mat"))
-
-
-
 
 func _get_handle_name(gizmo, handle_id, secondary):
 	if secondary:
@@ -353,7 +355,7 @@ func _get_priority():
 	return 2
 
 func _has_gizmo(for_node_3d):
-	return for_node_3d.is_class("MPath")
+	return for_node_3d is MPath
 
 func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 	if event is InputEventMouseButton:		
@@ -514,7 +516,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 				var new_pos:Vector3
 				var is_new_pos_set = false
 				if gui.is_terrain_snap():
-					if mterrain_plugin.active_terrain.is_grid_created():
+					if mterrain_plugin.tools.get_active_mterrain().is_grid_created():
 						if terrain_col.is_collided():
 							new_pos = terrain_col.get_collision_position()
 							is_new_pos_set = true
@@ -542,18 +544,18 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 				ur.commit_action(false)
 				change_active_point(new_index)
 				mpath.update_gizmos()
-				print("Mpath returning STOP forward gui created point")
+				print("Created point ", new_index, " at ", new_pos )
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 	if event is InputEventMouseMotion:
 		if value_mode == VALUE_MODE.NONE: 
-			print("Mpath returning null forward gui, mouse motion, no mode")
+			#print("Mpath returning null forward gui, mouse motion, no mode")
 			return
 		var curve = find_curve()
 		if not curve: 
-			print("Mpath returning null forward gui, mouse motion no curve")
+			#print("Mpath returning null forward gui, mouse motion no curve")
 			return
 		if not curve.has_point(active_point): 
-			print("Mpath returning null forward gui mouse motion no active point")
+			#print("Mpath returning null forward gui mouse motion no active point")
 			return
 		if not is_mouse_init_set:
 			mouse_init_pos = event.position
@@ -615,7 +617,6 @@ func on_collapse():
 	ur.add_undo_method(curve,"move_point_out",active_point,out_pos)
 	ur.commit_action(true)
 
-
 func set_gui(input:Control):
 	gui = input
 	gui.visibility_changed.connect(gui_visibility_changed)
@@ -651,8 +652,6 @@ func change_active_point(new_active_point:int):
 	gui.tilt_num.set_value_no_signal(curve.get_point_tilt(active_point)*2*PI)
 	gui.scale_num.set_value_no_signal(curve.get_point_scale(active_point))
 
-
-
 func toggle_connection()->bool:
 	var path = find_mpath()
 	if not path: return false
@@ -685,7 +684,6 @@ func connect_points()->bool:
 		path.update_gizmos()
 		return true
 	return false
-
 
 func disconnect_points():
 	var path = find_mpath()

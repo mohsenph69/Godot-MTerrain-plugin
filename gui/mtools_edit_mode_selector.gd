@@ -79,13 +79,14 @@ func init_edit_mode_options(all_mterrain):
 				)
 			if child is MNavigationRegion3D:
 				button = Button.new()
-				button.text = "paint " + child.name
+				button.text = "Paint " + child.name
 				button.mouse_filter = Control.MOUSE_FILTER_PASS
 				item_container.add_child(button)
 				button.pressed.connect(switch_to_mnavigation_paint.bind(child))
 				button.pressed.connect(exit_edit_mode_button.show)
 		
 func switch_to_mnavigation_paint(nav):
+	text = "Paint " + nav.name
 	edit_mode_changed.emit(nav, &"paint")
 
 func change_active_object(object):

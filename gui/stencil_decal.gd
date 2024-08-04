@@ -38,7 +38,7 @@ func set_absolute_terrain_pos(pos:Vector3):
 		active_terrain.set_brush_mask(active_image)
 	else:
 		active_terrain.disable_brush_mask()
-	if not is_fix:
+	if is_being_edited:
 		var angle_pos = pos - angle_offset
 		angle_pos -= active_terrain.offset
 		angle_pos = angle_pos/active_terrain.get_h_scale()
@@ -50,9 +50,6 @@ func set_absolute_terrain_pos(pos:Vector3):
 		desire_position = angle_pos + angle_offset
 		active_terrain.set_brush_mask_px_pos(px_pos)
 		set_process(true)
-
-func toggle_fix():
-	is_fix = not is_fix
 
 func increase_size(amount:int=1):
 	if active_terrain is MTerrain:

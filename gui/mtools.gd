@@ -115,12 +115,16 @@ func _on_mouse_entered_popup() -> void:
 
 #region getters
 func get_active_mterrain():
-	if active_object is MTerrain:
-		return active_object
-	if active_object is MGrass or active_object is MNavigationRegion3D or active_object is MPath:
-		if active_object.get_parent() is MTerrain:
-			return active_object.get_parent()
-	push_warning("no active terrain")
+	var object = active_object
+	if not object:
+		var selection = EditorInterface.get_selection().get_selected_nodes()
+		if selection.size() == 1:
+			object = selection[0]
+	if object is MTerrain:
+		return object
+	if object is MGrass or object is MNavigationRegion3D or object is MPath:
+		if object.get_parent() is MTerrain:
+			return object.get_parent()	
 		
 func get_all_mterrain(parent=EditorInterface.get_edited_scene_root()):	
 	var result = []
@@ -173,7 +177,8 @@ func set_active_object(object):
 
 func process_input(event):
 	if current_edit_mode in [&"sculpt", &"paint"]:
-		if event is InputEventKey:		
+		if event is InputEventKey:			
+			brush_popup_button.process_input(event)
 			var paint_brush_resize_speed:float=1.0
 			var paint_mask_resize_speed:float=1.0
 			const max_paint_brush_resize_speed:float=8.0
@@ -212,9 +217,6 @@ func process_input(event):
 				stencil_decal.rotate_image(1)
 			elif event.keycode == KEY_SEMICOLON and event.pressed:
 				stencil_decal.reset_image_rotation()
-		if event is InputEventMouseButton:
-			if event.button_index == MOUSE_BUTTON_MIDDLE and not event.pressed:
-				stencil_decal.toggle_fix()
 	if active_object is MGrass:
 		status_bar.set_grass_label(active_object.get_count())
 	else:

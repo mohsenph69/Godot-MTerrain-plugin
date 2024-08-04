@@ -176,7 +176,9 @@ func mesh_mode_selected(index:int):
 
 
 func _on_update_info_timer_timeout():
-	var point_count:int = 0
+	var point_count:int = 0	
 	if current_curve:
-		point_count = current_curve.get_points_count()
+		while current_curve.has_point(point_count):
+			point_count+=1
+		#point_count = current_curve.get_points_count()
 	point_count_label.text = "Point count " + str(point_count)

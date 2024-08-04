@@ -8,7 +8,7 @@ var height_brush_id = 0
 
 var last_height_brush_id
 var is_grass_add = true
-var is_color_brush = false
+var brush_mode = &"" # &"sculpt", &"paint", &"grass", &"navigation"
 var active_terrain #used for setting active color brush
 
 var float_prop_element=preload("res://addons/m_terrain/gui/control_prop_element/float.tscn")
@@ -55,6 +55,8 @@ func clear_selected_signals():
 func init_height_brushes(new_brush_manager):		
 	brush_container.clear()	
 	clear_selected_signals()
+	brush_mode = &"sculpt"
+	print("setting brush mode: sculpt")
 	brush_container.item_selected.connect(on_height_brush_select)	
 	height_brush_manager = new_brush_manager
 	smooth_brush_id = height_brush_manager.get_height_brush_id("Smooth")
@@ -133,6 +135,7 @@ func prop_change(prop_name,value):
 func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):	
 	clear_selected_signals()
 	active_terrain = terrain
+	brush_mode = &"paint"
 	if terrain == null:
 		return	
 		
@@ -177,6 +180,7 @@ func brush_layer_selected(index, layer_group):
 
 #region Grass Brushes
 func init_grass_brushes():
+	brush_mode = &"grass"
 	brush_container.clear()		
 	clear_selected_signals()
 	brush_container.item_selected.connect(on_grass_brush_select)
@@ -184,11 +188,13 @@ func init_grass_brushes():
 	brush_container.add_item("Add Grass")
 	brush_container.add_item("Remove Grass")
 	brush_container.select(0)
+	on_grass_brush_select(0)
 
 func on_grass_brush_select(id):
+	icon = null
 	if id==0:
 		is_grass_add = true
-		text = "Add Grass"
+		text = "Add Grass"		
 	else:
 		is_grass_add = false
 		text = "Remove Grass"
@@ -198,6 +204,7 @@ func on_grass_brush_select(id):
 
 #region MNavigation Brushes
 func init_mnavigation_brushes():
+	brush_mode = &"navigation"
 	brush_container.clear()		
 	clear_selected_signals()
 	brush_container.item_selected.connect(on_mnavigation_brush_select)
@@ -218,28 +225,33 @@ func on_mnavigation_brush_select(id):
 
 #region Input
 
-func _input(event):
-	return
-	if event is InputEventKey:
-		if not is_color_brush:
-			last_height_brush_id = brush_container.get_selected_id()
-			if event.keycode == KEY_SHIFT:
-				if event.is_pressed():
-					if not event.echo:
-						height_brush_id = smooth_brush_id
-				else:
-					height_brush_id = last_height_brush_id
-			elif event.keycode == KEY_CTRL:
-				if event.is_pressed():
-					if not event.echo:
-						height_brush_id = to_height_brush_id
-				else:
-					height_brush_id = last_height_brush_id
+func process_input(event):		
+	print("process Input brush")
+	if brush_mode == &"sculpt":
+		print("brushes input processing keys sculpt")
+		last_height_brush_id = height_brush_id
+		if event.keycode == KEY_SHIFT:
+			print("brushes input processing keys shift")
+			if event.is_pressed():
+				if not event.echo:
+					height_brush_id = smooth_brush_id
+					
+			else:
+				height_brush_id = last_height_brush_id
+		elif event.keycode == KEY_CTRL:
+			if event.is_pressed():
+				if not event.echo:
+					height_brush_id = to_height_brush_id
+			else:
+				height_brush_id = last_height_brush_id
+	elif brush_mode == &"grass": 
+		print("process Input color brush")
 		if event.keycode == KEY_SHIFT:
 			if event.is_pressed():
 				if not event.echo:
 					is_grass_add = not is_grass_add
 			else:
 				is_grass_add = not is_grass_add
-
+	else:
+		print("process input brush mode: ", brush_mode)
 #endregion
