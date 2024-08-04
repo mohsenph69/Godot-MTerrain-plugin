@@ -355,14 +355,15 @@ func _get_priority():
 func _has_gizmo(for_node_3d):
 	return for_node_3d.is_class("MPath")
 
-func _forward_3d_gui_input(camera, event, terrain_col:MCollision):	
-	if event is InputEventMouseButton:
-		if event.pressed:
-			if value_mode != VALUE_MODE.NONE:
+func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
+	if event is InputEventMouseButton:		
+		if event.pressed:			
+			if value_mode != VALUE_MODE.NONE:				
 				is_mouse_init_set = false
 				var curve = find_curve()
 				if not curve or not curve.has_point(active_point):
 					value_mode = VALUE_MODE.NONE
+					print("Mpath returning null forward gui")
 					return
 				if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling
 					curve.set_point_scale(active_point,init_scale)
@@ -371,6 +372,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 					gui.scale_num.set_value(init_scale)
 					value_mode = VALUE_MODE.NONE
 					curve.commit_point_update(active_point)
+					print("Mpath returning STOP forward gui, right button cancel")
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
 				if value_mode == VALUE_MODE.TILT:
 					ur.create_action("change tilt")
@@ -390,6 +392,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 					ur.add_undo_method(curve,"commit_point_update",active_point)
 					ur.commit_action(false)
 				value_mode = VALUE_MODE.NONE
+				print("Mpath returning STOP forward gui, left click")
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 	if event is InputEventKey:
 		if event.pressed:
@@ -460,13 +463,15 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 						lock_mode = LOCK_MODE.Z
 						if path: path.update_gizmos()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseButton:
-		if event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:
+	if event is InputEventMouseButton:		
+		if event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:			
 			var mpath = find_mpath()
 			if not mpath:
+				print("Mpath returning null forward gui, no mpath exists")
 				return
 			var curve:MCurve = mpath.curve
 			if not curve:
+				print("Mpath returning null forward gui, no curve exists")
 				return
 			#### Handling Selections
 			var from = camera.project_ray_origin(event.position)
@@ -483,6 +488,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 				else:
 					if pcol == active_point and selected_points.size() == 0:
 						change_active_point(0)
+						print("Mpath returning null forward gui selected points 0")
 						return
 					else:
 						selected_points.clear()
@@ -500,6 +506,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 			if pcol: #### if we have selection then we should stop here and not go into creation stuff
 				mpath.update_gizmos()
 				emit_signal("selection_changed")
+				print("Mpath returning null forward gui selection changed")
 				return
 			if gui.get_mode() == gui.MODE.CREATE:
 				### Here should be adjusted later with MTerrain
@@ -526,6 +533,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 						new_pos = from + to * 4.0
 					new_index = curve.add_point(new_pos,new_pos,new_pos,0)
 				if new_index == 0: ### In case for error
+					print("Mpath returning STOP forward gui, error")
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
 				## Undo Redo
 				ur.create_action("create_point")
@@ -534,12 +542,19 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 				ur.commit_action(false)
 				change_active_point(new_index)
 				mpath.update_gizmos()
+				print("Mpath returning STOP forward gui created point")
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 	if event is InputEventMouseMotion:
-		if value_mode == VALUE_MODE.NONE: return
+		if value_mode == VALUE_MODE.NONE: 
+			print("Mpath returning null forward gui, mouse motion, no mode")
+			return
 		var curve = find_curve()
-		if not curve: return
-		if not curve.has_point(active_point): return
+		if not curve: 
+			print("Mpath returning null forward gui, mouse motion no curve")
+			return
+		if not curve.has_point(active_point): 
+			print("Mpath returning null forward gui mouse motion no active point")
+			return
 		if not is_mouse_init_set:
 			mouse_init_pos = event.position
 			init_scale = curve.get_point_scale(active_point)
@@ -556,9 +571,11 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 			curve.set_point_scale(active_point,new_scale)
 			gui.scale_num.set_value(new_scale)
 		curve.commit_point_update(active_point)
+		print("Mpath returning STOP forward gui, point modified")
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 	if event is InputEventMouseButton:
 		if event.button_mask == MOUSE_BUTTON_LEFT and gui.is_select_lock():
+			print("Mpath returning STOP forward gui, selection locked")
 			return EditorPlugin.AFTER_GUI_INPUT_STOP
 
 

@@ -120,6 +120,7 @@ func get_active_mterrain():
 	if active_object is MGrass or active_object is MNavigationRegion3D or active_object is MPath:
 		if active_object.get_parent() is MTerrain:
 			return active_object.get_parent()
+	push_warning("no active terrain")
 		
 func get_all_mterrain(parent=EditorInterface.get_edited_scene_root()):	
 	var result = []
@@ -161,8 +162,14 @@ func get_all_mpath(root):
 
 func set_active_object(object):	
 	if active_object == object: return	
+	
+	#Cleanup active object stuff before setting new active object
+	if active_object is MNavigationRegion3D:
+		active_object.set_npoints_visible(false)
+	
 	if object is MTerrain or object is MGrass or object is MNavigationRegion3D:
 		edit_mode_button.change_active_object(object)	
+		
 
 func process_input(event):
 	if current_edit_mode in [&"sculpt", &"paint"]:
@@ -296,11 +303,10 @@ func draw(brush_position):
 			active_object.draw_height(brush_position,brush_decal.radius,brush_popup_button.height_brush_id)
 			return true
 		elif current_edit_mode == &"paint":					
-			active_object.draw_color(brush_position,brush_decal.radius,brush_popup_button.color_brush_name,brush_popup_button.color_brush_uniform)
-			print("draw color: ", brush_popup_button.color_brush_uniform)
+			active_object.draw_color(brush_position,brush_decal.radius,brush_popup_button.color_brush_name,brush_popup_button.color_brush_uniform)			
 			return true
 		else:
-			print(current_edit_mode)
+			push_warning("trying to 'draw' on mterrain, but not in sculpt or paint mode")
 	else:
 		print(active_object.name)
 		

@@ -18,6 +18,11 @@
 content_margin_left = 6.0
 bg_color = Color(0, 0.419608, 0, 0.188235)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cwina"]
+content_margin_left = 2.0
+content_margin_right = 2.0
+bg_color = Color(0.576471, 0.619608, 0.6, 0.52549)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_he1tx"]
 content_margin_left = 2.0
 content_margin_right = 2.0
@@ -27,11 +32,6 @@ bg_color = Color(0.85098, 0.4, 0.847059, 0.52549)
 content_margin_left = 2.0
 content_margin_right = 2.0
 bg_color = Color(0, 0.85098, 0.207843, 0.52549)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cwina"]
-content_margin_left = 2.0
-content_margin_right = 2.0
-bg_color = Color(0.576471, 0.619608, 0.6, 0.52549)
 
 [node name="mpath_gizmo_gui" type="Panel"]
 anchors_preset = 10
@@ -75,9 +75,9 @@ layout_mode = 2
 tooltip_text = "Change Mode
 Hot-keys: grave accent(`)"
 theme_override_styles/normal = SubResource("StyleBoxFlat_7loo7")
-selected = 0
 item_count = 2
 popup/item_0/text = "Edit"
+popup/item_0/id = 0
 popup/item_1/text = "Create"
 popup/item_1/id = 1
 
@@ -94,9 +94,9 @@ layout_mode = 2
 tooltip_text = "Toggle Connection
 Hot-key: T"
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 icon = ExtResource("6_a88nf")
 expand_icon = true
 
@@ -107,9 +107,9 @@ tooltip_text = "Connect
 Hot-key: C"
 theme_override_colors/font_color = Color(0.14902, 1, 0.25098, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 icon = ExtResource("7_mbnvb")
 expand_icon = true
 
@@ -120,9 +120,9 @@ tooltip_text = "Disconnect
 Hot-key: X"
 theme_override_colors/font_color = Color(0.717647, 0.952941, 0, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 icon = ExtResource("8_777vd")
 expand_icon = true
 
@@ -133,9 +133,9 @@ tooltip_text = "Remove
 Hot-key: Backspace"
 theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 icon = ExtResource("5_8fq58")
 expand_icon = true
 
@@ -207,18 +207,18 @@ layout_mode = 2
 tooltip_text = "Toggle Connection
 Hot-key: shift+T"
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 text = "Swap"
 
 [node name="sort_increasing" type="Button" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "sort increasing"
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 text = "sort"
 
 [node name="sort_decreasing" type="Button" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
@@ -226,12 +226,9 @@ layout_mode = 2
 tooltip_text = "Toggle Connection
 sort decreasing"
 theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 text = "sort rev"
-
-[node name="HBoxContainer3" type="HBoxContainer" parent="HBoxContainer"]
-layout_mode = 2
 
 [connection signal="pressed" from="HBoxContainer/show_rest" to="." method="_on_show_rest_pressed"]

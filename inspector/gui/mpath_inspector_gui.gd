@@ -2,7 +2,7 @@
 extends Control
 
 
-@onready var point_count_label:=$point_count_lable
+@onready var point_count_label:=$point_count_label
 
 var is_started:=false
 

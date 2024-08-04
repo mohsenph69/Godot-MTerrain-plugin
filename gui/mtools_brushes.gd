@@ -74,8 +74,8 @@ func init_height_brushes(new_brush_manager):
 		if "smooth" in n.to_lower():
 			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/brush_icon_smooth.svg"))
 		if "hole" in n.to_lower():
-			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/brush_icon_hole.svg"))
-	brush_container.select.call_deferred(2)
+			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/brush_icon_hole.svg"))	
+	on_height_brush_select(0)	
 	
 func on_height_brush_select(index):
 	clear_property_element()
@@ -84,6 +84,10 @@ func on_height_brush_select(index):
 	var brush_props = height_brush_manager.get_height_brush_property(height_brush_id)
 	for p in brush_props:
 		create_props(p)
+	text = brush_container.get_item_text(index)
+	set("theme_override_styles/normal", null)
+	icon = brush_container.get_item_icon(index)
+	print("height brush selected")
 
 func create_props(dic:Dictionary):
 	var element

@@ -13,8 +13,8 @@ func _ready():
 	
 	item_container = find_child("edit_mode_item_container")
 	exit_edit_mode_button = get_node("../edit_mode_exit_button")		
-	if not exit_edit_mode_button.pressed.is_connected(edit_mode_changed.emit.bind(null, &"")):
-		exit_edit_mode_button.pressed.connect(edit_mode_changed.emit.bind(null, &""))
+	if not exit_edit_mode_button.pressed.is_connected(exit_edit_mode_button_pressed):
+		exit_edit_mode_button.pressed.connect(exit_edit_mode_button_pressed)
 	if not exit_edit_mode_button.pressed.is_connected(exit_edit_mode_button.hide):	
 		exit_edit_mode_button.pressed.connect(exit_edit_mode_button.hide)
 
@@ -82,12 +82,16 @@ func init_edit_mode_options(all_mterrain):
 				button.text = "paint " + child.name
 				button.mouse_filter = Control.MOUSE_FILTER_PASS
 				item_container.add_child(button)
-				button.pressed.connect(edit_mode_changed.emit.bind(child, &"paint"))
+				button.pressed.connect(switch_to_mnavigation_paint.bind(child))
 				button.pressed.connect(exit_edit_mode_button.show)
 		
-		
+func switch_to_mnavigation_paint(nav):
+	edit_mode_changed.emit(nav, &"paint")
+
 func change_active_object(object):
 	pass
 
+func exit_edit_mode_button_pressed():	
+	edit_mode_changed.emit(null, &"")
 func exit_edit_mode():
 	exit_edit_mode_button.hide()

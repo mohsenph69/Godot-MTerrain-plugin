@@ -441,7 +441,7 @@ custom_minimum_size = Vector2(550, 100)
 layout_mode = 2
 offset_left = -2.0
 offset_top = -100.0
-offset_right = 548.0
+offset_right = 1693.0
 mouse_filter = 1
 
 [node name="scroll_container" type="ScrollContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Panel2"]
@@ -458,6 +458,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 1
+allow_reselect = true
 max_columns = 0
 
 [node name="mask_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
@@ -470,6 +471,7 @@ script = ExtResource("16_h7wnm")
 visible = false
 layout_mode = 1
 offset_top = -160.0
+offset_right = 1695.0
 mouse_filter = 1
 
 [node name="brush_masks" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2" instance=ExtResource("12_x7iwb")]
@@ -509,6 +511,7 @@ script = ExtResource("16_bxaiu")
 visible = false
 layout_mode = 1
 offset_top = -278.0
+offset_right = 1695.0
 mouse_filter = 1
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel"]
