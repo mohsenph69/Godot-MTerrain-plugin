@@ -1,6 +1,33 @@
 @tool
 extends Control
 
+##############################################################
+# 							MTools
+#	1. m_terrain.gd sets mask, decal, human on enter_tree
+#   2. User selects a node
+#	   This calls edit_mode_button.init_edit_mode_options()
+#      This populates the list of possible edit modes.	   
+#	3. User selectes edit mode by clicking on edit_mode_button,
+#	   This calls set_edit_mode()
+#	   This sets the active_object and current_mode  
+#   4. This sets appropriate "layers" (height or paint)
+#	   This sets appropriate "brushes" (height, color, grass, nav)
+#      If mpath, show mpath menu
+#	   If mcurve_mesh, show mcurve_mesh menu
+#   5. m_terrain.gd _forward_gui_input() calls the draw() when needed
+#
+#	NOTE: "popup" panels are just panels. 
+#   They appear on button click and we use mouse_exit to hide them. 
+#   We use timer to add a delay to prevent accidents
+#
+#   The popup buttons are also the main scripts for that function
+#   e.g. layers_popup_button has all the code to do with layers
+#	e.g. brush_popup_button has all the code to do with brushes
+#
+###############################################################
+
+
+
 #region Signals
 signal request_save
 signal request_info_window
@@ -11,7 +38,7 @@ signal edit_mode_changed
 
 #region UI Controls
 @onready var status_bar: Control = find_child("status_bar")
-@onready var save_button: Control = find_child("save_button")
+#@onready var save_button: Control = find_child("save_button") #TO DELETE
 @onready var paint_panel: Control = find_child("paint_panel")
 
 @onready var options_popup_button: Button = find_child("options_button")
@@ -23,7 +50,6 @@ signal edit_mode_changed
 
 @onready var mpath_gizmo_gui = find_child("mpath_gizmo_gui")
 @onready var mcurve_mesh = find_child("mpath_gizmo_gui")
-
 
 @onready var brush_size_control: Control = find_child("brush_size")
 
@@ -40,13 +66,13 @@ var current_popup_button: Button = null
 var timer
 #endregion
 
-var current_edit_mode = ""
+var current_edit_mode = &"" # &"", &"sculpt", &"paint"
 var active_object = null
 
 var brush_manager:MBrushManager = MBrushManager.new()
-var brush_decal
-var mask_decal
-var human_male
+var brush_decal # set by m_terrain.gd on enter_tree()
+var mask_decal # set by m_terrain.gd on enter_tree()
+var human_male # set by m_terrain.gd on enter_tree()
 
 #region Initialisations
 func _ready():	
@@ -121,9 +147,13 @@ func get_active_mterrain():
 			object = selection[0]
 	if object is MTerrain:
 		return object
-	if object is MGrass or object is MNavigationRegion3D or object is MPath:
+	if object is MGrass or object is MNavigationRegion3D or object:
 		if object.get_parent() is MTerrain:
 			return object.get_parent()	
+	if object is MPath or object is MCurveMesh:
+		var all_mterrain = get_all_mterrain()
+		if all_mterrain.size()>0:
+			return all_mterrain[0]
 		
 func get_all_mterrain(parent=EditorInterface.get_edited_scene_root()):	
 	var result = []
@@ -328,6 +358,7 @@ func _on_human_male_toggled(button_pressed):
 #func set_save_button_disabled(disabled:bool):
 #	save_button.disabled = disabled
 
+#To do: remove this function
 func _on_save_pressed():
 	var active_terrain = get_active_mterrain()
 	if active_terrain:

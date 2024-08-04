@@ -9,7 +9,7 @@ var exit_edit_mode_button
 func _ready():
 	var panel = get_child(0)
 	panel.visible = false
-	panel.position.y = -panel.size.y
+	panel.position.y = -panel.size.y -4
 	
 	item_container = find_child("edit_mode_item_container")
 	exit_edit_mode_button = get_node("../edit_mode_exit_button")		
@@ -98,14 +98,18 @@ func init_edit_mode_options(all_mterrain):
 				button.pressed.connect(switch_to_mnavigation_paint.bind(child))
 				button.pressed.connect(exit_edit_mode_button.show)
 	get_child(0).size. x = biggest_button_size + 12	
+	
 func switch_to_mnavigation_paint(nav):
 	text = "Paint " + nav.name
 	edit_mode_changed.emit(nav, &"paint")
 
 func change_active_object(object):
-	pass
+	#In future, make it auto-switch to the same edit mode, just for different object
+	exit_edit_mode_button_pressed()
+	exit_edit_mode()
 
 func exit_edit_mode_button_pressed():	
 	edit_mode_changed.emit(null, &"")
+	
 func exit_edit_mode():
 	exit_edit_mode_button.hide()
