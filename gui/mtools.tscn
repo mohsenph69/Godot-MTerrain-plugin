@@ -330,19 +330,27 @@ clip_contents = true
 layout_mode = 1
 offset_left = -6.0
 offset_top = -197.0
-offset_right = 229.0
+offset_right = 466.0
 mouse_filter = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Panel/hbox/PaintControls/edit_mode_button/Panel2"]
+[node name="MarginContainer" type="MarginContainer" parent="Panel/hbox/PaintControls/edit_mode_button/Panel2"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-size_flags_vertical = 3
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
 
-[node name="edit_mode_item_container" type="VBoxContainer" parent="Panel/hbox/PaintControls/edit_mode_button/Panel2/ScrollContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/hbox/PaintControls/edit_mode_button/Panel2/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="edit_mode_item_container" type="VBoxContainer" parent="Panel/hbox/PaintControls/edit_mode_button/Panel2/MarginContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -441,7 +449,7 @@ custom_minimum_size = Vector2(550, 100)
 layout_mode = 2
 offset_left = -2.0
 offset_top = -100.0
-offset_right = 548.0
+offset_right = 1605.0
 mouse_filter = 1
 
 [node name="scroll_container" type="ScrollContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Panel2"]
@@ -470,15 +478,68 @@ script = ExtResource("16_h7wnm")
 [node name="Panel2" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/mask_button"]
 visible = false
 layout_mode = 1
-offset_top = -160.0
+offset_top = -236.0
+offset_right = 1607.0
 mouse_filter = 1
 
-[node name="brush_masks" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2" instance=ExtResource("12_x7iwb")]
-layout_mode = 2
-anchors_preset = 0
-anchor_right = 0.0
-offset_right = 651.0
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
 grow_vertical = 2
+
+[node name="mask_cutoff" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+script = ExtResource("18_vmcc8")
+
+[node name="VSlider" type="VSlider" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_cutoff"]
+layout_mode = 2
+size_flags_horizontal = 1
+size_flags_vertical = 3
+mouse_filter = 1
+max_value = 500.0
+step = 0.1
+value = 50.0
+
+[node name="LineEdit" type="LineEdit" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_cutoff"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+mouse_filter = 1
+theme_override_constants/minimum_character_width = 0
+text = "21.5"
+middle_mouse_paste_enabled = false
+
+[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_cutoff"]
+layout_mode = 2
+text = "mask
+cutoff"
+horizontal_alignment = 1
+
+[node name="invert_mask" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
+layout_mode = 2
+
+[node name="invert_mask_button" type="TextureButton" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/invert_mask"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 1
+toggle_mode = true
+texture_normal = ExtResource("20_8anom")
+texture_pressed = ExtResource("21_lodvs")
+ignore_texture_size = true
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/invert_mask"]
+layout_mode = 2
+text = "invert
+mask"
+horizontal_alignment = 1
+
+[node name="brush_masks" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer" instance=ExtResource("12_x7iwb")]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 1
@@ -487,15 +548,8 @@ fixed_column_width = 100
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 
-[node name="HScrollBar" type="HScrollBar" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2"]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -8.0
-grow_horizontal = 2
-grow_vertical = 0
+[node name="HScrollBar" type="HScrollBar" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
+layout_mode = 2
 mouse_filter = 1
 
 [node name="brush_settings_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
@@ -510,6 +564,7 @@ script = ExtResource("16_bxaiu")
 visible = false
 layout_mode = 1
 offset_top = -278.0
+offset_right = 1607.0
 mouse_filter = 1
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel"]
@@ -546,53 +601,6 @@ middle_mouse_paste_enabled = false
 layout_mode = 2
 text = "brush
 size"
-horizontal_alignment = 1
-
-[node name="mask_cutoff" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2"]
-custom_minimum_size = Vector2(50, 0)
-layout_mode = 2
-script = ExtResource("18_vmcc8")
-
-[node name="VSlider" type="VSlider" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/mask_cutoff"]
-layout_mode = 2
-size_flags_horizontal = 1
-size_flags_vertical = 3
-mouse_filter = 1
-max_value = 500.0
-step = 0.1
-value = 50.0
-
-[node name="LineEdit" type="LineEdit" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/mask_cutoff"]
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-mouse_filter = 1
-theme_override_constants/minimum_character_width = 0
-text = "21.5"
-middle_mouse_paste_enabled = false
-
-[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/mask_cutoff"]
-layout_mode = 2
-text = "mask
-cutoff"
-horizontal_alignment = 1
-
-[node name="VBoxContainer2" type="VBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2"]
-layout_mode = 2
-
-[node name="invert_mask_button" type="TextureButton" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/VBoxContainer2"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-size_flags_vertical = 3
-toggle_mode = true
-texture_normal = ExtResource("20_8anom")
-texture_pressed = ExtResource("21_lodvs")
-ignore_texture_size = true
-stretch_mode = 3
-
-[node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2/VBoxContainer2"]
-layout_mode = 2
-text = "invert
-mask"
 horizontal_alignment = 1
 
 [node name="brush_settings" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/brush_settings_button/Panel/HBoxContainer2"]

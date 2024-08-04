@@ -30,9 +30,36 @@ var mcurve_mesh_gui
 
 var inspector_mpath
 
-#region keyboard shortcuts
+#region keyboard actions
 const keyboard_actions = [
-		{"name": "toggle_mpath_mode", "keycode": KEY_QUOTELEFT, "pressed": true}
+		{"name": "mterrain_brush_size_increase", "keycode": KEY_BRACKETRIGHT, "pressed": true},
+		{"name": "mterrain_brush_size_decrease", "keycode": KEY_BRACKETLEFT, "pressed": true},
+		{"name": "mterrain_mask_size_increase", "keycode": KEY_PERIOD, "pressed": true},
+		{"name": "mterrain_mask_size_decrease", "keycode": KEY_COMMA, "pressed": true},
+		{"name": "mterrain_mask_rotate_clockwise", "keycode": KEY_L, "pressed": true},
+		{"name": "mterrain_mask_rotate_counter_clockwise", "keycode": KEY_K, "pressed": true},
+		{"name": "mterrain_mask_rotation_reset", "keycode": KEY_SEMICOLON, "pressed": true},
+
+		{"name": "mpath_toggle_mode", "keycode": KEY_QUOTELEFT, "pressed": true},
+		{"name": "mpath_toggle_mirror", "keycode": KEY_M, "pressed": true},
+		{"name": "mpath_toggle_mirror_length", "keycode": KEY_L, "pressed": true},
+		
+		{"name": "mpath_validate", "keycode": KEY_P, "pressed": true},
+		{"name": "mpath_select_linked", "keycode": KEY_L, "pressed": true},
+		{"name": "mpath_swap_points", "keycode": KEY_T, "pressed": true, "shift": true},
+		{"name": "mpath_toggle_connection", "keycode": KEY_T, "pressed": true},
+		{"name": "mpath_remove_point", "keycode": KEY_BACKSPACE, "pressed": true},
+		{"name": "mpath_disconnect_point", "keycode": KEY_X, "pressed": true},
+		{"name": "mpath_connect_point", "keycode": KEY_C, "pressed": true},
+		{"name": "mpath_tilt_mode", "keycode": KEY_R, "pressed": true},
+		{"name": "mpath_scale_mode", "keycode": KEY_K, "pressed": true},
+		{"name": "mpath_lock_zy", "keycode": KEY_X, "pressed": true, "shift": true},
+		{"name": "mpath_lock_xz", "keycode": KEY_Y, "pressed": true, "shift": true},
+		{"name": "mpath_lock_xy", "keycode": KEY_Z, "pressed": true, "shift": true},
+		{"name": "mpath_lock_x", "keycode": KEY_X, "pressed": true},
+		{"name": "mpath_lock_y", "keycode": KEY_Y, "pressed": true},
+		{"name": "mpath_lock_z", "keycode": KEY_Z, "pressed": true},
+
 ]
 const setting_path = 'addons/MTerrain/keymap/'
 
@@ -43,9 +70,11 @@ func add_keymap():
 			var a = InputEventKey.new()
 			a.keycode = action.keycode
 			a.pressed = action.pressed
+			if "shift" in action.keys():
+				a.shift_pressed = action.shift				
 			ProjectSettings.set_setting(path, [a])
 		var events = ProjectSettings.get_setting(path)
-		if not InputMap.has_action(action.name):
+		if not InputMap.has_action(action.name):			
 			InputMap.add_action(action.name)
 		for e in events:
 			InputMap.action_add_event(action.name, e)
@@ -57,44 +86,42 @@ func remove_keymap():
 
 #region init and de-init
 func _enter_tree():		
-	if Engine.is_editor_hint():
-		add_keymap()		
+	if Engine.is_editor_hint():		
+		var main_screen = EditorInterface.get_editor_main_screen()											
 		main_screen_changed.connect(_on_main_screen_changed)		
-													
-		add_tool_menu_item("MTerrain import/export", show_import_window)
-		add_tool_menu_item("MTerrain image create/remove", show_image_creator_window)
+	
+		#add_tool_menu_item("MTerrain import/export", show_import_window)
+		#add_tool_menu_item("MTerrain image create/remove", show_image_creator_window)
 		
 		tools = preload("res://addons/m_terrain/gui/mtools.tscn").instantiate()		
 		tools.request_info_window.connect(show_info_window)
 		tools.request_import_window.connect(show_import_window)
 		tools.request_image_creator.connect(show_image_creator_window)
 		tools.edit_mode_changed.connect(select_object)		
-		var main_screen = EditorInterface.get_editor_main_screen()
 		main_screen.add_child(tools)
 		get_tree().node_added.connect(tools.on_node_modified)
 		get_tree().node_renamed.connect(tools.on_node_modified)
 		get_tree().node_removed.connect(tools.on_node_modified)
 		
-		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
-		
-		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
-		tsnap.pressed.connect(tsnap_pressed)
-		tsnap.visible = false
-		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)		
-		
 		tools.set_brush_decal( preload("res://addons/m_terrain/gui/brush_decal.tscn").instantiate()	)
 		main_screen.add_child(tools.brush_decal)
-		tools.brush_decal.visible = false
 		
-		tools.set_stencil( load("res://addons/m_terrain/gui/stencil_decal.tscn").instantiate() )
-		main_screen.add_child(tools.stencil_decal)
-		tools.stencil_decal.visible = false
+		tools.set_mask_decal( load("res://addons/m_terrain/gui/mask_decal.tscn").instantiate() )
+		main_screen.add_child(tools.mask_decal)
 		
 		tools.human_male = load("res://addons/m_terrain/gui/human_male.tscn").instantiate()
 		main_screen.add_child(tools.human_male)
 		tools.human_male.visible = false
 		
 		MTool.enable_editor_plugin()
+		
+		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
+		
+		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
+		tsnap.pressed.connect(tsnap_pressed)
+		tsnap.visible = false
+		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)				
+				
 		###### GIZMO
 		gizmo_moctmesh = load("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
 		gizmo_mpath = load("res://addons/m_terrain/gizmos/mpath_gizmo.gd").new()
@@ -110,6 +137,8 @@ func _enter_tree():
 		inspector_mpath.gizmo = gizmo_mpath
 		add_inspector_plugin(inspector_mpath)
 		
+		add_keymap()		
+		
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
 	EditorInterface.set_main_screen_editor("3D")
@@ -120,7 +149,7 @@ func _exit_tree():
 		remove_tool_menu_item("MTerrain import/export")
 		remove_tool_menu_item("MTerrain image create/remove")		
 		tools.brush_decal.queue_free()
-		tools.stencil_decal.queue_free()		
+		tools.mask_decal.queue_free()		
 		tsnap.queue_free()
 		tools.human_male.queue_free()
 		
@@ -143,8 +172,7 @@ func _on_main_screen_changed(screen_name):
 	selection_changed()	
 
 #select_object is called when tools changes edit mode
-func select_object(object, mode):
-	print("select object is called")
+func select_object(object, mode):	
 	EditorInterface.get_selection().clear()
 	EditorInterface.get_selection().add_node(object)
 
@@ -255,7 +283,7 @@ func _forward_3d_gui_input(viewport_camera, event):
 			collision_ray_step = (col_dis + 50)/100
 		else:
 			collision_ray_step = 3
-		tools.set_save_button_disabled(not active_terrain.has_unsave_image())
+		#tools.set_save_button_disabled(not active_terrain.has_unsave_image())
 	if tools.process_input(event):
 		return AFTER_GUI_INPUT_STOP
 	## Fail paint attempt
@@ -273,8 +301,8 @@ func paint_mode_handle(event:InputEvent):
 	if ray_col.is_collided():
 		tools.brush_decal.visible = true
 		tools.brush_decal.set_position(ray_col.get_collision_position())		
-		if tools.stencil_decal.is_being_edited:			
-			tools.stencil_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
+		if tools.mask_decal.is_being_edited:			
+			tools.mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				if tools.active_object is MGrass:
@@ -292,8 +320,8 @@ func paint_mode_handle(event:InputEvent):
 					get_undo_redo().add_undo_method(tools.active_object,"images_undo")
 					get_undo_redo().commit_action(false)
 			else:
-				if tools.stencil_decal.is_being_edited:
-					tools.stencil_decal.is_being_edited = false
+				if tools.mask_decal.is_being_edited:
+					tools.mask_decal.is_being_edited = false
 				elif tools.active_object is MGrass:
 					tools.active_object.save_grass_data()
 				elif tools.active_object is MNavigationRegion3D:
@@ -309,7 +337,7 @@ func paint_mode_handle(event:InputEvent):
 			
 	else:
 		tools.brush_decal.visible = false
-		tools.stencil_decal.visible = false
+		tools.mask_decal.visible = false
 		return AFTER_GUI_INPUT_PASS
 
 

@@ -8,20 +8,15 @@ var active_terrain
 @onready var mask_invert:BaseButton = find_child("invert_mask_button")
 
 func _ready():
-	mask_cutoff_control.value_changed.connect(update_mask_cutoff)	
-	mask_invert.toggled.connect(func(toggled): brush_mask_controller.invert_selected_image())
-	#mask_reverse.toggled.connect(??)
 	var panel = get_child(0)
 	panel.visible = false
 	panel.position.y = -panel.size.y
 	panel.size.x = get_viewport().size.x - global_position.x
 		
-func update_mask_cutoff(value):
-	active_terrain.set_mask_cutoff(value)		
-	
-func update_mask_hardness(value):
-	pass
+func init_mask_settings():
+	mask_cutoff_control.value_changed.connect(update_mask_cutoff)	
+	mask_invert.toggled.connect(func(toggled): brush_mask_controller.invert_selected_image())
 
-func update_mask_amount(value):
-	pass	
-	
+func update_mask_cutoff(value):
+	print("setting mask cutofff")
+	active_terrain.set_mask_cutoff(value)		

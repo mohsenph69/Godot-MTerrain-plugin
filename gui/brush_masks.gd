@@ -4,7 +4,7 @@ extends ItemList
 const brush_masks_dir:String = "res://addons/m_terrain/brush_masks/"
 const allowed_extension:PackedStringArray = ["jpg","jpeg","png","exr","bmp","dds","hdr","tga","svg","webp"]
 
-var stencil = null
+var mask = null
 
 var is_loaded := false
 var current_selected_index:int=-1
@@ -15,8 +15,8 @@ var textures:Array
 func _ready():
 	clear()
 
-func load_images(_stencil):
-	stencil = _stencil
+func load_images(mask_decal):
+	mask = mask_decal
 	if is_loaded: return
 	clear()
 	add_item("NULL")
@@ -49,7 +49,7 @@ func load_images(_stencil):
 		add_item("",tex)
 	is_loaded = true
 	if images.size() > 0:
-		stencil.set_mask(null,null)
+		mask.set_mask(null,null)
 
 func get_image():
 	if images.size() == 0 : return -1
@@ -61,13 +61,14 @@ func get_texture():
 
 func _on_item_selected(index):
 	if index == 0:
-		stencil.set_mask(null,null)
+		mask.set_mask(null,null)
 		current_selected_index = -1
 		return
 	current_selected_index = index - 1
-	stencil.set_mask(images[current_selected_index],textures[current_selected_index])
+	mask.set_mask(images[current_selected_index],textures[current_selected_index])
 
 func invert_selected_image():
+	print("inverting image")
 	if current_selected_index == -1:return
 	var img:Image= images[current_selected_index]
 	for j in range(img.get_height()):
@@ -77,4 +78,4 @@ func invert_selected_image():
 			img.set_pixel(i,j,Color(val,0,0,1))
 	textures[current_selected_index] = ImageTexture.create_from_image(img)
 	set_item_icon(current_selected_index+1,textures[current_selected_index])
-	stencil.set_mask(images[current_selected_index],textures[current_selected_index])
+	mask.set_mask(images[current_selected_index],textures[current_selected_index])

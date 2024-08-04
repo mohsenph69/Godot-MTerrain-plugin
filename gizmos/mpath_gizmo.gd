@@ -398,13 +398,15 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 	if event is InputEventKey:
 		if event.pressed:
-			if event.keycode == KEY_P:
+			#if event.keycode == KEY_P:
+			if Input.is_action_just_pressed("mpath_validate"):
 				print("validating ",selected_connections.size())
 				var curve:MCurve = find_curve()
 				#for c in selected_connections:
 				#	curve.validate_conn(c)
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_L:
+			#if event.keycode == KEY_L:
+			if Input.is_action_just_pressed("mpath_select_linked"):			
 				var path:MPath = find_mpath()
 				if path:
 					var curve:MCurve = path.curve
@@ -415,28 +417,35 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 						selected_connections = curve.get_conn_ids_exist(pp)
 						path.update_gizmos()
 						return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_T:
-				if Input.is_key_pressed(KEY_SHIFT):
-					swap_points()
+			#if event.keycode == KEY_T and Input.is_key_pressed(KEY_SHIFT):
+			if Input.is_action_just_pressed("mpath_swap_points"):			
+				swap_points()
+				return EditorPlugin.AFTER_GUI_INPUT_STOP
+			#if event.keycode == KEY_T and not Input.is_key_pressed(KEY_SHIFT):
+			if Input.is_action_just_pressed("mpath_toggle_connection"):			
+				if toggle_connection():
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
-				elif toggle_connection():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			elif  event.keycode == KEY_BACKSPACE:
+			#elif  event.keycode == KEY_BACKSPACE:
+			if Input.is_action_just_pressed("mpath_remove_point"):
 				if remove_point():
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			elif  event.keycode == KEY_X:
+			#elif  event.keycode == KEY_X:
+			if Input.is_action_just_pressed("mpath_disconnect_point"):			
 				if disconnect_points():
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			elif  event.keycode == KEY_C:
+			#elif event.keycode == KEY_C:
+			if Input.is_action_just_pressed("mpath_connect_point"):						
 				if connect_points():
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_R:
+			#if event.keycode == KEY_R:
+			if Input.is_action_just_pressed("mpath_tilt_mode"):									
 				var curve = find_curve()
 				if curve and curve.has_point(active_point):
 					init_tilt = curve.get_point_tilt(active_point)
 					value_mode = VALUE_MODE.TILT
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_K:
+#			if event.keycode == KEY_K:
+			if Input.is_action_just_pressed("mpath_scale_mode"):						
 				var curve = find_curve()
 				if curve and curve.has_point(active_point):
 					init_scale = curve.get_point_scale(active_point)
@@ -444,26 +453,26 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 					return EditorPlugin.AFTER_GUI_INPUT_STOP
 			if is_handle_setting:
 				var path:MPath = find_mpath()
-				if Input.is_key_pressed(KEY_SHIFT):
-					if event.keycode == KEY_X:
-						lock_mode = LOCK_MODE.ZY
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Y:
-						lock_mode = LOCK_MODE.XZ
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Z:
-						lock_mode = LOCK_MODE.XY
-						if path: path.update_gizmos()
-				else:
-					if event.keycode == KEY_X:
-						lock_mode = LOCK_MODE.X
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Y:
-						lock_mode = LOCK_MODE.Y
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Z:
-						lock_mode = LOCK_MODE.Z
-						if path: path.update_gizmos()
+				#shift x
+				if Input.is_action_just_pressed("mpath_lock_zy"):
+					lock_mode = LOCK_MODE.ZY
+					if path: path.update_gizmos()
+				#shift y
+				if Input.is_action_just_pressed("mpath_lock_xz"):
+					lock_mode = LOCK_MODE.XZ
+					if path: path.update_gizmos()
+				if Input.is_action_just_pressed("mpath_lock_xy"):					
+					lock_mode = LOCK_MODE.XY
+					if path: path.update_gizmos()
+				if Input.is_action_just_pressed("mpath_lock_x"):
+					lock_mode = LOCK_MODE.X
+					if path: path.update_gizmos()
+				if Input.is_action_just_pressed("mpath_lock_y"):			
+					lock_mode = LOCK_MODE.Y
+					if path: path.update_gizmos()
+				if Input.is_action_just_pressed("mpath_lock_z"):
+					lock_mode = LOCK_MODE.Z
+					if path: path.update_gizmos()
 				return EditorPlugin.AFTER_GUI_INPUT_STOP
 	if event is InputEventMouseButton:		
 		if event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:			

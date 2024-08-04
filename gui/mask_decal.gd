@@ -55,7 +55,7 @@ func increase_size(amount:int=1):
 	if active_terrain is MTerrain:
 		change_size(amount)
 	else:
-		push_error("trying to set mterrain stencil size, but stencil has no active_terrain")
+		push_error("trying to set mterrain mask size, but mask has no active_terrain")
 
 func change_size(amount:float):
 	if is_fix: return

@@ -24,20 +24,25 @@ func init_edit_mode_options(all_mterrain):
 	for child in item_container.get_children():
 		child.queue_free()
 	
+	var biggest_button_size = 0
+	var button_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	for terrain in all_mterrain:			
 		var button = Button.new()
-		button.text = "Sculpt " + terrain.name
+		button.text = "Sculpt " + terrain.name		
 		button.mouse_filter = Control.MOUSE_FILTER_PASS
+		button.alignment = button_alignment
 		#button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		#button.custom_minimum_size.y = 32
 		item_container.add_child(button)
+		biggest_button_size = max(biggest_button_size, button.size.x)
 		button.pressed.connect(func():
 			edit_mode_changed.emit(terrain, &"sculpt")
 			exit_edit_mode_button.show()
 			text = "Sculpt " + terrain.name
 		)		
 		
-		button = Button.new()
+		button = Button.new()		
+		button.alignment = button_alignment
 		button.text = "Paint " + terrain.name
 		button.mouse_filter = Control.MOUSE_FILTER_PASS
 		item_container.add_child(button)
@@ -49,9 +54,11 @@ func init_edit_mode_options(all_mterrain):
 		for child in terrain.get_children():
 			if child is MGrass:
 				button = Button.new()
-				button.text = "Paint " + child.name
+				button.text = "Paint " + child.name				
 				button.mouse_filter = Control.MOUSE_FILTER_PASS
+				button.alignment = button_alignment
 				item_container.add_child(button)
+				biggest_button_size = max(biggest_button_size, button.size.x)
 				button.pressed.connect(func():
 					edit_mode_changed.emit(child, &"paint")
 					exit_edit_mode_button.show()
@@ -59,9 +66,11 @@ func init_edit_mode_options(all_mterrain):
 				)
 			if child is MPath:
 				button = Button.new()
-				button.text = "Edit " + child.name
+				button.text = "Edit " + child.name				
 				button.mouse_filter = Control.MOUSE_FILTER_PASS
+				button.alignment = button_alignment
 				item_container.add_child(button)
+				biggest_button_size = max(biggest_button_size, button.size.x)
 				button.pressed.connect(func():
 					edit_mode_changed.emit(child, &"mpath")
 					exit_edit_mode_button.show()
@@ -69,9 +78,11 @@ func init_edit_mode_options(all_mterrain):
 				)
 			if child is MCurveMesh:
 				button = Button.new()
-				button.text = "Edit " + child.name
+				button.text = "Edit " + child.name				
 				button.mouse_filter = Control.MOUSE_FILTER_PASS
+				button.alignment = button_alignment
 				item_container.add_child(button)
+				biggest_button_size = max(biggest_button_size, button.size.x)
 				button.pressed.connect(func():
 					edit_mode_changed.emit(child, &"mcurve_mesh")
 					exit_edit_mode_button.show()
@@ -79,12 +90,14 @@ func init_edit_mode_options(all_mterrain):
 				)
 			if child is MNavigationRegion3D:
 				button = Button.new()
-				button.text = "Paint " + child.name
+				button.text = "Paint " + child.name				
 				button.mouse_filter = Control.MOUSE_FILTER_PASS
+				button.alignment = button_alignment
 				item_container.add_child(button)
+				biggest_button_size = max(biggest_button_size, button.size.x)
 				button.pressed.connect(switch_to_mnavigation_paint.bind(child))
 				button.pressed.connect(exit_edit_mode_button.show)
-		
+	get_child(0).size. x = biggest_button_size + 12	
 func switch_to_mnavigation_paint(nav):
 	text = "Paint " + nav.name
 	edit_mode_changed.emit(nav, &"paint")

@@ -46,15 +46,16 @@ func _ready():
 func _toggled(toggled_on):
 	if toggled_on:
 		get_child(0).size.x = get_viewport().size.x - global_position.x
-
-func clear_selected_signals():
+ 
+func clear_brushes():
+	brush_container.clear()	
+	clear_property_element()
 	for connection in brush_container.get_signal_connection_list("item_selected"):
-		connection.signal.disconnect(connection.callable)	 
+		connection.signal.disconnect(connection.callable)	
 
 #region Height Brushes
 func init_height_brushes(new_brush_manager):		
-	brush_container.clear()	
-	clear_selected_signals()
+	clear_brushes()	
 	brush_mode = &"sculpt"
 	print("setting brush mode: sculpt")
 	brush_container.item_selected.connect(on_height_brush_select)	
@@ -133,7 +134,7 @@ func prop_change(prop_name,value):
 
 #region Color Brushes
 func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):	
-	clear_selected_signals()
+	clear_brushes()
 	active_terrain = terrain
 	brush_mode = &"paint"
 	if terrain == null:
@@ -180,9 +181,9 @@ func brush_layer_selected(index, layer_group):
 
 #region Grass Brushes
 func init_grass_brushes():
-	brush_mode = &"grass"
-	brush_container.clear()		
-	clear_selected_signals()
+	clear_brushes()
+	
+	brush_mode = &"grass"	
 	brush_container.item_selected.connect(on_grass_brush_select)
 		
 	brush_container.add_item("Add Grass")
@@ -204,9 +205,9 @@ func on_grass_brush_select(id):
 
 #region MNavigation Brushes
 func init_mnavigation_brushes():
+	clear_brushes()
+	
 	brush_mode = &"navigation"
-	brush_container.clear()		
-	clear_selected_signals()
 	brush_container.item_selected.connect(on_mnavigation_brush_select)
 		
 	brush_container.add_item("Add Navigation")
@@ -226,9 +227,7 @@ func on_mnavigation_brush_select(id):
 #region Input
 
 func process_input(event):		
-	print("process Input brush")
-	if brush_mode == &"sculpt":
-		print("brushes input processing keys sculpt")
+	if brush_mode == &"sculpt":		
 		last_height_brush_id = height_brush_id
 		if event.keycode == KEY_SHIFT:
 			print("brushes input processing keys shift")
@@ -244,14 +243,15 @@ func process_input(event):
 					height_brush_id = to_height_brush_id
 			else:
 				height_brush_id = last_height_brush_id
-	elif brush_mode == &"grass": 
-		print("process Input color brush")
+	elif brush_mode == &"paint":
+		#to do: add remove paint?
+		pass
+	
+	elif brush_mode == &"grass": 		
 		if event.keycode == KEY_SHIFT:
 			if event.is_pressed():
 				if not event.echo:
 					is_grass_add = not is_grass_add
 			else:
-				is_grass_add = not is_grass_add
-	else:
-		print("process input brush mode: ", brush_mode)
+				is_grass_add = not is_grass_add	
 #endregion

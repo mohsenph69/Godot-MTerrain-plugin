@@ -28,6 +28,7 @@ signal edit_mode_changed
 
 @onready var brush_size_control: Control = find_child("brush_size")
 
+
 @onready var popup_buttons = [
 	edit_mode_button,
 	options_popup_button,
@@ -46,7 +47,7 @@ var active_object = null
 
 var brush_manager:MBrushManager = MBrushManager.new()
 var brush_decal
-var stencil_decal
+var mask_decal
 var human_male
 
 #region Initialisations
@@ -63,12 +64,13 @@ func _ready():
 
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
+	brush_decal.visible = false
 	brush_size_control.value_changed.connect(brush_decal.set_brush_size)			
 
-func set_stencil(new_stencil):
-	stencil_decal = new_stencil
-	mask_popup_button.init_masks(stencil_decal)		
-	#brush_size_control.value_changed.connect(stencil_decal.set_brush_size)		
+func set_mask_decal(new_mask):
+	mask_decal = new_mask
+	mask_decal.visible = false
+	mask_popup_button.init_masks(mask_decal, find_child("mask_cutoff"), find_child("invert_mask_button"))			
 
 func on_node_modified(node):	
 	if node is MTerrain or node is MGrass or node is MPath:
@@ -183,40 +185,41 @@ func process_input(event):
 			var paint_mask_resize_speed:float=1.0
 			const max_paint_brush_resize_speed:float=8.0
 			const max_mask_brush_resize_speed:float=16.0		
-			if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
-				if event.is_pressed():
-					paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
-					brush_decal.set_brush_size(brush_decal.get_brush_size() + floor(paint_brush_resize_speed))
-					brush_size_control.update_value(brush_decal.get_brush_size())
-					return true
-				else:
-					paint_brush_resize_speed=1
-			elif event.keycode == KEY_MINUS:
-				if event.is_pressed():
-					paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
-					brush_decal.set_brush_size(brush_decal.get_brush_size() - floor(paint_brush_resize_speed))
-					brush_size_control.update_value(brush_decal.get_brush_size())
-					return true
-				else:
-					paint_brush_resize_speed=1
-			elif event.keycode == KEY_COMMA:
+			
+			if Input.is_action_just_released("mterrain_mask_size_increase") or Input.is_action_just_released("mterrain_mask_size_decrease"):
+				paint_mask_resize_speed=1
+			if Input.is_action_just_released("mterrain_brush_size_increase") or Input.is_action_just_pressed("mterrain_brush_size_decrease"):
+				paint_brush_resize_speed=1				
+			#if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
+			if Input.is_action_just_pressed("mterrain_brush_size_increase"):				
+				paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
+				brush_decal.set_brush_size(brush_decal.get_brush_size() + floor(paint_brush_resize_speed))
+				brush_size_control.update_value(brush_decal.get_brush_size())
+				return true					
+			#elif event.keycode == KEY_MINUS:
+			elif Input.is_action_just_pressed("mterrain_brush_size_decrease"):				
+				paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
+				brush_decal.set_brush_size(brush_decal.get_brush_size() - floor(paint_brush_resize_speed))
+				brush_size_control.update_value(brush_decal.get_brush_size())
+				return true					
+			#elif event.keycode == KEY_PERIOD:
+			elif Input.is_action_pressed("mterrain_mask_size_increase"):				
+				paint_mask_resize_speed = min(paint_mask_resize_speed+0.2,max_mask_brush_resize_speed)
+				mask_decal.increase_size(paint_mask_resize_speed)
+			#elif event.keycode == KEY_COMMA:
+			elif Input.is_action_just_pressed("mterrain_mask_size_decrease"):
 				if event.is_pressed():
 					paint_mask_resize_speed = min(paint_mask_resize_speed+0.2,max_mask_brush_resize_speed)
-					stencil_decal.increase_size(-paint_mask_resize_speed)
-				else:
-					paint_mask_resize_speed=1
-			elif event.keycode == KEY_PERIOD:
-				if event.is_pressed():
-					paint_mask_resize_speed = min(paint_mask_resize_speed+0.2,max_mask_brush_resize_speed)
-					stencil_decal.increase_size(paint_mask_resize_speed)
-				else:
-					paint_mask_resize_speed=1
-			elif event.keycode == KEY_K and event.pressed:
-				stencil_decal.rotate_image(-1)
-			elif event.keycode == KEY_L and event.pressed:
-				stencil_decal.rotate_image(1)
-			elif event.keycode == KEY_SEMICOLON and event.pressed:
-				stencil_decal.reset_image_rotation()
+					mask_decal.increase_size(-paint_mask_resize_speed)							
+			#elif event.keycode == KEY_L and event.pressed:
+			elif Input.is_action_just_pressed("mterrain_mask_rotate_clockwise"):
+				mask_decal.rotate_image(1)
+			#elif event.keycode == KEY_K and event.pressed:
+			elif Input.is_action_just_pressed("mterrain_mask_rotate_counter_clockwise"):
+				mask_decal.rotate_image(-1)				
+			#elif event.keycode == KEY_SEMICOLON and event.pressed:
+			elif Input.is_action_just_pressed("mterrain_mask_rotation_reset"):
+				mask_decal.reset_image_rotation()
 	if active_object is MGrass:
 		status_bar.set_grass_label(active_object.get_count())
 	else:
@@ -245,10 +248,11 @@ func deactivate_editing():
 	
 	edit_mode_button.exit_edit_mode()
 	brush_decal.visible = false
-	stencil_decal.visible = false		
+	mask_decal.visible = false		
 	paint_panel.visible = false
 	mpath_gizmo_gui.visible = false
 	mcurve_mesh.visible = false
+	brush_popup_button.clear_brushes()
 	
 func set_edit_mode(object = active_object, mode=current_edit_mode):	
 	if object == active_object and current_edit_mode == mode:	
@@ -258,38 +262,40 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	if object==null or mode ==&"": 
 		deactivate_editing()
 		return
-	get_active_mterrain().set_brush_manager(brush_manager)
+	var active_mterrain = get_active_mterrain()
+	active_mterrain.set_brush_manager(brush_manager)
+	mask_popup_button.mterrain = active_mterrain
 	edit_mode_changed.emit(object, mode)
 	
 	if object is MTerrain:		
 		paint_panel.visible = true
 		layers_popup_button.visible = true
-		#to do: clean up previous edit mode: grass, nav, and path stuff, then:		
+		#to do: clean up previous edit mode: grass, nav, and path stuff?, then:		
 		for connection in layers_popup_button.get_signal_connection_list("layer_changed"):
 			connection.signal.disconnect(connection.callable)					
 		
 		if mode == &"sculpt":
 			layers_popup_button.init_height_layers(object)
-			brush_popup_button.init_height_brushes(brush_manager)					
+			brush_popup_button.init_height_brushes(brush_manager)
 		elif mode == &"paint":
-			layers_popup_button.init_color_layers(object, brush_popup_button)									
+			layers_popup_button.init_color_layers(object, brush_popup_button)
 			#Colol layers will init there own brushes				
-		stencil_decal.active_terrain = object				
+		mask_decal.active_terrain = object
 	elif object is MGrass:		
 		paint_panel.visible = true
-		#clean up previous edit mode: grass, nav, and path stuff, then:		
+		#clean up previous edit mode: grass, nav, and path stuff, then:	
 		layers_popup_button.visible = false
 		#init_height_layers(object.get_parent())
-		brush_popup_button.init_grass_brushes()				
+		brush_popup_button.init_grass_brushes()
+	elif object is MNavigationRegion3D:
+		paint_panel.visible = true
+		layers_popup_button.visible = false
+		brush_popup_button.init_mnavigation_brushes()
+		object.set_npoints_visible(true)
 	elif object is MPath:
 		mpath_gizmo_gui.visible = true
 	elif object is MCurveMesh:
 		mcurve_mesh.visible = true
-	elif object is MNavigationRegion3D:	
-		paint_panel.visible = true
-		layers_popup_button.visible = false
-		brush_popup_button.init_mnavigation_brushes()			
-		object.set_npoints_visible(true)
 	if not get_active_mterrain().is_grid_created():
 		get_active_mterrain().create_grid()
 
@@ -311,14 +317,13 @@ func draw(brush_position):
 			push_warning("trying to 'draw' on mterrain, but not in sculpt or paint mode")
 	else:
 		print(active_object.name)
-		
-	
+
 #region responding to signals
 func _on_human_male_toggled(button_pressed):	
 	human_male.visible = button_pressed
 
-func set_save_button_disabled(disabled:bool):
-	save_button.disabled = disabled
+#func set_save_button_disabled(disabled:bool):
+#	save_button.disabled = disabled
 
 func _on_save_pressed():
 	var active_terrain = get_active_mterrain()

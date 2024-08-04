@@ -50,15 +50,13 @@ func get_mode():
 
 func _input(event):
 	if not visible:
-		return
-	if event is InputEventKey:
-		if event.pressed:
-			if  event.keycode == KEY_QUOTELEFT:
-				toggle_mode()
-			elif event.keycode == KEY_M:
-				mirror_checkbox.button_pressed = not mirror_checkbox.button_pressed
-			elif event.keycode == KEY_L:
-				mirror_lenght_checkbox.button_pressed = not mirror_lenght_checkbox.button_pressed
+		return		
+	if Input.is_action_just_pressed( "mpath_toggle_mode" ):
+		toggle_mode()
+	if Input.is_action_just_pressed( "mpath_toggle_mirror" ):
+		mirror_checkbox.button_pressed = not mirror_checkbox.button_pressed
+	if Input.is_action_just_pressed( "mpath_toggle_mirror_length" ):
+		mirror_lenght_checkbox.button_pressed = not mirror_lenght_checkbox.button_pressed
 
 func _ready():
 	tilt_num.__set_name("tilt")
