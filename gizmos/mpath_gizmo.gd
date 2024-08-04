@@ -355,7 +355,7 @@ func _get_priority():
 func _has_gizmo(for_node_3d):
 	return for_node_3d.is_class("MPath")
 
-func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
+func _forward_3d_gui_input(camera, event, terrain_col:MCollision):	
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if value_mode != VALUE_MODE.NONE:
@@ -601,26 +601,26 @@ func on_collapse():
 
 func set_gui(input:Control):
 	gui = input
-	gui.connect("visibility_changed",Callable(self,"gui_visibility_changed"))
-	gui.toggle_connection_btn.connect("pressed",Callable(self,"toggle_connection"))
-	gui.collapse_btn.connect("pressed",Callable(self,"on_collapse"))
-	gui.connect_btn.connect("pressed",Callable(self,"connect_points"))
-	gui.disconnect_btn.connect("pressed",Callable(self,"disconnect_points"))
-	gui.remove_btn.connect("pressed",Callable(self,"remove_point"))
-	gui.swap_points_btn.connect("pressed",Callable(self,"swap_points"))
-	gui.depth_test_checkbox.connect("toggled",Callable(self,"toggle_depth_test"))
-	gui.tilt_num.connect("prop_changed",Callable(self,"on_point_val_changed"))
-	gui.scale_num.connect("prop_changed",Callable(self,"on_point_val_changed"))
-	gui.tilt_num.connect("commit_value",Callable(self,"on_point_val_commit"))
-	gui.scale_num.connect("commit_value",Callable(self,"on_point_val_commit"))
+	gui.visibility_changed.connect(gui_visibility_changed)
+	gui.toggle_connection_btn.pressed.connect(toggle_connection)
+	gui.collapse_btn.pressed.connect(on_collapse)
+	gui.connect_btn.pressed.connect(connect_points)
+	gui.disconnect_btn.pressed.connect(disconnect_points)
+	gui.remove_btn.pressed.connect(remove_point)
+	gui.swap_points_btn.pressed.connect(swap_points)
+	gui.depth_test_checkbox.toggled.connect(toggle_depth_test)
+	gui.tilt_num.prop_changed.connect(on_point_val_changed)
+	gui.scale_num.prop_changed.connect(on_point_val_changed)
+	gui.tilt_num.commit_value.connect(on_point_val_commit)
+	gui.scale_num.commit_value.connect(on_point_val_commit)
 	gui.tilt_num.set_editable(false)
 	gui.scale_num.set_editable(false)
 	gui.tilt_num.set_soft_min(-1)
 	gui.tilt_num.set_soft_max(1)
 	gui.scale_num.set_soft_min(-4)
 	gui.scale_num.set_soft_max(4)
-	gui.sort_increasing_btn.connect("pressed",Callable(self,"sort").bind(true))
-	gui.sort_decreasing_btn.connect("pressed",Callable(self,"sort").bind(false))
+	gui.sort_increasing_btn.pressed.connect(sort.bind(true))
+	gui.sort_decreasing_btn.pressed.connect(sort.bind(false))
 
 func change_active_point(new_active_point:int):
 	active_point = new_active_point
@@ -815,7 +815,3 @@ func sort(increasing:bool):
 	cu.clear_history()
 	su.clear_history()
 	path.update_gizmos()
-
-
-
-

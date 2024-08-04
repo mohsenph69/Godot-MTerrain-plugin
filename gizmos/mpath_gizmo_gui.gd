@@ -1,29 +1,28 @@
 @tool
-extends VBoxContainer
+extends Control
 
 
-@onready var mirror_checkbox:=$HBoxContainer/mirror_checkbox
-@onready var mirror_lenght_checkbox:=$HBoxContainer/mirror_l_checkbox
-@onready var snap_checkbox:=$HBoxContainer/snap
-@onready var mode_option:=$HBoxContainer/mode
-@onready var collapse_btn:=$HBoxContainer/collapse
-@onready var toggle_connection_btn:=$HBoxContainer/toggle_connection
-@onready var connect_btn:=$HBoxContainer/Connect
-@onready var swap_points_btn:=$HBoxContainer3/swap_points
-@onready var disconnect_btn:=$HBoxContainer/Disconnect
-@onready var remove_btn:=$HBoxContainer/remove
-@onready var tilt_num:=$HBoxContainer2/tilt
-@onready var scale_num:=$HBoxContainer2/scale
-@onready var depth_test_checkbox:=$HBoxContainer3/depth_test
-@onready var xz_handle_lock:=$HBoxContainer3/xz_handle_lock
-@onready var select_lock:=$HBoxContainer3/select_lock
-@onready var debug_col:=$HBoxContainer3/debug_col
-@onready var sort_increasing_btn:=$HBoxContainer3/sort_increasing
-@onready var sort_decreasing_btn:=$HBoxContainer3/sort_decreasing
+@onready var mirror_checkbox = find_child("mirror_checkbox")
+@onready var mirror_lenght_checkbox = find_child("mirror_l_checkbox")
+@onready var snap_checkbox = find_child("snap")
+@onready var mode_option = find_child("mode")
+@onready var collapse_btn = find_child("collapse")
+@onready var toggle_connection_btn = find_child("toggle_connection")
+@onready var connect_btn = find_child("Connect")
+@onready var swap_points_btn = find_child("swap_points")
+@onready var disconnect_btn = find_child("Disconnect")
+@onready var remove_btn = find_child("remove")
+@onready var tilt_num = find_child("tilt")
+@onready var scale_num = find_child("scale")
+@onready var depth_test_checkbox = find_child("depth_test")
+@onready var xz_handle_lock = find_child("xz_handle_lock")
+@onready var select_lock = find_child("select_lock")
+@onready var debug_col = find_child("debug_col")
+@onready var sort_increasing_btn = find_child("sort_increasing")
+@onready var sort_decreasing_btn = find_child("sort_decreasing")
 
-@onready var show_rest_btn:=$HBoxContainer/show_rest
-@onready var col2:=$HBoxContainer2
-@onready var col3:=$HBoxContainer3
+@onready var show_rest_btn = find_child("show_rest")
+@onready var settings_panel = find_child("settings_panel")
 
 
 var is_show_rest:=false
@@ -68,7 +67,8 @@ func _ready():
 	scale_num.set_value(1.0)
 	tilt_num.set_tooltip_text("Change Tilt\nHotkey: R")
 	scale_num.set_tooltip_text("Change Tilt\nHotkey: E")
-
+	settings_panel.visible = false
+	
 func toggle_mode():
 	if mode_option.selected == 0:
 		mode_option.selected = 1
@@ -83,9 +83,5 @@ func is_debug_col()->bool:
 
 func _on_show_rest_pressed():
 	is_show_rest = not is_show_rest
-	col2.visible = is_show_rest
-	col3.visible = is_show_rest
-	if is_show_rest:
-		show_rest_btn.text = "<"
-	else:
-		show_rest_btn.text = ">"
+	settings_panel.visible = is_show_rest
+		

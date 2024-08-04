@@ -4,10 +4,9 @@ extends ItemList
 const brush_masks_dir:String = "res://addons/m_terrain/brush_masks/"
 const allowed_extension:PackedStringArray = ["jpg","jpeg","png","exr","bmp","dds","hdr","tga","svg","webp"]
 
+var stencil = null
 
-var stencil=null
-
-var is_loaded:=false
+var is_loaded := false
 var current_selected_index:int=-1
 
 var images:Array
@@ -15,8 +14,6 @@ var textures:Array
 
 func _ready():
 	clear()
-
-
 
 func load_images(_stencil):
 	stencil = _stencil
@@ -81,7 +78,3 @@ func invert_selected_image():
 	textures[current_selected_index] = ImageTexture.create_from_image(img)
 	set_item_icon(current_selected_index+1,textures[current_selected_index])
 	stencil.set_mask(images[current_selected_index],textures[current_selected_index])
-
-
-
-
