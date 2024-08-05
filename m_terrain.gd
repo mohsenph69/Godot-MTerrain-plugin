@@ -222,7 +222,8 @@ func _handles(object):
 		gizmo_mpath_gui.visible = false
 	
 	if object is MCurveMesh:
-		mcurve_mesh_gui.set_curve_mesh(object)
+		#mcurve_mesh_gui.set_curve_mesh(object)
+		tools.set_active_object(object)
 		tools.request_show()	
 		return true
 	else:

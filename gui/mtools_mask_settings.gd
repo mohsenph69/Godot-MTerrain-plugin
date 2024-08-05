@@ -17,6 +17,5 @@ func init_mask_settings():
 	mask_cutoff_control.value_changed.connect(update_mask_cutoff)	
 	mask_invert.toggled.connect(func(toggled): brush_mask_controller.invert_selected_image())
 
-func update_mask_cutoff(value):
-	print("setting mask cutofff")
+func update_mask_cutoff(value):	
 	active_terrain.set_mask_cutoff(value)		

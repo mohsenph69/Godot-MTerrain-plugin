@@ -49,8 +49,7 @@ signal edit_mode_changed
 @onready var mask_popup_button: Button = find_child("mask_button")
 
 @onready var mpath_gizmo_gui = find_child("mpath_gizmo_gui")
-@onready var mcurve_mesh = find_child("mpath_gizmo_gui")
-
+@onready var mcurve_mesh = find_child("mcurve_mesh")
 @onready var brush_size_control: Control = find_child("brush_size")
 
 
@@ -96,7 +95,7 @@ func set_mask_decal(new_mask):
 	mask_popup_button.init_masks(mask_decal,  find_child("mask_size"), find_child("mask_rotation"),find_child("mask_cutoff"), find_child("invert_mask_button"))			
 
 func on_node_modified(node):	
-	if node is MTerrain or node is MGrass or node is MPath:
+	if node is MTerrain or node is MGrass or node is MNavigationRegion3D or node is MPath or node is MCurveMesh:
 		update_edit_mode_options()
 
 func update_edit_mode_options():	
@@ -199,11 +198,9 @@ func set_active_object(object):
 	#Cleanup active object stuff before setting new active object
 	if active_object is MNavigationRegion3D:
 		active_object.set_npoints_visible(false)
-	
-	if object is MTerrain or object is MGrass or object is MNavigationRegion3D:
-		edit_mode_button.change_active_object(object)	
 		
-
+	edit_mode_button.change_active_object(object)	
+		
 func process_input(event):
 	if current_edit_mode in [&"sculpt", &"paint"]:
 		if event is InputEventKey:			
@@ -273,7 +270,7 @@ func deactivate_editing():
 	if is_instance_valid(edit_mode_button):
 		edit_mode_button.text = "edit terrain"
 	
-	edit_mode_button.exit_edit_mode()
+	edit_mode_button.exit_edit_mode_button.visible = false
 	brush_decal.visible = false
 	mask_decal.visible = false		
 	for mterrain in get_all_mterrain():
@@ -328,6 +325,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	elif object is MPath:
 		mpath_gizmo_gui.visible = true
 	elif object is MCurveMesh:
+		mcurve_mesh.set_curve_mesh(object)
 		mcurve_mesh.visible = true
 	if not get_active_mterrain().is_grid_created():
 		get_active_mterrain().create_grid()
@@ -349,7 +347,7 @@ func draw(brush_position):
 		else:
 			push_warning("trying to 'draw' on mterrain, but not in sculpt or paint mode")
 	else:
-		print(active_object.name)
+		print("draw mterrain fail: active object is ", active_object.name)
 
 #region responding to signals
 func _on_human_male_toggled(button_pressed):	

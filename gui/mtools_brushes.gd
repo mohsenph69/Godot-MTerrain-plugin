@@ -57,8 +57,7 @@ func clear_brushes():
 #region Height Brushes
 func init_height_brushes(new_brush_manager):		
 	clear_brushes()	
-	brush_mode = &"sculpt"
-	print("setting brush mode: sculpt")
+	brush_mode = &"sculpt"	
 	brush_container.item_selected.connect(on_height_brush_select)	
 	height_brush_manager = new_brush_manager
 	smooth_brush_id = height_brush_manager.get_height_brush_id("Smooth")
@@ -90,8 +89,7 @@ func on_height_brush_select(index):
 		create_props(p)
 	text = brush_container.get_item_text(index)
 	set("theme_override_styles/normal", null)
-	icon = brush_container.get_item_icon(index)
-	print("height brush selected")
+	icon = brush_container.get_item_icon(index)	
 
 func create_props(dic:Dictionary):
 	var element
@@ -120,8 +118,7 @@ func create_props(dic:Dictionary):
 	element.prop_changed.connect(prop_change)
 	element.set_value(dic["default_value"])
 	element.set_name(dic["name"])
-	property_element_list.append(element)
-	print()
+	property_element_list.append(element)	
 	if element.prop_name.to_lower() == "revers":
 		reverse_property_control = element
 
@@ -236,10 +233,8 @@ func process_input(event):
 			if event.is_pressed():
 				if not event.echo:
 					last_height_brush_id = height_brush_id
-					height_brush_id = smooth_brush_id		
-					print("making smmooth brush. last brush: ", last_height_brush_id)			
-			else:
-				print("making original brush brush ", last_height_brush_id)			
+					height_brush_id = smooth_brush_id							
+			else:				
 				height_brush_id = last_height_brush_id
 		elif event.keycode == KEY_CTRL:
 			if event.is_pressed():

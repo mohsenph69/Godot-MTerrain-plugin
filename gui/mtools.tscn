@@ -313,6 +313,7 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="edit_selected_button" type="Button" parent="Panel/hbox/PaintControls"]
+visible = false
 layout_mode = 2
 text = "Edit MGrass1"
 
