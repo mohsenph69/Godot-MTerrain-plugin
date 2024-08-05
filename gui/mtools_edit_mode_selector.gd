@@ -5,6 +5,8 @@ signal edit_mode_changed
 
 var item_container
 var exit_edit_mode_button 
+var edit_selected_button
+var active_object
 
 func _ready():
 	var panel = get_child(0)
@@ -13,6 +15,12 @@ func _ready():
 	
 	item_container = find_child("edit_mode_item_container")
 	exit_edit_mode_button = get_node("../edit_mode_exit_button")		
+	edit_selected_button = get_node("../edit_selected_button")		
+	
+	if not edit_selected_button.pressed.is_connected(edit_selected):
+		edit_selected_button.pressed.connect(edit_selected)
+	edit_selected_button.visible = false
+	
 	if not exit_edit_mode_button.pressed.is_connected(exit_edit_mode_button_pressed):
 		exit_edit_mode_button.pressed.connect(exit_edit_mode_button_pressed)
 	if not exit_edit_mode_button.pressed.is_connected(exit_edit_mode_button.hide):	
@@ -114,9 +122,27 @@ func change_active_object(object):
 	#In future, make it auto-switch to the same edit mode, just for different object
 	exit_edit_mode_button_pressed()
 	exit_edit_mode()
-
+	edit_selected_button.visible = true
+	if object is MTerrain:
+		edit_selected_button.text = "click to Sculpt " + object.name
+	else:
+		edit_selected_button.text = "click to Paint " + object.name		
+	active_object = object
+	text = "..."
+	
 func exit_edit_mode_button_pressed():	
 	edit_mode_changed.emit(null, &"")
 	
 func exit_edit_mode():
 	exit_edit_mode_button.hide()
+
+func edit_selected():		
+	if active_object is MTerrain:
+		text = "Sculpt " + active_object.name
+		edit_mode_changed.emit(active_object, &"sculpt")		
+		edit_selected_button.visible = false				
+	else:
+		text = "Paint " + active_object.name
+		edit_mode_changed.emit(active_object, &"paint")
+		edit_selected_button.visible = false
+	
