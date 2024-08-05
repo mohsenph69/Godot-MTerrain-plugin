@@ -35,6 +35,8 @@ func init_height_layers(mterrain:MTerrain):
 	for child in layers_container.get_children():
 		child.queue_free()
 		layers_container.remove_child(child)
+	add_layer_button.visible = true
+	merge_button.visible = true
 	for layer in active_terrain.heightmap_layers:	
 		var layer_item = layer_item_scene.instantiate()
 		layer_item.name = layer		
@@ -95,6 +97,9 @@ func init_color_layers(mterrain:MTerrain, brush_button):
 	for child in layers_container.get_children():
 		child.queue_free()
 		layers_container.remove_child(child)
+	add_layer_button.visible = false
+	merge_button.visible = false
+	
 	var layer_group_id = 0	
 	brush_control = brush_button
 	for layer in active_terrain.get_layers_info():

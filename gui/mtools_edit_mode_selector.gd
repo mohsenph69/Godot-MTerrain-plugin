@@ -8,6 +8,8 @@ var exit_edit_mode_button
 var edit_selected_button
 var active_object
 
+var more_options_icon = preload("res://addons/m_terrain/icons/more_options_icon.svg")
+
 func _ready():
 	var panel = get_child(0)
 	panel.visible = false
@@ -69,12 +71,6 @@ func init_edit_mode_options(all_mterrain):
 	
 	get_child(0).size. x = biggest_button_size + 12	
 	
-func switch_to_mnavigation_paint(nav):
-	text = "Paint " + nav.name
-	edit_mode_changed.emit(nav, &"paint")
-	edit_selected_button.visible = false
-	exit_edit_mode_button.visible = true
-	
 func change_active_object(object):	
 	#In future, make it auto-switch to the same edit mode, just for different object
 	if not object == active_object:
@@ -94,7 +90,8 @@ func change_active_object(object):
 	else:
 		edit_selected_button.visible = false
 		
-	text = "..."
+	text = ""
+	icon = more_options_icon
 	
 func exit_edit_mode_button_pressed():	
 	edit_mode_changed.emit(null, &"")
@@ -106,24 +103,33 @@ func edit_selected(object = active_object, override_mode=null):
 	if object is MTerrain:
 		if override_mode and override_mode==&"paint":
 			text = "Paint " + object.name
+			icon = null
 			edit_mode_changed.emit(object, &"paint")		
 		else:
 			text = "Sculpt " + object.name
+			icon = null
 			edit_mode_changed.emit(object, &"sculpt")		
 		edit_selected_button.visible = false			
 		exit_edit_mode_button.show()		
+		active_object = object
 	elif object is MGrass or object is MNavigationRegion3D:
 		text = "Paint " + object.name
+		icon = null
 		edit_mode_changed.emit(object, &"paint")
 		edit_selected_button.visible = false
-		exit_edit_mode_button.visible = true				
+		exit_edit_mode_button.visible = true
+		active_object = object				
 	elif object is MPath:
 		text = "Edit " + object.name
+		icon = null
 		edit_mode_changed.emit(object, &"mpath")
 		edit_selected_button.visible = false
 		exit_edit_mode_button.show()		
+		active_object = object
 	elif object is MCurveMesh:
 		text = "Edit " + object.name
+		icon = null
 		edit_mode_changed.emit(object, &"mcurve_mesh")
 		edit_selected_button.visible = false
 		exit_edit_mode_button.show()		
+		active_object = object
