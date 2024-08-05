@@ -124,15 +124,15 @@ func change_active_object(object):
 	exit_edit_mode()
 	edit_selected_button.visible = true
 	if object is MTerrain:
-		edit_selected_button.text = "click to Sculpt " + object.name
+		edit_selected_button.text = "Click to Sculpt " + object.name
 	else:
-		edit_selected_button.text = "click to Paint " + object.name		
+		edit_selected_button.text = "Click to Paint " + object.name		
 	active_object = object
 	text = "..."
 	
 func exit_edit_mode_button_pressed():	
 	edit_mode_changed.emit(null, &"")
-	
+	change_active_object(active_object)
 func exit_edit_mode():
 	exit_edit_mode_button.hide()
 
