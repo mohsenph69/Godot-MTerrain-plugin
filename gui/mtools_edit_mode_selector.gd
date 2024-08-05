@@ -140,9 +140,11 @@ func edit_selected():
 	if active_object is MTerrain:
 		text = "Sculpt " + active_object.name
 		edit_mode_changed.emit(active_object, &"sculpt")		
-		edit_selected_button.visible = false				
+		edit_selected_button.visible = false			
+		exit_edit_mode_button.show()	
 	else:
 		text = "Paint " + active_object.name
 		edit_mode_changed.emit(active_object, &"paint")
 		edit_selected_button.visible = false
+		exit_edit_mode_button.show()
 	
