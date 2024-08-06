@@ -33,7 +33,7 @@ var inspector_mpath
 #region keyboard actions
 var default_keyboard_actions 
 
-const setting_path = 'addons/MTerrain/keymap/'
+const setting_path = 'addons/m_terrain/keymap/'
 
 func add_keymap(force_default = false):
 	print("aadding keymap mterrain, restore default: ", force_default)
