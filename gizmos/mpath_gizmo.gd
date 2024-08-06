@@ -510,7 +510,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 			selected_connections = curve.get_conn_ids_exist(all_pp)
 			if pcol: #### if we have selection then we should stop here and not go into creation stuff
 				mpath.update_gizmos()
-				emit_signal("selection_changed")				
+				selection_changed.emit()				
 				return
 			if gui.get_mode() == gui.MODE.CREATE:
 				### Here should be adjusted later with MTerrain

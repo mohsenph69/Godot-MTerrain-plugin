@@ -149,6 +149,7 @@ func get_active_mterrain():
 	if object is MGrass or object is MNavigationRegion3D or object:
 		if object.get_parent() is MTerrain:
 			return object.get_parent()	
+	#This is only used for snapping to MTerrain in MPath:
 	if object is MPath or object is MCurveMesh:
 		var all_mterrain = get_all_mterrain()
 		if all_mterrain.size()>0:
@@ -200,6 +201,9 @@ func set_active_object(object):
 		active_object.set_npoints_visible(false)
 		
 	edit_mode_button.change_active_object(object)	
+	#Automatically enter edit mode for mpath
+	if object is MPath:
+		edit_mode_button.edit_selected(object)
 		
 func process_input(event):
 	if current_edit_mode in [&"sculpt", &"paint"]:
@@ -293,11 +297,20 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	
 	active_object = object	
 	current_edit_mode = mode
+	
+	if object is MPath:		
+		mpath_gizmo_gui.visible = true
+		object.update_gizmos()
+	elif object is MCurveMesh:
+		mcurve_mesh.set_curve_mesh(object)
+		mcurve_mesh.visible = true
+		
+	edit_mode_changed.emit(object, mode)
 	var active_mterrain = get_active_mterrain()
+	if not active_mterrain: return
 	active_mterrain.set_brush_manager(brush_manager)
 	mask_popup_button.mterrain = active_mterrain
 	mask_popup_button.toggle_grass_settings(false)
-	edit_mode_changed.emit(object, mode)
 	
 	if object is MTerrain:		
 		paint_panel.visible = true
@@ -333,11 +346,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		mask_decal.active_terrain = active_mterrain
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
-	elif object is MPath:
-		mpath_gizmo_gui.visible = true
-	elif object is MCurveMesh:
-		mcurve_mesh.set_curve_mesh(object)
-		mcurve_mesh.visible = true
+	
 	
 
 func draw(brush_position):		

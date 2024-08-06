@@ -24,7 +24,6 @@ extends Control
 @onready var show_rest_btn = find_child("show_rest")
 @onready var settings_panel = find_child("settings_panel")
 
-
 var is_show_rest:=false
 
 enum MODE {
