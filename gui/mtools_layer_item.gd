@@ -7,6 +7,7 @@ signal layer_index_changed
 signal layer_removed
 signal layer_selected
 signal color_layer_selected
+signal layer_merged_with_background
 
 
 @onready var visibility_button = $hbox/visible
@@ -21,6 +22,8 @@ var icon_visible = preload("res://addons/m_terrain/icons/eye.svg")
 var icon_hidden = preload("res://addons/m_terrain/icons/eye-close.svg")
 
 var selected = false
+
+var confirmation_popup_scene = preload("res://addons/m_terrain/gui/mtools_layer_warning_popup.tscn")
 
 func disconnect_signals():			
 	for connection in name_button.get_signal_connection_list("pressed"):
@@ -59,11 +62,20 @@ func change_visibility(toggle_on):
 	layer_visibility_changed.emit(name)
 
 func remove_layer():
-	layer_removed.emit(name)
-	queue_free()
-	
+	var popup = confirmation_popup_scene.instantiate()
+	add_child(popup)
+	popup.confirmed.connect( func():
+		layer_removed.emit(name)
+		queue_free()
+	)
+
 func merge_layer_down():
-	pass
+	var popup = confirmation_popup_scene.instantiate()
+	add_child(popup)
+	popup.confirmed.connect( func():
+		layer_merged_with_background.emit(name)
+		queue_free()
+	)
 
 func begin_rename():
 	rename_input.text = name_button.text

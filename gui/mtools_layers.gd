@@ -16,13 +16,16 @@ var stylebox_selected = preload("res://addons/m_terrain/gui/stylebox_selected.tr
 
 var brush_control: Control
 
+var confirmation_popup_scene = preload("res://addons/m_terrain/gui/mtools_layer_warning_popup.tscn")
+
+
 func _ready():
 	var panel = get_child(0)
 	panel.visible = false
 	panel.position.y = -panel.size.y
 	panel.gui_input.connect(fix_gui_input)
 	#TO DO: add a confirmation dialog "Are you sure you want to merge layers?"
-	merge_button.pressed.connect(merge_heightmap_layers)
+	merge_button.pressed.connect(merge_all_heightmap_layers)
 	add_layer_button.pressed.connect(add_heightmap_layer)
 
 func fix_gui_input(event: InputEvent):
@@ -47,6 +50,7 @@ func init_height_layers(mterrain:MTerrain):
 		layer_item.layer_renamed.connect(rename_heightmap_layer)
 		#layer_item.layer_index_changed.connect(????)
 		layer_item.layer_removed.connect(remove_heightmap_layer)	
+		layer_item.layer_merged_with_background.connect(merge_heightmap_layer_with_background)
 	layers_container.get_child(0).select_heightmap_layer.call_deferred()
 
 func add_heightmap_layer():
@@ -79,8 +83,20 @@ func change_heightmap_layer_selection(layer_name):
 	text = layer_name	
 	layer_changed.emit(layer_name)
 
-func merge_heightmap_layers():
-	active_terrain.merge_heightmap_layer()
+func merge_all_heightmap_layers():
+	var popup = confirmation_popup_scene.instantiate()
+	add_child(popup)
+	popup.confirmed.connect( func():	
+		for layer in active_terrain.heightmap_layers:
+			if layer == "background": continue		
+			active_terrain.set_active_layer_by_name(layer)
+			active_terrain.merge_heightmap_layer()
+		init_height_layers(active_terrain)
+	)
+		
+func merge_heightmap_layer_with_background(layer):			
+	active_terrain.set_active_layer_by_name(layer)
+	active_terrain.merge_heightmap_layer()	
 
 func rename_heightmap_layer(name_button, new_name):
 	if new_name == "": return
