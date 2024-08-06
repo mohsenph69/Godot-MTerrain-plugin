@@ -1,11 +1,9 @@
-[gd_scene load_steps=28 format=3 uid="uid://bdxfu7h15wijq"]
+[gd_scene load_steps=26 format=3 uid="uid://bdxfu7h15wijq"]
 
-[ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="1_bamv0"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_options.gd" id="2_2bis6"]
-[ext_resource type="Texture2D" uid="uid://cyftv3kygv5b7" path="res://addons/m_terrain/icons/info_icon_pressed.png" id="2_ovrit"]
+[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="2_mjshi"]
 [ext_resource type="Texture2D" uid="uid://dgjegrn8jhlf6" path="res://addons/m_terrain/icons/human_disabled.svg" id="4_rgpuu"]
-[ext_resource type="Texture2D" uid="uid://lhctvyd5qpxt" path="res://addons/m_terrain/icons/human.svg" id="5_dvso0"]
 [ext_resource type="Texture2D" uid="uid://dj86rx42xt6wc" path="res://addons/m_terrain/icons/save_icon.svg" id="6_di4ov"]
 [ext_resource type="Texture2D" uid="uid://btn8tgu2yhlxj" path="res://addons/m_terrain/icons/save_icon_disable.svg" id="7_nh28h"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_status_bar.gd" id="9_666yn"]
@@ -77,13 +75,14 @@ offset_bottom = 32.0
 grow_horizontal = 2
 
 [node name="options_button" type="Button" parent="Panel/hbox"]
+custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 toggle_mode = true
-text = "|||"
+icon = ExtResource("2_mjshi")
+expand_icon = true
 script = ExtResource("2_2bis6")
 
 [node name="Panel" type="Panel" parent="Panel/hbox/options_button"]
-visible = false
 clip_contents = true
 custom_minimum_size = Vector2(0, 375)
 layout_mode = 1
@@ -97,32 +96,47 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = -8.0
 grow_horizontal = 2
 grow_vertical = 2
-metadata/_edit_lock_ = true
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/margin_top = 8
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
-layout_mode = 2
-alignment = 1
-
-[node name="info_btn" type="TextureButton" parent="Panel/hbox/options_button/Panel/VBoxContainer/HBoxContainer"]
+[node name="heightmap_import_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
 layout_mode = 2
 mouse_filter = 1
-texture_normal = ExtResource("1_bamv0")
-texture_pressed = ExtResource("2_ovrit")
-stretch_mode = 5
+text = "Import heightmap"
+alignment = 0
 
-[node name="human_male" type="TextureButton" parent="Panel/hbox/options_button/Panel/VBoxContainer/HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
+[node name="heightmap_export_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
 layout_mode = 2
-toggle_mode = true
-texture_normal = ExtResource("4_rgpuu")
-texture_pressed = ExtResource("5_dvso0")
-stretch_mode = 5
+mouse_filter = 1
+text = "Export heightmap"
+alignment = 0
+
+[node name="splatmap_import_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
+layout_mode = 2
+mouse_filter = 1
+text = "Import splatmap"
+alignment = 0
+
+[node name="image_creator_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
+layout_mode = 2
+mouse_filter = 1
+text = "Image Creator"
+alignment = 0
+
+[node name="transform_terrain_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer" node_paths=PackedStringArray("transform_window")]
+layout_mode = 2
+mouse_filter = 1
+text = "Transform Terrain"
+alignment = 0
+script = SubResource("GDScript_tlie2")
+transform_window = NodePath("../../../Popup")
 
 [node name="hide_status" type="CheckButton" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
 layout_mode = 2
@@ -130,32 +144,23 @@ mouse_filter = 1
 button_pressed = true
 text = "hide status"
 
-[node name="heightmap_import_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
+[node name="human_male" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-mouse_filter = 1
-text = "Import heightmap"
+toggle_mode = true
+text = "Human Preview"
+icon = ExtResource("4_rgpuu")
+alignment = 0
+icon_alignment = 2
 
-[node name="heightmap_export_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
+[node name="info_btn" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
 layout_mode = 2
 mouse_filter = 1
-text = "Export heightmap"
-
-[node name="splatmap_import_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
-layout_mode = 2
-mouse_filter = 1
-text = "Import splatmap"
-
-[node name="image_creator_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer"]
-layout_mode = 2
-mouse_filter = 1
-text = "Image Creator"
-
-[node name="transform_terrain_button" type="Button" parent="Panel/hbox/options_button/Panel/VBoxContainer" node_paths=PackedStringArray("transform_window")]
-layout_mode = 2
-mouse_filter = 1
-text = "Transform Terrain"
-script = SubResource("GDScript_tlie2")
-transform_window = NodePath("../../../Popup")
+text = "More Settings"
+icon = ExtResource("2_mjshi")
+alignment = 0
+icon_alignment = 2
+expand_icon = true
 
 [node name="Popup" type="Popup" parent="Panel/hbox/options_button"]
 title = "Transform Terrain"
@@ -451,7 +456,7 @@ script = ExtResource("11_c6bj1")
 [node name="Control" type="Control" parent="Panel/hbox/PaintControls/paint_panel/brush_button"]
 visible = false
 anchors_preset = 0
-offset_right = 1582.0
+offset_right = 1414.0
 mouse_filter = 1
 
 [node name="brush_settings_panel" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control"]
@@ -554,7 +559,7 @@ script = ExtResource("16_h7wnm")
 visible = false
 layout_mode = 1
 offset_top = -236.0
-offset_right = 1582.0
+offset_right = 1414.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2"]
@@ -694,12 +699,12 @@ layout_mode = 2
 visible = false
 layout_mode = 2
 
-[connection signal="pressed" from="Panel/hbox/options_button/Panel/VBoxContainer/HBoxContainer/info_btn" to="." method="_on_info_btn_pressed"]
-[connection signal="toggled" from="Panel/hbox/options_button/Panel/VBoxContainer/HBoxContainer/human_male" to="." method="_on_human_male_toggled"]
-[connection signal="toggled" from="Panel/hbox/options_button/Panel/VBoxContainer/hide_status" to="Panel/hbox/status_bar" method="toggle_visible"]
 [connection signal="pressed" from="Panel/hbox/options_button/Panel/VBoxContainer/heightmap_import_button" to="." method="_on_heightmap_import_button_pressed"]
 [connection signal="pressed" from="Panel/hbox/options_button/Panel/VBoxContainer/heightmap_export_button" to="." method="_on_heightmap_export_button_pressed"]
 [connection signal="pressed" from="Panel/hbox/options_button/Panel/VBoxContainer/splatmap_import_button" to="." method="_on_splatmap_import_button_pressed"]
 [connection signal="pressed" from="Panel/hbox/options_button/Panel/VBoxContainer/image_creator_button" to="." method="_on_image_creator_button_pressed"]
+[connection signal="toggled" from="Panel/hbox/options_button/Panel/VBoxContainer/hide_status" to="Panel/hbox/status_bar" method="toggle_visible"]
+[connection signal="toggled" from="Panel/hbox/options_button/Panel/VBoxContainer/human_male" to="." method="_on_human_male_toggled"]
+[connection signal="pressed" from="Panel/hbox/options_button/Panel/VBoxContainer/info_btn" to="." method="_on_info_btn_pressed"]
 [connection signal="pressed" from="Panel/hbox/save_button" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="Panel/hbox/reload" to="." method="_on_reload_pressed"]

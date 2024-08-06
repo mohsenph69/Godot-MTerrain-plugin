@@ -324,8 +324,9 @@ func paint_mode_handle(event:InputEvent):
 			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 				tools.mask_decal.is_being_edited = false
 				tools.mask_popup_button.clear_mask()
-
 			tools.mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+			tools.mask_decal.is_being_edited = true
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				if tools.active_object is MGrass:

@@ -43,6 +43,46 @@ grow_horizontal = 2
 grow_vertical = 2
 current_tab = 5
 
+[node name="Shortcuts" type="Panel" parent="base/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="base/TabContainer/Shortcuts"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="base/TabContainer/Shortcuts/MarginContainer"]
+layout_mode = 2
+
+[node name="vbox" type="VBoxContainer" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
+layout_mode = 2
+text = "MTerrain Shortcuts"
+horizontal_alignment = 1
+
+[node name="mterrain_action_list" type="VBoxContainer" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
+layout_mode = 2
+text = "MPath Shortcuts"
+horizontal_alignment = 1
+
+[node name="mpath_action_list" type="VBoxContainer" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
+layout_mode = 2
+
 [node name="Save config" type="TabBar" parent="base/TabContainer"]
 visible = false
 layout_mode = 2
@@ -326,7 +366,6 @@ size: %d meter
 vertex count: %d"
 
 [node name="info" type="TabBar" parent="base/TabContainer"]
-visible = false
 layout_mode = 2
 
 [node name="info" type="RichTextLabel" parent="base/TabContainer/info"]
@@ -343,45 +382,6 @@ For more information read [url=https://github.com/mohsenph69/Godot-MTerrain-plug
 on [url=https://github.com/mohsenph69/Godot-MTerrain-plugin]Github[/url]
 [/center]"
 fit_content = true
-
-[node name="Shortcuts" type="Panel" parent="base/TabContainer"]
-layout_mode = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="base/TabContainer/Shortcuts"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
-
-[node name="ScrollContainer" type="ScrollContainer" parent="base/TabContainer/Shortcuts/MarginContainer"]
-layout_mode = 2
-
-[node name="vbox" type="VBoxContainer" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
-layout_mode = 2
-text = "MTerrain Shortcuts"
-horizontal_alignment = 1
-
-[node name="mterrain_action_list" type="VBoxContainer" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
-layout_mode = 2
-
-[node name="Label2" type="Label" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
-layout_mode = 2
-text = "MPath Shortcuts"
-horizontal_alignment = 1
-
-[node name="mpath_action_list" type="VBoxContainer" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
-layout_mode = 2
 
 [connection signal="close_requested" from="." to="." method="_on_close_requested"]
 [connection signal="item_selected" from="base/TabContainer/Save config/scroll/VBoxContainer/hb/data_name_option" to="base/TabContainer/Save config" method="_on_data_name_option_item_selected"]
