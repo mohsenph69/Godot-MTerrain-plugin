@@ -214,7 +214,7 @@ func selection_changed():
 func _handles(object):
 	if not Engine.is_editor_hint(): return false
 	
-	if mcurve_mesh_gui.obj and mcurve_mesh_gui.is_active(): return false
+	if mcurve_mesh_gui and mcurve_mesh_gui.obj and mcurve_mesh_gui.is_active(): return false
 	
 	active_snap_object = null
 	tsnap.visible = false
