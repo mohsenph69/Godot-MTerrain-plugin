@@ -322,6 +322,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		#init_height_layers(object.get_parent())
 		brush_popup_button.init_grass_brushes()
 		mask_popup_button.toggle_grass_settings(true)
+		mask_decal.active_terrain = active_mterrain
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
 	elif object is MNavigationRegion3D:
@@ -329,6 +330,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		layers_popup_button.visible = false
 		brush_popup_button.init_mnavigation_brushes()
 		object.set_npoints_visible(true)
+		mask_decal.active_terrain = active_mterrain
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
 	elif object is MPath:
@@ -355,7 +357,7 @@ func draw(brush_position):
 		else:
 			push_warning("trying to 'draw' on mterrain, but not in sculpt or paint mode")
 	else:
-		print("draw mterrain fail: active object is ", active_object.name)
+		print("draw mterrain fail: active object is ", active_object.name)	
 
 #region responding to signals
 func _on_human_male_toggled(button_pressed):	

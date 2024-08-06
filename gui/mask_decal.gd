@@ -103,9 +103,11 @@ func set_mask(img:Image,tex:Texture2D):
 		texture_albedo = wpx
 		albedo_mix = 0.0	
 	if active_terrain:
-		update_active_image()
-		active_terrain.set_brush_mask(active_image)
-	
+		update_active_image()	
+		if orignal_image:
+			active_terrain.set_brush_mask(active_image)
+		else:
+			active_terrain.disable_brush_mask()		
 
 func reset_image_rotation():
 	image_rotation = 0
@@ -126,7 +128,7 @@ func set_image_rotation(value:int):
 func update_active_image():
 	if not active_terrain:return
 	is_dirty = false
-	if orignal_image == null:
+	if orignal_image == null:		
 		return
 	active_image = orignal_image.duplicate()
 	if image_rotation != 0:

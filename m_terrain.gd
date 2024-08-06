@@ -293,13 +293,6 @@ func paint_mode_handle(event:InputEvent):
 	if ray_col.is_collided():
 		tools.brush_decal.visible = true
 		tools.brush_decal.set_position(ray_col.get_collision_position())		
-		if tools.mask_decal.is_being_edited:			
-			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
-				tools.mask_decal.is_being_edited = false
-				tools.mask_popup_button.clear_mask()
-			tools.mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
-		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
-			tools.mask_decal.is_being_edited = true
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				if tools.active_object is MGrass:
@@ -318,7 +311,7 @@ func paint_mode_handle(event:InputEvent):
 					get_undo_redo().commit_action(false)
 			else:
 				if tools.mask_decal.is_being_edited:
-					tools.mask_decal.is_being_edited = false
+					tools.mask_decal.is_being_edited = false	
 				elif tools.active_object is MGrass:
 					tools.active_object.save_grass_data()
 				elif tools.active_object is MNavigationRegion3D:
@@ -328,10 +321,19 @@ func paint_mode_handle(event:InputEvent):
 		if event.button_mask == MOUSE_BUTTON_LEFT:			
 			var t = Time.get_ticks_msec()
 			var dt = t - last_draw_time			
-			last_draw_time = t			
+			last_draw_time = t		
+			if tools.mask_decal.is_being_edited:
+				return AFTER_GUI_INPUT_STOP 
 			if tools.draw(ray_col.get_collision_position()):
 				return AFTER_GUI_INPUT_STOP 
-			
+		if tools.mask_decal.is_being_edited:			
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+				tools.mask_decal.is_being_edited = false				
+				tools.mask_popup_button.clear_mask()
+			tools.mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+			tools.mask_decal.is_being_edited = true
+			AFTER_GUI_INPUT_STOP
 	else:
 		tools.brush_decal.visible = false
 		tools.mask_decal.visible = false

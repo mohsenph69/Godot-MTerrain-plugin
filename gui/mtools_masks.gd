@@ -38,11 +38,16 @@ func clear_mask():
 	var current_selection = mask_container.get_selected_items()
 	if current_selection.size()==0: return
 	mask_clear_button.visible = false
+	mask_decal.visible = false 
+	mask_decal.is_being_edited = false
+	#change_mask_cutoff(0)
 	if current_selection[0] != 0:
 		mask_container.select(0)
 		mask_decal.set_mask(null,null)
 		icon = mask_container.get_item_icon(0)
 		text = ""
+		clear_mask()
+	
 
 func change_mask_size(value):
 	mask_decal.set_size(value)
@@ -65,3 +70,5 @@ func start_mask_placement(id):
 	
 func toggle_grass_settings(toggle_on):
 	mask_cutoff_control.visible = toggle_on
+	mterrain.set_mask_cutoff(mask_cutoff_control.slider.value)
+
