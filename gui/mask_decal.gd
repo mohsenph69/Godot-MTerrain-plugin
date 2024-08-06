@@ -118,6 +118,11 @@ func rotate_image(amount:int):
 	is_dirty = true
 	update_active_image()
 
+func set_image_rotation(value:int):
+	image_rotation = value % 4
+	is_dirty = true
+	update_active_image()
+
 func update_active_image():
 	if not active_terrain:return
 	is_dirty = false

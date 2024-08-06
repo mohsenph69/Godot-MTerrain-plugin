@@ -19,7 +19,8 @@ func load_images(mask_decal):
 	mask = mask_decal
 	if is_loaded: return
 	clear()
-	add_item("NULL")
+	add_icon_item( preload("res://addons/m_terrain/icons/no_mask_icon.svg"))
+	#add_item("NULL")
 	var dir = DirAccess.open(brush_masks_dir)
 	if not dir:
 		printerr("Can not open brush masks directory")

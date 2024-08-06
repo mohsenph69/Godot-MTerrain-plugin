@@ -24,7 +24,7 @@ func _ready():
 	#TO DO: add a confirmation dialog "Are you sure you want to merge layers?"
 	merge_button.pressed.connect(merge_heightmap_layers)
 	add_layer_button.pressed.connect(add_heightmap_layer)
-	
+
 func fix_gui_input(event: InputEvent):
 	if event is InputEventMouseButton:
 		get_viewport().set_input_as_handled()
@@ -50,7 +50,10 @@ func init_height_layers(mterrain:MTerrain):
 	layers_container.get_child(0).select_heightmap_layer.call_deferred()
 
 func add_heightmap_layer():
-	active_terrain.add_heightmap_layer("New Layer")
+	var i = 0
+	while str("New Layer ", i) in active_terrain.heightmap_layers:
+		i+= 1
+	active_terrain.add_heightmap_layer(str("New Layer ", i))
 	init_height_layers(active_terrain)	
 
 func remove_heightmap_layer(layer_name):
@@ -85,8 +88,9 @@ func rename_heightmap_layer(name_button, new_name):
 	var layers = active_terrain.heightmap_layers
 	for i in layers.size():
 		if layers[i] == name_button.text:
-			layers[i] = new_name
-	active_terrain.heightmap_layers = layers
+			if active_terrain.rename_heightmap_layer(layers[i], new_name):
+				layers[i] = new_name
+		
 	name_button.text = new_name
 		
 #endregion

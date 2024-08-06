@@ -1,6 +1,8 @@
 @tool
 extends Window
 
+signal keymap_changed
+
 @onready var Terror:=$base/TabContainer/Terrain/VBoxContainer/Error
 @onready var Rwarning:=$base/TabContainer/Region/VBoxContainer/Warning
 @onready var tsizeg:=$base/TabContainer/Terrain/VBoxContainer/tsizeg
@@ -33,7 +35,7 @@ var terrain_pixel_size:Vector2
 
 
 
-func generate_info(_t:MTerrain,_version:String):
+func generate_info(_t:MTerrain,_version:String, keyboard_actions):
 	save_config.init_save_config(_t)
 	terrain = _t
 	version = _version
@@ -75,6 +77,21 @@ func generate_info(_t:MTerrain,_version:String):
 	vc *= vc
 	base_unit.text = base_unit.text % [terrain.get_base_size(),vc]
 	info.text = info.text % version
+
+	var mterrain_actions_list = find_child("mterrain_action_list")
+	var mpath_actions_list = find_child("mpath_action_list")
+	for action in keyboard_actions:
+		var item = preload("res://addons/m_terrain/gui/mtools_keyboard_shortcut_item.tscn").instantiate()				
+		if action.name.begins_with("mterrain_"):			
+			mterrain_actions_list.add_child(item)
+			item.label.text = action.name.substr(9)
+			item.name = action.name
+		elif action.name.begins_with("mpath_"):			
+			mpath_actions_list.add_child(item)
+			item.label.text = action.name.substr(6)
+			item.name = action.name
+		item.value.text = OS.get_keycode_string(action.keycode)
+		item.keymap_changed.connect( func(who, keycode, ctrl,alt,shift): keymap_changed.emit(who, keycode,ctrl,alt,shift))
 
 func _on_info_meta_clicked(meta):
 	OS.shell_open(meta)

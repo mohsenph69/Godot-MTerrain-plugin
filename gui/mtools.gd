@@ -272,7 +272,8 @@ func deactivate_editing():
 	
 	edit_mode_button.exit_edit_mode_button.visible = false
 	brush_decal.visible = false
-	mask_decal.visible = false		
+	mask_decal.visible = false	
+	mask_popup_button.clear_mask()	
 	for mterrain in get_all_mterrain():
 		mterrain.disable_brush_mask()
 	paint_panel.visible = false
@@ -295,6 +296,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	var active_mterrain = get_active_mterrain()
 	active_mterrain.set_brush_manager(brush_manager)
 	mask_popup_button.mterrain = active_mterrain
+	mask_popup_button.toggle_grass_settings(false)
 	edit_mode_changed.emit(object, mode)
 	
 	if object is MTerrain:		
@@ -311,24 +313,30 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 			layers_popup_button.init_color_layers(object, brush_popup_button)
 			#Colol layers will init there own brushes				
 		mask_decal.active_terrain = object
+		if not get_active_mterrain().is_grid_created():
+			get_active_mterrain().create_grid()
 	elif object is MGrass:		
 		paint_panel.visible = true
 		#clean up previous edit mode: grass, nav, and path stuff, then:	
 		layers_popup_button.visible = false
 		#init_height_layers(object.get_parent())
 		brush_popup_button.init_grass_brushes()
+		mask_popup_button.toggle_grass_settings(true)
+		if not get_active_mterrain().is_grid_created():
+			get_active_mterrain().create_grid()
 	elif object is MNavigationRegion3D:
 		paint_panel.visible = true
 		layers_popup_button.visible = false
 		brush_popup_button.init_mnavigation_brushes()
 		object.set_npoints_visible(true)
+		if not get_active_mterrain().is_grid_created():
+			get_active_mterrain().create_grid()
 	elif object is MPath:
 		mpath_gizmo_gui.visible = true
 	elif object is MCurveMesh:
 		mcurve_mesh.set_curve_mesh(object)
 		mcurve_mesh.visible = true
-	if not get_active_mterrain().is_grid_created():
-		get_active_mterrain().create_grid()
+	
 
 func draw(brush_position):		
 	if active_object is MGrass:

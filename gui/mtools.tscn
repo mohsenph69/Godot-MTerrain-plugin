@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://bdxfu7h15wijq"]
+[gd_scene load_steps=28 format=3 uid="uid://bdxfu7h15wijq"]
 
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="1_bamv0"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
@@ -14,15 +14,16 @@
 [ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="11_0dtgq"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_brushes.gd" id="11_c6bj1"]
 [ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="11_qk86q"]
-[ext_resource type="PackedScene" uid="uid://b6wfdaqojnwju" path="res://addons/m_terrain/gui/brush_masks.tscn" id="12_x7iwb"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_layers.gd" id="13_1tujl"]
 [ext_resource type="PackedScene" uid="uid://yyvmuhqx1jgi" path="res://addons/m_terrain/gui/mtools_layer_item.tscn" id="14_j3rha"]
 [ext_resource type="Texture2D" uid="uid://tow1rj13cxaw" path="res://addons/m_terrain/icons/merge_down_icon.svg" id="15_sjvca"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_masks.gd" id="16_h7wnm"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_slider_value.gd" id="18_vmcc8"]
+[ext_resource type="Texture2D" uid="uid://rtqaiuii2jml" path="res://addons/m_terrain/icons/no_mask_icon.svg" id="19_epiyr"]
 [ext_resource type="Texture2D" uid="uid://b8xvuorm57o1s" path="res://addons/m_terrain/icons/invert_icon_normal.svg" id="20_8anom"]
 [ext_resource type="Texture2D" uid="uid://tmhtthjk2rb4" path="res://addons/m_terrain/icons/invert_icon_inverted.svg" id="21_lodvs"]
 [ext_resource type="PackedScene" uid="uid://btfhp7mnhc5nj" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.tscn" id="23_i5qr3"]
+[ext_resource type="PackedScene" uid="uid://b6wfdaqojnwju" path="res://addons/m_terrain/gui/mtools_mask_list.tscn" id="23_qb0vt"]
 [ext_resource type="PackedScene" uid="uid://b76ioum2i7yjy" path="res://addons/m_terrain/gizmos/mcurve_mesh_gui.tscn" id="28_x63ge"]
 
 [sub_resource type="GDScript" id="GDScript_tlie2"]
@@ -62,7 +63,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -59.0
+offset_top = -73.0
 grow_horizontal = 2
 grow_vertical = 0
 
@@ -450,6 +451,7 @@ script = ExtResource("11_c6bj1")
 [node name="Control" type="Control" parent="Panel/hbox/PaintControls/paint_panel/brush_button"]
 visible = false
 anchors_preset = 0
+offset_right = 1582.0
 mouse_filter = 1
 
 [node name="brush_settings_panel" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control"]
@@ -541,15 +543,18 @@ allow_reselect = true
 max_columns = 0
 
 [node name="mask_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 toggle_mode = true
-text = "Mask"
+icon = ExtResource("19_epiyr")
+expand_icon = true
 script = ExtResource("16_h7wnm")
 
 [node name="Panel2" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/mask_button"]
 visible = false
 layout_mode = 1
 offset_top = -236.0
+offset_right = 1582.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2"]
@@ -597,16 +602,15 @@ layout_mode = 2
 size_flags_horizontal = 1
 size_flags_vertical = 3
 mouse_filter = 1
-max_value = 500.0
-step = 0.1
-value = 50.0
+max_value = 4.0
+rounded = true
 
 [node name="LineEdit" type="LineEdit" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_rotation"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 mouse_filter = 1
 theme_override_constants/minimum_character_width = 0
-text = "21.5"
+text = "0"
 middle_mouse_paste_enabled = false
 
 [node name="Label" type="Label" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/mask_rotation"]
@@ -661,7 +665,7 @@ text = "invert
 mask"
 horizontal_alignment = 1
 
-[node name="brush_masks" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer" instance=ExtResource("12_x7iwb")]
+[node name="mask_list" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer" instance=ExtResource("23_qb0vt")]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -674,6 +678,13 @@ metadata/_edit_group_ = true
 [node name="HScrollBar" type="HScrollBar" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
 layout_mode = 2
 mouse_filter = 1
+
+[node name="mask_clear_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
+visible = false
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+icon = ExtResource("11_0dtgq")
+expand_icon = true
 
 [node name="mpath_gizmo_gui" parent="Panel/hbox" instance=ExtResource("23_i5qr3")]
 visible = false

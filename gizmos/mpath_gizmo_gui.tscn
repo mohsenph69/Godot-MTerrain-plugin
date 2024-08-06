@@ -47,15 +47,17 @@ offset_right = 449.0
 offset_bottom = 40.0
 
 [node name="mirror_checkbox" type="CheckBox" parent="HBoxContainer"]
+custom_minimum_size = Vector2(5, 0)
 layout_mode = 2
 tooltip_text = "Mirror-Controls
 Hot-key: M"
 button_pressed = true
 icon = ExtResource("2_tic3q")
 alignment = 1
-icon_alignment = 1
+icon_alignment = 2
 
 [node name="mirror_l_checkbox" type="CheckBox" parent="HBoxContainer"]
+custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 tooltip_text = "Mirror-Controls-Lenght
 Hot-key: L"
@@ -65,10 +67,12 @@ alignment = 1
 icon_alignment = 1
 
 [node name="snap" type="CheckBox" parent="HBoxContainer"]
+custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 tooltip_text = "Snap to Terrain"
 button_pressed = true
 icon = ExtResource("3_yoi5b")
+icon_alignment = 2
 
 [node name="mode" type="OptionButton" parent="HBoxContainer"]
 layout_mode = 2

@@ -1,3 +1,4 @@
+#BRUSH button
 @tool
 extends Button
 
@@ -42,8 +43,13 @@ func _ready():
 	var panel = get_child(0)
 	panel.visible = false
 	panel.position.y = -panel.size.y
+	panel.gui_input.connect(fix_gui_input)
 	panel.size.x = get_viewport().size.x - global_position.x
-		
+	
+func fix_gui_input(event: InputEvent):
+	if event is InputEventMouseButton:
+		get_viewport().set_input_as_handled()
+	
 func _toggled(toggled_on):
 	if toggled_on:
 		get_child(0).size.x = get_viewport().size.x - global_position.x
@@ -68,9 +74,8 @@ func init_height_brushes(new_brush_manager):
 	var brush_names = height_brush_manager.get_height_brush_list()
 	
 	for n in brush_names:			
-		var id = brush_container.add_item("")
-		if "raise" in n.to_lower():
-			
+		var id = brush_container.add_item(n)
+		if "raise" in n.to_lower():			
 			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/brush_icon_raise.svg"))
 		if "height" in n.to_lower():
 			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/brush_icon_to_height.svg"))
@@ -78,6 +83,9 @@ func init_height_brushes(new_brush_manager):
 			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/brush_icon_smooth.svg"))
 		if "hole" in n.to_lower():
 			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/brush_icon_hole.svg"))	
+		if "layer" in n.to_lower():
+			brush_container.set_item_icon(id, preload("res://addons/m_terrain/icons/eraser_icon.svg"))	
+			
 	on_height_brush_select(0)	
 	
 func on_height_brush_select(index):
