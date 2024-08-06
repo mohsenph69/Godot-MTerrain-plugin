@@ -2,6 +2,7 @@
 extends Window
 
 signal keymap_changed
+signal restore_default_keymap_requested
 
 @onready var Terror:=$base/TabContainer/Terrain/VBoxContainer/Error
 @onready var Rwarning:=$base/TabContainer/Region/VBoxContainer/Warning
@@ -77,9 +78,19 @@ func generate_info(_t:MTerrain,_version:String, keyboard_actions):
 	vc *= vc
 	base_unit.text = base_unit.text % [terrain.get_base_size(),vc]
 	info.text = info.text % version
-
+	create_keymapping_interface(keyboard_actions)
+	
+func create_keymapping_interface(keyboard_actions):
 	var mterrain_actions_list = find_child("mterrain_action_list")
+	for child in mterrain_actions_list.get_children():
+		child.queue_free()
+		mterrain_actions_list.remove_child(child)
 	var mpath_actions_list = find_child("mpath_action_list")
+	for child in mpath_actions_list .get_children():
+		child.queue_free()
+		mterrain_actions_list.remove_child(child)
+	var restore_default_keymap = find_child("restore_default_keymap")
+	restore_default_keymap.pressed.connect( func(): restore_default_keymap_requested.emit() )
 	for action in keyboard_actions:
 		var item = preload("res://addons/m_terrain/gui/mtools_keyboard_shortcut_item.tscn").instantiate()				
 		if action.name.begins_with("mterrain_"):			

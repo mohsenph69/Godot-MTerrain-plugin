@@ -31,43 +31,16 @@ var mcurve_mesh_gui
 var inspector_mpath
 
 #region keyboard actions
-var default_keyboard_actions = [
-		{"name": "mterrain_brush_size_increase", "keycode": KEY_BRACKETRIGHT, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mterrain_brush_size_decrease", "keycode": KEY_BRACKETLEFT, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		
-		{"name": "mterrain_mask_size_increase", "keycode": KEY_PERIOD, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mterrain_mask_size_decrease", "keycode": KEY_COMMA, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mterrain_mask_rotate_clockwise", "keycode": KEY_L, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mterrain_mask_rotate_counter_clockwise", "keycode": KEY_K, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mterrain_mask_rotation_reset", "keycode": KEY_SEMICOLON, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+var default_keyboard_actions 
 
-		{"name": "mpath_toggle_mode", "keycode": KEY_QUOTELEFT, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_toggle_mirror", "keycode": KEY_M, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_toggle_mirror_length", "keycode": KEY_L, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		
-		{"name": "mpath_validate", "keycode": KEY_P, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_select_linked", "keycode": KEY_L, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_swap_points", "keycode": KEY_T, "pressed": true, "shift": true, "ctrl": false, "alt": false},
-		{"name": "mpath_toggle_connection", "keycode": KEY_T, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_remove_point", "keycode": KEY_BACKSPACE, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_disconnect_point", "keycode": KEY_X, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_connect_point", "keycode": KEY_C, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_tilt_mode", "keycode": KEY_R, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_scale_mode", "keycode": KEY_K, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_lock_zy", "keycode": KEY_X, "pressed": true, "shift": true, "ctrl": false, "alt": false},
-		{"name": "mpath_lock_xz", "keycode": KEY_Y, "pressed": true, "shift": true, "ctrl": false, "alt": false},
-		{"name": "mpath_lock_xy", "keycode": KEY_Z, "pressed": true, "shift": true, "ctrl": false, "alt": false},
-		{"name": "mpath_lock_x", "keycode": KEY_X, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_lock_y", "keycode": KEY_Y, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_lock_z", "keycode": KEY_Z, "pressed": true,  "shift": false, "ctrl": false, "alt": false },
-
-]
 const setting_path = 'addons/MTerrain/keymap/'
 
-func add_keymap():
+func add_keymap(force_default = false):
+	print("aadding keymap mterrain, restore default: ", force_default)
+	set_default_keymap()
 	for action in default_keyboard_actions:
 		var path = setting_path + action.name
-		if not ProjectSettings.has_setting(path):
+		if force_default or not ProjectSettings.has_setting(path):
 			var a = InputEventKey.new()
 			a.keycode = action.keycode
 			a.pressed = action.pressed
@@ -142,7 +115,7 @@ func _enter_tree():
 		inspector_mpath = load("res://addons/m_terrain/inspector/mpath.gd").new()
 		inspector_mpath.gizmo = gizmo_mpath
 		add_inspector_plugin(inspector_mpath)
-		
+				
 		add_keymap()		
 		
 func _ready() -> void:	
@@ -391,7 +364,42 @@ func show_info_window(active_terrain:MTerrain = tools.get_active_mterrain()):
 	add_child(current_window_info)
 	current_window_info.generate_info(active_terrain,version, default_keyboard_actions)
 	current_window_info.keymap_changed.connect(update_keymap)
+	current_window_info.restore_default_keymap_requested.connect(func():
+		add_keymap(true)
+		current_window_info.create_keymapping_interface(default_keyboard_actions)
+	)
 
+func set_default_keymap():
+	default_keyboard_actions = [
+		{"name": "mterrain_brush_size_increase", "keycode": KEY_BRACKETRIGHT, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_brush_size_decrease", "keycode": KEY_BRACKETLEFT, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		
+		{"name": "mterrain_mask_size_increase", "keycode": KEY_PERIOD, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_mask_size_decrease", "keycode": KEY_COMMA, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_mask_rotate_clockwise", "keycode": KEY_L, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_mask_rotate_counter_clockwise", "keycode": KEY_K, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_mask_rotation_reset", "keycode": KEY_SEMICOLON, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+
+		{"name": "mpath_toggle_mode", "keycode": KEY_QUOTELEFT, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_toggle_mirror", "keycode": KEY_M, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_toggle_mirror_length", "keycode": KEY_L, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		
+		{"name": "mpath_validate", "keycode": KEY_P, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_select_linked", "keycode": KEY_L, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_swap_points", "keycode": KEY_T, "pressed": true, "shift": true, "ctrl": false, "alt": false},
+		{"name": "mpath_toggle_connection", "keycode": KEY_T, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_remove_point", "keycode": KEY_BACKSPACE, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_disconnect_point", "keycode": KEY_X, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_connect_point", "keycode": KEY_C, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_tilt_mode", "keycode": KEY_R, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_scale_mode", "keycode": KEY_K, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_lock_zy", "keycode": KEY_X, "pressed": true, "shift": true, "ctrl": false, "alt": false},
+		{"name": "mpath_lock_xz", "keycode": KEY_Y, "pressed": true, "shift": true, "ctrl": false, "alt": false},
+		{"name": "mpath_lock_xy", "keycode": KEY_Z, "pressed": true, "shift": true, "ctrl": false, "alt": false},
+		{"name": "mpath_lock_x", "keycode": KEY_X, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_lock_y", "keycode": KEY_Y, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_lock_z", "keycode": KEY_Z, "pressed": true,  "shift": false, "ctrl": false, "alt": false },
+	]
 func update_keymap(who, keycode, ctrl, alt, shift):
 	var a = InputEventKey.new()
 	a.keycode = keycode

@@ -41,10 +41,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-current_tab = 5
 
 [node name="Shortcuts" type="Panel" parent="base/TabContainer"]
-visible = false
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="base/TabContainer/Shortcuts"]
@@ -82,6 +80,10 @@ horizontal_alignment = 1
 
 [node name="mpath_action_list" type="VBoxContainer" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
 layout_mode = 2
+
+[node name="restore_default_keymap" type="Button" parent="base/TabContainer/Shortcuts/MarginContainer/ScrollContainer/vbox"]
+layout_mode = 2
+text = "Restore Defaults"
 
 [node name="Save config" type="TabBar" parent="base/TabContainer"]
 visible = false
@@ -366,6 +368,7 @@ size: %d meter
 vertex count: %d"
 
 [node name="info" type="TabBar" parent="base/TabContainer"]
+visible = false
 layout_mode = 2
 
 [node name="info" type="RichTextLabel" parent="base/TabContainer/info"]
