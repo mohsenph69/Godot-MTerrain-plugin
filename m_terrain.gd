@@ -242,7 +242,12 @@ func _forward_3d_gui_input(viewport_camera, event):
 		return AFTER_GUI_INPUT_PASS
 		
 	var active_terrain = tools.get_active_mterrain()
-	if not active_terrain is MTerrain: ray_col = null
+	if not active_terrain is MTerrain: 
+		ray_col = null
+	elif event is InputEventMouse:
+		var ray:Vector3 = viewport_camera.project_ray_normal(event.position)
+		var pos:Vector3 = viewport_camera.global_position
+		ray_col = active_terrain.get_ray_collision_point(pos,ray,collision_ray_step,1000)
 	
 	for terrain in tools.get_all_mterrain():
 		terrain.set_editor_camera(viewport_camera)	
@@ -251,12 +256,9 @@ func _forward_3d_gui_input(viewport_camera, event):
 		return gizmo_mpath._forward_3d_gui_input(viewport_camera, event, ray_col)
 	######################## HANDLE CURVE GIZMO FINSH ########################	
 	
-	if active_terrain is MTerrain and event is InputEventMouse:				
-		var ray:Vector3=viewport_camera.project_ray_normal(event.position)
-		var pos:Vector3=viewport_camera.global_position
-		ray_col = active_terrain.get_ray_collision_point(pos,ray,collision_ray_step,1000)
+	if active_terrain is MTerrain and event is InputEventMouse:						
 		if ray_col.is_collided():			
-			col_dis = ray_col.get_collision_position().distance_to(pos)
+			col_dis = ray_col.get_collision_position().distance_to(viewport_camera.global_position)
 			tools.status_bar.set_height_label(ray_col.get_collision_position().y)
 			tools.status_bar.set_distance_label(col_dis)
 			tools.status_bar.set_region_label(active_terrain.get_region_id_by_world_pos(ray_col.get_collision_position()))

@@ -359,224 +359,232 @@ func _has_gizmo(for_node_3d):
 	return for_node_3d is MPath
 
 func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
-	if event is InputEventMouseButton:		
-		if event.pressed:			
-			if value_mode != VALUE_MODE.NONE:				
-				is_mouse_init_set = false
-				var curve = find_curve()
-				if not curve or not curve.has_point(active_point):
-					value_mode = VALUE_MODE.NONE					
-					return
-				if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling
-					curve.set_point_scale(active_point,init_scale)
-					curve.set_point_tilt(active_point,init_tilt)
-					gui.tilt_num.set_value(init_tilt)
-					gui.scale_num.set_value(init_scale)
-					value_mode = VALUE_MODE.NONE
-					curve.commit_point_update(active_point)					
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-				if value_mode == VALUE_MODE.TILT:
-					ur.create_action("change tilt")
-					ur.add_do_method(curve,"set_point_tilt",active_point,curve.get_point_tilt(active_point))
-					ur.add_do_method(curve,"commit_point_update",active_point)
-					ur.add_do_method(gui.tilt_num,"set_value",curve.get_point_tilt(active_point))
-					ur.add_undo_method(gui.tilt_num,"set_value",init_tilt)
-					ur.add_undo_method(curve,"set_point_tilt",active_point,init_tilt)
-					ur.add_undo_method(curve,"commit_point_update",active_point)
-					ur.commit_action(false)
-				elif value_mode == VALUE_MODE.SCALE:
-					ur.create_action("change scale")
-					ur.add_do_method(curve,"set_point_scale",active_point,curve.get_point_scale(active_point))
-					ur.add_do_method(gui.scale_num,"set_value",curve.get_point_scale(active_point))
-					ur.add_undo_method(gui.scale_num,"set_value",init_scale)
-					ur.add_undo_method(curve,"set_point_scale",active_point,init_scale)
-					ur.add_undo_method(curve,"commit_point_update",active_point)
-					ur.commit_action(false)
-				value_mode = VALUE_MODE.NONE				
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventKey:
-		if event.pressed:
-			#if event.keycode == KEY_P:
-			if Input.is_action_just_pressed("mpath_validate"):				
-				var curve:MCurve = find_curve()
-				#for c in selected_connections:
-				#	curve.validate_conn(c)
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-			#if event.keycode == KEY_L:
-			if Input.is_action_just_pressed("mpath_select_linked"):			
-				var path:MPath = find_mpath()
-				if path:
-					var curve:MCurve = path.curve
-					if curve and curve.has_point(active_point):
-						var pp = curve.get_point_conn_points_recursive(active_point)
-						selected_points = pp
-						pp.push_back(active_point)
-						selected_connections = curve.get_conn_ids_exist(pp)
-						path.update_gizmos()
-						return EditorPlugin.AFTER_GUI_INPUT_STOP
-			#if event.keycode == KEY_T and Input.is_key_pressed(KEY_SHIFT):
-			if Input.is_action_just_pressed("mpath_swap_points"):			
-				swap_points()
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-			#if event.keycode == KEY_T and not Input.is_key_pressed(KEY_SHIFT):
-			if Input.is_action_just_pressed("mpath_toggle_connection"):			
-				if toggle_connection():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			#elif  event.keycode == KEY_BACKSPACE:
-			if Input.is_action_just_pressed("mpath_remove_point"):
-				if remove_point():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			#elif  event.keycode == KEY_X:
-			if Input.is_action_just_pressed("mpath_disconnect_point"):			
-				if disconnect_points():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			#elif event.keycode == KEY_C:
-			if Input.is_action_just_pressed("mpath_connect_point"):						
-				if connect_points():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			#if event.keycode == KEY_R:
-			if Input.is_action_just_pressed("mpath_tilt_mode"):									
-				var curve = find_curve()
-				if curve and curve.has_point(active_point):
-					init_tilt = curve.get_point_tilt(active_point)
-					value_mode = VALUE_MODE.TILT
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-#			if event.keycode == KEY_K:
-			if Input.is_action_just_pressed("mpath_scale_mode"):						
-				var curve = find_curve()
-				if curve and curve.has_point(active_point):
-					init_scale = curve.get_point_scale(active_point)
-					value_mode = VALUE_MODE.SCALE
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if is_handle_setting:
-				var path:MPath = find_mpath()
-				#shift x
-				if Input.is_action_just_pressed("mpath_lock_zy"):
-					lock_mode = LOCK_MODE.ZY
-					if path: path.update_gizmos()
-				#shift y
-				if Input.is_action_just_pressed("mpath_lock_xz"):
-					lock_mode = LOCK_MODE.XZ
-					if path: path.update_gizmos()
-				if Input.is_action_just_pressed("mpath_lock_xy"):					
-					lock_mode = LOCK_MODE.XY
-					if path: path.update_gizmos()
-				if Input.is_action_just_pressed("mpath_lock_x"):
-					lock_mode = LOCK_MODE.X
-					if path: path.update_gizmos()
-				if Input.is_action_just_pressed("mpath_lock_y"):			
-					lock_mode = LOCK_MODE.Y
-					if path: path.update_gizmos()
-				if Input.is_action_just_pressed("mpath_lock_z"):
-					lock_mode = LOCK_MODE.Z
-					if path: path.update_gizmos()
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseButton:		
-		if event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:			
-			var mpath = find_mpath()
-			if not mpath:				
-				return
-			var curve:MCurve = mpath.curve
-			if not curve:				
-				return
-			#### Handling Selections
-			var from = camera.project_ray_origin(event.position)
-			var to = camera.project_ray_normal(event.position)
-			### Get collission point id
-			var pcol = curve.ray_active_point_collision(from,to,0.9999)
-			if pcol != 0:
-				if Input.is_key_pressed(KEY_CTRL):
-					var last:int= selected_points.find(pcol)
-					if last != -1:
-						selected_points.remove_at(last)
-					else:
-						selected_points.push_back(pcol)
-				else:
-					if pcol == active_point and selected_points.size() == 0:
-						change_active_point(0)						
-						return
-					else:
-						selected_points.clear()
-						change_active_point(pcol)
-						var last:int= selected_points.find(pcol)
-						if last != -1:
-							selected_points.remove_at(last)
-			if active_point != 0 and  Input.is_key_pressed(KEY_CTRL) and pcol==0: # Maybe a miss selction
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-			## selected connections
-			selected_connections.clear()
-			var all_pp = selected_points.duplicate()
-			all_pp.push_back(active_point)
-			selected_connections = curve.get_conn_ids_exist(all_pp)
-			if pcol: #### if we have selection then we should stop here and not go into creation stuff
-				mpath.update_gizmos()
-				selection_changed.emit()				
-				return
-			if gui.get_mode() == gui.MODE.CREATE:
-				### Here should be adjusted later with MTerrain
-				var new_index:int
-				var new_pos:Vector3
-				var is_new_pos_set = false
-				if gui.is_terrain_snap():
-					#To Do: user should be able to select which mterrain is used for snapping
-					var active_mterrain = mterrain_plugin.tools.get_active_mterrain()
-					if active_mterrain and active_mterrain.is_grid_created():
-						if terrain_col.is_collided():
-							new_pos = terrain_col.get_collision_position()
-							is_new_pos_set = true
-					else:
-						var col = MTool.ray_collision_y_zero_plane(camera.global_position,camera.project_ray_normal(event.position))
-						if col.is_collided():
-							new_pos = col.get_collision_position()
-							is_new_pos_set = true
-				if curve.has_point(active_point):
-					var creation_distance = curve.get_point_position(active_point).distance_to(from)
-					if not is_new_pos_set:
-						new_pos = from + to * creation_distance
-					new_index = curve.add_point(new_pos,new_pos,new_pos,active_point)
-				else:
-					if not is_new_pos_set:
-						new_pos = from + to * 4.0
-					new_index = curve.add_point(new_pos,new_pos,new_pos,0)
-				if new_index == 0: ### In case for error					
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-				## Undo Redo
-				ur.create_action("create_point")
-				ur.add_do_method(curve,"add_point",new_pos,new_pos,new_pos,active_point)
-				ur.add_undo_method(curve,"remove_point",new_index)
-				ur.commit_action(false)
-				change_active_point(new_index)
-				mpath.update_gizmos()				
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseMotion:
-		if value_mode == VALUE_MODE.NONE: 			
-			return
+	#Process tilt, scale, and right-click cancel
+	if event is InputEventMouseButton and event.pressed and value_mode != VALUE_MODE.NONE:
+		is_mouse_init_set = false
 		var curve = find_curve()
-		if not curve: 			
+		if not curve or not curve.has_point(active_point):
+			value_mode = VALUE_MODE.NONE					
 			return
-		if not curve.has_point(active_point): 			
-			return
-		if not is_mouse_init_set:
-			mouse_init_pos = event.position
-			init_scale = curve.get_point_scale(active_point)
-			init_tilt = curve.get_point_tilt(active_point)
-			is_mouse_init_set = true
-		var mouse_diff:float = mouse_init_pos.y - event.position.y
-		mouse_diff *= value_mode_mouse_sensivity
-		if value_mode == VALUE_MODE.TILT:
-			var new_tilt:= init_tilt + mouse_diff
-			curve.set_point_tilt(active_point,new_tilt)
-			gui.tilt_num.set_value(new_tilt)
-		elif  value_mode == VALUE_MODE.SCALE:
-			var new_scale:= init_scale + mouse_diff
-			curve.set_point_scale(active_point,new_scale)
-			gui.scale_num.set_value(new_scale)
-		curve.commit_point_update(active_point)		
-		return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseButton:
-		if event.button_mask == MOUSE_BUTTON_LEFT and gui.is_select_lock():			
+		if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling
+			curve.set_point_scale(active_point,init_scale)
+			curve.set_point_tilt(active_point,init_tilt)
+			gui.tilt_num.set_value(init_tilt)
+			gui.scale_num.set_value(init_scale)
+			value_mode = VALUE_MODE.NONE
+			curve.commit_point_update(active_point)					
 			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		if value_mode == VALUE_MODE.TILT:
+			ur.create_action("change tilt")
+			ur.add_do_method(curve,"set_point_tilt",active_point,curve.get_point_tilt(active_point))
+			ur.add_do_method(curve,"commit_point_update",active_point)
+			ur.add_do_method(gui.tilt_num,"set_value",curve.get_point_tilt(active_point))
+			ur.add_undo_method(gui.tilt_num,"set_value",init_tilt)
+			ur.add_undo_method(curve,"set_point_tilt",active_point,init_tilt)
+			ur.add_undo_method(curve,"commit_point_update",active_point)
+			ur.commit_action(false)
+		elif value_mode == VALUE_MODE.SCALE:
+			ur.create_action("change scale")
+			ur.add_do_method(curve,"set_point_scale",active_point,curve.get_point_scale(active_point))
+			ur.add_do_method(gui.scale_num,"set_value",curve.get_point_scale(active_point))
+			ur.add_undo_method(gui.scale_num,"set_value",init_scale)
+			ur.add_undo_method(curve,"set_point_scale",active_point,init_scale)
+			ur.add_undo_method(curve,"commit_point_update",active_point)
+			ur.commit_action(false)
+		value_mode = VALUE_MODE.NONE				
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
+	if event is InputEventKey and event.pressed:
+		if process_keyboard_actions():
+			return EditorPlugin.AFTER_GUI_INPUT_STOP		
+	if event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:			
+		if process_mouse_left_click(camera, event, terrain_col):
+			return EditorPlugin.AFTER_GUI_INPUT_STOP		
+	if event is InputEventMouseMotion:
+		if process_mouse_motion(event):
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+	if gui.is_select_lock() and event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT:
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
+		
+func process_mouse_left_click(camera, event, terrain_col):
+	var mpath = find_mpath()
+	if not mpath:				
+		return
+	var curve:MCurve = mpath.curve
+	if not curve:				
+		return
+	#### Handling Selections
+	var from = camera.project_ray_origin(event.position)
+	var to = camera.project_ray_normal(event.position)
+	### Get collission point id
+	var pcol = curve.ray_active_point_collision(from,to,0.9999)
+	if pcol != 0:
+		if Input.is_key_pressed(KEY_CTRL):
+			var last:int= selected_points.find(pcol)
+			if last != -1:
+				selected_points.remove_at(last)
+			else:
+				selected_points.push_back(pcol)
+		else:
+			if pcol == active_point and selected_points.size() == 0:
+				change_active_point(0)						
+				return
+			else:
+				selected_points.clear()
+				change_active_point(pcol)
+				var last:int= selected_points.find(pcol)
+				if last != -1:
+					selected_points.remove_at(last)
+	if active_point != 0 and  Input.is_key_pressed(KEY_CTRL) and pcol==0: # Maybe a miss selction
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
+	## selected connections
+	selected_connections.clear()
+	var all_pp = selected_points.duplicate()
+	all_pp.push_back(active_point)
+	selected_connections = curve.get_conn_ids_exist(all_pp)
+	if pcol: #### if we have selection then we should stop here and not go into creation stuff
+		mpath.update_gizmos()
+		selection_changed.emit()				
+		return
+	if gui.get_mode() == gui.MODE.CREATE:
+		### Here should be adjusted later with MTerrain
+		var new_index:int
+		var new_pos:Vector3
+		var is_new_pos_set = false
+		if gui.is_terrain_snap():
+			#To Do: user should be able to select which mterrain is used for snapping
+			var active_mterrain = mterrain_plugin.tools.get_active_mterrain()
+			if active_mterrain and active_mterrain.is_grid_created():
+				print("mpath snapping to mterrain")
+				if terrain_col.is_collided():
+					new_pos = terrain_col.get_collision_position()
+					is_new_pos_set = true
+			else:
+				var col = MTool.ray_collision_y_zero_plane(camera.global_position,camera.project_ray_normal(event.position))
+				if col.is_collided():
+					new_pos = col.get_collision_position()
+					is_new_pos_set = true
+		if curve.has_point(active_point):
+			var creation_distance = curve.get_point_position(active_point).distance_to(from)
+			if not is_new_pos_set:
+				new_pos = from + to * creation_distance
+			new_index = curve.add_point(new_pos,new_pos,new_pos,active_point)
+		else:
+			if not is_new_pos_set:
+				new_pos = from + to * 4.0
+			new_index = curve.add_point(new_pos,new_pos,new_pos,0)
+		if new_index == 0: ### In case for error					
+			return true
+		## Undo Redo
+		ur.create_action("create_point")
+		ur.add_do_method(curve,"add_point",new_pos,new_pos,new_pos,active_point)
+		ur.add_undo_method(curve,"remove_point",new_index)
+		ur.commit_action(false)
+		change_active_point(new_index)
+		mpath.update_gizmos()				
+		return true
 
+func process_mouse_motion(event):
+	if value_mode == VALUE_MODE.NONE: 			
+		return
+	var curve = find_curve()
+	if not curve: 			
+		return
+	if not curve.has_point(active_point): 			
+		return
+	if not is_mouse_init_set:
+		mouse_init_pos = event.position
+		init_scale = curve.get_point_scale(active_point)
+		init_tilt = curve.get_point_tilt(active_point)
+		is_mouse_init_set = true
+	var mouse_diff:float = mouse_init_pos.y - event.position.y
+	mouse_diff *= value_mode_mouse_sensivity
+	if value_mode == VALUE_MODE.TILT:
+		var new_tilt:= init_tilt + mouse_diff
+		curve.set_point_tilt(active_point,new_tilt)
+		gui.tilt_num.set_value(new_tilt)
+	elif value_mode == VALUE_MODE.SCALE:
+		var new_scale:= init_scale + mouse_diff
+		curve.set_point_scale(active_point,new_scale)
+		gui.scale_num.set_value(new_scale)
+	curve.commit_point_update(active_point)		
+	return true
+	
+func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
+#if event.keycode == KEY_P:
+	if Input.is_action_just_pressed("mpath_validate"):				
+		var curve:MCurve = find_curve()
+		#for c in selected_connections:
+		#	curve.validate_conn(c)
+		return true
+	#if event.keycode == KEY_L:
+	if Input.is_action_just_pressed("mpath_select_linked"):			
+		var path:MPath = find_mpath()
+		if path:
+			var curve:MCurve = path.curve
+			if curve and curve.has_point(active_point):
+				var pp = curve.get_point_conn_points_recursive(active_point)
+				selected_points = pp
+				pp.push_back(active_point)
+				selected_connections = curve.get_conn_ids_exist(pp)
+				path.update_gizmos()
+				return true
+	#if event.keycode == KEY_T and Input.is_key_pressed(KEY_SHIFT):
+	if Input.is_action_just_pressed("mpath_swap_points"):			
+		swap_points()
+		return true
+	#if event.keycode == KEY_T and not Input.is_key_pressed(KEY_SHIFT):
+	if Input.is_action_just_pressed("mpath_toggle_connection"):			
+		if toggle_connection():
+			return true
+	#elif  event.keycode == KEY_BACKSPACE:
+	if Input.is_action_just_pressed("mpath_remove_point"):
+		if remove_point():
+			return true
+	#elif  event.keycode == KEY_X:
+	if Input.is_action_just_pressed("mpath_disconnect_point"):			
+		if disconnect_points():
+			return true
+	#elif event.keycode == KEY_C:
+	if Input.is_action_just_pressed("mpath_connect_point"):						
+		if connect_points():
+			return true
+	#if event.keycode == KEY_R:
+	if Input.is_action_just_pressed("mpath_tilt_mode"):									
+		var curve = find_curve()
+		if curve and curve.has_point(active_point):
+			init_tilt = curve.get_point_tilt(active_point)
+			value_mode = VALUE_MODE.TILT
+			return true
+#	if event.keycode == KEY_K:
+	if Input.is_action_just_pressed("mpath_scale_mode"):						
+		var curve = find_curve()
+		if curve and curve.has_point(active_point):
+			init_scale = curve.get_point_scale(active_point)
+			value_mode = VALUE_MODE.SCALE
+			return true
+	if is_handle_setting:
+		var path:MPath = find_mpath()
+		#shift x
+		if Input.is_action_just_pressed("mpath_lock_zy"):
+			lock_mode = LOCK_MODE.ZY
+			if path: path.update_gizmos()
+		#shift y
+		if Input.is_action_just_pressed("mpath_lock_xz"):
+			lock_mode = LOCK_MODE.XZ
+			if path: path.update_gizmos()
+		if Input.is_action_just_pressed("mpath_lock_xy"):					
+			lock_mode = LOCK_MODE.XY
+			if path: path.update_gizmos()
+		if Input.is_action_just_pressed("mpath_lock_x"):
+			lock_mode = LOCK_MODE.X
+			if path: path.update_gizmos()
+		if Input.is_action_just_pressed("mpath_lock_y"):			
+			lock_mode = LOCK_MODE.Y
+			if path: path.update_gizmos()
+		if Input.is_action_just_pressed("mpath_lock_z"):
+			lock_mode = LOCK_MODE.Z
+			if path: path.update_gizmos()
+		return true
 
 func find_mpath()->MPath:
 	if active_path:
