@@ -16,7 +16,7 @@ func set_name(input:String):
 	$label.text = input
 
 func set_value(input:int):
-	print("set select ", input)
+	#print("set select ", input)
 	value = input
 	$values.selected = input
 

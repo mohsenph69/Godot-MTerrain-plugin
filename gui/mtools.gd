@@ -262,7 +262,7 @@ func process_input(event):
 func on_scene_changed(_root):
 	set_edit_mode(null)
 
-func request_hide():
+func request_hide():	
 	set_edit_mode(null, null)
 	visible = false
 
@@ -270,7 +270,7 @@ func request_show():
 	visible = true
 	update_edit_mode_options()
 
-func deactivate_editing():
+func deactivate_editing():	
 	if is_instance_valid(edit_mode_button):
 		edit_mode_button.text = "edit terrain"
 	
@@ -293,8 +293,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	
 	if object==null or mode ==&"": 
 		deactivate_editing()
-		return
-	
+		return	
 	active_object = object	
 	current_edit_mode = mode
 	
@@ -305,14 +304,14 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		mcurve_mesh.set_curve_mesh(object)
 		mcurve_mesh.visible = true
 		
-	edit_mode_changed.emit(object, mode)
+	edit_mode_changed.emit(object, mode)	
 	var active_mterrain = get_active_mterrain()
 	if not active_mterrain: return
 	active_mterrain.set_brush_manager(brush_manager)
 	mask_popup_button.mterrain = active_mterrain
 	mask_popup_button.toggle_grass_settings(false)
 	
-	if object is MTerrain:		
+	if object is MTerrain:				
 		paint_panel.visible = true
 		layers_popup_button.visible = true
 		#to do: clean up previous edit mode: grass, nav, and path stuff?, then:		
@@ -321,7 +320,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		
 		if mode == &"sculpt":
 			layers_popup_button.init_height_layers(object)
-			brush_popup_button.init_height_brushes(brush_manager)
+			brush_popup_button.init_height_brushes(brush_manager)			
 		elif mode == &"paint":
 			layers_popup_button.init_color_layers(object, brush_popup_button)
 			#Colol layers will init there own brushes				

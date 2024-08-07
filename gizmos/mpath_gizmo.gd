@@ -208,9 +208,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		### in multi select mode we do not inturput with this
 		return
 	var curve:MCurve= gizmo.get_node_3d().curve
-	if not curve: 
-		print("set handle, no curve")
-		return
+	if not curve: return
 	if not is_handle_init_pos_set:
 		is_handle_setting = true
 		is_handle_init_pos_set = true
@@ -220,8 +218,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 	var from = camera.project_ray_origin(screen_pos)
 	var to = camera.project_ray_normal(screen_pos)
 	# is main point
-	if not secondary:
-		print("set handle, not secondary :) ")
+	if not secondary:		
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
@@ -233,8 +230,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 				drag.y = 0.0
 		curve.move_point(points_id,drag)
 		change_active_point(points_id)
-	else: # is secondary
-		print("set handle, secondary")
+	else: # is secondary		
 		if gui.is_xz_handle_lock() and lock_mode == LOCK_MODE.NONE:
 			lock_mode = LOCK_MODE.XZ
 		if points_id % 2 == 0: # is even
@@ -363,8 +359,7 @@ func _has_gizmo(for_node_3d):
 
 func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 	#Process tilt, scale, and right-click cancel
-	if event is InputEventMouseButton and event.pressed and value_mode != VALUE_MODE.NONE:
-		print("mpath mode is not none")
+	if event is InputEventMouseButton and event.pressed and value_mode != VALUE_MODE.NONE:		
 		is_mouse_init_set = false
 		var curve = find_curve()
 		if not curve or not curve.has_point(active_point):
@@ -403,19 +398,16 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 		else:
 			return
 	if event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:			
-		if process_mouse_left_click(camera, event, terrain_col):
-			print("stopping mouose click gui")
+		if process_mouse_left_click(camera, event, terrain_col):			
 			return EditorPlugin.AFTER_GUI_INPUT_STOP		
 		else:
 			return
 	if event is InputEventMouseMotion:		
-		if process_mouse_motion(event):
-			print("stopping mouose motion gui")
+		if process_mouse_motion(event):			
 			return EditorPlugin.AFTER_GUI_INPUT_STOP
 		else:
 			return
-	if gui.is_select_lock() and event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT:
-		print("stopping lock gui")
+	if gui.is_select_lock() and event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT:		
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
 func process_mouse_left_click(camera, event, terrain_col):
@@ -464,8 +456,7 @@ func process_mouse_left_click(camera, event, terrain_col):
 		if gui.is_terrain_snap():
 			#To Do: user should be able to select which mterrain is used for snapping
 			var active_mterrain = mterrain_plugin.tools.get_active_mterrain()
-			if active_mterrain and active_mterrain.is_grid_created():
-				print("mpath snapping to mterrain")
+			if active_mterrain and active_mterrain.is_grid_created():				
 				if terrain_col.is_collided():
 					new_pos = terrain_col.get_collision_position()
 					is_new_pos_set = true

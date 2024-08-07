@@ -35,8 +35,7 @@ var default_keyboard_actions
 
 const setting_path = 'addons/m_terrain/keymap/'
 
-func add_keymap(force_default = false):
-	print("aadding keymap mterrain, restore default: ", force_default)
+func add_keymap(force_default = false):	
 	set_default_keymap()
 	for action in default_keyboard_actions:
 		var path = setting_path + action.name
@@ -159,7 +158,7 @@ func selection_changed():
 	var selection = get_editor_interface().get_selection().get_selected_nodes()
 
 	#TO DO: decide if this behaviour is good.
-	if selection.size() != 1:		
+	if selection.size() != 1:				
 		tools.request_hide()
 		gizmo_mpath_gui.visible = false
 		mcurve_mesh_gui.set_curve_mesh(null)		
@@ -228,6 +227,9 @@ func _handles(object):
 		tools.request_show()
 		return true
 	else:
+		#for some reason these get selected when switching from grass paint mode to terrain sculpt/paint mode:
+		if object is MTerrainMaterial or object is MBrushLayers:
+			return false
 		tools.request_hide()		
 		#TO DO: fix snap tool setting of active terain		
 		if object is Node3D:

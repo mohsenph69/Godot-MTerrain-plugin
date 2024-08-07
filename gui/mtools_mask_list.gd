@@ -69,7 +69,6 @@ func _on_item_selected(index):
 	mask.set_mask(images[current_selected_index],textures[current_selected_index])
 
 func invert_selected_image():
-	print("inverting image")
 	if current_selected_index == -1:return
 	var img:Image= images[current_selected_index]
 	for j in range(img.get_height()):
