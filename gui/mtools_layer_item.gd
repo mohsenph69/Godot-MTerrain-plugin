@@ -55,7 +55,7 @@ func init_for_heightmap():
 	rename_input.focus_exited.connect(end_rename.bind(""))
 
 func select_heightmap_layer():
-	layer_selected.emit(name)
+	layer_selected.emit(name_button.text)
 
 func change_visibility(toggle_on):
 	visibility_button.icon = icon_hidden if toggle_on else icon_visible
@@ -65,7 +65,7 @@ func remove_layer():
 	var popup = confirmation_popup_scene.instantiate()
 	add_child(popup)
 	popup.confirmed.connect( func():
-		layer_removed.emit(name)
+		layer_removed.emit(name)		
 		queue_free()
 	)
 
@@ -86,7 +86,6 @@ func begin_rename():
 	
 func end_rename(_new_name=""):
 	if rename_input.text == "": return
-	
 	rename_input.visible = false
 	name_button.visible = true
 	rename_button.visible = true

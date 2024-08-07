@@ -208,7 +208,8 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		### in multi select mode we do not inturput with this
 		return
 	var curve:MCurve= gizmo.get_node_3d().curve
-	if not curve:
+	if not curve: 
+		print("set handle, no curve")
 		return
 	if not is_handle_init_pos_set:
 		is_handle_setting = true
@@ -220,6 +221,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 	var to = camera.project_ray_normal(screen_pos)
 	# is main point
 	if not secondary:
+		print("set handle, not secondary :) ")
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
@@ -232,6 +234,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		curve.move_point(points_id,drag)
 		change_active_point(points_id)
 	else: # is secondary
+		print("set handle, secondary")
 		if gui.is_xz_handle_lock() and lock_mode == LOCK_MODE.NONE:
 			lock_mode = LOCK_MODE.XZ
 		if points_id % 2 == 0: # is even
@@ -292,7 +295,7 @@ func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
 			current_pos.x = init_pos.x
 	return current_pos
 
-func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
+func _commit_handle(gizmo, handle_id, secondary, restore, cancel):	
 	var curve:MCurve = gizmo.get_node_3d().curve
 	is_handle_init_pos_set = false
 	is_handle_setting = false
@@ -361,6 +364,7 @@ func _has_gizmo(for_node_3d):
 func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 	#Process tilt, scale, and right-click cancel
 	if event is InputEventMouseButton and event.pressed and value_mode != VALUE_MODE.NONE:
+		print("mpath mode is not none")
 		is_mouse_init_set = false
 		var curve = find_curve()
 		if not curve or not curve.has_point(active_point):
@@ -396,22 +400,29 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 	if event is InputEventKey and event.pressed:
 		if process_keyboard_actions():
 			return EditorPlugin.AFTER_GUI_INPUT_STOP		
+		else:
+			return
 	if event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:			
 		if process_mouse_left_click(camera, event, terrain_col):
+			print("stopping mouose click gui")
 			return EditorPlugin.AFTER_GUI_INPUT_STOP		
-	if event is InputEventMouseMotion:
+		else:
+			return
+	if event is InputEventMouseMotion:		
 		if process_mouse_motion(event):
+			print("stopping mouose motion gui")
 			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		else:
+			return
 	if gui.is_select_lock() and event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT:
+		print("stopping lock gui")
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
 func process_mouse_left_click(camera, event, terrain_col):
 	var mpath = find_mpath()
-	if not mpath:				
-		return
+	if not mpath: return
 	var curve:MCurve = mpath.curve
-	if not curve:				
-		return
+	if not curve: return
 	#### Handling Selections
 	var from = camera.project_ray_origin(event.position)
 	var to = camera.project_ray_normal(event.position)
@@ -483,14 +494,12 @@ func process_mouse_left_click(camera, event, terrain_col):
 		mpath.update_gizmos()				
 		return true
 
-func process_mouse_motion(event):
-	if value_mode == VALUE_MODE.NONE: 			
-		return
+#Mouse motion for curve tilt and scale
+func process_mouse_motion(event):	
+	if value_mode == VALUE_MODE.NONE: return
 	var curve = find_curve()
-	if not curve: 			
-		return
-	if not curve.has_point(active_point): 			
-		return
+	if not curve: return
+	if not curve.has_point(active_point): return	
 	if not is_mouse_init_set:
 		mouse_init_pos = event.position
 		init_scale = curve.get_point_scale(active_point)

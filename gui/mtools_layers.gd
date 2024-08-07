@@ -63,7 +63,10 @@ func add_heightmap_layer():
 func remove_heightmap_layer(layer_name):
 	active_terrain.set_active_layer_by_name(layer_name)
 	active_terrain.remove_heightmap_layer()
-	active_terrain.set_active_layer_by_name(active_heightmap_layer)
+	if layer_name == active_heightmap_layer:
+		change_heightmap_layer_selection("background")			
+	else:
+		active_terrain.set_active_layer_by_name(active_heightmap_layer)
 
 func toggle_heightmap_layer_visibility(layer_name):		
 	active_terrain.set_active_layer_by_name(layer_name)
@@ -102,13 +105,18 @@ func rename_heightmap_layer(name_button, new_name):
 	if new_name == "": return
 	if new_name in active_terrain.heightmap_layers: return
 	var layers = active_terrain.heightmap_layers
+	
 	for i in layers.size():
 		if layers[i] == name_button.text:
 			if active_terrain.rename_heightmap_layer(layers[i], new_name):
 				layers[i] = new_name
 		
 	name_button.text = new_name
-		
+	name_button.name = new_name
+	text = new_name
+	
+	#init_height_layers(active_terrain)
+	
 #endregion
 
 #region Color Layers
