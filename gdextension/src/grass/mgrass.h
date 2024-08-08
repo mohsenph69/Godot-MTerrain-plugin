@@ -41,6 +41,7 @@ class MGrass : public Node3D {
     int cell_creation_time_data_limit = 10000;
     float nav_obstacle_radius=1.0;
     int shape_type=-1;
+    bool visible = true;
     Variant shape_data;
 
     protected:
@@ -100,11 +101,17 @@ class MGrass : public Node3D {
     void recalculate_grass_config(int max_lod);
     void make_grass_dirty_by_pixel(uint32_t px, uint32_t py);
     void set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value);
+    void set_grass_sublayer_by_pixel(uint32_t px, uint32_t py, bool p_value);
+    bool is_init();
+    bool has_sublayer();
+    void create_sublayer();
+    void clear_grass_sublayer_by_pixel(uint32_t px, uint32_t py);
     bool get_grass_by_pixel(uint32_t px, uint32_t py);
     Vector2i get_closest_pixel(Vector3 pos);
     Vector3 get_pixel_world_pos(uint32_t px, uint32_t py);
     Vector2i grass_px_to_grid_px(uint32_t px, uint32_t py);
     void draw_grass(Vector3 brush_pos,real_t radius,bool add);
+    void clear_grass_sublayer_aabb(AABB aabb);
     _FORCE_INLINE_ void set_lod_setting_image_index(Ref<MGrassLodSetting> lod_setting); // Should be called after generate_random_number
     void set_active(bool input);
     bool get_active();
@@ -164,11 +171,15 @@ class MGrass : public Node3D {
     void undo();
     bool is_depend_on_image(int image_index);
 
-    void _grass_tree_entered();
-    void _grass_tree_exiting();
-
     static float get_shader_time();
     _FORCE_INLINE_ void update_shader_time();
     _FORCE_INLINE_ float get_shader_time(uint32_t grass_cell_index);
+
+
+    void _notification(int32_t what);
+
+    bool is_visible();
+    void _update_visibilty();
+    void set_visibility(bool input);
 };
 #endif

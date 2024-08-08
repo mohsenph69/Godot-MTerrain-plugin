@@ -27,6 +27,7 @@ class MGrassData : public Resource {
     MGrassData();
     ~MGrassData();
     PackedByteArray data;
+    PackedByteArray backup_data;
     int current_undo_id=0;
     int lowest_undo_id=0;
     HashMap<int,MGrassUndoData> undo_data;
@@ -38,7 +39,10 @@ class MGrassData : public Resource {
     void set_density(int input);
     int get_density();
 
-    void add(int d);
+    bool backup_exist();
+    void backup_create();
+    void backup_merge();
+    void backup_restore();
 
     void check_undo(); // register a stage for undo
     void undo();

@@ -60,7 +60,8 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_point_conn_count","p_index"), &MCurve::get_point_conn_count);
     ClassDB::bind_method(D_METHOD("get_point_conn_points","p_index"), &MCurve::get_point_conn_points);
     ClassDB::bind_method(D_METHOD("get_point_conn_points_recursive","p_index"), &MCurve::get_point_conn_points_recursive);
-    ClassDB::bind_method(D_METHOD("get_point_conn","p_index"), &MCurve::get_point_conn);
+    ClassDB::bind_method(D_METHOD("get_point_conns","p_index"), &MCurve::get_point_conns);
+    ClassDB::bind_method(D_METHOD("get_point_conns_inc_neighbor_points","p_index"), &MCurve::get_point_conns_inc_neighbor_points);
     ClassDB::bind_method(D_METHOD("get_point_conn_types","p_index"), &MCurve::get_point_conn_types);
     ClassDB::bind_method(D_METHOD("get_point_position","p_index"), &MCurve::get_point_position);
     ClassDB::bind_method(D_METHOD("get_point_in","p_index"), &MCurve::get_point_in);
@@ -748,7 +749,7 @@ PackedInt32Array MCurve::get_point_conn_points_recursive(int32_t p_index) const 
     return out;
 }
 
-PackedInt64Array MCurve::get_point_conn(int32_t p_index) const{
+PackedInt64Array MCurve::get_point_conns(int32_t p_index) const{
     PackedInt64Array out;
     ERR_FAIL_COND_V(!has_point(p_index),out);
     const Point* p = points_buffer.ptr() + p_index;
@@ -756,7 +757,35 @@ PackedInt64Array MCurve::get_point_conn(int32_t p_index) const{
         if(p->conn[i]!=0){
             int32_t other_index = std::abs(p->conn[i]);
             Conn cc(p_index,other_index);
-            out.push_back(p_index);
+            out.push_back(cc.id);
+        }
+    }
+    return out;
+}
+
+PackedInt64Array MCurve::get_point_conns_inc_neighbor_points(int32_t p_index) const{
+    PackedInt64Array out;
+    ERR_FAIL_COND_V(!has_point(p_index),out);
+    const Point* p = points_buffer.ptr() + p_index;
+    PackedInt32Array conn_points;
+    for(int8_t i=0; i < MAX_CONN ; i++){
+        if(p->conn[i]!=0){
+            int32_t other_index = std::abs(p->conn[i]);
+            conn_points.push_back(other_index);
+            Conn cc(p_index,other_index);
+            out.push_back(cc.id);
+        }
+    }
+    for(int j=0; j < conn_points.size(); j++){
+        const Point* op = points_buffer.ptr() + conn_points[j];
+        for(int8_t i=0; i < MAX_CONN ; i++){
+            int32_t other_index = std::abs(op->conn[i]);
+            if(other_index!=0 && other_index!=p_index){
+                Conn cc(conn_points[j],other_index);
+                if(true){
+                    out.push_back(cc.id);
+                }
+            }
         }
     }
     return out;
@@ -1093,7 +1122,7 @@ Transform3D MCurve::get_point_order_transform(int32_t point_a,int32_t point_b,fl
     return ptrasform;
 }
 
-Transform3D MCurve::get_conn_transform(int64_t conn_id,float t){
+Transform3D MCurve::get_conn_transform(int64_t conn_id,float t,bool apply_tilt,bool apply_scale){
     ERR_FAIL_COND_V(!has_conn(conn_id), Transform3D());
     Conn conn(conn_id);
     const Point* a = points_buffer.ptr() + conn.p.a;
@@ -1117,18 +1146,19 @@ Transform3D MCurve::get_conn_transform(int64_t conn_id,float t){
         ptrasform = _get_bezier_transform(a->position,b->position,a_control,b_control,Vector3(0,0,1),t);
     }
     ptrasform = _get_bezier_transform(a->position,b->position,a_control,b_control,Vector3(0,1,0),t);
-    // Applying tilt
+    if(apply_tilt)
     {
         float current_tilt = Math::lerp(a->tilt,b->tilt,t);
         ptrasform.basis.rotate(ptrasform.basis[0],current_tilt); 
     }                                            
-    // Applying scale
-    float current_scale = Math::lerp(a->scale,b->scale,t);
-    ptrasform.basis.scale(Vector3(current_scale,current_scale,current_scale));
+    if(apply_scale){
+        float current_scale = Math::lerp(a->scale,b->scale,t);
+        ptrasform.basis.scale(Vector3(current_scale,current_scale,current_scale));
+    }
     return ptrasform;
 }
 
-void MCurve::get_conn_transforms(int64_t conn_id,const Vector<float>& t,Vector<Transform3D>& transforms){
+void MCurve::get_conn_transforms(int64_t conn_id,const Vector<float>& t,Vector<Transform3D>& transforms,bool apply_tilt,bool apply_scale){
     ERR_FAIL_COND(!has_conn(conn_id));
     transforms.resize(t.size());
     Conn conn(conn_id);
@@ -1161,10 +1191,14 @@ void MCurve::get_conn_transforms(int64_t conn_id,const Vector<float>& t,Vector<T
     }
     for(int i=0; i < t.size(); i++){
         Transform3D ptrasform = _get_bezier_transform(a->position,b->position,a_control,b_control,Vector3(0,1,0),t[i]);
-        float current_tilt = Math::lerp(a->tilt,b->tilt,t[i]);
-        float current_scale = Math::lerp(a->scale,b->scale,t[i]);
-        ptrasform.basis.rotate(ptrasform.basis[0],current_tilt);
-        ptrasform.basis.scale(Vector3(current_scale,current_scale,current_scale));
+        if(apply_tilt){
+            float current_tilt = Math::lerp(a->tilt,b->tilt,t[i]);
+            ptrasform.basis.rotate(ptrasform.basis[0],current_tilt);
+        }
+        if(apply_scale){
+            float current_scale = Math::lerp(a->scale,b->scale,t[i]);
+            ptrasform.basis.scale(Vector3(current_scale,current_scale,current_scale));
+        }
         transforms.set(i,ptrasform);
     }
 }
@@ -1176,6 +1210,7 @@ float MCurve::get_conn_lenght(int64_t conn_id){
     } else {
         dis = _bake_conn_distance(conn_id);
     }
+    ERR_FAIL_COND_V(dis==nullptr,0.0f);
     return dis[DISTANCE_BAKE_TOTAL - 1];
 }
 Pair<float,float> MCurve::conn_ratio_limit_to_dis_limit(int64_t conn_id,const Pair<float,float>& limits){
@@ -1208,6 +1243,7 @@ float MCurve::get_point_order_distance_ratio(int32_t point_a,int32_t point_b,flo
     } else {
         dis = _bake_conn_distance(c.id);
     }
+    ERR_FAIL_COND_V(dis==nullptr,0.0f);
     distance = point_a > point_b ? dis[DISTANCE_BAKE_TOTAL - 1] - distance : distance;
     float t = _get_conn_distance_ratios(dis,distance);
     t = point_a > point_b ?  1.0f - t: t;
@@ -1221,6 +1257,7 @@ float MCurve::get_conn_distance_ratio(int64_t conn_id,float distance) {
     } else {
         dis = _bake_conn_distance(conn_id);
     }
+    ERR_FAIL_COND_V(dis==nullptr,0.0f);
     return _get_conn_distance_ratios(dis,distance);
 }
 /*
@@ -1234,6 +1271,8 @@ Pair<int,int> MCurve::get_conn_distances_ratios(int64_t conn_id,const Vector<flo
     } else {
         dis = _bake_conn_distance(conn_id);
     }
+    Pair<int,int> out;
+    ERR_FAIL_COND_V(dis==nullptr,out);
     float smallest_ratio = 10.0;
     int smallest_ration_index = -1;
     float biggest_ratio = 0.0;
@@ -1250,7 +1289,6 @@ Pair<int,int> MCurve::get_conn_distances_ratios(int64_t conn_id,const Vector<flo
             biggest_ratio_index = i;
         }
     }
-    Pair<int,int> out;
     ERR_FAIL_COND_V(smallest_ration_index==-1 || biggest_ratio_index==-1,out);
     out.first = smallest_ration_index;
     out.second = biggest_ratio_index;

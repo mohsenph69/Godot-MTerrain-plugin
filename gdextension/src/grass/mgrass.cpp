@@ -15,6 +15,7 @@ float MGrass::time_rollover_secs = 3600;
 
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
+    ClassDB::bind_method(D_METHOD("is_init"), &MGrass::is_init);
     ClassDB::bind_method(D_METHOD("make_grass_dirty_by_pixel","x","y"), &MGrass::make_grass_dirty_by_pixel);
     ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
@@ -85,14 +86,14 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("check_undo"), &MGrass::check_undo);
     ClassDB::bind_method(D_METHOD("undo"), &MGrass::undo);
     ClassDB::bind_method(D_METHOD("_lod_setting_changed"), &MGrass::_lod_setting_changed);
-    ClassDB::bind_method(D_METHOD("_grass_tree_exiting"), &MGrass::_grass_tree_exiting);
-    ClassDB::bind_method(D_METHOD("_grass_tree_entered"), &MGrass::_grass_tree_entered);
+
+    ClassDB::bind_method(D_METHOD("_update_visibilty"), &MGrass::_update_visibilty);
 }
 
 MGrass::MGrass(){
     dirty_points_id = memnew(VSet<int>);
-    connect("tree_exiting",Callable(this,"_grass_tree_exiting"));
-    connect("tree_entered",Callable(this,"_grass_tree_entered"));
+    connect("tree_exited",Callable(this,"_update_visibilty"));
+    connect("tree_entered",Callable(this,"_update_visibilty"));
 }
 MGrass::~MGrass(){
     memdelete(dirty_points_id);
@@ -195,6 +196,7 @@ void MGrass::init_grass(MGrid* _grid) {
 }
 
 void MGrass::clear_grass(){
+    UtilityFunctions::print("Clear Grass ... ");
     std::lock_guard<std::mutex> lock(update_mutex);
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
         memdelete(it->value);
@@ -502,7 +504,9 @@ void MGrass::apply_update_grass(){
     }
     for(int i=0;i<to_be_visible.size();i++){
         if(!to_be_visible[i]->is_out_of_range){
-            to_be_visible[i]->unrelax();
+            if(is_visible()){
+                to_be_visible[i]->unrelax();
+            }
             to_be_visible[i]->is_part_of_scene = true;
         }
     }
@@ -512,7 +516,8 @@ void MGrass::apply_update_grass(){
             memdelete(g);
             grid_to_grass.erase(grid->remove_instance_list[i].get_id());
         } else {
-            WARN_PRINT("Instance not found for removing");
+            UtilityFunctions::print("Grid to grass size ",grid_to_grass.size());
+            WARN_PRINT("Instance not found for removing "+ itos(grid->remove_instance_list[i].get_id()));
         }
     }
     to_be_visible.clear();
@@ -534,8 +539,8 @@ void MGrass::recalculate_grass_config(int max_lod){
 
 void MGrass::make_grass_dirty_by_pixel(uint32_t px, uint32_t py){
     if(!is_grass_init) return;
-    if(px>width) return;
-    if(py>height) return;
+    if(px>=width) return;
+    if(py>=height) return;
     Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
     int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
     dirty_points_id->insert(point_id);
@@ -543,8 +548,8 @@ void MGrass::make_grass_dirty_by_pixel(uint32_t px, uint32_t py){
 
 void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
     if(!is_grass_init) return;
-    if(px>width) return;
-    if(py>height) return;
+    if(px>=width) return;
+    if(py>=height) return;
     //ERR_FAIL_INDEX(px, width);
     //ERR_FAIL_INDEX(py, height);
     uint32_t rx = px/grass_region_pixel_width;
@@ -556,6 +561,44 @@ void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
     uint32_t ibyte = offs/8;
     uint32_t ibit = offs%8;
 
+    uint8_t b = grass_data->data[ibyte];
+
+    //if(p_value == ((b & (1 << ibit)) != 0) ){
+    //    return;
+    //}
+    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
+    dirty_points_id->insert(point_id);
+    if(!cell_creation.has(offs)){
+        cell_creation.insert(offs,std::numeric_limits<float>::quiet_NaN());
+        cell_creation_order.push_back(offs);
+    }
+    if(p_value){
+        b |= (1 << ibit);
+    } else {
+        b &= ~(1 << ibit);
+    }
+    grass_data->data.set(ibyte,b);
+    if(grass_data->backup_exist()){
+        grass_data->backup_data.set(ibyte,b);
+    }
+}
+
+void MGrass::set_grass_sublayer_by_pixel(uint32_t px, uint32_t py, bool p_value){
+    if(!is_grass_init) return;
+    ERR_FAIL_COND(!grass_data->backup_exist());
+    if(px>=width) return;
+    if(py>=height) return;
+    //ERR_FAIL_INDEX(px, width);
+    //ERR_FAIL_INDEX(py, height);
+    uint32_t rx = px/grass_region_pixel_width;
+    uint32_t ry = py/grass_region_pixel_width;
+    uint32_t rid = ry*region_grid_width + rx;
+    uint32_t x = px%grass_region_pixel_width;
+    uint32_t y = py%grass_region_pixel_width;
+    uint32_t offs = rid*grass_region_pixel_size + y*grass_region_pixel_width + x;
+    uint32_t ibyte = offs/8;
+    uint32_t ibit = offs%8;
     uint8_t b = grass_data->data[ibyte];
 
     if(p_value == ((b & (1 << ibit)) != 0) ){
@@ -574,6 +617,57 @@ void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
         b &= ~(1 << ibit);
     }
     grass_data->data.set(ibyte,b);
+}
+
+bool MGrass::is_init(){
+    return is_grass_init;
+}
+
+bool MGrass::has_sublayer(){
+    if(grass_data.is_null()){
+        return false;
+    }
+    return grass_data->backup_exist();
+}
+
+void MGrass::create_sublayer(){
+    ERR_FAIL_COND(grass_data.is_null());
+    grass_data->backup_create();
+}
+
+void MGrass::clear_grass_sublayer_by_pixel(uint32_t px, uint32_t py){
+    if(!is_grass_init) return;
+    ERR_FAIL_COND(!grass_data->backup_exist());
+    if(px>=width) return;
+    if(py>=height) return;
+    //ERR_FAIL_INDEX(px, width);
+    //ERR_FAIL_INDEX(py, height);
+    uint32_t rx = px/grass_region_pixel_width;
+    uint32_t ry = py/grass_region_pixel_width;
+    uint32_t rid = ry*region_grid_width + rx;
+    uint32_t x = px%grass_region_pixel_width;
+    uint32_t y = py%grass_region_pixel_width;
+    uint32_t offs = rid*grass_region_pixel_size + y*grass_region_pixel_width + x;
+    uint32_t ibyte = offs/8;
+    uint32_t ibit = offs%8;
+
+    uint8_t byte_backup = grass_data->backup_data[ibyte];
+    uint8_t byte = grass_data->data[ibyte];
+    if(byte_backup==byte){
+        return;
+    }
+    bool backup_val = (byte_backup & (1 << ibit)) != 0;
+    
+    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
+    dirty_points_id->insert(point_id);
+
+    if(backup_val){
+        byte |= (1 << ibit);
+    } else {
+        byte &= ~(1 << ibit);
+    }
+    grass_data->data.set(ibyte,byte);
 }
 
 bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) {
@@ -654,6 +748,24 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
             Vector2i grid_px = grass_px_to_grid_px(x,y);
             if(dis<brush_px_radius && grid->get_brush_mask_value_bool(grid_px.x,grid_px.y))
                 set_grass_by_pixel(x,y,add);
+        }
+    }
+    update_dirty_chunks();
+}
+
+void MGrass::clear_grass_sublayer_aabb(AABB aabb){
+    ERR_FAIL_COND(!is_grass_init);
+    ERR_FAIL_COND(!grass_data->backup_exist());
+    Vector2i start = get_closest_pixel(aabb.position);
+    Vector2i end = get_closest_pixel(aabb.position + aabb.size);
+    start.x = start.x < 0 ? 0 : start.x;
+    start.y = start.y < 0 ? 0 : start.y;
+    end.x = end.x < width ? end.x : width - 1;
+    end.y = end.y < height ? end.y : height - 1;
+
+    for(int j=start.y; j <= end.y; j++){
+        for(int i=start.x; i <= end.x ; i++){
+            clear_grass_sublayer_by_pixel(i,j);
         }
     }
     update_dirty_chunks();
@@ -1215,21 +1327,6 @@ bool MGrass::is_depend_on_image(int image_index){
     return false;
 }
 
-void MGrass::_grass_tree_entered(){
-    MTerrain* parent = Object::cast_to<MTerrain>(get_parent());
-    if(parent){
-        if(parent->is_grid_created()){
-            ERR_FAIL_EDMSG("You should restart the terrain to grass initialize correctly");
-        }
-    } else {
-        ERR_FAIL_EDMSG("Grass must be the direct children of MTerrain Node");
-    }
-}
-
-void MGrass::_grass_tree_exiting(){
-    clear_grass();
-}
-
 float MGrass::get_shader_time(){
     double t = double(Time::get_singleton()->get_ticks_msec());
     t /= 1000.0;
@@ -1251,4 +1348,49 @@ float MGrass::get_shader_time(uint32_t grass_cell_index){
         return current_shader_time;
     }
     return val;
+}
+
+void MGrass::_notification(int32_t what){
+    switch (what)
+    {
+    case NOTIFICATION_VISIBILITY_CHANGED:
+        _update_visibilty();
+        break;
+    
+    default:
+        break;
+    }
+}
+
+
+bool MGrass::is_visible(){
+    return visible;
+}
+
+void MGrass::_update_visibilty(){
+    if(!is_inside_tree()){
+        set_visibility(false);
+        return;
+    }
+    set_visibility(is_visible_in_tree());
+}
+
+void MGrass::set_visibility(bool input){
+    if(!is_init()){
+        visible = input;
+        return;
+    }
+    if(input == visible){
+        return;
+    }
+    std::lock_guard<std::mutex> lock(update_mutex);
+    for(HashMap<int64_t,MGrassChunk*>::Iterator it=grid_to_grass.begin(); it!=grid_to_grass.end(); ++it){
+        MGrassChunk* c = it->value;
+        if(input){
+            c->unrelax();
+        } else {
+            c->relax();
+        }
+    }
+    visible = input;
 }

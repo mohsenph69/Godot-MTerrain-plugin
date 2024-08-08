@@ -79,6 +79,7 @@ struct MImage {
     void unload(Ref<MResource> mres);
     void set_active_layer(int l);
     void add_layer(String lname);
+    void rename_layer(int layer_index,String new_name);
     void merge_layer();
     void remove_layer(bool is_visible);
     void layer_visible(bool input);

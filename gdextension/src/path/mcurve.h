@@ -216,7 +216,8 @@ class MCurve : public Resource{
     PackedInt32Array get_point_conn_points_exist(int32_t p_index) const;
     PackedInt32Array get_point_conn_points(int32_t p_index) const;
     PackedInt32Array get_point_conn_points_recursive(int32_t p_index) const;
-    PackedInt64Array get_point_conn(int32_t p_index) const;
+    PackedInt64Array get_point_conns(int32_t p_index) const;
+    PackedInt64Array get_point_conns_inc_neighbor_points(int32_t p_index) const;
     Vector3 get_point_position(int p_index);
     Vector3 get_point_in(int p_index);
     Vector3 get_point_out(int p_index);
@@ -237,8 +238,8 @@ class MCurve : public Resource{
     Vector3 get_point_order_tangent(int32_t point_a,int32_t point_b,float t);
     Vector3 get_conn_tangent(int64_t conn_id,float t);
     Transform3D get_point_order_transform(int32_t point_a,int32_t point_b,float t,bool tilt=true,bool scale=true);
-    Transform3D get_conn_transform(int64_t conn_id,float t);
-    void get_conn_transforms(int64_t conn_id,const Vector<float>& t,Vector<Transform3D>& transforms);
+    Transform3D get_conn_transform(int64_t conn_id,float t,bool apply_tilt=true,bool apply_scale=true);
+    void get_conn_transforms(int64_t conn_id,const Vector<float>& t,Vector<Transform3D>& transforms,bool apply_tilt=true,bool apply_scale=true);
     float get_conn_lenght(int64_t conn_id);
     Pair<float,float> conn_ratio_limit_to_dis_limit(int64_t conn_id,const Pair<float,float>& limits);
     float get_point_order_distance_ratio(int32_t point_a,int32_t point_b,float distance);

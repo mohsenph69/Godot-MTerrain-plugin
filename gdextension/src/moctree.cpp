@@ -1272,6 +1272,7 @@ void MOctree::process_tick(){
 				}
 			}
 		}
+		check_point_process_finished();
 		return;
 	} else {
 		if(is_valid_octmesh_updater()){
@@ -1289,6 +1290,7 @@ void MOctree::process_tick(){
 		is_point_process_wait = true;
 		waiting_oct_ids = oct_ids;
 		send_update_signal();
+		check_point_process_finished();
 	}
 }
 
@@ -1324,7 +1326,7 @@ void MOctree::_notification(int p_what){
 				WorkerThreadPool::get_singleton()->wait_for_task_completion(MOctMesh::thread_task_id);
 			}
 		}
-		break;
+		break;		
 	}
 }
 

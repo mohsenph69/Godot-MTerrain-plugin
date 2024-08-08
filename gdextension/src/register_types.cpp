@@ -39,6 +39,7 @@
 #include "path/mintersection.h"
 #include "path/mcurve_mesh.h"
 #include "path/mcurve_mesh_override.h"
+#include "path/mcurve_terrain.h"
 
 
 using namespace godot;
@@ -75,6 +76,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MIntersection>();
 	ClassDB::register_class<MCurveMesh>();
 	ClassDB::register_class<MCurveMeshOverride>();
+	ClassDB::register_class<MCurveTerrain>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {
