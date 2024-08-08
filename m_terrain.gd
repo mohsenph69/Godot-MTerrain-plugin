@@ -77,6 +77,7 @@ func _enter_tree():
 		tools.request_image_creator.connect(show_image_creator_window)
 		tools.edit_mode_changed.connect(select_object)		
 		main_screen.add_child(tools)
+
 		get_tree().node_added.connect(tools.on_node_modified)
 		get_tree().node_renamed.connect(tools.on_node_modified)
 		get_tree().node_removed.connect(tools.on_node_modified)
@@ -84,10 +85,10 @@ func _enter_tree():
 		tools.set_brush_decal( preload("res://addons/m_terrain/gui/brush_decal.tscn").instantiate()	)
 		main_screen.add_child(tools.brush_decal)
 		
-		tools.set_mask_decal( load("res://addons/m_terrain/gui/mask_decal.tscn").instantiate() )
+		tools.set_mask_decal( preload("res://addons/m_terrain/gui/mask_decal.tscn").instantiate() )
 		main_screen.add_child(tools.mask_decal)
 		
-		tools.human_male = load("res://addons/m_terrain/gui/human_male.tscn").instantiate()
+		tools.human_male = preload("res://addons/m_terrain/gui/human_male.tscn").instantiate()
 		main_screen.add_child(tools.human_male)
 		tools.human_male.visible = false
 		

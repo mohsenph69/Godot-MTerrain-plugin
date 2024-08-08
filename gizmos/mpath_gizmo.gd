@@ -2,7 +2,7 @@
 extends EditorNode3DGizmoPlugin
 
 signal selection_changed
-
+signal lock_mode_changed
 const value_mode_mouse_sensivity:float = 0.01
 const bake_interval:float = 0.2
 
@@ -32,6 +32,7 @@ enum LOCK_MODE {
 	XZ,
 	XY,
 	ZY,
+	XYZ
 }
 var lock_mode := LOCK_MODE.NONE
 var is_handle_setting:= true
@@ -54,8 +55,7 @@ var mouse_init_pos:Vector2i
 var is_mouse_init_set:=false
 
 var active_path:MPath
-
-
+		
 func _init():	
 	selection = EditorInterface.get_selection()
 	
@@ -157,13 +157,13 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 		lines.push_back(pos)
 		lines.push_back(out_pos)
 	########## Lock mode line ##################
-	if lock_mode == LOCK_MODE.X or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.XZ:
+	if lock_mode == LOCK_MODE.X or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.XZ or lock_mode == LOCK_MODE.XYZ:
 		lines.push_back(handle_init_pos + Vector3(-100000,0,0))
 		lines.push_back(handle_init_pos + Vector3(100000,0,0))
-	if  lock_mode == LOCK_MODE.Y or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.ZY:
+	if  lock_mode == LOCK_MODE.Y or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.ZY or lock_mode == LOCK_MODE.XYZ:
 		lines.push_back(handle_init_pos + Vector3(0,-100000,0))
 		lines.push_back(handle_init_pos + Vector3(0,100000,0))
-	if lock_mode == LOCK_MODE.Z or lock_mode == LOCK_MODE.XZ or lock_mode == LOCK_MODE.ZY:
+	if lock_mode == LOCK_MODE.Z or lock_mode == LOCK_MODE.XZ or lock_mode == LOCK_MODE.ZY or lock_mode == LOCK_MODE.XYZ:
 		lines.push_back(handle_init_pos + Vector3(0,0,-100000))
 		lines.push_back(handle_init_pos + Vector3(0,0,100000))
 	################## Setting lines and handles
@@ -233,6 +233,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 	else: # is secondary		
 		if gui.is_xz_handle_lock() and lock_mode == LOCK_MODE.NONE:
 			lock_mode = LOCK_MODE.XZ
+			lock_mode_changed.emit(lock_mode)
 		if points_id % 2 == 0: # is even
 			points_id /= 2;
 			var in_pos:Vector3 = curve.get_point_in(points_id)
@@ -291,11 +292,37 @@ func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
 			current_pos.x = init_pos.x
 	return current_pos
 
+func update_lock_mode(x,y,z):
+	print("updating lock mode: ", x, y, z)
+	if x and y and z:
+		lock_mode = LOCK_MODE.XYZ
+		return
+	if x and y:
+		lock_mode = LOCK_MODE.XY
+		return
+	if x and z:
+		lock_mode = LOCK_MODE.XZ
+		return
+	if y and z:
+		lock_mode = LOCK_MODE.ZY
+		return
+	if x:
+		lock_mode = LOCK_MODE.X
+		return
+	if y:
+		lock_mode = LOCK_MODE.Y
+		return
+	if z:
+		lock_mode = LOCK_MODE.Z
+		return
+
+
 func _commit_handle(gizmo, handle_id, secondary, restore, cancel):	
 	var curve:MCurve = gizmo.get_node_3d().curve
 	is_handle_init_pos_set = false
 	is_handle_setting = false
 	lock_mode = LOCK_MODE.NONE
+	lock_mode_changed.emit(lock_mode)
 	is_mouse_init_set = false
 	if not curve:
 		return
@@ -407,7 +434,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 			return EditorPlugin.AFTER_GUI_INPUT_STOP
 		else:
 			return
-	if gui.is_select_lock() and event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT:		
+	if gui.is_select_lock() and event is InputEventMouse and event.button_mask == MOUSE_BUTTON_LEFT:		
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
 func process_mouse_left_click(camera, event, terrain_col):
@@ -510,7 +537,7 @@ func process_mouse_motion(event):
 	return true
 	
 func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
-#if event.keycode == KEY_P:
+	#if event.keycode == KEY_P:
 	if Input.is_action_just_pressed("mpath_validate"):				
 		var curve:MCurve = find_curve()
 		#for c in selected_connections:
@@ -555,7 +582,7 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 			init_tilt = curve.get_point_tilt(active_point)
 			value_mode = VALUE_MODE.TILT
 			return true
-#	if event.keycode == KEY_K:
+	#if event.keycode == KEY_K:
 	if Input.is_action_just_pressed("mpath_scale_mode"):						
 		var curve = find_curve()
 		if curve and curve.has_point(active_point):
@@ -567,24 +594,39 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 		#shift x
 		if Input.is_action_just_pressed("mpath_lock_zy"):
 			lock_mode = LOCK_MODE.ZY
+			lock_mode_changed.emit(lock_mode)			
 			if path: path.update_gizmos()
+			return true
 		#shift y
 		if Input.is_action_just_pressed("mpath_lock_xz"):
 			lock_mode = LOCK_MODE.XZ
+			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
+			return true
+		#shift z
 		if Input.is_action_just_pressed("mpath_lock_xy"):					
 			lock_mode = LOCK_MODE.XY
+			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
+			return true
+		#x
 		if Input.is_action_just_pressed("mpath_lock_x"):
 			lock_mode = LOCK_MODE.X
+			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
+			return true
+		#y
 		if Input.is_action_just_pressed("mpath_lock_y"):			
 			lock_mode = LOCK_MODE.Y
+			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
+			return true
+		#z
 		if Input.is_action_just_pressed("mpath_lock_z"):
 			lock_mode = LOCK_MODE.Z
+			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
-		return true
+			return true
 
 func find_mpath()->MPath:
 	if active_path:
@@ -644,6 +686,7 @@ func set_gui(input:Control):
 	gui.scale_num.set_soft_max(4)
 	gui.sort_increasing_btn.pressed.connect(sort.bind(true))
 	gui.sort_decreasing_btn.pressed.connect(sort.bind(false))
+	gui.gizmo = self
 
 func change_active_point(new_active_point:int):
 	active_point = new_active_point

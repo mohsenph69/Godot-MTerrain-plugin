@@ -144,6 +144,30 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 icon = ExtResource("5_8fq58")
 expand_icon = true
 
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="VSeparator" type="MarginContainer" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+
+[node name="Label4" type="Label" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "axis lock: "
+
+[node name="x_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "x"
+
+[node name="y_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "y"
+
+[node name="z_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "z   "
+
 [node name="show_rest" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2

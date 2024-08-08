@@ -24,6 +24,15 @@ extends Control
 @onready var show_rest_btn = find_child("show_rest")
 @onready var settings_panel = find_child("settings_panel")
 
+@onready var x_lock = find_child("x_lock")
+@onready var y_lock = find_child("y_lock")
+@onready var z_lock = find_child("z_lock")
+
+var gizmo:
+	set(value):
+		gizmo = value
+		gizmo.lock_mode_changed.connect(update_axis_lock)		
+
 var is_show_rest:=false
 
 enum MODE {
@@ -65,7 +74,17 @@ func _ready():
 	tilt_num.set_tooltip_text("Change Tilt\nHotkey: R")
 	scale_num.set_tooltip_text("Change Tilt\nHotkey: E")
 	settings_panel.visible = false
+
+	x_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+	y_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+	z_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+
 	
+func update_axis_lock(lock_mode):		
+	x_lock.button_pressed = true if lock_mode in [1,4,5,7] else false #x, xz, xy, xyz
+	y_lock.button_pressed = true if lock_mode in [2,5,6,7] else false #y, xy, zy, xyz
+	z_lock.button_pressed = true if lock_mode in [3,4,6,7] else false #z, xz, zy, xyz
+
 func toggle_mode():
 	if mode_option.selected == 0:
 		mode_option.selected = 1
