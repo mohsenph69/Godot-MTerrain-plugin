@@ -112,3 +112,7 @@ func _on_show_rest_pressed():
 	is_show_rest = not is_show_rest
 	settings_panel.visible = is_show_rest
 		
+
+
+func show_mpath_help_window():
+	add_child( preload("res://addons/m_terrain/gui/mpath_help_popup.tscn").instantiate())

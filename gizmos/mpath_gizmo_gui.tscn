@@ -91,13 +91,13 @@ icon_alignment = 2
 [node name="collapse" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Collapse point"
+tooltip_text = "Collapse point: move point handles to center of point"
 icon = ExtResource("4_38e8d")
 
 [node name="toggle_connection" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Toggle Connection
+tooltip_text = "Toggle Points Connection
 Hot-key: T"
 theme_override_font_sizes/font_size = 18
 icon = ExtResource("6_a88nf")
@@ -106,7 +106,7 @@ expand_icon = true
 [node name="Connect" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Connect
+tooltip_text = "Connect points
 Hot-key: C"
 theme_override_colors/font_color = Color(0.14902, 1, 0.25098, 1)
 theme_override_font_sizes/font_size = 18
@@ -116,7 +116,7 @@ expand_icon = true
 [node name="Disconnect" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Disconnect
+tooltip_text = "Disconnect points
 Hot-key: X"
 theme_override_colors/font_color = Color(0.717647, 0.952941, 0, 1)
 theme_override_font_sizes/font_size = 18
@@ -126,7 +126,7 @@ expand_icon = true
 [node name="remove" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Remove
+tooltip_text = "Remove point
 Hot-key: Backspace"
 theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 18
@@ -147,25 +147,30 @@ text = "axis lock: "
 
 [node name="x_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
 layout_mode = 2
+tooltip_text = "lock point's x position"
 text = "x"
 
 [node name="y_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
 layout_mode = 2
+tooltip_text = "lock point's y position"
 text = "y"
 
 [node name="z_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
 layout_mode = 2
+tooltip_text = "lock point's z position"
 text = "z   "
 
 [node name="Button" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
+tooltip_text = "show MPath help window"
 theme_override_font_sizes/font_size = 21
 text = "?"
 
 [node name="show_rest" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
+tooltip_text = "More settings"
 icon = ExtResource("10_wuoaw")
 expand_icon = true
 
@@ -266,4 +271,5 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/margin_right = 12
 
+[connection signal="pressed" from="HBoxContainer/Button" to="." method="show_mpath_help_window"]
 [connection signal="pressed" from="HBoxContainer/show_rest" to="." method="_on_show_rest_pressed"]
