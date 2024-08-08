@@ -1,5 +1,5 @@
 @tool
-extends HBoxContainer
+extends BoxContainer
 
 signal prop_changed
 
@@ -13,18 +13,13 @@ func set_options(input:String):
 
 func set_name(input:String):
 	prop_name = input
-	$lable.text = input
+	$label.text = input
 
 func set_value(input:int):
-	print("set select ", input)
+	#print("set select ", input)
 	value = input
 	$values.selected = input
 
 func _on_values_item_selected(index):
 	value = index
 	emit_signal("prop_changed",prop_name,value)
-
-
-
-
-

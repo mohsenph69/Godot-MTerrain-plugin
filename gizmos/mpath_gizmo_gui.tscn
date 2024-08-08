@@ -1,12 +1,17 @@
-[gd_scene load_steps=12 format=3 uid="uid://btfhp7mnhc5nj"]
+[gd_scene load_steps=17 format=3 uid="uid://btfhp7mnhc5nj"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_ufvdf"]
-[ext_resource type="Texture2D" uid="uid://ch4p2bk5wx574" path="res://addons/m_terrain/icons/collapse_normal.svg" id="2_2am03"]
-[ext_resource type="Texture2D" uid="uid://cqh311apccvi3" path="res://addons/m_terrain/icons/M-terrain_icon.png" id="2_kkk5j"]
-[ext_resource type="Texture2D" uid="uid://c5ca7hy0hp07k" path="res://addons/m_terrain/icons/collapse_pressed.svg" id="3_ardhu"]
+[ext_resource type="Texture2D" uid="uid://c64direekaeap" path="res://addons/m_terrain/icons/mirror_icon.svg" id="2_tic3q"]
 [ext_resource type="Texture2D" uid="uid://b2edfbh3q6uh2" path="res://addons/m_terrain/icons/depth_test.svg" id="3_n0m75"]
+[ext_resource type="Texture2D" uid="uid://ckbvdmvbcxfb6" path="res://addons/m_terrain/icons/magnet_icon.svg" id="3_yoi5b"]
+[ext_resource type="Texture2D" uid="uid://30e6iyx7q1y7" path="res://addons/m_terrain/icons/mpath_collapse_point_icon.svg" id="4_38e8d"]
+[ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="5_8fq58"]
+[ext_resource type="Texture2D" uid="uid://c32td7i377ewu" path="res://addons/m_terrain/icons/toggle_connection.svg" id="6_a88nf"]
 [ext_resource type="PackedScene" uid="uid://cjjqtr6xhktp4" path="res://addons/m_terrain/gui/control_prop_element/float_range.tscn" id="6_bsspt"]
 [ext_resource type="Texture2D" uid="uid://jw6maiih4qf8" path="res://addons/m_terrain/icons/lock.svg" id="7_0ucgh"]
+[ext_resource type="Texture2D" uid="uid://cylua0xddvmx7" path="res://addons/m_terrain/icons/connect_icon.svg" id="7_mbnvb"]
+[ext_resource type="Texture2D" uid="uid://bnafvu7s1g7dn" path="res://addons/m_terrain/icons/disconnect_icon.svg" id="8_777vd"]
+[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="10_wuoaw"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7loo7"]
 content_margin_left = 6.0
@@ -27,42 +32,23 @@ content_margin_left = 2.0
 content_margin_right = 2.0
 bg_color = Color(0, 0.85098, 0.207843, 0.52549)
 
-[node name="mpath_gizmo_gui" type="VBoxContainer"]
-clip_contents = true
+[node name="mpath_gizmo_gui" type="Panel"]
 anchors_preset = 10
 anchor_right = 1.0
+offset_bottom = 45.0
+grow_horizontal = 2
 size_flags_horizontal = 3
 script = ExtResource("1_ufvdf")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
-layout_mode = 2
-
-[node name="mirror_checkbox" type="CheckBox" parent="HBoxContainer"]
-layout_mode = 2
-tooltip_text = "Mirror-Controls
-Hot-key: M"
-button_pressed = true
-text = "M"
-alignment = 1
-icon_alignment = 1
-
-[node name="mirror_l_checkbox" type="CheckBox" parent="HBoxContainer"]
-layout_mode = 2
-tooltip_text = "Mirror-Controls-Lenght
-Hot-key: L"
-button_pressed = true
-text = "ML"
-alignment = 1
-icon_alignment = 1
-
-[node name="snap" type="CheckBox" parent="HBoxContainer"]
-layout_mode = 2
-tooltip_text = "Snap to Terrain"
-button_pressed = true
-text = "snap"
-icon = ExtResource("2_kkk5j")
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 40.0
+grow_horizontal = 2
 
 [node name="mode" type="OptionButton" parent="HBoxContainer"]
+visible = false
 layout_mode = 2
 tooltip_text = "Change Mode
 Hot-keys: grave accent(`)"
@@ -74,98 +60,169 @@ popup/item_0/id = 0
 popup/item_1/text = "Create"
 popup/item_1/id = 1
 
-[node name="collapse" type="TextureButton" parent="HBoxContainer"]
+[node name="mirror_checkbox" type="CheckBox" parent="HBoxContainer"]
+custom_minimum_size = Vector2(5, 0)
 layout_mode = 2
-tooltip_text = "Collapse point"
-texture_normal = ExtResource("2_2am03")
-texture_pressed = ExtResource("3_ardhu")
-stretch_mode = 3
+tooltip_text = "Mirror-Controls
+Hot-key: M"
+button_pressed = true
+icon = ExtResource("2_tic3q")
+alignment = 1
+icon_alignment = 2
+
+[node name="mirror_l_checkbox" type="CheckBox" parent="HBoxContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+tooltip_text = "Mirror-Controls-Lenght
+Hot-key: L"
+button_pressed = true
+text = "ML"
+alignment = 1
+icon_alignment = 1
+
+[node name="snap" type="CheckBox" parent="HBoxContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+tooltip_text = "Snap to Terrain"
+button_pressed = true
+icon = ExtResource("3_yoi5b")
+icon_alignment = 2
+
+[node name="collapse" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Collapse point: move point handles to center of point"
+icon = ExtResource("4_38e8d")
 
 [node name="toggle_connection" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Toggle Connection
+tooltip_text = "Toggle Points Connection
 Hot-key: T"
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-text = "-T-"
+icon = ExtResource("6_a88nf")
+expand_icon = true
 
 [node name="Connect" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Connect
+tooltip_text = "Connect points
 Hot-key: C"
 theme_override_colors/font_color = Color(0.14902, 1, 0.25098, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-text = "-C-"
+icon = ExtResource("7_mbnvb")
+expand_icon = true
 
 [node name="Disconnect" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Disconnect
+tooltip_text = "Disconnect points
 Hot-key: X"
 theme_override_colors/font_color = Color(0.717647, 0.952941, 0, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-text = "-D-"
+icon = ExtResource("8_777vd")
+expand_icon = true
 
 [node name="remove" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Remove
+tooltip_text = "Remove point
 Hot-key: Backspace"
 theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
-text = "-D-"
+icon = ExtResource("5_8fq58")
+expand_icon = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="VSeparator" type="MarginContainer" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+
+[node name="Label4" type="Label" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "axis lock: "
+
+[node name="x_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+tooltip_text = "lock point's x position"
+text = "x"
+
+[node name="y_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+tooltip_text = "lock point's y position"
+text = "y"
+
+[node name="z_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+tooltip_text = "lock point's z position"
+text = "z   "
+
+[node name="Button" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "show MPath help window"
+theme_override_font_sizes/font_size = 21
+text = "?"
 
 [node name="show_rest" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = ">"
+tooltip_text = "More settings"
+icon = ExtResource("10_wuoaw")
+expand_icon = true
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+[node name="settings_panel" type="Panel" parent="HBoxContainer/show_rest"]
 visible = false
-layout_mode = 2
+layout_mode = 1
+offset_top = -238.0
+offset_right = 299.0
 
-[node name="tilt" parent="HBoxContainer2" instance=ExtResource("6_bsspt")]
+[node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/show_rest/settings_panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="tilt" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2" instance=ExtResource("6_bsspt")]
 layout_mode = 2
+size_flags_horizontal = 4
 tooltip_text = "Change Tilt
 Hotkey: R"
 
-[node name="scale" parent="HBoxContainer2" instance=ExtResource("6_bsspt")]
+[node name="scale" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2" instance=ExtResource("6_bsspt")]
 layout_mode = 2
+size_flags_horizontal = 4
 tooltip_text = "Change Tilt
 Hotkey: E"
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="."]
-visible = false
+[node name="FlowContainer" type="FlowContainer" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2"]
 layout_mode = 2
 
-[node name="depth_test" type="CheckBox" parent="HBoxContainer3"]
+[node name="depth_test" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "gizmo line depth test"
 icon = ExtResource("3_n0m75")
 
-[node name="xz_handle_lock" type="CheckBox" parent="HBoxContainer3"]
+[node name="xz_handle_lock" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "XY Handle lock"
 button_pressed = true
 text = "XY"
 icon = ExtResource("7_0ucgh")
 
-[node name="select_lock" type="CheckBox" parent="HBoxContainer3"]
+[node name="select_lock" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "Keep the Path node selected!"
 button_pressed = true
 text = "select"
 icon = ExtResource("7_0ucgh")
 
-[node name="debug_col" type="CheckBox" parent="HBoxContainer3"]
+[node name="debug_col" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "Collission for debug line in editor!
 If activated by clicking on line it will select path node
@@ -174,7 +231,7 @@ So if you have a huge path deactive this!"
 button_pressed = true
 text = "COL"
 
-[node name="swap_points" type="Button" parent="HBoxContainer3"]
+[node name="swap_points" type="Button" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "Toggle Connection
 Hot-key: shift+T"
@@ -184,7 +241,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 text = "Swap"
 
-[node name="sort_increasing" type="Button" parent="HBoxContainer3"]
+[node name="sort_increasing" type="Button" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "sort increasing"
 theme_override_font_sizes/font_size = 18
@@ -193,7 +250,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 text = "sort"
 
-[node name="sort_decreasing" type="Button" parent="HBoxContainer3"]
+[node name="sort_decreasing" type="Button" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
 tooltip_text = "Toggle Connection
 sort decreasing"
@@ -203,4 +260,16 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 text = "sort rev"
 
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="active_point_label" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer2" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_right = 12
+
+[connection signal="pressed" from="HBoxContainer/Button" to="." method="show_mpath_help_window"]
 [connection signal="pressed" from="HBoxContainer/show_rest" to="." method="_on_show_rest_pressed"]

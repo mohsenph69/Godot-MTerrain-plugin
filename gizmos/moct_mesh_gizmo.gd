@@ -12,7 +12,7 @@ func _init():
 	sel_line_mat = StandardMaterial3D.new()
 	sel_line_mat.albedo_color = Color(0.2,0.2,0.8)
 	sel_line_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	selection.connect("selection_changed",Callable(self,"on_selection_change"))
+	selection.selection_changed.connect(on_selection_change)
 
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
@@ -91,7 +91,3 @@ func on_selection_change():
 			n.update_gizmos()
 			if not selected_mesh.has(n):
 				selected_mesh.push_back(n)
-
-
-
-

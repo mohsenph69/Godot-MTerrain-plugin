@@ -1,14 +1,14 @@
 @tool
 extends Window
 
-@onready var no_terrain_label := $VBoxContainer/no_terrain
-@onready var uniform_name_line := $VBoxContainer/uniform_name/uniform_name_line
-@onready var format_option := $VBoxContainer/uniform_name2/OptionButton
-@onready var uniform_name_empty_error:=$VBoxContainer/no_terrain2
-@onready var def_color_picker:= $VBoxContainer/def_color/ColorPickerButton
-@onready var file_compress_option:=$VBoxContainer/hb3/file_compress
-@onready var compress_option:=$VBoxContainer/hb2/data_compress_option
-@onready var remove_uniform_list:= $VBoxContainer/uniform_name3/remove_uniform_list
+@onready var no_terrain_label = find_child("no_terrain")
+@onready var uniform_name_line = find_child("uniform_name_line")
+@onready var format_option = find_child("uniform_name_2")
+@onready var uniform_name_empty_error = find_child("no_terrain2")
+@onready var def_color_picker = find_child("ColorPickerButton")
+@onready var file_compress_option = find_child("file_compress")
+@onready var compress_option = find_child("data_compress_option")
+@onready var remove_uniform_list = find_child("remove_uniform_list")
 
 const config_file_name:=".save_config.ini"
 

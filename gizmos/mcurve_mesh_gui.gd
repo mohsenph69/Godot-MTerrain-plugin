@@ -1,5 +1,5 @@
 @tool
-extends HBoxContainer
+extends BoxContainer
 
 @onready var active_btn:=$active
 @onready var segment_select_option:=$segment_select
@@ -20,7 +20,7 @@ func _init():
 	instance_rid = RenderingServer.instance_create()
 	var ed := EditorScript.new()
 	selection = ed.get_editor_interface().get_selection()
-	selection.connect("selection_changed",Callable(self,"selection_changed"))
+	selection.selection_changed.connect(selection_changed)
 
 func _enter_tree():
 	update_scenario()
@@ -79,6 +79,7 @@ func _on_active_toggled(button_pressed):
 	segment_select_option.visible = button_pressed
 	socket_select_option.visible = button_pressed
 	if not button_pressed and obj:
+		selection.clear()
 		selection.add_node(obj)
 
 func update_mesh():
@@ -134,7 +135,7 @@ func is_active():
 	return active_btn.button_pressed
 
 func _on_visibility_changed():
-	if not visible:
+	if active_btn and not visible:
 		active_btn.button_pressed = false
 
 func selection_changed():
@@ -166,4 +167,3 @@ func _process(delta):
 	var marker = sockets_gizmos[socket_index]
 	var t:Transform3D = marker.global_transform
 	obj.intersections[seg_index].sockets[socket_index] = t
-

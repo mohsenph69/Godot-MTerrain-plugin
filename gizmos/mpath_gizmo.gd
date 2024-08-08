@@ -2,6 +2,8 @@
 extends EditorNode3DGizmoPlugin
 
 signal selection_changed
+signal lock_mode_changed
+signal active_point_position_updated
 
 const value_mode_mouse_sensivity:float = 0.01
 const bake_interval:float = 0.2
@@ -32,6 +34,7 @@ enum LOCK_MODE {
 	XZ,
 	XY,
 	ZY,
+	XYZ
 }
 var lock_mode := LOCK_MODE.NONE
 var is_handle_setting:= true
@@ -54,44 +57,48 @@ var mouse_init_pos:Vector2i
 var is_mouse_init_set:=false
 
 var active_path:MPath
-
-
-func _init():
-	var ed = EditorScript.new()
-	var interface = ed.get_editor_interface()
-	selection = interface.get_selection()
+		
+func _init():	
+	selection = EditorInterface.get_selection()
+	
 	var line_mat = StandardMaterial3D.new()
 	line_mat.albedo_color = Color(0.3,0.3,1.0)
 	line_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	line_mat.render_priority = 10
 	line_mat.no_depth_test = true
-	var control_line_mat = line_mat.duplicate()
-	control_line_mat.albedo_color = Color(0.5,0.8,1.0)
 	add_material("line_mat",line_mat)
+	
+	var control_line_mat = line_mat.duplicate()
+	control_line_mat.albedo_color = Color(0.5,0.8,1.0)	
+	add_material("control_line_mat",control_line_mat)
+	
 	var selected_lines_mat = line_mat.duplicate()
 	selected_lines_mat.albedo_color = Color(0.2,1.0,0.2)
 	add_material("selected_lines_mat",selected_lines_mat)
-	add_material("control_line_mat",control_line_mat)
+	
 	create_handle_material("points")
 	var hmat = get_material("points")
 	hmat.albedo_texture = handle00_tex
 	hmat.render_priority = 10
 	hmat.no_depth_test = true
 	hmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
 	var controls = hmat.duplicate()
 	add_material("controls",controls)
 	controls.albedo_texture = handle01_tex
+	
 	var active_p_math = get_material("points").duplicate()
 	active_p_math.albedo_color = Color(0.9,0.9,0.1)
 	active_p_math.render_priority = 100
 	active_p_math.no_depth_test = true
 	add_material("active_point",active_p_math)
+	
 	var selected_points_math = active_p_math.duplicate()
 	selected_points_math.albedo_color = Color(1.0,0.2,2)
 	add_material("selected_points",selected_points_math)
 
 
-func _redraw(gizmo: EditorNode3DGizmo) -> void:
+func _redraw(gizmo: EditorNode3DGizmo) -> void:	
 	gizmo.clear()
 	var node:MPath= gizmo.get_node_3d()
 	var curve:MCurve= node.curve
@@ -152,13 +159,13 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 		lines.push_back(pos)
 		lines.push_back(out_pos)
 	########## Lock mode line ##################
-	if lock_mode == LOCK_MODE.X or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.XZ:
+	if lock_mode == LOCK_MODE.X or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.XZ or lock_mode == LOCK_MODE.XYZ:
 		lines.push_back(handle_init_pos + Vector3(-100000,0,0))
 		lines.push_back(handle_init_pos + Vector3(100000,0,0))
-	if  lock_mode == LOCK_MODE.Y or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.ZY:
+	if  lock_mode == LOCK_MODE.Y or lock_mode == LOCK_MODE.XY or lock_mode == LOCK_MODE.ZY or lock_mode == LOCK_MODE.XYZ:
 		lines.push_back(handle_init_pos + Vector3(0,-100000,0))
 		lines.push_back(handle_init_pos + Vector3(0,100000,0))
-	if lock_mode == LOCK_MODE.Z or lock_mode == LOCK_MODE.XZ or lock_mode == LOCK_MODE.ZY:
+	if lock_mode == LOCK_MODE.Z or lock_mode == LOCK_MODE.XZ or lock_mode == LOCK_MODE.ZY or lock_mode == LOCK_MODE.XYZ:
 		lines.push_back(handle_init_pos + Vector3(0,0,-100000))
 		lines.push_back(handle_init_pos + Vector3(0,0,100000))
 	################## Setting lines and handles
@@ -173,32 +180,33 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	if lines.size() > 2:
 		gizmo.add_lines(lines,get_material("control_line_mat"))
 
-
-
-
 func _get_handle_name(gizmo, handle_id, secondary):
 	if secondary:
 		if handle_id%2 == 0:
 			return "C "+str(handle_id/2)
 		else:
 			return "C "+str((handle_id-1)/2)
-	return "P "+str(handle_id)
+	else:			
+		return "P "+str(handle_id)
 
 func _is_handle_highlighted(gizmo, handle_id, secondary):
 	return false
 
-func _get_handle_value(gizmo, handle_id, secondary):
+func _get_handle_value(gizmo, handle_id, secondary):	
 	var curve:MCurve = gizmo.get_node_3d().curve
-	if not curve:
+	if not curve:		
 		return null
 	if not secondary:
-		return curve.get_point_position(handle_id)
+		active_point_position_updated.emit(str("P", handle_id, ": ", curve.get_point_position(handle_id)))
+		return curve.get_point_position(handle_id)		
 	else:
 		if handle_id % 2 == 0: #even
-			handle_id /=2
-			return curve.get_point_in(handle_id)
-		else:
+			handle_id /=2			
+			active_point_position_updated.emit(str("C", handle_id, ": ", curve.get_point_in(handle_id)))
+			return curve.get_point_in(handle_id)			
+		else:						
 			handle_id = (handle_id-1)/2
+			active_point_position_updated.emit(str("C", handle_id, ": ", curve.get_point_out(handle_id)))
 			return curve.get_point_out(handle_id)
 
 func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
@@ -206,8 +214,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		### in multi select mode we do not inturput with this
 		return
 	var curve:MCurve= gizmo.get_node_3d().curve
-	if not curve:
-		return
+	if not curve: return
 	if not is_handle_init_pos_set:
 		is_handle_setting = true
 		is_handle_init_pos_set = true
@@ -217,20 +224,22 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 	var from = camera.project_ray_origin(screen_pos)
 	var to = camera.project_ray_normal(screen_pos)
 	# is main point
-	if not secondary:
+	if not secondary:		
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
 		if gui.is_terrain_snap() and lock_mode == LOCK_MODE.NONE:
-			if mterrain_plugin.active_terrain and mterrain_plugin.active_terrain.is_grid_created():
-				drag.y = mterrain_plugin.active_terrain.get_height(drag)
+			var active_terrain = mterrain_plugin.tools.get_active_mterrain()
+			if active_terrain and active_terrain.is_grid_created():
+				drag.y = active_terrain.get_height(drag)
 			else:
 				drag.y = 0.0
 		curve.move_point(points_id,drag)
 		change_active_point(points_id)
-	else: # is secondary
+	else: # is secondary		
 		if gui.is_xz_handle_lock() and lock_mode == LOCK_MODE.NONE:
 			lock_mode = LOCK_MODE.XZ
+			lock_mode_changed.emit(lock_mode)
 		if points_id % 2 == 0: # is even
 			points_id /= 2;
 			var in_pos:Vector3 = curve.get_point_in(points_id)
@@ -289,11 +298,36 @@ func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
 			current_pos.x = init_pos.x
 	return current_pos
 
-func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
+func update_lock_mode(x,y,z):	
+	if x and y and z:
+		lock_mode = LOCK_MODE.XYZ
+		return
+	if x and y:
+		lock_mode = LOCK_MODE.XY
+		return
+	if x and z:
+		lock_mode = LOCK_MODE.XZ
+		return
+	if y and z:
+		lock_mode = LOCK_MODE.ZY
+		return
+	if x:
+		lock_mode = LOCK_MODE.X
+		return
+	if y:
+		lock_mode = LOCK_MODE.Y
+		return
+	if z:
+		lock_mode = LOCK_MODE.Z
+		return
+
+
+func _commit_handle(gizmo, handle_id, secondary, restore, cancel):	
 	var curve:MCurve = gizmo.get_node_3d().curve
 	is_handle_init_pos_set = false
 	is_handle_setting = false
 	lock_mode = LOCK_MODE.NONE
+	lock_mode_changed.emit(lock_mode)
 	is_mouse_init_set = false
 	if not curve:
 		return
@@ -353,214 +387,255 @@ func _get_priority():
 	return 2
 
 func _has_gizmo(for_node_3d):
-	return for_node_3d.is_class("MPath")
+	return for_node_3d is MPath
 
 func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
-	if event is InputEventMouseButton:
-		if event.pressed:
-			if value_mode != VALUE_MODE.NONE:
-				is_mouse_init_set = false
-				var curve = find_curve()
-				if not curve or not curve.has_point(active_point):
-					value_mode = VALUE_MODE.NONE
-					return
-				if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling
-					curve.set_point_scale(active_point,init_scale)
-					curve.set_point_tilt(active_point,init_tilt)
-					gui.tilt_num.set_value(init_tilt)
-					gui.scale_num.set_value(init_scale)
-					value_mode = VALUE_MODE.NONE
-					curve.commit_point_update(active_point)
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-				if value_mode == VALUE_MODE.TILT:
-					ur.create_action("change tilt")
-					ur.add_do_method(curve,"set_point_tilt",active_point,curve.get_point_tilt(active_point))
-					ur.add_do_method(curve,"commit_point_update",active_point)
-					ur.add_do_method(gui.tilt_num,"set_value",curve.get_point_tilt(active_point))
-					ur.add_undo_method(gui.tilt_num,"set_value",init_tilt)
-					ur.add_undo_method(curve,"set_point_tilt",active_point,init_tilt)
-					ur.add_undo_method(curve,"commit_point_update",active_point)
-					ur.commit_action(false)
-				elif value_mode == VALUE_MODE.SCALE:
-					ur.create_action("change scale")
-					ur.add_do_method(curve,"set_point_scale",active_point,curve.get_point_scale(active_point))
-					ur.add_do_method(gui.scale_num,"set_value",curve.get_point_scale(active_point))
-					ur.add_undo_method(gui.scale_num,"set_value",init_scale)
-					ur.add_undo_method(curve,"set_point_scale",active_point,init_scale)
-					ur.add_undo_method(curve,"commit_point_update",active_point)
-					ur.commit_action(false)
-				value_mode = VALUE_MODE.NONE
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventKey:
-		if event.pressed:
-			if event.keycode == KEY_P:
-				print("validating ",selected_connections.size())
-				var curve:MCurve = find_curve()
-				#for c in selected_connections:
-				#	curve.validate_conn(c)
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_L:
-				var path:MPath = find_mpath()
-				if path:
-					var curve:MCurve = path.curve
-					if curve and curve.has_point(active_point):
-						var pp = curve.get_point_conn_points_recursive(active_point)
-						selected_points = pp
-						pp.push_back(active_point)
-						selected_connections = curve.get_conn_ids_exist(pp)
-						path.update_gizmos()
-						return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_T:
-				if Input.is_key_pressed(KEY_SHIFT):
-					swap_points()
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-				elif toggle_connection():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			elif  event.keycode == KEY_BACKSPACE:
-				if remove_point():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			elif  event.keycode == KEY_X:
-				if disconnect_points():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			elif  event.keycode == KEY_C:
-				if connect_points():
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_R:
-				var curve = find_curve()
-				if curve and curve.has_point(active_point):
-					init_tilt = curve.get_point_tilt(active_point)
-					value_mode = VALUE_MODE.TILT
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if event.keycode == KEY_K:
-				var curve = find_curve()
-				if curve and curve.has_point(active_point):
-					init_scale = curve.get_point_scale(active_point)
-					value_mode = VALUE_MODE.SCALE
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-			if is_handle_setting:
-				var path:MPath = find_mpath()
-				if Input.is_key_pressed(KEY_SHIFT):
-					if event.keycode == KEY_X:
-						lock_mode = LOCK_MODE.ZY
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Y:
-						lock_mode = LOCK_MODE.XZ
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Z:
-						lock_mode = LOCK_MODE.XY
-						if path: path.update_gizmos()
-				else:
-					if event.keycode == KEY_X:
-						lock_mode = LOCK_MODE.X
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Y:
-						lock_mode = LOCK_MODE.Y
-						if path: path.update_gizmos()
-					if event.keycode == KEY_Z:
-						lock_mode = LOCK_MODE.Z
-						if path: path.update_gizmos()
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseButton:
-		if event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:
-			var mpath = find_mpath()
-			if not mpath:
-				return
-			var curve:MCurve = mpath.curve
-			if not curve:
-				return
-			#### Handling Selections
-			var from = camera.project_ray_origin(event.position)
-			var to = camera.project_ray_normal(event.position)
-			### Get collission point id
-			var pcol = curve.ray_active_point_collision(from,to,0.9999)
-			if pcol != 0:
-				if Input.is_key_pressed(KEY_CTRL):
-					var last:int= selected_points.find(pcol)
-					if last != -1:
-						selected_points.remove_at(last)
-					else:
-						selected_points.push_back(pcol)
-				else:
-					if pcol == active_point and selected_points.size() == 0:
-						change_active_point(0)
-						return
-					else:
-						selected_points.clear()
-						change_active_point(pcol)
-						var last:int= selected_points.find(pcol)
-						if last != -1:
-							selected_points.remove_at(last)
-			if active_point != 0 and  Input.is_key_pressed(KEY_CTRL) and pcol==0: # Maybe a miss selction
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-			## selected connections
-			selected_connections.clear()
-			var all_pp = selected_points.duplicate()
-			all_pp.push_back(active_point)
-			selected_connections = curve.get_conn_ids_exist(all_pp)
-			if pcol: #### if we have selection then we should stop here and not go into creation stuff
-				mpath.update_gizmos()
-				emit_signal("selection_changed")
-				return
-			if gui.get_mode() == gui.MODE.CREATE:
-				### Here should be adjusted later with MTerrain
-				var new_index:int
-				var new_pos:Vector3
-				var is_new_pos_set = false
-				if gui.is_terrain_snap():
-					if mterrain_plugin.active_terrain.is_grid_created():
-						if terrain_col.is_collided():
-							new_pos = terrain_col.get_collision_position()
-							is_new_pos_set = true
-					else:
-						var col = MTool.ray_collision_y_zero_plane(camera.global_position,camera.project_ray_normal(event.position))
-						if col.is_collided():
-							new_pos = col.get_collision_position()
-							is_new_pos_set = true
-				if curve.has_point(active_point):
-					var creation_distance = curve.get_point_position(active_point).distance_to(from)
-					if not is_new_pos_set:
-						new_pos = from + to * creation_distance
-					new_index = curve.add_point(new_pos,new_pos,new_pos,active_point)
-				else:
-					if not is_new_pos_set:
-						new_pos = from + to * 4.0
-					new_index = curve.add_point(new_pos,new_pos,new_pos,0)
-				if new_index == 0: ### In case for error
-					return EditorPlugin.AFTER_GUI_INPUT_STOP
-				## Undo Redo
-				ur.create_action("create_point")
-				ur.add_do_method(curve,"add_point",new_pos,new_pos,new_pos,active_point)
-				ur.add_undo_method(curve,"remove_point",new_index)
-				ur.commit_action(false)
-				change_active_point(new_index)
-				mpath.update_gizmos()
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseMotion:
-		if value_mode == VALUE_MODE.NONE: return
+	#Process tilt, scale, and right-click cancel
+	if event is InputEventMouseButton and event.pressed and value_mode != VALUE_MODE.NONE:		
+		is_mouse_init_set = false
 		var curve = find_curve()
-		if not curve: return
-		if not curve.has_point(active_point): return
-		if not is_mouse_init_set:
-			mouse_init_pos = event.position
-			init_scale = curve.get_point_scale(active_point)
-			init_tilt = curve.get_point_tilt(active_point)
-			is_mouse_init_set = true
-		var mouse_diff:float = mouse_init_pos.y - event.position.y
-		mouse_diff *= value_mode_mouse_sensivity
-		if value_mode == VALUE_MODE.TILT:
-			var new_tilt:= init_tilt + mouse_diff
-			curve.set_point_tilt(active_point,new_tilt)
-			gui.tilt_num.set_value(new_tilt)
-		elif  value_mode == VALUE_MODE.SCALE:
-			var new_scale:= init_scale + mouse_diff
-			curve.set_point_scale(active_point,new_scale)
-			gui.scale_num.set_value(new_scale)
-		curve.commit_point_update(active_point)
-		return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseButton:
-		if event.button_mask == MOUSE_BUTTON_LEFT and gui.is_select_lock():
+		if not curve or not curve.has_point(active_point):
+			value_mode = VALUE_MODE.NONE					
+			return
+		if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling
+			curve.set_point_scale(active_point,init_scale)
+			curve.set_point_tilt(active_point,init_tilt)
+			gui.tilt_num.set_value(init_tilt)
+			gui.scale_num.set_value(init_scale)
+			value_mode = VALUE_MODE.NONE
+			curve.commit_point_update(active_point)					
 			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		if value_mode == VALUE_MODE.TILT:
+			ur.create_action("change tilt")
+			ur.add_do_method(curve,"set_point_tilt",active_point,curve.get_point_tilt(active_point))
+			ur.add_do_method(curve,"commit_point_update",active_point)
+			ur.add_do_method(gui.tilt_num,"set_value",curve.get_point_tilt(active_point))
+			ur.add_undo_method(gui.tilt_num,"set_value",init_tilt)
+			ur.add_undo_method(curve,"set_point_tilt",active_point,init_tilt)
+			ur.add_undo_method(curve,"commit_point_update",active_point)
+			ur.commit_action(false)
+		elif value_mode == VALUE_MODE.SCALE:
+			ur.create_action("change scale")
+			ur.add_do_method(curve,"set_point_scale",active_point,curve.get_point_scale(active_point))
+			ur.add_do_method(gui.scale_num,"set_value",curve.get_point_scale(active_point))
+			ur.add_undo_method(gui.scale_num,"set_value",init_scale)
+			ur.add_undo_method(curve,"set_point_scale",active_point,init_scale)
+			ur.add_undo_method(curve,"commit_point_update",active_point)
+			ur.commit_action(false)
+		value_mode = VALUE_MODE.NONE				
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
+	if event is InputEventKey and event.pressed:
+		if process_keyboard_actions():
+			return EditorPlugin.AFTER_GUI_INPUT_STOP		
+		else:
+			return
+	if event is InputEventMouseButton and event.button_mask == MOUSE_BUTTON_LEFT and event.pressed:			
+		if process_mouse_left_click(camera, event, terrain_col):			
+			return EditorPlugin.AFTER_GUI_INPUT_STOP		
+		else:
+			return
+	if event is InputEventMouseMotion:		
+		if process_mouse_motion(event):			
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		else:
+			return
+	if gui.is_select_lock() and event is InputEventMouse and event.button_mask == MOUSE_BUTTON_LEFT:		
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
+		
+func process_mouse_left_click(camera, event, terrain_col):
+	var mpath = find_mpath()
+	if not mpath: return
+	var curve:MCurve = mpath.curve
+	if not curve: return
+	#### Handling Selections
+	var from = camera.project_ray_origin(event.position)
+	var to = camera.project_ray_normal(event.position)
+	### Get collission point id
+	var pcol = curve.ray_active_point_collision(from,to,0.9999)
+	if pcol != 0:
+		if Input.is_key_pressed(KEY_ALT):
+			print("Alt clicked mpath")
+			change_active_point(pcol)
+			remove_point()
+		elif Input.is_key_pressed(KEY_SHIFT):
+			var last:int= selected_points.find(pcol)
+			if last != -1:
+				selected_points.remove_at(last)
+			else:
+				selected_points.push_back(pcol)
+		else:
+			if pcol == active_point and selected_points.size() == 0:
+				change_active_point(0)						
+				return
+			else:
+				selected_points.clear()
+				change_active_point(pcol)
+				var last:int= selected_points.find(pcol)
+				if last != -1:
+					selected_points.remove_at(last)
+	if active_point != 0 and  Input.is_key_pressed(KEY_SHIFT) and pcol==0: # Maybe a miss selction
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
+	## selected connections
+	selected_connections.clear()
+	var all_pp = selected_points.duplicate()
+	all_pp.push_back(active_point)
+	selected_connections = curve.get_conn_ids_exist(all_pp)
+	if pcol: #### if we have selection then we should stop here and not go into creation stuff
+		mpath.update_gizmos()
+		selection_changed.emit()				
+		return
+	if gui.get_mode() == gui.MODE.CREATE or Input.is_key_pressed(KEY_CTRL):
+		### Here should be adjusted later with MTerrain
+		var new_index:int
+		var new_pos:Vector3
+		var is_new_pos_set = false
+		if gui.is_terrain_snap():
+			#To Do: user should be able to select which mterrain is used for snapping
+			var active_mterrain = mterrain_plugin.tools.get_active_mterrain()
+			if active_mterrain and active_mterrain.is_grid_created():				
+				if terrain_col.is_collided():
+					new_pos = terrain_col.get_collision_position()
+					is_new_pos_set = true
+			else:
+				var col = MTool.ray_collision_y_zero_plane(camera.global_position,camera.project_ray_normal(event.position))
+				if col.is_collided():
+					new_pos = col.get_collision_position()
+					is_new_pos_set = true
+		if curve.has_point(active_point):
+			var creation_distance = curve.get_point_position(active_point).distance_to(from)
+			if not is_new_pos_set:
+				new_pos = from + to * creation_distance
+			new_index = curve.add_point(new_pos,new_pos,new_pos,active_point)
+		else:
+			if not is_new_pos_set:
+				new_pos = from + to * 4.0
+			new_index = curve.add_point(new_pos,new_pos,new_pos,0)
+		if new_index == 0: ### In case for error					
+			return true
+		## Undo Redo
+		ur.create_action("create_point")
+		ur.add_do_method(curve,"add_point",new_pos,new_pos,new_pos,active_point)
+		ur.add_undo_method(curve,"remove_point",new_index)
+		ur.commit_action(false)
+		change_active_point(new_index)
+		mpath.update_gizmos()				
+		return true
 
+#Mouse motion for curve tilt and scale
+func process_mouse_motion(event):	
+	if value_mode == VALUE_MODE.NONE: return
+	var curve = find_curve()
+	if not curve: return
+	if not curve.has_point(active_point): return	
+	if not is_mouse_init_set:
+		mouse_init_pos = event.position
+		init_scale = curve.get_point_scale(active_point)
+		init_tilt = curve.get_point_tilt(active_point)
+		is_mouse_init_set = true
+	var mouse_diff:float = mouse_init_pos.y - event.position.y
+	mouse_diff *= value_mode_mouse_sensivity
+	if value_mode == VALUE_MODE.TILT:
+		var new_tilt:= init_tilt + mouse_diff
+		curve.set_point_tilt(active_point,new_tilt)
+		gui.tilt_num.set_value(new_tilt)
+	elif value_mode == VALUE_MODE.SCALE:
+		var new_scale:= init_scale + mouse_diff
+		curve.set_point_scale(active_point,new_scale)
+		gui.scale_num.set_value(new_scale)
+	curve.commit_point_update(active_point)		
+	return true
+	
+func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
+	#if event.keycode == KEY_P:
+	if Input.is_action_just_pressed("mpath_validate"):				
+		var curve:MCurve = find_curve()
+		#for c in selected_connections:
+		#	curve.validate_conn(c)
+		return true
+	#if event.keycode == KEY_L:
+	if Input.is_action_just_pressed("mpath_select_linked"):			
+		var path:MPath = find_mpath()
+		if path:
+			var curve:MCurve = path.curve
+			if curve and curve.has_point(active_point):
+				var pp = curve.get_point_conn_points_recursive(active_point)
+				selected_points = pp
+				pp.push_back(active_point)
+				selected_connections = curve.get_conn_ids_exist(pp)
+				path.update_gizmos()
+				return true
+	#if event.keycode == KEY_T and Input.is_key_pressed(KEY_SHIFT):
+	if Input.is_action_just_pressed("mpath_swap_points"):			
+		swap_points()
+		return true
+	#if event.keycode == KEY_T and not Input.is_key_pressed(KEY_SHIFT):
+	if Input.is_action_just_pressed("mpath_toggle_connection"):			
+		if toggle_connection():
+			return true
+	#elif  event.keycode == KEY_BACKSPACE:
+	if Input.is_action_just_pressed("mpath_remove_point"):
+		if remove_point():
+			return true
+	#elif  event.keycode == KEY_X:
+	if Input.is_action_just_pressed("mpath_disconnect_point"):			
+		if disconnect_points():
+			return true
+	#elif event.keycode == KEY_C:
+	if Input.is_action_just_pressed("mpath_connect_point"):						
+		if connect_points():
+			return true
+	#if event.keycode == KEY_R:
+	if Input.is_action_just_pressed("mpath_tilt_mode"):									
+		var curve = find_curve()
+		if curve and curve.has_point(active_point):
+			init_tilt = curve.get_point_tilt(active_point)
+			value_mode = VALUE_MODE.TILT
+			return true
+	#if event.keycode == KEY_K:
+	if Input.is_action_just_pressed("mpath_scale_mode"):						
+		var curve = find_curve()
+		if curve and curve.has_point(active_point):
+			init_scale = curve.get_point_scale(active_point)
+			value_mode = VALUE_MODE.SCALE
+			return true
+	if is_handle_setting:
+		var path:MPath = find_mpath()
+		#shift x
+		if Input.is_action_just_pressed("mpath_lock_zy"):
+			lock_mode = LOCK_MODE.ZY
+			lock_mode_changed.emit(lock_mode)			
+			if path: path.update_gizmos()
+			return true
+		#shift y
+		if Input.is_action_just_pressed("mpath_lock_xz"):
+			lock_mode = LOCK_MODE.XZ
+			lock_mode_changed.emit(lock_mode)
+			if path: path.update_gizmos()
+			return true
+		#shift z
+		if Input.is_action_just_pressed("mpath_lock_xy"):					
+			lock_mode = LOCK_MODE.XY
+			lock_mode_changed.emit(lock_mode)
+			if path: path.update_gizmos()
+			return true
+		#x
+		if Input.is_action_just_pressed("mpath_lock_x"):
+			lock_mode = LOCK_MODE.X
+			lock_mode_changed.emit(lock_mode)
+			if path: path.update_gizmos()
+			return true
+		#y
+		if Input.is_action_just_pressed("mpath_lock_y"):			
+			lock_mode = LOCK_MODE.Y
+			lock_mode_changed.emit(lock_mode)
+			if path: path.update_gizmos()
+			return true
+		#z
+		if Input.is_action_just_pressed("mpath_lock_z"):
+			lock_mode = LOCK_MODE.Z
+			lock_mode_changed.emit(lock_mode)
+			if path: path.update_gizmos()
+			return true
 
 func find_mpath()->MPath:
 	if active_path:
@@ -598,29 +673,29 @@ func on_collapse():
 	ur.add_undo_method(curve,"move_point_out",active_point,out_pos)
 	ur.commit_action(true)
 
-
 func set_gui(input:Control):
 	gui = input
-	gui.connect("visibility_changed",Callable(self,"gui_visibility_changed"))
-	gui.toggle_connection_btn.connect("pressed",Callable(self,"toggle_connection"))
-	gui.collapse_btn.connect("pressed",Callable(self,"on_collapse"))
-	gui.connect_btn.connect("pressed",Callable(self,"connect_points"))
-	gui.disconnect_btn.connect("pressed",Callable(self,"disconnect_points"))
-	gui.remove_btn.connect("pressed",Callable(self,"remove_point"))
-	gui.swap_points_btn.connect("pressed",Callable(self,"swap_points"))
-	gui.depth_test_checkbox.connect("toggled",Callable(self,"toggle_depth_test"))
-	gui.tilt_num.connect("prop_changed",Callable(self,"on_point_val_changed"))
-	gui.scale_num.connect("prop_changed",Callable(self,"on_point_val_changed"))
-	gui.tilt_num.connect("commit_value",Callable(self,"on_point_val_commit"))
-	gui.scale_num.connect("commit_value",Callable(self,"on_point_val_commit"))
+	gui.visibility_changed.connect(gui_visibility_changed)
+	gui.toggle_connection_btn.pressed.connect(toggle_connection)
+	gui.collapse_btn.pressed.connect(on_collapse)
+	gui.connect_btn.pressed.connect(connect_points)
+	gui.disconnect_btn.pressed.connect(disconnect_points)
+	gui.remove_btn.pressed.connect(remove_point)
+	gui.swap_points_btn.pressed.connect(swap_points)
+	gui.depth_test_checkbox.toggled.connect(toggle_depth_test)
+	gui.tilt_num.prop_changed.connect(on_point_val_changed)
+	gui.scale_num.prop_changed.connect(on_point_val_changed)
+	gui.tilt_num.commit_value.connect(on_point_val_commit)
+	gui.scale_num.commit_value.connect(on_point_val_commit)
 	gui.tilt_num.set_editable(false)
 	gui.scale_num.set_editable(false)
 	gui.tilt_num.set_soft_min(-1)
 	gui.tilt_num.set_soft_max(1)
 	gui.scale_num.set_soft_min(-4)
 	gui.scale_num.set_soft_max(4)
-	gui.sort_increasing_btn.connect("pressed",Callable(self,"sort").bind(true))
-	gui.sort_decreasing_btn.connect("pressed",Callable(self,"sort").bind(false))
+	gui.sort_increasing_btn.pressed.connect(sort.bind(true))
+	gui.sort_decreasing_btn.pressed.connect(sort.bind(false))
+	gui.gizmo = self
 
 func change_active_point(new_active_point:int):
 	active_point = new_active_point
@@ -633,8 +708,6 @@ func change_active_point(new_active_point:int):
 	gui.scale_num.set_editable(true)
 	gui.tilt_num.set_value_no_signal(curve.get_point_tilt(active_point)*2*PI)
 	gui.scale_num.set_value_no_signal(curve.get_point_scale(active_point))
-
-
 
 func toggle_connection()->bool:
 	var path = find_mpath()
@@ -669,7 +742,6 @@ func connect_points()->bool:
 		return true
 	return false
 
-
 func disconnect_points():
 	var path = find_mpath()
 	if not path: return false
@@ -697,6 +769,7 @@ func _toggle_connection(curve:MCurve,toggle_point,toggle_conn):
 		curve.toggle_conn_type(active_point,conn)
 	if curve.has_point(active_point):
 		curve.commit_point_update(active_point)
+	find_mpath().update_gizmos()
 	return true
 
 func remove_point()->bool:
@@ -815,7 +888,3 @@ func sort(increasing:bool):
 	cu.clear_history()
 	su.clear_history()
 	path.update_gizmos()
-
-
-
-
