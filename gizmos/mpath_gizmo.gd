@@ -453,7 +453,11 @@ func process_mouse_left_click(camera, event, terrain_col):
 	### Get collission point id
 	var pcol = curve.ray_active_point_collision(from,to,0.9999)
 	if pcol != 0:
-		if Input.is_key_pressed(KEY_CTRL):
+		if Input.is_key_pressed(KEY_ALT):
+			print("Alt clicked mpath")
+			change_active_point(pcol)
+			remove_point()
+		elif Input.is_key_pressed(KEY_SHIFT):
 			var last:int= selected_points.find(pcol)
 			if last != -1:
 				selected_points.remove_at(last)
@@ -469,7 +473,7 @@ func process_mouse_left_click(camera, event, terrain_col):
 				var last:int= selected_points.find(pcol)
 				if last != -1:
 					selected_points.remove_at(last)
-	if active_point != 0 and  Input.is_key_pressed(KEY_CTRL) and pcol==0: # Maybe a miss selction
+	if active_point != 0 and  Input.is_key_pressed(KEY_SHIFT) and pcol==0: # Maybe a miss selction
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 	## selected connections
 	selected_connections.clear()
@@ -480,7 +484,7 @@ func process_mouse_left_click(camera, event, terrain_col):
 		mpath.update_gizmos()
 		selection_changed.emit()				
 		return
-	if gui.get_mode() == gui.MODE.CREATE:
+	if gui.get_mode() == gui.MODE.CREATE or Input.is_key_pressed(KEY_CTRL):
 		### Here should be adjusted later with MTerrain
 		var new_index:int
 		var new_pos:Vector3
@@ -765,6 +769,7 @@ func _toggle_connection(curve:MCurve,toggle_point,toggle_conn):
 		curve.toggle_conn_type(active_point,conn)
 	if curve.has_point(active_point):
 		curve.commit_point_update(active_point)
+	find_mpath().update_gizmos()
 	return true
 
 func remove_point()->bool:

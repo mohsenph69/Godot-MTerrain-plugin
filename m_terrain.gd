@@ -396,7 +396,7 @@ func set_default_keymap():
 		{"name": "mpath_swap_points", "keycode": KEY_T, "pressed": true, "shift": true, "ctrl": false, "alt": false},
 		{"name": "mpath_toggle_connection", "keycode": KEY_T, "pressed": true, "shift": false, "ctrl": false, "alt": false},
 		{"name": "mpath_remove_point", "keycode": KEY_BACKSPACE, "pressed": true, "shift": false, "ctrl": false, "alt": false},
-		{"name": "mpath_disconnect_point", "keycode": KEY_X, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mpath_disconnect_point", "keycode": KEY_B, "pressed": true, "shift": false, "ctrl": false, "alt": false},
 		{"name": "mpath_connect_point", "keycode": KEY_C, "pressed": true, "shift": false, "ctrl": false, "alt": false},
 		{"name": "mpath_tilt_mode", "keycode": KEY_R, "pressed": true, "shift": false, "ctrl": false, "alt": false},
 		{"name": "mpath_scale_mode", "keycode": KEY_K, "pressed": true, "shift": false, "ctrl": false, "alt": false},

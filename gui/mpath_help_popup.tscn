@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://dpd66ybtq65sa"]
+
+[node name="Window" type="Window"]
+initial_position = 2
+size = Vector2i(400, 300)
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="RichTextLabel" parent="Panel/MarginContainer/VBoxContainer/Panel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "
+Click
+Shift+Click 
+Ctrl Click
+Alt Click"
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+text_direction = 2
+
+[node name="VSeparator" type="VSeparator" parent="Panel/MarginContainer/VBoxContainer/Panel/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label2" type="RichTextLabel" parent="Panel/MarginContainer/VBoxContainer/Panel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "
+Select point
+Select multiple points
+Add point
+Delete point"
+
+[node name="Button" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "OK"

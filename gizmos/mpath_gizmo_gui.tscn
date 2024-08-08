@@ -1,11 +1,10 @@
-[gd_scene load_steps=18 format=3 uid="uid://btfhp7mnhc5nj"]
+[gd_scene load_steps=17 format=3 uid="uid://btfhp7mnhc5nj"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_ufvdf"]
-[ext_resource type="Texture2D" uid="uid://ch4p2bk5wx574" path="res://addons/m_terrain/icons/collapse_normal.svg" id="2_2am03"]
 [ext_resource type="Texture2D" uid="uid://c64direekaeap" path="res://addons/m_terrain/icons/mirror_icon.svg" id="2_tic3q"]
-[ext_resource type="Texture2D" uid="uid://c5ca7hy0hp07k" path="res://addons/m_terrain/icons/collapse_pressed.svg" id="3_ardhu"]
 [ext_resource type="Texture2D" uid="uid://b2edfbh3q6uh2" path="res://addons/m_terrain/icons/depth_test.svg" id="3_n0m75"]
 [ext_resource type="Texture2D" uid="uid://ckbvdmvbcxfb6" path="res://addons/m_terrain/icons/magnet_icon.svg" id="3_yoi5b"]
+[ext_resource type="Texture2D" uid="uid://30e6iyx7q1y7" path="res://addons/m_terrain/icons/mpath_collapse_point_icon.svg" id="4_38e8d"]
 [ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="5_8fq58"]
 [ext_resource type="Texture2D" uid="uid://c32td7i377ewu" path="res://addons/m_terrain/icons/toggle_connection.svg" id="6_a88nf"]
 [ext_resource type="PackedScene" uid="uid://cjjqtr6xhktp4" path="res://addons/m_terrain/gui/control_prop_element/float_range.tscn" id="6_bsspt"]
@@ -48,6 +47,19 @@ anchor_right = 1.0
 offset_bottom = 40.0
 grow_horizontal = 2
 
+[node name="mode" type="OptionButton" parent="HBoxContainer"]
+visible = false
+layout_mode = 2
+tooltip_text = "Change Mode
+Hot-keys: grave accent(`)"
+theme_override_styles/normal = SubResource("StyleBoxFlat_7loo7")
+item_count = 2
+selected = 0
+popup/item_0/text = "Edit"
+popup/item_0/id = 0
+popup/item_1/text = "Create"
+popup/item_1/id = 1
+
 [node name="mirror_checkbox" type="CheckBox" parent="HBoxContainer"]
 custom_minimum_size = Vector2(5, 0)
 layout_mode = 2
@@ -76,24 +88,11 @@ button_pressed = true
 icon = ExtResource("3_yoi5b")
 icon_alignment = 2
 
-[node name="mode" type="OptionButton" parent="HBoxContainer"]
-layout_mode = 2
-tooltip_text = "Change Mode
-Hot-keys: grave accent(`)"
-theme_override_styles/normal = SubResource("StyleBoxFlat_7loo7")
-item_count = 2
-selected = 0
-popup/item_0/text = "Edit"
-popup/item_0/id = 0
-popup/item_1/text = "Create"
-popup/item_1/id = 1
-
-[node name="collapse" type="TextureButton" parent="HBoxContainer"]
+[node name="collapse" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 tooltip_text = "Collapse point"
-texture_normal = ExtResource("2_2am03")
-texture_pressed = ExtResource("3_ardhu")
-stretch_mode = 3
+icon = ExtResource("4_38e8d")
 
 [node name="toggle_connection" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
@@ -101,9 +100,6 @@ layout_mode = 2
 tooltip_text = "Toggle Connection
 Hot-key: T"
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 icon = ExtResource("6_a88nf")
 expand_icon = true
 
@@ -114,9 +110,6 @@ tooltip_text = "Connect
 Hot-key: C"
 theme_override_colors/font_color = Color(0.14902, 1, 0.25098, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 icon = ExtResource("7_mbnvb")
 expand_icon = true
 
@@ -127,9 +120,6 @@ tooltip_text = "Disconnect
 Hot-key: X"
 theme_override_colors/font_color = Color(0.717647, 0.952941, 0, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 icon = ExtResource("8_777vd")
 expand_icon = true
 
@@ -140,9 +130,6 @@ tooltip_text = "Remove
 Hot-key: Backspace"
 theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
-theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 icon = ExtResource("5_8fq58")
 expand_icon = true
 
@@ -169,6 +156,12 @@ text = "y"
 [node name="z_lock" type="CheckBox" parent="HBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "z   "
+
+[node name="Button" type="Button" parent="HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "?"
 
 [node name="show_rest" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
