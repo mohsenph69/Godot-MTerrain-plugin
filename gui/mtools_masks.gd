@@ -72,3 +72,20 @@ func toggle_grass_settings(toggle_on):
 	mask_cutoff_control.visible = toggle_on
 	mterrain.set_mask_cutoff(mask_cutoff_control.slider.value)
 
+func _on_h_box_container_resized():
+	var vbox = get_child(0)
+	if not mask_container:
+		await ready
+	mask_container.custom_minimum_size.x = global_position.x-owner.global_position.x
+	mask_container.fixed_icon_size = get_parent().custom_minimum_size *2
+	mask_container.max_columns = floor( mask_container.custom_minimum_size.x / mask_container.fixed_icon_size.x)
+	find_child("mask_size").custom_minimum_size.x = size.x
+	vbox.size.x = owner.size.x
+	vbox.global_position.x = owner.global_position.x
+	vbox.size.y = get_viewport_rect().size.y/5
+	vbox.position.y = -vbox.size.y-2
+	
+	#vbox.size.x = owner.size.x - (global_position.x - owner.global_position.x)
+	#vbox.global_position.x = global_position.x
+
+

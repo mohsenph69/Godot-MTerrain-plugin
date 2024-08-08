@@ -112,3 +112,16 @@ func init_for_colors():
 func select_color_layer():
 	layer_selected.emit(get_index())
 	
+	
+#region Theme: color and size etc
+func _on_resized():
+	resize_children_recursive(self, custom_minimum_size.y)
+
+func resize_children_recursive(parent, new_size):
+	for child in parent.get_children():
+		if child is Control:
+			child.custom_minimum_size.x = new_size
+			child.custom_minimum_size.y = new_size		
+		resize_children_recursive(child, new_size)
+#endregion
+

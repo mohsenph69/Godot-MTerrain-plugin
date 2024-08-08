@@ -81,3 +81,5 @@ layout_mode = 2
 mouse_filter = 1
 icon = ExtResource("5_yuyg3")
 expand_icon = true
+
+[connection signal="resized" from="." to="." method="_on_resized"]

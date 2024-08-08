@@ -1,6 +1,7 @@
-[gd_scene load_steps=17 format=3 uid="uid://btfhp7mnhc5nj"]
+[gd_scene load_steps=18 format=3 uid="uid://btfhp7mnhc5nj"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_ufvdf"]
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_byb3a"]
+[ext_resource type="Script" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_y34ur"]
 [ext_resource type="Texture2D" uid="uid://c64direekaeap" path="res://addons/m_terrain/icons/mirror_icon.svg" id="2_tic3q"]
 [ext_resource type="Texture2D" uid="uid://b2edfbh3q6uh2" path="res://addons/m_terrain/icons/depth_test.svg" id="3_n0m75"]
 [ext_resource type="Texture2D" uid="uid://ckbvdmvbcxfb6" path="res://addons/m_terrain/icons/magnet_icon.svg" id="3_yoi5b"]
@@ -32,20 +33,14 @@ content_margin_left = 2.0
 content_margin_right = 2.0
 bg_color = Color(0, 0.85098, 0.207843, 0.52549)
 
-[node name="mpath_gizmo_gui" type="Panel"]
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 45.0
-grow_horizontal = 2
-size_flags_horizontal = 3
-script = ExtResource("1_ufvdf")
+[node name="PanelContainer" type="PanelContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+theme = ExtResource("1_byb3a")
+script = ExtResource("1_y34ur")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 40.0
-grow_horizontal = 2
+layout_mode = 2
 
 [node name="mode" type="OptionButton" parent="HBoxContainer"]
 visible = false
@@ -97,7 +92,7 @@ icon = ExtResource("4_38e8d")
 [node name="toggle_connection" type="Button" parent="HBoxContainer"]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-tooltip_text = "Switch Connection Dsirection
+tooltip_text = "Switch Connection Direction
 Hot-key: T"
 theme_override_font_sizes/font_size = 18
 icon = ExtResource("5_xw4f1")
@@ -168,25 +163,23 @@ theme_override_font_sizes/font_size = 21
 text = "?"
 
 [node name="show_rest" type="Button" parent="HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "More settings"
+toggle_mode = true
+button_pressed = true
 icon = ExtResource("10_wuoaw")
 expand_icon = true
 
-[node name="settings_panel" type="Panel" parent="HBoxContainer/show_rest"]
+[node name="settings_panel" type="PanelContainer" parent="HBoxContainer/show_rest"]
 visible = false
 layout_mode = 1
+offset_left = -381.0
 offset_top = -238.0
-offset_right = 299.0
+offset_right = 32.0
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/show_rest/settings_panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 
 [node name="tilt" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2" instance=ExtResource("6_bsspt")]
 layout_mode = 2
@@ -207,13 +200,6 @@ layout_mode = 2
 layout_mode = 2
 tooltip_text = "gizmo line depth test"
 icon = ExtResource("3_n0m75")
-
-[node name="xz_handle_lock" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
-layout_mode = 2
-tooltip_text = "XY Handle lock"
-button_pressed = true
-text = "XY"
-icon = ExtResource("7_0ucgh")
 
 [node name="select_lock" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/FlowContainer"]
 layout_mode = 2
@@ -272,4 +258,4 @@ layout_mode = 2
 theme_override_constants/margin_right = 12
 
 [connection signal="pressed" from="HBoxContainer/Button" to="." method="show_mpath_help_window"]
-[connection signal="pressed" from="HBoxContainer/show_rest" to="." method="_on_show_rest_pressed"]
+[connection signal="toggled" from="HBoxContainer/show_rest" to="." method="_on_show_rest_toggled"]

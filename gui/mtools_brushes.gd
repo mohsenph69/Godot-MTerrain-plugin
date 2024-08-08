@@ -32,6 +32,7 @@ var color_brush_index:int
 var color_brush_uniform:String
 var color_brush_name:String
 
+var no_image = preload("res://addons/m_terrain/icons/no_images.png") #For color brush
 
 var property_element_list:Array
 var color_brush_layers:Array
@@ -152,7 +153,7 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 		
 	brush_container.clear()	
 	var layer_group = active_terrain.get_layers_info()[layer_group_id]						
-	var no_image = preload("res://addons/m_terrain/icons/no_images.png")
+	
 	var index = -1
 	for i in layer_group["info"]:				
 		index +=1
@@ -176,9 +177,13 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 
 func brush_layer_selected(index, layer_group):			
 	active_terrain.set_color_layer(index, color_layer_group_id,color_brush_name)
-	if brush_container.get_item_icon(index):
-		icon = brush_container.get_item_icon(index)	
-	text = brush_container.get_item_text(index)
+	var brush_icon = brush_container.get_item_icon(index)
+	if brush_icon and brush_icon != no_image:
+		icon = brush_icon
+	else:
+		icon = null
+	#text = brush_container.get_item_text(index)
+	tooltip_text = "Current brush: " + brush_container.get_item_text(index)
 	var color = brush_container.get_item_custom_bg_color(index)
 	if color:
 		var stylebox = StyleBoxFlat.new()
@@ -268,3 +273,22 @@ func process_input(event):
 			else:
 				is_grass_add = not is_grass_add	
 #endregion
+
+
+func _on_resized():
+	var vbox = get_child(0)
+	var settings = find_child("brush_settings_panel")
+	settings.custom_minimum_size.x = global_position.x-owner.global_position.x
+	var size_panel = find_child("brush_size_panel")
+	size_panel.custom_minimum_size.x = size.x
+	var brushes_panel = find_child("brush_brushes_panel")
+	brushes_panel.custom_minimum_size.x = owner.size.x - size_panel.size.x - settings.size.x - 12
+	
+	vbox.size.x = owner.size.x
+	vbox.global_position.x = owner.global_position.x
+	vbox.size.y = get_viewport_rect().size.y/5
+	vbox.position.y = -vbox.size.y
+
+
+func _on_panel_visibility_changed():
+	_on_resized()

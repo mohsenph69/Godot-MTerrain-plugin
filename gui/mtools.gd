@@ -52,6 +52,7 @@ signal edit_mode_changed
 @onready var mcurve_mesh = find_child("mcurve_mesh")
 @onready var brush_size_control: Control = find_child("brush_size")
 
+@onready var mtools_root = find_child("mtools_root")
 
 @onready var popup_buttons = [
 	edit_mode_button,
@@ -411,3 +412,32 @@ func _on_splatmap_import_button_pressed() -> void:
 func _on_image_creator_button_pressed() -> void:
 	request_image_creator.emit()
 #endregion	
+
+#region theme: sizes and colors etc
+func _on_resized():		
+	if not has_node("VSplitContainer") or not mtools_root:
+		await ready
+	var vsplit  = $VSplitContainer
+	var max_size = get_viewport_rect().size.y / 16 + 2
+	var min_size = get_viewport_rect().size.y / 32
+	vsplit.size.y = max_size
+	vsplit.position.y = -vsplit.size.y
+	#print(vsplit.split_offset, " and minsize: ", min_size, " and max: ", max_size)
+	vsplit.split_offset = clamp(vsplit.split_offset, -max_size,-min_size)
+	resize_children_recursive(mtools_root, clamp(mtools_root.size.y, min_size, max_size ))
+	theme.default_font_size = clamp( clamp(mtools_root.size.y, min_size, max_size) /2 , 12,32)
+	
+func resize_children_recursive(parent, new_size):
+	for child in parent.get_children():
+		if child is Control and not child is ItemList and not child is LineEdit and not child is Label:
+			child.custom_minimum_size.x = new_size
+			child.custom_minimum_size.y = new_size		
+		resize_children_recursive(child, new_size)
+
+func update_theme():
+	pass
+
+
+func _on_v_split_container_dragged(offset):
+	_on_resized()
+#endregion

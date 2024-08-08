@@ -48,8 +48,6 @@ func connect_lock_mode_signals():
 		y_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
 		z_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
 
-		
-var is_show_rest:=false
 
 enum MODE {
 	EDIT = 0,
@@ -113,10 +111,11 @@ func is_select_lock()->bool:
 func is_debug_col()->bool:
 	return debug_col.button_pressed
 
-func _on_show_rest_pressed():
-	is_show_rest = not is_show_rest
-	settings_panel.visible = is_show_rest
-		
+func _on_show_rest_toggled(toggle_on):
+	settings_panel.visible = toggle_on
+	settings_panel.position.x = -settings_panel.size.x + show_rest_btn.size.x 
+	
+	#settings_panel.position.y = -settings_panel.size.y #- size.y
 func set_terrain_snap(mterrain):
 	if mterrain == null:
 		snap_checkbox.button_pressed = false
