@@ -937,3 +937,47 @@ func sort(increasing:bool):
 	cu.clear_history()
 	su.clear_history()
 	path.update_gizmos()
+
+
+func get_conns_list(only_selected:bool)->PackedInt64Array:
+	if(only_selected):
+		return selected_connections
+	var curve = find_curve()
+	if not curve: return PackedInt64Array()
+	return curve.get_active_conns()
+
+func deform(only_selected:bool):
+	curve_terrain.deform_on_conns(get_conns_list(only_selected))
+	curve_terrain.terrain.update_all_dirty_image_texture(false)
+
+func clear_deform(only_selected:bool):
+	curve_terrain.clear_deform(get_conns_list(only_selected))
+	curve_terrain.terrain.update_all_dirty_image_texture(false)
+
+func clear_deform_large(only_selected:bool):
+	print("Clear large ")
+	var curve = find_curve()
+	if not curve: return
+	var aabb = curve.get_conns_aabb(get_conns_list(only_selected))
+	aabb = aabb.grow(10)
+	curve_terrain.clear_deform_aabb(aabb)
+	curve_terrain.terrain.update_all_dirty_image_texture(false)
+
+func paint(only_selected:bool):
+	curve_terrain.paint_on_conns(get_conns_list(only_selected))
+	curve_terrain.terrain.update_all_dirty_image_texture(false)
+
+func clear_paint(only_selected:bool):
+	curve_terrain.clear_paint(get_conns_list(only_selected))
+	curve_terrain.terrain.update_all_dirty_image_texture(false)
+
+func clear_paint_large(only_selected:bool):
+	var curve = find_curve()
+	if not curve: return
+	var aabb = curve.get_conns_aabb(get_conns_list(only_selected))
+	aabb = aabb.grow(10)
+	curve_terrain.clear_paint_aabb(aabb)
+	curve_terrain.terrain.update_all_dirty_image_texture(false)
+
+
+
