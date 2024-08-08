@@ -114,8 +114,8 @@ func is_debug_col()->bool:
 func _on_show_rest_toggled(toggle_on):
 	settings_panel.visible = toggle_on
 	settings_panel.position.x = -settings_panel.size.x + show_rest_btn.size.x 
+	settings_panel.position.y = -settings_panel.size.y # - show_rest_btn.size.y
 	
-	#settings_panel.position.y = -settings_panel.size.y #- size.y
 func set_terrain_snap(mterrain):
 	if mterrain == null:
 		snap_checkbox.button_pressed = false
@@ -128,3 +128,7 @@ func set_terrain_snap(mterrain):
 
 func show_mpath_help_window():
 	add_child( preload("res://addons/m_terrain/gui/mpath_help_popup.tscn").instantiate())
+
+
+func _on_show_rest_minimum_size_changed():
+	_on_show_rest_toggled(settings_panel.visible)
