@@ -212,9 +212,11 @@ class MTerrain : public  Node3D {
     void set_heightmap_layers(PackedStringArray input);
     const PackedStringArray& get_heightmap_layers();
 
-    void set_active_layer_by_name(String lname);
+    bool set_active_layer_by_name(String lname);
+    String get_active_layer_name();
     bool get_layer_visibility(String lname);
     void add_heightmap_layer(String lname);
+    bool rename_heightmap_layer(String old_name,String new_name);
     void merge_heightmap_layer();
     void remove_heightmap_layer();
     void toggle_heightmap_layer_visibile();
@@ -261,6 +263,8 @@ class MTerrain : public  Node3D {
 
     void _notification(int32_t what);
     void _frame_draw();
+
+    void _update_visibility();
 };
 
 

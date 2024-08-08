@@ -16,6 +16,19 @@ var icon_rotation = preload("res://addons/m_terrain/icons/rotation.svg")
 var mterrain_plugin:EditorPlugin
 var gui:Control
 
+### The MCurveTerrain parameter
+var curve_terrain:=MCurveTerrain.new()
+var auto_terrain_deform := false
+var auto_terrain_paint := false
+var auto_grass_modify := false
+### As we can have multiple grass to be modified base on the curve!
+### for each grass we store its setting related to curve_modification
+### in its medata
+### grass loading meta and chaning meta is defined in "res://addons/m_terrain/inspector/gui/curve_terrain.tscn"
+### in MPath gizmo we dont care about load or change grass_modify_settings
+### WE ONLY USE THAT
+var grass_modify_settings:Dictionary
+
 var selection:EditorSelection
 var ur:EditorUndoRedoManager
 var selected_mesh:Array
@@ -41,6 +54,7 @@ var is_handle_setting:= true
 var is_handle_init_pos_set:=false
 var handle_init_id:=0
 var handle_init_pos:Vector3
+var init_aabb:AABB ## AABB before moving point or handle
 
 
 enum VALUE_MODE {
@@ -220,6 +234,16 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		is_handle_init_pos_set = true
 		handle_init_id = points_id
 		handle_init_pos = _get_handle_value(gizmo,points_id,secondary)
+		var pp:int = points_id
+		if secondary:
+			if points_id % 2 == 0:
+				pp = points_id / 2
+			else:
+				pp = (points_id - 1)/2
+		## AABB
+		var conns = curve.get_point_conns(pp)
+		init_aabb = curve.get_conns_aabb(conns)
+	#################################
 	var mode = gui.get_mode()
 	var from = camera.project_ray_origin(screen_pos)
 	var to = camera.project_ray_normal(screen_pos)
@@ -341,7 +365,6 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 		ur.add_do_method(curve,"commit_point_update",handle_id)
 		ur.add_undo_method(curve,"move_point",handle_id,restore)
 		ur.add_undo_method(curve,"commit_point_update",handle_id)
-		ur.commit_action(false)
 	else:
 		if handle_id % 2 == 0: #even
 			handle_id /=2
@@ -355,7 +378,6 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 				ur.add_undo_method(curve,"move_point_out",handle_id,point_pos + point_pos - restore)
 			ur.add_do_method(curve,"commit_point_update",handle_id)
 			ur.add_undo_method(curve,"commit_point_update",handle_id)
-			ur.commit_action(false)
 		else:
 			handle_id = (handle_id-1)/2
 			curve.commit_point_update(handle_id)
@@ -368,8 +390,35 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 				ur.add_undo_method(curve,"move_point_in",handle_id,point_pos + point_pos - restore)
 			ur.add_do_method(curve,"commit_point_update",handle_id)
 			ur.add_undo_method(curve,"commit_point_update",handle_id)
-			ur.commit_action(false)
 	gizmo.get_node_3d().update_gizmos()
+	#### Deforming Terrain
+	if auto_terrain_deform or auto_terrain_paint:
+		### we also deform neighbor points 
+		var undo_aabb = curve.get_conns_aabb(curve.get_point_conns(handle_id))
+		var conns:PackedInt64Array = curve.get_point_conns_inc_neighbor_points(handle_id)
+		if auto_terrain_deform:
+			curve_terrain.clear_deform_aabb(init_aabb)
+			curve_terrain.deform_on_conns(conns)
+			ur.add_undo_method(curve_terrain,"clear_deform_aabb",undo_aabb)
+			ur.add_undo_method(curve_terrain,"deform_on_conns",conns)
+			ur.add_do_method(curve_terrain,"clear_deform_aabb",init_aabb)
+			ur.add_do_method(curve_terrain,"deform_on_conns",conns)
+		if auto_terrain_paint:
+			curve_terrain.clear_paint_aabb(init_aabb)
+			curve_terrain.paint_on_conns(conns)
+			ur.add_undo_method(curve_terrain,"clear_paint_aabb",undo_aabb)
+			ur.add_undo_method(curve_terrain,"paint_on_conns",conns)
+			ur.add_do_method(curve_terrain,"clear_paint_aabb",init_aabb)
+			ur.add_do_method(curve_terrain,"paint_on_conns",conns)
+		if false:
+			var grass:MGrass= curve_terrain.terrain.get_child(2)
+			curve_terrain.clear_grass_aabb(grass,init_aabb,9.0)
+			curve_terrain.modify_grass(conns,grass,2.0,6.0,true)
+		curve_terrain.terrain.update_all_dirty_image_texture(false)
+		ur.add_do_method(curve_terrain.terrain,"update_all_dirty_image_texture",false)
+		ur.add_undo_method(curve_terrain.terrain,"update_all_dirty_image_texture",false)
+	ur.commit_action(false)
+
 
 func move_with_commit(curve:MCurve,handle_id:int, secondary:bool,pos:Vector3):
 	if not secondary:

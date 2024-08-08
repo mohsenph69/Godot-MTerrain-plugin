@@ -2,8 +2,6 @@
 
 
 void MGrassData::_bind_methods(){
-    ClassDB::bind_method(D_METHOD("add","d"), &MGrassData::add);
-
     ClassDB::bind_method(D_METHOD("set_data","input"), &MGrassData::set_data);
     ClassDB::bind_method(D_METHOD("get_data"), &MGrassData::get_data);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY),"set_data","get_data");
@@ -39,8 +37,25 @@ int MGrassData::get_density(){
     return density_index;
 }
 
-void MGrassData::add(int d) {
-    data.push_back((uint8_t)d);
+bool MGrassData::backup_exist(){
+    return backup_data.size() > 0;
+}
+
+void MGrassData::backup_create(){
+    ERR_FAIL_COND(backup_exist());
+    ERR_FAIL_COND(data.size()==0);
+    backup_data = data.duplicate();
+}
+
+void MGrassData::backup_merge(){
+    ERR_FAIL_COND(!backup_exist());
+    backup_data.resize(0);
+}
+
+void MGrassData::backup_restore(){
+    ERR_FAIL_COND(!backup_exist());
+    data = backup_data.duplicate();
+    backup_data.resize(0);
 }
 
 void MGrassData::check_undo(){

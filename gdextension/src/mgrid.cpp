@@ -30,6 +30,7 @@ uint64_t MGrid::get_update_id(){
 }
 
 void MGrid::clear() {
+    UtilityFunctions::print("Clear grid ");
     if(is_dirty){
         RenderingServer* rs = RenderingServer::get_singleton();
         for(int32_t z=_search_bound.top; z <=_search_bound.bottom; z++)
@@ -69,6 +70,9 @@ void MGrid::clear() {
     lowest_undo_id=0;
     _regions_count = 0;
     grid_pixel_region.clear();
+    grid_update_info.clear();
+    remove_instance_list.clear();
+    update_mesh_list.clear();
     if(is_update_regions_future_valid && update_regions_future.valid()){
         update_regions_future.wait();
         is_update_regions_future_valid = false;
@@ -129,8 +133,8 @@ void MGrid::create(const int32_t width,const int32_t height, MChunks* chunks) {
     }
     _grid_bound = MBound(0,width-1, 0, height-1);
     regions = memnew_arr(MRegion, _regions_count);
-    int total_points = _size.z*_size.x;
-    points_row = memnew_arr(MPoint, total_points);
+    total_points_count = _size.z*_size.x;
+    points_row = memnew_arr(MPoint, total_points_count);
     points = memnew_arr(MPoint*, _size.z);
     for (int32_t z=0; z<_size.z; z++){
         points[z] = &points_row[z*_size.x];
@@ -542,7 +546,7 @@ bool MGrid::check_bigger_size(const int8_t lod,const int8_t size,const int32_t r
                     }
                     int32_t region_id = get_region_id_by_point(x,z);
                     //MRegion* region = get_region_by_point(x,z);
-                    points[z][x].create_instance(get_world_pos(x,0,z), _scenario, regions[region_id].get_material_rid());
+                    points[z][x].create_instance(get_world_pos(x,0,z), _scenario, regions[region_id].get_material_rid(),is_visible);
                     rs->instance_set_visible(points[z][x].instance, false);
                     rs->instance_set_base(points[z][x].instance, mesh);
                     /*
@@ -704,6 +708,7 @@ Ref<MCollision> MGrid::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_ve
 }
 
 void MGrid::update_chunks(const Vector3& cam_pos) {
+    std::lock_guard<std::mutex> lock(update_chunks_mutex);
     _update_id++;
     num_chunks = 0;
     update_mesh_list.clear();
@@ -778,8 +783,10 @@ void MGrid::apply_update_chunks() {
     for(RID rm: remove_instance_list){
         rs->free_rid(rm);
     }
-    for(RID add : update_mesh_list){
-        rs->instance_set_visible(add, true);
+    if(is_visible){
+        for(RID add : update_mesh_list){
+            rs->instance_set_visible(add, true);
+        }
     }
 }
 
@@ -1438,25 +1445,41 @@ void MGrid::update_all_dirty_image_texture(bool update_physics){
     }
 }
 
-void MGrid::set_active_layer(String input){
+bool MGrid::set_active_layer(String input){
     // We did not add background to heightmap layers so the error handling down here is ok
     int index = heightmap_layers.find(input);
     if(index != -1){
         active_heightmap_layer = index;
     } else {
-        ERR_FAIL_MSG("Active Layer "+input+"is not found");
+        ERR_FAIL_V_MSG(false,"Active Layer "+input+"is not found");
         active_heightmap_layer = 0;
     }
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         _all_heightmap_image_list[i]->set_active_layer(active_heightmap_layer);
     }
+    return index!=-1;
 }
 
+String MGrid::get_active_layer(){
+    ERR_FAIL_INDEX_V(active_heightmap_layer, heightmap_layers.size(),"background");
+    return heightmap_layers[active_heightmap_layer];
+}
+
+// heightmap_layers will be set in MTerrain!
+// This function should be called only from MTerrain
 void MGrid::add_heightmap_layer(String lname){
     for(int i=0;i<_all_heightmap_image_list.size();i++){
         _all_heightmap_image_list[i]->add_layer(lname);
     }
     heightmap_layers_visibility.push_back(true);
+}
+
+// This function should be called only from MTerrain
+void MGrid::rename_heightmap_layer(int layer_index,String lname){
+    for(int i=0;i<_all_heightmap_image_list.size();i++){
+        _all_heightmap_image_list[i]->rename_layer(layer_index,lname);
+    }
+    heightmap_layers.set(layer_index,lname);
 }
 
 void MGrid::merge_heightmap_layer(){
@@ -1485,7 +1508,7 @@ void MGrid::remove_heightmap_layer(){
     heightmap_layers_visibility.remove_at(active_heightmap_layer);
 }
 
-void MGrid::toggle_heightmap_layer_visibile(){
+void MGrid::toggle_heightmap_layer_visible(){
     ERR_FAIL_COND_EDMSG(active_heightmap_layer==0, "Can not Hide background layer");
     bool input = !heightmap_layers_visibility[active_heightmap_layer];
     for(int i=0;i<_all_heightmap_image_list.size();i++){
@@ -1577,4 +1600,30 @@ void MGrid::update_renderer_info(){
 
 bool MGrid::is_opengl(){
     return _is_opengl;
+}
+
+bool MGrid::get_visibility(){
+    return is_visible;
+}
+
+void MGrid::set_visibility(bool input){
+    if(!is_created()){
+        is_visible = input;
+        return;
+    }
+    if(input == is_visible){
+        return;
+    }
+    std::lock_guard<std::mutex> lock(update_chunks_mutex);
+    MBound current_bound = _search_bound;
+    current_bound.merge(_last_search_bound);
+    for(int32_t z=current_bound.top; z <=current_bound.bottom; z++)
+    {
+        for(int32_t x=current_bound.left; x <=current_bound.right; x++){
+            if(points[z][x].has_instance){
+                RenderingServer::get_singleton()->instance_set_visible(points[z][x].instance,input);
+            }
+        }
+    }
+    is_visible = input;
 }

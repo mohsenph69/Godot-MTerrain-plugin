@@ -15,7 +15,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_jv20c")
 
-[node name="point_count_label" type="Label" parent="."]
+[node name="point_count_lable" type="Label" parent="."]
 layout_mode = 2
 text = "Point count: "
 
@@ -26,6 +26,7 @@ layout_mode = 2
 layout_mode = 2
 item_count = 2
 popup/item_0/text = "None"
+popup/item_0/id = 0
 popup/item_1/text = "Other_child"
 popup/item_1/id = 1
 
@@ -54,9 +55,10 @@ layout_mode = 2
 [node name="mesh_mode_option" type="OptionButton" parent="."]
 visible = false
 layout_mode = 2
-selected = 0
 item_count = 2
+selected = 0
 popup/item_0/text = "mesh"
+popup/item_0/id = 0
 popup/item_1/text = "material"
 popup/item_1/id = 1
 
@@ -83,6 +85,9 @@ allow_reselect = true
 [node name="update_info_timer" type="Timer" parent="."]
 wait_time = 0.752
 autostart = true
+
+[node name="HSeparator4" type="HSeparator" parent="."]
+layout_mode = 2
 
 [connection signal="item_selected" from="child_selctor" to="." method="_on_child_selctor_item_selected"]
 [connection signal="timeout" from="update_info_timer" to="." method="_on_update_info_timer_timeout"]

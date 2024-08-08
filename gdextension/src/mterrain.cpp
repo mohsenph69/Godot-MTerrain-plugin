@@ -7,10 +7,12 @@
 #include <godot_cpp/classes/reg_ex.hpp>
 #include <godot_cpp/classes/reg_ex_match.hpp>
 #include <godot_cpp/classes/file_access.hpp>
+#include <godot_cpp/classes/dir_access.hpp>
 
 #include "mbrush_manager.h"
 #include "navmesh/mnavigation_region_3d.h"
 #include "mbrush_layers.h"
+#include "mtool.h"
 
 
 void MTerrain::_bind_methods() {
@@ -153,6 +155,7 @@ void MTerrain::_bind_methods() {
 
     ClassDB::bind_method(D_METHOD("set_active_layer_by_name","layer_name"), &MTerrain::set_active_layer_by_name);
     ClassDB::bind_method(D_METHOD("add_heightmap_layer","layer_name"), &MTerrain::add_heightmap_layer);
+    ClassDB::bind_method(D_METHOD("rename_heightmap_layer","old_name","new_name"), &MTerrain::rename_heightmap_layer);
     ClassDB::bind_method(D_METHOD("merge_heightmap_layer"), &MTerrain::merge_heightmap_layer);
     ClassDB::bind_method(D_METHOD("remove_heightmap_layer"), &MTerrain::remove_heightmap_layer);
     ClassDB::bind_method(D_METHOD("toggle_heightmap_layer_visibile"), &MTerrain::toggle_heightmap_layer_visibile);
@@ -195,6 +198,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("is_grid_created"), &MTerrain::is_grid_created);
     ClassDB::bind_method(D_METHOD("update_all_dirty_image_texture","update_physics"), &MTerrain::update_all_dirty_image_texture);
     ClassDB::bind_method(D_METHOD("update_normals","left","right","top","bottom"), &MTerrain::update_normals);
+
+    ClassDB::bind_method(D_METHOD("_update_visibility") , &MTerrain::_update_visibility);
 }
 
 MTerrain::MTerrain() {
@@ -203,7 +208,8 @@ MTerrain::MTerrain() {
     lod_distance.append(12);
     lod_distance.append(16);
     lod_distance.append(24);
-    connect("tree_exiting", Callable(this, "_finish_terrain"));
+    connect("tree_exited", Callable(this, "_update_visibility"));
+    connect("tree_entered", Callable(this, "_update_visibility"));
     recalculate_terrain_config(true);
     grid = memnew(MGrid);
     update_chunks_timer = memnew(Timer);
@@ -225,6 +231,7 @@ MTerrain::MTerrain() {
 }
 
 MTerrain::~MTerrain() {
+    remove_grid();
     memdelete(grid);
 }
 
@@ -233,7 +240,7 @@ void MTerrain::_finish_terrain() {
     if(update_thread_chunks.valid()){
         update_thread_chunks.wait();
     }
-    grid->clear();
+    remove_grid();
 }
 
 void MTerrain::create_grid(){
@@ -555,17 +562,19 @@ void MTerrain::get_cam_pos() {
         cam_pos = custom_camera->get_global_position();
         return;
     }
-    if(editor_camera !=nullptr){
-        cam_pos = editor_camera->get_global_position();
-        return;
+    if(Engine::get_singleton()->is_editor_hint()){
+        Node3D* cam = MTool::find_editor_camera(true);
+        if(cam!=nullptr){
+            cam_pos = cam->get_global_position();
+            return;
+        }
+
     }
-    Viewport* v = get_viewport();
-    Camera3D* camera = v->get_camera_3d();
-    ERR_FAIL_COND_EDMSG(camera==nullptr, "No camera is detected, If you are in editor activate MTerrain plugin and click on terrain node");
-    cam_pos = camera->get_global_position();
+    ERR_FAIL_MSG("No camera is detected");
 }
 
 void MTerrain::set_dataDir(String input) {
+    ERR_FAIL_COND_MSG(grid->is_created(),"Can not change dataDir after terrain is created!");
     dataDir = input;
 }
 
@@ -574,6 +583,7 @@ String MTerrain::get_dataDir() {
 }
 
 void MTerrain::set_layersDataDir(String input){
+    ERR_FAIL_COND_MSG(grid->is_created(),"Can not change layersDataDir after terrain is created!");
     layersDataDir = input;
 }
 String MTerrain::get_layersDataDir(){
@@ -997,6 +1007,7 @@ Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
 
 
 void MTerrain::set_heightmap_layers(PackedStringArray input){
+    ERR_FAIL_COND_MSG(grid->is_created(),"Can not change layers name when terrain grid is created!");
     grid->heightmap_layers.clear();
     if(input.size()==0){
         input.push_back("background");
@@ -1013,9 +1024,14 @@ const PackedStringArray& MTerrain::get_heightmap_layers(){
     return grid->heightmap_layers;
 }
 
-void MTerrain::set_active_layer_by_name(String lname){
-    ERR_FAIL_COND_MSG(!grid->is_created(),"Please call set_active_layer_by_name function after creating grid");
-    grid->set_active_layer(lname);
+bool MTerrain::set_active_layer_by_name(String lname){
+    ERR_FAIL_COND_V_MSG(!grid->is_created(),false,"Please call set_active_layer_by_name function after creating grid");
+    return grid->set_active_layer(lname);
+}
+
+String MTerrain::get_active_layer_name(){
+    ERR_FAIL_COND_V(!grid->is_created(),String());
+    return grid->get_active_layer();
 }
 
 bool MTerrain::get_layer_visibility(String lname){
@@ -1035,6 +1051,45 @@ void MTerrain::add_heightmap_layer(String lname){
     grid->heightmap_layers.push_back(lname);
 }
 
+bool MTerrain::rename_heightmap_layer(String old_name,String new_name){
+    int layer_index = grid->heightmap_layers.find(old_name);
+    ERR_FAIL_COND_V_MSG(layer_index==-1,false,"Can not find layer "+old_name);
+    /// Renaming files
+    Ref<DirAccess> dir = DirAccess::open(layersDataDir);
+    PackedStringArray layers_file_names;
+    // Getting a list of layer files path
+    if(dir.is_valid()){
+        dir->list_dir_begin();
+        String fname = dir->get_next();
+        while (fname != "")
+        {
+            if (!dir->current_is_dir()){
+                layers_file_names.push_back(fname);
+            }
+            fname = dir->get_next();
+        }
+    }
+    Ref<RegEx> reg;
+    reg.instantiate();
+    reg->compile(old_name+"_x\\d+_y\\d+\\.(res|r32)");
+    for(int i=0; i < layers_file_names.size(); i++){
+        String fname = layers_file_names[i];
+        Ref<RegExMatch> result = reg->search(fname);
+        if(result.is_valid()){
+            String new_file_name = fname.replace(old_name,new_name);
+            String old_path = layersDataDir.path_join(fname);
+            String new_path = layersDataDir.path_join(new_file_name);
+            Error err = dir->rename(old_path,new_path);
+            ERR_FAIL_COND_V_MSG(err!=godot::OK,false,"Can not rename layer file!");
+        }
+    }
+    grid->heightmap_layers.set(layer_index,new_name);
+    if(grid->is_created()){
+        grid->rename_heightmap_layer(layer_index,new_name);
+    }
+    return true;
+}
+
 void MTerrain::merge_heightmap_layer(){
     ERR_FAIL_COND(!grid->is_created());
     grid->merge_heightmap_layer();
@@ -1047,7 +1102,7 @@ void MTerrain::remove_heightmap_layer(){
 
 void MTerrain::toggle_heightmap_layer_visibile(){
     ERR_FAIL_COND(!grid->is_created());
-    grid->toggle_heightmap_layer_visibile();
+    grid->toggle_heightmap_layer_visible();
 }
 
 void MTerrain::terrain_child_changed(Node* n){
@@ -1255,5 +1310,16 @@ void MTerrain::_notification(int32_t what){
         _finish_terrain();
         return;
     }
+    else if(what == NOTIFICATION_VISIBILITY_CHANGED){
+        _update_visibility();
+    }
     
+}
+
+void MTerrain::_update_visibility(){
+    if(!is_inside_tree()){
+        grid->set_visibility(false);
+        return;
+    }
+    grid->set_visibility(is_visible_in_tree());
 }

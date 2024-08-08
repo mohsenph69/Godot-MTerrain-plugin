@@ -2,7 +2,7 @@
 extends Control
 
 
-@onready var point_count_label:=$point_count_label
+@onready var point_count_lable:=$point_count_lable
 
 var is_started:=false
 
@@ -24,16 +24,16 @@ func start():
 	is_started = true
 	child_selector = $child_selctor
 	items = $itemlist
-	items.item_selected.connect(item_selected)
+	items.item_selected.connect(Callable(self,"item_selected"))
 	connection_tab = $HBoxContainer/connection_tab
 	intersection_tab = $HBoxContainer/intersection_tab
-	connection_tab.pressed.connect(change_tab.bind(true))
-	intersection_tab.pressed.connect(change_tab.bind(false))
-	$HBoxContainer2/clear_override.button_up.connect(clear_override)
-	$HBoxContainer2/Remove_mesh.button_up.connect(remove_mesh)
-	$mesh_mode_option.item_selected.connect(mesh_mode_selected)
+	connection_tab.connect("pressed",Callable(self,"change_tab").bind(true))
+	intersection_tab.connect("pressed",Callable(self,"change_tab").bind(false))
+	$HBoxContainer2/clear_override.connect("button_up",Callable(self,"clear_override"))
+	$HBoxContainer2/Remove_mesh.connect("button_up",Callable(self,"remove_mesh"))
+	$mesh_mode_option.connect("item_selected",Callable(self,"mesh_mode_selected"))
 	if not gizmo: printerr("Gizmo is NULL")
-	gizmo.selection_changed.connect(update_curve_item_selection)
+	gizmo.connect("selection_changed",Callable(self,"update_curve_item_selection"))
 
 func set_path(input:MPath)->void:
 	start()
@@ -176,9 +176,7 @@ func mesh_mode_selected(index:int):
 
 
 func _on_update_info_timer_timeout():
-	var point_count:int = 0	
+	var point_count:int = 0
 	if current_curve:
-		while current_curve.has_point(point_count):
-			point_count+=1
-		#point_count = current_curve.get_points_count()
-	point_count_label.text = "Point count " + str(point_count)
+		point_count = current_curve.get_points_count()
+	point_count_lable.text = "Point count " + str(point_count)

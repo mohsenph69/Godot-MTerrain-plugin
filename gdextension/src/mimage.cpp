@@ -145,6 +145,14 @@ void MImage::add_layer(String lname){
 	}
 }
 
+void MImage::rename_layer(int layer_index,String new_name){
+	if(name!=HEIGHTMAP_NAME){
+		return;
+	}
+	std::lock_guard<std::recursive_mutex> lock(load_mutex);
+	layer_names.set(layer_index,new_name);
+}
+
 void MImage::load_layer(String lname){
 	std::lock_guard<std::recursive_mutex> lock(load_mutex);
 	if(!is_init){

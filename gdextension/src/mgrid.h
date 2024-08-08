@@ -57,13 +57,14 @@ struct MPoint
     bool has_instance=false;
 
    
-    void create_instance(const Vector3& pos,const RID scenario,const RID material){
+    void create_instance(const Vector3& pos,const RID scenario,const RID material,bool visible){
         has_instance = true;
         Transform3D xform(Basis(), pos);
         RenderingServer* rs = RenderingServer::get_singleton();
         instance = rs->instance_create();
         rs->instance_set_scenario(instance, scenario);
         rs->instance_set_transform(instance, xform);
+        rs->instance_set_visible(instance,visible);
         if(material != RID())
             rs->instance_geometry_set_material_override(instance, material);
     }
@@ -124,6 +125,8 @@ struct MSaveConfig
 class MGrid : public Object {
     GDCLASS(MGrid, Object);
     friend class MRegion;
+    friend class MTerrain;
+    friend class MImage;
     private:
     bool _is_opengl=false;
     uint8_t _update_id=0; // Only for mesh update not for physics
@@ -132,6 +135,7 @@ class MGrid : public Object {
     MPoint* points_row;
     bool current_update = true;
     bool is_dirty = false;
+    bool is_visible = true;
     MChunks* _chunks;
     MGridPos _size;
     MGridPos _size_meter;
@@ -160,6 +164,7 @@ class MGrid : public Object {
     
 
     Ref<MTerrainMaterial> _terrain_material;
+    int total_points_count=0;
     uint64_t update_count=0;
     uint64_t total_remove=0;
     uint64_t total_add=0;
@@ -173,10 +178,12 @@ class MGrid : public Object {
 
 
 
+
     protected:
     static void _bind_methods(){};
 
     public:
+    std::mutex update_chunks_mutex;
     MSaveConfig save_config;
     Ref<PhysicsMaterial> physics_material;
     int collision_layer=1;
@@ -319,14 +326,18 @@ class MGrid : public Object {
 
     void update_all_dirty_image_texture(bool update_physics=false);
 
-    void set_active_layer(String input);
+    private:
+    bool set_active_layer(String input);
+    String get_active_layer();
     void add_heightmap_layer(String lname);
+    void rename_heightmap_layer(int layer_index,String lname);
     void merge_heightmap_layer();
     void remove_heightmap_layer();
-    void toggle_heightmap_layer_visibile();
+    void toggle_heightmap_layer_visible();
     bool is_layer_visible(int index);
     bool is_layer_visible(const String& lname);
 
+    public:
     float get_h_scale();
 
     float get_brush_mask_value(uint32_t x,uint32_t y);
@@ -339,6 +350,9 @@ class MGrid : public Object {
 
     void update_renderer_info();
     bool is_opengl();
+
+    bool get_visibility();
+    void set_visibility(bool input);
 };
 
 #endif

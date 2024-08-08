@@ -59,6 +59,7 @@ struct  MBound
     bool has_point(const int32_t x, const int32_t y);
     bool has_point(const MGridPos& p);
     void intersect(const MBound& other);
+    void merge(const MBound& other);
 
     bool operator==(const MBound& other);
     bool operator!=(const MBound& other);
