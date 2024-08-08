@@ -96,14 +96,14 @@ func _enter_tree():
 		
 		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
 		
-		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
+		tsnap = preload("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
 		tsnap.pressed.connect(tsnap_pressed)
 		tsnap.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)				
 				
 		###### GIZMO
-		gizmo_moctmesh = load("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
-		gizmo_mpath = load("res://addons/m_terrain/gizmos/mpath_gizmo.gd").new()
+		gizmo_moctmesh = preload("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
+		gizmo_mpath = preload("res://addons/m_terrain/gizmos/mpath_gizmo.gd").new()
 		gizmo_mpath_gui = tools.find_child("mpath_gizmo_gui") #load("res://addons/m_terrain/gizmos/mpath_gizmo_gui.tscn").instantiate()
 		mcurve_mesh_gui = tools.find_child("mcurve_mesh") #load("res://addons/m_terrain/gizmos/mcurve_mesh_gui.tscn").instantiate()
 		add_node_3d_gizmo_plugin(gizmo_moctmesh)
@@ -112,7 +112,7 @@ func _enter_tree():
 		gizmo_mpath.set_gui(gizmo_mpath_gui)
 		gizmo_mpath.mterrain_plugin = self		
 		#### Inspector
-		inspector_mpath = load("res://addons/m_terrain/inspector/mpath.gd").new()
+		inspector_mpath = preload("res://addons/m_terrain/inspector/mpath.gd").new()
 		inspector_mpath.gizmo = gizmo_mpath
 		add_inspector_plugin(inspector_mpath)
 				
@@ -367,7 +367,7 @@ func show_image_creator_window():
 func show_info_window(active_terrain:MTerrain = tools.get_active_mterrain()):
 	if is_instance_valid(current_window_info):
 		current_window_info.queue_free()
-	current_window_info = load("res://addons/m_terrain/gui/terrain_info.tscn").instantiate()
+	current_window_info = preload("res://addons/m_terrain/gui/terrain_info.tscn").instantiate()
 	add_child(current_window_info)
 	current_window_info.generate_info(active_terrain,version, default_keyboard_actions)
 	current_window_info.keymap_changed.connect(update_keymap)

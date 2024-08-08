@@ -3,6 +3,8 @@ extends EditorNode3DGizmoPlugin
 
 signal selection_changed
 signal lock_mode_changed
+signal active_point_position_updated
+
 const value_mode_mouse_sensivity:float = 0.01
 const bake_interval:float = 0.2
 
@@ -184,23 +186,27 @@ func _get_handle_name(gizmo, handle_id, secondary):
 			return "C "+str(handle_id/2)
 		else:
 			return "C "+str((handle_id-1)/2)
-	return "P "+str(handle_id)
+	else:			
+		return "P "+str(handle_id)
 
 func _is_handle_highlighted(gizmo, handle_id, secondary):
 	return false
 
-func _get_handle_value(gizmo, handle_id, secondary):
+func _get_handle_value(gizmo, handle_id, secondary):	
 	var curve:MCurve = gizmo.get_node_3d().curve
-	if not curve:
+	if not curve:		
 		return null
 	if not secondary:
-		return curve.get_point_position(handle_id)
+		active_point_position_updated.emit(str("P", handle_id, ": ", curve.get_point_position(handle_id)))
+		return curve.get_point_position(handle_id)		
 	else:
 		if handle_id % 2 == 0: #even
-			handle_id /=2
-			return curve.get_point_in(handle_id)
-		else:
+			handle_id /=2			
+			active_point_position_updated.emit(str("C", handle_id, ": ", curve.get_point_in(handle_id)))
+			return curve.get_point_in(handle_id)			
+		else:						
 			handle_id = (handle_id-1)/2
+			active_point_position_updated.emit(str("C", handle_id, ": ", curve.get_point_out(handle_id)))
 			return curve.get_point_out(handle_id)
 
 func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
@@ -292,8 +298,7 @@ func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
 			current_pos.x = init_pos.x
 	return current_pos
 
-func update_lock_mode(x,y,z):
-	print("updating lock mode: ", x, y, z)
+func update_lock_mode(x,y,z):	
 	if x and y and z:
 		lock_mode = LOCK_MODE.XYZ
 		return

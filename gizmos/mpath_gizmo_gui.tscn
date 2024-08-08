@@ -42,9 +42,11 @@ size_flags_horizontal = 3
 script = ExtResource("1_ufvdf")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
-layout_mode = 2
-offset_right = 449.0
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
 offset_bottom = 40.0
+grow_horizontal = 2
 
 [node name="mirror_checkbox" type="CheckBox" parent="HBoxContainer"]
 custom_minimum_size = Vector2(5, 0)
@@ -259,5 +261,16 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_cwina")
 theme_override_styles/hover = SubResource("StyleBoxFlat_he1tx")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_nkgdj")
 text = "sort rev"
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="active_point_label" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer2" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_right = 12
 
 [connection signal="pressed" from="HBoxContainer/show_rest" to="." method="_on_show_rest_pressed"]

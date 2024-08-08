@@ -28,18 +28,34 @@ extends Control
 @onready var y_lock = find_child("y_lock")
 @onready var z_lock = find_child("z_lock")
 
+@onready var active_point_label = find_child("active_point_label")
+
 var gizmo:
 	set(value):
 		gizmo = value
 		gizmo.lock_mode_changed.connect(update_axis_lock)		
+		gizmo.active_point_position_updated.connect(update_active_point_label)
+		
+		if is_instance_valid(x_lock):
+			connect_lock_mode_signals()
+		else:
+			print("NO XLOCK")
+		
+func connect_lock_mode_signals():
+		x_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+		y_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+		z_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
 
+		
 var is_show_rest:=false
 
 enum MODE {
 	EDIT = 0,
 	CREATE = 1,
 }
-
+func update_active_point_label(new_text):
+	active_point_label.text = new_text
+	
 func is_mirror()->bool:
 	return mirror_checkbox.button_pressed
 
@@ -74,11 +90,6 @@ func _ready():
 	tilt_num.set_tooltip_text("Change Tilt\nHotkey: R")
 	scale_num.set_tooltip_text("Change Tilt\nHotkey: E")
 	settings_panel.visible = false
-
-	x_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
-	y_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
-	z_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
-
 	
 func update_axis_lock(lock_mode):		
 	x_lock.button_pressed = true if lock_mode in [1,4,5,7] else false #x, xz, xy, xyz
