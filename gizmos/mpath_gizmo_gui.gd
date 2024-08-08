@@ -30,6 +30,8 @@ extends Control
 
 @onready var active_point_label = find_child("active_point_label")
 
+var mterrain_for_snap = null
+
 var gizmo:
 	set(value):
 		gizmo = value
@@ -65,8 +67,11 @@ func is_mirror_lenght()->bool:
 func is_xz_handle_lock()->bool:
 	return xz_handle_lock.button_pressed
 
-func is_terrain_snap():
-	return snap_checkbox.button_pressed
+func get_terrain_for_snap():
+	if mterrain_for_snap and snap_checkbox.button_pressed:
+		return mterrain_for_snap
+	else:
+		return null	
 
 func get_mode():
 	return mode_option.selected
@@ -112,7 +117,15 @@ func _on_show_rest_pressed():
 	is_show_rest = not is_show_rest
 	settings_panel.visible = is_show_rest
 		
-
+func set_terrain_snap(mterrain):
+	if mterrain == null:
+		snap_checkbox.button_pressed = false
+		snap_checkbox.visible = false
+		mterrain_for_snap = null
+	else:	
+		mterrain_for_snap = mterrain		
+		snap_checkbox.button_pressed = true
+		snap_checkbox.visible = true
 
 func show_mpath_help_window():
 	add_child( preload("res://addons/m_terrain/gui/mpath_help_popup.tscn").instantiate())

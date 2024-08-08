@@ -3,14 +3,14 @@ extends Control
 
 ##############################################################
 # 							MTools
-#	1. m_terrain.gd sets mask, decal, human on enter_tree
+#	1. m_terrain.gd sets mask, decal, and human on enter_tree()
 #   2. User selects a node
 #	   This calls edit_mode_button.init_edit_mode_options()
 #      This populates the list of possible edit modes.	   
 #	3. User selectes edit mode by clicking on edit_mode_button,
-#	   This calls set_edit_mode()
+#	   This calls mtools.set_edit_mode()
 #	   This sets the active_object and current_mode  
-#   4. This sets appropriate "layers" (height or paint)
+#   4. This sets appropriate "layers" (heightmap or paint) 
 #	   This sets appropriate "brushes" (height, color, grass, nav)
 #      If mpath, show mpath menu
 #	   If mcurve_mesh, show mcurve_mesh menu
@@ -216,16 +216,17 @@ func process_input(event):
 			
 			if Input.is_action_just_released("mterrain_mask_size_increase") or Input.is_action_just_released("mterrain_mask_size_decrease"):
 				paint_mask_resize_speed=1
-			if Input.is_action_just_released("mterrain_brush_size_increase") or Input.is_action_just_pressed("mterrain_brush_size_decrease"):
+			if Input.is_action_just_released("mterrain_brush_size_increase") or Input.is_action_just_released("mterrain_brush_size_decrease"):
 				paint_brush_resize_speed=1				
-			#if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
-			if Input.is_action_just_pressed("mterrain_brush_size_increase"):				
+				
+			#if event.keycode == KEY_BRACKETLEFT or event.keycode == KEY_BRACKETRIGHT:
+			if Input.is_action_pressed("mterrain_brush_size_increase"):				
 				paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
 				brush_decal.set_brush_size(brush_decal.get_brush_size() + floor(paint_brush_resize_speed))
 				brush_size_control.update_value(brush_decal.get_brush_size())
 				return true					
 			#elif event.keycode == KEY_MINUS:
-			elif Input.is_action_just_pressed("mterrain_brush_size_decrease"):				
+			elif Input.is_action_pressed("mterrain_brush_size_decrease"):				
 				paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
 				brush_decal.set_brush_size(brush_decal.get_brush_size() - floor(paint_brush_resize_speed))
 				brush_size_control.update_value(brush_decal.get_brush_size())
@@ -299,6 +300,11 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	
 	if object is MPath:		
 		mpath_gizmo_gui.visible = true
+		var active_mterrain = get_active_mterrain()
+		if active_mterrain and active_mterrain.is_grid_created():
+			mpath_gizmo_gui.set_terrain_snap(active_mterrain)
+		else:
+			mpath_gizmo_gui.set_terrain_snap(null)
 		object.update_gizmos()
 	elif object is MCurveMesh:
 		mcurve_mesh.set_curve_mesh(object)

@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://ckbvdmvbcxfb6" path="res://addons/m_terrain/icons/magnet_icon.svg" id="3_yoi5b"]
 [ext_resource type="Texture2D" uid="uid://30e6iyx7q1y7" path="res://addons/m_terrain/icons/mpath_collapse_point_icon.svg" id="4_38e8d"]
 [ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="5_8fq58"]
-[ext_resource type="Texture2D" uid="uid://c32td7i377ewu" path="res://addons/m_terrain/icons/toggle_connection.svg" id="6_a88nf"]
+[ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="5_xw4f1"]
 [ext_resource type="PackedScene" uid="uid://cjjqtr6xhktp4" path="res://addons/m_terrain/gui/control_prop_element/float_range.tscn" id="6_bsspt"]
 [ext_resource type="Texture2D" uid="uid://jw6maiih4qf8" path="res://addons/m_terrain/icons/lock.svg" id="7_0ucgh"]
 [ext_resource type="Texture2D" uid="uid://cylua0xddvmx7" path="res://addons/m_terrain/icons/connect_icon.svg" id="7_mbnvb"]
@@ -95,16 +95,16 @@ tooltip_text = "Collapse point: move point handles to center of point"
 icon = ExtResource("4_38e8d")
 
 [node name="toggle_connection" type="Button" parent="HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-tooltip_text = "Toggle Points Connection
+tooltip_text = "Switch Connection Dsirection
 Hot-key: T"
 theme_override_font_sizes/font_size = 18
-icon = ExtResource("6_a88nf")
+icon = ExtResource("5_xw4f1")
 expand_icon = true
 
 [node name="Connect" type="Button" parent="HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 tooltip_text = "Connect points
 Hot-key: C"
@@ -114,7 +114,7 @@ icon = ExtResource("7_mbnvb")
 expand_icon = true
 
 [node name="Disconnect" type="Button" parent="HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 tooltip_text = "Disconnect points
 Hot-key: X"
@@ -124,7 +124,7 @@ icon = ExtResource("8_777vd")
 expand_icon = true
 
 [node name="remove" type="Button" parent="HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 tooltip_text = "Remove point
 Hot-key: Backspace"

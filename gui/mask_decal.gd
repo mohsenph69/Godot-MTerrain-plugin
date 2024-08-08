@@ -31,14 +31,16 @@ func _ready():
 	wpx = ImageTexture.create_from_image(img)
 	
 
-func set_absolute_terrain_pos(pos:Vector3):
+func set_absolute_terrain_pos(pos:Vector3, force =false):
 	if is_dirty:
 		update_active_image()
 	if orignal_image:
 		active_terrain.set_brush_mask(active_image)
+		print("set brush mask")
 	else:
 		active_terrain.disable_brush_mask()
-	if is_being_edited:
+		print("disable brush mask")
+	if is_being_edited or force:
 		var angle_pos = pos - angle_offset
 		angle_pos -= active_terrain.offset
 		angle_pos = angle_pos/active_terrain.get_h_scale()
@@ -82,7 +84,8 @@ func set_size(value):
 	var last_pos = position
 	angle_offset = Vector3(size.x/2,0,size.z/2)
 	is_dirty = true
-	set_absolute_terrain_pos(position)
+	update_active_image()
+	is_being_edited = true
 
 func _process(delta):
 	if (desire_position - position).length() < 0.01:
@@ -124,6 +127,7 @@ func set_image_rotation(value:int):
 	image_rotation = value % 4
 	is_dirty = true
 	update_active_image()
+	is_being_edited = true
 
 func update_active_image():
 	if not active_terrain:return

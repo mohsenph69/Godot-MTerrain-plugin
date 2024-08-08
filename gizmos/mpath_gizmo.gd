@@ -228,8 +228,8 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
-		if gui.is_terrain_snap() and lock_mode == LOCK_MODE.NONE:
-			var active_terrain = mterrain_plugin.tools.get_active_mterrain()
+		var active_terrain = gui.get_terrain_for_snap() 
+		if active_terrain and lock_mode == LOCK_MODE.NONE:			
 			if active_terrain and active_terrain.is_grid_created():
 				drag.y = active_terrain.get_height(drag)
 			else:
@@ -489,9 +489,9 @@ func process_mouse_left_click(camera, event, terrain_col):
 		var new_index:int
 		var new_pos:Vector3
 		var is_new_pos_set = false
-		if gui.is_terrain_snap():
-			#To Do: user should be able to select which mterrain is used for snapping
-			var active_mterrain = mterrain_plugin.tools.get_active_mterrain()
+		var active_mterrain = gui.get_terrain_for_snap()
+		if active_mterrain:
+			#To Do: user should be able to select which mterrain is used for snapping			
 			if active_mterrain and active_mterrain.is_grid_created():				
 				if terrain_col.is_collided():
 					new_pos = terrain_col.get_collision_position()
@@ -569,8 +569,8 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 		swap_points()
 		return true
 	#if event.keycode == KEY_T and not Input.is_key_pressed(KEY_SHIFT):
-	if Input.is_action_just_pressed("mpath_toggle_connection"):			
-		if toggle_connection():
+	if Input.is_action_just_pressed("mpath_toggle_connection"):					
+		if toggle_connection():			
 			return true
 	#elif  event.keycode == KEY_BACKSPACE:
 	if Input.is_action_just_pressed("mpath_remove_point"):

@@ -95,9 +95,10 @@ func on_height_brush_select(index):
 	var brush_props = height_brush_manager.get_height_brush_property(height_brush_id)
 	for p in brush_props:
 		create_props(p)
-	text = brush_container.get_item_text(index)
+	text = ""# brush_container.get_item_text(index)
 	set("theme_override_styles/normal", null)
 	icon = brush_container.get_item_icon(index)	
+	tooltip_text = "Current brush: " + brush_container.get_item_text(index)
 
 func create_props(dic:Dictionary):
 	var element

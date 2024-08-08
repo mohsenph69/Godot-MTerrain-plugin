@@ -74,7 +74,7 @@ offset_bottom = 32.0
 grow_horizontal = 2
 
 [node name="options_button" type="Button" parent="Panel/hbox"]
-custom_minimum_size = Vector2(64, 0)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 tooltip_text = "More MTerrain settings"
 toggle_mode = true
@@ -322,12 +322,13 @@ layout_mode = 2
 
 [node name="edit_selected_button" type="Button" parent="Panel/hbox/PaintControls"]
 visible = false
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 tooltip_text = "Edit currently selected node"
 text = "Edit MGrass1"
 
 [node name="edit_mode_button" type="Button" parent="Panel/hbox/PaintControls"]
-custom_minimum_size = Vector2(24, 0)
+custom_minimum_size = Vector2(24, 64)
 layout_mode = 2
 tooltip_text = "Select MTerrain edit mode"
 toggle_mode = true
@@ -381,6 +382,7 @@ expand_icon = true
 layout_mode = 2
 
 [node name="layers_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 tooltip_text = "Current Layer. Click to show layer menu"
 toggle_mode = true
@@ -440,16 +442,18 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="brush_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 tooltip_text = "Current Brush. Click to show brush menu"
 toggle_mode = true
 text = "Brush"
+expand_icon = true
 script = ExtResource("11_c6bj1")
 
 [node name="Control" type="Control" parent="Panel/hbox/PaintControls/paint_panel/brush_button"]
 visible = false
 anchors_preset = 0
-offset_right = 1765.0
+offset_right = 1707.0
 mouse_filter = 1
 
 [node name="brush_settings_panel" type="Panel" parent="Panel/hbox/PaintControls/paint_panel/brush_button/Control"]
@@ -539,6 +543,7 @@ size_flags_vertical = 3
 mouse_filter = 1
 allow_reselect = true
 max_columns = 0
+fixed_icon_size = Vector2i(64, 64)
 
 [node name="mask_button" type="Button" parent="Panel/hbox/PaintControls/paint_panel"]
 custom_minimum_size = Vector2(64, 64)
@@ -553,7 +558,7 @@ script = ExtResource("16_h7wnm")
 visible = false
 layout_mode = 1
 offset_top = -236.0
-offset_right = 1765.0
+offset_right = 1707.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/hbox/PaintControls/paint_panel/mask_button/Panel2"]
