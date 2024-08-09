@@ -1,9 +1,8 @@
-[gd_scene load_steps=15 format=3 uid="uid://btfhp7mnhc5nj"]
+[gd_scene load_steps=14 format=3 uid="uid://btfhp7mnhc5nj"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_byb3a"]
 [ext_resource type="Script" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_y34ur"]
 [ext_resource type="Texture2D" uid="uid://c64direekaeap" path="res://addons/m_terrain/icons/mirror_icon.svg" id="2_tic3q"]
-[ext_resource type="Texture2D" uid="uid://b2edfbh3q6uh2" path="res://addons/m_terrain/icons/depth_test.svg" id="3_n0m75"]
 [ext_resource type="Texture2D" uid="uid://ckbvdmvbcxfb6" path="res://addons/m_terrain/icons/magnet_icon.svg" id="3_yoi5b"]
 [ext_resource type="Texture2D" uid="uid://30e6iyx7q1y7" path="res://addons/m_terrain/icons/mpath_collapse_point_icon.svg" id="4_38e8d"]
 [ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="5_8fq58"]
@@ -152,16 +151,14 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "More settings"
 toggle_mode = true
-button_pressed = true
 icon = ExtResource("10_01bp8")
 icon_alignment = 1
 expand_icon = true
 
 [node name="settings_panel" type="PanelContainer" parent="HBoxContainer/show_rest"]
-visible = false
 layout_mode = 1
-offset_left = -474.0
-offset_top = -238.0
+offset_left = -514.0
+offset_top = -309.0
 offset_right = 32.0
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/show_rest/settings_panel"]
@@ -188,16 +185,20 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="depth_test" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/ScrollContainer/FlowContainer"]
+visible = false
 layout_mode = 2
 tooltip_text = "gizmo line depth test"
-icon = ExtResource("3_n0m75")
+text = "Depth Test Connection Lines"
+expand_icon = true
 
 [node name="select_lock" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/ScrollContainer/FlowContainer"]
 layout_mode = 2
 tooltip_text = "Keep the Path node selected!"
 button_pressed = true
-text = "select"
+text = "selection "
 icon = ExtResource("7_0ucgh")
+alignment = 2
+icon_alignment = 2
 
 [node name="debug_col" type="CheckBox" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/ScrollContainer/FlowContainer"]
 layout_mode = 2
@@ -206,7 +207,8 @@ If activated by clicking on line it will select path node
 but it will take more processing power,
 So if you have a huge path deactive this!"
 button_pressed = true
-text = "COL"
+text = "debug collision"
+alignment = 2
 
 [node name="swap_points" type="Button" parent="HBoxContainer/show_rest/settings_panel/HBoxContainer2/ScrollContainer/FlowContainer"]
 layout_mode = 2

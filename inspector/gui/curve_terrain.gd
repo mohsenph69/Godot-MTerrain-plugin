@@ -26,7 +26,7 @@ func start_curve_terrain(_gizmo,_path):
 	
 
 func set_default_values():
-	print("set default -----------------------")
+	#print("set default -----------------------")
 	var new_mcurve:=MCurveTerrain.new()
 	gizmo.auto_terrain_deform = false
 	gizmo.auto_terrain_paint = false

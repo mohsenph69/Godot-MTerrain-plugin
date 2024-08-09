@@ -79,11 +79,13 @@ func _ready():
 	timer = Timer.new()
 	timer.timeout.connect(func(): current_popup_button.button_pressed = false)
 	add_child(timer)
-	
+	update_theme()
 	for button in popup_buttons:
 		init_popup_button_signals(button)	
 
 	edit_mode_button.edit_mode_changed.connect(set_edit_mode)		
+
+	theme_changed.connect(update_theme)
 
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
@@ -417,8 +419,8 @@ func _on_image_creator_button_pressed() -> void:
 #region theme: sizes and colors etc
 func _on_resized():		
 	if not has_node("VSplitContainer") or not mtools_root:
-		call_deferred( "_on_resized" )
-		
+		call_deferred( "_on_resized" )	
+		return
 	var vsplit  = $VSplitContainer
 	var max_size = get_viewport_rect().size.y / 16 + 2
 	var min_size = get_viewport_rect().size.y / 32
@@ -436,10 +438,12 @@ func resize_children_recursive(parent, new_size):
 			child.custom_minimum_size.y = new_size		
 		resize_children_recursive(child, new_size)
 
-func update_theme():
-	pass
-
-
+func update_theme():	
+	var base_color = EditorInterface.get_editor_settings().get_setting("interface/theme/base_color")	
+	var stylebox = preload("res://addons/m_terrain/gui/styles/popup_panel_stylebox.tres")
+	if stylebox.bg_color != base_color:
+		stylebox.set("bg_color", base_color)	
+		
 func _on_v_split_container_dragged(offset):
 	_on_resized()
 #endregion
