@@ -265,6 +265,9 @@ class MTerrain : public  Node3D {
     void _frame_draw();
 
     void _update_visibility();
+
+    void _dummy_setter(bool input){}
+    bool _dummy_getter(){return true;}
 };
 
 
