@@ -270,11 +270,12 @@ func request_hide():
 
 func request_show():
 	visible = true
+	_on_resized()
 	update_edit_mode_options()
 
 func deactivate_editing():	
 	if is_instance_valid(edit_mode_button):
-		edit_mode_button.text = "edit terrain"
+		edit_mode_button.text = ""
 	
 	edit_mode_button.exit_edit_mode_button.visible = false
 	brush_decal.visible = false
@@ -416,7 +417,8 @@ func _on_image_creator_button_pressed() -> void:
 #region theme: sizes and colors etc
 func _on_resized():		
 	if not has_node("VSplitContainer") or not mtools_root:
-		await ready
+		call_deferred( "_on_resized" )
+		
 	var vsplit  = $VSplitContainer
 	var max_size = get_viewport_rect().size.y / 16 + 2
 	var min_size = get_viewport_rect().size.y / 32

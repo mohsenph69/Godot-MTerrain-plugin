@@ -107,24 +107,28 @@ func create_props(dic:Dictionary):
 		var rng = dic["max"] - dic["min"]
 		if dic["hint"] == "range":
 			element = float_range_prop_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.set_min(dic["min"])
 			element.set_max(dic["max"])
 			element.set_step(dic["hint_string"].to_float())
 		else:
 			element = float_prop_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.min = dic["min"]
 			element.max = dic["max"]
 	elif dic["type"]==TYPE_BOOL:
 		element = bool_element.instantiate()
+		brush_settings_container.add_child(element)
 	elif dic["type"]==TYPE_INT:
 		if dic["hint"] == "enum":
 			element = int_enum_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.set_options(dic["hint_string"])
 		else:
 			element = int_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.set_min(dic["min"])
 			element.set_max(dic["max"])
-	brush_settings_container.add_child(element)
 	element.prop_changed.connect(prop_change)
 	element.set_value(dic["default_value"])
 	element.set_name(dic["name"])

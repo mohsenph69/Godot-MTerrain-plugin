@@ -62,11 +62,12 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -87.4375
+offset_top = -40.0
+offset_right = 1148.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 0
-split_offset = -42
+split_offset = -2
 
 [node name="Control" type="Control" parent="VSplitContainer"]
 layout_mode = 2
@@ -78,13 +79,13 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 
 [node name="hbox" type="HBoxContainer" parent="VSplitContainer/mtools_root"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 offset_right = 1148.0
 offset_bottom = 11.0
 
 [node name="options_button" type="Button" parent="VSplitContainer/mtools_root/hbox"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 tooltip_text = "More MTerrain settings"
 toggle_mode = true
@@ -94,14 +95,14 @@ script = ExtResource("2_2bis6")
 
 [node name="PanelContainer" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/options_button"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 0
 offset_top = -510.0
 offset_right = 475.0
 offset_bottom = -4.0
 
 [node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
@@ -109,11 +110,11 @@ theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="heightmap_import_button" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 text = "Import/Export 
@@ -121,14 +122,14 @@ text = "Import/Export
 alignment = 0
 
 [node name="image_creator_button" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 text = "Image Creator"
 alignment = 0
 
 [node name="transform_terrain_button" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer" node_paths=PackedStringArray("transform_window")]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 text = "Transform Terrain"
@@ -137,14 +138,14 @@ script = SubResource("GDScript_tlie2")
 transform_window = NodePath("../../../../Popup")
 
 [node name="hide_status" type="CheckButton" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 button_pressed = true
 text = "hide status"
 
 [node name="human_male" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 toggle_mode = true
 text = "Human Preview"
@@ -154,7 +155,7 @@ icon_alignment = 2
 expand_icon = true
 
 [node name="info_btn" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 text = "More Settings"
@@ -170,7 +171,7 @@ borderless = false
 keep_title_visible = true
 
 [node name="TransformTerrainPopup" type="Panel" parent="VSplitContainer/mtools_root/hbox/options_button/Popup" node_paths=PackedStringArray("confirm_transform")]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -187,7 +188,7 @@ script = SubResource("GDScript_siatt")
 confirm_transform = NodePath("VBoxContainer/confirm_transform")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/options_button/Popup/TransformTerrainPopup"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -204,7 +205,7 @@ text = "Offset"
 horizontal_alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/options_button/Popup/TransformTerrainPopup/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 alignment = 1
 
@@ -240,7 +241,7 @@ text = "Scale"
 horizontal_alignment = 1
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/options_button/Popup/TransformTerrainPopup/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 alignment = 1
 
@@ -269,24 +270,24 @@ placeholder_text = "  Z  "
 expand_to_text_length = true
 
 [node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/mtools_root/hbox/options_button/Popup/TransformTerrainPopup/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 theme_override_constants/margin_top = 12
 
 [node name="confirm_transform" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/Popup/TransformTerrainPopup/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 text = "Transform!"
 
 [node name="VSeparator" type="VSeparator" parent="VSplitContainer/mtools_root/hbox"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="save_button" type="TextureButton" parent="VSplitContainer/mtools_root/hbox"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 toggle_mode = true
 texture_normal = ExtResource("6_di4ov")
@@ -295,7 +296,7 @@ stretch_mode = 5
 
 [node name="reload" type="TextureButton" parent="VSplitContainer/mtools_root/hbox"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 toggle_mode = true
 texture_normal = ExtResource("9_ck5t3")
@@ -303,12 +304,12 @@ stretch_mode = 5
 
 [node name="VSeparator2" type="VSeparator" parent="VSplitContainer/mtools_root/hbox"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="status_bar" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 script = ExtResource("9_666yn")
 
@@ -333,22 +334,22 @@ layout_mode = 2
 text = "R:2"
 
 [node name="VSeparator3" type="VSeparator" parent="VSplitContainer/mtools_root/hbox/status_bar"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="PaintControls" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="edit_selected_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 tooltip_text = "Edit currently selected node"
 text = "Edit MGrass1"
 
 [node name="edit_mode_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 tooltip_text = "Select MTerrain edit mode"
 toggle_mode = true
@@ -360,7 +361,7 @@ script = ExtResource("10_qe47s")
 [node name="Panel2" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/edit_mode_button"]
 visible = false
 clip_contents = true
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 1
 offset_left = -6.0
 offset_top = -198.0
@@ -369,7 +370,7 @@ offset_bottom = -1.0
 mouse_filter = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/edit_mode_button/Panel2"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
@@ -377,36 +378,36 @@ theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/edit_mode_button/Panel2/MarginContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="edit_mode_item_container" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/edit_mode_button/Panel2/MarginContainer/ScrollContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="Button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/edit_mode_button/Panel2/MarginContainer/ScrollContainer/edit_mode_item_container"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 text = "TEST"
 
 [node name="edit_mode_exit_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 tooltip_text = "Exit edit mode for MTerrain related nodes"
 icon = ExtResource("11_0dtgq")
 expand_icon = true
 
 [node name="paint_panel" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="layers_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 tooltip_text = "Current Layer. Click to show layer menu"
 toggle_mode = true
@@ -416,7 +417,7 @@ script = ExtResource("13_1tujl")
 [node name="Panel2" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button"]
 visible = false
 clip_contents = true
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 1
 offset_top = -296.0
 offset_right = 1036.0
@@ -424,7 +425,7 @@ offset_bottom = -2.0
 mouse_filter = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button/Panel2"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
@@ -433,15 +434,15 @@ theme_override_constants/margin_bottom = 12
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button/Panel2/MarginContainer"]
 clip_contents = true
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="layer_controls" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button/Panel2/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="add_layer_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button/Panel2/MarginContainer/VBoxContainer/layer_controls"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "Add new heightmap layer"
@@ -451,7 +452,7 @@ alignment = 0
 expand_icon = true
 
 [node name="merge_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button/Panel2/MarginContainer/VBoxContainer/layer_controls"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "Merge all heightmap layers with background (flatten)"
@@ -463,20 +464,20 @@ icon_alignment = 2
 expand_icon = true
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button/Panel2/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
 [node name="layer_item_container" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/layers_button/Panel2/MarginContainer/VBoxContainer/ScrollContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="brush_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 tooltip_text = "Current Brush. Click to show brush menu"
 toggle_mode = true
@@ -486,29 +487,29 @@ script = ExtResource("11_c6bj1")
 
 [node name="Panel" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 1
 offset_left = -298.0
 offset_top = -273.4
-offset_right = 903.0
+offset_right = -232.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="brush_settings_panel" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer"]
 clip_contents = true
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer/brush_settings_panel"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="brush_settings" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer/brush_settings_panel/ScrollContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -517,24 +518,24 @@ alignment = 2
 
 [node name="brush_size_panel" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer"]
 clip_contents = true
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 metadata/_edit_group_ = true
 
 [node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer/brush_size_panel"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 theme_override_constants/margin_top = 12
 
 [node name="brush_size" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer/brush_size_panel/MarginContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 alignment = 2
 script = ExtResource("18_vmcc8")
 
 [node name="VSlider" type="VSlider" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer/brush_size_panel/MarginContainer/brush_size"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 1
 size_flags_vertical = 3
@@ -559,12 +560,12 @@ text = "size"
 horizontal_alignment = 1
 
 [node name="brush_brushes_panel" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 mouse_filter = 1
 
 [node name="scroll_container" type="ScrollContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel/HBoxContainer/brush_brushes_panel"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -579,26 +580,25 @@ auto_height = true
 fixed_icon_size = Vector2i(64, 64)
 
 [node name="mask_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 tooltip_text = "Current mask. Click to show mask menu"
 toggle_mode = true
-button_pressed = true
 icon = ExtResource("19_epiyr")
 expand_icon = true
 script = ExtResource("16_h7wnm")
 
 [node name="Panel2" type="PanelContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+visible = false
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 1
 offset_left = -360.0
-offset_top = -275.4
-offset_right = 788.0
-offset_bottom = -2.0
+offset_top = -273.4
+offset_right = 261.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="mask_list" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer" instance=ExtResource("23_qb0vt")]
@@ -611,16 +611,17 @@ fixed_icon_size = Vector2i(85, 85)
 metadata/_edit_group_ = true
 
 [node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 theme_override_constants/margin_top = 12
 
 [node name="mask_size" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 script = ExtResource("18_vmcc8")
 
 [node name="VSlider" type="VSlider" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer/mask_size"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 1
 size_flags_vertical = 3
@@ -644,20 +645,21 @@ text = "size"
 horizontal_alignment = 1
 
 [node name="MarginContainer2" type="MarginContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer"]
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 theme_override_constants/margin_top = 12
 
 [node name="mask_settings" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer2"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 alignment = 2
 
 [node name="invert_mask" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer2/mask_settings"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="invert_mask_button" type="TextureButton" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer2/mask_settings/invert_mask"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 1
@@ -674,12 +676,12 @@ text = "invert"
 horizontal_alignment = 1
 
 [node name="mask_cutoff" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer2/mask_settings"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 script = ExtResource("18_vmcc8")
 
 [node name="VSlider" type="VSlider" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer2/mask_settings/mask_cutoff"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 1
 size_flags_vertical = 3
@@ -703,12 +705,12 @@ text = "cutoff"
 horizontal_alignment = 1
 
 [node name="mask_rotation" type="VBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer2/mask_settings"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 script = ExtResource("18_vmcc8")
 
 [node name="VSlider" type="VSlider" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2/HBoxContainer/MarginContainer2/mask_settings/mask_rotation"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 size_flags_horizontal = 1
 size_flags_vertical = 3
@@ -732,19 +734,19 @@ horizontal_alignment = 1
 
 [node name="mask_clear_button" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel"]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 icon = ExtResource("11_0dtgq")
 expand_icon = true
 
 [node name="mpath_gizmo_gui" parent="VSplitContainer/mtools_root/hbox" instance=ExtResource("23_i5qr3")]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [node name="mcurve_mesh" parent="VSplitContainer/mtools_root/hbox" instance=ExtResource("28_x63ge")]
 visible = false
-custom_minimum_size = Vector2(42.7188, 42.7188)
+custom_minimum_size = Vector2(2.125, 2.125)
 layout_mode = 2
 
 [connection signal="dragged" from="VSplitContainer" to="." method="_on_v_split_container_dragged"]
