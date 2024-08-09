@@ -392,7 +392,7 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 			ur.add_undo_method(curve,"commit_point_update",handle_id)
 	gizmo.get_node_3d().update_gizmos()
 	#### Deforming Terrain
-	if auto_terrain_deform or auto_terrain_paint:
+	if auto_terrain_deform or auto_terrain_paint or auto_grass_modify:
 		### we also deform neighbor points 
 		var undo_aabb = curve.get_conns_aabb(curve.get_point_conns(handle_id))
 		var conns:PackedInt64Array = curve.get_point_conns_inc_neighbor_points(handle_id)
@@ -410,11 +410,24 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 			ur.add_undo_method(curve_terrain,"paint_on_conns",conns)
 			ur.add_do_method(curve_terrain,"clear_paint_aabb",init_aabb)
 			ur.add_do_method(curve_terrain,"paint_on_conns",conns)
-		if false:
-			var grass:MGrass= curve_terrain.terrain.get_child(2)
-			curve_terrain.clear_grass_aabb(grass,init_aabb,9.0)
-			curve_terrain.modify_grass(conns,grass,2.0,6.0,true)
+		if auto_grass_modify:
+			var grass_names:Array= grass_modify_settings.keys()
+			for gname in grass_names:
+				var s:Dictionary = grass_modify_settings[gname]
+				var r:float = s["radius"] ; var o = s["offset"]
+				if not s["active"] : continue
+				if not curve_terrain.terrain.has_node(gname):
+					printerr("can not find grass "+gname+" please reselect MPath node to update grass names")
+					continue
+				var g = curve_terrain.terrain.get_node(gname)
+				if not(g is MGrass):
+					printerr(gname+" is not a grass node! please reselect MPath node to update grass names")
+					continue
+				curve_terrain.clear_grass_aabb(g,init_aabb,r+o)
+				curve_terrain.modify_grass(conns,g,o,r,s["add"])
+				g.update_dirty_chunks()
 		curve_terrain.terrain.update_all_dirty_image_texture(false)
+		curve_terrain.terrain.save_all_dirty_images()
 		ur.add_do_method(curve_terrain.terrain,"update_all_dirty_image_texture",false)
 		ur.add_undo_method(curve_terrain.terrain,"update_all_dirty_image_texture",false)
 	ur.commit_action(false)
@@ -818,7 +831,8 @@ func _toggle_connection(curve:MCurve,toggle_point,toggle_conn):
 		curve.toggle_conn_type(active_point,conn)
 	if curve.has_point(active_point):
 		curve.commit_point_update(active_point)
-	find_mpath().update_gizmos()
+	var mpath = find_mpath()
+	if mpath: mpath.call_deferred("update_gizmos")
 	return true
 
 func remove_point()->bool:

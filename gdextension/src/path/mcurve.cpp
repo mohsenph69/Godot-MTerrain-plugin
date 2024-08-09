@@ -1412,7 +1412,8 @@ void MCurve::toggle_conn_type(int32_t point, int64_t conn_id){
     for(int8_t i=0; i < MAX_CONN; i++){
         if(std::abs(tp->conn[i]) == other_point){
             tp->conn[i] = -tp->conn[i];
-            emit_signal("curve_updated");
+            Conn cc(point,std::abs(tp->conn[i]));
+            baked_lines.erase(cc.id);
             return;
         }
     }

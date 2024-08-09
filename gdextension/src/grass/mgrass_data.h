@@ -10,10 +10,13 @@
 using namespace godot;
 
 struct MGrassUndoData {
-    uint8_t* data;
-
+    uint8_t* data=nullptr;
+    uint8_t* backup_data=nullptr;
     void free(){
         memdelete_arr(data);
+        if(backup_data!=nullptr){
+            memdelete_arr(backup_data);
+        }
     }
 };
 
@@ -36,6 +39,8 @@ class MGrassData : public Resource {
 
     void set_data(const PackedByteArray& d);
     const PackedByteArray& get_data();
+    void set_backup_data(const PackedByteArray& d);
+    const PackedByteArray& get_backup_data();
     void set_density(int input);
     int get_density();
 
@@ -45,6 +50,7 @@ class MGrassData : public Resource {
     void backup_restore();
 
     void check_undo(); // register a stage for undo
+    void clear_undo();
     void undo();
 
 };
