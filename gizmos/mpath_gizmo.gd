@@ -570,11 +570,13 @@ func process_mouse_left_click(camera, event, terrain_col):
 				if col.is_collided():
 					new_pos = col.get_collision_position()
 					is_new_pos_set = true
+		var conn_ids:PackedInt64Array
 		if curve.has_point(active_point):
 			var creation_distance = curve.get_point_position(active_point).distance_to(from)
 			if not is_new_pos_set:
 				new_pos = from + to * creation_distance
 			new_index = curve.add_point(new_pos,new_pos,new_pos,active_point)
+			conn_ids.push_back(curve.get_conn_id(new_index,active_point))
 		else:
 			if not is_new_pos_set:
 				new_pos = from + to * 4.0
@@ -583,7 +585,13 @@ func process_mouse_left_click(camera, event, terrain_col):
 			return true
 		## Undo Redo
 		ur.create_action("create_point")
+		ur.add_do_method(self,"change_active_point",new_index)
+		ur.add_undo_method(self,"change_active_point",active_point)
 		ur.add_do_method(curve,"add_point",new_pos,new_pos,new_pos,active_point)
+		if conn_ids.size()!=0:
+			curve_terrain_modify(conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+			ur.add_do_method(self,"curve_terrain_modify",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+			ur.add_undo_method(self,"curve_terrain_clear",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 		ur.add_undo_method(curve,"remove_point",new_index)
 		ur.commit_action(false)
 		change_active_point(new_index)
@@ -872,10 +880,16 @@ func remove_point()->bool:
 	var p_out = curve.get_point_out(active_point)
 	var conn_points = curve.get_point_conn_points(active_point)
 	var conn_types = curve.get_point_conn_types(active_point)
+	var conn_ids:PackedInt64Array = curve.get_point_conns(active_point)
 	ur.create_action("Remove Point")
+	if conn_ids.size()!=0:
+		curve_terrain_modify(conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+		ur.add_do_method(self,"curve_terrain_clear",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 	ur.add_do_method(curve,"remove_point",active_point)
 	#curve.add_point_conn_point(p_pos,p_in,p_out,conn_types,conn_points)
 	ur.add_undo_method(curve,"add_point_conn_point",p_pos,p_in,p_out,conn_types,conn_points)
+	if conn_ids.size()!=0:
+		ur.add_undo_method(self,"curve_terrain_modify",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 	ur.commit_action(true)
 	return true
 
