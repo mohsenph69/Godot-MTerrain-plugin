@@ -16,8 +16,8 @@
 
 
 void MTerrain::_bind_methods() {
-    //ADD_SIGNAL(MethodInfo("finish_updating"));
-    //ADD_SIGNAL(MethodInfo("finish_updating_physics"));
+    ClassDB::bind_method(D_METHOD("_dummy_setter","input"), &MTerrain::_dummy_setter);
+    ClassDB::bind_method(D_METHOD("_dummy_getter"), &MTerrain::_dummy_getter);
 
     ClassDB::bind_method(D_METHOD("_finish_terrain"), &MTerrain::_finish_terrain);
     ClassDB::bind_method(D_METHOD("create_grid"), &MTerrain::create_grid);
@@ -59,19 +59,11 @@ void MTerrain::_bind_methods() {
     
     ClassDB::bind_method(D_METHOD("set_heightmap_layers", "input"), &MTerrain::set_heightmap_layers);
     ClassDB::bind_method(D_METHOD("get_heightmap_layers"), &MTerrain::get_heightmap_layers);
-    ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "heightmap_layers"), "set_heightmap_layers","get_heightmap_layers");
-
-    ClassDB::bind_method(D_METHOD("set_regions_limit","input"), &MTerrain::set_regions_limit);
-    ClassDB::bind_method(D_METHOD("get_regions_limit"), &MTerrain::get_regions_limit);
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "regions_limit"), "set_regions_limit", "get_regions_limit");
+    ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "heightmap_layers",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE), "set_heightmap_layers","get_heightmap_layers");
 
     ClassDB::bind_method(D_METHOD("set_update_chunks_interval","interval"), &MTerrain::set_update_chunks_interval);
     ClassDB::bind_method(D_METHOD("get_update_chunks_interval"), &MTerrain::get_update_chunks_interval);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "update_chunks_interval"), "set_update_chunks_interval", "get_update_chunks_interval");
-    
-    ClassDB::bind_method(D_METHOD("set_distance_update_threshold","input"), &MTerrain::set_distance_update_threshold);
-    ClassDB::bind_method(D_METHOD("get_distance_update_threshold"), &MTerrain::get_distance_update_threshold);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"distance_update_threshold"),"set_distance_update_threshold","get_distance_update_threshold");
 
     ClassDB::bind_method(D_METHOD("set_update_chunks_loop", "val"), &MTerrain::set_update_chunks_loop);
     ClassDB::bind_method(D_METHOD("get_update_chunks_loop"), &MTerrain::get_update_chunks_loop);
@@ -85,16 +77,21 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_update_physics_loop"), &MTerrain::get_update_physics_loop);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "update_physics_loop"), "set_update_physics_loop", "get_update_physics_loop");
 
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"Region Unit",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_CATEGORY),"_dummy_setter","_dummy_getter");
+
+    ClassDB::bind_method(D_METHOD("set_regions_limit","input"), &MTerrain::set_regions_limit);
+    ClassDB::bind_method(D_METHOD("get_regions_limit"), &MTerrain::get_regions_limit);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "regions_limit"), "set_regions_limit", "get_regions_limit");
+
     ClassDB::bind_method(D_METHOD("set_physics_update_limit", "val"), &MTerrain::set_physics_update_limit);
     ClassDB::bind_method(D_METHOD("get_physics_update_limit"), &MTerrain::get_physics_update_limit);
     ADD_PROPERTY(PropertyInfo(Variant::INT, "physics_update_limit"), "set_physics_update_limit", "get_physics_update_limit");
 
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"Grid unit (min_size)",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_CATEGORY),"_dummy_setter","_dummy_getter");
+
     ClassDB::bind_method(D_METHOD("get_terrain_size"), &MTerrain::get_terrain_size);
     ClassDB::bind_method(D_METHOD("set_terrain_size", "size"), &MTerrain::set_terrain_size);
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I,"terrain_size"), "set_terrain_size", "get_terrain_size");
-    ClassDB::bind_method(D_METHOD("set_offset", "offset"), &MTerrain::set_offset);
-    ClassDB::bind_method(D_METHOD("get_offset"), &MTerrain::get_offset);
-    ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "offset"), "set_offset", "get_offset");
 
     ClassDB::bind_method(D_METHOD("set_region_size", "region_size"), &MTerrain::set_region_size);
     ClassDB::bind_method(D_METHOD("get_region_size"), &MTerrain::get_region_size);
@@ -107,7 +104,16 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_custom_camera", "camera"), &MTerrain::set_custom_camera);
     ClassDB::bind_method(D_METHOD("set_editor_camera", "camera"), &MTerrain::set_editor_camera);
 
-    
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"Meter unit",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_CATEGORY),"_dummy_setter","_dummy_getter");
+
+    ClassDB::bind_method(D_METHOD("set_distance_update_threshold","input"), &MTerrain::set_distance_update_threshold);
+    ClassDB::bind_method(D_METHOD("get_distance_update_threshold"), &MTerrain::get_distance_update_threshold);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"distance_update_threshold"),"set_distance_update_threshold","get_distance_update_threshold");
+
+    ClassDB::bind_method(D_METHOD("set_offset", "offset"), &MTerrain::set_offset);
+    ClassDB::bind_method(D_METHOD("get_offset"), &MTerrain::get_offset);
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "offset"), "set_offset", "get_offset");
+
     ClassDB::bind_method(D_METHOD("set_min_size","index"), &MTerrain::set_min_size);
     ClassDB::bind_method(D_METHOD("get_min_size"), &MTerrain::get_min_size);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"min_size",PROPERTY_HINT_ENUM, M_SIZE_LIST_STRING), "set_min_size", "get_min_size");
@@ -132,7 +138,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_lod_distance"), &MTerrain::get_lod_distance);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY, "lod_distance",PROPERTY_HINT_NONE,"", PROPERTY_USAGE_STORAGE),"set_lod_distance","get_lod_distance");
 
-    ADD_SUBGROUP("Physics","");
+    ADD_GROUP("Physics","");
 
     ClassDB::bind_method(D_METHOD("set_physics_material","input"), &MTerrain::set_physics_material);
     ClassDB::bind_method(D_METHOD("get_physics_material"), &MTerrain::get_physics_material);
@@ -177,7 +183,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_brush_layers_num"), &MTerrain::get_brush_layers_num);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"brush_layers_groups_num",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_brush_layers_num","get_brush_layers_num");
     
-    ADD_SUBGROUP("util","");
+    ADD_GROUP("util","");
     ClassDB::bind_method(D_METHOD("set_set_mtime","input"), &MTerrain::set_set_mtime);
     ClassDB::bind_method(D_METHOD("get_set_mtime"), &MTerrain::get_set_mtime);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"set_mtime"),"set_set_mtime","get_set_mtime");
@@ -854,13 +860,15 @@ PackedInt32Array MTerrain::get_lod_distance() {
 
 void MTerrain::_get_property_list(List<PropertyInfo> *p_list) const {
     //Adding lod distance property
-    PropertyInfo sub_lod(Variant::INT, "LOD distance", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_SUBGROUP);
+    PropertyInfo sub_lod(Variant::INT, "LOD distance", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_GROUP);
     p_list->push_back(sub_lod);
     for(int i=0; i<lod_distance.size();i++){
         PropertyInfo p(Variant::INT,"M_LOD_"+itos(i),PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR);
         p_list->push_back(p);
     }
     //Adding size info property
+    PropertyInfo size_group(Variant::INT, "Generating Chunks", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_GROUP);
+    p_list->push_back(size_group);
     for(int size=0;size<size_info.size();size++){
         Array lod_info = size_info[size];
         PropertyInfo sub(Variant::INT, "Size "+itos(size_list[size+min_size_index]), PROPERTY_HINT_NONE, "", PROPERTY_USAGE_SUBGROUP);

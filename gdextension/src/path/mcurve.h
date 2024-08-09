@@ -218,6 +218,7 @@ class MCurve : public Resource{
     PackedInt32Array get_point_conn_points_recursive(int32_t p_index) const;
     PackedInt64Array get_point_conns(int32_t p_index) const;
     PackedInt64Array get_point_conns_inc_neighbor_points(int32_t p_index) const;
+    PackedInt64Array growed_conn(PackedInt64Array conn_ids) const;
     Vector3 get_point_position(int p_index);
     Vector3 get_point_in(int p_index);
     Vector3 get_point_out(int p_index);
