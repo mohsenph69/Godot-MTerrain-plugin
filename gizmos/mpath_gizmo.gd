@@ -18,6 +18,7 @@ var gui:Control
 
 ### The MCurveTerrain parameter
 var curve_terrain:=MCurveTerrain.new()
+var is_curve_terrain_panel_open := false
 var auto_terrain_deform := false
 var auto_terrain_paint := false
 var auto_grass_modify := false
@@ -426,6 +427,12 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 				curve_terrain.clear_grass_aabb(g,init_aabb,r+o)
 				curve_terrain.modify_grass(conns,g,o,r,s["add"])
 				g.update_dirty_chunks()
+				ur.add_undo_method(curve_terrain,"clear_grass_aabb",g,undo_aabb,r+o)
+				ur.add_undo_method(curve_terrain,"modify_grass",conns,g,o,r,s["add"])
+				ur.add_do_method(curve_terrain,"clear_grass_aabb",g,init_aabb,r+o)
+				ur.add_do_method(curve_terrain,"modify_grass",conns,g,o,r,s["add"])
+				ur.add_undo_method(g,"update_dirty_chunks")
+				ur.add_do_method(g,"update_dirty_chunks")
 		curve_terrain.terrain.update_all_dirty_image_texture(false)
 		curve_terrain.terrain.save_all_dirty_images()
 		ur.add_do_method(curve_terrain.terrain,"update_all_dirty_image_texture",false)
@@ -777,9 +784,17 @@ func toggle_connection()->bool:
 	var curve:MCurve = path.curve
 	if not curve: return false
 	if not curve.has_point(active_point): return false
+	var tconn = curve.growed_conn(selected_connections)
 	ur.create_action("toggle connection")
+	## Terrain clear befor
+	ur.add_do_method(self,"curve_terrain_clear",tconn,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+	ur.add_undo_method(self,"curve_terrain_clear",tconn,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+	# toggle
 	ur.add_do_method(self,"_toggle_connection",curve,active_point,selected_connections)
 	ur.add_undo_method(self,"_toggle_connection",curve,active_point,selected_connections)
+	## Terrain modify after
+	ur.add_do_method(self,"curve_terrain_modify",tconn,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+	ur.add_undo_method(self,"curve_terrain_modify",tconn,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 	ur.commit_action(true)
 	return true
 
@@ -796,8 +811,15 @@ func connect_points()->bool:
 	var other_point:int = selected_points[0]
 	var res:bool = curve.connect_points(active_point,other_point,MCurve.CONN_NONE)
 	if res:
+		var conn_ids:PackedInt64Array
+		conn_ids.push_back(curve.get_conn_id(active_point,other_point))
 		ur.create_action("disconnect points")
 		ur.add_do_method(curve,"connect_points",active_point,other_point,MCurve.CONN_NONE)
+		##Terrain
+		curve_terrain_modify(conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+		ur.add_do_method(self,"curve_terrain_modify",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+		ur.add_undo_method(self,"curve_terrain_clear",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+		## end Terrain
 		ur.add_undo_method(curve,"disconnect_points",active_point,other_point)
 		ur.commit_action(false)
 		path.update_gizmos()
@@ -815,15 +837,19 @@ func disconnect_points():
 		push_error("More than two points is selected")
 		return false
 	var other_point:int = selected_points[0]
+	var conn_ids:PackedInt64Array
+	conn_ids.push_back(curve.get_conn_id(active_point,other_point))
+	if not curve.has_conn(conn_ids[0]): return
 	var conn_type = curve.get_conn_type(curve.get_conn_id(active_point,other_point))
-	var res:bool = curve.disconnect_points(active_point,other_point)
-	if res:
-		ur.create_action("connect points")
-		ur.add_do_method(curve,"disconnect_points",active_point,other_point)
-		ur.add_undo_method(curve,"connect_points",active_point,other_point,conn_type)
-		ur.commit_action(false)
-		path.update_gizmos()
-		return true
+	curve_terrain_clear(conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+	ur.create_action("disconnect_points")
+	ur.add_do_method(self,"curve_terrain_clear",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+	curve.disconnect_points(active_point,other_point)
+	ur.add_do_method(curve,"disconnect_points",active_point,other_point)
+	ur.add_undo_method(curve,"connect_points",active_point,other_point,conn_type)
+	ur.add_undo_method(self,"curve_terrain_modify",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+	ur.commit_action(false)
+	path.update_gizmos()
 	return false
 
 func _toggle_connection(curve:MCurve,toggle_point,toggle_conn):
@@ -952,12 +978,15 @@ func sort(increasing:bool):
 	su.clear_history()
 	path.update_gizmos()
 
-
+### if selection is empty will get connection around active point
 func get_conns_list(only_selected:bool)->PackedInt64Array:
-	if(only_selected):
-		return selected_connections
 	var curve = find_curve()
 	if not curve: return PackedInt64Array()
+	if(only_selected):
+		if selected_connections.size() !=0:
+			return selected_connections
+		else:
+			return curve.get_point_conns(active_point)
 	return curve.get_active_conns()
 
 func deform(only_selected:bool):
@@ -992,6 +1021,125 @@ func clear_paint_large(only_selected:bool):
 	aabb = aabb.grow(10)
 	curve_terrain.clear_paint_aabb(aabb)
 	curve_terrain.terrain.update_all_dirty_image_texture(false)
+
+func modify_grass(only_selected:bool):
+	var conns = get_conns_list(only_selected)
+	if conns.size() == 0: return
+	var g_names = grass_modify_settings.keys()
+	for gname in g_names:
+		var setting:Dictionary = grass_modify_settings[gname]
+		if not setting["active"] : return
+		if not curve_terrain.terrain.has_node(gname):
+			printerr("can not find grass "+gname+" please reselect MPath node to update grass names")
+			continue
+		var g = curve_terrain.terrain.get_node(gname)
+		if not(g is MGrass):
+			printerr(gname+" is not a grass node! please reselect MPath node to update grass names")
+			continue
+		curve_terrain.modify_grass(conns,g,setting["offset"],setting["radius"],setting["add"])
+		g.update_dirty_chunks()
+		
+
+func clear_grass(only_selected:bool):
+	var conns = get_conns_list(only_selected)
+	if conns.size() == 0: return
+	var g_names = grass_modify_settings.keys()
+	for gname in g_names:
+		var setting:Dictionary = grass_modify_settings[gname]
+		if not setting["active"] : return
+		if not curve_terrain.terrain.has_node(gname):
+			printerr("can not find grass "+gname+" please reselect MPath node to update grass names")
+			continue
+		var g = curve_terrain.terrain.get_node(gname)
+		if not(g is MGrass):
+			printerr(gname+" is not a grass node! please reselect MPath node to update grass names")
+			continue
+		curve_terrain.clear_grass(conns,g,setting["offset"]+setting["radius"])
+		g.update_dirty_chunks()
+
+func clear_grass_large(only_selected:bool):
+	var curve = find_curve()
+	if not curve: return
+	var aabb = curve.get_conns_aabb(get_conns_list(only_selected))
+	aabb = aabb.grow(10)
+	var g_names = grass_modify_settings.keys()
+	for gname in g_names:
+		var setting:Dictionary = grass_modify_settings[gname]
+		if not setting["active"] : return
+		if not curve_terrain.terrain.has_node(gname):
+			printerr("can not find grass "+gname+" please reselect MPath node to update grass names")
+			continue
+		var g = curve_terrain.terrain.get_node(gname)
+		if not(g is MGrass):
+			printerr(gname+" is not a grass node! please reselect MPath node to update grass names")
+			continue
+		curve_terrain.clear_grass_aabb(g,aabb,setting["offset"]+setting["radius"])
+		g.update_dirty_chunks()
+
+
+## Usefull when points are not moving like for connect or discconect
+func curve_terrain_modify(conns:PackedInt64Array,_terrain:bool,_paint:bool,_grass:bool,_gsettings):
+	if auto_terrain_deform or auto_terrain_paint or auto_grass_modify:
+		if _terrain:
+			curve_terrain.deform_on_conns(conns)
+		if _paint:
+			curve_terrain.paint_on_conns(conns)
+		if _grass:
+			var grass_names:Array= _gsettings.keys()
+			for gname in grass_names:
+				var s:Dictionary = _gsettings[gname]
+				var r:float = s["radius"] ; var o = s["offset"]
+				if not s["active"] : continue
+				if not curve_terrain.terrain.has_node(gname):
+					printerr("can not find grass "+gname+" please reselect MPath node to update grass names")
+					continue
+				var g = curve_terrain.terrain.get_node(gname)
+				if not(g is MGrass):
+					printerr(gname+" is not a grass node! please reselect MPath node to update grass names")
+					continue
+				curve_terrain.modify_grass(conns,g,o,r,s["add"])
+				g.update_dirty_chunks()
+		curve_terrain.terrain.update_all_dirty_image_texture(false)
+		curve_terrain.terrain.save_all_dirty_images()
+
+## Usefull when points are not moving like for connect or discconect
+func curve_terrain_clear(conns:PackedInt64Array,_terrain:bool,_paint:bool,_grass:bool,_gsettings):
+	if auto_terrain_deform or auto_terrain_paint or auto_grass_modify:
+		if _terrain:
+			curve_terrain.clear_deform(conns)
+		if _paint:
+			curve_terrain.clear_paint(conns)
+		if _grass:
+			var grass_names:Array= _gsettings.keys()
+			for gname in grass_names:
+				var s:Dictionary = _gsettings[gname]
+				var r:float = s["radius"] ; var o = s["offset"]
+				if not s["active"] : continue
+				if not curve_terrain.terrain.has_node(gname):
+					printerr("can not find grass "+gname+" please reselect MPath node to update grass names")
+					continue
+				var g = curve_terrain.terrain.get_node(gname)
+				if not(g is MGrass):
+					printerr(gname+" is not a grass node! please reselect MPath node to update grass names")
+					continue
+				curve_terrain.clear_grass(conns,g,o+r)
+				g.update_dirty_chunks()
+		curve_terrain.terrain.update_all_dirty_image_texture(false)
+		curve_terrain.terrain.save_all_dirty_images()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

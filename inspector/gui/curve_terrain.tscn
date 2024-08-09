@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://br05oyiapuwpf"]
+[gd_scene load_steps=5 format=3 uid="uid://br05oyiapuwpf"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/inspector/gui/curve_terrain.gd" id="1_txmoh"]
 [ext_resource type="Texture2D" uid="uid://bsdfn2yec6vtv" path="res://addons/m_terrain/icons/terrain_icon.png" id="2_n3lna"]
 [ext_resource type="Texture2D" uid="uid://c08s0xlu8tted" path="res://addons/m_terrain/icons/brush_icon.png" id="3_bwp6e"]
+[ext_resource type="Texture2D" uid="uid://d03ukmldfnxs3" path="res://addons/m_terrain/icons/foilage_icon.png" id="4_ftpdb"]
 
 [node name="curve_terrain" type="VBoxContainer"]
 anchors_preset = 15
@@ -12,7 +13,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_txmoh")
 
-[node name="active_terrain" type="CheckButton" parent="."]
+[node name="panle_open" type="CheckButton" parent="."]
 layout_mode = 2
 text = "Terrain"
 
@@ -196,9 +197,29 @@ layout_mode = 2
 [node name="g_container" type="VBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="auto_g_modify" type="CheckBox" parent="g_container"]
+[node name="gt" type="HBoxContainer" parent="g_container"]
+layout_mode = 2
+
+[node name="auto_g_modify" type="CheckBox" parent="g_container/gt"]
 layout_mode = 2
 text = "Auto Modify"
+
+[node name="grass_tool" type="MenuButton" parent="g_container/gt"]
+layout_mode = 2
+text = "Grass Tool"
+icon = ExtResource("4_ftpdb")
+flat = false
+item_count = 4
+popup/item_0/text = "Only Selected"
+popup/item_0/checkable = 1
+popup/item_0/checked = true
+popup/item_0/id = 0
+popup/item_1/text = "modify"
+popup/item_1/id = 1
+popup/item_2/text = "clear"
+popup/item_2/id = 2
+popup/item_3/text = "clear large"
+popup/item_3/id = 3
 
 [node name="grass_list" type="ItemList" parent="g_container"]
 custom_minimum_size = Vector2(0, 72)
@@ -244,7 +265,7 @@ max_value = 500.0
 step = 0.01
 update_on_text_changed = true
 
-[connection signal="toggled" from="active_terrain" to="." method="_on_active_terrain_toggled"]
+[connection signal="toggled" from="panle_open" to="." method="_on_panle_open_toggled"]
 [connection signal="toggled" from="tsv/tilt" to="." method="_on_tilt_toggled"]
 [connection signal="toggled" from="tsv/scale" to="." method="_on_scale_toggled"]
 [connection signal="toggled" from="tsv2/auto_deform" to="." method="_on_auto_deform_toggled"]
@@ -258,7 +279,7 @@ update_on_text_changed = true
 [connection signal="value_changed" from="ov5/pfalloff" to="." method="_on_pfalloff_value_changed"]
 [connection signal="color_changed" from="ov4/pcolor" to="." method="_on_pcolor_color_changed"]
 [connection signal="color_changed" from="ov4/bgcolor" to="." method="_on_bgcolor_color_changed"]
-[connection signal="toggled" from="g_container/auto_g_modify" to="." method="_on_auto_g_modify_toggled"]
+[connection signal="toggled" from="g_container/gt/auto_g_modify" to="." method="_on_auto_g_modify_toggled"]
 [connection signal="item_selected" from="g_container/grass_list" to="." method="_on_grass_list_item_selected"]
 [connection signal="pressed" from="g_container/gh/gactive" to="." method="upate_grass_meta"]
 [connection signal="pressed" from="g_container/gh/gadd" to="." method="upate_grass_meta"]
