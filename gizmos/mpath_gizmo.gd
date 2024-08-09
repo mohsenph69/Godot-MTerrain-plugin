@@ -248,7 +248,8 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 	var from = camera.project_ray_origin(screen_pos)
 	var to = camera.project_ray_normal(screen_pos)
 	# is main point
-	if not secondary:		
+	if not secondary:	
+	#	for pid in curve.get_active_points():
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
