@@ -11,6 +11,7 @@ var active_grass:MGrass=null
 func start_curve_terrain(_gizmo,_path):
 	$tsv2/deform_tools.get_popup().connect("index_pressed",deform_tool_index_pressed)
 	$tsv3/paint_tools.get_popup().connect("index_pressed",paint_tool_index_pressed)
+	$g_container/gt/grass_tool.get_popup().connect("index_pressed",grass_tool_index_pressed)
 	gizmo = _gizmo
 	path = _path
 	curve_terrain = gizmo.curve_terrain
@@ -25,6 +26,7 @@ func start_curve_terrain(_gizmo,_path):
 	
 
 func set_default_values():
+	print("set default -----------------------")
 	var new_mcurve:=MCurveTerrain.new()
 	gizmo.auto_terrain_deform = false
 	gizmo.auto_terrain_paint = false
@@ -34,6 +36,7 @@ func set_default_values():
 	
 
 func set_values(d:Dictionary):
+	$panle_open.set_pressed_no_signal(d["panel_open"]) ; panle_open_toggled(d["panel_open"])
 	$tsv2/auto_deform.set_pressed_no_signal(d["auto_deform"]) ; gizmo.auto_terrain_deform = d["auto_deform"]
 	$tsv/tilt.set_pressed_no_signal(d["tilt"]) ; curve_terrain.apply_tilt = d["tilt"]
 	$tsv/scale.set_pressed_no_signal(d["scale"]) ; curve_terrain.apply_scale = d["scale"]
@@ -50,10 +53,11 @@ func set_values(d:Dictionary):
 	$ov4/bgcolor.color = d["bgcolor"] ; curve_terrain.bg_color = d["bgcolor"]
 	$tsv2/deform_tools.set("popup/item_0/checked",d["donly_selected"])
 	$tsv3/paint_tools.set("popup/item_0/checked",d["ponly_selected"])
-	$g_container/auto_g_modify.set_pressed_no_signal(d["auto_grass"]) ; gizmo.auto_grass_modify = d["auto_grass"]
+	$g_container/gt/auto_g_modify.set_pressed_no_signal(d["auto_grass"]) ; gizmo.auto_grass_modify = d["auto_grass"]
 
 func get_curve_terrain_data(ct:MCurveTerrain)->Dictionary:
 	var d:Dictionary
+	d["panel_open"] = gizmo.is_curve_terrain_panel_open
 	d["auto_deform"] = gizmo.auto_terrain_deform
 	d["tilt"] = ct.apply_tilt
 	d["scale"] = ct.apply_scale
@@ -76,7 +80,14 @@ func update_meta_values():
 	var d = get_curve_terrain_data(curve_terrain)
 	path.set_meta("curve_terrain",d)
 
-func _on_active_terrain_toggled(toggled_on):
+func _on_panle_open_toggled(toggled_on):
+	var child_count = get_child_count()
+	gizmo.is_curve_terrain_panel_open = toggled_on
+	for c in range(2,child_count):
+		get_child(c).visible = toggled_on
+	update_meta_values()
+
+func panle_open_toggled(toggled_on):
 	var child_count = get_child_count()
 	for c in range(2,child_count):
 		get_child(c).visible = toggled_on
@@ -203,7 +214,6 @@ func change_active_grass(index):
 		printerr("Can not find "+grass_name)
 		return
 	active_grass = curve_terrain.terrain.get_node(grass_name)
-	print("change active grass to ",active_grass.name)
 	if not gizmo.grass_modify_settings.has(grass_name):
 		## restoring default setting
 		$g_container/gh/gactive.set_pressed_no_signal(false)
@@ -216,7 +226,6 @@ func change_active_grass(index):
 	$g_container/gh/gadd.set_pressed_no_signal(g_setting["add"])
 	$g_container/ov7/gradius.set_value_no_signal(g_setting["radius"])
 	$g_container/ov6/goffset.set_value_no_signal(g_setting["offset"])
-	print("Changing radius to ",g_setting["radius"])
 
 func upate_grass_meta():
 	if not active_grass:
@@ -246,5 +255,23 @@ func _on_gradius_value_changed(value):
 
 func _on_goffset_value_changed(value):
 	upate_grass_meta()
+
+
+func grass_tool_index_pressed(index:int):
+	var only_selected:bool=$g_container/gt/grass_tool.get("popup/item_0/checked")
+	if index==0:
+		$g_container/gt/grass_tool.set("popup/item_0/checked",not only_selected)
+		$g_container/gt/grass_tool.call_deferred("show_popup")
+		update_meta_values()
+		return
+	if index==1:
+		gizmo.modify_grass(only_selected)
+		return
+	if index == 2:
+		gizmo.clear_grass(only_selected)
+		return
+	if index == 3:
+		gizmo.clear_grass_large(only_selected)
+		return
 
 

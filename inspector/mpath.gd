@@ -23,8 +23,9 @@ func _parse_begin(object):
 		if not curve_terrain:
 			curve_terrain = curve_terrain_res.instantiate()
 		add_custom_control(curve_terrain)
-		curve_terrain.start_curve_terrain(gizmo,object)
 		gizmo.curve_terrain.terrain = gizmo.mterrain_plugin.tools.get_active_mterrain()
+		curve_terrain.start_curve_terrain(gizmo,object)
+		
 
 
 

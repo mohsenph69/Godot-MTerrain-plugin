@@ -5,6 +5,11 @@ void MGrassData::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_data","input"), &MGrassData::set_data);
     ClassDB::bind_method(D_METHOD("get_data"), &MGrassData::get_data);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY),"set_data","get_data");
+    
+    ClassDB::bind_method(D_METHOD("set_backup_data","input"), &MGrassData::set_backup_data);
+    ClassDB::bind_method(D_METHOD("get_backup_data"), &MGrassData::get_backup_data);
+    ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"backup_data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY),"set_backup_data","get_backup_data");    
+    
     ClassDB::bind_method(D_METHOD("set_density","input"), &MGrassData::set_density);
     ClassDB::bind_method(D_METHOD("get_density"), &MGrassData::get_density);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"density",PROPERTY_HINT_ENUM,M_H_SCALE_LIST_STRING),"set_density","get_density");
@@ -25,6 +30,14 @@ void MGrassData::set_data(const PackedByteArray& d){
 
 const PackedByteArray& MGrassData::get_data(){
     return data;
+}
+
+void MGrassData::set_backup_data(const PackedByteArray& d){
+    backup_data = d;
+}
+
+const PackedByteArray& MGrassData::get_backup_data(){
+    return backup_data;
 }
 
 void MGrassData::set_density(int input){
@@ -59,7 +72,7 @@ void MGrassData::backup_restore(){
 }
 
 void MGrassData::check_undo(){
-    if(current_undo_id - lowest_undo_id > 6){
+    if(current_undo_id - lowest_undo_id > 4){
         if(undo_data.has(lowest_undo_id)){
             MGrassUndoData d = undo_data[lowest_undo_id];
             d.free();
@@ -71,9 +84,21 @@ void MGrassData::check_undo(){
         MGrassUndoData d;
         d.data = memnew_arr(uint8_t,data.size());
         memcpy(d.data,data.ptr(),data.size());
+        if(backup_exist()){
+            d.backup_data = memnew_arr(uint8_t,backup_data.size());
+            memcpy(d.backup_data,backup_data.ptr(),backup_data.size());
+        }
         undo_data.insert(current_undo_id,d);
     }
     current_undo_id++;
+}
+
+void MGrassData::clear_undo(){
+    for(HashMap<int,MGrassUndoData>::Iterator it=undo_data.begin(); it!=undo_data.end(); ++it){
+        it->value.free();
+    }
+    current_undo_id = 0;
+    lowest_undo_id = 0;
 }
 
 void MGrassData::undo(){
@@ -84,6 +109,10 @@ void MGrassData::undo(){
     if(undo_data.has(current_undo_id)){
         MGrassUndoData d = undo_data[current_undo_id];
         memcpy(data.ptrw(),d.data,data.size());
+        if(d.backup_data!=nullptr){
+            backup_data.resize(data.size());
+            memcpy(backup_data.ptrw(),d.backup_data,backup_data.size());
+        }
         d.free();
         undo_data.erase(current_undo_id);
     }
