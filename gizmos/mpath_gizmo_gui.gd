@@ -127,8 +127,10 @@ func set_terrain_snap(mterrain):
 		snap_checkbox.visible = true
 
 func show_mpath_help_window():
-	add_child( preload("res://addons/m_terrain/gui/mpath_help_popup.tscn").instantiate())
-
+	var help_window = preload("res://addons/m_terrain/gui/mpath_help_popup.tscn").instantiate()
+	add_child(help_window)
+	help_window.size.x = 25 * theme.default_font_size
+	help_window.size.y = 24 * theme.default_font_size
 
 func _on_show_rest_minimum_size_changed():
 	_on_show_rest_toggled(settings_panel.visible)

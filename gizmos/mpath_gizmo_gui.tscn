@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://jw6maiih4qf8" path="res://addons/m_terrain/icons/lock.svg" id="7_0ucgh"]
 [ext_resource type="Texture2D" uid="uid://cylua0xddvmx7" path="res://addons/m_terrain/icons/connect_icon.svg" id="7_mbnvb"]
 [ext_resource type="Texture2D" uid="uid://bnafvu7s1g7dn" path="res://addons/m_terrain/icons/disconnect_icon.svg" id="8_777vd"]
-[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="10_wuoaw"]
+[ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="10_01bp8"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7loo7"]
 content_margin_left = 6.0
@@ -153,10 +153,12 @@ layout_mode = 2
 tooltip_text = "More settings"
 toggle_mode = true
 button_pressed = true
-icon = ExtResource("10_wuoaw")
+icon = ExtResource("10_01bp8")
+icon_alignment = 1
 expand_icon = true
 
 [node name="settings_panel" type="PanelContainer" parent="HBoxContainer/show_rest"]
+visible = false
 layout_mode = 1
 offset_left = -474.0
 offset_top = -238.0
