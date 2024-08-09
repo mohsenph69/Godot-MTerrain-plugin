@@ -30,6 +30,8 @@ extends Control
 
 @onready var active_point_label = find_child("active_point_label")
 
+var mterrain_for_snap = null
+
 var gizmo:
 	set(value):
 		gizmo = value
@@ -46,8 +48,6 @@ func connect_lock_mode_signals():
 		y_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
 		z_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
 
-		
-var is_show_rest:=false
 
 enum MODE {
 	EDIT = 0,
@@ -65,8 +65,11 @@ func is_mirror_lenght()->bool:
 func is_xz_handle_lock()->bool:
 	return xz_handle_lock.button_pressed
 
-func is_terrain_snap():
-	return snap_checkbox.button_pressed
+func get_terrain_for_snap():
+	if mterrain_for_snap and snap_checkbox.button_pressed:
+		return mterrain_for_snap
+	else:
+		return null	
 
 func get_mode():
 	return mode_option.selected
@@ -108,11 +111,26 @@ func is_select_lock()->bool:
 func is_debug_col()->bool:
 	return debug_col.button_pressed
 
-func _on_show_rest_pressed():
-	is_show_rest = not is_show_rest
-	settings_panel.visible = is_show_rest
-		
-
+func _on_show_rest_toggled(toggle_on):
+	settings_panel.visible = toggle_on
+	settings_panel.position.x = -settings_panel.size.x + show_rest_btn.size.x 
+	settings_panel.position.y = -settings_panel.size.y # - show_rest_btn.size.y
+	
+func set_terrain_snap(mterrain):
+	if mterrain == null:
+		snap_checkbox.button_pressed = false
+		snap_checkbox.visible = false
+		mterrain_for_snap = null
+	else:	
+		mterrain_for_snap = mterrain		
+		snap_checkbox.button_pressed = true
+		snap_checkbox.visible = true
 
 func show_mpath_help_window():
-	add_child( preload("res://addons/m_terrain/gui/mpath_help_popup.tscn").instantiate())
+	var help_window = preload("res://addons/m_terrain/gui/mpath_help_popup.tscn").instantiate()
+	add_child(help_window)
+	help_window.size.x = 25 * theme.default_font_size
+	help_window.size.y = 24 * theme.default_font_size
+
+func _on_show_rest_minimum_size_changed():
+	_on_show_rest_toggled(settings_panel.visible)

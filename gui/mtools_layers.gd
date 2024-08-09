@@ -6,13 +6,14 @@ signal layer_changed
 @onready var layers_container:Control = find_child("layer_item_container")
 @onready var add_layer_button: Button = find_child("add_layer_button")
 @onready var merge_button: Button = find_child("merge_button")
+@onready var layer_controls: Control = find_child("layer_controls")
 var active_terrain: MTerrain = null
 var active_heightmap_layer = ""
 
 var hide_icon = preload("res://addons/m_terrain/icons/hidden.png")
 var show_icon = preload("res://addons/m_terrain/icons/show.png")
 var layer_item_scene = preload("res://addons/m_terrain/gui/mtools_layer_item.tscn")
-var stylebox_selected = preload("res://addons/m_terrain/gui/stylebox_selected.tres")
+var stylebox_selected = preload("res://addons/m_terrain/gui/styles/stylebox_selected.tres")
 
 var brush_control: Control
 
@@ -22,7 +23,7 @@ var confirmation_popup_scene = preload("res://addons/m_terrain/gui/mtools_layer_
 func _ready():
 	var panel = get_child(0)
 	panel.visible = false
-	panel.position.y = -panel.size.y
+	panel.position.y = -panel.size.y-2
 	panel.gui_input.connect(fix_gui_input)
 	#TO DO: add a confirmation dialog "Are you sure you want to merge layers?"
 	merge_button.pressed.connect(merge_all_heightmap_layers)
@@ -38,12 +39,12 @@ func init_height_layers(mterrain:MTerrain):
 	for child in layers_container.get_children():
 		child.queue_free()
 		layers_container.remove_child(child)
-	add_layer_button.visible = true
-	merge_button.visible = true
+	layer_controls.visible = true
 	for layer in active_terrain.heightmap_layers:	
 		var layer_item = layer_item_scene.instantiate()
 		layer_item.name = layer		
 		layers_container.add_child(layer_item)
+		layer_item.custom_minimum_size = custom_minimum_size
 		layer_item.init_for_heightmap()
 		layer_item.layer_selected.connect(change_heightmap_layer_selection)
 		layer_item.layer_visibility_changed.connect(toggle_heightmap_layer_visibility)
@@ -125,8 +126,7 @@ func init_color_layers(mterrain:MTerrain, brush_button):
 	for child in layers_container.get_children():
 		child.queue_free()
 		layers_container.remove_child(child)
-	add_layer_button.visible = false
-	merge_button.visible = false
+	layer_controls.visible = false
 	
 	var layer_group_id = 0	
 	brush_control = brush_button

@@ -13,7 +13,7 @@ var more_options_icon = preload("res://addons/m_terrain/icons/more_options_icon.
 func _ready():
 	var panel = get_child(0)
 	panel.visible = false
-	panel.position.y = -panel.size.y -4
+	panel.position.y = -panel.size.y-1
 	
 	item_container = find_child("edit_mode_item_container")
 	exit_edit_mode_button = get_node("../edit_mode_exit_button")		

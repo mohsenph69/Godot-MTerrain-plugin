@@ -32,10 +32,10 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><path
-       style="fill:none;stroke:#ececec;stroke-width:0.965;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#e0e0e0;stroke-width:0.965;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
        d="M 1.0805693,7.7399514 C 2.7222217,7.6717214 4.0123736,6.4827555 5.0526706,5.3274411 6.0164634,4.3132647 7.1620517,3.2020473 8.6490726,3.1606773 c 1.2716075,-0.0015 2.3017224,0.8854237 3.0622164,1.8194791 0.966085,1.1242914 1.902045,2.456259 3.397772,2.892416 0.245219,0.07095 0.499315,0.113183 0.754763,0.117936"
        id="path1" /><path
-       style="fill:none;stroke:#ececec;stroke-width:0.736548;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;stroke:#e0e0e0;stroke-width:0.736548;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
        d="M 7.5928061,9.8843892 V 14.307251 H 9.2365896 V 9.9057362 H 11.350026 L 8.5000892,7.0558007 5.7889139,9.8737152 Z"
        id="path2"
        sodipodi:nodetypes="cccccccc" /></g></svg>

@@ -5,6 +5,7 @@ type="CompressedTexture2D"
 uid="uid://6ibn1gduso81"
 path="res://.godot/imported/merge_layers_icon.svg-a7f760c4101101940d873cf31df839a3.ctex"
 metadata={
+"has_editor_variant": true,
 "vram_texture": false
 }
 
@@ -33,5 +34,5 @@ process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
 svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
+editor/scale_with_editor_scale=true
+editor/convert_colors_with_editor_theme=true

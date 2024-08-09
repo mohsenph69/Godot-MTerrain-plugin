@@ -3,14 +3,14 @@ extends Control
 
 ##############################################################
 # 							MTools
-#	1. m_terrain.gd sets mask, decal, human on enter_tree
+#	1. m_terrain.gd sets mask, decal, and human on enter_tree()
 #   2. User selects a node
 #	   This calls edit_mode_button.init_edit_mode_options()
 #      This populates the list of possible edit modes.	   
 #	3. User selectes edit mode by clicking on edit_mode_button,
-#	   This calls set_edit_mode()
+#	   This calls mtools.set_edit_mode()
 #	   This sets the active_object and current_mode  
-#   4. This sets appropriate "layers" (height or paint)
+#   4. This sets appropriate "layers" (heightmap or paint) 
 #	   This sets appropriate "brushes" (height, color, grass, nav)
 #      If mpath, show mpath menu
 #	   If mcurve_mesh, show mcurve_mesh menu
@@ -52,6 +52,7 @@ signal edit_mode_changed
 @onready var mcurve_mesh = find_child("mcurve_mesh")
 @onready var brush_size_control: Control = find_child("brush_size")
 
+@onready var mtools_root = find_child("mtools_root")
 
 @onready var popup_buttons = [
 	edit_mode_button,
@@ -78,11 +79,13 @@ func _ready():
 	timer = Timer.new()
 	timer.timeout.connect(func(): current_popup_button.button_pressed = false)
 	add_child(timer)
-	
+	update_theme()
 	for button in popup_buttons:
 		init_popup_button_signals(button)	
 
 	edit_mode_button.edit_mode_changed.connect(set_edit_mode)		
+
+	theme_changed.connect(update_theme)
 
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
@@ -216,16 +219,17 @@ func process_input(event):
 			
 			if Input.is_action_just_released("mterrain_mask_size_increase") or Input.is_action_just_released("mterrain_mask_size_decrease"):
 				paint_mask_resize_speed=1
-			if Input.is_action_just_released("mterrain_brush_size_increase") or Input.is_action_just_pressed("mterrain_brush_size_decrease"):
+			if Input.is_action_just_released("mterrain_brush_size_increase") or Input.is_action_just_released("mterrain_brush_size_decrease"):
 				paint_brush_resize_speed=1				
-			#if event.keycode == KEY_EQUAL or event.keycode == KEY_PLUS:
-			if Input.is_action_just_pressed("mterrain_brush_size_increase"):				
+				
+			#if event.keycode == KEY_BRACKETLEFT or event.keycode == KEY_BRACKETRIGHT:
+			if Input.is_action_pressed("mterrain_brush_size_increase"):				
 				paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
 				brush_decal.set_brush_size(brush_decal.get_brush_size() + floor(paint_brush_resize_speed))
 				brush_size_control.update_value(brush_decal.get_brush_size())
 				return true					
 			#elif event.keycode == KEY_MINUS:
-			elif Input.is_action_just_pressed("mterrain_brush_size_decrease"):				
+			elif Input.is_action_pressed("mterrain_brush_size_decrease"):				
 				paint_brush_resize_speed = min(paint_brush_resize_speed+0.1,max_paint_brush_resize_speed)
 				brush_decal.set_brush_size(brush_decal.get_brush_size() - floor(paint_brush_resize_speed))
 				brush_size_control.update_value(brush_decal.get_brush_size())
@@ -268,11 +272,12 @@ func request_hide():
 
 func request_show():
 	visible = true
+	_on_resized()
 	update_edit_mode_options()
 
 func deactivate_editing():	
 	if is_instance_valid(edit_mode_button):
-		edit_mode_button.text = "edit terrain"
+		edit_mode_button.text = ""
 	
 	edit_mode_button.exit_edit_mode_button.visible = false
 	brush_decal.visible = false
@@ -299,6 +304,11 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	
 	if object is MPath:		
 		mpath_gizmo_gui.visible = true
+		var active_mterrain = get_active_mterrain()
+		if active_mterrain and active_mterrain.is_grid_created():
+			mpath_gizmo_gui.set_terrain_snap(active_mterrain)
+		else:
+			mpath_gizmo_gui.set_terrain_snap(null)
 		object.update_gizmos()
 	elif object is MCurveMesh:
 		mcurve_mesh.set_curve_mesh(object)
@@ -405,3 +415,35 @@ func _on_splatmap_import_button_pressed() -> void:
 func _on_image_creator_button_pressed() -> void:
 	request_image_creator.emit()
 #endregion	
+
+#region theme: sizes and colors etc
+func _on_resized():		
+	if not has_node("VSplitContainer") or not mtools_root:
+		call_deferred( "_on_resized" )	
+		return
+	var vsplit  = $VSplitContainer
+	var max_size = get_viewport_rect().size.y / 16 + 2
+	var min_size = get_viewport_rect().size.y / 32
+	vsplit.size.y = max_size
+	vsplit.position.y = -vsplit.size.y
+	#print(vsplit.split_offset, " and minsize: ", min_size, " and max: ", max_size)
+	vsplit.split_offset = clamp(vsplit.split_offset, -max_size,-min_size)
+	resize_children_recursive(mtools_root, clamp(mtools_root.size.y, min_size, max_size ))
+	theme.default_font_size = clamp( clamp(mtools_root.size.y, min_size, max_size) /2 , 12,32)
+	
+func resize_children_recursive(parent, new_size):
+	for child in parent.get_children():
+		if child is Control and not child is ItemList and not child is LineEdit and not child is Label:
+			child.custom_minimum_size.x = new_size
+			child.custom_minimum_size.y = new_size		
+		resize_children_recursive(child, new_size)
+
+func update_theme():	
+	var base_color = EditorInterface.get_editor_settings().get_setting("interface/theme/base_color")	
+	var stylebox = preload("res://addons/m_terrain/gui/styles/popup_panel_stylebox.tres")
+	if stylebox.bg_color != base_color:
+		stylebox.set("bg_color", base_color)	
+		
+func _on_v_split_container_dragged(offset):
+	_on_resized()
+#endregion

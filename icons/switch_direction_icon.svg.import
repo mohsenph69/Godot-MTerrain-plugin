@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bw2njdr7ynhtk"
-path="res://.godot/imported/settings_icon.svg-3542b39b807f7b578dc7af22d8ab8fd7.ctex"
+uid="uid://ckrq26s3bkih3"
+path="res://.godot/imported/switch_direction_icon.svg-685456fe990114ea89d3df8486e9ed04.ctex"
 metadata={
 "has_editor_variant": true,
 "vram_texture": false
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/m_terrain/icons/settings_icon.svg"
-dest_files=["res://.godot/imported/settings_icon.svg-3542b39b807f7b578dc7af22d8ab8fd7.ctex"]
+source_file="res://addons/m_terrain/icons/switch_direction_icon.svg"
+dest_files=["res://.godot/imported/switch_direction_icon.svg-685456fe990114ea89d3df8486e9ed04.ctex"]
 
 [params]
 

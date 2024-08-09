@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://addons/m_terrain/gui/terrain_info.gd" id="1_wd31j"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/Save config.gd" id="2_iihim"]
-[ext_resource type="StyleBox" uid="uid://cjys1hccuc4wx" path="res://addons/m_terrain/gui/styles/terrain_infor_lable_stylebox.tres" id="2_mc1wb"]
+[ext_resource type="StyleBox" uid="uid://cjys1hccuc4wx" path="res://addons/m_terrain/gui/styles/terrain_info_label_stylebox.tres" id="2_mc1wb"]
 [ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="3_41fbb"]
 [ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="4_cuomh"]
 
