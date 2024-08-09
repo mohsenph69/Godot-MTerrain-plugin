@@ -775,7 +775,7 @@ func change_active_point(new_active_point:int):
 		return
 	gui.tilt_num.set_editable(true)
 	gui.scale_num.set_editable(true)
-	gui.tilt_num.set_value_no_signal(curve.get_point_tilt(active_point)*2*PI)
+	gui.tilt_num.set_value_no_signal(curve.get_point_tilt(active_point))
 	gui.scale_num.set_value_no_signal(curve.get_point_scale(active_point))
 
 func toggle_connection()->bool:
@@ -917,7 +917,7 @@ func on_point_val_changed(prop_name,val):
 	if not curve: return false
 	if not curve.has_point(active_point): return false
 	if prop_name == "tilt":
-		curve.set_point_tilt(active_point,val*2*PI)
+		curve.set_point_tilt(active_point,val)
 	elif prop_name == "scale":
 		curve.set_point_scale(active_point,val)
 	path.update_gizmos()

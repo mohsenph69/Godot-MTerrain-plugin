@@ -168,6 +168,7 @@ theme_override_font_sizes/font_size = 21
 text = "?"
 
 [node name="show_rest" type="Button" parent="HBoxContainer"]
+visible = false
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 tooltip_text = "More settings"
@@ -175,7 +176,6 @@ icon = ExtResource("10_wuoaw")
 expand_icon = true
 
 [node name="settings_panel" type="Panel" parent="HBoxContainer/show_rest"]
-visible = false
 layout_mode = 1
 offset_top = -238.0
 offset_right = 299.0
