@@ -73,7 +73,7 @@ class MCurveTerrain : public RefCounted {
     void paint_on_conns(const PackedInt64Array& conn_ids);
 
     void clear_grass_aabb(MGrass* grass,AABB aabb,float radius_plus_offset);
-    void clear_grass(MGrass* grass,const PackedInt64Array& conn_ids,float radius_plus_offset);
+    void clear_grass(const PackedInt64Array& conn_ids,MGrass* grass,float radius_plus_offset);
     void modify_grass(const PackedInt64Array& conn_ids,MGrass* grass,float g_start_offset,float g_radius,bool add);
 };
 #endif

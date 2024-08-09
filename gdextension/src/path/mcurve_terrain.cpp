@@ -64,6 +64,7 @@ void MCurveTerrain::_bind_methods(){
     ClassDB::bind_method(D_METHOD("clear_paint","conn_ids"), &MCurveTerrain::clear_paint);
 
     ClassDB::bind_method(D_METHOD("clear_grass_aabb","grass","aabb","radius_plus_offset"), &MCurveTerrain::clear_grass_aabb);
+    ClassDB::bind_method(D_METHOD("clear_grass","conn_ids","grass","radius_plus_offset"), &MCurveTerrain::clear_grass);
     ClassDB::bind_method(D_METHOD("modify_grass","conn_ids","grass","start_offset","radius","add"), &MCurveTerrain::modify_grass);
 }
 
@@ -473,7 +474,7 @@ void MCurveTerrain::clear_grass_aabb(MGrass* grass,AABB aabb,float radius_plus_o
 }
 
 
-void MCurveTerrain::clear_grass(MGrass* grass,const PackedInt64Array& conn_ids,float radius_plus_offset){
+void MCurveTerrain::clear_grass(const PackedInt64Array& conn_ids,MGrass* grass,float radius_plus_offset){
     ERR_FAIL_COND(curve==nullptr);
     ERR_FAIL_COND(grid==nullptr);
     ERR_FAIL_COND(terrain==nullptr);
@@ -486,6 +487,7 @@ void MCurveTerrain::clear_grass(MGrass* grass,const PackedInt64Array& conn_ids,f
     }
     
     float interval_meter = grass->get_grass_data()->density * 0.4;
+    radius_plus_offset += interval_meter;
     for(int c=0; c < conn_ids.size(); c++){
         int64_t conn_id = conn_ids[c];
         ERR_CONTINUE(!curve->has_conn(conn_id));

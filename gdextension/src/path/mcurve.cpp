@@ -62,6 +62,7 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_point_conn_points_recursive","p_index"), &MCurve::get_point_conn_points_recursive);
     ClassDB::bind_method(D_METHOD("get_point_conns","p_index"), &MCurve::get_point_conns);
     ClassDB::bind_method(D_METHOD("get_point_conns_inc_neighbor_points","p_index"), &MCurve::get_point_conns_inc_neighbor_points);
+    ClassDB::bind_method(D_METHOD("growed_conn","conn_ids"), &MCurve::growed_conn);
     ClassDB::bind_method(D_METHOD("get_point_conn_types","p_index"), &MCurve::get_point_conn_types);
     ClassDB::bind_method(D_METHOD("get_point_position","p_index"), &MCurve::get_point_position);
     ClassDB::bind_method(D_METHOD("get_point_in","p_index"), &MCurve::get_point_in);
@@ -785,6 +786,21 @@ PackedInt64Array MCurve::get_point_conns_inc_neighbor_points(int32_t p_index) co
                 if(true){
                     out.push_back(cc.id);
                 }
+            }
+        }
+    }
+    return out;
+}
+
+PackedInt64Array MCurve::growed_conn(PackedInt64Array conn_ids) const{
+    PackedInt64Array out;
+    for(int i=0; i < conn_ids.size(); i++){
+        Conn cc(conn_ids[i]);
+        PackedInt64Array pc = get_point_conns(cc.p.a);
+        pc.append_array(get_point_conns(cc.p.b));
+        for(int j=0; j < pc.size(); j++){
+            if(out.find(pc[j]==-1)){
+                out.push_back(pc[j]);
             }
         }
     }
