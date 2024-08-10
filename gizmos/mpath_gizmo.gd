@@ -10,7 +10,7 @@ const bake_interval:float = 0.2
 
 var handle00_tex = preload("res://addons/m_terrain/icons/handle00.png")
 var handle01_tex = preload("res://addons/m_terrain/icons/handle01.png")
-var icon_collapse = preload("res://addons/m_terrain/icons/collapse_normal.svg")
+#var icon_collapse = preload("res://addons/m_terrain/icons/collapse_normal.svg")
 var icon_rotation = preload("res://addons/m_terrain/icons/rotation.svg")
 
 var mterrain_plugin:EditorPlugin

@@ -156,6 +156,7 @@ icon_alignment = 1
 expand_icon = true
 
 [node name="settings_panel" type="PanelContainer" parent="HBoxContainer/show_rest"]
+visible = false
 layout_mode = 1
 offset_left = -514.0
 offset_top = -309.0

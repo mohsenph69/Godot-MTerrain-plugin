@@ -10,7 +10,7 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2e40r"]
 
 [resource]
-default_font_size = 12
+default_font_size = 24
 Button/styles/hover = null
 Button/styles/normal = ExtResource("1_set7o")
 Button/styles/pressed = SubResource("StyleBoxEmpty_2e40r")
