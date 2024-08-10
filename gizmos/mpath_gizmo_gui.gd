@@ -15,7 +15,7 @@ extends Control
 @onready var tilt_num = find_child("tilt")
 @onready var scale_num = find_child("scale")
 @onready var depth_test_checkbox = find_child("depth_test")
-@onready var xz_handle_lock = find_child("xz_handle_lock")
+#@onready var xz_handle_lock = find_child("xz_handle_lock")
 @onready var select_lock = find_child("select_lock")
 @onready var debug_col = find_child("debug_col")
 @onready var sort_increasing_btn = find_child("sort_increasing")
@@ -63,7 +63,7 @@ func is_mirror_lenght()->bool:
 	return mirror_lenght_checkbox.button_pressed
 
 func is_xz_handle_lock()->bool:
-	return xz_handle_lock.button_pressed
+	return y_lock.button_pressed
 
 func get_terrain_for_snap():
 	if mterrain_for_snap and snap_checkbox.button_pressed:
