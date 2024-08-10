@@ -39,14 +39,12 @@ var gizmo:
 		gizmo.active_point_position_updated.connect(update_active_point_label)
 		
 		if is_instance_valid(x_lock):
-			connect_lock_mode_signals()
-		else:
-			print("NO XLOCK")
+			connect_lock_mode_signals()		
 		
 func connect_lock_mode_signals():
-		x_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
-		y_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
-		z_lock.pressed.connect(gizmo.update_lock_mode.bind(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+		x_lock.pressed.connect(func(): gizmo.update_lock_mode(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+		y_lock.pressed.connect(func(): gizmo.update_lock_mode(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
+		z_lock.pressed.connect(func(): gizmo.update_lock_mode(x_lock.button_pressed, y_lock.button_pressed,z_lock.button_pressed))
 
 
 enum MODE {

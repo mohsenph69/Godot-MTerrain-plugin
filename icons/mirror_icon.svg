@@ -21,9 +21,9 @@
    inkscape:pageopacity="0"
    inkscape:pagecheckerboard="0"
    inkscape:deskcolor="#d1d1d1"
-   inkscape:zoom="42.5625"
-   inkscape:cx="16"
-   inkscape:cy="16"
+   inkscape:zoom="21.28125"
+   inkscape:cx="14.519824"
+   inkscape:cy="11.183554"
    inkscape:current-layer="Icons" />
 <style
    type="text/css"
@@ -41,12 +41,12 @@
    class="st0"
    points="12,22 3,27 3,5 12,10 "
    id="polygon1"
-   style="stroke:#e0e0e0" />
+   style="stroke:#e0e0e0;stroke-width:1.4;stroke-dasharray:none" />
 <polygon
    class="st0"
    points="20,10 29,5 29,27 20,22 "
    id="polygon2"
-   style="stroke:#e0e0e0" />
+   style="stroke:#e0e0e0;stroke-width:1.4;stroke-dasharray:none" />
 <line
    class="st0"
    x1="16"

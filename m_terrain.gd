@@ -97,7 +97,7 @@ func _enter_tree():
 		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
 		
 		tsnap = preload("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
-		tsnap.pressed.connect(tsnap_pressed)
+		tsnap.pressed.connect(func(): tsnap_pressed(tools.get_active_mterrain()))
 		tsnap.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)				
 				

@@ -27,8 +27,8 @@ offset_bottom = 23.0
 grow_horizontal = 2
 grow_vertical = 0
 rotation = -1.5708
-scale = Vector2(2, 2)
 mouse_filter = 1
+theme_type_variation = &"button_icon_only"
 
 [node name="label" type="Label" parent="."]
 layout_mode = 2

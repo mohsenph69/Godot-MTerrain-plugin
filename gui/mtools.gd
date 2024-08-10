@@ -26,7 +26,15 @@ extends Control
 #
 ###############################################################
 
+# fix icon-only button margins
+# fix brush bool-property button 
+# added ctrl mouse wheel to increase brush size
+# fixed xyz lock not working from buttons... 
+# right click cancel drag for mpath 
+# grass active button in panel
+# has_sublayer merge sublayer 
 
+# terrain walk mode
 
 #region Signals
 signal request_save
@@ -210,6 +218,15 @@ func set_active_object(object):
 		
 func process_input(event):
 	if current_edit_mode in [&"sculpt", &"paint"]:
+		if event is InputEventMouseButton and Input.is_key_pressed(KEY_CTRL):
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				brush_decal.set_brush_size(brush_decal.get_brush_size() *1.05)
+				brush_size_control.update_value(brush_decal.get_brush_size())
+				return true
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				brush_decal.set_brush_size(brush_decal.get_brush_size() /1.05)
+				brush_size_control.update_value(brush_decal.get_brush_size())
+				return true
 		if event is InputEventKey:			
 			brush_popup_button.process_input(event)
 			var paint_brush_resize_speed:float=1.0
@@ -303,6 +320,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	current_edit_mode = mode
 	
 	if object is MPath:		
+		deactivate_editing()
 		mpath_gizmo_gui.visible = true
 		var active_mterrain = get_active_mterrain()
 		if active_mterrain and active_mterrain.is_grid_created():
@@ -341,7 +359,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		mask_decal.active_terrain = object
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
-	elif object is MGrass:		
+	elif object is MGrass:				
 		paint_panel.visible = true
 		#clean up previous edit mode: grass, nav, and path stuff, then:	
 		layers_popup_button.visible = false
@@ -349,6 +367,10 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		brush_popup_button.init_grass_brushes()
 		mask_popup_button.toggle_grass_settings(true)
 		mask_decal.active_terrain = active_mterrain
+		if not object.active or not object.is_init():
+			object.active = true			
+			object.visible = true
+			get_active_mterrain().remove_grid()
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
 	elif object is MNavigationRegion3D:
@@ -357,6 +379,10 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		brush_popup_button.init_mnavigation_brushes()
 		object.set_npoints_visible(true)
 		mask_decal.active_terrain = active_mterrain
+		if not object.active:
+			object.active = true			
+			object.visible = true
+			get_active_mterrain().remove_grid()
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
 	

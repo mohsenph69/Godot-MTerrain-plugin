@@ -35,11 +35,9 @@ func set_absolute_terrain_pos(pos:Vector3, force =false):
 	if is_dirty:
 		update_active_image()
 	if orignal_image:
-		active_terrain.set_brush_mask(active_image)
-		print("set brush mask")
+		active_terrain.set_brush_mask(active_image)		
 	else:
-		active_terrain.disable_brush_mask()
-		print("disable brush mask")
+		active_terrain.disable_brush_mask()		
 	if is_being_edited or force:
 		var angle_pos = pos - angle_offset
 		angle_pos -= active_terrain.offset
