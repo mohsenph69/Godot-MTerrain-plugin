@@ -16,6 +16,8 @@ float MGrass::time_rollover_secs = 3600;
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
     ClassDB::bind_method(D_METHOD("is_init"), &MGrass::is_init);
+    ClassDB::bind_method(D_METHOD("has_sublayer"), &MGrass::has_sublayer);
+    ClassDB::bind_method(D_METHOD("merge_sublayer"), &MGrass::merge_sublayer);
     ClassDB::bind_method(D_METHOD("make_grass_dirty_by_pixel","x","y"), &MGrass::make_grass_dirty_by_pixel);
     ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
@@ -628,6 +630,13 @@ bool MGrass::has_sublayer(){
         return false;
     }
     return grass_data->backup_exist();
+}
+
+void MGrass::merge_sublayer(){
+    if(grass_data.is_null()){
+        return;
+    }
+    grass_data->backup_merge();
 }
 
 void MGrass::create_sublayer(){

@@ -104,6 +104,7 @@ class MGrass : public Node3D {
     void set_grass_sublayer_by_pixel(uint32_t px, uint32_t py, bool p_value);
     bool is_init();
     bool has_sublayer();
+    void merge_sublayer();
     void create_sublayer();
     void clear_grass_sublayer_by_pixel(uint32_t px, uint32_t py);
     bool get_grass_by_pixel(uint32_t px, uint32_t py);
