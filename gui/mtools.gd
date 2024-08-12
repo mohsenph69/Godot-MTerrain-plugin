@@ -83,7 +83,7 @@ var mask_decal # set by m_terrain.gd on enter_tree()
 var human_male # set by m_terrain.gd on enter_tree()
 var edit_human_position = false
 @onready var human_button = find_child("human_male")
-
+@onready var grass_merge_sublayer_button = find_child("grass_merge_sublayer")
 #region Initialisations
 func _ready():	
 	timer = Timer.new()
@@ -346,6 +346,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	if object is MTerrain:				
 		paint_panel.visible = true
 		layers_popup_button.visible = true
+		grass_merge_sublayer_button.visible = false
 		#to do: clean up previous edit mode: grass, nav, and path stuff?, then:		
 		for connection in layers_popup_button.get_signal_connection_list("layer_changed"):
 			connection.signal.disconnect(connection.callable)					
@@ -363,7 +364,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		mask_decal.active_terrain = object
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
-	elif object is MGrass:				
+	elif object is MGrass:
 		paint_panel.visible = true
 		#clean up previous edit mode: grass, nav, and path stuff, then:	
 		layers_popup_button.visible = false
@@ -372,12 +373,15 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		mask_popup_button.toggle_grass_settings(true)
 		mask_decal.active_terrain = active_mterrain
 		if not object.active or not object.is_init():
-			object.active = true			
+			object.active = true
 			object.visible = true
 			get_active_mterrain().remove_grid()
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
+		if object.has_sublayer():
+			grass_merge_sublayer_button.visible = true
 	elif object is MNavigationRegion3D:
+		grass_merge_sublayer_button.visible = false	
 		paint_panel.visible = true
 		layers_popup_button.visible = false
 		brush_popup_button.init_mnavigation_brushes()
@@ -480,3 +484,17 @@ func update_theme():
 func _on_v_split_container_dragged(offset):
 	_on_resized()
 #endregion
+
+
+func _on_grass_merge_sublayer_pressed():
+	if not active_object is MGrass:
+		push_error("trying to merge grass sublayer, but active object is not MGrass")
+		return
+	if not active_object.is_init():
+		push_error("trying to merge grass sublayer, but grass is not init()")
+		return
+	if not active_object.has_sublayer():
+		push_error("trying to merge grass sublayer, but grass doesn't have sublayer")
+		return
+	active_object.merge_sublayer() 
+
