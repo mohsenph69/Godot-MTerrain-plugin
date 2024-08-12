@@ -84,6 +84,11 @@ var human_male # set by m_terrain.gd on enter_tree()
 var edit_human_position = false
 @onready var human_button = find_child("human_male")
 @onready var grass_merge_sublayer_button = find_child("grass_merge_sublayer")
+@onready var walk_terrain_button = find_child("walk_terrain")
+var walking_terrain = false
+var editor_camera: Camera3D = null #this is set by forward_gui_input
+var walk_speed = 5 #in meters per seccond
+
 #region Initialisations
 func _ready():	
 	timer = Timer.new()
@@ -281,6 +286,31 @@ func process_input(event):
 		#brush_list_option.select(hole_brush_id)		
 	#elif brush_id == hole_brush_id:
 		#brush_list_option.select(raise_brush_id)		
+
+func process_input_terrain_walk(cam:Camera3D, event:InputEvent):
+	if event is InputEventMouseButton:
+		if event.button_index in [MOUSE_BUTTON_MASK_RIGHT, MOUSE_BUTTON_MASK_LEFT]:
+			walk_terrain_button.button_pressed = false
+			return true
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP: 
+			walk_speed *= 1.03
+			return true
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN: 
+			walk_speed /= 1.03
+			return true
+	if event is InputEventMouseMotion:
+		cam.rotation.y += -event.relative.x/100
+		cam.rotation.x = clamp(cam.rotation.x -event.relative.y/100, -PI*0.3, PI*0.35)
+		return true
+
+func _process(delta):
+	if walking_terrain and editor_camera:
+		var multiplier = 1
+		if Input.is_key_pressed(KEY_SHIFT):
+			multiplier = 2
+		editor_camera.position += editor_camera.basis.z * Input.get_axis("mterrain_walk_forward", "mterrain_walk_backward") * walk_speed * delta * multiplier
+		editor_camera.position += editor_camera.basis.x * Input.get_axis("mterrain_walk_left", "mterrain_walk_right") * walk_speed * delta * multiplier
+		editor_camera.position.y = get_active_mterrain().get_height(editor_camera.global_position) + 1.6
 
 func on_scene_changed(_root):
 	set_edit_mode(null)
@@ -498,3 +528,15 @@ func _on_grass_merge_sublayer_pressed():
 		return
 	active_object.merge_sublayer() 
 
+
+
+func _on_walk_terrain_toggled(toggled_on):
+	if not get_active_mterrain(): 
+		push_error("trying to walk mterrain, but there is no active mterrain")
+		walk_terrain_button.button_pressed = false
+		return
+	walking_terrain = toggled_on
+	if toggled_on:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE		

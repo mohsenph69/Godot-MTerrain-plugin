@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://bdxfu7h15wijq"]
+[gd_scene load_steps=27 format=3 uid="uid://bdxfu7h15wijq"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_avwfe"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
@@ -20,6 +20,7 @@
 [ext_resource type="Texture2D" uid="uid://rtqaiuii2jml" path="res://addons/m_terrain/icons/no_mask_icon.svg" id="19_epiyr"]
 [ext_resource type="Texture2D" uid="uid://b8xvuorm57o1s" path="res://addons/m_terrain/icons/invert_icon_normal.svg" id="20_8anom"]
 [ext_resource type="Texture2D" uid="uid://tmhtthjk2rb4" path="res://addons/m_terrain/icons/invert_icon_inverted.svg" id="21_lodvs"]
+[ext_resource type="Texture2D" uid="uid://2dpvr41alpt8" path="res://addons/m_terrain/icons/walk_icon.svg" id="22_c7tyl"]
 [ext_resource type="PackedScene" uid="uid://btfhp7mnhc5nj" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.tscn" id="23_i5qr3"]
 [ext_resource type="PackedScene" uid="uid://b6wfdaqojnwju" path="res://addons/m_terrain/gui/mtools_mask_list.tscn" id="23_qb0vt"]
 [ext_resource type="PackedScene" uid="uid://b76ioum2i7yjy" path="res://addons/m_terrain/gizmos/mcurve_mesh_gui.tscn" id="28_x63ge"]
@@ -504,7 +505,7 @@ custom_minimum_size = Vector2(32.6875, 32.6875)
 layout_mode = 1
 offset_left = -107.0
 offset_top = -187.8
-offset_right = 1746.0
+offset_right = 1669.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel"]
@@ -608,7 +609,7 @@ custom_minimum_size = Vector2(32.6875, 32.6875)
 layout_mode = 1
 offset_left = -192.0
 offset_top = -265.8
-offset_right = 1661.0
+offset_right = 1584.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2"]
@@ -753,13 +754,25 @@ layout_mode = 2
 icon = ExtResource("11_0dtgq")
 expand_icon = true
 
-[node name="human_male" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel"]
+[node name="human_male" type="Button" parent="VSplitContainer/mtools_root/hbox"]
 custom_minimum_size = Vector2(32.6875, 32.6875)
 layout_mode = 2
 mouse_filter = 1
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 icon = ExtResource("4_rgpuu")
+alignment = 0
+icon_alignment = 2
+expand_icon = true
+
+[node name="walk_terrain" type="Button" parent="VSplitContainer/mtools_root/hbox"]
+custom_minimum_size = Vector2(32.6875, 32.6875)
+layout_mode = 2
+tooltip_text = "Walk on terrain"
+mouse_filter = 1
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("22_c7tyl")
 alignment = 0
 icon_alignment = 2
 expand_icon = true
@@ -786,4 +799,5 @@ layout_mode = 2
 [connection signal="pressed" from="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/grass_merge_sublayer" to="." method="_on_grass_merge_sublayer_pressed"]
 [connection signal="minimum_size_changed" from="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel" to="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button" method="_on_resized"]
 [connection signal="minimum_size_changed" from="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2" to="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button" method="_on_h_box_container_resized"]
-[connection signal="toggled" from="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/human_male" to="." method="_on_human_male_toggled"]
+[connection signal="toggled" from="VSplitContainer/mtools_root/hbox/human_male" to="." method="_on_human_male_toggled"]
+[connection signal="toggled" from="VSplitContainer/mtools_root/hbox/walk_terrain" to="." method="_on_walk_terrain_toggled"]

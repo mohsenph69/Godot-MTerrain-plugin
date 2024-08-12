@@ -254,6 +254,12 @@ func _forward_3d_gui_input(viewport_camera, event):
 		var pos:Vector3 = viewport_camera.global_position
 		ray_col = active_terrain.get_ray_collision_point(pos,ray,collision_ray_step,1000)
 	
+	if tools.walking_terrain:
+		tools.editor_camera = viewport_camera
+		if tools.process_input_terrain_walk(viewport_camera, event):
+			return AFTER_GUI_INPUT_STOP
+	
+	
 	for terrain in tools.get_all_mterrain():
 		terrain.set_editor_camera(viewport_camera)	
 	######################## HANDLE CURVE GIZMO ##############################
@@ -396,6 +402,12 @@ func set_default_keymap():
 		{"name": "mterrain_mask_rotate_clockwise", "keycode": KEY_L, "pressed": true, "shift": false, "ctrl": false, "alt": false},
 		{"name": "mterrain_mask_rotate_counter_clockwise", "keycode": KEY_K, "pressed": true, "shift": false, "ctrl": false, "alt": false},
 		{"name": "mterrain_mask_rotation_reset", "keycode": KEY_SEMICOLON, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+
+		{"name": "mterrain_walk_forward", "keycode": KEY_W, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_walk_backward", "keycode": KEY_S, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_walk_left", "keycode": KEY_A, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+		{"name": "mterrain_walk_right", "keycode": KEY_D, "pressed": true, "shift": false, "ctrl": false, "alt": false},
+
 
 		{"name": "mpath_toggle_mode", "keycode": KEY_QUOTELEFT, "pressed": true, "shift": false, "ctrl": false, "alt": false},
 		{"name": "mpath_toggle_mirror", "keycode": KEY_M, "pressed": true, "shift": false, "ctrl": false, "alt": false},
