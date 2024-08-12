@@ -31,7 +31,7 @@ extends Control
 # added ctrl mouse wheel to increase brush size
 # fixed xyz lock not working from buttons... 
 # right click cancel drag for mpath 
-# grass active button in panel
+# grass auto make active when entering paint mode
 # has_sublayer merge sublayer 
 
 # terrain walk mode
@@ -284,6 +284,7 @@ func on_scene_changed(_root):
 	set_edit_mode(null)
 
 func request_hide():	
+	
 	set_edit_mode(null, null)
 	visible = false
 
@@ -295,6 +296,7 @@ func request_show():
 func deactivate_editing():	
 	if is_instance_valid(edit_mode_button):
 		edit_mode_button.text = ""
+		edit_mode_button.theme_type_variation = "button_icon_only"
 	
 	edit_mode_button.exit_edit_mode_button.visible = false
 	brush_decal.visible = false
@@ -320,7 +322,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	current_edit_mode = mode
 	
 	if object is MPath:		
-		deactivate_editing()
+		#deactivate_editing()
 		mpath_gizmo_gui.visible = true
 		var active_mterrain = get_active_mterrain()
 		if active_mterrain and active_mterrain.is_grid_created():
