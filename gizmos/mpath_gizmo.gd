@@ -472,7 +472,7 @@ func _has_gizmo(for_node_3d):
 	return for_node_3d is MPath
 
 func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+	if moving_point and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		moving_point = false
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 	#Process tilt, scale, and right-click cancel
@@ -482,8 +482,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 		if not curve or not curve.has_point(active_point):
 			value_mode = VALUE_MODE.NONE					
 			return
-		if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling
-			
+		if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling		
 			curve.set_point_scale(active_point,init_scale)
 			curve.set_point_tilt(active_point,init_tilt)
 			gui.tilt_num.set_value(init_tilt)
