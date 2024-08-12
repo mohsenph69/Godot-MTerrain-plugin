@@ -271,8 +271,16 @@ func _forward_3d_gui_input(viewport_camera, event):
 				if paint_mode_handle(event):
 					return AFTER_GUI_INPUT_STOP			
 			if tools.human_male.visible:
-				tools.human_male.global_position = ray_col.get_collision_position()
-				tools.human_male.visible = true
+				if tools.edit_human_position:
+					tools.human_male.global_position = ray_col.get_collision_position()
+				if event is InputEventMouseButton:
+					if event.button_index == MOUSE_BUTTON_LEFT:
+						tools.edit_human_position = false
+					if event.button_index == MOUSE_BUTTON_RIGHT and tools.edit_human_position:
+						tools._on_human_male_toggled(false)
+					if event.button_index == MOUSE_BUTTON_MIDDLE:
+						tools.edit_human_position = true
+						
 		else:
 			col_dis=1000000
 			tools.status_bar.disable_height_label()

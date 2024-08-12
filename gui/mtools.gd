@@ -81,6 +81,8 @@ var brush_manager:MBrushManager = MBrushManager.new()
 var brush_decal # set by m_terrain.gd on enter_tree()
 var mask_decal # set by m_terrain.gd on enter_tree()
 var human_male # set by m_terrain.gd on enter_tree()
+var edit_human_position = false
+@onready var human_button = find_child("human_male")
 
 #region Initialisations
 func _ready():	
@@ -297,7 +299,7 @@ func deactivate_editing():
 	if is_instance_valid(edit_mode_button):
 		edit_mode_button.text = ""
 		edit_mode_button.theme_type_variation = "button_icon_only"
-	
+	_on_human_male_toggled(false)
 	edit_mode_button.exit_edit_mode_button.visible = false
 	brush_decal.visible = false
 	mask_decal.visible = false	
@@ -411,7 +413,10 @@ func draw(brush_position):
 
 #region responding to signals
 func _on_human_male_toggled(button_pressed):	
+	edit_human_position = true
 	human_male.visible = button_pressed
+	if not human_button.button_pressed == button_pressed:
+		human_button.button_pressed = button_pressed
 
 #func set_save_button_disabled(disabled:bool):
 #	save_button.disabled = disabled

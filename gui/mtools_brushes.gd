@@ -58,6 +58,8 @@ func _toggled(toggled_on):
 func clear_brushes():
 	brush_container.clear()	
 	clear_property_element()
+	set("theme_override_styles/normal", null)
+	text = ""
 	for connection in brush_container.get_signal_connection_list("item_selected"):
 		connection.signal.disconnect(connection.callable)	
 
@@ -186,7 +188,7 @@ func brush_layer_selected(index, layer_group):
 		icon = brush_icon
 	else:
 		icon = null
-	#text = brush_container.get_item_text(index)
+	text = "" #brush_container.get_item_text(index)
 	tooltip_text = "Current brush: " + brush_container.get_item_text(index)
 	var color = brush_container.get_item_custom_bg_color(index)
 	if color:

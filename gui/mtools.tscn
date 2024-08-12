@@ -131,6 +131,7 @@ text = "Image Creator"
 alignment = 0
 
 [node name="transform_terrain_button" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer" node_paths=PackedStringArray("transform_window")]
+visible = false
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 mouse_filter = 1
@@ -144,17 +145,7 @@ custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 mouse_filter = 1
 button_pressed = true
-text = "hide status"
-
-[node name="human_male" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(42.7188, 42.7188)
-layout_mode = 2
-toggle_mode = true
-text = "Human Preview"
-icon = ExtResource("4_rgpuu")
-alignment = 0
-icon_alignment = 2
-expand_icon = true
+text = "Hide Status"
 
 [node name="info_btn" type="Button" parent="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(42.7188, 42.7188)
@@ -313,27 +304,32 @@ layout_mode = 2
 visible = false
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
+alignment = 1
 script = ExtResource("9_666yn")
 
 [node name="h_label" type="Label" parent="VSplitContainer/mtools_root/hbox/status_bar"]
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 text = "H: 321m"
+vertical_alignment = 1
 
 [node name="d_label" type="Label" parent="VSplitContainer/mtools_root/hbox/status_bar"]
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 text = "D: 620m"
+vertical_alignment = 1
 
 [node name="g_label" type="Label" parent="VSplitContainer/mtools_root/hbox/status_bar"]
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 text = "G: 271543"
+vertical_alignment = 1
 
 [node name="r_label" type="Label" parent="VSplitContainer/mtools_root/hbox/status_bar"]
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 text = "R:2"
+vertical_alignment = 1
 
 [node name="VSeparator3" type="VSeparator" parent="VSplitContainer/mtools_root/hbox/status_bar"]
 custom_minimum_size = Vector2(42.7188, 42.7188)
@@ -402,6 +398,7 @@ visible = false
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 tooltip_text = "Exit edit mode for MTerrain related nodes"
+theme_type_variation = &"button_icon_only"
 icon = ExtResource("11_0dtgq")
 expand_icon = true
 
@@ -483,6 +480,7 @@ size_flags_vertical = 3
 custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 2
 tooltip_text = "Current Brush. Click to show brush menu"
+theme_type_variation = &"button_icon_only"
 toggle_mode = true
 text = "Brush"
 expand_icon = true
@@ -494,7 +492,7 @@ custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 1
 offset_left = -107.0
 offset_top = -187.8
-offset_right = 1498.0
+offset_right = 1676.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel"]
@@ -598,7 +596,7 @@ custom_minimum_size = Vector2(42.7188, 42.7188)
 layout_mode = 1
 offset_left = -192.0
 offset_top = -265.8
-offset_right = 1413.0
+offset_right = 1591.0
 mouse_filter = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2"]
@@ -743,6 +741,17 @@ layout_mode = 2
 icon = ExtResource("11_0dtgq")
 expand_icon = true
 
+[node name="human_male" type="Button" parent="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel"]
+custom_minimum_size = Vector2(42.7188, 42.7188)
+layout_mode = 2
+mouse_filter = 1
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("4_rgpuu")
+alignment = 0
+icon_alignment = 2
+expand_icon = true
+
 [node name="mpath_gizmo_gui" parent="VSplitContainer/mtools_root/hbox" instance=ExtResource("23_i5qr3")]
 visible = false
 custom_minimum_size = Vector2(42.7188, 42.7188)
@@ -759,9 +768,9 @@ layout_mode = 2
 [connection signal="pressed" from="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer/heightmap_import_button" to="." method="_on_heightmap_import_button_pressed"]
 [connection signal="pressed" from="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer/image_creator_button" to="." method="_on_image_creator_button_pressed"]
 [connection signal="toggled" from="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer/hide_status" to="VSplitContainer/mtools_root/hbox/status_bar" method="toggle_visible"]
-[connection signal="toggled" from="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer/human_male" to="." method="_on_human_male_toggled"]
 [connection signal="pressed" from="VSplitContainer/mtools_root/hbox/options_button/PanelContainer/MarginContainer/VBoxContainer/info_btn" to="." method="_on_info_btn_pressed"]
 [connection signal="pressed" from="VSplitContainer/mtools_root/hbox/save_button" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="VSplitContainer/mtools_root/hbox/reload" to="." method="_on_reload_pressed"]
 [connection signal="minimum_size_changed" from="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button/Panel" to="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/brush_button" method="_on_resized"]
 [connection signal="minimum_size_changed" from="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button/Panel2" to="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/mask_button" method="_on_h_box_container_resized"]
+[connection signal="toggled" from="VSplitContainer/mtools_root/hbox/PaintControls/paint_panel/human_male" to="." method="_on_human_male_toggled"]
