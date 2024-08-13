@@ -308,7 +308,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		change_active_point(points_id)
 
 func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
-	if not moving_point or  lock_mode == LOCK_MODE.XYZ:
+	if not moving_point or lock_mode == LOCK_MODE.XYZ:
 		current_pos = init_pos
 	elif lock_mode == LOCK_MODE.NONE: 
 		return current_pos
@@ -351,6 +351,8 @@ func update_lock_mode(x,y,z):
 	if z:
 		lock_mode = LOCK_MODE.Z
 		return
+	lock_mode = LOCK_MODE.NONE
+		
 
 func _begin_handle_action(gizmo, id, is_secondary):
 	moving_point = true
@@ -695,7 +697,7 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 			if not lock_mode_temporary:
 				lock_mode_temporary = true
 				lock_mode_original = lock_mode		
-			lock_mode = LOCK_MODE.ZY
+			lock_mode = LOCK_MODE.ZY if lock_mode != LOCK_MODE.ZY else LOCK_MODE.NONE 
 			lock_mode_changed.emit(lock_mode)			
 			if path: path.update_gizmos()
 			return true
@@ -704,7 +706,7 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 			if not lock_mode_temporary:
 				lock_mode_temporary = true
 				lock_mode_original = lock_mode		
-			lock_mode = LOCK_MODE.XZ
+			lock_mode = LOCK_MODE.XZ  if lock_mode != LOCK_MODE.XZ else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
@@ -713,7 +715,7 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 			if not lock_mode_temporary:
 				lock_mode_temporary = true
 				lock_mode_original = lock_mode		
-			lock_mode = LOCK_MODE.XY
+			lock_mode = LOCK_MODE.XY if lock_mode != LOCK_MODE.XY else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
@@ -722,7 +724,7 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 			if not lock_mode_temporary:
 				lock_mode_temporary = true
 				lock_mode_original = lock_mode		
-			lock_mode = LOCK_MODE.X
+			lock_mode = LOCK_MODE.X if lock_mode != LOCK_MODE.X else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
@@ -731,7 +733,7 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 			if not lock_mode_temporary:
 				lock_mode_temporary = true
 				lock_mode_original = lock_mode		
-			lock_mode = LOCK_MODE.Y
+			lock_mode = LOCK_MODE.Y  if lock_mode != LOCK_MODE.Y else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
@@ -741,7 +743,7 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 				lock_mode_temporary = true
 				lock_mode_original = lock_mode		
 			lock_mode_original = lock_mode
-			lock_mode = LOCK_MODE.Z
+			lock_mode = LOCK_MODE.Z if lock_mode != LOCK_MODE.Z else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
