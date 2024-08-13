@@ -411,8 +411,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 			get_active_mterrain().remove_grid()
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
-		if object.has_sublayer():
-			grass_merge_sublayer_button.visible = true
+		grass_merge_sublayer_button.visible = object.has_sublayer()
 	elif object is MNavigationRegion3D:
 		grass_merge_sublayer_button.visible = false	
 		paint_panel.visible = true
