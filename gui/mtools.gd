@@ -298,6 +298,9 @@ func process_input_terrain_walk(cam:Camera3D, event:InputEvent):
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN: 
 			walk_speed /= 1.03
 			return true
+	if event is InputEventKey and event.keycode == KEY_ESCAPE:
+		walk_terrain_button.button_pressed = false
+		return true
 	if event is InputEventMouseMotion:
 		cam.rotation.y += -event.relative.x/100
 		cam.rotation.x = clamp(cam.rotation.x -event.relative.y/100, -PI*0.3, PI*0.35)
@@ -539,4 +542,4 @@ func _on_walk_terrain_toggled(toggled_on):
 	if toggled_on:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE		
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

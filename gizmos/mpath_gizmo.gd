@@ -330,7 +330,6 @@ func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
 	return current_pos
 
 func update_lock_mode(x,y,z):	
-	print("updating lockmode: ", x,y,z)
 	if x and y and z:
 		lock_mode = LOCK_MODE.XYZ
 		return
@@ -370,7 +369,6 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 	if not curve:
 		return
 	if not ur:
-		printerr("curve gizmo undo redo is null")
 		return
 	if not secondary:
 		curve.commit_point_update(handle_id)
