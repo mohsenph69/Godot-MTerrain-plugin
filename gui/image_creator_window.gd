@@ -1,7 +1,7 @@
 @tool
 extends Window
 
-signal image_created
+signal layer_created
 
 @onready var no_terrain_label = find_child("no_terrain")
 @onready var uniform_name_line = find_child("uniform_name_line")
@@ -49,9 +49,9 @@ func set_terrain(input:MTerrain):
 	if not (mres is MResource):
 		return
 	var data_names:Array= mres.compressed_data.keys()
-	for dname in data_names:
-		remove_uniform_list.add_item(dname)
-	remove_uniform_list.select(-1)
+	#for dname in data_names:
+	#	remove_uniform_list.add_item(dname)
+	#remove_uniform_list.select(-1)
 
 func _on_close_requested():
 	queue_free()
@@ -105,8 +105,11 @@ func init_new_color_layer(uniform_name, color):
 	active_terrain.brush_layers[id].layers[0].NAME = "background"
 	if layer_types.selected == 0:
 		active_terrain.brush_layers[id].layers[0].color = color
-
-	
+	layer_created.emit(active_terrain.brush_layers[id])
+	if active_terrain.is_grid_created():
+		active_terrain.restart_grid()
+	else:
+		active_terrain.create_grid()
 
 func _on_remove_button_up():
 	if not is_init:
