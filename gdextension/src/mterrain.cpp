@@ -576,6 +576,14 @@ void MTerrain::get_cam_pos() {
         }
 
     }
+    Viewport* v = get_viewport();
+    if(v!=nullptr){
+        Camera3D* camera = v->get_camera_3d();
+        if(camera!=nullptr){
+            cam_pos = camera->get_global_position();
+            return;
+        }
+    }    
     ERR_FAIL_MSG("No camera is detected");
 }
 

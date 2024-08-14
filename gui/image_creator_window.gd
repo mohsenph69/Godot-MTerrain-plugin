@@ -26,8 +26,12 @@ func _ready():
 	layer_types.item_selected.connect(func(id): $ScrollContainer/VBoxContainer/def_color.visible = id == 0)	
 	
 	find_child("close_button").pressed.connect(_on_close_requested)
+<<<<<<< HEAD
 	find_child("restart_editor_button").pressed.connect(func():EditorInterface.restart_editor())		
 		
+=======
+	
+>>>>>>> 44ab8f7dab56bbd9a96adb6ced4633278ac1d28b
 func set_terrain(input:MTerrain):
 	active_terrain = input
 	if input.terrain_size.x % input.region_size !=0:
@@ -93,8 +97,11 @@ func _on_create_button_up():
 			mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
 			ResourceSaver.save(mres,path)
 			init_new_color_layer(uniform_name, def_color)
+<<<<<<< HEAD
 			find_child("restart_editor_button").visible = true
 			find_child("restart_label").visible = true
+=======
+>>>>>>> 44ab8f7dab56bbd9a96adb6ced4633278ac1d28b
 	#queue_free()
 
 func init_new_color_layer(uniform_name, color):
