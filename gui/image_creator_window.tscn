@@ -167,10 +167,14 @@ layout_mode = 2
 text = "Uniform name is empty"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 [node name="restart_label" type="Label" parent="PanelContainer/VBoxContainer/Create Color Layer/VBoxContainer"]
 =======
 [node name="rlabel" type="Label" parent="PanelContainer/VBoxContainer/Create Color Layer/VBoxContainer"]
 >>>>>>> 44ab8f7dab56bbd9a96adb6ced4633278ac1d28b
+=======
+[node name="restart_label" type="Label" parent="PanelContainer/VBoxContainer/Create Color Layer/VBoxContainer"]
+>>>>>>> tmp
 visible = false
 modulate = Color(1, 0.219608, 0.266667, 1)
 layout_mode = 2
@@ -178,6 +182,9 @@ text = "Restart editor before using new color layer"
 horizontal_alignment = 1
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> tmp
 [node name="restart_editor_button" type="Button" parent="PanelContainer/VBoxContainer/Create Color Layer/VBoxContainer"]
 visible = false
 layout_mode = 2
@@ -190,10 +197,13 @@ layout_mode = 2
 [node name="close_button" type="Button" parent="PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+<<<<<<< HEAD
 =======
 [node name="close_button" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 >>>>>>> 44ab8f7dab56bbd9a96adb6ced4633278ac1d28b
+=======
+>>>>>>> tmp
 text = "Close"
 
 [connection signal="close_requested" from="." to="." method="_on_close_requested"]

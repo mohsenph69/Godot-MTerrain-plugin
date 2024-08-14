@@ -27,11 +27,16 @@ func _ready():
 	
 	find_child("close_button").pressed.connect(_on_close_requested)
 <<<<<<< HEAD
+<<<<<<< HEAD
 	find_child("restart_editor_button").pressed.connect(func():EditorInterface.restart_editor())		
 		
 =======
 	
 >>>>>>> 44ab8f7dab56bbd9a96adb6ced4633278ac1d28b
+=======
+	find_child("restart_editor_button").pressed.connect(func():EditorInterface.restart_editor())		
+		
+>>>>>>> tmp
 func set_terrain(input:MTerrain):
 	active_terrain = input
 	if input.terrain_size.x % input.region_size !=0:
@@ -98,10 +103,15 @@ func _on_create_button_up():
 			ResourceSaver.save(mres,path)
 			init_new_color_layer(uniform_name, def_color)
 <<<<<<< HEAD
+<<<<<<< HEAD
 			find_child("restart_editor_button").visible = true
 			find_child("restart_label").visible = true
 =======
 >>>>>>> 44ab8f7dab56bbd9a96adb6ced4633278ac1d28b
+=======
+			find_child("restart_editor_button").visible = true
+			find_child("restart_label").visible = true
+>>>>>>> tmp
 	#queue_free()
 
 func init_new_color_layer(uniform_name, color):

@@ -13,10 +13,14 @@
 
 [resource]
 <<<<<<< HEAD
+<<<<<<< HEAD
 default_font_size = 16
 =======
 default_font_size = 17
 >>>>>>> 44ab8f7dab56bbd9a96adb6ced4633278ac1d28b
+=======
+default_font_size = 16
+>>>>>>> tmp
 Button/styles/hover = null
 Button/styles/normal = ExtResource("1_set7o")
 Button/styles/pressed = ExtResource("1_set7o")
