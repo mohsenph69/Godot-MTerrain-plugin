@@ -38,7 +38,7 @@ var property_element_list:Array
 var color_brush_layers:Array
 var color_brush_titles:Array
 var selected_layer_group=0
-
+@onready var add_color_brush_button = find_child("add_color_brush_button")
 
 func _ready():
 	var panel = get_child(0)
@@ -46,6 +46,8 @@ func _ready():
 	panel.position.y = -panel.size.y
 	panel.gui_input.connect(fix_gui_input)
 	panel.size.x = get_viewport().size.x - global_position.x
+
+	add_color_brush_button.pressed.connect(show_add_color_brush_popup)
 	
 func fix_gui_input(event: InputEvent):
 	if event is InputEventMouseButton:
@@ -62,7 +64,12 @@ func clear_brushes():
 	text = ""
 	for connection in brush_container.get_signal_connection_list("item_selected"):
 		connection.signal.disconnect(connection.callable)	
-
+	for connection in brush_container.get_signal_connection_list("item_clicked"):
+		connection.signal.disconnect(connection.callable)
+	add_color_brush_button.visible = false
+	
+	
+	
 #region Height Brushes
 func init_height_brushes(new_brush_manager):		
 	clear_brushes()	
@@ -156,8 +163,14 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 	brush_mode = &"paint"
 	if terrain == null:
 		return	
-		
+	brush_container.item_clicked.connect(func(id, pos, button_index): 
+		if button_index == MOUSE_BUTTON_MASK_RIGHT: 
+			var popup = preload("res://addons/m_terrain/gui/mtools_layer_warning_popup.tscn").instantiate()
+			add_child(popup)
+			popup.confirmed.connect(remove_color_brush.bind(id)))		
 	brush_container.clear()	
+	add_color_brush_button.visible = true
+	selected_layer_group = layer_group_id
 	var layer_group = active_terrain.get_layers_info()[layer_group_id]						
 	
 	var index = -1
@@ -195,9 +208,41 @@ func brush_layer_selected(index, layer_group):
 		var stylebox = StyleBoxFlat.new()
 		stylebox.bg_color = color
 		set("theme_override_styles/normal", stylebox)
+		set("theme_override_styles/focus", stylebox)
+		set("theme_override_styles/hover", stylebox)
+		set("theme_override_styles/pressed", stylebox)
 	else:
 		set("theme_override_styles/normal", null)
+		set("theme_override_styles/focus", null)
+		set("theme_override_styles/hover", null)
+		set("theme_override_styles/pressed", null)
+		
 
+func show_add_color_brush_popup():
+	var popup = preload("res://addons/m_terrain/gui/mtools_create_color_brush.tscn").instantiate()
+	add_child(popup)
+	popup.brush_created.connect(add_color_brush)
+	
+func add_color_brush(brush_name, color, hardness ):
+	var group: MBrushLayers = active_terrain.brush_layers[selected_layer_group]
+	group.layers_num += 1
+	group.layers[group.layers_num-1].NAME = brush_name
+	group.layers[group.layers_num-1].color = color
+	group.layers[group.layers_num-1].hardness = hardness
+	
+	init_color_brushes(active_terrain, selected_layer_group)
+
+func remove_color_brush(id):
+	var group: MBrushLayers = active_terrain.brush_layers[selected_layer_group]
+	var brushes = group.layers.duplicate()	
+	var index = 0
+	for i in brushes.size():
+		if i != id:			
+			group.layers[index] = brushes[i]
+			index += 1
+	group.layers_num -= 1	
+	
+	init_color_brushes(active_terrain, selected_layer_group)
 #endregion
 
 #region Grass Brushes
