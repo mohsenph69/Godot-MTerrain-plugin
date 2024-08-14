@@ -13,7 +13,7 @@ var more_options_icon = preload("res://addons/m_terrain/icons/more_options_icon.
 func _ready():
 	var panel = get_child(0)
 	panel.visible = false
-	panel.position.y = -panel.size.y -4
+	panel.position.y = -panel.size.y-1
 	
 	item_container = find_child("edit_mode_item_container")
 	exit_edit_mode_button = get_node("../edit_mode_exit_button")		
@@ -91,6 +91,7 @@ func change_active_object(object):
 		edit_selected_button.visible = false
 		
 	text = ""
+	theme_type_variation
 	icon = more_options_icon
 	
 func exit_edit_mode_button_pressed():	
@@ -99,14 +100,16 @@ func exit_edit_mode_button_pressed():
 	
 
 
-func edit_selected(object = active_object, override_mode=null):		
+func edit_selected(object = active_object, override_mode=null):
 	if object is MTerrain:
 		if override_mode and override_mode==&"paint":
 			text = "Paint " + object.name
+			theme_type_variation = ""
 			icon = null
 			edit_mode_changed.emit(object, &"paint")		
 		else:
 			text = "Sculpt " + object.name
+			theme_type_variation = ""
 			icon = null
 			edit_mode_changed.emit(object, &"sculpt")		
 		edit_selected_button.visible = false			
@@ -114,6 +117,7 @@ func edit_selected(object = active_object, override_mode=null):
 		active_object = object
 	elif object is MGrass or object is MNavigationRegion3D:
 		text = "Paint " + object.name
+		theme_type_variation = ""
 		icon = null
 		edit_mode_changed.emit(object, &"paint")
 		edit_selected_button.visible = false
@@ -121,6 +125,7 @@ func edit_selected(object = active_object, override_mode=null):
 		active_object = object				
 	elif object is MPath:
 		text = "Edit " + object.name
+		theme_type_variation = ""
 		icon = null
 		edit_mode_changed.emit(object, &"mpath")
 		edit_selected_button.visible = false
@@ -128,6 +133,7 @@ func edit_selected(object = active_object, override_mode=null):
 		active_object = object
 	elif object is MCurveMesh:
 		text = "Edit " + object.name
+		theme_type_variation = ""
 		icon = null
 		edit_mode_changed.emit(object, &"mcurve_mesh")
 		edit_selected_button.visible = false

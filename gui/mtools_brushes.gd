@@ -32,6 +32,7 @@ var color_brush_index:int
 var color_brush_uniform:String
 var color_brush_name:String
 
+var no_image = preload("res://addons/m_terrain/icons/no_images.png") #For color brush
 
 var property_element_list:Array
 var color_brush_layers:Array
@@ -57,6 +58,8 @@ func _toggled(toggled_on):
 func clear_brushes():
 	brush_container.clear()	
 	clear_property_element()
+	set("theme_override_styles/normal", null)
+	text = ""
 	for connection in brush_container.get_signal_connection_list("item_selected"):
 		connection.signal.disconnect(connection.callable)	
 
@@ -95,9 +98,10 @@ func on_height_brush_select(index):
 	var brush_props = height_brush_manager.get_height_brush_property(height_brush_id)
 	for p in brush_props:
 		create_props(p)
-	text = brush_container.get_item_text(index)
+	text = ""# brush_container.get_item_text(index)
 	set("theme_override_styles/normal", null)
 	icon = brush_container.get_item_icon(index)	
+	tooltip_text = "Current brush: " + brush_container.get_item_text(index)
 
 func create_props(dic:Dictionary):
 	var element
@@ -105,24 +109,28 @@ func create_props(dic:Dictionary):
 		var rng = dic["max"] - dic["min"]
 		if dic["hint"] == "range":
 			element = float_range_prop_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.set_min(dic["min"])
 			element.set_max(dic["max"])
 			element.set_step(dic["hint_string"].to_float())
 		else:
 			element = float_prop_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.min = dic["min"]
 			element.max = dic["max"]
 	elif dic["type"]==TYPE_BOOL:
 		element = bool_element.instantiate()
+		brush_settings_container.add_child(element)
 	elif dic["type"]==TYPE_INT:
 		if dic["hint"] == "enum":
 			element = int_enum_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.set_options(dic["hint_string"])
 		else:
 			element = int_element.instantiate()
+			brush_settings_container.add_child(element)
 			element.set_min(dic["min"])
 			element.set_max(dic["max"])
-	brush_settings_container.add_child(element)
 	element.prop_changed.connect(prop_change)
 	element.set_value(dic["default_value"])
 	element.set_name(dic["name"])
@@ -151,7 +159,7 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 		
 	brush_container.clear()	
 	var layer_group = active_terrain.get_layers_info()[layer_group_id]						
-	var no_image = preload("res://addons/m_terrain/icons/no_images.png")
+	
 	var index = -1
 	for i in layer_group["info"]:				
 		index +=1
@@ -175,9 +183,13 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 
 func brush_layer_selected(index, layer_group):			
 	active_terrain.set_color_layer(index, color_layer_group_id,color_brush_name)
-	if brush_container.get_item_icon(index):
-		icon = brush_container.get_item_icon(index)	
-	text = brush_container.get_item_text(index)
+	var brush_icon = brush_container.get_item_icon(index)
+	if brush_icon and brush_icon != no_image:
+		icon = brush_icon
+	else:
+		icon = null
+	text = "" #brush_container.get_item_text(index)
+	tooltip_text = "Current brush: " + brush_container.get_item_text(index)
 	var color = brush_container.get_item_custom_bg_color(index)
 	if color:
 		var stylebox = StyleBoxFlat.new()
@@ -267,3 +279,22 @@ func process_input(event):
 			else:
 				is_grass_add = not is_grass_add	
 #endregion
+
+
+func _on_resized():
+	var vbox = get_child(0)
+	var settings = find_child("brush_settings_panel")
+	settings.custom_minimum_size.x = global_position.x-owner.global_position.x
+	var size_panel = find_child("brush_size_panel")
+	size_panel.custom_minimum_size.x = size.x
+	var brushes_panel = find_child("brush_brushes_panel")
+	brushes_panel.custom_minimum_size.x = owner.size.x - size_panel.size.x - settings.size.x - 12
+	
+	vbox.size.x = owner.size.x
+	vbox.global_position.x = owner.global_position.x
+	vbox.size.y = get_viewport_rect().size.y/5
+	vbox.position.y = -vbox.size.y
+
+
+func _on_panel_visibility_changed():
+	_on_resized()

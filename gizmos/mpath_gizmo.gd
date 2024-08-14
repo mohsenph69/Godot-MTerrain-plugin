@@ -10,7 +10,7 @@ const bake_interval:float = 0.2
 
 var handle00_tex = preload("res://addons/m_terrain/icons/handle00.png")
 var handle01_tex = preload("res://addons/m_terrain/icons/handle01.png")
-var icon_collapse = preload("res://addons/m_terrain/icons/collapse_normal.svg")
+#var icon_collapse = preload("res://addons/m_terrain/icons/collapse_normal.svg")
 var icon_rotation = preload("res://addons/m_terrain/icons/rotation.svg")
 
 var mterrain_plugin:EditorPlugin
@@ -40,6 +40,8 @@ var active_point:int = 0
 var selected_points:PackedInt32Array
 var selected_connections:PackedInt64Array
 
+var moving_point = false 
+
 enum LOCK_MODE {
 	NONE,
 	X,
@@ -51,6 +53,8 @@ enum LOCK_MODE {
 	XYZ
 }
 var lock_mode := LOCK_MODE.NONE
+var lock_mode_temporary = false
+var lock_mode_original = LOCK_MODE.NONE
 var is_handle_setting:= true
 var is_handle_init_pos_set:=false
 var handle_init_id:=0
@@ -249,12 +253,13 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 	var from = camera.project_ray_origin(screen_pos)
 	var to = camera.project_ray_normal(screen_pos)
 	# is main point
-	if not secondary:		
+	if not secondary:	
+	#	for pid in curve.get_active_points():
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
-		if gui.is_terrain_snap() and lock_mode == LOCK_MODE.NONE:
-			var active_terrain = mterrain_plugin.tools.get_active_mterrain()
+		var active_terrain = gui.get_terrain_for_snap() 
+		if active_terrain and lock_mode == LOCK_MODE.NONE:			
 			if active_terrain and active_terrain.is_grid_created():
 				drag.y = active_terrain.get_height(drag)
 			else:
@@ -262,9 +267,9 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		curve.move_point(points_id,drag)
 		change_active_point(points_id)
 	else: # is secondary		
-		if gui.is_xz_handle_lock() and lock_mode == LOCK_MODE.NONE:
-			lock_mode = LOCK_MODE.XZ
-			lock_mode_changed.emit(lock_mode)
+		#if gui.is_xz_handle_lock() and lock_mode == LOCK_MODE.NONE:
+		#	lock_mode = LOCK_MODE.XZ
+		#	lock_mode_changed.emit(lock_mode)
 		if points_id % 2 == 0: # is even
 			points_id /= 2;
 			var in_pos:Vector3 = curve.get_point_in(points_id)
@@ -303,24 +308,25 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		change_active_point(points_id)
 
 func get_constraint_pos(init_pos:Vector3,current_pos:Vector3):
-	match lock_mode:
-		LOCK_MODE.NONE:
-			return current_pos
-		LOCK_MODE.X:
-			current_pos.z = init_pos.z
-			current_pos.y = init_pos.y
-		LOCK_MODE.Y:
-			current_pos.x = init_pos.x
-			current_pos.z = init_pos.z
-		LOCK_MODE.Z:
-			current_pos.x = init_pos.x
-			current_pos.y = init_pos.y
-		LOCK_MODE.XY:
-			current_pos.z = init_pos.z
-		LOCK_MODE.XZ:
-			current_pos.y = init_pos.y
-		LOCK_MODE.ZY:
-			current_pos.x = init_pos.x
+	if not moving_point or lock_mode == LOCK_MODE.XYZ:
+		current_pos = init_pos
+	elif lock_mode == LOCK_MODE.NONE: 
+		return current_pos
+	elif lock_mode == LOCK_MODE.X:
+		current_pos.z = init_pos.z
+		current_pos.y = init_pos.y
+	elif lock_mode == LOCK_MODE.Y:
+		current_pos.x = init_pos.x
+		current_pos.z = init_pos.z
+	elif lock_mode == LOCK_MODE.Z:
+		current_pos.x = init_pos.x
+		current_pos.y = init_pos.y
+	elif lock_mode == LOCK_MODE.XY:
+		current_pos.z = init_pos.z
+	elif lock_mode == LOCK_MODE.XZ:
+		current_pos.y = init_pos.y
+	elif lock_mode == LOCK_MODE.ZY:
+		current_pos.x = init_pos.x	
 	return current_pos
 
 func update_lock_mode(x,y,z):	
@@ -345,19 +351,26 @@ func update_lock_mode(x,y,z):
 	if z:
 		lock_mode = LOCK_MODE.Z
 		return
+	lock_mode = LOCK_MODE.NONE
+		
 
+func _begin_handle_action(gizmo, id, is_secondary):
+	moving_point = true
 
 func _commit_handle(gizmo, handle_id, secondary, restore, cancel):	
+	moving_point = false
 	var curve:MCurve = gizmo.get_node_3d().curve
 	is_handle_init_pos_set = false
 	is_handle_setting = false
-	lock_mode = LOCK_MODE.NONE
-	lock_mode_changed.emit(lock_mode)
+	if lock_mode_temporary:
+		lock_mode = lock_mode_original
+		lock_mode_temporary = false
+		lock_mode_original = null
+		lock_mode_changed.emit(lock_mode)
 	is_mouse_init_set = false
 	if not curve:
 		return
 	if not ur:
-		printerr("curve gizmo undo redo is null")
 		return
 	if not secondary:
 		curve.commit_point_update(handle_id)
@@ -459,6 +472,9 @@ func _has_gizmo(for_node_3d):
 	return for_node_3d is MPath
 
 func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
+	if moving_point and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		moving_point = false
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
 	#Process tilt, scale, and right-click cancel
 	if event is InputEventMouseButton and event.pressed and value_mode != VALUE_MODE.NONE:		
 		is_mouse_init_set = false
@@ -466,7 +482,7 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 		if not curve or not curve.has_point(active_point):
 			value_mode = VALUE_MODE.NONE					
 			return
-		if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling
+		if event.button_index == MOUSE_BUTTON_RIGHT: # Canceling		
 			curve.set_point_scale(active_point,init_scale)
 			curve.set_point_tilt(active_point,init_tilt)
 			gui.tilt_num.set_value(init_tilt)
@@ -522,8 +538,7 @@ func process_mouse_left_click(camera, event, terrain_col):
 	### Get collission point id
 	var pcol = curve.ray_active_point_collision(from,to,0.9999)
 	if pcol != 0:
-		if Input.is_key_pressed(KEY_ALT):
-			print("Alt clicked mpath")
+		if Input.is_key_pressed(KEY_ALT):			
 			change_active_point(pcol)
 			remove_point()
 		elif Input.is_key_pressed(KEY_SHIFT):
@@ -558,9 +573,9 @@ func process_mouse_left_click(camera, event, terrain_col):
 		var new_index:int
 		var new_pos:Vector3
 		var is_new_pos_set = false
-		if gui.is_terrain_snap():
-			#To Do: user should be able to select which mterrain is used for snapping
-			var active_mterrain = mterrain_plugin.tools.get_active_mterrain()
+		var active_mterrain = gui.get_terrain_for_snap()
+		if active_mterrain:
+			#To Do: user should be able to select which mterrain is used for snapping			
 			if active_mterrain and active_mterrain.is_grid_created():				
 				if terrain_col.is_collided():
 					new_pos = terrain_col.get_collision_position()
@@ -646,8 +661,8 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 		swap_points()
 		return true
 	#if event.keycode == KEY_T and not Input.is_key_pressed(KEY_SHIFT):
-	if Input.is_action_just_pressed("mpath_toggle_connection"):			
-		if toggle_connection():
+	if Input.is_action_just_pressed("mpath_toggle_connection"):					
+		if toggle_connection():			
 			return true
 	#elif  event.keycode == KEY_BACKSPACE:
 	if Input.is_action_just_pressed("mpath_remove_point"):
@@ -679,37 +694,56 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 		var path:MPath = find_mpath()
 		#shift x
 		if Input.is_action_just_pressed("mpath_lock_zy"):
-			lock_mode = LOCK_MODE.ZY
+			if not lock_mode_temporary:
+				lock_mode_temporary = true
+				lock_mode_original = lock_mode		
+			lock_mode = LOCK_MODE.ZY if lock_mode != LOCK_MODE.ZY else LOCK_MODE.NONE 
 			lock_mode_changed.emit(lock_mode)			
 			if path: path.update_gizmos()
 			return true
 		#shift y
 		if Input.is_action_just_pressed("mpath_lock_xz"):
-			lock_mode = LOCK_MODE.XZ
+			if not lock_mode_temporary:
+				lock_mode_temporary = true
+				lock_mode_original = lock_mode		
+			lock_mode = LOCK_MODE.XZ  if lock_mode != LOCK_MODE.XZ else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
 		#shift z
-		if Input.is_action_just_pressed("mpath_lock_xy"):					
-			lock_mode = LOCK_MODE.XY
+		if Input.is_action_just_pressed("mpath_lock_xy"):				
+			if not lock_mode_temporary:
+				lock_mode_temporary = true
+				lock_mode_original = lock_mode		
+			lock_mode = LOCK_MODE.XY if lock_mode != LOCK_MODE.XY else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
 		#x
 		if Input.is_action_just_pressed("mpath_lock_x"):
-			lock_mode = LOCK_MODE.X
+			if not lock_mode_temporary:
+				lock_mode_temporary = true
+				lock_mode_original = lock_mode		
+			lock_mode = LOCK_MODE.X if lock_mode != LOCK_MODE.X else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
 		#y
-		if Input.is_action_just_pressed("mpath_lock_y"):			
-			lock_mode = LOCK_MODE.Y
+		if Input.is_action_just_pressed("mpath_lock_y"):				
+			if not lock_mode_temporary:
+				lock_mode_temporary = true
+				lock_mode_original = lock_mode		
+			lock_mode = LOCK_MODE.Y  if lock_mode != LOCK_MODE.Y else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
 		#z
 		if Input.is_action_just_pressed("mpath_lock_z"):
-			lock_mode = LOCK_MODE.Z
+			if not lock_mode_temporary:
+				lock_mode_temporary = true
+				lock_mode_original = lock_mode		
+			lock_mode_original = lock_mode
+			lock_mode = LOCK_MODE.Z if lock_mode != LOCK_MODE.Z else LOCK_MODE.NONE
 			lock_mode_changed.emit(lock_mode)
 			if path: path.update_gizmos()
 			return true
@@ -752,6 +786,7 @@ func on_collapse():
 
 func set_gui(input:Control):
 	gui = input
+	
 	gui.visibility_changed.connect(gui_visibility_changed)
 	gui.toggle_connection_btn.pressed.connect(toggle_connection)
 	gui.collapse_btn.pressed.connect(on_collapse)
@@ -1012,7 +1047,7 @@ func clear_deform(only_selected:bool):
 	curve_terrain.terrain.update_all_dirty_image_texture(false)
 
 func clear_deform_large(only_selected:bool):
-	print("Clear large ")
+	#print("Clear large ")
 	var curve = find_curve()
 	if not curve: return
 	var aabb = curve.get_conns_aabb(get_conns_list(only_selected))
