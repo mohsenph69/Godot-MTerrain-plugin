@@ -23,7 +23,9 @@ var is_init = false
 var active_terrain
 
 func _ready():
-	layer_types.item_selected.connect(func(id): $ScrollContainer/VBoxContainer/def_color.visible = id == 0)	
+	layer_types.item_selected.connect(func(id): 
+		find_child("def_color").visible = id == 0
+	)	
 	
 	find_child("close_button").pressed.connect(_on_close_requested)
 	find_child("restart_editor_button").pressed.connect(func():EditorInterface.restart_editor())		

@@ -27,16 +27,16 @@ var to_height_brush_id
 var hole_brush_id
 var reverse_property_control
 
+var property_element_list:Array
+
+var color_brush_layer: MBrushLayers
 var color_layer_group_id:int
-var color_brush_index:int
 var color_brush_uniform:String
-var color_brush_name:String
+var color_brush_name:String # "Color Paint", "Channel Painter", "Bitwise Brush", "Paint 16", Paint 256" 
 
 var no_image = preload("res://addons/m_terrain/icons/no_images.png") #For color brush
 
-var property_element_list:Array
-var color_brush_layers:Array
-var color_brush_titles:Array
+
 @onready var add_color_brush_button = find_child("add_color_brush_button")
 
 func _ready():
@@ -59,7 +59,8 @@ func _toggled(toggled_on):
 func clear_brushes():
 	#brush_container.clear()	
 	for child in brush_container.get_children():
-		child.free()
+		brush_container.remove_child(child)
+		child.queue_free()
 	clear_property_element()
 	set("theme_override_styles/normal", null)
 	text = ""
@@ -167,26 +168,25 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 		return	
 							
 	add_color_brush_button.visible = true
-	var layer_group = active_terrain.brush_layers[layer_group_id]						
+	color_brush_layer = active_terrain.brush_layers[layer_group_id]						
 		
-	for i in layer_group.layers.size():						
-		var bname = layer_group.layers[i].NAME
+	for i in color_brush_layer.layers.size():	
+		var brush = color_brush_layer.layers[i]					
+		var bname = brush.NAME
 		if bname.is_empty():
 			bname = str("layer ", i)
-		var bicon:Texture = load(layer_group.layers[i].ICON) if FileAccess.file_exists(layer_group.layers[i].ICON) else null		
-		var bhardness = layer_group.layers[i].hardness
-		var bcolor = layer_group.layers[i].color
+		var bicon:Texture = load(brush.ICON) if FileAccess.file_exists(brush.ICON) else null						
 		
 		var brush_item = preload("res://addons/m_terrain/gui/mtools_brush_item.tscn").instantiate()		
 		brush_container.add_child(brush_item)		
-		brush_item.set_color_brush(layer_group_id, bname, bicon, bhardness, bcolor)
-		brush_item.brush_selected.connect( brush_layer_selected.bind(brush_item.get_index(), layer_group))
+		brush_item.set_color_brush(color_brush_layer, i)
+		brush_item.brush_selected.connect( brush_layer_selected.bind(brush_item.get_index(), color_brush_layer))
 		brush_item.brush_edited.connect(update_color_brush)
 		brush_item.brush_removed.connect(remove_color_brush)
 	
 	color_layer_group_id = layer_group_id
-	color_brush_uniform = layer_group.uniform_name
-	color_brush_name = layer_group.brush_name
+	color_brush_uniform = color_brush_layer.uniform_name
+	color_brush_name = color_brush_layer.brush_name
 	
 	if brush_container.get_child_count() != 0:
 		brush_layer_selected(0, layer_group_id)
@@ -218,18 +218,48 @@ func brush_layer_selected(index, layer_group):
 func show_add_color_brush_popup():
 	var popup = preload("res://addons/m_terrain/gui/mtools_create_color_brush.tscn").instantiate()
 	add_child(popup)
+	popup.size = get_viewport_rect().size / 3
+	
+	var existing_brushes = color_brush_layer.layers.map(func(a): return a.NAME)
+	if color_brush_name == "Color Paint":
+		popup.init_for_color(existing_brushes)
+	elif color_brush_name == "Channel Painter":
+		popup.init_for_channel(existing_brushes)
+	elif color_brush_name == "Bitwise":
+		popup.init_for_bitwise(existing_brushes)
+	elif color_brush_name == "Paint 16":
+		popup.init_for_16(existing_brushes)
+	elif color_brush_name == "Paint 256":
+		popup.init_for_256(existing_brushes)
 	popup.brush_created.connect(update_color_brush.bind(-1))
 	
-func update_color_brush(brush_name, brush_icon, hardness, color, id):
-	var group: MBrushLayers = active_terrain.brush_layers[color_layer_group_id]	
+func update_color_brush(brush_name, brush_icon, data, id):	
 	if id == -1:
-		group.layers_num += 1
-		id = group.layers_num -1
-	group.layers[id].NAME = brush_name
-	group.layers[id].ICON = brush_icon
-	group.layers[id].color = color
-	group.layers[id].hardness = hardness
-	
+		color_brush_layer.layers_num += 1
+		id = color_brush_layer.layers_num -1
+	color_brush_layer.layers[id].NAME = brush_name
+	color_brush_layer.layers[id].ICON = brush_icon
+	if "color" in data.keys():
+		color_brush_layer.layers[id].color = data.color		
+		color_brush_layer.layers[id].hardness = data.hardness
+	elif "r_on" in data.keys():
+		color_brush_layer.layers[id].red = data.r_on
+		color_brush_layer.layers[id].green = data.g_on
+		color_brush_layer.layers[id].blue = data.b_on
+		color_brush_layer.layers[id].alpha = data.a_on
+		color_brush_layer.layers[id]["red-value"] = data.r_value
+		color_brush_layer.layers[id]["green-value"] = data.g_value
+		color_brush_layer.layers[id]["blue-value"] = data.b_value
+		color_brush_layer.layers[id]["alpha-value"] = data.a_value
+		color_brush_layer.layers[id].hardness = data.hardness
+	elif "bit" in data.keys():		
+		color_brush_layer.layers[id].value = data.bit_value
+		color_brush_layer.layers[id].bit = data.bit
+	elif "paint16layer" in data.keys():
+		color_brush_layer.layers[id]['paint-layer'] = data.paint16layer
+	elif "paint256layer" in data.keys():
+		color_brush_layer.layers[id]['paint-layer'] = data.paint256layer	
+		
 	init_color_brushes(active_terrain, color_layer_group_id)
 
 func remove_color_brush(id):

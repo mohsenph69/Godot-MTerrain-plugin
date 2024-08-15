@@ -1,13 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://csp8xxyqqfo6"]
+[gd_scene load_steps=4 format=3 uid="uid://csp8xxyqqfo6"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_10jgu"]
 [ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_create_color_brush.gd" id="2_shva1"]
+[ext_resource type="Script" path="res://addons/m_terrain/gui/channel_brush_control.gd" id="3_maa7g"]
 
 [node name="Window" type="Window"]
 initial_position = 1
-size = Vector2i(500, 674)
+size = Vector2i(800, 600)
 wrap_controls = true
 popup_window = true
+max_size = Vector2i(800, 600)
 theme = ExtResource("1_10jgu")
 script = ExtResource("2_shva1")
 
@@ -23,7 +25,7 @@ layout_mode = 2
 
 [node name="brush_name" type="LineEdit" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
-placeholder_text = "Brush Name"
+text = "New Brush"
 alignment = 1
 
 [node name="icon_path" type="LineEdit" parent="PanelContainer/VBoxContainer"]
@@ -36,7 +38,7 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-text = "hardness: "
+text = "Hardness: "
 
 [node name="hardness" type="HSlider" parent="PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -46,9 +48,190 @@ max_value = 1.0
 step = 0.05
 
 [node name="color_picker" type="ColorPickerButton" parent="PanelContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 text = " "
+
+[node name="ChannelR" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+script = ExtResource("3_maa7g")
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/ChannelR"]
+layout_mode = 2
+text = "R "
+horizontal_alignment = 2
+
+[node name="CheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ChannelR"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/ChannelR"]
+layout_mode = 2
+theme_override_constants/minimum_character_width = 2
+text = "0"
+max_length = 4
+editable = false
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/ChannelR"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+editable = false
+
+[node name="ChannelG" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+script = ExtResource("3_maa7g")
+
+[node name="Label2" type="Label" parent="PanelContainer/VBoxContainer/ChannelG"]
+layout_mode = 2
+text = "G "
+
+[node name="CheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ChannelG"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/ChannelG"]
+layout_mode = 2
+theme_override_constants/minimum_character_width = 2
+text = "0"
+max_length = 4
+editable = false
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/ChannelG"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+editable = false
+
+[node name="ChannelB" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+script = ExtResource("3_maa7g")
+
+[node name="Label2" type="Label" parent="PanelContainer/VBoxContainer/ChannelB"]
+layout_mode = 2
+text = "B "
+
+[node name="CheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ChannelB"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/ChannelB"]
+layout_mode = 2
+theme_override_constants/minimum_character_width = 2
+text = "0"
+max_length = 4
+editable = false
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/ChannelB"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+editable = false
+
+[node name="ChannelA" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+script = ExtResource("3_maa7g")
+
+[node name="Label2" type="Label" parent="PanelContainer/VBoxContainer/ChannelA"]
+layout_mode = 2
+text = "A "
+
+[node name="CheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ChannelA"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/ChannelA"]
+layout_mode = 2
+theme_override_constants/minimum_character_width = 2
+text = "0"
+max_length = 4
+editable = false
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/ChannelA"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+editable = false
+
+[node name="Bitwise" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+script = ExtResource("3_maa7g")
+is_bit = true
+force_int = true
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/Bitwise"]
+layout_mode = 2
+text = "Bit "
+
+[node name="CheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/Bitwise"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Bitwise"]
+layout_mode = 2
+theme_override_constants/minimum_character_width = 2
+text = "0"
+max_length = 3
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/Bitwise"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 127.0
+
+[node name="Paint16" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+script = ExtResource("3_maa7g")
+is_bit = true
+force_int = true
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/Paint16"]
+layout_mode = 2
+text = "Paint layer: "
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/Paint16"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 15.0
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Paint16"]
+layout_mode = 2
+theme_override_constants/minimum_character_width = 2
+text = "0"
+max_length = 3
+
+[node name="Paint256" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+script = ExtResource("3_maa7g")
+is_bit = true
+force_int = true
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer/Paint256"]
+layout_mode = 2
+text = "Paint layer: "
+
+[node name="HSlider" type="HSlider" parent="PanelContainer/VBoxContainer/Paint256"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 255.0
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer/Paint256"]
+layout_mode = 2
+theme_override_constants/minimum_character_width = 2
+text = "0"
+max_length = 3
 
 [node name="create" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2

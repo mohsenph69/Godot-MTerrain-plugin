@@ -9,23 +9,54 @@ signal brush_removed
 @onready var edit= find_child("edit")
 @onready var remove = find_child("remove")
 var color
-var hardness
+var brush_type = 0
+var brush_data = {}
+var brush_layer 
 
 func _ready():	
 	label.pressed.connect(func(): brush_selected.emit())
 	visibility_changed.connect(on_resize)
 	resized.connect(on_resize)
+	
 func set_height_brush(bname, bicon):
 	edit.free()
 	remove.free()
 	label.text = bname
 	label.icon = bicon
 	
-func set_color_brush(layer_group_id, bname, bicon, bhardness, bcolor):
-	label.text = bname
-	label.icon = bicon if bicon else null
-	if bcolor:
-		color = bcolor
+func set_color_brush(layer_group, i):
+	brush_layer = layer_group
+	var brush = layer_group.layers[i]
+	label.text = brush.NAME
+	label.icon = load(brush.ICON) if FileAccess.file_exists(brush.ICON) else null
+	if layer_group.brush_name == "Color Paint":	
+		brush_data = {"color": brush.color, "hardness":brush.hardness }
+		brush_type = 0
+	elif layer_group.brush_name == "Channel Painter": 
+		brush_data = {
+			"hardness":brush.hardness,
+			"r_on": brush.red, 
+			"r_value":brush['red-value'],
+			"g_on": brush.green, 
+			"g_value":brush['green-value'],
+			"b_on": brush.blue, 
+			"b_value":brush['blue-value'],
+			"a_on": brush.alpha, 
+			"a_value":brush['alpha-value'],
+			 }
+		brush_type = 1
+	elif layer_group.brush_name == "Bitwise Brush": 
+		brush_data = {"bit": brush.bit, "value":brush.value }
+		brush_type = 2
+	elif layer_group.brush_name == "Paint 16": 
+		brush_data = {"paint16layer": brush['paint-layer'] }
+		brush_type = 3
+	elif layer_group.brush_name == "Paint 256": 
+		brush_data = {"paint256layer": brush['paint-layer'] }
+		brush_type = 4		
+				
+	if brush_type == 0:
+		color = brush.color
 		var stylebox = StyleBoxFlat.new()
 		stylebox.bg_color = color
 		label.set("theme_override_styles/normal", stylebox)
@@ -36,8 +67,7 @@ func set_color_brush(layer_group_id, bname, bicon, bhardness, bcolor):
 		label.set("theme_override_styles/normal", null)
 		label.set("theme_override_styles/focus", null)
 		label.set("theme_override_styles/hover", null)
-		label.set("theme_override_styles/pressed", null)
-	hardness = bhardness
+		label.set("theme_override_styles/pressed", null)	
 	edit.pressed.connect(edit_brush)
 	remove.pressed.connect(remove_brush)	
 
@@ -51,10 +81,10 @@ func edit_brush():
 	var popup = preload("res://addons/m_terrain/gui/mtools_create_color_brush.tscn").instantiate()
 	add_child(popup)	
 	var bicon = label.icon.resource_path if label.icon else ""
-	popup.load_brush(label.text, bicon, hardness, color)
+	popup.load_brush(brush_layer, label.text, bicon, brush_data)
 	popup.brush_created.connect(
-		func(new_name, new_icon_path, new_hardness, new_color): 
-			brush_edited.emit(new_name, new_icon_path, new_hardness, new_color, get_index())
+		func(new_name, new_icon_path, data): 				
+			brush_edited.emit(new_name, new_icon_path, data, get_index())
 	)
 
 func remove_brush():
