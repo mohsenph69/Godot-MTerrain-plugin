@@ -56,8 +56,15 @@ signal edit_mode_changed
 @onready var brush_popup_button: Button = find_child("brush_button")
 @onready var mask_popup_button: Button = find_child("mask_button")
 
+var active_snap_object:Node3D = null
+
+var collision_ray_step=0.2
+var ray_col:MCollision
+var col_dis:float
+
+var undo_redo: EditorUndoRedoManager
 @onready var mpath_gizmo_gui = find_child("mpath_gizmo_gui")
-@onready var mcurve_mesh = find_child("mcurve_mesh")
+@onready var mcurve_mesh_gui = find_child("mcurve_mesh")
 @onready var brush_size_control: Control = find_child("brush_size")
 
 @onready var mtools_root = find_child("mtools_root")
@@ -76,6 +83,8 @@ var timer
 
 var current_edit_mode = &"" # &"", &"sculpt", &"paint"
 var active_object = null
+
+
 
 var brush_manager:MBrushManager = MBrushManager.new()
 var brush_decal # set by m_terrain.gd on enter_tree()
@@ -102,6 +111,8 @@ func _ready():
 
 	theme_changed.connect(update_theme)
 	visibility_changed.connect(_on_resized)
+	
+	MTool.enable_editor_plugin()
 
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
@@ -223,7 +234,8 @@ func set_active_object(object):
 	#Automatically enter edit mode for mpath
 	if object is MPath:
 		edit_mode_button.edit_selected(object)
-		
+
+#region EditorPlugin functions
 func process_input(event):
 	if current_edit_mode in [&"sculpt", &"paint"]:
 		if event is InputEventMouseButton and Input.is_key_pressed(KEY_CTRL):
@@ -316,13 +328,173 @@ func _process(delta):
 		editor_camera.position += editor_camera.basis.x * Input.get_axis("mterrain_walk_left", "mterrain_walk_right") * walk_speed * delta * multiplier
 		editor_camera.position.y = get_active_mterrain().get_height(editor_camera.global_position) + 1.6
 
+func on_selection_changed(obj):
+	if obj is MTerrain:
+		request_show()	
+		return
+	if obj.get_parent() is MTerrain:
+		if obj is MGrass or obj is MNavigationRegion3D:
+			request_show()	
+			return
+	if obj is MPath or obj is MCurveMesh:
+		request_show()	
+		return
+	
+	if mcurve_mesh_gui.obj and mcurve_mesh_gui.is_active():
+		request_show()	
+		return
+	request_hide()
+
+func on_handles(object):
+	active_snap_object = null
+	if mcurve_mesh_gui and mcurve_mesh_gui.obj and mcurve_mesh_gui.is_active(): 
+		return false
+	if mpath_gizmo_gui and not object is MPath:
+		mpath_gizmo_gui.visible = false
+	if not object is MCurveMesh:
+		mcurve_mesh_gui.set_curve_mesh(null)	
+		
+	if object is MPath or (object is MCurveMesh and object.get_parent() is MPath) or object is MTerrain or (object is MGrass and object.get_parent() is MTerrain) or (object is MNavigationRegion3D and object.get_parent() is MTerrain):	
+		set_active_object(object)
+		request_show()				
+		return true
+	#for some reason these get selected when switching from grass paint mode to terrain sculpt/paint mode:
+	if object is MTerrainMaterial or object is MBrushLayers:
+		return false
+	request_hide()	
+	#TO DO: fix snap tool setting of active terain		
+	if object is Node3D:
+		for mterrain:MTerrain in get_all_mterrain(EditorInterface.get_edited_scene_root()):
+			if mterrain.is_grid_created():
+				active_snap_object = object				
+				return false
+
+func forward_3d_gui_input(viewport_camera, event):
+	var active_terrain = get_active_mterrain()
+	if not active_terrain is MTerrain: 
+		ray_col = null
+	elif event is InputEventMouse:
+		var ray:Vector3 = viewport_camera.project_ray_normal(event.position)
+		var pos:Vector3 = viewport_camera.global_position
+		ray_col = active_terrain.get_ray_collision_point(pos,ray,collision_ray_step,1000)
+	
+	if walking_terrain:
+		editor_camera = viewport_camera
+		if process_input_terrain_walk(viewport_camera, event):
+			return true
+	
+	
+	for terrain in get_all_mterrain():
+		terrain.set_editor_camera(viewport_camera)	
+	######################## HANDLE CURVE GIZMO ##############################
+	if mpath_gizmo_gui.visible:				
+		return mpath_gizmo_gui.gizmo._forward_3d_gui_input(viewport_camera, event, ray_col)
+	######################## HANDLE CURVE GIZMO FINSH ########################	
+	
+	if active_terrain is MTerrain and event is InputEventMouse:						
+		if ray_col.is_collided():			
+			col_dis = ray_col.get_collision_position().distance_to(viewport_camera.global_position)
+			status_bar.set_height_label(ray_col.get_collision_position().y)
+			status_bar.set_distance_label(col_dis)
+			status_bar.set_region_label(active_terrain.get_region_id_by_world_pos(ray_col.get_collision_position()))
+			if current_edit_mode in [&"sculpt", &"paint"]:							
+				if paint_mode_handle(event):
+					return true
+			if human_male.visible:
+				if edit_human_position:
+					human_male.global_position = ray_col.get_collision_position()
+				if event is InputEventMouseButton:
+					if event.button_index == MOUSE_BUTTON_LEFT:
+						edit_human_position = false
+					if event.button_index == MOUSE_BUTTON_RIGHT and edit_human_position:
+						_on_human_male_toggled(false)
+					if event.button_index == MOUSE_BUTTON_MIDDLE:
+						edit_human_position = true
+						
+		else:
+			col_dis=1000000
+			status_bar.disable_height_label()
+			status_bar.disable_distance_label()
+			status_bar.disable_region_label()
+		if col_dis<1000:
+			collision_ray_step = (col_dis + 50)/100
+		else:
+			collision_ray_step = 3
+		#set_save_button_disabled(not active_terrain.has_unsave_image())
+	if process_input(event):
+		return true
+	## Fail paint attempt
+	## returning the stop so terrain will not be unselected
+	#if current_edit_mode == &"paint":		
+	#	if event is InputEventMouseButton:
+	#		if event.button_mask == MOUSE_BUTTON_LEFT:
+	#			return AFTER_GUI_INPUT_STOP
+
+
+
+var last_draw_time:int=0
+	
+func paint_mode_handle(event:InputEvent):	
+	if ray_col.is_collided():
+		brush_decal.visible = true
+		brush_decal.set_position(ray_col.get_collision_position())		
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				if active_object is MGrass:
+					active_object.check_undo()
+					undo_redo.create_action("GrassPaint")
+					undo_redo.add_undo_method(active_object,"undo")
+					undo_redo.commit_action(false)
+				elif active_object is MNavigationRegion3D:
+					pass
+				elif active_object is MTerrain: ## Start of painting						
+					active_object.set_brush_start_point(ray_col.get_collision_position(),brush_decal.radius)
+					#set_active_layer()
+					active_object.images_add_undo_stage()
+					undo_redo.create_action("Sculpting")
+					undo_redo.add_undo_method(active_object,"images_undo")
+					undo_redo.commit_action(false)
+			else:
+				if mask_decal.is_being_edited:
+					mask_decal.is_being_edited = false	
+				elif active_object is MGrass:
+					active_object.save_grass_data()
+				elif active_object is MNavigationRegion3D:
+					active_object.save_nav_data()
+				elif active_object is MTerrain:
+					active_object.save_all_dirty_images()
+		if event.button_mask == MOUSE_BUTTON_LEFT:			
+			var t = Time.get_ticks_msec()
+			var dt = t - last_draw_time			
+			last_draw_time = t		
+			if mask_decal.is_being_edited:
+				return true 
+			if draw(ray_col.get_collision_position()):
+				return true
+		if mask_decal.is_being_edited:			
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+				mask_decal.is_being_edited = false				
+				mask_popup_button.clear_mask()
+			mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+			mask_decal.is_being_edited = true
+			return true
+	else:
+		brush_decal.visible = false
+		mask_decal.visible = false
+		return false
+
+
+
+
 func on_scene_changed(_root):
 	set_edit_mode(null)
 
-func request_hide():	
-	
+func request_hide():		
 	set_edit_mode(null, null)
 	visible = false
+	mpath_gizmo_gui.visible = false
+	mcurve_mesh_gui.set_curve_mesh(null)		
 
 func request_show():
 	visible = true
@@ -342,7 +514,7 @@ func deactivate_editing():
 		mterrain.disable_brush_mask()
 	paint_panel.visible = false
 	mpath_gizmo_gui.visible = false
-	mcurve_mesh.visible = false
+	mcurve_mesh_gui.visible = false
 	brush_popup_button.clear_brushes()
 	active_object = null
 	current_edit_mode = &""
@@ -367,8 +539,8 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 			mpath_gizmo_gui.set_terrain_snap(null)
 		object.update_gizmos()
 	elif object is MCurveMesh:
-		mcurve_mesh.set_curve_mesh(object)
-		mcurve_mesh.visible = true
+		mcurve_mesh_gui.set_curve_mesh(object)
+		mcurve_mesh_gui.visible = true
 		
 	edit_mode_changed.emit(object, mode)	
 	var active_mterrain = get_active_mterrain()
