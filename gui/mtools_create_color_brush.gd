@@ -14,7 +14,6 @@ func _ready():
 		brush_created.emit(brush_name.text, icon.text, hardness.value, color.color) 
 		queue_free())
 	close_requested.connect(queue_free)	
-	files_dropped.connect(on_files_dropped)
 	color.pressed.connect(func(): 
 		var picker = color.get_picker().get_parent()
 		picker.position.x+= picker.size.x
@@ -28,5 +27,3 @@ func load_brush(bname, bicon, bhardness, bcolor):
 	color.color = bcolor
 	create_button.text = "Update"
 
-func on_files_dropped(files):
-	icon.text = files[0]

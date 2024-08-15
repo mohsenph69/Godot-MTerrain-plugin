@@ -101,6 +101,7 @@ func _ready():
 	edit_mode_button.edit_mode_changed.connect(set_edit_mode)		
 
 	theme_changed.connect(update_theme)
+	visibility_changed.connect(_on_resized)
 
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
@@ -147,7 +148,7 @@ func init_popup_button_signals(popup_button:Button):
 func _on_mouse_exited_popup() -> void:
 	if current_popup_button:
 		timer.one_shot = true	
-		timer.start(0.25)
+		timer.start(0.35)
 
 func _on_mouse_entered_popup() -> void:
 	if is_instance_valid(timer):

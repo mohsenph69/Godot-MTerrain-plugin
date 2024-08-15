@@ -181,6 +181,8 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 		brush_container.add_child(brush_item)		
 		brush_item.set_color_brush(layer_group_id, bname, bicon, bhardness, bcolor)
 		brush_item.brush_selected.connect( brush_layer_selected.bind(brush_item.get_index(), layer_group))
+		brush_item.brush_edited.connect(update_color_brush)
+		brush_item.brush_removed.connect(remove_color_brush)
 	
 	color_layer_group_id = layer_group_id
 	color_brush_uniform = layer_group.uniform_name
@@ -216,21 +218,17 @@ func brush_layer_selected(index, layer_group):
 func show_add_color_brush_popup():
 	var popup = preload("res://addons/m_terrain/gui/mtools_create_color_brush.tscn").instantiate()
 	add_child(popup)
-	popup.brush_created.connect(update_color_brush)
+	popup.brush_created.connect(update_color_brush.bind(-1))
 	
-func update_color_brush(brush_name, brush_icon, hardness, color):
-	var group: MBrushLayers = active_terrain.brush_layers[color_layer_group_id]
-	var target = group.layers.size()
-	for i in group.layers.size():
-		if group.layers[i].NAME == brush_name:	
-			target = i
-			break
-	if target > group.layers_num-1:
+func update_color_brush(brush_name, brush_icon, hardness, color, id):
+	var group: MBrushLayers = active_terrain.brush_layers[color_layer_group_id]	
+	if id == -1:
 		group.layers_num += 1
-	group.layers[target].NAME = brush_name
-	group.layers[target].ICON = brush_icon
-	group.layers[target].color = color
-	group.layers[target].hardness = hardness
+		id = group.layers_num -1
+	group.layers[id].NAME = brush_name
+	group.layers[id].ICON = brush_icon
+	group.layers[id].color = color
+	group.layers[id].hardness = hardness
 	
 	init_color_brushes(active_terrain, color_layer_group_id)
 
@@ -238,25 +236,33 @@ func remove_color_brush(id):
 	var group: MBrushLayers = active_terrain.brush_layers[color_layer_group_id]
 	var brushes = group.layers.duplicate()	
 	var index = 0
+	if id > brushes.size()-1 or id < 0: 
+		push_error("trying to delete nonexistant brush. Id: ", id)
+		return
 	for i in brushes.size():
 		if i != id:			
 			group.layers[index] = brushes[i]
 			index += 1
 	group.layers_num -= 1	
 	
-	init_color_brushes(active_terrain, color_layer_group_id)
+	init_color_brushes.call_deferred(active_terrain, color_layer_group_id)
 #endregion
 
 #region Grass Brushes
 func init_grass_brushes():
 	clear_brushes()
-	
 	brush_mode = &"grass"	
-	brush_container.item_selected.connect(on_grass_brush_select)
+	var brush_item_scene = preload("res://addons/m_terrain/gui/mtools_brush_item.tscn")
+	var brush_item = brush_item_scene.instantiate()
+	brush_container.add_child(brush_item)		
+	brush_item.set_text_brush("Add Grass")
+	brush_item.brush_selected.connect(func(): on_grass_brush_select(0))
+	
+	brush_item = brush_item_scene.instantiate()
+	brush_container.add_child(brush_item)		
+	brush_item.set_text_brush("Remove Grass")	
+	brush_item.brush_selected.connect(func(): on_grass_brush_select(1))
 		
-	brush_container.add_item("Add Grass")
-	brush_container.add_item("Remove Grass")
-	brush_container.select(0)
 	on_grass_brush_select(0)
 
 func on_grass_brush_select(id):
@@ -276,11 +282,19 @@ func init_mnavigation_brushes():
 	clear_brushes()
 	
 	brush_mode = &"navigation"
-	brush_container.item_selected.connect(on_mnavigation_brush_select)
-		
-	brush_container.add_item("Add Navigation")
-	brush_container.add_item("Remove Navigation")
-	brush_container.select(0)
+
+	var brush_item_scene = preload("res://addons/m_terrain/gui/mtools_brush_item.tscn")
+	var brush_item = brush_item_scene.instantiate()
+	brush_container.add_child(brush_item)		
+	brush_item.set_text_brush("Add Navigation")
+	brush_item.brush_selected.connect(func(): on_grass_brush_select(0))
+	
+	brush_item = brush_item_scene.instantiate()
+	brush_container.add_child(brush_item)		
+	brush_item.set_text_brush("Remove Navigation")	
+	brush_item.brush_selected.connect(func(): on_grass_brush_select(1))
+	
+	on_mnavigation_brush_select(0)
 
 func on_mnavigation_brush_select(id):
 	if id==0:
