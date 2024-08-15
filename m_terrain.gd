@@ -99,7 +99,7 @@ func _enter_tree():
 		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
 		
 		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
-		tsnap.pressed.connect(func(): tsnap_pressed(tools.get_active_mterrain()))
+		tsnap.pressed.connect(tsnap_pressed)
 		tsnap.visible = false
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)				
 				
@@ -189,11 +189,17 @@ func _forward_3d_gui_input(viewport_camera, event):
 		
 
 #To do: fix tsnap pressed - how does it find active_terrain?
-func tsnap_pressed(active_terrain):
-	if active_terrain and tools.active_snap_object and active_terrain.is_grid_created():
+func tsnap_pressed():
+	var terrains = tools.get_all_mterrain()
+	var active_terrain
+	for terrain in terrains:
+		if terrain.is_grid_created():
+			active_terrain = terrain
+			break	
+	if active_terrain and tools.active_snap_object:		
 		var h:float = active_terrain.get_height(tools.active_snap_object.global_position)
 		tools.active_snap_object.global_position.y = h
-
+			
 func show_import_window():	
 	var window = load("res://addons/m_terrain/gui/import_window.tscn").instantiate()
 	add_child(window)		
