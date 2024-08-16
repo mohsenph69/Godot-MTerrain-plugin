@@ -13,7 +13,7 @@ signal brush_created
 @onready var bitwise = find_child("Bitwise")
 @onready var paint16 = find_child("Paint16")
 @onready var paint256 = find_child("Paint256")
-
+@onready var brush_type = find_child("brush_type")
 var existing_brush_names = []
 var is_update_mode = false
 
@@ -28,6 +28,18 @@ func _ready():
 		picker.position.x+= picker.size.x
 		picker.position.y = color.global_position.y + position.y
 		)
+	var load_icon_button = find_child("load_icon_button")
+	load_icon_button.pressed.connect(func():
+		var popup = FileDialog.new()
+		popup.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+		popup.use_native_dialog = true
+		popup.filters = PackedStringArray(["*.png, *.jpg ; Image Files"])
+		add_child(popup)
+		popup.show()
+		popup.size = size
+		popup.position = position
+		popup.file_selected.connect(func(file): icon.text = file)
+	)
 
 func validate_brush_name(new_name):
 	if new_name in existing_brush_names:
@@ -77,6 +89,7 @@ func init_for_color(existing_brushes):
 	color.visible = true
 	hardness.visible = true
 	existing_brush_names = existing_brushes
+	brush_type.text = "Color Brush Settings"
 
 func init_for_channel(existing_brushes):
 	clear_options()
@@ -86,21 +99,25 @@ func init_for_channel(existing_brushes):
 	a.visible = true
 	hardness.visible = true
 	existing_brush_names = existing_brushes
+	brush_type.text = "Channel Brush Settings"
 	
 func init_for_bitwise(existing_brushes):
 	clear_options()	
 	bitwise.visible = true
 	existing_brush_names = existing_brushes
+	brush_type.text = "Bitwise Brush Settings"
 	
 func init_for_16(existing_brushes):
 	clear_options()	
 	paint16.visible = true
 	existing_brush_names = existing_brushes
+	brush_type.text = "Paint16 Brush Settings"
 	
 func init_for_256(existing_brushes):
 	clear_options()	
 	paint256.visible = true
 	existing_brush_names = existing_brushes
+	brush_type.text = "Paint256 Brush Settings"
 
 func load_brush(layer_group, bname, bicon, data={}):
 	var existing_brush_names = layer_group.layers.map(func(a): return a.NAME).filter(func(a): return a != bname)

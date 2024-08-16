@@ -122,5 +122,16 @@ func resize_children_recursive(parent, new_size):
 			child.custom_minimum_size.x = new_size
 			child.custom_minimum_size.y = new_size		
 		resize_children_recursive(child, new_size)
+		
+func get_total_width():	
+	var total = name_button.text.length() * get_theme_default_font_size() *0.75	
+	#name_button.size.x if is_instance_valid(name_button) and name_button.visible else total
+	
+	total = total + visibility_button.size.x if is_instance_valid(visibility_button) and visibility_button.visible else total	
+	total = total + rename_button.size.x if is_instance_valid(rename_button) and rename_button.visible else total
+	total = total + merge_down_button.size.x if is_instance_valid(merge_down_button) and merge_down_button.visible else total
+	total = total + remove_button.size.x if is_instance_valid(remove_button) and remove_button.visible else total
+	total *= 1.01
+	return total
 #endregion
 

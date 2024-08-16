@@ -10,7 +10,7 @@ signal layer_created
 @onready var def_color_picker = find_child("ColorPickerButton")
 @onready var layer_types:OptionButton = find_child("layer_types")
 @onready var file_compress_option = find_child("file_compress")
-@onready var compress_option = find_child("data_compress_option")
+@onready var compress_option: OptionButton = find_child("data_compress_option")
 @onready var remove_uniform_list = find_child("remove_uniform_list")
 
 const config_file_name:=".save_config.ini"
@@ -26,9 +26,15 @@ func _ready():
 	layer_types.item_selected.connect(func(id): 
 		find_child("def_color").visible = id == 0
 	)	
-	
+	format_option.item_selected.connect(func(id):
+		find_child("data_compress_settings").visible = id in [Image.FORMAT_L8, Image.FORMAT_RGB8, Image.FORMAT_RGBA8]
+		compress_option.set_item_disabled(1, not id in [Image.FORMAT_RGB8, Image.FORMAT_RGBA8])
+		compress_option.set_item_disabled(2, not id in [Image.FORMAT_L8, Image.FORMAT_RGB8, Image.FORMAT_RGBA8])		
+	)
 	find_child("close_button").pressed.connect(_on_close_requested)
-		
+	find_child("create").button_up.connect(_on_create_button_up)
+	
+	
 func set_terrain(input:MTerrain):
 	active_terrain = input
 	if input.terrain_size.x % input.region_size !=0:

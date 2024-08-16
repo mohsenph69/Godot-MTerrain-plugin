@@ -26,7 +26,8 @@ func value_changed(new_value):
 	if slider.value != new_value:
 		slider.value = new_value
 
-func text_changed(new_text):
+func text_changed(new_text):	
+	var caret_position = text.caret_column
 	if not force_int:
 		if new_text.to_float() > slider.min_value and new_text.to_float() < slider.max_value: 			
 			slider.value = new_text.to_float()
@@ -40,6 +41,7 @@ func text_changed(new_text):
 		if text.text.to_int() == new_text.to_int() and slider.value == new_text.to_int(): return	
 		slider.value = new_text.to_int()
 		text.text = new_text.to_int()
+	text.caret_column = caret_position
 
 func toggle(toggle_on):	
 	slider.editable = toggle_on

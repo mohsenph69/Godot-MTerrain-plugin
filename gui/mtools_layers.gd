@@ -22,11 +22,21 @@ var confirmation_popup_scene = preload("res://addons/m_terrain/gui/mtools_layer_
 
 
 func _ready():
-	var panel = get_child(0)
+	var panel:Control = get_child(0)
 	panel.visible = false
 	panel.position.y = -panel.size.y-2
 	panel.gui_input.connect(fix_gui_input)
-	#TO DO: add a confirmation dialog "Are you sure you want to merge layers?"
+	panel.visibility_changed.connect(func():
+		var max_width = 0
+		for child in layers_container.get_children():
+			if child.get_total_width() > max_width:
+				max_width = child.get_total_width()
+		max_width = min(max_width, owner.mtools_root.get_child(0).size.x)
+		print(max_width)
+		panel.custom_minimum_size.x = max_width
+		panel.size.x = max_width
+	)
+	
 	merge_height_layers_button.pressed.connect(merge_all_heightmap_layers)
 	add_height_layer_button.pressed.connect(add_heightmap_layer)
 	add_color_layer_button.pressed.connect(add_color_layer)
@@ -140,7 +150,7 @@ func init_color_layers(mterrain:MTerrain, brush_button):
 		add_color_layer_item(layer_group_id, layer)
 		layer_group_id += 1
 	if layer_group_id>0:
-		layers_container.get_child(0).select_layer()
+		layers_container.get_child(0).select_layer()	
 
 func add_color_layer_item(layer_group_id, layer):
 		var layer_item = layer_item_scene.instantiate()
