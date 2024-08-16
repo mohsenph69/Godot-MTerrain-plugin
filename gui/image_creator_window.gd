@@ -28,7 +28,6 @@ func _ready():
 	)	
 	
 	find_child("close_button").pressed.connect(_on_close_requested)
-	find_child("restart_editor_button").pressed.connect(func():EditorInterface.restart_editor())		
 		
 func set_terrain(input:MTerrain):
 	active_terrain = input
@@ -95,8 +94,6 @@ func _on_create_button_up():
 			mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
 			ResourceSaver.save(mres,path)
 			init_new_color_layer(uniform_name, def_color)
-			find_child("restart_editor_button").visible = true
-			find_child("restart_label").visible = true
 	#queue_free()
 
 func init_new_color_layer(uniform_name, color):

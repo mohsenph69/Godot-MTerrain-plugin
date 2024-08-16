@@ -45,7 +45,7 @@ func _ready():
 	panel.position.y = -panel.size.y
 	panel.gui_input.connect(fix_gui_input)
 	panel.size.x = get_viewport().size.x - global_position.x
-
+	panel.visibility_changed.connect(_on_panel_visibility_changed)
 	add_color_brush_button.pressed.connect(show_add_color_brush_popup)
 	
 func fix_gui_input(event: InputEvent):
@@ -69,12 +69,14 @@ func clear_brushes():
 	#for connection in brush_container.get_signal_connection_list("item_clicked"):
 	#	connection.signal.disconnect(connection.callable)
 	add_color_brush_button.visible = false
-	
+	find_child("brush_settings_panel").visible = false
 	
 	
 #region Height Brushes
 func init_height_brushes(new_brush_manager):		
 	clear_brushes()	
+	find_child("brush_settings_panel").visible = true
+	
 	brush_mode = &"sculpt"	
 	#brush_container.brush_selected.connect(on_height_brush_select)	
 	height_brush_manager = new_brush_manager
@@ -372,20 +374,27 @@ func process_input(event):
 #endregion
 
 
-func _on_resized():
+func _on_resized():	
 	var vbox = get_child(0)
 	var settings = find_child("brush_settings_panel")
 	settings.custom_minimum_size.x = global_position.x-owner.global_position.x
+	settings.size = settings.custom_minimum_size
 	var size_panel = find_child("brush_size_panel")
 	size_panel.custom_minimum_size.x = size.x
+	size_panel.size = size_panel.custom_minimum_size
 	var brushes_panel = find_child("brush_brushes_panel")
-	brushes_panel.custom_minimum_size.x = owner.size.x - size_panel.size.x - settings.size.x - 12
+	brushes_panel.custom_minimum_size.x = (owner.size.x - size_panel.size.x - settings.size.x - 12) *0.5
+	brushes_panel.size = brushes_panel.custom_minimum_size
 	
-	vbox.size.x = owner.size.x
-	vbox.global_position.x = owner.global_position.x
+	vbox.size.x = settings.size.x + size_panel.size.x + brushes_panel.size.x * 1.01
+	if settings.visible:
+		vbox.global_position.x = owner.global_position.x
+	else:
+		vbox.position.x = 0
+		
 	vbox.size.y = get_viewport_rect().size.y/5
 	vbox.position.y = -vbox.size.y
 
 
-func _on_panel_visibility_changed():
+func _on_panel_visibility_changed():	
 	_on_resized()

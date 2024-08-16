@@ -12,7 +12,7 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2e40r"]
 
 [resource]
-default_font_size = 28
+default_font_size = 32
 Button/styles/hover = null
 Button/styles/normal = ExtResource("1_set7o")
 Button/styles/pressed = ExtResource("1_set7o")

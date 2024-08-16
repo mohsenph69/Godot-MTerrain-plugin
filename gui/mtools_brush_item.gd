@@ -57,8 +57,8 @@ func set_color_brush(layer_group, i):
 				
 	if brush_type == 0:
 		color = brush.color
-		var stylebox = StyleBoxFlat.new()
-		stylebox.bg_color = color
+		var stylebox = preload("res://2d_editor/button_stylebox.tres").duplicate()
+		stylebox.bg_color = color		
 		label.set("theme_override_styles/normal", stylebox)
 		label.set("theme_override_styles/focus", stylebox)
 		label.set("theme_override_styles/hover", stylebox)

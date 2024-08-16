@@ -127,7 +127,7 @@ func set_mask_decal(new_mask):
 func on_node_modified(node):	
 	if node is MTerrain or node is MGrass or node is MNavigationRegion3D or node is MPath or node is MCurveMesh:
 		update_edit_mode_options()
-
+		
 func update_edit_mode_options():	
 	var all_mterrain = get_all_mterrain()
 	if all_mterrain.size() != 0:
@@ -496,7 +496,7 @@ func request_hide():
 	mpath_gizmo_gui.visible = false
 	mcurve_mesh_gui.set_curve_mesh(null)		
 
-func request_show():
+func request_show():	
 	visible = true
 	_on_resized()
 	update_edit_mode_options()
@@ -659,7 +659,7 @@ func _on_image_creator_button_pressed() -> void:
 #endregion	
 
 #region theme: sizes and colors etc
-func _on_resized():		
+func _on_resized():			
 	if not has_node("VSplitContainer") or not mtools_root:
 		call_deferred( "_on_resized" )	
 		return
