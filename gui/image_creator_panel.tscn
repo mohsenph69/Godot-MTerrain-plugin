@@ -42,6 +42,19 @@ horizontal_alignment = 1
 [node name="HSeparator2" type="HSeparator" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
 layout_mode = 2
 
+[node name="layer_name_hbox" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/layer_name_hbox"]
+layout_mode = 2
+text = "Layer Name:"
+
+[node name="layer_name" type="LineEdit" parent="VBoxContainer/Create Color Layer/VBoxContainer/layer_name_hbox"]
+layout_mode = 2
+placeholder_text = "New Layer Name"
+expand_to_text_length = true
+
 [node name="layer_type" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
 layout_mode = 2
 alignment = 1
@@ -65,15 +78,15 @@ popup/item_3/id = 3
 popup/item_4/text = "Paint 16"
 popup/item_4/id = 4
 
-[node name="uniform_name" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+[node name="uniform_name_hbox" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
 layout_mode = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/uniform_name"]
+[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/uniform_name_hbox"]
 layout_mode = 2
-text = "Uniform name:"
+text = "Uniform Name:"
 
-[node name="uniform_name_line" type="LineEdit" parent="VBoxContainer/Create Color Layer/VBoxContainer/uniform_name"]
+[node name="uniform_name" type="LineEdit" parent="VBoxContainer/Create Color Layer/VBoxContainer/uniform_name_hbox"]
 layout_mode = 2
 expand_to_text_length = true
 
@@ -92,15 +105,24 @@ text = "-------------"
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
 layout_mode = 2
 
-[node name="uniform_name2" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+[node name="advanced_settings_button" type="Button" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Advanced Settings"
+
+[node name="advanced_settings" type="VBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="image_format_vbox" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings"]
 layout_mode = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/uniform_name2"]
+[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/image_format_vbox"]
 layout_mode = 2
 text = "Image Format"
 
-[node name="uniform_name_2" type="OptionButton" parent="VBoxContainer/Create Color Layer/VBoxContainer/uniform_name2"]
+[node name="image_format" type="OptionButton" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/image_format_vbox"]
 layout_mode = 2
 item_count = 12
 selected = 5
@@ -129,47 +151,43 @@ popup/item_10/id = 10
 popup/item_11/text = "FORMAT_RGBAF"
 popup/item_11/id = 11
 
-[node name="data_compress_settings" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+[node name="data_compress_settings" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings"]
 layout_mode = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/data_compress_settings"]
+[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/data_compress_settings"]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_bk6nk")
 text = "Compress"
 
-[node name="data_compress_option" parent="VBoxContainer/Create Color Layer/VBoxContainer/data_compress_settings" instance=ExtResource("1_2426v")]
+[node name="data_compress_option" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/data_compress_settings" instance=ExtResource("1_2426v")]
 layout_mode = 2
 
-[node name="hb3" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+[node name="hb3" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings"]
 layout_mode = 2
 alignment = 1
 
-[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/hb3"]
+[node name="Label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/hb3"]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_h7iju")
 text = "File Compress"
 
-[node name="file_compress" parent="VBoxContainer/Create Color Layer/VBoxContainer/hb3" instance=ExtResource("2_w2t2j")]
+[node name="file_compress" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/hb3" instance=ExtResource("2_w2t2j")]
 layout_mode = 2
 selected = 4
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+layout_mode = 2
+
+[node name="instructions_label" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="create" type="Button" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Create"
-
-[node name="no_terrain" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
-visible = false
-modulate = Color(1, 0.219608, 0.266667, 1)
-layout_mode = 2
-text = "No active Terrain, Please select the terrain and open this again"
-
-[node name="no_terrain2" type="Label" parent="VBoxContainer/Create Color Layer/VBoxContainer"]
-visible = false
-modulate = Color(1, 0.219608, 0.266667, 1)
-layout_mode = 2
-text = "Uniform name is empty"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2

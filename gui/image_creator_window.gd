@@ -3,15 +3,15 @@ extends Window
 
 signal layer_created
 
-@onready var no_terrain_label = find_child("no_terrain")
-@onready var uniform_name_line = find_child("uniform_name_line")
-@onready var format_option = find_child("uniform_name_2")
-@onready var uniform_name_empty_error = find_child("no_terrain2")
+@onready var layer_name_input:LineEdit = find_child("layer_name")
+@onready var uniform_name_input:LineEdit = find_child("uniform_name")
+@onready var format_option:OptionButton = find_child("image_format")
 @onready var def_color_picker = find_child("ColorPickerButton")
 @onready var layer_types:OptionButton = find_child("layer_types")
 @onready var file_compress_option = find_child("file_compress")
 @onready var compress_option: OptionButton = find_child("data_compress_option")
-@onready var remove_uniform_list = find_child("remove_uniform_list")
+@onready var instructions_label: Label = find_child("instructions_label")
+@onready var create_button:Button = find_child("create")
 
 const config_file_name:=".save_config.ini"
 
@@ -20,23 +20,61 @@ var image_width:int=0
 var data_dir:=""
 var is_init = false
 
-var active_terrain
+var active_terrain: MTerrain
+
+var advanced_settings = false
 
 func _ready():
+	layer_name_input.text_changed.connect(func(new_text):
+		validate_settings()
+	)
+	uniform_name_input.text_changed.connect(func(new_text):
+		validate_settings()
+	)
 	layer_types.item_selected.connect(func(id): 
 		find_child("def_color").visible = id == 0
+		validate_settings()		
 	)	
-	format_option.item_selected.connect(func(id):
+	format_option.item_selected.connect(func(id):		
 		find_child("data_compress_settings").visible = id in [Image.FORMAT_L8, Image.FORMAT_RGB8, Image.FORMAT_RGBA8]
 		compress_option.set_item_disabled(1, not id in [Image.FORMAT_RGB8, Image.FORMAT_RGBA8])
 		compress_option.set_item_disabled(2, not id in [Image.FORMAT_L8, Image.FORMAT_RGB8, Image.FORMAT_RGBA8])		
+		validate_settings()
 	)
 	find_child("close_button").pressed.connect(_on_close_requested)
-	find_child("create").button_up.connect(_on_create_button_up)
+	create_button.button_up.connect(_on_create_button_up)
+
+	find_child("advanced_settings_button").pressed.connect(func():
+		find_child("advanced_settings_button").visible = false
+		find_child("advanced_settings").visible = true
+		advanced_settings = true		
+	)		
+	
+func validate_settings():
+	var instructions = ""
+	var warnings = ""
+	var existing_layers = active_terrain.brush_layers.map(func(a):return a.layers_title)
+	if layer_name_input.text.strip_edges() == "":
+		instructions += "Please enter a Layer Name\n"		
+	elif layer_name_input.text == "" or layer_name_input.text in existing_layers:
+		instructions += "Layer name aleady exists.\n"
+	if uniform_name_input.text == "":
+		instructions += "Please enter a Uniform Name\n"
+	elif uniform_name_input.text in active_terrain.brush_layers.map(func(a): return a.uniform_name):		
+		var others_mode = active_terrain.brush_layers.filter(func(a): return a.uniform_name == uniform_name_input.text).map(func(a): return a.brush_name)		
+		if "Color Paint" in others_mode or layer_types.selected == 0:
+			instructions += "Uniform already exists. Cannot share uniform in Color Paint mode"
+		warnings += "This layer is about to share a Uniform with another layer. Please be careful with how you combine brushes"
+	
+	
+	
+	instructions_label.text = warnings if instructions == "" else instructions 	
+	create_button.disabled = instructions != ""
 	
 	
 func set_terrain(input:MTerrain):
 	active_terrain = input
+	validate_settings()
 	if input.terrain_size.x % input.region_size !=0:
 		printerr("Terrain size.x is not divisible by its region size")
 		return
@@ -47,8 +85,7 @@ func set_terrain(input:MTerrain):
 	region_grid_size.y = input.terrain_size.x/input.region_size
 	image_width = ((input.region_size*input.get_base_size())/input.get_h_scale())
 	data_dir = input.dataDir
-	is_init = true
-	no_terrain_label.visible = false
+	is_init = true	
 	## Setting image list
 	var first_path = data_dir.path_join("x0_y0.res")
 	if not ResourceLoader.exists(first_path):
@@ -70,17 +107,11 @@ func _on_create_button_up():
 		printerr("Image create/remove is not init")
 		return
 	var format:int = format_option.get_selected_id()
-	var uniform_name:String = uniform_name_line.text
+	var uniform_name:String = uniform_name_input.text
 	var def_color:Color=def_color_picker.color
 	var file_compress = file_compress_option.selected
 	var compress = compress_option.selected
 	
-	if uniform_name.is_empty():
-		printerr("Uniform Name is empty")
-		uniform_name_empty_error.visible = true
-		return
-	else:
-		uniform_name_empty_error.visible = false
 	var dir = DirAccess.open(data_dir)
 	if not dir:
 		printerr("Can not open ",data_dir)
@@ -98,15 +129,14 @@ func _on_create_button_up():
 			var img:Image = Image.create(image_width,image_width,false,format)
 			img.fill(def_color)
 			mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
-			ResourceSaver.save(mres,path)
-			init_new_color_layer(uniform_name, def_color)
-	#queue_free()
+			ResourceSaver.save(mres,path)			
+			init_new_color_layer(layer_name_input.text, uniform_name, def_color)	
 
-func init_new_color_layer(uniform_name, color):
+func init_new_color_layer(layer_name, uniform_name, color = null):
 	active_terrain.brush_layers_groups_num += 1
 	var id = active_terrain.brush_layers_groups_num-1
 	active_terrain.brush_layers[id] = MBrushLayers.new()
-	active_terrain.brush_layers[id].layers_title = uniform_name
+	active_terrain.brush_layers[id].layers_title = layer_name
 	active_terrain.brush_layers[id].uniform_name = uniform_name
 	active_terrain.brush_layers[id].brush_name = layer_types.get_item_text(layer_types.selected)
 	active_terrain.brush_layers[id].layers_num = 1
@@ -118,64 +148,3 @@ func init_new_color_layer(uniform_name, color):
 		active_terrain.restart_grid()
 	else:
 		active_terrain.create_grid()
-
-func _on_remove_button_up():
-	if not is_init:
-		printerr("Image create/remove is not init")
-		return
-	var index = remove_uniform_list.selected
-	if index < 0:
-		return
-	var dname = remove_uniform_list.get_item_text(index)
-	var dir = DirAccess.open(data_dir)
-	if not dir:
-		printerr("Can not open ",data_dir)
-		return
-	dir.list_dir_begin()
-	var file_name :String= dir.get_next()
-	var res_names:PackedStringArray
-	while file_name != "":
-		if file_name.get_extension() == "res":
-			res_names.append(file_name)
-		file_name = dir.get_next()
-	remove_config_file(dname)
-	for res_name in res_names:
-		var path = data_dir.path_join(res_name)
-		var mres = load(path)
-		if not (mres is MResource):
-			continue
-		mres.remove_data(dname)
-		ResourceSaver.save(mres,path)
-	#queue_free()
-
-
-func update_config_file():
-	var path = data_dir.path_join(config_file_name)
-	var config = ConfigFile.new()
-	if FileAccess.file_exists(path):
-		var err = config.load(path)
-		if err != OK:
-			printerr("Can not load config with err ",err)
-	
-	var uniform_name:String = uniform_name_line.text
-	var file_compress = file_compress_option.selected
-	var compress = compress_option.selected
-	
-	config.set_value(uniform_name,"compress",compress)
-	config.set_value(uniform_name,"file_compress",file_compress)
-	config.save(path)
-
-
-func remove_config_file(dname):
-	var path = data_dir.path_join(config_file_name)
-	var config = ConfigFile.new()
-	if FileAccess.file_exists(path):
-		var err = config.load(path)
-		if err != OK:
-			printerr("Can not load config with err ",err)
-			return
-	else:
-		return
-	
-	config.erase_section(dname)
-	config.save(path)

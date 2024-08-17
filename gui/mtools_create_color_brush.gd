@@ -19,9 +19,9 @@ var is_update_mode = false
 
 func _ready():
 	brush_name.text_changed.connect(validate_brush_name)
-	create_button.pressed.connect(func():
+	create_button.pressed.connect(func():		
 		brush_created.emit(brush_name.text, icon.text, get_data()) 
-		queue_free())
+		free())
 	close_requested.connect(queue_free)	
 	color.pressed.connect(func(): 
 		var picker = color.get_picker().get_parent()

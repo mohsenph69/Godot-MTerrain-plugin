@@ -107,6 +107,7 @@ func init_for_colors():
 	visibility_button.queue_free()		
 
 	name_button.text = name
+	
 	#rename_button.pressed.connect(begin_rename)
 	#rename_input.text_submitted.connect(end_rename)
 	#rename_input.focus_exited.connect(end_rename.bind(""))

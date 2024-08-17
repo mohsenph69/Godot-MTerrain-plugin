@@ -31,8 +31,7 @@ func _ready():
 		for child in layers_container.get_children():
 			if child.get_total_width() > max_width:
 				max_width = child.get_total_width()
-		max_width = min(max_width, owner.mtools_root.get_child(0).size.x)
-		print(max_width)
+		max_width = min(max_width, owner.mtools_root.get_child(0).size.x)		
 		panel.custom_minimum_size.x = max_width
 		panel.size.x = max_width
 	)
@@ -157,6 +156,7 @@ func add_color_layer_item(layer_group_id, layer):
 		layer_item.name = layer.layers_title if layer.layers_title != "" else str("layer group ", layer_group_id)
 		layers_container.add_child(layer_item)
 		layer_item.init_for_colors()		
+		layer_item.name_button.tooltip_text = str("select ", layer.layers_title, ". Uniform: ", layer.uniform_name)
 		layer_item.layer_selected.connect(change_color_layer_selection)
 		layer_item.layer_removed.connect(remove_color_layer)
 		#layer_item.layer_visibility_changed.connect(toggle_heightmap_layer_visibility)
