@@ -32,7 +32,22 @@ func _ready():
 		validate_settings()
 	)
 	layer_types.item_selected.connect(func(id): 
-		find_child("def_color").visible = id == 0
+		find_child("def_color").visible = id == 0 #color paint
+		var allowed_formats = []		
+		format_option.select(Image.FORMAT_RGBA8)
+		if layer_types.get_item_text(id) == "Paint 16":
+			format_option.select(Image.FORMAT_RGBA4444)			
+			allowed_formats = [Image.FORMAT_RGBA4444]
+		if layer_types.get_item_text(id) == "Paint 256":
+			format_option.select(Image.FORMAT_R8)			
+			allowed_formats = [Image.FORMAT_R8, Image.FORMAT_RG8,Image.FORMAT_RGB8,Image.FORMAT_RGBA8]
+		
+		for i in format_option.item_count:
+			if allowed_formats == []:
+				format_option.set_item_disabled(i, false)	
+			else:
+				format_option.set_item_disabled(i, not i in allowed_formats)	
+		
 		validate_settings()		
 	)	
 	format_option.item_selected.connect(func(id):		
