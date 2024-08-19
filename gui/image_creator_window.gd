@@ -18,9 +18,9 @@ func _on_create_pressed():
 	queue_free()
 
 func _on_image_name_text_changed(new_text):
-	var enable = new_text in mterrain.get_image_list()
-	create_button.disabled == enable
-	error_label.visible == not enable
+	var disable = new_text in mterrain.get_image_list()	
+	create_button.disabled = disable
+	error_label.visible = disable
 
 func create_image():	
 	var format:int = image_format.get_selected_id()

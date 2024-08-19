@@ -106,6 +106,7 @@ layout_mode = 2
 selected = 4
 
 [node name="error_label" type="Label" parent="PanelContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 text = "Image already exists!"
 horizontal_alignment = 1
