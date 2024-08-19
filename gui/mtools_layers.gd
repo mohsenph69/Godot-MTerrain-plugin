@@ -178,7 +178,10 @@ func add_color_layer():
 	var window = preload("res://addons/m_terrain/gui/image_creator_window.tscn").instantiate()
 	add_child(window)
 	window.set_terrain(active_terrain)
-	window.layer_created.connect(func(layer): add_color_layer_item(active_terrain.brush_layers_groups_num-1, layer ) )
+	window.layer_created.connect(func(layer): 
+		add_color_layer_item(active_terrain.brush_layers_groups_num-1, layer ) 
+		change_color_layer_selection(active_terrain.brush_layers_groups_num-1, active_terrain.brush_layers[active_terrain.brush_layers_groups_num-1].layers_title)
+	)
 
 func rename_color_layer():
 	pass

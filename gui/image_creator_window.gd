@@ -74,7 +74,7 @@ func validate_settings():
 	var warnings = ""
 	var existing_layers = active_terrain.brush_layers.map(func(a):return a.layers_title)
 	advanced_settings_button.visible = true	
-	advanced_settings_control.visible = true	
+	advanced_settings_control.visible = false
 	if layer_name_input.text.strip_edges() == "":
 		instructions += "Please enter a Layer Name\n"		
 	elif layer_name_input.text == "" or layer_name_input.text in existing_layers:
@@ -95,6 +95,7 @@ func validate_settings():
 	
 func set_terrain(input:MTerrain):
 	active_terrain = input
+	active_terrain.save_all_dirty_images()
 	validate_settings.call_deferred()
 	if input.terrain_size.x % input.region_size !=0:
 		printerr("Terrain size.x is not divisible by its region size")
