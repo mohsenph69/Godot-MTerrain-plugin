@@ -27,6 +27,7 @@ var is_init = false
 var active_terrain: MTerrain
 
 var advanced_settings = false
+var uniform_exists = false
 
 func _ready():
 	layer_name_input.text_changed.connect(func(new_text):
@@ -88,7 +89,9 @@ func validate_settings():
 		warnings += "This layer is about to share a Uniform with another layer. Please be careful with how you combine brushes"
 		advanced_settings_button.visible = false	
 		advanced_settings_control.visible = false		
+		uniform_exists = true
 	else:
+		uniform_exists = false
 		warnings += str("Creating new image uniform. \nTo use in shader you need to add \n`uniform sampler2d mterrain_",uniform_name_input.text, "` to your shader \nthen restart the terrain")
 	
 	instructions_label.text = warnings if instructions == "" else instructions 	
@@ -124,18 +127,17 @@ func set_terrain(input:MTerrain):
 
 func _on_close_requested():
 	queue_free()
-	
 
-func _on_create_button_up():
-		if not is_init:
-			printerr("Image create/remove is not init")
-			return
-		var format:int = format_option.get_selected_id()
-		var uniform_name:String = uniform_name_input.text
-		var def_color:Color=def_color_picker.color
-		var file_compress = file_compress_option.selected
-		var compress = compress_option.selected
-		
+func _on_create_button_up():	
+	if not is_init:
+		printerr("Image create/remove is not init")
+		return
+	var format:int = format_option.get_selected_id()
+	var uniform_name:String = uniform_name_input.text
+	var def_color:Color=def_color_picker.color
+	var file_compress = file_compress_option.selected
+	var compress = compress_option.selected	
+	if not uniform_exists:
 		var dir = DirAccess.open(data_dir)
 		if not dir:
 			printerr("Can not open ",data_dir)
@@ -154,9 +156,10 @@ func _on_create_button_up():
 				img.fill(def_color)
 				mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
 				ResourceSaver.save(mres,path)			
-			init_new_color_layer(layer_name_input.text, uniform_name, def_color)	
-			queue_free()
-			
+
+	init_new_color_layer(layer_name_input.text, uniform_name, def_color)	
+	queue_free()
+		
 
 func init_new_color_layer(layer_name, uniform_name, color = null):
 	active_terrain.brush_layers_groups_num += 1
