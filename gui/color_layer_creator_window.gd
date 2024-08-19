@@ -85,10 +85,13 @@ func validate_settings():
 	elif uniform_name_input.text in active_terrain.brush_layers.map(func(a): return a.uniform_name):		
 		var others_mode = active_terrain.brush_layers.filter(func(a): return a.uniform_name == uniform_name_input.text).map(func(a): return a.brush_name)		
 		if "Color Paint" in others_mode or layer_types.selected == 0:
-			instructions += "Uniform already exists. Cannot share uniform in Color Paint mode"
+			instructions += "Uniform already exists. Cannot share uniform in Color Paint mode"		
 		warnings += "This layer is about to share a Uniform with another layer. Please be careful with how you combine brushes"
 		advanced_settings_button.visible = false	
 		advanced_settings_control.visible = false		
+		uniform_exists = true
+	elif uniform_name_input.text in active_terrain.get_image_list():
+		warnings += "This layer is about to connect with an existing uniform image"		
 		uniform_exists = true
 	else:
 		uniform_exists = false
@@ -156,7 +159,9 @@ func _on_create_button_up():
 				img.fill(def_color)
 				mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
 				ResourceSaver.save(mres,path)			
-
+	else:
+		print("uniform exists")
+	
 	init_new_color_layer(layer_name_input.text, uniform_name, def_color)	
 	queue_free()
 		

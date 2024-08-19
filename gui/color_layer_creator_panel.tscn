@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://dptq8ffglb0du"]
 
-[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_7rkgl"]
-[ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="1_2426v"]
-[ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="2_w2t2j"]
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_g0rx7"]
+[ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="2_rkshc"]
+[ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="3_kynmw"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_50mff"]
 font_size = 32
@@ -19,7 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("1_7rkgl")
+theme = ExtResource("1_g0rx7")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 2
@@ -160,7 +160,7 @@ layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_bk6nk")
 text = "Compress"
 
-[node name="data_compress_option" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/data_compress_settings" instance=ExtResource("1_2426v")]
+[node name="data_compress_option" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/data_compress_settings" instance=ExtResource("2_rkshc")]
 layout_mode = 2
 
 [node name="hb3" type="HBoxContainer" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings"]
@@ -172,7 +172,7 @@ layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxEmpty_h7iju")
 text = "File Compress"
 
-[node name="file_compress" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/hb3" instance=ExtResource("2_w2t2j")]
+[node name="file_compress" parent="VBoxContainer/Create Color Layer/VBoxContainer/advanced_settings/hb3" instance=ExtResource("3_kynmw")]
 layout_mode = 2
 selected = 4
 
