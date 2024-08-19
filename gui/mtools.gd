@@ -560,11 +560,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		if mode == &"sculpt":
 			layers_popup_button.init_height_layers(object)
 			brush_popup_button.init_height_brushes(brush_manager)			
-		elif mode == &"paint":
-			if object.get_layers_info().size() == 0:
-				add_child(preload("res://addons/m_terrain/gui/paint_mode_instructions_popup.tscn").instantiate())
-				set_edit_mode(null,null)
-				return
+		elif mode == &"paint":			
 			layers_popup_button.init_color_layers(object, brush_popup_button)
 			#Colol layers will init there own brushes				
 		mask_decal.active_terrain = object
