@@ -187,8 +187,6 @@ func _forward_3d_gui_input(viewport_camera, event):
 	else:
 		return AFTER_GUI_INPUT_PASS
 		
-
-#To do: fix tsnap pressed - how does it find active_terrain?
 func tsnap_pressed():
 	var terrains = tools.get_all_mterrain()
 	var active_terrain
@@ -212,16 +210,24 @@ func show_image_creator_window():
 		window.set_terrain(tools.get_active_mterrain())
 
 func show_info_window(active_terrain = tools.get_active_mterrain()):
+	var is_grid_created = active_terrain.is_grid_created()
 	if is_instance_valid(current_window_info):
 		current_window_info.queue_free()
+	if not active_terrain is MTerrain:
+		push_error("no active mterrain for info window")
 	current_window_info = load("res://addons/m_terrain/gui/terrain_info.tscn").instantiate()
-	add_child(current_window_info)
+	add_child(current_window_info)	
+	if is_grid_created:
+		active_terrain.remove_grid()
 	current_window_info.generate_info(active_terrain,version, default_keyboard_actions)
+	current_window_info.mtools = tools	
 	current_window_info.keymap_changed.connect(update_keymap)
 	current_window_info.restore_default_keymap_requested.connect(func():
 		add_keymap(true)
 		current_window_info.create_keymapping_interface(default_keyboard_actions)
 	)
+	if is_grid_created:
+		current_window_info.tree_exiting.connect(active_terrain.create_grid)
 
 func set_default_keymap():
 	default_keyboard_actions = [

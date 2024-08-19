@@ -88,6 +88,8 @@ func validate_settings():
 		warnings += "This layer is about to share a Uniform with another layer. Please be careful with how you combine brushes"
 		advanced_settings_button.visible = false	
 		advanced_settings_control.visible = false		
+	else:
+		warnings += str("Creating new image uniform. \nTo use in shader you need to add \n`uniform sampler2d mterrain_",uniform_name_input.text, "` to your shader \nthen restart the terrain")
 	
 	instructions_label.text = warnings if instructions == "" else instructions 	
 	create_button.disabled = instructions != ""

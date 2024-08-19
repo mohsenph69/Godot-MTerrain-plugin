@@ -360,10 +360,8 @@ func process_input(event):
 			if not event.echo:					
 				reverse_property_control.set_value(not reverse_property_control.value)
 				
-	elif brush_mode == &"paint":
-		#to do: add remove paint?
+	elif brush_mode == &"paint":		
 		pass
-	
 	elif brush_mode == &"grass": 		
 		if event.keycode == KEY_ALT:
 			if event.is_pressed():

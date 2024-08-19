@@ -361,8 +361,7 @@ func on_handles(object):
 	#for some reason these get selected when switching from grass paint mode to terrain sculpt/paint mode:
 	if object is MTerrainMaterial or object is MBrushLayers:
 		return false
-	request_hide()	
-	#TO DO: fix snap tool setting of active terain		
+	request_hide()		
 	if object is Node3D:
 		for mterrain:MTerrain in get_all_mterrain(EditorInterface.get_edited_scene_root()):
 			if mterrain.is_grid_created():
@@ -629,27 +628,70 @@ func draw(brush_position):
 	else:
 		print("draw mterrain fail: active object is ", active_object.name)	
 
+
+func remove_image(active_terrain, dname):
+	var is_grid_created = active_terrain.is_grid_created()
+	if is_grid_created:
+		active_terrain.remove_grid()	
+	var dir = DirAccess.open(active_terrain.dataDir)
+	if not dir:
+		printerr("Can not open ",active_terrain.dataDir)
+		return
+	dir.list_dir_begin()
+	var file_name :String= dir.get_next()
+	var res_names:PackedStringArray = []
+	while file_name != "":
+		if file_name.get_extension() == "res":
+			res_names.append(file_name)
+		file_name = dir.get_next()
+	#remove config file:
+	var config_path = active_terrain.dataDir.path_join(".save_config.ini")
+	var config = ConfigFile.new()
+	if FileAccess.file_exists(config_path):
+		var err = config.load(config_path)
+		if err != OK:
+			printerr("Can not load config with err ",err)							
+	config.erase_section(dname)	
+	config.save(config_path)
+	
+	#remove data
+	for res_name in res_names:
+		var path = active_terrain.dataDir.path_join(res_name)
+		var mres = load(path)
+		if not mres is MResource:				
+			continue			
+		mres.remove_data(dname)
+		ResourceSaver.save(mres,path)		
+	#remove layers
+	var id = 0
+	var remove_count = 0
+	var layers = active_terrain.brush_layers
+	for i in layers.size():
+		if layers[i].uniform_name != dname:
+			active_terrain.brush_layers[id] = layers[i]
+			id += 1		
+		else:
+			remove_count += 1
+	active_terrain.brush_layers_groups_num -= remove_count
+			
+	
+	if is_grid_created:
+		active_terrain.create_grid()
+	set_edit_mode(null,null)
+	#todo: dont' exit edit mode, just change layer selection to 0 or -1
+
+
+
 #region responding to signals
 func _on_human_male_toggled(button_pressed):	
 	edit_human_position = true
 	human_male.visible = button_pressed
 	if not human_button.button_pressed == button_pressed:
 		human_button.button_pressed = button_pressed
-
-#func set_save_button_disabled(disabled:bool):
-#	save_button.disabled = disabled
-
-#To do: remove this function
-func _on_save_pressed():
-	var active_terrain = get_active_mterrain()
-	if active_terrain:
-		active_terrain.save_all_dirty_images()	
-	else:
-		push_warning("trying to save mterrain, but active_object is wrong")	
 	
-
 func _on_info_btn_pressed():
 	request_info_window.emit()
+	request_info_window
 
 func _on_reload_pressed() -> void:
 	get_active_mterrain().create_grid()
@@ -657,14 +699,6 @@ func _on_reload_pressed() -> void:
 func _on_heightmap_import_button_pressed() -> void:
 	request_import_window.emit()
 
-func _on_heightmap_export_button_pressed() -> void:
-	request_import_window.emit()
-
-func _on_splatmap_import_button_pressed() -> void:
-	request_import_window.emit()
-
-func _on_image_creator_button_pressed() -> void:
-	request_image_creator.emit()
 #endregion	
 
 #region theme: sizes and colors etc

@@ -148,14 +148,21 @@ func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_
 	var layer_group_id = -1	
 	brush_control = brush_button
 	for layer in active_terrain.brush_layers:
-		layer_group_id += 1
-		add_color_layer_item(layer_group_id, layer)		
+		if validate_brush_layer_data(layer):
+			layer_group_id += 1
+			add_color_layer_item(layer_group_id, layer)				
 	if layer_group_id >= 0:
 		layers_container.get_child(0).select_layer()
 	else:		
 		text = "(click to add a color layer)"		
 		change_color_layer_selection(-1, "")
 
+func validate_brush_layer_data(layer):
+	if layer.uniform_name in active_terrain.get_image_list():
+		return true
+	else:
+		push_error("layer ", layer.layers_title, " has invalid uniform: ", layer.uniform_name)		
+	
 func add_color_layer_item(layer_group_id, layer):
 		var layer_item = layer_item_scene.instantiate()
 		layer_item.name = layer.layers_title if layer.layers_title != "" else str("layer group ", layer_group_id)
@@ -188,28 +195,8 @@ func rename_color_layer():
 	
 func remove_color_layer(layer_name:String, remove_image: bool):		
 	var dname = active_terrain.brush_layers.filter(func(a:MBrushLayers): return a.layers_title == layer_name)[0].uniform_name		
-	if remove_image:
-		active_terrain.remove_grid()
-		var dir = DirAccess.open(active_terrain.dataDir)
-		if not dir:
-			printerr("Can not open ",active_terrain.dataDir)
-			return
-		dir.list_dir_begin()
-		var file_name :String= dir.get_next()
-		var res_names:PackedStringArray = []
-		while file_name != "":
-			if file_name.get_extension() == "res":
-				res_names.append(file_name)
-			file_name = dir.get_next()
-		remove_config_file(dname)
-		for res_name in res_names:
-			var path = active_terrain.dataDir.path_join(res_name)
-			var mres = load(path)
-			if not mres is MResource:				
-				continue			
-			mres.remove_data(dname)
-			ResourceSaver.save(mres,path)
-		active_terrain.create_grid()
+	if remove_image:		
+		owner.remove_image(active_terrain, dname)
 	var layers = active_terrain.brush_layers
 	var id = 0
 	var remove_count = 0
@@ -226,20 +213,7 @@ func remove_color_layer(layer_name:String, remove_image: bool):
 		change_color_layer_selection(-1, "")
 	init_color_layers()	
 
-func remove_config_file(dname):
-	var path = active_terrain.dataDir.path_join(".save_config.ini")
-	var config = ConfigFile.new()
-	if FileAccess.file_exists(path):
-		var err = config.load(path)
-		if err != OK:
-			printerr("Can not load config with err ",err)
-			return
-	else:
-		return	
-	config.erase_section(dname)
-	config.save(path)
 #endregion
-
 
 func init_grass_toggle():
 	pass
