@@ -139,7 +139,10 @@ func rename_heightmap_layer(name_button, new_name):
 #endregion
 
 #region Color Layers
-func init_color_layers(mterrain:MTerrain, brush_button):	
+func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_control):	
+	if not mterrain or not brush_button:
+		push_error("init color layers failed: no mterrain or no brush button" )
+		return
 	active_terrain = mterrain
 	clear_layers()
 	add_color_layer_button.visible = true
@@ -155,7 +158,7 @@ func add_color_layer_item(layer_group_id, layer):
 		var layer_item = layer_item_scene.instantiate()
 		layer_item.name = layer.layers_title if layer.layers_title != "" else str("layer group ", layer_group_id)
 		layers_container.add_child(layer_item)
-		layer_item.init_for_colors()		
+		layer_item.init_for_colors(active_terrain.brush_layers)		
 		layer_item.name_button.tooltip_text = str("select ", layer.layers_title, ". Uniform: ", layer.uniform_name)
 		layer_item.layer_selected.connect(change_color_layer_selection)
 		layer_item.color_layer_removed.connect(remove_color_layer)
@@ -176,8 +179,8 @@ func add_color_layer():
 func rename_color_layer():
 	pass
 	
-func remove_color_layer(layer_name:String, remove_image: bool):	
-	var dname = active_terrain.brush_layers.filter(func(a:MBrushLayers): return a.layers_title == layer_name)[0].uniform_name
+func remove_color_layer(layer_name:String, remove_image: bool):		
+	var dname = active_terrain.brush_layers.filter(func(a:MBrushLayers): return a.layers_title == layer_name)[0].uniform_name		
 	if remove_image:
 		var dir = DirAccess.open(active_terrain.dataDir)
 		if not dir:
@@ -194,20 +197,22 @@ func remove_color_layer(layer_name:String, remove_image: bool):
 		for res_name in res_names:
 			var path = active_terrain.dataDir.path_join(res_name)
 			var mres = load(path)
-			if not mres is MResource:
-				print("can't load mres: ", path)
-				continue
-			print("removing ", dname)			
+			if not mres is MResource:				
+				continue			
 			mres.remove_data(dname)
 			ResourceSaver.save(mres,path)
 	var layers = active_terrain.brush_layers
 	var id = 0
+	var remove_count = 0
 	for i in layers.size():
 		if layers[i].uniform_name != dname:
 			active_terrain.brush_layers[id] = layers[i]
 			id += 1		
-	active_terrain.brush_layers_groups_num -= 1	
+		else:
+			remove_count += 1
+	active_terrain.brush_layers_groups_num -= remove_count
 	change_color_layer_selection(0, active_terrain.brush_layers[0].layers_title)
+	init_color_layers()
 
 func remove_config_file(dname):
 	var path = active_terrain.dataDir.path_join(".save_config.ini")

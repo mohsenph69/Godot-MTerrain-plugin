@@ -6,6 +6,7 @@
 [node name="Control" type="Window"]
 initial_position = 2
 size = Vector2i(400, 300)
+wrap_controls = true
 always_on_top = true
 popup_window = true
 theme = ExtResource("1_ebtbp")
@@ -35,6 +36,12 @@ text = "Are you sure?
 You will not be able to undo this."
 horizontal_alignment = 1
 
+[node name="shared_uniform_label" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 6
+text = "This image is also used by:"
+horizontal_alignment = 1
+
 [node name="HBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 alignment = 1
@@ -45,7 +52,7 @@ text = "Delete Layer Only"
 
 [node name="delete_layer_and_image" type="Button" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-text = "Delete Layer And Image"
+text = "Delete Image And Connnected Layers"
 
 [node name="cancel_button" type="Button" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
