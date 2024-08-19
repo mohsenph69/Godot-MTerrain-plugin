@@ -6,7 +6,6 @@ signal layer_renamed
 signal layer_index_changed
 signal layer_removed
 signal layer_selected
-signal color_layer_selected
 signal color_layer_removed
 signal layer_merged_with_background
 

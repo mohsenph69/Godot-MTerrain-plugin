@@ -390,14 +390,15 @@ func forward_3d_gui_input(viewport_camera, event):
 	if mpath_gizmo_gui.visible:				
 		return mpath_gizmo_gui.gizmo._forward_3d_gui_input(viewport_camera, event, ray_col)
 	######################## HANDLE CURVE GIZMO FINSH ########################	
-	
+	var a: MTerrain	
 	if active_terrain is MTerrain and event is InputEventMouse:						
+
 		if ray_col.is_collided():			
 			col_dis = ray_col.get_collision_position().distance_to(viewport_camera.global_position)
 			status_bar.set_height_label(ray_col.get_collision_position().y)
 			status_bar.set_distance_label(col_dis)
 			status_bar.set_region_label(active_terrain.get_region_id_by_world_pos(ray_col.get_collision_position()))
-			if current_edit_mode in [&"sculpt", &"paint"]:							
+			if current_edit_mode in [&"sculpt", &"paint"]:				
 				if paint_mode_handle(event):
 					return true
 			if human_male.visible:
@@ -434,8 +435,13 @@ func forward_3d_gui_input(viewport_camera, event):
 
 var last_draw_time:int=0
 	
-func paint_mode_handle(event:InputEvent):	
-	if ray_col.is_collided():
+func validate_brush():
+	if active_object is MTerrain and current_edit_mode == &"Paint":
+		if not brush_popup_button.visible: return false
+	return true
+	
+func paint_mode_handle(event:InputEvent):		
+	if ray_col.is_collided() and validate_brush():
 		brush_decal.visible = true
 		brush_decal.set_position(ray_col.get_collision_position())		
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -528,6 +534,8 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		return	
 	active_object = object	
 	current_edit_mode = mode
+	brush_popup_button.visible = true
+	mask_popup_button.visible = true
 	
 	if object is MPath:		
 		#deactivate_editing()
@@ -560,7 +568,12 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		if mode == &"sculpt":
 			layers_popup_button.init_height_layers(object)
 			brush_popup_button.init_height_brushes(brush_manager)			
-		elif mode == &"paint":			
+		elif mode == &"paint":						
+			layers_popup_button.layer_changed.connect(func(id):
+				print("layer changed")
+				brush_popup_button.visible = id > -1
+				mask_popup_button.visible = id > -1
+			)
 			layers_popup_button.init_color_layers(object, brush_popup_button)
 			#Colol layers will init there own brushes				
 		mask_decal.active_terrain = object

@@ -13,6 +13,10 @@ signal layer_created
 @onready var instructions_label: Label = find_child("instructions_label")
 @onready var create_button:Button = find_child("create")
 
+@onready var advanced_settings_button:Button = find_child("advanced_settings_button")
+@onready var advanced_settings_control:Button = find_child("advanced_settings")
+
+
 const config_file_name:=".save_config.ini"
 
 var region_grid_size:Vector2i
@@ -60,8 +64,8 @@ func _ready():
 	create_button.button_up.connect(_on_create_button_up)
 
 	find_child("advanced_settings_button").pressed.connect(func():
-		find_child("advanced_settings_button").visible = false
-		find_child("advanced_settings").visible = true
+		advanced_settings_button.visible = false
+		advanced_settings_control.visible = true
 		advanced_settings = true		
 	)		
 	
@@ -69,6 +73,8 @@ func validate_settings():
 	var instructions = ""
 	var warnings = ""
 	var existing_layers = active_terrain.brush_layers.map(func(a):return a.layers_title)
+	advanced_settings_button.visible = true	
+	advanced_settings_control.visible = true	
 	if layer_name_input.text.strip_edges() == "":
 		instructions += "Please enter a Layer Name\n"		
 	elif layer_name_input.text == "" or layer_name_input.text in existing_layers:
@@ -80,8 +86,8 @@ func validate_settings():
 		if "Color Paint" in others_mode or layer_types.selected == 0:
 			instructions += "Uniform already exists. Cannot share uniform in Color Paint mode"
 		warnings += "This layer is about to share a Uniform with another layer. Please be careful with how you combine brushes"
-	
-	
+		advanced_settings_button.visible = false	
+		advanced_settings_control.visible = false		
 	
 	instructions_label.text = warnings if instructions == "" else instructions 	
 	create_button.disabled = instructions != ""
