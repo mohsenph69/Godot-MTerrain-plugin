@@ -217,7 +217,10 @@ func remove_color_layer(layer_name:String, remove_image: bool):
 		else:
 			remove_count += 1
 	active_terrain.brush_layers_groups_num -= remove_count
-	change_color_layer_selection(0, active_terrain.brush_layers[0].layers_title)
+	if 	active_terrain.brush_layers.size() > 0:
+		change_color_layer_selection(0, active_terrain.brush_layers[0].layers_title)
+	else:
+		change_color_layer_selection(-1, "")
 	init_color_layers()	
 
 func remove_config_file(dname):
