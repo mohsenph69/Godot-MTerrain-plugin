@@ -27,8 +27,7 @@ var selected = false
 var confirmation_popup_scene = preload("res://addons/m_terrain/gui/mtools_layer_warning_popup.tscn")
 
 func _ready():
-	name_button.pressed.connect(select_layer)
-	remove_button.pressed.connect(remove_layer)
+	name_button.pressed.connect(select_layer)	
 
 func disconnect_signals():			
 #	for connection in name_button.get_signal_connection_list("pressed"):
@@ -45,7 +44,7 @@ func disconnect_signals():
 func select_layer():
 	layer_selected.emit(get_index(), name_button.text)
 
-func remove_layer():
+func remove_heightmap_layer():
 	var popup = confirmation_popup_scene.instantiate()
 	add_child(popup)
 	popup.confirmed.connect( func():
@@ -68,7 +67,8 @@ func init_for_heightmap():
 	rename_button.pressed.connect(begin_rename)
 	rename_input.text_submitted.connect(end_rename)
 	rename_input.focus_exited.connect(end_rename.bind(""))
-
+	remove_button.pressed.connect(remove_heightmap_layer)
+	
 func change_visibility(toggle_on):
 	visibility_button.icon = icon_hidden if toggle_on else icon_visible
 	layer_visibility_changed.emit(name)
@@ -96,6 +96,14 @@ func end_rename(_new_name=""):
 	layer_renamed.emit(name_button, rename_input.text)
 	
 
+func remove_color_layer():	
+	var popup = preload("res://addons/m_terrain/gui/mtools_popup_remove_color_layer.tscn").instantiate()
+	add_child(popup)
+	popup.confirmed.connect( func(both):
+		color_layer_removed.emit(name, both)
+		queue_free()
+	)
+
 func init_for_colors():	
 	disconnect_signals()
 	rename_button.queue_free()
@@ -107,7 +115,7 @@ func init_for_colors():
 	visibility_button.queue_free()		
 
 	name_button.text = name
-	
+	remove_button.pressed.connect(remove_color_layer)
 	#rename_button.pressed.connect(begin_rename)
 	#rename_input.text_submitted.connect(end_rename)
 	#rename_input.focus_exited.connect(end_rename.bind(""))

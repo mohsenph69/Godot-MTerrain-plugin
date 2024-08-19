@@ -146,6 +146,8 @@ func _on_create_button_up():
 			mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
 			ResourceSaver.save(mres,path)			
 			init_new_color_layer(layer_name_input.text, uniform_name, def_color)	
+			queue_free()
+			
 
 func init_new_color_layer(layer_name, uniform_name, color = null):
 	active_terrain.brush_layers_groups_num += 1
