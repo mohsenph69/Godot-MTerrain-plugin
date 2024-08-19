@@ -436,11 +436,11 @@ func forward_3d_gui_input(viewport_camera, event):
 var last_draw_time:int=0
 	
 func validate_brush():
-	if active_object is MTerrain and current_edit_mode == &"Paint":
+	if active_object is MTerrain and current_edit_mode == &"paint":		
 		if not brush_popup_button.visible: return false
 	return true
 	
-func paint_mode_handle(event:InputEvent):		
+func paint_mode_handle(event:InputEvent):			
 	if ray_col.is_collided() and validate_brush():
 		brush_decal.visible = true
 		brush_decal.set_position(ray_col.get_collision_position())		
