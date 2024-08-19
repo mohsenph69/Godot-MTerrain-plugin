@@ -698,7 +698,9 @@ func _on_reload_pressed() -> void:
 
 func _on_heightmap_import_button_pressed() -> void:
 	request_import_window.emit()
-
+	
+func _on_image_creator_button_pressed():
+	request_image_creator.emit()
 #endregion	
 
 #region theme: sizes and colors etc
@@ -758,3 +760,6 @@ func _on_walk_terrain_toggled(toggled_on):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+

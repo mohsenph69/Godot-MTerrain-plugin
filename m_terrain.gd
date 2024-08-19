@@ -206,8 +206,8 @@ func show_import_window():
 func show_image_creator_window():	
 	if tools.get_active_mterrain():	
 		var window = load("res://addons/m_terrain/gui/image_creator_window.tscn").instantiate()
-		add_child(window)
-		window.set_terrain(tools.get_active_mterrain())
+		add_child(window)		
+		window.mterrain = tools.get_active_mterrain()		
 
 func show_info_window(active_terrain = tools.get_active_mterrain()):
 	var is_grid_created = active_terrain.is_grid_created()

@@ -182,7 +182,7 @@ func change_color_layer_selection(layer_id, layer_name):
 			
 
 func add_color_layer():
-	var window = preload("res://addons/m_terrain/gui/image_creator_window.tscn").instantiate()
+	var window = preload("res://addons/m_terrain/gui/color_layer_creator_window.tscn").instantiate()
 	add_child(window)
 	window.set_terrain(active_terrain)
 	window.layer_created.connect(func(layer): 
