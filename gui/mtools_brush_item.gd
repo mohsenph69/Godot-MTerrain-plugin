@@ -69,13 +69,18 @@ func set_color_brush(layer_group, i):
 		label.set("theme_override_styles/hover", null)
 		label.set("theme_override_styles/pressed", null)	
 	edit.pressed.connect(edit_brush)
-	remove.pressed.connect(remove_brush)	
+	edit.tooltip_text = str("edit ", brush.NAME)
+	if layer_group.layers[i].NAME == "background":
+		remove.disabled = true
+		remove.tooltip_text = "cannot remove background brush"
+	else:
+		remove.pressed.connect(remove_brush)	
 
 func set_text_brush(text):
 	label.text = text
 	label.icon = null
-	edit.free()
-	remove.free()
+	edit.queue_free()
+	remove.queue_free()
 
 func edit_brush():
 	var popup = preload("res://addons/m_terrain/gui/mtools_create_color_brush.tscn").instantiate()

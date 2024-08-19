@@ -123,6 +123,8 @@ func init_for_256(existing_brushes):
 func load_brush(layer_group, bname, bicon, data={}):
 	var existing_brush_names = layer_group.layers.map(func(a): return a.NAME).filter(func(a): return a != bname)
 	brush_name.text = bname
+	if bname == "background":
+		brush_name.editable = false
 	icon.text = bicon
 	if layer_group.brush_name == "Color Paint":
 		init_for_color(existing_brush_names)	
