@@ -14,7 +14,7 @@ signal layer_created
 @onready var create_button:Button = find_child("create")
 
 @onready var advanced_settings_button:Button = find_child("advanced_settings_button")
-@onready var advanced_settings_control:Button = find_child("advanced_settings")
+@onready var advanced_settings_control:Control = find_child("advanced_settings")
 
 
 const config_file_name:=".save_config.ini"
@@ -63,7 +63,7 @@ func _ready():
 	find_child("close_button").pressed.connect(_on_close_requested)
 	create_button.button_up.connect(_on_create_button_up)
 
-	find_child("advanced_settings_button").pressed.connect(func():
+	advanced_settings_button.pressed.connect(func():
 		advanced_settings_button.visible = false
 		advanced_settings_control.visible = true
 		advanced_settings = true		
@@ -95,7 +95,7 @@ func validate_settings():
 	
 func set_terrain(input:MTerrain):
 	active_terrain = input
-	validate_settings()
+	validate_settings.call_deferred()
 	if input.terrain_size.x % input.region_size !=0:
 		printerr("Terrain size.x is not divisible by its region size")
 		return
