@@ -21,7 +21,8 @@ func _ready():
 	brush_name.text_changed.connect(validate_brush_name)
 	create_button.pressed.connect(func():		
 		brush_created.emit(brush_name.text, icon.text, get_data()) 
-		free())
+		queue_free()
+	)
 	close_requested.connect(queue_free)	
 	color.pressed.connect(func(): 
 		var picker = color.get_picker().get_parent()
