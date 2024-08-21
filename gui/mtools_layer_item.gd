@@ -95,21 +95,23 @@ func end_rename(_new_name=""):
 	layer_renamed.emit(name_button, rename_input.text)
 	
 
-func remove_color_layer(brush_layers:Array):	
+func remove_color_layer(terrain:MTerrain,layer_group_index:int):	
 	var popup = preload("res://addons/m_terrain/gui/mtools_popup_remove_color_layer.tscn").instantiate()
+	var layer:MBrushLayers = terrain.brush_layers[layer_group_index]
 	add_child(popup)
-	var uniform = brush_layers.filter(func(a): return a.layers_title == name)[0].uniform_name
+	var uniform = layer.uniform_name
 	var layers_with_same_uniform = []
-	for l in brush_layers:
+	for l in terrain.brush_layers:
 		if l.uniform_name == uniform and l.layers_title != name:
 			layers_with_same_uniform.push_back(l.layers_title)
 	popup.set_shared_uniform_label(layers_with_same_uniform)
 	popup.confirmed.connect( func(both):
-		color_layer_removed.emit(name, both)
+		color_layer_removed.emit(terrain, layer_group_index,both)
 		queue_free()
 	)
 
-func init_for_colors(brush_layers: Array):	
+func init_for_colors(terrain:MTerrain, layer_group_index:int):	
+	var layer:MBrushLayers = terrain.brush_layers[layer_group_index]
 	disconnect_signals()
 	rename_button.queue_free()
 	rename_input.queue_free()
@@ -119,8 +121,8 @@ func init_for_colors(brush_layers: Array):
 	merge_down_button.queue_free()
 	visibility_button.queue_free()		
 
-	name_button.text = name
-	remove_button.pressed.connect(remove_color_layer.bind(brush_layers))
+	name_button.text = layer.layers_title if layer.layers_title != "" else str("layer group ", layer_group_index)
+	remove_button.pressed.connect(remove_color_layer.bind(terrain,layer_group_index))
 	#rename_button.pressed.connect(begin_rename)
 	#rename_input.text_submitted.connect(end_rename)
 	#rename_input.focus_exited.connect(end_rename.bind(""))

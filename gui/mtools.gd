@@ -562,15 +562,14 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 			connection.signal.disconnect(connection.callable)					
 		if mode == &"sculpt":
 			layers_popup_button.init_height_layers(object)
-			brush_popup_button.init_height_brushes(brush_manager)			
-		elif mode == &"paint":						
+			brush_popup_button.init_height_brushes(brush_manager)
+		elif mode == &"paint":
 			layers_popup_button.layer_changed.connect(func(id):
-				print("layer changed")
 				brush_popup_button.visible = id > -1
 				mask_popup_button.visible = id > -1
 			)
 			layers_popup_button.init_color_layers(object, brush_popup_button)
-			#Colol layers will init there own brushes				
+			#Colol layers will init there own brushes
 		mask_decal.active_terrain = object
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()

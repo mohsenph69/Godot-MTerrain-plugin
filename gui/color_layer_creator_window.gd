@@ -160,7 +160,8 @@ func _on_create_button_up():
 				mres.insert_data(img.get_data(),uniform_name,format,compress,file_compress)
 				ResourceSaver.save(mres,path)			
 	else:
-		print("uniform exists")
+		pass
+		#print("uniform exists")
 	
 	init_new_color_layer(layer_name_input.text, uniform_name, def_color)	
 	queue_free()

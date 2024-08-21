@@ -140,23 +140,23 @@ func rename_heightmap_layer(name_button, new_name):
 #endregion
 
 #region Color Layers
-func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_control):	
+func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_control):
 	if not mterrain or not brush_button:
 		push_error("init color layers failed: no mterrain or no brush button" )
 		return
 	active_terrain = mterrain
 	clear_layers()
 	add_color_layer_button.visible = true
-	var layer_group_id = -1	
 	brush_control = brush_button
-	for layer in active_terrain.brush_layers:
-		if validate_brush_layer_data(layer):
-			layer_group_id += 1
-			add_color_layer_item(layer_group_id, layer)				
-	if layer_group_id >= 0:
+	var valid_count:int = 0
+	for i in range(active_terrain.brush_layers.size()):
+		if validate_brush_layer_data(active_terrain.brush_layers[i]):
+			add_color_layer_item(active_terrain, i)
+			valid_count += 1
+	if valid_count > 0:
 		layers_container.get_child(0).select_layer()
-	else:		
-		text = "(click to add a color layer)"		
+	else:
+		text = "(click to add a color layer)"
 		change_color_layer_selection(-1, "")
 
 func validate_brush_layer_data(layer):
@@ -165,14 +165,14 @@ func validate_brush_layer_data(layer):
 	else:
 		push_error("layer ", layer.layers_title, " has invalid uniform: ", layer.uniform_name)		
 	
-func add_color_layer_item(layer_group_id, layer):
-		var layer_item = layer_item_scene.instantiate()
-		layer_item.name = layer.layers_title if layer.layers_title != "" else str("layer group ", layer_group_id)
-		layers_container.add_child(layer_item)
-		layer_item.init_for_colors(active_terrain.brush_layers)		
-		layer_item.name_button.tooltip_text = str("select ", layer.layers_title, ". Uniform: ", layer.uniform_name)
-		layer_item.layer_selected.connect(change_color_layer_selection)
-		layer_item.color_layer_removed.connect(remove_color_layer)
+func add_color_layer_item(terrain:MTerrain, layer_group_index:int):
+	var layer_item = layer_item_scene.instantiate()
+	#layer_item.name = layer.layers_title if layer.layers_title != "" else str("layer group ", layer_group_id)
+	layers_container.add_child(layer_item)
+	layer_item.init_for_colors(terrain,layer_group_index)		
+	#layer_item.name_button.tooltip_text = str("select ", layer.layers_title, ". Uniform: ", layer.uniform_name)
+	layer_item.layer_selected.connect(change_color_layer_selection)
+	layer_item.color_layer_removed.connect(remove_color_layer)
 	
 func change_color_layer_selection(layer_id, layer_name):		
 	if layer_id < 0:			
@@ -188,32 +188,35 @@ func add_color_layer():
 	add_child(window)
 	window.set_terrain(active_terrain)
 	window.layer_created.connect(func(layer): 
-		add_color_layer_item(active_terrain.brush_layers_groups_num-1, layer ) 
+		add_color_layer_item(active_terrain, active_terrain.brush_layers_groups_num-1 ) 
 		change_color_layer_selection(active_terrain.brush_layers_groups_num-1, active_terrain.brush_layers[active_terrain.brush_layers_groups_num-1].layers_title)
 	)
 
 func rename_color_layer():
 	pass
 	
-func remove_color_layer(layer_name:String, remove_image: bool):		
-	var dname = active_terrain.brush_layers.filter(func(a:MBrushLayers): return a.layers_title == layer_name)[0].uniform_name		
-	if remove_image:		
+func remove_color_layer(terrain:MTerrain, layer_group_index:int,both:bool):
+	var layer:MBrushLayers = terrain.brush_layers[layer_group_index]
+	var dname = layer.uniform_name
+	if both:
 		owner.remove_image(active_terrain, dname)
-	var layers = active_terrain.brush_layers
+	var layers = terrain.brush_layers
 	var id = 0
 	var remove_count = 0
-	for i in layers.size():
-		if layers[i].uniform_name != dname:
-			active_terrain.brush_layers[id] = layers[i]
-			id += 1		
-		else:
-			remove_count += 1
-	active_terrain.brush_layers_groups_num -= remove_count
-	if 	active_terrain.brush_layers.size() > 0:
-		change_color_layer_selection(0, active_terrain.brush_layers[0].layers_title)
+	if both:
+		var i:int=terrain.brush_layers.size() - 1
+		while  i >= 0:
+			if(terrain.brush_layers[i].uniform_name == dname):
+				terrain.brush_layers.remove_at(i)
+			i-=1
+	else:
+		terrain.brush_layers.remove_at(layer_group_index)
+	terrain.brush_layers_groups_num = terrain.brush_layers.size()
+	if 	terrain.brush_layers.size() > 0:
+		change_color_layer_selection(0, terrain.brush_layers[0].layers_title)
 	else:
 		change_color_layer_selection(-1, "")
-	init_color_layers()	
+	init_color_layers()
 
 #endregion
 
