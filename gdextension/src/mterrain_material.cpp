@@ -368,7 +368,9 @@ void MTerrainMaterial::load_images(Array images_names,Ref<MResource> first_res){
     */
     ERR_FAIL_COND(!grid);
     ERR_FAIL_COND(!grid->is_created());
-    ERR_FAIL_COND(is_loaded);
+    if(is_loaded){
+        clear();
+    }
     update_uniforms_list();
     //Adding textures
     //Making sure images names are string not stringName
