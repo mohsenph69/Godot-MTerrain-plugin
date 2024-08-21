@@ -130,10 +130,7 @@ func on_node_modified(node):
 		
 func update_edit_mode_options():	
 	var all_mterrain = get_all_mterrain()
-	if all_mterrain.size() != 0:
-		edit_mode_button.init_edit_mode_options(all_mterrain)
-	else:
-		push_warning("get_all_mterrain returning null on editor scene tree changed")
+	edit_mode_button.init_edit_mode_options(all_mterrain)
 
 func clear_current_popup_button():
 	if current_popup_button:
@@ -531,11 +528,13 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	if object==null or mode ==&"": 
 		deactivate_editing()
 		return	
+	if not is_instance_valid(object):
+		push_error("Instance is not valid")
+		return
 	active_object = object	
 	current_edit_mode = mode
 	brush_popup_button.visible = true
 	mask_popup_button.visible = true
-	
 	if object is MPath:		
 		#deactivate_editing()
 		mpath_gizmo_gui.visible = true
@@ -548,14 +547,12 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	elif object is MCurveMesh:
 		mcurve_mesh_gui.set_curve_mesh(object)
 		mcurve_mesh_gui.visible = true
-		
 	edit_mode_changed.emit(object, mode)	
 	var active_mterrain = get_active_mterrain()
 	if not active_mterrain: return
 	active_mterrain.set_brush_manager(brush_manager)
 	mask_popup_button.mterrain = active_mterrain
 	mask_popup_button.toggle_grass_settings(false)
-	
 	if object is MTerrain:				
 		paint_panel.visible = true
 		layers_popup_button.visible = true
@@ -563,7 +560,6 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		#to do: clean up previous edit mode: grass, nav, and path stuff?, then:		
 		for connection in layers_popup_button.get_signal_connection_list("layer_changed"):
 			connection.signal.disconnect(connection.callable)					
-		
 		if mode == &"sculpt":
 			layers_popup_button.init_height_layers(object)
 			brush_popup_button.init_height_brushes(brush_manager)			

@@ -69,7 +69,9 @@ func init_height_layers(mterrain:MTerrain):
 		#layer_item.layer_index_changed.connect(????)
 		layer_item.layer_removed.connect(remove_heightmap_layer)	
 		layer_item.layer_merged_with_background.connect(merge_heightmap_layer_with_background)
-	layers_container.get_child(0).select_layer.call_deferred()
+	if layers_container.get_child_count()!=0:
+		layers_container.get_child(0).select_layer.call_deferred()
+
 
 func add_heightmap_layer():
 	var i = 0
