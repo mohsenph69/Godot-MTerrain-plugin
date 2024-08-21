@@ -6,7 +6,6 @@ signal layer_renamed
 signal layer_index_changed
 signal layer_removed
 signal layer_selected
-signal color_layer_selected
 signal color_layer_removed
 signal layer_merged_with_background
 
@@ -27,8 +26,7 @@ var selected = false
 var confirmation_popup_scene = preload("res://addons/m_terrain/gui/mtools_layer_warning_popup.tscn")
 
 func _ready():
-	name_button.pressed.connect(select_layer)
-	remove_button.pressed.connect(remove_layer)
+	name_button.pressed.connect(select_layer)	
 
 func disconnect_signals():			
 #	for connection in name_button.get_signal_connection_list("pressed"):
@@ -45,7 +43,7 @@ func disconnect_signals():
 func select_layer():
 	layer_selected.emit(get_index(), name_button.text)
 
-func remove_layer():
+func remove_heightmap_layer():
 	var popup = confirmation_popup_scene.instantiate()
 	add_child(popup)
 	popup.confirmed.connect( func():
@@ -68,7 +66,8 @@ func init_for_heightmap():
 	rename_button.pressed.connect(begin_rename)
 	rename_input.text_submitted.connect(end_rename)
 	rename_input.focus_exited.connect(end_rename.bind(""))
-
+	remove_button.pressed.connect(remove_heightmap_layer)
+	
 func change_visibility(toggle_on):
 	visibility_button.icon = icon_hidden if toggle_on else icon_visible
 	layer_visibility_changed.emit(name)
@@ -96,7 +95,21 @@ func end_rename(_new_name=""):
 	layer_renamed.emit(name_button, rename_input.text)
 	
 
-func init_for_colors():	
+func remove_color_layer(brush_layers:Array):	
+	var popup = preload("res://addons/m_terrain/gui/mtools_popup_remove_color_layer.tscn").instantiate()
+	add_child(popup)
+	var uniform = brush_layers.filter(func(a): return a.layers_title == name)[0].uniform_name
+	var layers_with_same_uniform = []
+	for l in brush_layers:
+		if l.uniform_name == uniform and l.layers_title != name:
+			layers_with_same_uniform.push_back(l.layers_title)
+	popup.set_shared_uniform_label(layers_with_same_uniform)
+	popup.confirmed.connect( func(both):
+		color_layer_removed.emit(name, both)
+		queue_free()
+	)
+
+func init_for_colors(brush_layers: Array):	
 	disconnect_signals()
 	rename_button.queue_free()
 	rename_input.queue_free()
@@ -107,6 +120,7 @@ func init_for_colors():
 	visibility_button.queue_free()		
 
 	name_button.text = name
+	remove_button.pressed.connect(remove_color_layer.bind(brush_layers))
 	#rename_button.pressed.connect(begin_rename)
 	#rename_input.text_submitted.connect(end_rename)
 	#rename_input.focus_exited.connect(end_rename.bind(""))
@@ -122,5 +136,16 @@ func resize_children_recursive(parent, new_size):
 			child.custom_minimum_size.x = new_size
 			child.custom_minimum_size.y = new_size		
 		resize_children_recursive(child, new_size)
+		
+func get_total_width():	
+	var total = name_button.text.length() * get_theme_default_font_size() *0.75	
+	#name_button.size.x if is_instance_valid(name_button) and name_button.visible else total
+	
+	total = total + visibility_button.size.x if is_instance_valid(visibility_button) and visibility_button.visible else total	
+	total = total + rename_button.size.x if is_instance_valid(rename_button) and rename_button.visible else total
+	total = total + merge_down_button.size.x if is_instance_valid(merge_down_button) and merge_down_button.visible else total
+	total = total + remove_button.size.x if is_instance_valid(remove_button) and remove_button.visible else total
+	total *= 1.01
+	return total
 #endregion
 

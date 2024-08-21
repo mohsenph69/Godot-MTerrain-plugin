@@ -21,7 +21,7 @@ signal restore_default_keymap_requested
 
 @onready var info:=$base/TabContainer/info/info
 
-@onready var save_config:=$"base/TabContainer/Save config"
+@onready var save_config = find_child("Manage Images")
 
 var version:String
 
@@ -34,7 +34,7 @@ var region_count:int
 var terrain_meter_size:Vector2
 var terrain_pixel_size:Vector2
 
-
+var mtools
 
 func generate_info(_t:MTerrain,_version:String, keyboard_actions):
 	save_config.init_save_config(_t)
@@ -110,6 +110,6 @@ func _on_info_meta_clicked(meta):
 func _on_close_requested():
 	queue_free()
 
-
-
-
+func _on_delete_uniform_pressed():
+	mtools.remove_image(mtools.get_active_mterrain(), find_child("data_name_option").text)
+	save_config.init_save_config(terrain)	

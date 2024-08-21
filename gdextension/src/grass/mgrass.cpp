@@ -198,6 +198,7 @@ void MGrass::init_grass(MGrid* _grid) {
 }
 
 void MGrass::clear_grass(){
+    UtilityFunctions::print("Clear Grass ... ");
     std::lock_guard<std::mutex> lock(update_mutex);
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
         memdelete(it->value);

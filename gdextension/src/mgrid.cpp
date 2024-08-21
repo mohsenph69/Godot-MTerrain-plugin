@@ -30,6 +30,7 @@ uint64_t MGrid::get_update_id(){
 }
 
 void MGrid::clear() {
+    UtilityFunctions::print("Clear grid ");
     if(is_dirty){
         RenderingServer* rs = RenderingServer::get_singleton();
         for(int32_t z=_search_bound.top; z <=_search_bound.bottom; z++)

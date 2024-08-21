@@ -384,11 +384,7 @@ void MTerrainMaterial::load_images(Array images_names,Ref<MResource> first_res){
     }
     for(int i=0;i<pimages_names.size();i++){
         Image::Format _f = Image::Format::FORMAT_MAX;
-        if (pimages_names[i] == NORMALS_NAME){
-            _f = Image::Format::FORMAT_RGB8;
-        } else if(pimages_names[i] == HEIGHTMAP_NAME){
-            _f = Image::Format::FORMAT_RF;
-        } else if(first_res.is_valid()){
+        if(first_res.is_valid()){
             _f = first_res->get_data_format(pimages_names[i]);
         }
         _f = _f == Image::Format::FORMAT_MAX ? Image::Format::FORMAT_L8 : _f;
@@ -425,7 +421,13 @@ void MTerrainMaterial::add_terrain_image(StringName name, bool is_ram_image, Ima
             MGridPos rpos(x,0,z);
             MImage* i = memnew(MImage(name,uniform_name,rpos,region));
             i->is_ram_image = is_ram_image;
-            i->format = _f;
+            if (name == NORMALS_NAME){
+                i->format = Image::Format::FORMAT_RGB8;
+            } else if(name == HEIGHTMAP_NAME) {
+                i->format = Image::Format::FORMAT_RF;
+            } else {
+                i->format = _f;
+            }
             region->add_image(i);
             all_images.push_back(i);
             if(name==HEIGHTMAP_NAME){
