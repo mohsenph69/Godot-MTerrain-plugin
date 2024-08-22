@@ -153,6 +153,9 @@ func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_
 		if validate_brush_layer_data(active_terrain.brush_layers[i]):
 			add_color_layer_item(active_terrain, i)
 			valid_count += 1
+		else:
+			active_terrain.brush_layers.erase(active_terrain.brush_layers[i])
+			active_terrain.brush_layers_groups_num -= 1
 	if valid_count > 0:
 		layers_container.get_child(0).select_layer()
 	else:
@@ -163,6 +166,7 @@ func validate_brush_layer_data(layer):
 	if layer.uniform_name in active_terrain.get_image_list():
 		return true
 	else:
+		
 		push_error("layer ", layer.layers_title, " has invalid uniform: ", layer.uniform_name)		
 	
 func add_color_layer_item(terrain:MTerrain, layer_group_index:int):
