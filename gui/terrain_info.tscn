@@ -197,6 +197,11 @@ text = "Name"
 [node name="data_name_option" type="OptionButton" parent="base/TabContainer/Manage Images/scroll/VBoxContainer/hb"]
 layout_mode = 2
 
+[node name="delete_confirm_label" type="Label" parent="base/TabContainer/Manage Images/scroll/VBoxContainer/hb"]
+visible = false
+layout_mode = 2
+text = "Click again to confirm delete:"
+
 [node name="delete_uniform" type="Button" parent="base/TabContainer/Manage Images/scroll/VBoxContainer/hb"]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2

@@ -111,5 +111,10 @@ func _on_close_requested():
 	queue_free()
 
 func _on_delete_uniform_pressed():
-	mtools.remove_image(mtools.get_active_mterrain(), find_child("data_name_option").text)
-	save_config.init_save_config(terrain)	
+	var confirm_label = find_child("delete_confirm_label")
+	if confirm_label.visible:
+		mtools.remove_image(mtools.get_active_mterrain(), find_child("data_name_option").text)
+		save_config.init_save_config(terrain)	
+		confirm_label.visible = false
+	else:
+		confirm_label.visible = true
