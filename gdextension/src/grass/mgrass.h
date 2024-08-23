@@ -72,7 +72,7 @@ class MGrass : public Node3D {
     Ref<MGrassLodSetting> default_lod_setting;
     Vector<RID> material_rids;
     Vector<RID> meshe_rids;
-    Vector<PackedFloat32Array*> rand_buffer_pull;
+    Vector<PackedFloat32Array> rand_buffer_pull;
     HashMap<int64_t,MGrassChunk*> grid_to_grass;
     Vector<MGrassChunk*> to_be_visible;
     VSet<int>* dirty_points_id;
