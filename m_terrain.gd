@@ -20,6 +20,8 @@ var inspector_mpath
 var timer = Timer.new()
 var needs_restart = false
 	
+var MLOD_Mesh_Importer
+	
 func check_restart():
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
 		if needs_restart:
@@ -117,6 +119,8 @@ func _enter_tree():
 		add_inspector_plugin(inspector_mpath)
 				
 		add_keymap()		
+		MLOD_Mesh_Importer = preload("res://addons/m_terrain/MLOD_Mesh_importer.gd").new()
+		GLTFDocument.register_gltf_document_extension(MLOD_Mesh_Importer)
 		
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
@@ -144,6 +148,8 @@ func _exit_tree():
 		
 		### Inspector
 		remove_inspector_plugin(inspector_mpath)
+		
+		GLTFDocument.unregister_gltf_document_extension(MLOD_Mesh_Importer)
 #endregion
 
 func _on_main_screen_changed(screen_name):
