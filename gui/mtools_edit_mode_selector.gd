@@ -56,15 +56,20 @@ func init_edit_mode_options(all_mterrain):
 					biggest_button_size = max(biggest_button_size, button.size.x)
 					button.pressed.connect(edit_selected.bind(child))
 	
-	var all_nodes = EditorInterface.get_edited_scene_root().find_children("*")	
-	for child in all_nodes:
-		var button
-		if child is MPath or child is MCurveMesh:
-			button = button_template.duplicate()
-			button.text = "Edit " + child.name							
-			item_container.add_child(button)
-			biggest_button_size = max(biggest_button_size, button.size.x)
-			button.pressed.connect(edit_selected.bind(child))		
+	var all_path = MPath.get_all_path_nodes()
+	var all_curve_mesh = MCurveMesh.get_all_curve_mesh_nodes()
+	for child in all_path:
+		var button = button_template.duplicate()
+		button.text = "Edit " + child.name
+		item_container.add_child(button)
+		biggest_button_size = max(biggest_button_size, button.size.x)
+		button.pressed.connect(edit_selected.bind(child))
+	for child in all_curve_mesh:
+		var button = button_template.duplicate()
+		button.text = "Edit " + child.name
+		item_container.add_child(button)
+		biggest_button_size = max(biggest_button_size, button.size.x)
+		button.pressed.connect(edit_selected.bind(child))
 	button_template.queue_free()
 	get_child(0).size. x = biggest_button_size + 12	
 	

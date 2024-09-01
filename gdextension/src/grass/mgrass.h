@@ -44,11 +44,13 @@ class MGrass : public Node3D {
     int shape_type=-1;
     bool visible = true;
     Variant shape_data;
+    static Vector<MGrass*> all_grass_nodes;
 
     protected:
     static void _bind_methods();
 
     public:
+    static TypedArray<MGrass> get_all_grass_nodes();
     bool active = true;
     bool is_grass_init = false;
     RID scenario;
@@ -88,6 +90,7 @@ class MGrass : public Node3D {
     HashMap<int,RID> shapes_rids; //Key is random Index (Each Random index will result the same shape) and value is the RID shape
     float collision_radius=64;
     bool active_shape_resize=false;
+
 
     MGrass();
     ~MGrass();

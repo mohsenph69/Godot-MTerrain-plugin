@@ -5,6 +5,8 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/resource_saver.hpp>
 
+Vector<MCurveMesh*> MCurveMesh::all_curve_mesh_nodes;
+
 void MCurveMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("_update_visibilty"), &MCurveMesh::_update_visibilty);
     ClassDB::bind_method(D_METHOD("_on_connections_updated"), &MCurveMesh::_on_connections_updated);
@@ -40,6 +42,18 @@ void MCurveMesh::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("reload"), &MCurveMesh::reload);
     ClassDB::bind_method(D_METHOD("recreate"), &MCurveMesh::recreate);
+
+    ClassDB::bind_static_method("MCurveMesh",D_METHOD("get_all_curve_mesh_nodes"), &MCurveMesh::get_all_curve_mesh_nodes);
+}
+
+TypedArray<MCurveMesh> MCurveMesh::get_all_curve_mesh_nodes(){
+    TypedArray<MCurveMesh> out;
+    for(MCurveMesh* c : all_curve_mesh_nodes){
+        if(c->is_inside_tree()){
+            out.push_back(c);
+        }
+    }
+    return out;
 }
 
 // after calling this sliced_pos and slice_info are invalid and should be recalculate
@@ -170,8 +184,18 @@ void MeshSlicedInfo::get_index(int mesh_count,PackedInt32Array& input){
     }
 }
 
+MCurveMesh::MCurveMesh(){
+    all_curve_mesh_nodes.push_back(this);
+}
+
 MCurveMesh::~MCurveMesh(){
     clear();
+    for(int i=0; i < all_curve_mesh_nodes.size(); i++){
+        if(this == all_curve_mesh_nodes[i]){
+            all_curve_mesh_nodes.remove_at(i);
+            break;
+        }
+    }
 }
 
 void MCurveMesh::_on_connections_updated(){

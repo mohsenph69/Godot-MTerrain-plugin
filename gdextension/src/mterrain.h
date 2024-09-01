@@ -96,7 +96,7 @@ class MTerrain : public  Node3D {
     std::future<void> update_regions_future;
     bool is_update_regions_future_valid = false;
     bool set_mtime=false;
-    
+    static Vector<MTerrain*> all_terrain_nodes;
 
 
 
@@ -104,6 +104,7 @@ class MTerrain : public  Node3D {
     static void _bind_methods();
 
     public:
+    static TypedArray<MTerrain> get_all_terrain_nodes();
     // Confirm grass list with collision
     Vector<MGrass*> confirm_grass_col_list;
     MGrid* grid=nullptr;

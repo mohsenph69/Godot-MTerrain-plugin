@@ -11,7 +11,7 @@
 
 
 float MGrass::time_rollover_secs = 3600;
-
+Vector<MGrass*> MGrass::all_grass_nodes;
 
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
@@ -91,16 +91,35 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("_lod_setting_changed"), &MGrass::_lod_setting_changed);
 
     ClassDB::bind_method(D_METHOD("_update_visibilty"), &MGrass::_update_visibilty);
+
+    ClassDB::bind_static_method("MGrass",D_METHOD("get_all_grass_nodes"),&MGrass::get_all_grass_nodes);
+}
+
+TypedArray<MGrass> MGrass::get_all_grass_nodes(){
+    TypedArray<MGrass> out;
+    for(MGrass* g : all_grass_nodes){
+        if(g->is_inside_tree()){
+            out.push_back(g);
+        }
+    }
+    return out;
 }
 
 MGrass::MGrass(){
     dirty_points_id = memnew(VSet<int>);
     connect("tree_exited",Callable(this,"_update_visibilty"));
     connect("tree_entered",Callable(this,"_update_visibilty"));
+    all_grass_nodes.push_back(this);
 }
 MGrass::~MGrass(){
     clear_grass();
     memdelete(dirty_points_id);
+    for(int i=0; i < all_grass_nodes.size();i++){
+        if(this==all_grass_nodes[i]){
+            all_grass_nodes.remove_at(i);
+            break;
+        }
+    }
 }
 
 void MGrass::init_grass(MGrid* _grid) {

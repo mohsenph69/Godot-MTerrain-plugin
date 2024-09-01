@@ -14,6 +14,7 @@
 #include "mbrush_layers.h"
 #include "mtool.h"
 
+Vector<MTerrain*> MTerrain::all_terrain_nodes;
 
 void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("_dummy_setter","input"), &MTerrain::_dummy_setter);
@@ -207,6 +208,18 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("update_normals","left","right","top","bottom"), &MTerrain::update_normals);
 
     ClassDB::bind_method(D_METHOD("_update_visibility") , &MTerrain::_update_visibility);
+
+    ClassDB::bind_static_method("MTerrain",D_METHOD("get_all_terrain_nodes"), &MTerrain::get_all_terrain_nodes);
+}
+
+TypedArray<MTerrain> MTerrain::get_all_terrain_nodes(){
+    TypedArray<MTerrain> out;
+    for(int i=0; i < all_terrain_nodes.size();i++){
+        if(all_terrain_nodes[i]->is_inside_tree()){
+            out.push_back(all_terrain_nodes[i]);
+        }
+    }
+    return out;
 }
 
 MTerrain::MTerrain() {
@@ -235,11 +248,18 @@ MTerrain::MTerrain() {
     connect("ready",Callable(this,"_terrain_ready_signal"));
     connect("child_exiting_tree",Callable(this,"terrain_child_changed"));
     connect("child_entered_tree",Callable(this,"terrain_child_changed"));
+    all_terrain_nodes.push_back(this);
 }
 
 MTerrain::~MTerrain() {
     remove_grid();
     memdelete(grid);
+    for(int i=0; i < all_terrain_nodes.size(); i++){
+        if(this==all_terrain_nodes[i]){
+            all_terrain_nodes.remove_at(i);
+            break;
+        }
+    }
 }
 
 
