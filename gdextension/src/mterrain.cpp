@@ -352,7 +352,7 @@ void MTerrain::remove_grid(){
     }
     grid->clear();
     for(int i=0;i<confirm_grass_list.size();i++){
-        if(!UtilityFunctions::is_instance_valid(confirm_grass_list[i])){
+        if(ObjectDB::get_instance(confirm_grass_list[i]->get_instance_id())){
             continue;
         }
         confirm_grass_list[i]->clear_grass();
@@ -597,7 +597,7 @@ void MTerrain::get_cam_pos() {
             cam_pos = camera->get_global_position();
             return;
         }
-    }    
+    }
     ERR_FAIL_MSG("No camera is detected");
 }
 

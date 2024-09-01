@@ -122,8 +122,7 @@ struct MSaveConfig
     }
 };
 
-class MGrid : public Object {
-    GDCLASS(MGrid, Object);
+class MGrid {
     friend class MRegion;
     friend class MTerrain;
     friend class MImage;
@@ -175,12 +174,6 @@ class MGrid : public Object {
     std::future<void> update_regions_future;
     bool is_update_regions_future_valid = false;
 
-
-
-
-
-    protected:
-    static void _bind_methods(){};
 
     public:
     std::mutex update_chunks_mutex;

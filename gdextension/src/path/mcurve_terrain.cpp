@@ -77,7 +77,7 @@ MCurve* MCurveTerrain::get_curve(){
 }
 
 void MCurveTerrain::set_terrain(MTerrain* m_terrain){
-    if(!UtilityFunctions::is_instance_valid(m_terrain)){
+    if(ObjectDB::get_instance(m_terrain->get_instance_id())){
         return;
     }
     terrain = m_terrain;
