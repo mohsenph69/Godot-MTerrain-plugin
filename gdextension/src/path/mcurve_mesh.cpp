@@ -185,6 +185,8 @@ void MeshSlicedInfo::get_index(int mesh_count,PackedInt32Array& input){
 }
 
 MCurveMesh::MCurveMesh(){
+    connect("tree_exited", Callable(this, "_update_visibilty"));
+    connect("tree_entered", Callable(this, "_update_visibilty"));
     all_curve_mesh_nodes.push_back(this);
 }
 
@@ -318,7 +320,7 @@ Ref<MeshSlicedInfo> MCurveMesh::_generate_mesh_sliced_info(Ref<Mesh> mesh){
 }
 
 void MCurveMesh::_update_visibilty(){
-    bool v = path->is_visible() && path->is_inside_tree();
+    bool v = path->is_visible() && path->is_inside_tree() && is_inside_tree();
     for(HashMap<int64_t,Instance>::Iterator it=curve_mesh_instances.begin();it!=curve_mesh_instances.end();++it){
         RS->instance_set_visible(it->value.instance,v);
     }
@@ -1043,8 +1045,8 @@ void MCurveMesh::_notification(int p_what){
             ov.instantiate();
         }
         _generate_all_mesh_sliced_info();
-        _on_curve_changed();
         _generate_all_intersections_info();
+        _on_curve_changed();
         break;
     case NOTIFICATION_PARENTED:
         _on_curve_changed();
@@ -1089,7 +1091,6 @@ bool MCurveMesh::_set(const StringName &p_name, const Variant &p_value){
         if(seg.is_valid()){
             seg->connect("meshes_changed",Callable(this,"_generate_all_mesh_sliced_info"));
         }
-        _generate_all_mesh_sliced_info();
         meshes[index] = p_value;
         return true;
     }

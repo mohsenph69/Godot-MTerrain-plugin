@@ -866,9 +866,8 @@ void MGrass::set_meshes(Variant input){ // For comtibilty with older MTerrain ve
     }
     if(meshes.is_valid()){
         meshes->connect("meshes_changed",Callable(this,"recreate_all_grass"));
-    } else {
-        recreate_all_grass();
     }
+    recreate_all_grass();
 }
 Ref<MMeshLod> MGrass::get_meshes(){
     return meshes;
