@@ -492,7 +492,7 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
             j++;
         }
         // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
-        if(meshes->get_mesh_rid(lod) == RID() || count < min_grass_cutoff){
+        if(meshes.is_null() || meshes->get_mesh_rid(lod) == RID() || count < min_grass_cutoff){
             g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
             continue;
         }
@@ -866,6 +866,8 @@ void MGrass::set_meshes(Variant input){ // For comtibilty with older MTerrain ve
     }
     if(meshes.is_valid()){
         meshes->connect("meshes_changed",Callable(this,"recreate_all_grass"));
+    } else {
+        recreate_all_grass();
     }
 }
 Ref<MMeshLod> MGrass::get_meshes(){
