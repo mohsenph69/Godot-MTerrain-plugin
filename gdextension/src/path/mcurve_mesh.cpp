@@ -200,7 +200,6 @@ MCurveMesh::~MCurveMesh(){
 
 void MCurveMesh::_on_connections_updated(){
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
-    ERR_FAIL_COND(ObjectDB::get_instance(path->get_instance_id())==nullptr);
     ERR_FAIL_COND(curve.is_null());
     //ERR_FAIL_COND(!path->is_inside_tree());
     thread_task_id = WorkerThreadPool::get_singleton()->add_native_task(&MCurveMesh::thread_update,(void*)this);
@@ -319,10 +318,7 @@ Ref<MeshSlicedInfo> MCurveMesh::_generate_mesh_sliced_info(Ref<Mesh> mesh){
 }
 
 void MCurveMesh::_update_visibilty(){
-    bool v = false;
-    if(ObjectDB::get_instance(path->get_instance_id())==nullptr){
-        v = path->is_visible() && path->is_inside_tree();
-    }
+    bool v = path->is_visible() && path->is_inside_tree();
     for(HashMap<int64_t,Instance>::Iterator it=curve_mesh_instances.begin();it!=curve_mesh_instances.end();++it){
         RS->instance_set_visible(it->value.instance,v);
     }
@@ -981,13 +977,13 @@ Array MCurveMesh::get_materials(){
 void MCurveMesh::_on_curve_changed(){
     MPath* new_path = Object::cast_to<MPath>(get_parent());
     if(new_path!=path){
-        if(path!=nullptr && ObjectDB::get_instance(path->get_instance_id())==nullptr){
+        if(path!=nullptr){
             path->disconnect("curve_changed",Callable(this,"_on_curve_changed"));
             path->disconnect("visibility_changed",Callable(this,"_update_visibilty"));
             path->disconnect("tree_exited",Callable(this,"_update_visibilty"));
             path->disconnect("tree_entered",Callable(this,"_update_visibilty"));
         }
-        if(new_path!=nullptr && ObjectDB::get_instance(new_path->get_instance_id())==nullptr){
+        if(new_path!=nullptr){
             new_path->connect("curve_changed",Callable(this,"_on_curve_changed"));
             new_path->connect("visibility_changed",Callable(this,"_update_visibilty"));
             new_path->connect("tree_exited",Callable(this,"_update_visibilty"));

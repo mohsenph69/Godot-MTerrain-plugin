@@ -162,7 +162,6 @@ void MOctMesh::octree_thread_update(void* input){
             continue;
         }
         MOctMesh* oct_mesh = octpoint_to_octmesh.get(p.id);
-        ERR_CONTINUE(ObjectDB::get_instance(oct_mesh->get_instance_id())==nullptr);
         oct_mesh->update_lod_mesh(p.lod);
     }
 }

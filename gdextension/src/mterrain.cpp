@@ -372,9 +372,6 @@ void MTerrain::remove_grid(){
     }
     grid->clear();
     for(int i=0;i<confirm_grass_list.size();i++){
-        if(ObjectDB::get_instance(confirm_grass_list[i]->get_instance_id())){
-            continue;
-        }
         confirm_grass_list[i]->clear_grass();
     }
     confirm_grass_list.clear();
