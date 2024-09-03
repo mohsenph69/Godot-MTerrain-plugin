@@ -4,11 +4,11 @@
 void MGrassData::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_data","input"), &MGrassData::set_data);
     ClassDB::bind_method(D_METHOD("get_data"), &MGrassData::get_data);
-    ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY),"set_data","get_data");
+    ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_data","get_data");
     
     ClassDB::bind_method(D_METHOD("set_backup_data","input"), &MGrassData::set_backup_data);
     ClassDB::bind_method(D_METHOD("get_backup_data"), &MGrassData::get_backup_data);
-    ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"backup_data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE|PROPERTY_USAGE_READ_ONLY),"set_backup_data","get_backup_data");    
+    ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"backup_data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_backup_data","get_backup_data");    
     
     ClassDB::bind_method(D_METHOD("set_density","input"), &MGrassData::set_density);
     ClassDB::bind_method(D_METHOD("get_density"), &MGrassData::get_density);

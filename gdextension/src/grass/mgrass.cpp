@@ -772,7 +772,9 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
 
 void MGrass::clear_grass_sublayer_aabb(AABB aabb){
     ERR_FAIL_COND(!is_grass_init);
-    ERR_FAIL_COND(!grass_data->backup_exist());
+    if(!grass_data->backup_exist()){
+        return;
+    }
     Vector2i start = get_closest_pixel(aabb.position);
     Vector2i end = get_closest_pixel(aabb.position + aabb.size);
     start.x = start.x < 0 ? 0 : start.x;
@@ -1368,7 +1370,9 @@ void MGrass::_notification(int32_t what){
     case NOTIFICATION_VISIBILITY_CHANGED:
         _update_visibilty();
         break;
-    
+    case NOTIFICATION_EDITOR_PRE_SAVE:
+        save_grass_data();
+        break;
     default:
         break;
     }
