@@ -57,7 +57,6 @@ class MGrass : public Node3D {
     RID space;
     Ref<MGrassData> grass_data;
     MGrid* grid = nullptr;
-    //int grass_in_cell=1;
     uint32_t base_grid_size_in_pixel;
     uint32_t grass_region_pixel_width; // Width or Height both are equal
     uint32_t grass_region_pixel_size; // Total pixel size for each region
@@ -126,8 +125,6 @@ class MGrass : public Node3D {
     int get_cell_creation_time_data_limit();
     void set_grass_count_limit(int input);
     int get_grass_count_limit();
-    //void set_grass_in_cell(int input);
-    //int get_grass_in_cell();
     void set_min_grass_cutoff(int input);
     int get_min_grass_cutoff();
     void set_lod_settings(Array input);

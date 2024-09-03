@@ -12,7 +12,9 @@ void MGrassData::_bind_methods(){
     
     ClassDB::bind_method(D_METHOD("set_density","input"), &MGrassData::set_density);
     ClassDB::bind_method(D_METHOD("get_density"), &MGrassData::get_density);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"density",PROPERTY_HINT_ENUM,M_H_SCALE_LIST_STRING),"set_density","get_density");
+    // For compatibilty
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"density",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_density","get_density");
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"grass_cell_size",PROPERTY_HINT_ENUM,M_H_SCALE_LIST_STRING),"set_density","get_density");
 }
 
 MGrassData::MGrassData(){
