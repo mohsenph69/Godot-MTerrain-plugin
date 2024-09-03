@@ -717,6 +717,7 @@ func _on_grass_merge_sublayer_pressed():
 		push_error("trying to merge grass sublayer, but grass doesn't have sublayer")
 		return
 	active_object.merge_sublayer() 
+	grass_merge_sublayer_button.visible = active_object.has_sublayer()
 
 
 
