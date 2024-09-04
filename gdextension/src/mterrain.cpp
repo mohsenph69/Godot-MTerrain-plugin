@@ -279,6 +279,21 @@ void MTerrain::create_grid(){
     ERR_FAIL_COND(grid->is_created());
     ERR_FAIL_COND_EDMSG(terrain_size.x%region_size!=0,"Terrain size X component is not divisible by region size");
     ERR_FAIL_COND_EDMSG(terrain_size.y%region_size!=0,"Terrain size Y component is not divisible by region size");
+    if(Engine::get_singleton()->is_editor_hint()){
+        if(dataDir.is_empty() || dataDir == String("res://") || !dataDir.is_absolute_path()){
+            dataDir = "res://mterrain_data";
+        }
+        if(layersDataDir.is_empty() || layersDataDir == String("res://") || !layersDataDir.is_absolute_path()){
+            layersDataDir = dataDir.path_join("layers");
+        }
+
+        if(dataDir.is_absolute_path() && !DirAccess::dir_exists_absolute(dataDir)){
+            DirAccess::make_dir_recursive_absolute(dataDir);
+        }
+        if(layersDataDir.is_absolute_path() && !DirAccess::dir_exists_absolute(layersDataDir)){
+            DirAccess::make_dir_recursive_absolute(layersDataDir);
+        }
+    }
     _chunks = memnew(MChunks);
     grid->update_renderer_info();
     _chunks->create_chunks(size_list[min_size_index],size_list[max_size_index],h_scale_list[min_h_scale_index],h_scale_list[max_h_scale_index],size_info);
@@ -626,6 +641,10 @@ void MTerrain::get_cam_pos() {
 void MTerrain::set_dataDir(String input) {
     ERR_FAIL_COND_MSG(grid->is_created(),"Can not change dataDir after terrain is created!");
     dataDir = input;
+    if(Engine::get_singleton()->is_editor_hint() && !dataDir.is_empty() && dataDir != String("res://") && dataDir.is_absolute_path() && layersDataDir.is_empty() && is_inside_tree()){
+        // Setting automaticly layer data directory
+        layersDataDir = dataDir.path_join("layers");
+    }
 }
 
 String MTerrain::get_dataDir() {
