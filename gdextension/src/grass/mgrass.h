@@ -18,6 +18,7 @@
 #include "mgrass_lod_setting.h"
 #include "../mpixel_region.h"
 #include "../mbound.h"
+#include "../octmesh/mmesh_lod.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include "mgrass_chunk.h"
@@ -43,18 +44,19 @@ class MGrass : public Node3D {
     int shape_type=-1;
     bool visible = true;
     Variant shape_data;
+    static Vector<MGrass*> all_grass_nodes;
 
     protected:
     static void _bind_methods();
 
     public:
+    static TypedArray<MGrass> get_all_grass_nodes();
     bool active = true;
     bool is_grass_init = false;
     RID scenario;
     RID space;
     Ref<MGrassData> grass_data;
     MGrid* grid = nullptr;
-    //int grass_in_cell=1;
     uint32_t base_grid_size_in_pixel;
     uint32_t grass_region_pixel_width; // Width or Height both are equal
     uint32_t grass_region_pixel_size; // Total pixel size for each region
@@ -67,11 +69,11 @@ class MGrass : public Node3D {
     int min_grass_cutoff=1;
     Array lod_settings;
     Array materials;
-    Array meshes;
+    Ref<MMeshLod> meshes;
     Vector<Ref<MGrassLodSetting>> settings;
     Ref<MGrassLodSetting> default_lod_setting;
     Vector<RID> material_rids;
-    Vector<RID> meshe_rids;
+    //Vector<RID> meshe_rids;
     Vector<PackedFloat32Array> rand_buffer_pull;
     HashMap<int64_t,MGrassChunk*> grid_to_grass;
     Vector<MGrassChunk*> to_be_visible;
@@ -87,6 +89,7 @@ class MGrass : public Node3D {
     HashMap<int,RID> shapes_rids; //Key is random Index (Each Random index will result the same shape) and value is the RID shape
     float collision_radius=64;
     bool active_shape_resize=false;
+
 
     MGrass();
     ~MGrass();
@@ -122,14 +125,12 @@ class MGrass : public Node3D {
     int get_cell_creation_time_data_limit();
     void set_grass_count_limit(int input);
     int get_grass_count_limit();
-    //void set_grass_in_cell(int input);
-    //int get_grass_in_cell();
     void set_min_grass_cutoff(int input);
     int get_min_grass_cutoff();
     void set_lod_settings(Array input);
     Array get_lod_settings();
-    void set_meshes(Array input);
-    Array get_meshes();
+    void set_meshes(Variant input);
+    Ref<MMeshLod> get_meshes();
     void set_materials(Array input);
     Array get_materials();
     uint32_t get_width();
@@ -165,6 +166,7 @@ class MGrass : public Node3D {
 
 
     godot::Error save_grass_data();
+    void _recreate_all_grass(); // used in gdscript
     void recreate_all_grass(int lod=-1); // LOD -1 means all grass
     void update_random_buffer_pull(int lod);
     void _lod_setting_changed();

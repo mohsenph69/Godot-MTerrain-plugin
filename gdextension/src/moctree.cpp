@@ -749,7 +749,7 @@ void MOctree::enable_as_curve_updater(){
 }
 
 void MOctree::update_camera_position(){
-	if(camera_node && UtilityFunctions::is_instance_valid(camera_node) && camera_node->is_inside_tree()){
+	if(camera_node!=nullptr){
 		camera_position = camera_node->get_global_position();
 		return;
 	}

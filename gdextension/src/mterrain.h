@@ -34,9 +34,9 @@ class MTerrain : public  Node3D {
     MChunks* _chunks;
     std::future<void> update_thread_chunks;
     bool finish_updating=true;
-    bool update_chunks_loop=true;
+    bool chunks_update_loop_enabled=true;
     Timer* update_chunks_timer;
-    float update_chunks_interval = 0.1;
+    float chunks_update_interval = 0.1;
     float distance_update_threshold=32;
     // -1 is Terrain grid update
     // >=0 is index of confirm grass list update
@@ -47,9 +47,9 @@ class MTerrain : public  Node3D {
 
     std::future<void> update_thread_physics;
     bool finish_updating_physics=true;
-    bool update_physics_loop=true;
+    bool physics_update_loop_enabled=true;
     Timer* update_physics_timer;
-    float update_physics_interval = 0.5;
+    float physics_update_interval = 0.5;
     //Physics update stage is same as chunk update but just for physics
     int update_stage_physics=-1;
 
@@ -96,7 +96,7 @@ class MTerrain : public  Node3D {
     std::future<void> update_regions_future;
     bool is_update_regions_future_valid = false;
     bool set_mtime=false;
-    
+    static Vector<MTerrain*> all_terrain_nodes;
 
 
 
@@ -104,6 +104,7 @@ class MTerrain : public  Node3D {
     static void _bind_methods();
 
     public:
+    static TypedArray<MTerrain> get_all_terrain_nodes();
     // Confirm grass list with collision
     Vector<MGrass*> confirm_grass_col_list;
     MGrid* grid=nullptr;
@@ -147,20 +148,23 @@ class MTerrain : public  Node3D {
 
     void set_regions_limit(int input);
     int get_regions_limit();
-    float get_update_chunks_interval();
-    void set_update_chunks_interval(float input);
+    float get_chunks_update_interval();
+    void set_chunks_update_interval(float input);
     float get_distance_update_threshold();
     void set_distance_update_threshold(float input);
-    void set_update_chunks_loop(bool input);
-    bool get_update_chunks_loop();
-    float get_update_physics_interval();
-    void set_update_physics_interval(float input);
-    bool get_update_physics_loop();
-    void set_update_physics_loop(bool input);
-    void set_physics_update_limit(int32_t input);
-    int32_t get_physics_update_limit();
+    void set_chunks_update_loop_enabled(bool input);
+    bool get_chunks_update_loop_enabled();
+    float get_physics_update_interval();
+    void set_physics_update_interval(float input);
+    bool get_physics_update_loop_enabled();
+    void set_physics_update_loop_enabled(bool input);
+    void set_regions_processing_physics(int32_t input);
+    int32_t get_regions_processing_physics();
     Vector2i get_terrain_size();
     void set_terrain_size(Vector2i size);
+    Vector2i get_terrain_region_count();
+    void set_terrain_region_count(Vector2i size);
+
 
     void set_max_range(int32_t input);
     int32_t get_max_range();

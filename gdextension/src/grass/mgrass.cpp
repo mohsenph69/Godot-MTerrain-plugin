@@ -11,7 +11,7 @@
 
 
 float MGrass::time_rollover_secs = 3600;
-
+Vector<MGrass*> MGrass::all_grass_nodes;
 
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
@@ -22,6 +22,7 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_grass_by_pixel","x","y","val"), &MGrass::set_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("get_grass_by_pixel","x","y"), &MGrass::get_grass_by_pixel);
     ClassDB::bind_method(D_METHOD("update_dirty_chunks"), &MGrass::update_dirty_chunks_gd);
+    ClassDB::bind_method(D_METHOD("recreate_all_grass"), &MGrass::_recreate_all_grass);
     ClassDB::bind_method(D_METHOD("draw_grass","brush_pos","radius","add"), &MGrass::draw_grass);
     ClassDB::bind_method(D_METHOD("get_count"), &MGrass::get_count);
     ClassDB::bind_method(D_METHOD("get_width"), &MGrass::get_width);
@@ -78,7 +79,7 @@ void MGrass::_bind_methods() {
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"lod_settings",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE), "set_lod_settings","get_lod_settings");
     ClassDB::bind_method(D_METHOD("set_meshes","input"), &MGrass::set_meshes);
     ClassDB::bind_method(D_METHOD("get_meshes"), &MGrass::get_meshes);
-    ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"meshes",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_meshes","get_meshes");
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"meshes",PROPERTY_HINT_RESOURCE_TYPE,"MMeshLod"),"set_meshes","get_meshes");
     ClassDB::bind_method(D_METHOD("set_materials"), &MGrass::set_materials);
     ClassDB::bind_method(D_METHOD("get_materials"), &MGrass::get_materials);
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"materials",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_materials","get_materials");
@@ -90,16 +91,35 @@ void MGrass::_bind_methods() {
     ClassDB::bind_method(D_METHOD("_lod_setting_changed"), &MGrass::_lod_setting_changed);
 
     ClassDB::bind_method(D_METHOD("_update_visibilty"), &MGrass::_update_visibilty);
+
+    ClassDB::bind_static_method("MGrass",D_METHOD("get_all_grass_nodes"),&MGrass::get_all_grass_nodes);
+}
+
+TypedArray<MGrass> MGrass::get_all_grass_nodes(){
+    TypedArray<MGrass> out;
+    for(MGrass* g : all_grass_nodes){
+        if(g->is_inside_tree()){
+            out.push_back(g);
+        }
+    }
+    return out;
 }
 
 MGrass::MGrass(){
     dirty_points_id = memnew(VSet<int>);
     connect("tree_exited",Callable(this,"_update_visibilty"));
     connect("tree_entered",Callable(this,"_update_visibilty"));
+    all_grass_nodes.push_back(this);
 }
 MGrass::~MGrass(){
     clear_grass();
     memdelete(dirty_points_id);
+    for(int i=0; i < all_grass_nodes.size();i++){
+        if(this==all_grass_nodes[i]){
+            all_grass_nodes.remove_at(i);
+            break;
+        }
+    }
 }
 
 void MGrass::init_grass(MGrid* _grid) {
@@ -133,16 +153,6 @@ void MGrass::init_grass(MGrid* _grid) {
         // Data already created so we check if the data size is correct
         ERR_FAIL_COND_EDMSG(grass_data->data.size()!=data_size,"Grass \""+get_name()+"\" data not match, Some Terrain setting and grass density should not change after grass data creation, change back setting or create a new grass data");
     }
-    meshe_rids.clear();
-    material_rids.clear();
-    for(int i=0;i<meshes.size();i++){
-        Ref<Mesh> m = meshes[i];
-        if(m.is_valid()){
-            meshe_rids.push_back(m->get_rid());
-        } else {
-            meshe_rids.push_back(RID());
-        }
-    }
     for(int i=0;i<materials.size();i++){
         Ref<Material> m = materials[i];
         if(m.is_valid()){
@@ -167,8 +177,8 @@ void MGrass::init_grass(MGrid* _grid) {
             settings[i]->connect("lod_setting_changed",Callable(this,"_lod_setting_changed"));
         }
         int lod_scale = pow(2,i);
-        if(settings[i]->force_lod_count >=0){
-            lod_scale = pow(2,settings[i]->force_lod_count);
+        if(settings[i]->grid_lod >=0){
+            lod_scale = pow(2,settings[i]->grid_lod);
         }
         float cdensity = grass_data->density*lod_scale;
         rand_buffer_pull.push_back(settings[i]->generate_random_number(cdensity,100));
@@ -324,16 +334,16 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     int lod = g->lod;
     int lod_scale;
     const float* rand_buffer =(float*)rand_buffer_pull[lod].ptr();
-    if(settings[lod]->force_lod_count >=0 && settings[lod]->force_lod_count < lod_count){
-        lod_scale = pow(2,settings[lod]->force_lod_count);
+    if(settings[lod]->grid_lod >=0 && settings[lod]->grid_lod < lod_count){
+        lod_scale = pow(2,settings[lod]->grid_lod);
     } else {
         lod_scale = pow(2,lod);
     }
     int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
-    uint32_t divide_amount= (uint32_t)settings[lod]->divide;
+    uint32_t divide_amount= (uint32_t)settings[lod]->multimesh_subdivisions;
     Vector<MPixelRegion> pixel_regions = px.devide(divide_amount);
-    int grass_in_cell = settings[lod]->grass_in_cell;
+    int cell_instance_count = settings[lod]->cell_instance_count;
     uint32_t buffer_strid_float = settings[lod]->get_buffer_strid_float();
     uint32_t buffer_strid_byte = settings[lod]->get_buffer_strid_byte();
     int rand_buffer_size = rand_buffer_pull[lod].size()/buffer_strid_float;
@@ -379,9 +389,9 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                 uint32_t ibit = offs%8;
                 uint32_t cell_id = g->region_id*grass_region_pixel_size + offs;
                 if( (ptr[ibyte] & (1 << ibit)) != 0){
-                    for(int r=0;r<grass_in_cell;r++){
+                    for(int r=0;r<cell_instance_count;r++){
                         index=count*buffer_strid_float;
-                        int rand_index = y*grass_region_pixel_width_lod + x*grass_in_cell + r;
+                        int rand_index = y*grass_region_pixel_width_lod + x*cell_instance_count + r;
                         const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*buffer_strid_float;
                         buffer.resize(buffer.size()+buffer_strid_float);
                         float* ptrw = (float*)buffer.ptrw();
@@ -482,11 +492,11 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
             j++;
         }
         // Discard grass chunk in case there is no mesh RID or count is less than min_grass_cutoff
-        if(meshe_rids[lod] == RID() || count < min_grass_cutoff){
+        if(meshes.is_null() || meshes->get_mesh_rid(lod) == RID() || count < min_grass_cutoff){
             g->set_buffer(0,RID(),RID(),RID(),PackedFloat32Array());
             continue;
         }
-        g->set_buffer(count,scenario,meshe_rids[lod],material_rids[lod],buffer,settings[lod]->active_color_data,settings[lod]->active_custom_data);
+        g->set_buffer(count,scenario,meshes->get_mesh_rid(lod),material_rids[lod],buffer,settings[lod]->active_color_data,settings[lod]->active_custom_data);
         //UtilityFunctions::print("buffer ",buffer);
         total_count += count;
     }
@@ -528,9 +538,6 @@ void MGrass::apply_update_grass(){
 
 void MGrass::recalculate_grass_config(int max_lod){
     lod_count = max_lod + 1;
-    if(meshes.size()!=lod_count){
-        meshes.resize(lod_count);
-    }
     if(materials.size()!=lod_count){
         materials.resize(lod_count);
     }
@@ -765,7 +772,9 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
 
 void MGrass::clear_grass_sublayer_aabb(AABB aabb){
     ERR_FAIL_COND(!is_grass_init);
-    ERR_FAIL_COND(!grass_data->backup_exist());
+    if(!grass_data->backup_exist()){
+        return;
+    }
     Vector2i start = get_closest_pixel(aabb.position);
     Vector2i end = get_closest_pixel(aabb.position + aabb.size);
     start.x = start.x < 0 ? 0 : start.x;
@@ -835,10 +844,34 @@ Array MGrass::get_lod_settings(){
     return lod_settings;
 }
 
-void MGrass::set_meshes(Array input){
-    meshes = input;
+void MGrass::set_meshes(Variant input){ // For comtibilty with older MTerrain version
+    if(meshes.is_valid()){
+        meshes->disconnect("meshes_changed",Callable(this,"recreate_all_grass"));
+    }
+    if(input.get_type()==Variant::ARRAY){
+        Array arr = input;
+        if(arr.size()==0){
+            meshes = Ref<MMeshLod>();
+        }
+        TypedArray<Mesh> arr_mesh;
+        for(int i=0; i < arr.size(); i++){
+            Ref<Mesh> _m = arr[i];
+            arr_mesh.push_back(_m);
+        }
+        if(meshes.is_null()){
+            meshes.instantiate();
+        }
+        meshes->set_meshes(arr_mesh);
+        return;
+    } else {
+        meshes = input;
+    }
+    if(meshes.is_valid()){
+        meshes->connect("meshes_changed",Callable(this,"recreate_all_grass"));
+    }
+    recreate_all_grass();
 }
-Array MGrass::get_meshes(){
+Ref<MMeshLod> MGrass::get_meshes(){
     return meshes;
 }
 
@@ -934,7 +967,7 @@ void MGrass::update_physics(Vector3 cam_pos){
         return;
     }
     ERR_FAIL_COND(!is_grass_init);
-    int grass_in_cell = settings[0]->grass_in_cell;
+    int cell_instance_count = settings[0]->cell_instance_count;
     uint32_t buffer_strid_float = settings[0]->get_buffer_strid_float();
     uint32_t buffer_strid_byte = settings[0]->get_buffer_strid_byte();
     cam_pos -= grid->offset;
@@ -959,8 +992,8 @@ void MGrass::update_physics(Vector3 cam_pos){
     for(int y=last_physics_search_bound.top;y<=last_physics_search_bound.bottom;y++){
         for(int x=last_physics_search_bound.left;x<=last_physics_search_bound.right;x++){
             if(!physics_search_bound.has_point(x,y)){
-                for(int r=0;r<grass_in_cell;r++){
-                    uint64_t uid = y*width*grass_in_cell + x*grass_in_cell + r;
+                for(int r=0;r<cell_instance_count;r++){
+                    uint64_t uid = y*width*cell_instance_count + x*cell_instance_count + r;
                     int find_index = shapes_ids.find(uid);
                     if(find_index!=-1){
                         PS->body_remove_shape(main_physics_body,find_index);
@@ -979,14 +1012,14 @@ void MGrass::update_physics(Vector3 cam_pos){
             if(!get_grass_by_pixel(x,y)){
                 continue;
             }
-            for(int r=0;r<grass_in_cell;r++){
-                uint64_t uid = y*width*grass_in_cell + x*grass_in_cell + r;
+            for(int r=0;r<cell_instance_count;r++){
+                uint64_t uid = y*width*cell_instance_count + x*cell_instance_count + r;
                 if(shapes_ids.has(uid)){
                     continue;
                 }
                 int rx = (x/grass_region_pixel_width);
                 int ry = (y/grass_region_pixel_width);
-                int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width)*grass_in_cell + r;
+                int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width)*cell_instance_count + r;
                 //UtilityFunctions::print("grass_region_pixel_width ", grass_region_pixel_width);
                 //UtilityFunctions::print("X ",x, " Y ", y, " RX ",rx, " RY ", ry);
                 //UtilityFunctions::print("rand_index ",(rand_index));
@@ -1108,7 +1141,7 @@ PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
         return positions;
     }
     ERR_FAIL_COND_V(!is_grass_init,positions);
-    int grass_in_cell = settings[0]->grass_in_cell;
+    int cell_instance_count = settings[0]->cell_instance_count;
     cam_pos -= grid->offset;
     cam_pos = cam_pos / grass_data->density;
     int px_x = round(cam_pos.x);
@@ -1134,7 +1167,7 @@ PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
             if(!get_grass_by_pixel(x,y)){
                 continue;
             }
-            for(int r=0;r<grass_in_cell;r++){
+            for(int r=0;r<cell_instance_count;r++){
                 int rx = (x/grass_region_pixel_width);
                 int ry = (y/grass_region_pixel_width);
                 int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width) + r;
@@ -1163,12 +1196,6 @@ void MGrass::_get_property_list(List<PropertyInfo> *p_list) const{
         PropertyInfo m(Variant::OBJECT,"Material_LOD_"+itos(i),PROPERTY_HINT_RESOURCE_TYPE,"StandardMaterial3D,ORMMaterial3D,ShaderMaterial",PROPERTY_USAGE_EDITOR);
         p_list->push_back(m);
     }
-    PropertyInfo sub_lod2(Variant::INT, "Grass Meshes", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_SUBGROUP);
-    p_list->push_back(sub_lod2);
-    for(int i=0;i<meshes.size();i++){
-        PropertyInfo m(Variant::OBJECT,"Mesh_LOD_"+itos(i),PROPERTY_HINT_RESOURCE_TYPE,"Mesh",PROPERTY_USAGE_EDITOR);
-        p_list->push_back(m);
-    }
 }
 
 bool MGrass::_get(const StringName &p_name, Variant &r_ret) const{
@@ -1179,15 +1206,6 @@ bool MGrass::_get(const StringName &p_name, Variant &r_ret) const{
             return false;
         }
         r_ret = materials[index];
-        return true;
-    }
-    if(p_name.begins_with("Mesh_LOD_")){
-        PackedStringArray s = p_name.split("_");
-        int index = s[2].to_int();
-        if(index>meshes.size()-1){
-            return false;
-        }
-        r_ret = meshes[index];
         return true;
     }
     if(p_name.begins_with("Setting_LOD_")){
@@ -1215,24 +1233,6 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
                 material_rids.set(index,m->get_rid());
             } else {
                 material_rids.set(index,RID());
-            }
-            recreate_all_grass(index);
-        }
-        return true;
-    }
-    if(p_name.begins_with("Mesh_LOD_")){
-        PackedStringArray s = p_name.split("_");
-        int index = s[2].to_int();
-        if(index>meshes.size()-1){
-            return false;
-        }
-        meshes[index] = p_value;
-        if(is_grass_init){
-            Ref<Mesh> m = p_value;
-            if(m.is_valid()){
-                meshe_rids.set(index,m->get_rid());
-            } else {
-                meshe_rids.set(index,RID());
             }
             recreate_all_grass(index);
         }
@@ -1272,7 +1272,12 @@ godot::Error MGrass::save_grass_data(){
     return ERR_UNAVAILABLE;   
 }
 
+void MGrass::_recreate_all_grass(){
+    recreate_all_grass();
+}
+
 void MGrass::recreate_all_grass(int lod){
+    std::lock_guard<std::mutex> lock(update_mutex);
     for(HashMap<int64_t,MGrassChunk*>::Iterator it = grid_to_grass.begin();it!=grid_to_grass.end();++it){
         if(lod==-1){
             create_grass_chunk(-1,it->value);
@@ -1286,8 +1291,8 @@ void MGrass::recreate_all_grass(int lod){
 void MGrass::update_random_buffer_pull(int lod){
     ERR_FAIL_INDEX(lod,rand_buffer_pull.size());
     int lod_scale;
-    if(settings[lod]->force_lod_count >=0){
-        lod_scale = pow(2,settings[lod]->force_lod_count);
+    if(settings[lod]->grid_lod >=0){
+        lod_scale = pow(2,settings[lod]->grid_lod);
     } else {
         lod_scale = pow(2,lod);
     }
@@ -1297,7 +1302,7 @@ void MGrass::update_random_buffer_pull(int lod){
 }
 
 void MGrass::_lod_setting_changed(){
-    if(!grid->is_created()){
+    if(!grid->is_created() || !is_init()){
         return;
     }
     for(int i=0;i<lod_count;i++){
@@ -1365,7 +1370,9 @@ void MGrass::_notification(int32_t what){
     case NOTIFICATION_VISIBILITY_CHANGED:
         _update_visibilty();
         break;
-    
+    case NOTIFICATION_EDITOR_PRE_SAVE:
+        save_grass_data();
+        break;
     default:
         break;
     }
