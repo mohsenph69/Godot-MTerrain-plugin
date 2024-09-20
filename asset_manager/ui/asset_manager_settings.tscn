@@ -1,0 +1,72 @@
+[gd_scene load_steps=4 format=3 uid="uid://ybj3nflkwptb"]
+
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_4jk3n"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/asset_manager_settings.gd" id="2_766no"]
+[ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="3_x8u7q"]
+
+[node name="settings" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_4jk3n")
+script = ExtResource("2_766no")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "root asset folder"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "res://addons/m_terrain/asset_manager/example_asset_library"
+expand_to_text_length = true
+
+[node name="Button" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "select"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="group_names" type="VBoxContainer" parent="MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+
+[node name="Button5" type="Label" parent="MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/group_names"]
+layout_mode = 2
+text = "Grouping Settings"
+
+[node name="add_group_button" type="Button" parent="MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/group_names"]
+layout_mode = 2
+text = "Add Group"
+
+[node name="group_list" type="VBoxContainer" parent="MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/group_names"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Tags" parent="MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer" instance=ExtResource("3_x8u7q")]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 1
+
+[node name="add_tag_button" type="Button" parent="MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/Tags"]
+layout_mode = 2
+text = "+"

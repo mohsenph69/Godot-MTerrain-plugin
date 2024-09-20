@@ -40,3 +40,5 @@ gdextension/.vscode/*
 
 
 !/gui/human_male.obj
+
+config/*

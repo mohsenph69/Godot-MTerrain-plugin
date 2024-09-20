@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://b0e74s117ljja"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/tags_editor.gd" id="1_jgok0"]
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_xvavf"]
+
+[node name="Tags" type="VBoxContainer"]
+size_flags_horizontal = 3
+theme = ExtResource("1_xvavf")
+script = ExtResource("1_jgok0")
+
+[node name="Label2" type="Label" parent="."]
+layout_mode = 2
+text = "Tags"
+horizontal_alignment = 1
+
+[node name="search" type="LineEdit" parent="."]
+layout_mode = 2
+placeholder_text = "search"
+
+[node name="tags_list" type="VBoxContainer" parent="."]
+layout_mode = 2

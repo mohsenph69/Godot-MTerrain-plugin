@@ -20,8 +20,9 @@ var inspector_mpath
 var timer = Timer.new()
 var needs_restart = false
 	
-var MLOD_Mesh_Importer
-	
+#var MLOD_Mesh_Importer
+var asset_browser
+var asset_browser_inspector_plugin
 func check_restart():
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
 		if needs_restart:
@@ -121,10 +122,15 @@ func _enter_tree():
 		add_keymap()		
 		
 		
-		MLOD_Mesh_Importer = preload("res://addons/m_terrain/MLOD_Mesh_import_plugin.gd").new()
-		add_import_plugin(MLOD_Mesh_Importer, true)
+		#MLOD_Mesh_Importer = preload("res://addons/m_terrain/MLOD_Mesh_import_plugin.gd").new()
+		#add_import_plugin(MLOD_Mesh_Importer, true)
 		#MLOD_Mesh_Importer = preload("res://addons/m_terrain/MLOD_Mesh_importer.gd").new()
 		#GLTFDocument.register_gltf_document_extension(MLOD_Mesh_Importer)
+		asset_browser = preload("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
+		add_control_to_bottom_panel(asset_browser, "Assets")
+		asset_browser_inspector_plugin = preload("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
+		add_inspector_plugin(asset_browser_inspector_plugin)
+		
 		
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
@@ -152,9 +158,11 @@ func _exit_tree():
 		
 		### Inspector
 		remove_inspector_plugin(inspector_mpath)
-		
+				
+		remove_control_from_bottom_panel(asset_browser)
+		remove_inspector_plugin(asset_browser_inspector_plugin)
 		#GLTFDocument.unregister_gltf_document_extension(MLOD_Mesh_Importer)
-		remove_import_plugin(MLOD_Mesh_Importer)
+		#remove_import_plugin(MLOD_Mesh_Importer)
 #endregion
 
 func _on_main_screen_changed(screen_name):
