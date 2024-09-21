@@ -1,18 +1,18 @@
-@tool 
+@tool
 extends EditorInspectorPlugin
 
 var asset_library: MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
-func _can_handle(object):	
+func _can_handle(object):
 	if object.has_meta("collection_id") and object.get_meta("collection_id") != -1: return true
 	if object.has_meta("mesh_id") and object.get_meta("mesh_id") != -1: return true
 	if object is MAssetTable:return true
 		
 
 func _parse_begin(object):
-	if object is MAssetTable:		
+	if object is MAssetTable:
 		add_custom_control(preload("res://addons/m_terrain/asset_manager/debug/asset_table_inspector.tscn").instantiate())
-	elif object.has_meta("collection_id"):								
+	elif object.has_meta("collection_id"):
 		var collection_id = object.get_meta("collection_id")
 		if collection_id == -1: return
 		if object.get_parent().has_meta("collection_id"):
@@ -24,18 +24,18 @@ func _parse_begin(object):
 		
 		var vbox = VBoxContainer.new()
 		var hbox = HBoxContainer.new()
-		vbox.add_child(hbox)	
+		vbox.add_child(hbox)
 		var label = Label.new()
 		vbox.add_child(label)
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL		
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		var has_collection = asset_library.has_collection(collection_id)
-		if has_collection:			
+		if has_collection:
 			label.text = asset_library.collection_get_name(collection_id)
 			var label_details = Label.new()
 			var data = asset_library.collection_get_mesh_items_info(collection_id)
 			label_details.text = str("items: ", data.size(), "\npositions: ", data.map(func(a): return a.transform.origin))
-			label_details.autowrap_mode = TextServer.AUTOWRAP_WORD		
+			label_details.autowrap_mode = TextServer.AUTOWRAP_WORD
 			vbox.add_child(label_details)
 		else:
 			label.text = "Collection doesn't exist"
@@ -43,32 +43,32 @@ func _parse_begin(object):
 		if has_collection:
 			var button = Button.new()
 			hbox.add_child(button)
-			button.text = "remove collection"		
+			button.text = "remove collection"
 			button.pressed.connect(func():
 				asset_library.remove_collection(collection_id)
-				object.set_meta("collection_id", collection_id-1)				
+				object.set_meta("collection_id", collection_id-1)
 				object.remove_meta("overrides")
 			)
 			if object.has_meta("overrides"):
 				button = Button.new()
 				hbox.add_child(button)
-				button.text = "update"		
+				button.text = "update"
 				button.pressed.connect(func():
-					AssetIO.collection_save_from_nodes(object)				
+					AssetIO.collection_save_from_nodes(object)
 					object.remove_meta("overrides")
 				)
 				button = Button.new()
 				hbox.add_child(button)
-				button.text = "save as new"		
+				button.text = "save as new"
 				button.pressed.connect(func():
 					object.name = object.name.trim_suffix("*")
-					object.set_meta("collection_id", asset_library.collection_create(object.name))				
+					object.set_meta("collection_id", asset_library.collection_create(object.name))
 					AssetIO.collection_save_from_nodes(object)
 					object.remove_meta("overrides")
 				)
 			button = Button.new()
 			hbox.add_child(button)
-			button.text = "reload"		
+			button.text = "reload"
 			button.pressed.connect(func():
 				AssetIO.reload_collection(object, object.get_meta("collection_id"))
 				object.remove_meta("overrides")
@@ -76,11 +76,11 @@ func _parse_begin(object):
 		else:
 			var button = Button.new()
 			hbox.add_child(button)
-			button.text = "create collection"		
+			button.text = "create collection"
 			button.pressed.connect(func():
-				object.set_meta("collection_id", asset_library.collection_create(object.name))				
+				object.set_meta("collection_id", asset_library.collection_create(object.name))
 				object.notify_property_list_changed()
-			)		
+			)
 		add_custom_control(vbox)
 		#var edit_button = CheckButton.new()
 		#edit_button.text = "edit"
@@ -92,7 +92,7 @@ func _parse_begin(object):
 	elif object.has_meta("mesh_id"):
 		var mesh_id = object.get_meta("mesh_id")
 		if mesh_id != -1: return
-		var hbox = HBoxContainer.new()	
+		var hbox = HBoxContainer.new()
 		var label = Label.new()
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -105,14 +105,14 @@ func _parse_begin(object):
 		if has_item:
 			var button = Button.new()
 			hbox.add_child(button)
-			button.text = "remove item"		
+			button.text = "remove item"
 			button.pressed.connect(func():
 				asset_library.remove_mesh_item(mesh_id)
 				object.set_meta("mesh_id", -1)
 			)
 			button = Button.new()
 			hbox.add_child(button)
-			button.text = "save mesh item"		
+			button.text = "save mesh item"
 			button.pressed.connect(func():
 				object.save_changes()
 			)
@@ -125,16 +125,16 @@ func _parse_begin(object):
 				##object.collection_id = asset_library.collection_create(object.name)				
 				#object.notify_property_list_changed()
 			#)
-		add_custom_control(hbox)	
+		add_custom_control(hbox)
 
-func save_changes(object):	
-	pass	
+func save_changes(object):
+	pass
 			 	
-func update_overrides(node:Node3D):	
+func update_overrides(node:Node3D):
 	var parent = node.get_parent()
 	#if not parent.has_meta("collection_id"): return
 	var overrides = parent.get_meta("overrides") if parent.has_meta("overrides") else {}
 	overrides[node.name.trim_suffix("*")] = {
-		"transform": node.transform	
-	}	
+		"transform": node.transform
+	}
 	parent.set_meta("overrides",overrides)

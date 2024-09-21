@@ -4,6 +4,12 @@ class_name AssetIO extends Object
 const LOD_COUNT = 8
 
 #region GLB	
+static func glb_get_root_node_name(path):
+	var gltf_document = GLTFDocument.new()
+	var gltf_state = GLTFState.new()
+	gltf_document.append_from_file(path,gltf_state)
+	return gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
+
 static func glb_load(asset_library:MAssetTable, path, paths_loaded=[]):
 	glb_update_objects(asset_library, path)
 
@@ -40,7 +46,7 @@ static func glb_update_objects(asset_library:MAssetTable, path):
 					elif "collision_sphere" in child_extras:
 						pass
 					elif "collection_id" in child_extras:
-						asset_library.collection_add_sub_collection(collection_id, child_extras.collection_id, child.transform)						
+						asset_library.collection_add_sub_collection(collection_id, child_extras.collection_id, child.transform)
 			var data = import_mesh_item_from_nodes(asset_library, mesh_children)			
 			for i in data.ids.size():				
 				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])			
@@ -200,6 +206,7 @@ static func collection_save_from_nodes(root_node) -> int: #returns collection_id
 		root_node.notify_property_list_changed()
 		return root_node.get_meta("collection_id")
 	else:		
+		var overrides = root_node.get_meta("overrides") if root_node.has_meta("overrides") else {}
 		var collection_id = root_node.get_meta("collection_id") 
 		if collection_id == -1:	return collection_id
 		asset_library.collection_remove_all_items(collection_id)
@@ -209,148 +216,20 @@ static func collection_save_from_nodes(root_node) -> int: #returns collection_id
 				asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_id, child.transform)							
 			elif child is CollisionShape3D:
 				pass
-			elif child.has_meta("mesh_id"):
-				var sub_collection_id = child.get_meta("mesh_id")
+			elif child.has_meta("collection_id"):
+				var sub_collection_id = child.get_meta("collection_id")
 				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, child.transform)								
 		return collection_id
-#endregion
-	
-	
-	#assert(not path in paths_loaded)
-	#paths_loaded.push_back(path)
-	#var gltf_document = GLTFDocument.new()
-	#if not Engine.is_editor_hint():
-		#GLTFDocument.register_gltf_document_extension(GLTFExtras.new())
-	#var gltf_state = GLTFState.new()
-	#gltf_document.append_from_file(path,gltf_state)
-	#var current_collection
-	#var scene = gltf_document.generate_scene(gltf_state).get_child(0)	
-	#var nodes = [scene]
-	#nodes.append_array(scene.get_children())
-	#for child:Node in nodes:			
-		#if child is ImporterMeshInstance3D:	
-			#if not child.get_parent(): continue				
-			#if "_lod_" in child.name:				
-				#var all_mesh_lod_nodes = child.get_parent().find_children(str(child.name.split("_lod_")[0], "_lod_*"))												
-				#all_mesh_lod_nodes = all_mesh_lod_nodes.filter(func(a): if a is MeshInstance3D or a is ImporterMeshInstance3D: return true)
-				#all_mesh_lod_nodes.sort_custom(func(a,b): return true if int(a.name.to_lower().split("_lod_")[1]) < int(b.name.to_lower().split("_lod_")[1]) else false)							
-				#if child in all_mesh_lod_nodes:					
-					#if child != all_mesh_lod_nodes[0]:
-						##print("mesh lod not first but: ", all_mesh_lod_nodes.find(child))
-						#continue							
-					##print("mesh lod first but: ", child.name, " in ", all_mesh_lod_nodes)
-						#
-					#var mesh_hash_array = []
-					#var meshes = []
-					##Save Meshes using hash
-					#for mesh_node in all_mesh_lod_nodes:
-						#var current_lod = int(mesh_node.name.to_lower().split("_lod_")[1])
-						#var mesh = mesh_node.mesh if mesh_node is MeshInstance3D else mesh_node.mesh.get_mesh()																		
-						#var all_surfaces = []
-						#for i in mesh.get_surface_count():
-							#all_surfaces.push_back(mesh.surface_get_arrays(i))
-						#var mesh_hash = hash(all_surfaces)						
-						#var mesh_save_path = str("res://addons/m_terrain/asset_manager/example_asset_library/import/",mesh_hash, ".res")
-						#if not FileAccess.file_exists(mesh_save_path):
-							#mesh.resource_path = mesh_save_path
-							#ResourceSaver.save(mesh, mesh_save_path)
-						#else:
-							#mesh = load(mesh_save_path)
-						#while len(mesh_hash_array) < current_lod:
-							#if len(mesh_hash_array) == 0:
-								#mesh_hash_array.push_back(0)
-							#else:
-								#mesh_hash_array.push_back(mesh_hash_array.back())
-						#mesh_hash_array.push_back(mesh_hash)
-						#meshes.push_back(mesh)
-									#
-					#var mesh_item_id = asset_library.mesh_item_find_by_info(mesh_hash_array, mesh_hash_array.map(func(a): return 0), mesh_hash_array.map(func(a): return -1), mesh_hash_array.map(func(a): return 0))
-					#if mesh_item_id == -1:
-						#print("doesn't have mesh item")
-						#mesh_item_id = asset_library.mesh_item_add(mesh_hash_array, mesh_hash_array.map(func(a): return 0), mesh_hash_array.map(func(a): return -1), mesh_hash_array.map(func(a): return 0))										
-					#else:
-						#print("has mesh item")
-					#if child.get_parent() is Asset_Collection_Node:
-						#var collection_id = child.get_parent().collection_id
-						#if not mesh_item_id in asset_library.collection_get_mesh_items_ids(collection_id):							
-							#asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_id, child.transform)															
-							#print(asset_library.collection_get_name(collection_id))
-							#print(asset_library.collection_get_mesh_items_ids(collection_id))
-					#else:
-						#print(child.get_parent() )
-					#var moct_mesh = MOctMesh.new()
-					#for meta in child.get_meta_list():
-						#moct_mesh.set_meta(meta, child.get_meta(meta))
-					#var mmesh_lod = MMeshLod.new()					
-					#mmesh_lod.meshes = meshes												
-					#moct_mesh.mesh_lod = mmesh_lod
-					#child.replace_by.call_deferred(moct_mesh)
-					#moct_mesh.name = child.name
-					#moct_mesh.transform = child.transform				
-		#if child.has_meta("extras"):						
-			#var extras = child.get_meta("extras")			
-			#if "static_body" in extras:				
-				#var collection_id = -1
-				#if "collection" in extras:					
-					#if asset_library.has_collection(extras["collection"]):
-						#collection_id = extras["collection"]
-				#else:					
-					#collection_id = asset_library.collection_get_id(child.name+ "_Xc")
-					#print(collection_id)
-				#if collection_id == -1:					
-					#collection_id = asset_library.collection_create(child.name)
-				#child.set_meta("collection_id", collection_id)
-				#child.set_script(preload("res://addons/m_terrain/asset_manager/collection.gd"))						
-				#child.collection_id = collection_id
-			#elif "collection" in extras:		
-				#child.set_script(preload("res://addons/m_terrain/asset_manager/collection.gd"))						
-				#child.collection_id = extras.collection
-				#if child.get_child_count() > 0:
-					#var collection_id = asset_library.collection_create(child.name) if not asset_library.has_collection(extras.collection) else extras.collection
-					#child.set_meta("collection_id", collection_id)					
-				#elif child.get_parent().has_meta("collection_id"):
-					#asset_library.collection_add_sub_collection(child.get_parent().get_meta("collection_id"), extras["collection"], child.transform)				
-					#
-			#elif "hlod" in extras:
-				#if child == scene: continue
-				#for grandchild in child.get_children():
-					#child.remove_child(grandchild)
-					#grandchild.queue_free()
-				#child.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
-				#child.scene_file_path = ""#asset_library.hlod_get_baker_path()
-					#
-			#elif "glb" in extras:
-				#var glb_path = "res://addons/m_terrain/asset_manager/example_asset_library/export/" + extras["glb"]
-				#print(glb_path)
-				#update_from_glb(asset_library, glb_path, paths_loaded.duplicate())
-				#child.set_script(preload("res://addons/m_terrain/asset_manager/collection.gd"))
-				##child.collection_id = asset_library.collection_get_id()
-			#else:
-				#print(extras)
-	#if scene.has_meta("extras"):
-		#var extras = scene.get_meta("extras")
-		#if "hlod" in extras:
-			#for child in scene.find_children("*"):
-				#child.owner = scene
-			#scene.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
-			#var packed_scene = PackedScene.new()
-			#packed_scene.pack(scene)			
-			#ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + scene.name + ".tscn")
-	#scene.queue_free()
-	#ResourceSaver.save(asset_library, asset_library.resource_path)	
-	#return
-	
-#func get_root_node_name_from_glb(path):
-	#var gltf_document = GLTFDocument.new()
-	#var gltf_state = GLTFState.new()
-	#gltf_document.append_from_file(path,gltf_state)
-	#return gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
+#endregion	
 
 static func reload_collection(node, collection_id):
 	var overrides = node.get_meta("overrides") if node.has_meta("overrides") else {}
 	var new_root = collection_instantiate(collection_id)	
 	for node_name in overrides:	
-		new_root.get_node(node_name).transform = overrides[node_name].transform					
+		if new_root.has_node(node_name):
+			new_root.get_node(node_name).transform = overrides[node_name].transform					
+		else:
+			print(new_root.name, " is trying to override ", node_name, " but node does not exist " )
 
 	if is_instance_valid(new_root):
 		var old_meta = {}
