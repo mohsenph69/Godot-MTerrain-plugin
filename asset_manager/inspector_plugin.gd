@@ -12,13 +12,21 @@ func _can_handle(object):
 func _parse_begin(object):
 	if object is MAssetTable:		
 		add_custom_control(preload("res://addons/m_terrain/asset_manager/debug/asset_table_inspector.tscn").instantiate())
-	elif object.has_meta("collection_id"):
+	elif object.has_meta("collection_id"):								
 		var collection_id = object.get_meta("collection_id")
 		if collection_id == -1: return
+		if object.get_parent().has_meta("collection_id"):
+			if not object.property_list_changed.is_connected(update_overrides.bind(object)):
+				object.property_list_changed.connect(update_overrides.bind(object))
+		else:
+			if object.property_list_changed.is_connected(update_overrides.bind(object)):
+				object.property_list_changed.disconnect(update_overrides.bind(object))
+		
 		var vbox = VBoxContainer.new()
 		var hbox = HBoxContainer.new()
 		vbox.add_child(hbox)	
 		var label = Label.new()
+		vbox.add_child(label)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL		
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		var has_collection = asset_library.has_collection(collection_id)
@@ -31,20 +39,39 @@ func _parse_begin(object):
 			vbox.add_child(label_details)
 		else:
 			label.text = "Collection doesn't exist"
-		hbox.add_child(label)
+		
 		if has_collection:
 			var button = Button.new()
 			hbox.add_child(button)
 			button.text = "remove collection"		
 			button.pressed.connect(func():
 				asset_library.remove_collection(collection_id)
-				object.set_meta("collection_id", collection_id-1)
+				object.set_meta("collection_id", collection_id-1)				
+				object.remove_meta("overrides")
 			)
+			if object.has_meta("overrides"):
+				button = Button.new()
+				hbox.add_child(button)
+				button.text = "update"		
+				button.pressed.connect(func():
+					AssetIO.collection_save_from_nodes(object)				
+					object.remove_meta("overrides")
+				)
+				button = Button.new()
+				hbox.add_child(button)
+				button.text = "save as new"		
+				button.pressed.connect(func():
+					object.name = object.name.trim_suffix("*")
+					object.set_meta("collection_id", asset_library.collection_create(object.name))				
+					AssetIO.collection_save_from_nodes(object)
+					object.remove_meta("overrides")
+				)
 			button = Button.new()
 			hbox.add_child(button)
-			button.text = "save collection"		
+			button.text = "reload"		
 			button.pressed.connect(func():
-				object.save_changes()
+				AssetIO.reload_collection(object, object.get_meta("collection_id"))
+				object.remove_meta("overrides")
 			)
 		else:
 			var button = Button.new()
@@ -60,34 +87,7 @@ func _parse_begin(object):
 		#add_custom_control(edit_button)
 		#if object.get_child_count() > 0 and object.get_child(0).owner == object.owner:
 		#	edit_button.button_pressed = true
-		#edit_button.toggled.connect(func(toggle_on): Asset_IO.edit_collection(object,toggle_on)	)
-		vbox.tree_exiting.connect(func():
-			#if edit_button.button_pressed:
-			if false:
-				var popup = preload("res://addons/m_terrain/asset_manager/ui/save_changes_popup.tscn").instantiate()				
-				EditorInterface.get_editor_main_screen().add_child(popup)
-				popup.popup_centered()
-				popup.continue_button.pressed.connect(popup.queue_free)
-				popup.discard_button.pressed.connect(func():
-					for child in object.get_children():
-						object.remove_child(child)
-						child.queue_free()					
-					object = Asset_IO.reload_collection(object, object.get_meta("collection_id"))
-					Asset_IO.edit_collection(object, false)
-					popup.queue_free()
-				)				
-				popup.override_button.pressed.connect(func():					
-					object.set_meta("collection_id", asset_library.collection_create(object.name))
-					Asset_IO.collection_save_from_nodes(object)
-					Asset_IO.edit_collection(object, false)
-					popup.queue_free()
-				)
-				popup.update_button.pressed.connect(func():
-					Asset_IO.collection_save_from_nodes(object)
-					Asset_IO.edit_collection(object, false)
-					popup.queue_free()
-				)
-		)
+		#edit_button.toggled.connect(func(toggle_on): AssetIO.edit_collection(object,toggle_on)	)		
 
 	elif object.has_meta("mesh_id"):
 		var mesh_id = object.get_meta("mesh_id")
@@ -130,3 +130,11 @@ func _parse_begin(object):
 func save_changes(object):	
 	pass	
 			 	
+func update_overrides(node:Node3D):	
+	var parent = node.get_parent()
+	#if not parent.has_meta("collection_id"): return
+	var overrides = parent.get_meta("overrides") if parent.has_meta("overrides") else {}
+	overrides[node.name.trim_suffix("*")] = {
+		"transform": node.transform	
+	}	
+	parent.set_meta("overrides",overrides)

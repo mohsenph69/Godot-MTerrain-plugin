@@ -138,29 +138,17 @@ func _enter_tree():
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		asset_browser_inspector_plugin = preload("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
 		add_inspector_plugin(asset_browser_inspector_plugin)
-		scene_changed.connect(monitor_collections)					
+		#scene_changed.connect(monitor_collections)					
 	
 func monitor_collections(root:Node):			
 	if not root: return		
-	if root.scene_file_path in loaded_scenes: return
-	print("scene changed: ", root.scene_file_path)
-	var new_root = load_collections_recursive(root)
+	if root.scene_file_path in loaded_scenes: return	
+	var new_root = AssetIO.collections_load_recursive(root)
 	loaded_scenes.push_back(root.scene_file_path)	
 	if is_instance_valid(new_root):	
 		for child in new_root.find_children("*"):
-			if not child.child_entered_tree.is_connected(load_collections_recursive):
-				child.child_entered_tree.connect(load_collections_recursive)
-	
-func load_collections_recursive(root:Node)->Node:	
-	if root.has_meta("collection_id"):
-		print("loaded collection for ", root.name)		
-		var new_root = Asset_IO.reload_collection(root, root.get_meta("collection_id"))		
-		return new_root if is_instance_valid(new_root) else null
-	else:
-		for child in root.get_children():
-			if child.has_meta("collection_id"):
-				Asset_IO.reload_collection(child, child.get_meta("collection_id"))	
-		return root
+			if not child.child_entered_tree.is_connected(AssetIO.collections_load_recursive):
+				child.child_entered_tree.connect(AssetIO.collections_load_recursive)
 		
 	
 func _ready() -> void:	
@@ -212,20 +200,31 @@ func selection_changed():
 	
 	var selection = get_editor_interface().get_selection().get_selected_nodes()
 	
-	#Asset Library: Auto edit nodes:
-	#if selection.size() > 0:
-		#for child in EditorInterface.get_edited_scene_root().find_children("*"):			
-			#if child.has_meta("collection_id"):
-				#if selection.size() == 1:
-					#if selection[0] == child:
-						#Asset_IO.edit_collection(child,true)				
-					#elif not child.is_ancestor_of(selection[0]):					
-						#Asset_IO.edit_collection(child,false)
-				#elif selection.size() > 1:					
-					#for node in selection:
-						#if node.get_parent() in selection:																					
-							#get_editor_interface().get_selection().remove_node(node)
-							#Asset_IO.edit_collection(node.get_parent(),false)
+	#Asset Library: 
+	#var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+	#for node in selection:
+		#if node.has_meta("collection_id") and not asset_library.collection_get_name(node.get_meta("collection_id")) in node.name:
+			#node = AssetIO.reload_collection(node, node.get_meta("collection_id"))
+			#get_editor_interface().get_selection().add_node(node)
+		#return
+	#Auto edit nodes:	
+	if selection.size() > 0:
+		for child in EditorInterface.get_edited_scene_root().find_children("*"):			
+			if child.has_meta("collection_id"):
+				if selection.size() == 1:
+					if selection[0] == child:
+						AssetIO.edit_collection(child,true)				
+						if not child.name.ends_with("*"):
+							child.name += "*"
+					elif not child.is_ancestor_of(selection[0]):					
+						AssetIO.edit_collection(child,false)
+						if child.name.ends_with("*"):							
+							child.name = child.name.trim_suffix("*")
+				elif selection.size() > 1:					
+					for node in selection:
+						if node.get_parent() in selection:																					
+							get_editor_interface().get_selection().remove_node(node)
+							AssetIO.edit_collection(node.get_parent(),false)
 					
 	
 	if selection.size() != 1 or not current_main_screen_name == "3D":		

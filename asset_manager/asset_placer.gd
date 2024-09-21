@@ -107,7 +107,7 @@ func _drop_data(at_position, data):
 		import_gltf(file)
 		
 func import_gltf(path):		
-	Asset_IO.glb_load(asset_library, path)
+	AssetIO.glb_load(asset_library, path)
 	regroup(current_category)
 	asset_library.notify_property_list_changed()
 			
@@ -153,7 +153,7 @@ func regroup(category = "None", filtered_collections = asset_library.collection_
 	current_category = category
 
 func collection_item_activated(id, group_list:ItemList):					
-	var node = Asset_IO.collection_instantiate(group_list.get_item_metadata(id))	
+	var node = AssetIO.collection_instantiate(group_list.get_item_metadata(id))	
 	#node.set_meta("collection_id", group_list.get_item_metadata(id))
 	EditorInterface.get_edited_scene_root().add_child(node)
 	node.owner = EditorInterface.get_edited_scene_root()

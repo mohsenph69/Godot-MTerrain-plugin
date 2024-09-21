@@ -1,5 +1,5 @@
 @tool
-class_name Asset_IO extends Object
+class_name AssetIO extends Object
 
 const LOD_COUNT = 8
 
@@ -345,19 +345,26 @@ static func collection_save_from_nodes(root_node) -> int: #returns collection_id
 	#var gltf_state = GLTFState.new()
 	#gltf_document.append_from_file(path,gltf_state)
 	#return gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
+
 static func reload_collection(node, collection_id):
-	var new_root = Asset_IO.collection_instantiate(collection_id)		
+	var overrides = node.get_meta("overrides") if node.has_meta("overrides") else {}
+	var new_root = collection_instantiate(collection_id)	
+	for node_name in overrides:	
+		new_root.get_node(node_name).transform = overrides[node_name].transform					
+
 	if is_instance_valid(new_root):
 		var old_meta = {}
 		for meta in node.get_meta_list():
 			old_meta[meta] = node.get_meta(meta)
 		node.replace_by(new_root)
+		new_root.name = node.name
 		node.free()		
 		for meta in old_meta:
-			new_root.set_meta(meta, old_meta[meta])							
+			new_root.set_meta(meta, old_meta[meta])		
 	else:
 		new_root = null
 	return new_root
+	
 static func collection_instantiate(collection_id)->Node3D:
 	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
 	if not asset_library.has_collection(collection_id):
@@ -387,11 +394,12 @@ static func collection_instantiate(collection_id)->Node3D:
 			var single_item_collection_ids = asset_library.tag_get_collections_in_collections(asset_library.mesh_item_find_collections(mesh_id), 0)			
 			if len(single_item_collection_ids) == 0: push_error("single item collection doesn't exist! mesh_id: ", mesh_id)
 			mesh_item.set_meta("collection_id", single_item_collection_ids[0])								
-			mesh_item.name = asset_library.collection_get_name(collection_id)												
+			var mesh_item_name = asset_library.collection_get_name(single_item_collection_ids[0])
 			mesh_item.mesh_lod = MMeshLod.new()	
 			mesh_item.mesh_lod.meshes = mesh_item_get_mesh_resources(mesh_id)															
 			mesh_item.transform = items_info[i].transform									
-			node.add_child(mesh_item)			
+			node.add_child(mesh_item)
+			mesh_item.name = mesh_item_name
 		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 		for id in sub_collections:
 			var sub_collection = Node3D.new()
@@ -413,3 +421,49 @@ static func edit_collection(object, toggle_on):
 	var n = Node.new()
 	object.add_child(n)
 	n.queue_free()
+
+static func collections_load_recursive(root:Node)->Node:	
+	if root.has_meta("collection_id"):
+		print("loaded collection for ", root.name)		
+		var new_root = reload_collection(root, root.get_meta("collection_id"))		
+		return new_root if is_instance_valid(new_root) else null
+	else:
+		for child in root.get_children():
+			if child.has_meta("collection_id"):
+				reload_collection(child, child.get_meta("collection_id"))	
+		return root
+
+#static func collection_prompt_save_changes(nodes:Array):
+	#var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+	#var popup = preload("res://addons/m_terrain/asset_manager/ui/save_changes_popup.tscn").instantiate()
+	#EditorInterface.get_editor_main_screen().add_child(popup)
+	#popup.name = "save_changes_popup"
+	#popup.focus_exited.connect(func():								
+		#popup.queue_free()
+	#)	
+	#popup.prompt_label.text = str("Save Changes to ", nodes.map( func(a): return a.name.trim_suffix("*")), "?")
+	#popup.continue_button.pressed.connect(popup.queue_free)
+	#popup.discard_button.pressed.connect(func():
+		#for child in nodes:
+			#AssetIO.reload_collection(child, child.get_meta("collection_id"))
+		#popup.queue_free()
+	#)
+	#popup.new_button.pressed.connect(func():	
+		#for child in nodes:
+			#child.set_meta("collection_id", asset_library.collection_create(child.name))
+			#AssetIO.collection_save_from_nodes(child)
+		#popup.queue_free()		
+	#)
+	#popup.override_button.pressed.connect(func():
+		#for child in nodes:
+			#child.set_meta("overrides", {
+				#"transform":child.transform									
+			#})
+		#popup.queue_free()
+	#)
+	#popup.update_button.pressed.connect(func():								
+		#for child in nodes:
+			#AssetIO.collection_save_from_nodes(child)
+		#popup.queue_free()
+	#)							
+	#popup.popup_centered()

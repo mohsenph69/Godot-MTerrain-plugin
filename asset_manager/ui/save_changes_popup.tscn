@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/save_changes_popup.gd" id="1_t6hlv"]
 
 [node name="PopupPanel" type="Popup"]
-size = Vector2i(649, 500)
+size = Vector2i(743, 500)
 visible = true
 always_on_top = true
 extend_to_title = true
@@ -23,7 +23,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/margin_top = 20
 
-[node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
+[node name="prompt_label" type="Label" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Save Changes?"
 horizontal_alignment = 1

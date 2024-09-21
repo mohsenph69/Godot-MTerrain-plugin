@@ -6,6 +6,19 @@ class_name HLod_Baker extends Node
 @export var bake_path = "res://"
 @export var bake = false
 
+func _notification(what):
+	if what == NOTIFICATION_EDITOR_PRE_SAVE:
+		for child in get_children():
+			if child.has_meta("collection_id"):
+				for grandchild in child.get_children():
+					grandchild.owner = null
+					
+
+func _ready():
+	for child in get_children():
+		if child.has_meta("collection_id"):
+			var original_transform = child.transform
+			AssetIO.reload_collection(child, child.get_meta("collection_id")).transform = original_transform
 
 func bake_to_hlod_resource():	
 	var hlod_resource = Resource.new()
