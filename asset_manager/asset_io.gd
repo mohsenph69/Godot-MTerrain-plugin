@@ -197,7 +197,7 @@ static func hash_material(material):
 #endregion
 #region Collection
 static func collection_save_from_nodes(root_node) -> int: #returns collection_id
-	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))			
 	if root_node is MOctMesh:		
 		var material_overrides = root_node.get_meta("material_overrides") if root_node.has_meta("material_overrides") else []	
 		var mesh_id = root_node.get_meta("mesh_id") if root_node.has_meta("mesh_id") else -1
@@ -206,14 +206,16 @@ static func collection_save_from_nodes(root_node) -> int: #returns collection_id
 		root_node.notify_property_list_changed()
 		return root_node.get_meta("collection_id")
 	else:		
-		var overrides = root_node.get_meta("overrides") if root_node.has_meta("overrides") else {}
+		var overrides = root_node.get_meta("overrides") if root_node.has_meta("overrides") else {}		
 		var collection_id = root_node.get_meta("collection_id") 
 		if collection_id == -1:	return collection_id
+		print("before: ", asset_library.collection_get_mesh_items_info(collection_id))
 		asset_library.collection_remove_all_items(collection_id)
 		for child in root_node.get_children():					
 			if child.has_meta("mesh_id"):			
 				var mesh_id = child.get_meta("mesh_id")
 				asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_id, child.transform)							
+				
 			elif child is CollisionShape3D:
 				pass
 			elif child.has_meta("collection_id"):

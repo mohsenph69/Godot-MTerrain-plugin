@@ -25,6 +25,8 @@ var asset_browser
 var asset_browser_inspector_plugin
 var loaded_scenes = []
 
+var gltf_extras_importer
+
 func check_restart():
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
 		if needs_restart:
@@ -138,6 +140,8 @@ func _enter_tree():
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		asset_browser_inspector_plugin = preload("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
 		add_inspector_plugin(asset_browser_inspector_plugin)
+		gltf_extras_importer = GLTFExtras.new()
+		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)
 		#scene_changed.connect(monitor_collections)					
 	
 func monitor_collections(root:Node):			
@@ -182,6 +186,7 @@ func _exit_tree():
 		remove_inspector_plugin(asset_browser_inspector_plugin)
 		var asset_library = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 		ResourceSaver.save(asset_library, asset_library.resource_path)
+		GLTFDocument.unregister_gltf_document_extension(gltf_extras_importer)
 		#GLTFDocument.unregister_gltf_document_extension(MLOD_Mesh_Importer)
 		#remove_import_plugin(MLOD_Mesh_Importer)
 #endregion
