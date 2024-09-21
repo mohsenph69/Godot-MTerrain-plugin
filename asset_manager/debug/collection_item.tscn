@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://cwgmolxwrtaxf"]
+
+[node name="collection" type="HBoxContainer"]
+
+[node name="id" type="Label" parent="."]
+layout_mode = 2
+
+[node name="name" type="LineEdit" parent="."]
+layout_mode = 2
+text = "collection name"
+expand_to_text_length = true
+
+[node name="remove" type="Button" parent="."]
+layout_mode = 2
+text = "x"
+
+[node name="meshes" type="Label" parent="."]
+layout_mode = 2

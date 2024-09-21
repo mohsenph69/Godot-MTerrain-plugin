@@ -1,39 +1,44 @@
-[gd_scene load_steps=16 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=8 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
 [ext_resource type="PackedScene" uid="uid://5wjjba4i6uji" path="res://addons/m_terrain/asset_manager/ui/group_control.tscn" id="3_4shpx"]
-[ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="3_ikt3p"]
-[ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="3_kvx3v"]
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/collection.gd" id="6_mjlpq"]
-[ext_resource type="ArrayMesh" uid="uid://bpjocq0mdulqn" path="res://addons/m_terrain/asset_manager/example_asset_library/import/632549392.res" id="7_1hobi"]
-[ext_resource type="ArrayMesh" uid="uid://b1g5br32o3jt3" path="res://addons/m_terrain/asset_manager/example_asset_library/import/1458971374.res" id="7_5lyot"]
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/mesh_item.gd" id="8_1n2wb"]
-[ext_resource type="ArrayMesh" uid="uid://c1hut141u7td3" path="res://addons/m_terrain/asset_manager/example_asset_library/import/1827016283.res" id="8_mqymq"]
+[ext_resource type="PackedScene" uid="uid://bq3mcnrp6nw4k" path="res://addons/m_terrain/asset_manager/ui/filter_by_tags_control.tscn" id="3_dfwqm"]
 
 [sub_resource type="GDScript" id="GDScript_tq7tq"]
 script/source = "@tool
 extends Button
 @onready var all_button = find_child(\"all_button\")
+@onready var clear_button = find_child(\"clear_button\")
+@onready var tags_control = find_child(\"Tags\")
 func _ready():
 	all_button.toggled.connect(func(toggle_on):
 		if toggle_on:
 			all_button.text = \"match all\"
 		else:
 			all_button.text = \"match any\"
+	)	
+	tags_control.editable = false	
+	clear_button.pressed.connect(func():
+		if all_button.button_pressed:
+			tags_control.set_tags_from_data([])
+		else:
+			tags_control.set_tags_from_data(owner.asset_library.tag_get_names().keys())
 	)
-
+	
 func _toggled(toggle_on):	
-	var popup = get_child(0)
-	if toggle_on:
-		popup.visible = true
-		popup.position.x = global_position.x
+	var popup:Popup = get_child(0)
+	if toggle_on:		
+		tags_control.set_options(owner.asset_library.tag_get_names())		
+		var rect = Rect2i(Vector2i(), popup.size)
+		rect.position.x = global_position.x
 		if get_viewport_rect().size.y - owner.global_position.y + size.y < owner.global_position.y:
-			popup.position.y = owner.global_position.y - popup.size.y
+			rect.position.y = owner.global_position.y - popup.size.y
 			popup.max_size.y = owner.global_position.y
 		else:
-			popup.position.y = owner.global_position.y + size.y
+			rect.position.y = owner.global_position.y + size.y
 			popup.max_size.y = get_viewport_rect().size.y - owner.global_position.y - size.y
+		popup.popup(rect)
 	else:
 		popup.visible = false
 
@@ -79,13 +84,6 @@ func _pressed():
 	popup.window_input.connect(func(e): if e is InputEventKey and e.keycode == KEY_ESCAPE: popup.queue_free())
 "
 
-[sub_resource type="MMeshLod" id="MMeshLod_scn37"]
-meshes = Array[Mesh]([ExtResource("7_5lyot")])
-
-[sub_resource type="MMeshLod" id="MMeshLod_povdg"]
-meshes = Array[Mesh]([ExtResource("7_1hobi"), ExtResource("8_mqymq")])
-lod_count = 2
-
 [node name="AssetPlacer" type="PanelContainer"]
 anchors_preset = 15
 anchor_right = 1.0
@@ -114,44 +112,9 @@ script = SubResource("GDScript_tq7tq")
 
 [node name="filter_popup_menu" type="Popup" parent="VBoxContainer/HBoxContainer/filter_by_button"]
 position = Vector2i(491, 0)
-size = Vector2i(172, 505)
+size = Vector2i(168, 505)
 
-[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu/PanelContainer"]
-layout_mode = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu/PanelContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="all_button" type="CheckButton" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu/PanelContainer/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "match all"
-icon_alignment = 2
-
-[node name="remove" type="Button" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu/PanelContainer/VBoxContainer/HBoxContainer"]
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-mouse_filter = 1
-theme_type_variation = &"button_icon_only"
-icon = ExtResource("3_kvx3v")
-icon_alignment = 1
-expand_icon = true
-
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu/PanelContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Tags" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu/PanelContainer/VBoxContainer/ScrollContainer" instance=ExtResource("3_ikt3p")]
-layout_mode = 2
+[node name="PanelContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu" instance=ExtResource("3_dfwqm")]
 
 [node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -231,25 +194,3 @@ layout_mode = 2
 
 [node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
 layout_mode = 2
-
-[node name="Chair" type="Node3D" parent="."]
-script = ExtResource("6_mjlpq")
-edit = true
-collection_id = 3
-
-[node name="Chair" type="MOctMesh" parent="Chair"]
-mesh_lod = SubResource("MMeshLod_scn37")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.60458, 0, 0)
-script = ExtResource("8_1n2wb")
-mesh_id = 1
-
-[node name="Chair2" type="MOctMesh" parent="Chair"]
-mesh_lod = SubResource("MMeshLod_povdg")
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.03944, 0, 0)
-script = ExtResource("8_1n2wb")
-mesh_id = 2
-
-[node name="Wall2" type="Node3D" parent="."]
-script = ExtResource("6_mjlpq")
-edit = true
-collection_id = 2

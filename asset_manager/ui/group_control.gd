@@ -25,5 +25,5 @@ func set_group(group_name):
 func add_item(item_name, item_icon, item):
 	var i = group_list.add_item(item_name, item_icon)
 	group_list.set_item_metadata(i, item)
-	var asset_library:MAssetTable = Asset_Manager_IO.get_asset_library()
+	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 	group_list.set_item_tooltip(i, str(item_name,": ", asset_library.collection_get_mesh_items_info(item) ))

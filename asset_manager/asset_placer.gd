@@ -3,7 +3,13 @@
 # Asset Library Functionality:
 # - Items
 #	- add item
+#		- func add_item_new_item
+#		- func add_item_existing_item
+#		- func add_item_no_meshes
+#		- func add_item_array_lengths_mismatched
 #	- remove item
+#		- func remove_item_item_exists
+#		- func remove_item_no_item
 #	- get item id (has item)
 #	- get item mesh_array
 #	- get item material_array
@@ -57,20 +63,18 @@ var current_category = "None"
 var collections= []
 #var tags
 
-var asset_library: MAssetTable = Asset_Manager_IO.get_asset_library()
+var asset_library: MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 func _ready():	
 	#categories = {"colors": [0,1,2], "sizes":[3,4,5], "building_parts": [6,7,8,9]}   #data.categories
 	#tags = ["red", "green", "blue", "small", "medium", "large", "wall", "floor", "roof", "door"]#data.tags	
-	
-	
-	#if not asset_library.has_collection(0):
-	#	asset_library.collection_create("first collection")
-	
-#	search_collections.text_changed.connect(func(text):		
-#		Array(asset_library.collection_names_begin_with(text)).map(func(a): return asset_library.collection_get_name(a))
-#		asset_library.tag_get_collections()
-#	)
+		
+	search_collections.text_changed.connect(func(text):				
+		var filtered_collections = asset_library.collection_names_begin_with(text) if text != "" else asset_library.collection_get_list()			
+		regroup(current_category, filtered_collections)
+				
+			
+	)
 	
 	grouping_popup_menu.index_pressed.connect(func(id):		
 		regroup(grouping_popup_menu.get_item_text(id))			
@@ -105,16 +109,17 @@ func _drop_data(at_position, data):
 func import_gltf(path):		
 	Asset_Manager_IO.update_from_glb(asset_library, path)
 	regroup(current_category)
+	asset_library.notify_property_list_changed()
 			
-func regroup(category = "None"):
-	current_category = category
-	for child in groups.get_children():
-		groups.remove_child(child)
-		child.queue_free()
+func regroup(category = "None", filtered_collections = asset_library.collection_get_list()):
+	if current_category != category:		
+		for child in groups.get_children():
+			groups.remove_child(child)
+			child.queue_free()
 	if category == "None":		
 		ungrouped.group_list.clear()		
 				
-		for collection_id in asset_library.collection_get_list():
+		for collection_id in filtered_collections:
 			var collection_name = asset_library.collection_get_name(collection_id)
 			var thumbnail = null # load(.../thumbnails/" + collection_name + ".png")
 			ungrouped.add_item(collection_name, thumbnail, collection_id)	
@@ -124,23 +129,27 @@ func regroup(category = "None"):
 	#elif category in categories:
 	elif category in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
-		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")
+		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
 		for tag_id in asset_library.group_get_tags(category):
 			if asset_library.tag_get_name(tag_id) == "": continue
-			var group_control = group_control_scene.instantiate()								
-			groups.add_child(group_control)			
-			group_control.group_list.multi_selected.connect(func(id, selected):
-				process_selection(group_control.group_list, id, selected)
-			)						
-			#group_control.set_group(tags[tag_id])
-			group_control.set_group(asset_library.tag_get_name(tag_id))
-			print("adding ", asset_library.tag_get_name(tag_id))
-			ungrouped.group_list.clear()						
-			for collection_id in asset_library.tags_get_collections_any([tag_id]):
-				group_control.add_item(asset_library.collection_get_name(collection_id))							
-			#else:
-				#ungrouped.add_item(collection.resource_name, thumbnail, collection)
-					
+			var group_control = groups.find_child(asset_library.tag_get_name(tag_id))
+			if current_category != category:
+				group_control = group_control_scene.instantiate()								
+				groups.add_child(group_control)			
+				group_control.group_list.multi_selected.connect(func(id, selected):
+					process_selection(group_control.group_list, id, selected)
+				)									
+				group_control.set_group(asset_library.tag_get_name(tag_id))					
+			
+			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
+				var thumbnail = null				
+				group_control.add_item(asset_library.collection_get_name(collection_id), thumbnail, collection_id)							
+		ungrouped.group_list.clear()
+		for id in filtered_collections:
+			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(category)):
+				var thumbnail = null
+				ungrouped.add_item(asset_library.collection_get_name(id), thumbnail, id )
+	current_category = category
 func process_selection(who:ItemList, id, selected):
 	current_selection = []
 	var all_groups = groups.get_children().map(func(a): return a.group_list)

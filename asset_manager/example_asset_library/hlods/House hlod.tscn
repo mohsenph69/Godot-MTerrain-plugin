@@ -1,11 +1,32 @@
-[gd_scene load_steps=6 format=3 uid="uid://by7231n1qxrg7"]
+[gd_scene load_steps=14 format=3 uid="uid://by7231n1qxrg7"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_lxchk"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/collection.gd" id="1_v7ytv"]
 [ext_resource type="ArrayMesh" uid="uid://b1g5br32o3jt3" path="res://addons/m_terrain/asset_manager/example_asset_library/import/1458971374.res" id="2_ugjhx"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/mesh_item.gd" id="3_y5nrr"]
+[ext_resource type="ArrayMesh" uid="uid://bpjocq0mdulqn" path="res://addons/m_terrain/asset_manager/example_asset_library/import/632549392.res" id="5_0n3qc"]
+[ext_resource type="ArrayMesh" uid="uid://c1hut141u7td3" path="res://addons/m_terrain/asset_manager/example_asset_library/import/1827016283.res" id="6_54bll"]
 
 [sub_resource type="MMeshLod" id="MMeshLod_6yk6r"]
+meshes = Array[Mesh]([ExtResource("2_ugjhx")])
+
+[sub_resource type="MMeshLod" id="MMeshLod_jqe5u"]
+meshes = Array[Mesh]([ExtResource("5_0n3qc"), ExtResource("6_54bll")])
+lod_count = 2
+
+[sub_resource type="MMeshLod" id="MMeshLod_fg4qw"]
+meshes = Array[Mesh]([ExtResource("2_ugjhx")])
+
+[sub_resource type="MMeshLod" id="MMeshLod_yjxxq"]
+meshes = Array[Mesh]([ExtResource("2_ugjhx")])
+
+[sub_resource type="MMeshLod" id="MMeshLod_p3qqu"]
+meshes = Array[Mesh]([ExtResource("2_ugjhx")])
+
+[sub_resource type="MMeshLod" id="MMeshLod_265ov"]
+meshes = Array[Mesh]([ExtResource("2_ugjhx")])
+
+[sub_resource type="MMeshLod" id="MMeshLod_vsyge"]
 meshes = Array[Mesh]([ExtResource("2_ugjhx")])
 
 [node name="House hlod" type="Node3D"]
@@ -50,54 +71,92 @@ metadata/extras = {
 "glb": "Table1.glb"
 }
 
-[node name="table_003 sub_collection" type="Node3D" parent="."]
+[node name="table" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, 5.32449)
+script = ExtResource("1_v7ytv")
+collection_id = 2
 metadata/extras = {
 "glb": "Table1.glb"
 }
 
-[node name="wall_005 sub_collection" type="Node3D" parent="."]
+[node name="table" type="MOctMesh" parent="table"]
+mesh_lod = SubResource("MMeshLod_jqe5u")
+transform = Transform3D(2.10095, 0, 0, 0, -0.078764, 0, 0, 0, 1, 0, 0.50499, -3.25841)
+script = ExtResource("3_y5nrr")
+mesh_id = 1
+
+[node name="wall" type="Node3D" parent="."]
 transform = Transform3D(9.30696, 0, 0, 0, 1, 0, 0, 0, 1, 1.08067, 0, -8.67685)
 script = ExtResource("1_v7ytv")
 edit = true
-collection_id = 0.0
+collection_id = 5
 metadata/extras = {
 "collection": 0.0,
 "glb": "Wall.glb"
 }
 
-[node name="wall_006 sub_collection" type="Node3D" parent="."]
+[node name="wall" type="MOctMesh" parent="wall"]
+mesh_lod = SubResource("MMeshLod_fg4qw")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -0.0984155, 0, 1.01022, 0)
+script = ExtResource("3_y5nrr")
+mesh_id = 2
+
+[node name="wall2" type="Node3D" parent="."]
 transform = Transform3D(10.2671, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.35473)
 script = ExtResource("1_v7ytv")
-collection_id = 0.0
+collection_id = 5
 metadata/extras = {
 "collection": 0.0,
 "glb": "Wall.glb"
 }
 
-[node name="wall_007 sub_collection" type="Node3D" parent="."]
+[node name="wall2" type="MOctMesh" parent="wall2"]
+mesh_lod = SubResource("MMeshLod_yjxxq")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -0.0984155, 0, 1.01022, 0)
+script = ExtResource("3_y5nrr")
+mesh_id = 2
+
+[node name="wall3" type="Node3D" parent="."]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, -10.0452, 0, 0)
 script = ExtResource("1_v7ytv")
-collection_id = 0.0
+collection_id = 5
 metadata/extras = {
 "collection": 0.0,
 "glb": "Wall.glb"
 }
 
-[node name="wall_008 sub_collection" type="Node3D" parent="."]
+[node name="wall3" type="MOctMesh" parent="wall3"]
+mesh_lod = SubResource("MMeshLod_p3qqu")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -0.0984155, 0, 1.01022, 0)
+script = ExtResource("3_y5nrr")
+mesh_id = 2
+
+[node name="wall4" type="Node3D" parent="."]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, 10.3008, 0, 0)
 script = ExtResource("1_v7ytv")
-collection_id = 0.0
+collection_id = 5
 metadata/extras = {
 "collection": 0.0,
 "glb": "Wall.glb"
 }
 
-[node name="wall_009 sub_collection" type="Node3D" parent="."]
+[node name="wall4" type="MOctMesh" parent="wall4"]
+mesh_lod = SubResource("MMeshLod_265ov")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -0.0984155, 0, 1.01022, 0)
+script = ExtResource("3_y5nrr")
+mesh_id = 2
+
+[node name="wall5" type="Node3D" parent="."]
 transform = Transform3D(0, 0, 107.291, 0, 0.149278, 0, -10.2671, 0, 0, 0, -0.292326, 0)
 script = ExtResource("1_v7ytv")
-collection_id = 0.0
+collection_id = 5
 metadata/extras = {
 "collection": 0.0,
 "glb": "Wall.glb"
 }
+
+[node name="wall5" type="MOctMesh" parent="wall5"]
+mesh_lod = SubResource("MMeshLod_vsyge")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -0.0984155, 0, 1.01022, 0)
+script = ExtResource("3_y5nrr")
+mesh_id = 2

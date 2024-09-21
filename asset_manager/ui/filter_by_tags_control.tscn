@@ -1,0 +1,60 @@
+[gd_scene load_steps=3 format=3 uid="uid://bq3mcnrp6nw4k"]
+
+[ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="1_jimx1"]
+[ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="2_h2171"]
+
+[node name="PanelContainer" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="all_button" type="CheckButton" parent="VBoxContainer/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 6
+text = "match all"
+icon_alignment = 2
+
+[node name="clear_button" type="Button" parent="VBoxContainer/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 1
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("1_jimx1")
+icon_alignment = 1
+expand_icon = true
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Tags" parent="VBoxContainer/ScrollContainer/MarginContainer" instance=ExtResource("2_h2171")]
+layout_mode = 2

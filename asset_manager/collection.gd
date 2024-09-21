@@ -1,11 +1,11 @@
 @tool
 class_name Asset_Collection_Node extends Node3D
 
-var asset_library: MAssetTable = Asset_Manager_IO.get_asset_library()
+var asset_library: MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 @export var edit: bool:
 	set(val):
-		if edit == val: return
+		if edit == val: return		
 		edit = val			
 		for child in get_children():			
 			if edit:				
@@ -13,7 +13,7 @@ var asset_library: MAssetTable = Asset_Manager_IO.get_asset_library()
 				notify_property_list_changed()
 			else:
 				child.owner = null
-				notify_property_list_changed()
+				notify_property_list_changed()		
 		var n = Node.new()
 		add_child(n)
 		n.queue_free()
@@ -31,8 +31,9 @@ func _notification(what):
 		if asset_library.has_collection(collection_id):
 			save_changes()
 
-func _enter_tree():	
+func _ready():	
 	load_collection()
+	notify_property_list_changed()
 	
 func save_changes():
 	if not edit: return
@@ -44,7 +45,9 @@ func save_changes():
 			asset_library.collection_add_item(collection_id, MAssetTable.MESH, child.mesh_id, child.transform)			
 		elif child is CollisionShape3D:
 			pass 		
-func load_collection():	
+
+func load_collection():			
+	name = asset_library.collection_get_name(collection_id)
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -68,6 +71,8 @@ func load_collection():
 			mesh_item.mesh_id = item_ids[i]
 			mesh_item.owner = EditorInterface.get_edited_scene_root()
 			mesh_item.transform = items_info[i].transform
+			if not is_instance_valid(mesh_item.mesh_lod):
+				mesh_item.load_mesh_item()
 		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 		for id in sub_collections:
 			var sub_collection = Asset_Collection_Node.new()

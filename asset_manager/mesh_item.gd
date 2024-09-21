@@ -4,19 +4,20 @@ class_name Mesh_Item extends MOctMesh
 @export var mesh_id = 0:
 	set(val):
 		if mesh_id == val: return
+		if mesh_id == null: return
 		mesh_id = val
 		load_mesh_item()
 		notify_property_list_changed()
 @export var material_overrides: Array[Material] = []
 
-@onready var asset_library:MAssetTable = Asset_Manager_IO.get_asset_library()
+var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 func _notification(what):
 	if what == NOTIFICATION_EDITOR_PRE_SAVE:
 		if asset_library.has_mesh_item(mesh_id):
 			save_changes()
 
-func load_mesh_item():
+func load_mesh_item():	
 	if not mesh_lod: mesh_lod = MMeshLod.new()
 	if asset_library.has_mesh_item(mesh_id):
 		var data = asset_library.mesh_item_get_info(mesh_id)
@@ -30,14 +31,13 @@ func load_mesh_item():
 		mesh_lod.meshes = meshes	
 	else:
 		mesh_lod.meshes = []
+	print(mesh_lod)
 
-func save_changes():
-	var asset_library:MAssetTable = Asset_Manager_IO.get_asset_library()
-	mesh_id = save(mesh_id, mesh_lod.meshes, material_overrides)
+func save_changes():	
+	mesh_id = save(asset_library, mesh_id, mesh_lod.meshes, material_overrides)
 	print("saved mesh")
 	
-static func save(mesh_id, meshes, materials):
-	var asset_library:MAssetTable = Asset_Manager_IO.get_asset_library()	
+static func save(asset_library, mesh_id, meshes, materials):	
 	var mesh_hash_array = []	
 	var mesh_hash_index_array = []
 	var mesh_hash_index = 0
@@ -46,7 +46,7 @@ static func save(mesh_id, meshes, materials):
 		var mesh_hash = hash_mesh(mesh)
 		var is_saved = false
 		while not is_saved:
-			var mesh_save_path = str("res://addons/m_terrain/asset_manager/example_asset_library/import/",mesh_hash, "_", mesh_hash_index, ".res")
+			var mesh_save_path = str("res://addons/m_terrain/asset_manager/example_asset_library/import/",mesh_hash,".res")
 			if not FileAccess.file_exists(mesh_save_path):
 				mesh.resource_path = mesh_save_path
 				ResourceSaver.save(mesh, mesh_save_path)

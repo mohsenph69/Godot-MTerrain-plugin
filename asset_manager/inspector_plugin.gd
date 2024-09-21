@@ -1,11 +1,13 @@
 @tool 
 extends EditorInspectorPlugin
 
-var asset_library: MAssetTable = Asset_Manager_IO.get_asset_library()
+var asset_library: MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
-func _can_handle(object):
-	if object is Asset_Collection_Node or object is Mesh_Item:
-		return true
+func _can_handle(object):	
+	if object is Asset_Collection_Node: return true
+	if object is Mesh_Item:return true
+	if object is MAssetTable:return true
+		
 
 func _parse_begin(object):
 	if object is Asset_Collection_Node:
@@ -14,6 +16,7 @@ func _parse_begin(object):
 		vbox.add_child(hbox)	
 		var label = Label.new()
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL		
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		var has_collection = asset_library.has_collection(object.collection_id)
 		if has_collection:			
 			label.text = asset_library.collection_get_name(object.collection_id)
@@ -52,6 +55,7 @@ func _parse_begin(object):
 	elif object is Mesh_Item:
 		var hbox = HBoxContainer.new()	
 		var label = Label.new()
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var has_item = asset_library.has_mesh_item(object.mesh_id)
 		if has_item:
@@ -82,3 +86,6 @@ func _parse_begin(object):
 				object.notify_property_list_changed()
 			)
 		add_custom_control(hbox)
+
+	elif object is MAssetTable:		
+		add_custom_control(preload("res://addons/m_terrain/asset_manager/debug/asset_table_inspector.tscn").instantiate())

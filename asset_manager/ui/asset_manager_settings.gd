@@ -6,7 +6,7 @@ extends PanelContainer
 
 var all_tags
 var selected_group
-var asset_library: MAssetTable = Asset_Manager_IO.get_asset_library()
+@onready var asset_library: MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 func _ready():
 	add_group_button.pressed.connect(add_group)
@@ -25,12 +25,21 @@ func _ready():
 	#)
 		
 	set_tag_options(asset_library.tag_get_names())
+	
 	set_groups()
 	var add_tag_button = find_child("add_tag_button")
 	add_tag_button.pressed.connect(add_tag)
 
-func add_tag():
-	return
+func add_tag():	
+	var i = 0
+	var tag_name = "new_tag_0"
+	asset_library.tag_add(tag_name)
+	print("adding tag", i)
+	while tag_name in asset_library.tag_get_names():
+		i += 1
+		tag_name = str("new tag ", i)
+	print("aa:", asset_library.tag_add(tag_name))
+	
 	#all_tags.push_back("new tag")
 	#set_options(all_tags)
 	#tag_option_added.emit("tag)

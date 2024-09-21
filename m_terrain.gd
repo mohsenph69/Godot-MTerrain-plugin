@@ -126,6 +126,9 @@ func _enter_tree():
 		#add_import_plugin(MLOD_Mesh_Importer, true)
 		#MLOD_Mesh_Importer = preload("res://addons/m_terrain/MLOD_Mesh_importer.gd").new()
 		#GLTFDocument.register_gltf_document_extension(MLOD_Mesh_Importer)
+		if not ProjectSettings.has_setting("addons/m_terrain/asset_libary_path"):
+			ProjectSettings.set_setting("addons/m_terrain/asset_libary_path", "res://addons/m_terrain/asset_manager/example_asset_library/asset_library.res")	
+
 		asset_browser = preload("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		asset_browser_inspector_plugin = preload("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
@@ -161,6 +164,8 @@ func _exit_tree():
 				
 		remove_control_from_bottom_panel(asset_browser)
 		remove_inspector_plugin(asset_browser_inspector_plugin)
+		var asset_library = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+		ResourceSaver.save(asset_library, asset_library.resource_path)
 		#GLTFDocument.unregister_gltf_document_extension(MLOD_Mesh_Importer)
 		#remove_import_plugin(MLOD_Mesh_Importer)
 #endregion
