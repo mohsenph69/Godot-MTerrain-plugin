@@ -10,7 +10,9 @@ static func get_asset_library():
 	if not asset_library is MAssetTable:			
 		asset_library = MAssetTable.new()
 		ResourceSaver.save(asset_library, path)
+	
 	return asset_library
+	
 	
 static func export_to_glb(root_node, path = str("res://asset_manager/export/", root_node.name.to_lower(), ".glb") ):
 	var gltf_document= GLTFDocument.new()
@@ -92,10 +94,10 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 					meshes.push_back(mesh)
 								
 				#Add Mesh Item
-				var mesh_item_id = asset_library.mesh_item_find_by_info(mesh_hash_array, mesh_hash_array.map(func(a): return 0), mesh_hash_array.map(func(a): return -1), mesh_hash_array.map(func(a): return 0))
+				var mesh_item_id = asset_library.mesh_item_find_by_info(mesh_hash_array, mesh_hash_array.map(func(a): return 0),mesh_hash_array.map(func(a): return 0))
 				if mesh_item_id == -1:
 					print("doesn't have mesh item")
-					mesh_item_id = asset_library.mesh_item_add(mesh_hash_array, mesh_hash_array.map(func(a): return 0), mesh_hash_array.map(func(a): return -1), mesh_hash_array.map(func(a): return 0))										
+					mesh_item_id = asset_library.mesh_item_add(mesh_hash_array, mesh_hash_array.map(func(a): return 0), mesh_hash_array.map(func(a): return -1))										
 				else:
 					print("has mesh item", mesh_item_id)
 				mesh_item_ids.push_back(mesh_item_id)				
@@ -104,8 +106,10 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 	#Create single item collections	
 	for i in mesh_item_ids.size():
 		var name = mesh_item_names[i] + "_mesh"
-		var collection_id = asset_library.collection_get_id(name)
-		if collection_id == -1:
+		var fcol = asset_library.mesh_item_find_collections(i)
+		var scol = asset_library.tag_get_collections_in_collections(fcol,0)
+		if scol.size() == 0:
+			var collection_id = scol[0]
 			collection_id = asset_library.collection_create(name)
 			asset_library.collection_add_tag(collection_id,0)
 			asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], Transform3D())

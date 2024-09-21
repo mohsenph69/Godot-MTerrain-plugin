@@ -71,9 +71,7 @@ func _ready():
 		
 	search_collections.text_changed.connect(func(text):				
 		var filtered_collections = asset_library.collection_names_begin_with(text) if text != "" else asset_library.collection_get_list()			
-		regroup(current_category, filtered_collections)
-				
-			
+		regroup(current_category, filtered_collections)							
 	)
 	
 	grouping_popup_menu.index_pressed.connect(func(id):		

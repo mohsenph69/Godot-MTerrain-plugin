@@ -133,7 +133,7 @@ func _enter_tree():
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		asset_browser_inspector_plugin = preload("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
 		add_inspector_plugin(asset_browser_inspector_plugin)
-		
+				
 		
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
