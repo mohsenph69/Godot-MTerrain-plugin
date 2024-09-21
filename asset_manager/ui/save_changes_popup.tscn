@@ -1,0 +1,68 @@
+[gd_scene load_steps=2 format=3 uid="uid://dk0vlggem7dtf"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/save_changes_popup.gd" id="1_t6hlv"]
+
+[node name="PopupPanel" type="Popup"]
+size = Vector2i(649, 500)
+visible = true
+always_on_top = true
+extend_to_title = true
+script = ExtResource("1_t6hlv")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="MarginContainer2" type="MarginContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="Label" type="Label" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Save Changes?"
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="continue" type="Button" parent="PanelContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "continue editing"
+
+[node name="discard" type="Button" parent="PanelContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "discard"
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="PanelContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="update" type="Button" parent="PanelContainer/VBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "update collection"
+
+[node name="override" type="Button" parent="PanelContainer/VBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "make override"
+
+[node name="new" type="Button" parent="PanelContainer/VBoxContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "make new collection"

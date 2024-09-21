@@ -1,27 +1,20 @@
-class_name Asset_Manager_IO extends Object
+@tool
+class_name Asset_IO extends Object
 
-static func get_asset_library():	
-	if not ProjectSettings.has_setting("addons/m_terrain/asset_libary_path"):
-		ProjectSettings.set_setting("addons/m_terrain/asset_libary_path", "res://addons/m_terrain/asset_manager/example_asset_library/asset_library.res")	
-	var path = ProjectSettings.get_setting("addons/m_terrain/asset_libary_path")
-	var asset_library
-	if FileAccess.file_exists(path):
-		asset_library = load(path)
-	if not asset_library is MAssetTable:			
-		asset_library = MAssetTable.new()
-		ResourceSaver.save(asset_library, path)
-	
-	return asset_library
-	
-	
-static func export_to_glb(root_node, path = str("res://asset_manager/export/", root_node.name.to_lower(), ".glb") ):
+const LOD_COUNT = 8
+
+#region GLB	
+static func glb_load(asset_library:MAssetTable, path, paths_loaded=[]):
+	glb_update_objects(asset_library, path)
+
+static func glb_export(root_node, path = str("res://asset_manager/export/", root_node.name.to_lower(), ".glb") ):
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()
 	gltf_document.append_from_scene(root_node, gltf_save_state)
 	#var path = "res://asset_manager/TEST_EXPORT.gltf"	
 	var error = gltf_document.write_to_filesystem(gltf_save_state, path)	
 
-static func update_objects_from_glb(asset_library:MAssetTable, path):
+static func glb_update_objects(asset_library:MAssetTable, path):
 	var gltf_document = GLTFDocument.new()
 	if not Engine.is_editor_hint():
 		GLTFDocument.register_gltf_document_extension(GLTFExtras.new())
@@ -49,9 +42,8 @@ static func update_objects_from_glb(asset_library:MAssetTable, path):
 					elif "collection_id" in child_extras:
 						asset_library.collection_add_sub_collection(collection_id, child_extras.collection_id, child.transform)						
 			var data = import_mesh_item_from_nodes(asset_library, mesh_children)			
-			for i in data.ids.size():
-				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])
-			#asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_id, child.transform)						
+			for i in data.ids.size():				
+				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])			
 
 static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 	var mesh_item_ids = []
@@ -69,7 +61,7 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 					continue							
 				#print("mesh lod first but: ", child.name, " in ", all_mesh_lod_nodes)
 					
-				var mesh_hash_array = []
+				var mesh_hash_array = []				
 				var meshes = []
 				#Save Meshes using hash
 				for mesh_node in all_mesh_lod_nodes:
@@ -93,8 +85,13 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 					mesh_hash_array.push_back(mesh_hash)
 					meshes.push_back(mesh)
 								
-				#Add Mesh Item
-				var mesh_item_id = asset_library.mesh_item_find_by_info(mesh_hash_array, mesh_hash_array.map(func(a): return 0),mesh_hash_array.map(func(a): return 0))
+				#Fill empty lod with last mesh
+				var last_mesh = mesh_hash_array[-1]
+				while mesh_hash_array.size() < LOD_COUNT:
+					mesh_hash_array.push_back(mesh_hash_array[-1])
+									
+				#Add Mesh Item								
+				var mesh_item_id = asset_library.mesh_item_find_by_info(mesh_hash_array, mesh_hash_array.map(func(a): return 0), mesh_hash_array.map(func(a): return -1))
 				if mesh_item_id == -1:
 					print("doesn't have mesh item")
 					mesh_item_id = asset_library.mesh_item_add(mesh_hash_array, mesh_hash_array.map(func(a): return 0), mesh_hash_array.map(func(a): return -1))										
@@ -105,21 +102,120 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 				mesh_item_transforms.push_back(child.transform)
 	#Create single item collections	
 	for i in mesh_item_ids.size():
-		var name = mesh_item_names[i] + "_mesh"
-		var fcol = asset_library.mesh_item_find_collections(i)
-		var scol = asset_library.tag_get_collections_in_collections(fcol,0)
-		if scol.size() == 0:
-			var collection_id = scol[0]
+		var name = mesh_item_names[i] + "_mesh"		
+		var collection_ids = asset_library.tag_get_collections_in_collections(asset_library.mesh_item_find_collections(mesh_item_ids[i]),0)
+		if collection_ids.size() == 0:
+			var collection_id = collection_ids
 			collection_id = asset_library.collection_create(name)
 			asset_library.collection_add_tag(collection_id,0)
 			asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], Transform3D())
 	return {"ids":mesh_item_ids, "transforms": mesh_item_transforms}
+
+#endregion
+#region Mesh Item
+static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]		
+	var asset_library = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))	
+	if asset_library.has_mesh_item(mesh_id):
+		var meshes = []	
+		var data = asset_library.mesh_item_get_info(mesh_id)		
+		for mesh_hash in data.mesh:		
+			var path = str("res://addons/m_terrain/asset_manager/example_asset_library/import/", mesh_hash, ".res")			
+			if FileAccess.file_exists(path):
+				meshes.push_back(load(path))
+			else:
+				meshes.push_back(null)
+		return meshes
+		
+static func mesh_item_save_from_resources(mesh_id, meshes, materials)->int:	
+	var asset_library = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	var mesh_hash_array = []	
+	var mesh_hash_index_array = []
+	var mesh_hash_index = 0
+	
+	for mesh in meshes:				
+		var mesh_hash = hash_mesh(mesh)
+		var is_saved = false
+		while not is_saved:
+			var mesh_save_path = str("res://addons/m_terrain/asset_manager/example_asset_library/import/",mesh_hash,".res")
+			if not FileAccess.file_exists(mesh_save_path):
+				mesh.resource_path = mesh_save_path
+				ResourceSaver.save(mesh, mesh_save_path)
+				is_saved = true
+				mesh_hash_index_array.push_back(mesh_hash_index)
+			else:			
+				var existing_mesh = load(mesh_save_path)			
+				var existing_mesh_hash = hash_mesh(existing_mesh)						
+				if existing_mesh_hash == mesh_hash:
+					mesh_hash_index_array.push_back(mesh_hash_index)
+					is_saved = true
+				else:								
+					mesh_hash_index += 1					
+		mesh_hash_array.push_back(mesh_hash)
+		
+	var material_hash_array = []
+	var material_hash_index_array = []
+	var material_hash_index = 0
+	for material in materials:		
+		var material_hash = hash_material(material)
+		var is_saved = false
+		while not is_saved:					
+			var material_save_path = str("res://addons/m_terrain/asset_manager/example_asset_library/import/",material_hash, "_", material_hash_index, ".res")			
+			if not FileAccess.file_exists(material_save_path):
+				material.resource_path = material_save_path
+				ResourceSaver.save(material, material_save_path)
+				is_saved = true
+				material_hash_index_array.push_back(material_hash_index)
+			else:			
+				var existing_material = load(material_save_path)			
+				var existing_material_hash = hash_material(existing_material)						
+				if existing_material_hash == material_hash:
+					mesh_hash_index_array.push_back(mesh_hash_index)
+					is_saved = true
+				else:								
+					mesh_hash_index += 1					
+		material_hash_array.push_back(material_hash)
+	if asset_library.has_mesh_item(mesh_id):
+		asset_library.mesh_item_update(mesh_id, mesh_hash_array, mesh_hash_index_array, material_hash_array,material_hash_index_array )
+	else:
+		mesh_id = asset_library.mesh_item_add(mesh_hash_array, mesh_hash_index_array, material_hash_array,material_hash_index_array )
+	return mesh_id
+
+static func hash_mesh(mesh):
+	var all_surfaces = []
+	for i in mesh.get_surface_count():
+		all_surfaces.push_back(mesh.surface_get_arrays(i))
+	return hash(all_surfaces)
+
+static func hash_material(material):	
+	return hash(material)
+#endregion
+#region Collection
+static func collection_save_from_nodes(root_node) -> int: #returns collection_id
+	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	if root_node is MOctMesh:		
+		var material_overrides = root_node.get_meta("material_overrides") if root_node.has_meta("material_overrides") else []	
+		var mesh_id = root_node.get_meta("mesh_id") if root_node.has_meta("mesh_id") else -1
+		mesh_id = mesh_item_save_from_resources(mesh_id, root_node.mesh_lod.meshes, material_overrides)		
+		root_node.set_meta("mesh_id", mesh_id)
+		root_node.notify_property_list_changed()
+		return root_node.get_meta("collection_id")
+	else:		
+		var collection_id = root_node.get_meta("collection_id") 
+		if collection_id == -1:	return collection_id
+		asset_library.collection_remove_all_items(collection_id)
+		for child in root_node.get_children():					
+			if child.has_meta("mesh_id"):			
+				var mesh_id = child.get_meta("mesh_id")
+				asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_id, child.transform)							
+			elif child is CollisionShape3D:
+				pass
+			elif child.has_meta("mesh_id"):
+				var sub_collection_id = child.get_meta("mesh_id")
+				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, child.transform)								
+		return collection_id
+#endregion
 	
 	
-	
-static func update_from_glb(asset_library:MAssetTable, path, paths_loaded=[]):
-	update_objects_from_glb(asset_library, path)
-	return
 	#assert(not path in paths_loaded)
 	#paths_loaded.push_back(path)
 	#var gltf_document = GLTFDocument.new()
@@ -249,3 +345,71 @@ static func update_from_glb(asset_library:MAssetTable, path, paths_loaded=[]):
 	#var gltf_state = GLTFState.new()
 	#gltf_document.append_from_file(path,gltf_state)
 	#return gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
+static func reload_collection(node, collection_id):
+	var new_root = Asset_IO.collection_instantiate(collection_id)		
+	if is_instance_valid(new_root):
+		var old_meta = {}
+		for meta in node.get_meta_list():
+			old_meta[meta] = node.get_meta(meta)
+		node.replace_by(new_root)
+		node.free()		
+		for meta in old_meta:
+			new_root.set_meta(meta, old_meta[meta])							
+	else:
+		new_root = null
+	return new_root
+static func collection_instantiate(collection_id)->Node3D:
+	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
+	if not asset_library.has_collection(collection_id):
+		print("collection doesn't exist")
+		#TODO: CHECK IF THERE"S A GLB THAT NEEDS TO BE LOADED
+		return null
+	var node
+	if collection_id in asset_library.tag_get_collections(0):
+		node = MOctMesh.new()
+		var mesh_id = asset_library.collection_get_mesh_items_ids(collection_id)[0]
+		node.set_meta("mesh_id", mesh_id)
+		node.set_meta("collection_id", collection_id)
+		node.mesh_lod = MMeshLod.new()	
+		node.mesh_lod.meshes = mesh_item_get_mesh_resources(mesh_id)
+		node.name = asset_library.collection_get_name(collection_id)									
+		return node
+	else:
+		node = Node3D.new()
+		node.name = asset_library.collection_get_name(collection_id)							
+		node.set_meta("collection_id", collection_id)
+		var item_ids = asset_library.collection_get_mesh_items_ids(collection_id)		
+		var items_info = asset_library.collection_get_mesh_items_info(collection_id)
+		for i in item_ids.size():						
+			var mesh_item = MOctMesh.new()			
+			var mesh_id = item_ids[i]
+			mesh_item.set_meta("mesh_id", mesh_id)			
+			var single_item_collection_ids = asset_library.tag_get_collections_in_collections(asset_library.mesh_item_find_collections(mesh_id), 0)			
+			if len(single_item_collection_ids) == 0: push_error("single item collection doesn't exist! mesh_id: ", mesh_id)
+			mesh_item.set_meta("collection_id", single_item_collection_ids[0])								
+			mesh_item.name = asset_library.collection_get_name(collection_id)												
+			mesh_item.mesh_lod = MMeshLod.new()	
+			mesh_item.mesh_lod.meshes = mesh_item_get_mesh_resources(mesh_id)															
+			mesh_item.transform = items_info[i].transform									
+			node.add_child(mesh_item)			
+		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
+		for id in sub_collections:
+			var sub_collection = Node3D.new()
+			sub_collection.set_meta("collection_id", id)
+			node.add_child(sub_collection)		
+		#for hlod in asset_library.collection_get_sub_hlods(collection_id):
+			#var hlod_baker_scene = load().instantiate()
+			#add_child(hlod_baker_scene)	
+		return node
+
+static func edit_collection(object, toggle_on):
+	for child in object.get_children():			
+		if toggle_on:				
+			child.owner = EditorInterface.get_edited_scene_root()
+			object.notify_property_list_changed()
+		else:
+			child.owner = null
+			object.notify_property_list_changed()		
+	var n = Node.new()
+	object.add_child(n)
+	n.queue_free()

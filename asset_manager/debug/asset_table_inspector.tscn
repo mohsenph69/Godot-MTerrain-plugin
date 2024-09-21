@@ -14,23 +14,21 @@ script = ExtResource("1_oevxw")
 custom_minimum_size = Vector2(100, 20)
 layout_mode = 2
 text = "tags: {  }"
-autowrap_mode = 2
+autowrap_mode = 1
 
 [node name="groups_label" type="Label" parent="."]
 custom_minimum_size = Vector2(100, 20)
 layout_mode = 2
-text = "groups: [\"new group 0\"]"
-autowrap_mode = 2
+text = "groups: []"
+autowrap_mode = 1
 
 [node name="mesh_items_label" type="Label" parent="."]
 custom_minimum_size = Vector2(100, 20)
 layout_mode = 2
 text = "mesh_items: 
-0| { \"mesh\": [\"1989727879\", \"1458971374\"], \"material\": [\"-1\", \"-1\"] }
-1| { \"mesh\": [\"632549392\", \"1827016283\"], \"material\": [\"-1\", \"-1\"] }
-2| { \"mesh\": [\"1458971374\"], \"material\": [\"-1\"] }
+0| { \"mesh\": [\"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\"], \"material\": [-1, -1, -1, -1, -1, -1, -1, -1] }
 "
-autowrap_mode = 2
+autowrap_mode = 1
 
 [node name="meshes_container" type="VBoxContainer" parent="."]
 layout_mode = 2
@@ -39,20 +37,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(100, 20)
 layout_mode = 2
 text = "collections: 
-0| sphere_mesh | [{ \"mesh\": [\"1989727879\", \"1458971374\"], \"material\": [\"-1\", \"-1\"], \"id\": 0, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, 1), O: (0, 0, 0)] }]
-tags: [0]
-1| sphere | [{ \"mesh\": [\"1989727879\", \"1458971374\"], \"material\": [\"-1\", \"-1\"], \"id\": 0, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, 1), O: (0, 0, 0)] }]
+0| wall | [{ \"mesh\": [\"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\"], \"material\": [-1, -1, -1, -1, -1, -1, -1, -1], \"id\": 0, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, -0.098415), O: (0, 1.010224, 0)] }]
 tags: []
-2| table_mesh | [{ \"mesh\": [\"632549392\", \"1827016283\"], \"material\": [\"-1\", \"-1\"], \"id\": 1, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, 1), O: (0, 0, 0)] }]
+1| wall_mesh | [{ \"mesh\": [\"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\"], \"material\": [-1, -1, -1, -1, -1, -1, -1, -1], \"id\": 0, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, 1), O: (0, 0, 0)] }]
 tags: [0]
-3| table | [{ \"mesh\": [\"632549392\", \"1827016283\"], \"material\": [\"-1\", \"-1\"], \"id\": 1, \"transform\": [X: (2.100953, 0, 0), Y: (0, -0.078764, 0), Z: (0, 0, 1), O: (0, 0.50499, 0)] }]
-tags: []
-4| wall_mesh | [{ \"mesh\": [\"1458971374\"], \"material\": [\"-1\"], \"id\": 2, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, 1), O: (0, 0, 0)] }]
-tags: [0]
-5| wall | [{ \"mesh\": [\"1458971374\"], \"material\": [\"-1\"], \"id\": 2, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, -0.098415), O: (0, 1.010224, 0)] }]
-tags: []
 "
-autowrap_mode = 2
+autowrap_mode = 1
 
 [node name="collections_container" type="VBoxContainer" parent="."]
 layout_mode = 2

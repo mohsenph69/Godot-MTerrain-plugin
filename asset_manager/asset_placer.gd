@@ -83,6 +83,8 @@ func _ready():
 	ungrouped.group_list.multi_selected.connect(func(id, selected):
 		process_selection(ungrouped.group_list, id, selected)
 	)
+	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
+	
 	var tags_control = find_child("Tags")	
 	tags_control.set_options(asset_library.tag_get_names())
 	tags_control.set_tags_from_data([])
@@ -105,7 +107,7 @@ func _drop_data(at_position, data):
 		import_gltf(file)
 		
 func import_gltf(path):		
-	Asset_Manager_IO.update_from_glb(asset_library, path)
+	Asset_IO.glb_load(asset_library, path)
 	regroup(current_category)
 	asset_library.notify_property_list_changed()
 			
@@ -136,8 +138,9 @@ func regroup(category = "None", filtered_collections = asset_library.collection_
 				groups.add_child(group_control)			
 				group_control.group_list.multi_selected.connect(func(id, selected):
 					process_selection(group_control.group_list, id, selected)
-				)									
+				)
 				group_control.set_group(asset_library.tag_get_name(tag_id))					
+				group_control.group_list.item_activated.connect(collection_item_activated.bind(group_control.group_list))
 			
 			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
 				var thumbnail = null				
@@ -148,6 +151,14 @@ func regroup(category = "None", filtered_collections = asset_library.collection_
 				var thumbnail = null
 				ungrouped.add_item(asset_library.collection_get_name(id), thumbnail, id )
 	current_category = category
+
+func collection_item_activated(id, group_list:ItemList):					
+	var node = Asset_IO.collection_instantiate(group_list.get_item_metadata(id))	
+	#node.set_meta("collection_id", group_list.get_item_metadata(id))
+	EditorInterface.get_edited_scene_root().add_child(node)
+	node.owner = EditorInterface.get_edited_scene_root()
+	node.name = group_list.get_item_text(id)	
+
 func process_selection(who:ItemList, id, selected):
 	current_selection = []
 	var all_groups = groups.get_children().map(func(a): return a.group_list)

@@ -23,6 +23,8 @@ var needs_restart = false
 #var MLOD_Mesh_Importer
 var asset_browser
 var asset_browser_inspector_plugin
+var loaded_scenes = []
+
 func check_restart():
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
 		if needs_restart:
@@ -99,7 +101,7 @@ func _enter_tree():
 		main_screen.add_child(tools.human_male)
 		tools.human_male.visible = false
 		
-		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
+		EditorInterface.get_selection().selection_changed.connect(selection_changed)
 		
 		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
 		tsnap.pressed.connect(tsnap_pressed)
@@ -128,13 +130,39 @@ func _enter_tree():
 		#GLTFDocument.register_gltf_document_extension(MLOD_Mesh_Importer)
 		if not ProjectSettings.has_setting("addons/m_terrain/asset_libary_path"):
 			ProjectSettings.set_setting("addons/m_terrain/asset_libary_path", "res://addons/m_terrain/asset_manager/example_asset_library/asset_library.res")	
-
+		if not FileAccess.file_exists(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path")):
+			var asset_library = MAssetTable.new()
+			ResourceSaver.save(asset_library, ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+			EditorInterface.get_resource_filesystem().scan()
 		asset_browser = preload("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		asset_browser_inspector_plugin = preload("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
 		add_inspector_plugin(asset_browser_inspector_plugin)
-				
+		scene_changed.connect(monitor_collections)					
+	
+func monitor_collections(root:Node):			
+	if not root: return		
+	if root.scene_file_path in loaded_scenes: return
+	print("scene changed: ", root.scene_file_path)
+	var new_root = load_collections_recursive(root)
+	loaded_scenes.push_back(root.scene_file_path)	
+	if is_instance_valid(new_root):	
+		for child in new_root.find_children("*"):
+			if not child.child_entered_tree.is_connected(load_collections_recursive):
+				child.child_entered_tree.connect(load_collections_recursive)
+	
+func load_collections_recursive(root:Node)->Node:	
+	if root.has_meta("collection_id"):
+		print("loaded collection for ", root.name)		
+		var new_root = Asset_IO.reload_collection(root, root.get_meta("collection_id"))		
+		return new_root if is_instance_valid(new_root) else null
+	else:
+		for child in root.get_children():
+			if child.has_meta("collection_id"):
+				Asset_IO.reload_collection(child, child.get_meta("collection_id"))	
+		return root
 		
+	
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
 	EditorInterface.set_main_screen_editor("3D")
@@ -183,12 +211,32 @@ func selection_changed():
 	if not tools or not is_instance_valid(EditorInterface.get_edited_scene_root()): return
 	
 	var selection = get_editor_interface().get_selection().get_selected_nodes()
-
-	if selection.size() != 1 or not current_main_screen_name == "3D":
+	
+	#Asset Library: Auto edit nodes:
+	#if selection.size() > 0:
+		#for child in EditorInterface.get_edited_scene_root().find_children("*"):			
+			#if child.has_meta("collection_id"):
+				#if selection.size() == 1:
+					#if selection[0] == child:
+						#Asset_IO.edit_collection(child,true)				
+					#elif not child.is_ancestor_of(selection[0]):					
+						#Asset_IO.edit_collection(child,false)
+				#elif selection.size() > 1:					
+					#for node in selection:
+						#if node.get_parent() in selection:																					
+							#get_editor_interface().get_selection().remove_node(node)
+							#Asset_IO.edit_collection(node.get_parent(),false)
+					
+	
+	if selection.size() != 1 or not current_main_screen_name == "3D":		
 		tools.request_hide()
+		#exit edit mode
 		return
 
 	tools.on_selection_changed(selection[0])
+	
+	
+			
 	
 
 func _handles(object):
