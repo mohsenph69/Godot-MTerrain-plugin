@@ -150,7 +150,12 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 	var mesh_item_names = []
 	var mesh_item_transforms = []
 	var sibling_ids = []
-	var material_table:MMaterialTable = preload("res://masset/new_m_material_table.res") #TODO replace with asset table's material table	
+	
+	var material_table_path = "res://masset/new_m_material_table.res"
+	if not FileAccess.file_exists(material_table_path):		
+		var m = MMaterialTable.new()
+		ResourceSaver.save(m, material_table_path)
+	var material_table:MMaterialTable = load(material_table_path) #TODO replace with asset table's material table	
 	var material_ids = []
 	var existing_material_hashes = {}
 	for material_id in material_table.table:
