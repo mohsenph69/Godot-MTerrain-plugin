@@ -31,6 +31,7 @@ size_flags_vertical = 0
 [node name="all_button" type="CheckButton" parent="VBoxContainer/MarginContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 6
+button_pressed = true
 text = "match all"
 icon_alignment = 2
 

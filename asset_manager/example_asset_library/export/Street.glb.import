@@ -3,7 +3,7 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://b3ob20kp7gwil"
+uid="uid://df7706yt11b3r"
 path="res://.godot/imported/Street.glb-8ec08855e45d3b4a4abf18f2eab04ed7.scn"
 
 [deps]
@@ -30,7 +30,7 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path="res://addons/gltf_extras/post_import_extras.gd"
+import_script/path="res://addons/m_terrain/asset_manager/gltf_extras/post_import_extras.gd"
 _subresources={}
 gltf/naming_version=1
 gltf/embedded_image_handling=1

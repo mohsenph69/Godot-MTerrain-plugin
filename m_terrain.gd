@@ -142,6 +142,11 @@ func _enter_tree():
 		add_inspector_plugin(asset_browser_inspector_plugin)
 		gltf_extras_importer = GLTFExtras.new()
 		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)
+		scene_saved.connect(func(_path):
+			var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
+			ResourceSaver.save(asset_library, asset_library.resource_path)
+		)
+			
 		#scene_changed.connect(monitor_collections)					
 	
 func monitor_collections(root:Node):			
@@ -189,6 +194,7 @@ func _exit_tree():
 		GLTFDocument.unregister_gltf_document_extension(gltf_extras_importer)
 		#GLTFDocument.unregister_gltf_document_extension(MLOD_Mesh_Importer)
 		#remove_import_plugin(MLOD_Mesh_Importer)
+		
 #endregion
 
 func _on_main_screen_changed(screen_name):

@@ -6,8 +6,6 @@ signal tag_option_removed
 signal tag_option_renamed
 
 @onready var tag_list = find_child("tags_list")
-var all_tags
-var selected_tags = []
 var editable = true
 var selectable = true
 
@@ -19,49 +17,40 @@ func get_tag_array():
 	return arr
 	
 func _ready():
+	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+
 	var search:LineEdit = find_child("search")
 	search.text_changed.connect(func(new_text):		
 		for tag in tag_list.get_children():
-			tag.visible = new_text in tag.text or new_text == ""				
+			tag.visible = tag.tag_id in asset_library.tag_names_begin_with(new_text) or new_text == ""
 	)
 
-func set_options(tag_data): #{tag_name: tag_id}
-	all_tags = tag_data.keys()
+func set_options(tag_data): #{tag_name: tag_id}	
+	if not is_instance_valid(tag_list): await ready
 	for child in tag_list.get_children():
 		tag_list.remove_child(child)
 		child.queue_free()
 	var biggest_size = 0
 	for tag in tag_data:
+		if tag_data[tag] == 0: continue
 		var control = preload("res://addons/m_terrain/asset_manager/ui/tag_list_item.tscn").instantiate()
 		control.set_editable(editable)
 		tag_list.add_child(control)
 		control.tag_id = tag_data[tag]
 		control.set_tag_name(tag)
-		control.checkbox.disabled = not selectable
-		control.checkbox.toggled.connect(toggle_tag.bind(tag))
+		control.checkbox.disabled = not selectable #or tag_data[tag] == 0
+		control.checkbox.toggled.connect(toggle_tag.bind(tag_data[tag]))
 		biggest_size = max(biggest_size, control.size.x)
-	get_window().size.x = biggest_size
+	if get_window() != EditorInterface.get_editor_main_screen().get_window():
+		get_window().size.x = biggest_size
 			
 func toggle_tag(toggled, tag):	
-	tag_changed.emit(tag, toggled)
-	if toggled:
-		if not tag in selected_tags:
-			selected_tags.push_back(tag)
-	else:
-		if tag in selected_tags:
-			selected_tags.erase(tag)
+	tag_changed.emit(tag, toggled)	
 							
-func set_tags_from_data(data: Array): #dada: Array[String]
-	selected_tags = []
-	for control in tag_list.get_children():							
-		if data == null:
-			control.checkbox.disabled = true
-		else:
-			control.checkbox.disabled = false
-			control.checkbox.button_pressed = control.line_edit.text in data
-			if control.line_edit.text in data:
-				selected_tags.push_back(control.line_edit.text)
+func set_tags_from_data(tags: PackedInt32Array): #data: Array[int32]
+	if not is_instance_valid(tag_list): await ready	
+	for control in tag_list.get_children():											
+		control.checkbox.button_pressed = control.tag_id in tags		
 	
-func rename_tag(id, new_name):
-	all_tags[id] = new_name
+func rename_tag(id, new_name):	
 	tag_option_renamed.emit(id, new_name)

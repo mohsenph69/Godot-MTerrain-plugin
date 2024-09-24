@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://ct5bub7v1xb2s"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/material_table_inspector.gd" id="1_obqif"]
+
+[node name="HFlowContainer" type="HFlowContainer"]
+custom_minimum_size = Vector2(200, 50)
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 49.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+script = ExtResource("1_obqif")
+
+[node name="Label" type="Label" parent="."]
+custom_minimum_size = Vector2(200, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No materials yet. Drag and drop materials here"
+horizontal_alignment = 1
+autowrap_mode = 2

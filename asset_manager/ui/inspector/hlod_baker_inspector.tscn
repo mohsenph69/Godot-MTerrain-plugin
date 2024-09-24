@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://boyvdfyc4qv16"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
+
+[node name="HlodBakerInspector" type="VBoxContainer"]
+script = ExtResource("1_2wg81")
+
+[node name="Bake" type="Button" parent="."]
+layout_mode = 2
+text = "Bake"
+
+[node name="Join" type="Button" parent="."]
+layout_mode = 2
+text = "Join Meshes"
+
+[node name="Export" type="Button" parent="."]
+layout_mode = 2
+text = "Export as glb"

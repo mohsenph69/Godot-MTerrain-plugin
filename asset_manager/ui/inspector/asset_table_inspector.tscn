@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cypjfwjlguowi"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/debug/asset_table_inspector.gd" id="1_oevxw"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/asset_table_inspector.gd" id="1_oevxw"]
 
 [node name="Control" type="VBoxContainer"]
 anchors_preset = 15

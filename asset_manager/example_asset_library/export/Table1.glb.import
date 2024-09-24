@@ -3,7 +3,7 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cnsoxt6jl3uke"
+uid="uid://d4f0hfebxfhsw"
 path="res://.godot/imported/Table1.glb-4323ffc05d40931d050586da5d4ac68b.scn"
 
 [deps]
@@ -30,7 +30,14 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path="res://addons/gltf_extras/post_import_extras.gd"
-_subresources={}
+import_script/path="res://addons/m_terrain/asset_manager/gltf_extras/post_import_extras.gd"
+_subresources={
+"materials": {
+"Material_1": {
+"use_external/enabled": true,
+"use_external/path": "res://masset/materials/blue_material.tres"
+}
+}
+}
 gltf/naming_version=1
 gltf/embedded_image_handling=1

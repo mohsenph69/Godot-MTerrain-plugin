@@ -3,7 +3,7 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://biq5qx1lltm83"
+uid="uid://bdio2m5topdi5"
 path="res://.godot/imported/Sphere1.glb-625c17e0248da485123f7a3d75be6303.scn"
 
 [deps]
@@ -30,7 +30,7 @@ animation/fps=30
 animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
-import_script/path="res://addons/gltf_extras/post_import_extras.gd"
+import_script/path="res://addons/m_terrain/asset_manager/gltf_extras/post_import_extras.gd"
 _subresources={}
 gltf/naming_version=1
 gltf/embedded_image_handling=1

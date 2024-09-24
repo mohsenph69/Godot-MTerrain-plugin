@@ -17,10 +17,9 @@ func _ready():
 	groups_label.text = str("groups: ", asset_library.group_get_list())
 	
 	var mesh_text = "mesh_items: \n"
-	for mesh_item_id in asset_library.mesh_item_get_list():
-		print("has mesh item ", mesh_item_id)
+	for mesh_item_id in asset_library.mesh_item_get_list():		
 		mesh_text += str(mesh_item_id, "| ", asset_library.mesh_item_get_info(mesh_item_id), "\n")
-		var mesh_node = preload("res://addons/m_terrain/asset_manager/debug/collection_item.tscn").instantiate()		
+		var mesh_node = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_item.tscn").instantiate()		
 		meshes_container.add_child(mesh_node)
 		
 		mesh_node.find_child("id").text = str(mesh_item_id)		
@@ -41,7 +40,7 @@ func _ready():
 	var collections = asset_library.collection_get_list()
 	var collection_text = "collections: \n"
 	for collection_id in asset_library.collection_get_list():
-		var collection_node = preload("res://addons/m_terrain/asset_manager/debug/collection_item.tscn").instantiate()		
+		var collection_node = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_item.tscn").instantiate()		
 		collections_container.add_child(collection_node)
 		collection_node.find_child("id").text = str(collection_id)
 		collection_node.find_child("meshes").text = str(asset_library.collection_get_mesh_items_ids(collection_id))
