@@ -1,10 +1,13 @@
 @tool
 class_name HLod_Baker extends Node3D
 
-var lod_levels = AssetIO.LOD_COUNT
+
 @export var max_lod = -1
-@export var bake_path = "res://"
+@export var bake_path = "res://massets/" #+ name + ".res"
 @export var meshes_to_join: Array[Node3D]
+@export var hlod_resource: MHlod
+
+var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
 var timer: Timer
 
@@ -44,19 +47,34 @@ func make_joined_mesh(glb=true, res=false):
 		AssetIO.glb_export(mesh_node, "res://addons/m_terrain/asset_manager/example_asset_library/export/" + name + "_merged.glb")
 				
 func bake_to_hlod_resource():	
-	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	var asset_library:MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var hlod := MHlod.new()
+	hlod.set_baker_path(scene_file_path)
 	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):
 		if not child.has_meta("mesh_id"): continue
-		var mesh_array = Array(asset_library.mesh_item_get_info(child.get_meta("mesh_id")).mesh).map(func(a): return int(a))
-		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_array, mesh_array.map(func(a): return 0), mesh_array.map(func(a): return -1), mesh_array.map(func(a): return 0), mesh_array.map(func(a): return 0), 1 )
+		var mesh_item_info = asset_library.mesh_item_get_info(child.get_meta("mesh_id"))
+		var mesh_hash_array = Array(mesh_item_info.mesh).map(func(a): return int(a))		
+		var mesh_hash_index = Array(mesh_item_info.mesh_index).map(func(a): return int(a))		
+		var arr := Array()
+		arr.resize(len(mesh_item_info.mesh))
+		arr.fill(0)
+		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.mesh_index, mesh_item_info.material, arr, arr, 1 )
 		var i = 0
 		var max_lod = child.get_meta("max_lod") if child.has_meta("max_lod") else AssetIO.LOD_COUNT
 		while i < max_lod:
 			hlod.insert_item_in_lod_table(mesh_id, i)
 			i += 1
-	#hlod.set_baker_path(bake_path)
-	ResourceSaver.save(hlod, bake_path) #hlod.get_baker_path())
+	for child:HLod_Baker in find_children("*", "HLod_Baker", true, false):
+		if is_instance_valid(child.hlod_resource):
+			hlod.add_sub_hlod(child.transform, child.hlod_resource)
+		elif FileAccess.file_exists(bake_path):
+			var child_hlod_resource = load(bake_path)
+			if child_hlod_resource is MHlod:
+				hlod.add_sub_hlod(child.transform, child.hlod_resource)
+	for child:MHlodScene in find_children("*", "MHlodScene", true, false):
+		if child.hlod is MHlod:
+			hlod.add_sub_hlod(child.transform, child.hlod_resource)	
+	ResourceSaver.save(hlod, bake_path) #hlod.get_baker_path())	
 	return
 	#hlod.get_baker_path()
 	var hlod_resource = Resource.new()
@@ -117,4 +135,5 @@ func update_lod():
 	asset_mesh_updater.update_auto_lod()		
 	
 func _exit_tree():
-	timer.queue_free()
+	if is_instance_valid(timer):
+		timer.queue_free()

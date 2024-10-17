@@ -12,7 +12,7 @@ extends Node
 
 
 func _ready():	
-	var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+	var asset_library:MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 	tags_label.text = str("tags: ", asset_library.tag_get_names())
 	groups_label.text = str("groups: ", asset_library.group_get_list())
 	

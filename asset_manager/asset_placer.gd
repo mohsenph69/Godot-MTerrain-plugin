@@ -63,7 +63,7 @@ var current_category = "None"
 var collections= []
 #var tags
 
-var asset_library: MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+var asset_library: MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 func _ready():	
 	#categories = {"colors": [0,1,2], "sizes":[3,4,5], "building_parts": [6,7,8,9]}   #data.categories
@@ -107,7 +107,8 @@ func _drop_data(at_position, data):
 		import_gltf(file)
 		
 func import_gltf(path):		
-	AssetIO.glb_load(asset_library, path)
+	AssetIO.glb_load_asset(path)
+	#AssetIO.glb_load(path)
 	regroup(current_category)
 	asset_library.notify_property_list_changed()
 			
