@@ -5,7 +5,7 @@ extends PanelContainer
 @onready var add_group_button:Button = find_child("add_group_button")
 
 var selected_group
-@onready var asset_library: MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+@onready var asset_library: MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 func _ready():
 	add_group_button.pressed.connect(add_group)

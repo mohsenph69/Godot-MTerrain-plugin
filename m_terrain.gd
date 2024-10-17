@@ -132,7 +132,7 @@ func _enter_tree():
 		gltf_extras_importer = GLTFExtras.new()
 		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)
 		scene_saved.connect(func(_path):
-			var asset_library:MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
+			var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
 			ResourceSaver.save(asset_library, asset_library.resource_path)
 		)
 	
@@ -165,7 +165,7 @@ func _exit_tree():
 				
 		remove_control_from_bottom_panel(asset_browser)
 		remove_inspector_plugin(asset_browser_inspector_plugin)
-		var asset_library = MAssetTable.get_singelton()#load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+		var asset_library = MAssetTable.get_singleton()#load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 		ResourceSaver.save(asset_library, asset_library.resource_path)
 		GLTFDocument.unregister_gltf_document_extension(gltf_extras_importer)
 		#GLTFDocument.unregister_gltf_document_extension(MLOD_Mesh_Importer)

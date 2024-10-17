@@ -1,6 +1,6 @@
 @tool
 extends HFlowContainer
-var material_table: MMaterialTable = MMaterialTable.get_singelton()
+var material_table: MMaterialTable = MMaterialTable.get_singleton()
 
 func _enter_tree():		
 	for m in material_table.table:			

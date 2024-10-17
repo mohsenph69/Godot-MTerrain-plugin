@@ -1,7 +1,7 @@
 @tool
 extends EditorInspectorPlugin
 
-var asset_library: MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+var asset_library: MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 func _can_handle(object):		
 	if object.has_meta("collection_id") and object.get_meta("collection_id") != -1: return true

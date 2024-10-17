@@ -47,7 +47,7 @@ func make_joined_mesh(glb=true, res=false):
 		AssetIO.glb_export(mesh_node, "res://addons/m_terrain/asset_manager/example_asset_library/export/" + name + "_merged.glb")
 				
 func bake_to_hlod_resource():	
-	var asset_library:MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var hlod := MHlod.new()
 	hlod.set_baker_path(scene_file_path)
 	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):

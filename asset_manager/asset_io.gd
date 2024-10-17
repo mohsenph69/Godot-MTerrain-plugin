@@ -20,7 +20,7 @@ static func glb_get_root_node_name(path):
 	return gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
 
 static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asset_manager/example_asset_library/export/", root_node.name.to_lower(), ".glb") ):
-	var asset_library:MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()
 	
@@ -45,7 +45,7 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 	
 #Load glb file containing one or more assets
 static func glb_load_asset(path):
-	var asset_library:MAssetTable = MAssetTable.get_singelton()
+	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var gltf_document = GLTFDocument.new()
 	if not Engine.is_editor_hint():		
 		GLTFDocument.register_gltf_document_extension(GLTFExtras.new())
@@ -57,7 +57,7 @@ static func glb_load_asset(path):
 #Load glb file with sub-scenes and recursive loading
 static func glb_load(path, paths_loaded=[]):		
 	if path in paths_loaded: return	
-	var asset_library:MAssetTable = MAssetTable.get_singelton()
+	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	paths_loaded.push_back(path)	
 	var gltf_document = GLTFDocument.new()
 	if not Engine.is_editor_hint():		
@@ -87,7 +87,7 @@ static func save_glb_table(data):
 	
 #Parse GLB file and update asset library
 static func glb_update_objects(scene, glb_path):		
-	var asset_library:MAssetTable = MAssetTable.get_singelton()
+	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var glb_table = get_glb_table()
 	for object: Node3D in scene:		
 		var extras = object.get_meta_list() #("extras")		
@@ -168,6 +168,7 @@ static func glb_update_objects(scene, glb_path):
 			packed_scene.pack(object)
 			ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")
 	save_glb_table(glb_table)
+	asset_library.save()
 	
 static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):	
 	var mesh_item_ids = []
@@ -175,7 +176,7 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 	var mesh_item_transforms = []
 	var sibling_ids = []
 		
-	var material_table:MMaterialTable = MMaterialTable.get_singelton()
+	var material_table:MMaterialTable = MMaterialTable.get_singleton()
 	var material_ids = []
 	var existing_material_hashes = {}
 	for material_id in material_table.table:		
@@ -300,7 +301,7 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 #endregion
 #region Mesh Item
 static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]		
-	var asset_library = MAssetTable.get_singelton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))	
+	var asset_library = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))	
 	if asset_library.has_mesh_item(mesh_id):
 		var meshes = []	
 		var data = asset_library.mesh_item_get_info(mesh_id)		
@@ -314,7 +315,7 @@ static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
 		return meshes
 		
 static func mesh_item_save_from_resources(mesh_id, meshes, material_ids)->int:	
-	var asset_library = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	var asset_library = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var mesh_hash_array = []	
 	var mesh_hash_index_array = []	
 	
@@ -358,7 +359,7 @@ static func hash_material(material):
 #endregion
 #region Collection
 static func collection_save_from_nodes(root_node) -> int: #returns collection_id	
-	var asset_library:MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))			
+	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))			
 	if root_node is MAssetMesh:		
 		var material_overrides = root_node.get_meta("material_overrides") if root_node.has_meta("material_overrides") else []	
 		var mesh_id = root_node.get_meta("mesh_id") if root_node.has_meta("mesh_id") else -1
@@ -385,7 +386,7 @@ static func collection_save_from_nodes(root_node) -> int: #returns collection_id
 		return collection_id
 		
 static func reload_collection(node:Node3D, collection_id):
-	var asset_library:MAssetTable = MAssetTable.get_singelton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
+	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
 	if not collection_id in asset_library.collection_get_list(): return
 	var overrides = node.get_meta("overrides") if node.has_meta("overrides") else {}	
 	var parent = node.get_parent()
@@ -420,7 +421,7 @@ static func reload_collection(node:Node3D, collection_id):
 	return new_root
 	
 static func collection_instantiate(collection_id, overrides = {})->Node3D:
-	var asset_library:MAssetTable = MAssetTable.get_singelton()
+	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var glb_table = get_glb_table() 
 	if not asset_library.has_collection(collection_id):
 		print("collection doesn't exist")

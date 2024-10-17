@@ -17,7 +17,7 @@ func get_tag_array():
 	return arr
 	
 func _ready():
-	var asset_library:MAssetTable = MAssetTable.get_singelton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	var asset_library:MAssetTable = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 
 	var search:LineEdit = find_child("search")
 	search.text_changed.connect(func(new_text):		
