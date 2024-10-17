@@ -86,4 +86,4 @@ func _export_node(state: GLTFState, gltf_node: GLTFNode, json: Dictionary, node:
 	var extras = {}
 	for meta in node.get_meta_list():
 		extras[meta] = node.get_meta(meta)
-	json["extras"] = node.get_meta("extras")	
+	json["extras"] = extras #node.get_meta("extras")	

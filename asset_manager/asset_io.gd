@@ -39,8 +39,9 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 	EditorInterface.get_edited_scene_root().add_child(node)
 	
 	gltf_document.append_from_scene(node, gltf_save_state)	
+	print("exporting to ", path)
 	var error = gltf_document.write_to_filesystem(gltf_save_state, path)	
-	#print("exported to ", path)
+	
 	node.queue_free()	
 	
 #Load glb file containing one or more assets
@@ -91,34 +92,6 @@ static func glb_update_objects(scene, glb_path):
 	var glb_table = get_glb_table()
 	for object: Node3D in scene:		
 		var extras = object.get_meta_list() #("extras")		
-		if "static_body" in extras:
-			var collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1			
-			if collection_id == -1:			
-				if "glb" in extras:					
-					collection_id = asset_library.collection_get_id(glb_get_root_node_name("res://addons/m_terrain/asset_manager/example_asset_library/export/" + object.get_meta("glb")))
-				if collection_id == -1:									
-					var collection_name = object.name.to_lower()
-					collection_id = asset_library.collection_get_id(collection_name)
-					if collection_id == -1:
-						collection_id = asset_library.collection_create(collection_name)
-			glb_table[collection_id] = glb_path
-						
-			var mesh_children = []						
-			asset_library.collection_remove_all_items(collection_id)
-			for child in object.get_children():
-				if child is ImporterMeshInstance3D:
-					mesh_children.push_back(child)					
-				else:
-					var child_extras = child.get_meta_list()
-					if "collision_box" in child_extras:
-						pass
-					elif "collision_sphere" in child_extras:
-						pass
-					elif "collection_id" in child_extras:
-						asset_library.collection_add_sub_collection(collection_id, child.get_meta(collection_id), child.transform)
-			var data = import_mesh_item_from_nodes(asset_library, mesh_children)			
-			for i in data.ids.size():				
-				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])			
 		if "hlod_id" in extras:			
 			object.set_meta("hlod_id", object.get_meta("hlod_id"))
 			object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
@@ -167,6 +140,35 @@ static func glb_update_objects(scene, glb_path):
 			var packed_scene:PackedScene = PackedScene.new()
 			packed_scene.pack(object)
 			ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")
+		if "static_body" in extras:
+			var collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1			
+			if collection_id == -1:			
+				if "glb" in extras:					
+					collection_id = asset_library.collection_get_id(glb_get_root_node_name("res://addons/m_terrain/asset_manager/example_asset_library/export/" + object.get_meta("glb")))
+				if collection_id == -1:									
+					var collection_name = object.name.to_lower()
+					collection_id = asset_library.collection_get_id(collection_name)
+					if collection_id == -1:
+						collection_id = asset_library.collection_create(collection_name)
+			glb_table[collection_id] = glb_path
+						
+			var mesh_children = []						
+			asset_library.collection_remove_all_items(collection_id)
+			for child in object.get_children():
+				if child is ImporterMeshInstance3D:
+					mesh_children.push_back(child)					
+				else:
+					var child_extras = child.get_meta_list()
+					if "collision_box" in child_extras:
+						pass
+					elif "collision_sphere" in child_extras:
+						pass
+					elif "collection_id" in child_extras:
+						asset_library.collection_add_sub_collection(collection_id, child.get_meta(collection_id), child.transform)
+			var data = import_mesh_item_from_nodes(asset_library, mesh_children)			
+			for i in data.ids.size():				
+				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])			
+		
 	save_glb_table(glb_table)
 	asset_library.save()
 	

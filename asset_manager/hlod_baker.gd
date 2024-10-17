@@ -1,9 +1,32 @@
 @tool
 class_name HLod_Baker extends Node3D
 
+@export_storage var join_at_lod: int
+@export var joined_mesh: MMeshLod:
+	get():
+		if not is_instance_valid(joined_mesh):
+			joined_mesh = MMeshLod.new()
+			joined_mesh.meshes.resize(AssetIO.LOD_COUNT)
+		return joined_mesh
+		
+@export_storage var bake_path = "res://massets/":
+	get():
+		if not bake_path.ends_with(".res"):
+			bake_path = bake_path + name + ".res"
+		return bake_path
 
-@export var max_lod = -1
-@export var bake_path = "res://massets/" #+ name + ".res"
+@export_storage var joined_mesh_export_path = "res://massets/":
+	get():		
+		if not joined_mesh_export_path.ends_with(".glb"):
+			joined_mesh_export_path = joined_mesh_export_path + name + ".glb"
+		return joined_mesh_export_path
+
+@export_storage var export_path = "res://massets/":
+	get():		
+		if not export_path.ends_with(".glb"):
+			export_path = export_path + name + ".glb"
+		return export_path
+
 @export var meshes_to_join: Array[Node3D]
 @export var hlod_resource: MHlod
 
@@ -19,7 +42,7 @@ func _notification(what):
 					grandchild.owner = null
 					
 
-func _ready():	
+func _ready():		
 	asset_mesh_updater.update_auto_lod()
 	for child in get_children():
 		if child.has_meta("hlod"):
@@ -32,20 +55,17 @@ func _ready():
 				node.transform = original_transform
 		
 
-func make_joined_mesh(glb=true, res=false):
+func make_joined_mesh():
 	var mesh_joiner := MMeshJoiner.new()
 	var all_mesh_nodes = []
 	for child in meshes_to_join:
 		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))
 	mesh_joiner.insert_mesh_data(all_mesh_nodes.map(func(a:MAssetMesh): return a.meshes.meshes[0]), all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
-	var new_mesh = mesh_joiner.join_meshes()
-	if res:
-		ResourceSaver.save(new_mesh, str("res://masset/meshes/", AssetIO.hash_mesh(new_mesh), ".res"))
-	if glb:
-		var mesh_node = MeshInstance3D.new()
-		mesh_node.mesh = new_mesh	
-		AssetIO.glb_export(mesh_node, "res://addons/m_terrain/asset_manager/example_asset_library/export/" + name + "_merged.glb")
+	return mesh_joiner.join_meshes()					
 				
+func update_joined_mesh(mesh = make_joined_mesh()):
+	joined_mesh.meshes[join_at_lod] = mesh 
+	
 func bake_to_hlod_resource():	
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var hlod := MHlod.new()
@@ -74,34 +94,7 @@ func bake_to_hlod_resource():
 	for child:MHlodScene in find_children("*", "MHlodScene", true, false):
 		if child.hlod is MHlod:
 			hlod.add_sub_hlod(child.transform, child.hlod_resource)	
-	ResourceSaver.save(hlod, bake_path) #hlod.get_baker_path())	
-	return
-	#hlod.get_baker_path()
-	var hlod_resource = Resource.new()
-	
-	var static_bodies = []
-	for child in get_children():
-		if child.scene_file_path != "":
-			for i in lod_levels:
-				if i <= child.get_meta("max_lod"):
-					hlod_resource.add_packed_scene_item(child)			
-		elif child is MeshInstance3D:
-			for i in lod_levels:
-				hlod_resource.add_mesh_item(child.get_meta(str("mesh_lod_",i)), child.get_meta(str("material_lod_",i)))
-		elif child is CollisionShape3D:
-			for i in lod_levels:
-				if child.get_meta(str("lod_",i)):
-					hlod_resource.add_collision_item(child, find_matching_static_body(static_bodies, child.get_parent()))	
-		elif child is StaticBody3D:			
-			var exists = false
-			for body: StaticBody3D in static_bodies:				
-				if compare_static_bodies(body, child):
-					exists = true
-					break
-			if not exists:
-				static_bodies.push_back(child)
-				hlod_resource.add_collision_item()			
-	ResourceSaver.save(hlod_resource, bake_path)
+	ResourceSaver.save(hlod, bake_path)
 
 func find_matching_static_body(arr, body):
 	for sb in arr:
@@ -117,8 +110,6 @@ func compare_static_bodies(a:StaticBody3D,b):
 	if a.collision_mask != b.collision_mask:
 		return false
 	return true
-
-
 		
 func _enter_tree():
 	asset_mesh_updater = MAssetMeshUpdater.new()	

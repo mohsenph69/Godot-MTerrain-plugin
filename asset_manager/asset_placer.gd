@@ -157,6 +157,9 @@ func collection_item_activated(id, group_list:ItemList):
 	var node = AssetIO.collection_instantiate(group_list.get_item_metadata(id))	
 	#node.set_meta("collection_id", group_list.get_item_metadata(id))
 	EditorInterface.get_edited_scene_root().add_child(node)
+	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()
+	if len(selected_nodes) < 2:
+		pass
 	node.owner = EditorInterface.get_edited_scene_root()
 	node.name = group_list.get_item_text(id)	
 

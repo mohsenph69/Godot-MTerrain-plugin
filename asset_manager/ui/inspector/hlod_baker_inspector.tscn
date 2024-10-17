@@ -1,18 +1,108 @@
-[gd_scene load_steps=2 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=4 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
+[ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="2_cvmba"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg4xs"]
+bg_color = Color(0.25098, 0.266667, 0.298039, 1)
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
+offset_right = 323.0
+offset_bottom = 171.0
 script = ExtResource("1_2wg81")
 
-[node name="Bake" type="Button" parent="."]
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_bg4xs")
+text = "Bake HLod"
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="BakePath" type="LineEdit" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="select_bake_path" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+icon = ExtResource("2_cvmba")
+expand_icon = true
+
+[node name="Bake" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Bake"
 
-[node name="Join" type="Button" parent="."]
+[node name="Label2" type="Label" parent="."]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_bg4xs")
+text = "Join Meshes"
+horizontal_alignment = 1
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer3"]
+layout_mode = 2
+text = "Join at Lod: "
+
+[node name="JoinLod" type="SpinBox" parent="HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 10.0
+
+[node name="Join" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Join Meshes"
 
-[node name="Export" type="Button" parent="."]
+[node name="HBoxContainer4" type="HBoxContainer" parent="."]
 layout_mode = 2
-text = "Export as glb"
+
+[node name="joined_mesh_export_path" type="LineEdit" parent="HBoxContainer4"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="select_joined_mesh_export_path" type="Button" parent="HBoxContainer4"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+icon = ExtResource("2_cvmba")
+expand_icon = true
+
+[node name="export_joined_meshes" type="Button" parent="HBoxContainer4"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Export"
+
+[node name="Label3" type="Label" parent="."]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_bg4xs")
+text = "Export HLOD as GLB"
+horizontal_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="export_path" type="LineEdit" parent="HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="select_export_path" type="Button" parent="HBoxContainer2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+icon = ExtResource("2_cvmba")
+expand_icon = true
+
+[node name="Export" type="Button" parent="HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Export"
