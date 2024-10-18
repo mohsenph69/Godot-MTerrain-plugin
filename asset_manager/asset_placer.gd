@@ -155,11 +155,12 @@ func regroup(category = "None", filtered_collections = asset_library.collection_
 
 func collection_item_activated(id, group_list:ItemList):					
 	var node = AssetIO.collection_instantiate(group_list.get_item_metadata(id))	
-	#node.set_meta("collection_id", group_list.get_item_metadata(id))
-	EditorInterface.get_edited_scene_root().add_child(node)
-	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()
-	if len(selected_nodes) < 2:
-		pass
+	#node.set_meta("collection_id", group_list.get_item_metadata(id))	
+	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
+	if len(selected_nodes) == 0:
+		EditorInterface.get_edited_scene_root().add_child(node)
+	elif len(selected_nodes) == 1:
+		selected_nodes[0].add_child(node)
 	node.owner = EditorInterface.get_edited_scene_root()
 	node.name = group_list.get_item_text(id)	
 
