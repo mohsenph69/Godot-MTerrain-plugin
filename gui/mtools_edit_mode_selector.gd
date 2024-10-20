@@ -106,17 +106,18 @@ func change_active_object(object):
 		active_object = null
 	exit_edit_mode_button.visible = false
 	edit_selected_button.visible = true
-	if object is MTerrain:
-		active_object = object
-		edit_selected_button.text = "Click to Sculpt " + object.name
-	elif object is MGrass or object is MNavigationRegion3D:
-		active_object = object
-		edit_selected_button.text = "Click to Paint " + object.name			
-	elif object is MPath or object is MCurveMesh:
-		active_object = object
-		edit_selected_button.text = "Click to Edit " + object.name		
-	else:
-		edit_selected_button.visible = false
+	if object:
+		if object is MTerrain:
+			active_object = object
+			edit_selected_button.text = "Click to Sculpt " + object.name
+		elif object is MGrass or object is MNavigationRegion3D:
+			active_object = object
+			edit_selected_button.text = "Click to Paint " + object.name			
+		elif object is MPath or object is MCurveMesh:
+			active_object = object
+			edit_selected_button.text = "Click to Edit " + object.name		
+		else:
+			edit_selected_button.visible = false
 		
 	text = ""
 	theme_type_variation
