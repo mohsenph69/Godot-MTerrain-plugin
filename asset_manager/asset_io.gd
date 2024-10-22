@@ -83,10 +83,10 @@ static func glb_update_objects(scene:Array, glb_path):
 		if object is ImporterMeshInstance3D:
 			#Import as mesh asset with single lod, ignore transform
 			var data = import_mesh_item_from_nodes([object])												
-		elif "hlod_id" in extras:			
-			object.set_meta("hlod_id", object.get_meta("hlod_id"))
+		elif "_hlod" in object.name:				
+			#object.set_meta("hlod_id", object.get_meta("hlod_id"))
 			object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
-			object.set_meta("glb", glb_path.split("/")[-1])
+			#object.set_meta("glb", glb_path.split("/")[-1])
 			var mesh_children = []
 			for child in object.find_children("*", "Node3D", true, false):
 				child.owner = object

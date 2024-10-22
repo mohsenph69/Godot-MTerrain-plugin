@@ -31,7 +31,14 @@ func add_tag():
 	while tag_name in asset_library.tag_get_names():
 		i += 1
 		tag_name = str("new tag ", i)
-	asset_library.tag_add(tag_name)
+	for j in 256:
+		if j == 0: continue
+		if asset_library.tag_get_name(j) == "":
+			asset_library.tag_set_name(j, "new tag")
+			break
+		
+	#asset_library.tag_set_name()
+	#asset_library.tag_add(tag_name)
 		
 func set_tag_options(tags):
 	tags_control.set_options(tags)	

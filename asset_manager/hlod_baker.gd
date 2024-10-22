@@ -1,7 +1,7 @@
 @tool
 class_name HLod_Baker extends Node3D
 
-@export_storage var join_at_lod: int
+@export_storage var join_at_lod: int = -1
 @export var joined_mesh: MMeshLod:
 	get():
 		if not is_instance_valid(joined_mesh):

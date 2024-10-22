@@ -54,7 +54,9 @@ text = "Join at Lod: "
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+min_value = -1.0
 max_value = 10.0
+value = -1.0
 
 [node name="Join" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true

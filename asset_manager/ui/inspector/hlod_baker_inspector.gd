@@ -26,7 +26,10 @@ func _ready():
 		
 	%JoinLod.value = object.join_at_lod
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1
-	%JoinLod.value_changed.connect(func(value): object.join_at_lod = value)	
+	%JoinLod.value_changed.connect(func(value): 
+		object.join_at_lod = value
+		%Join.disabled = value == -1
+	)	
 	%Join.pressed.connect(object.update_joined_mesh)
 	
 	%joined_mesh_export_path.text = object.joined_mesh_export_path

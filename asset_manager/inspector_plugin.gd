@@ -24,17 +24,14 @@ func _parse_begin(object):
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()
 		control.object = object
 	elif object is MHlodScene:
-		control = Button.new()
-		var validate_button = func():			
-			if is_instance_valid(object.hlod) and FileAccess.file_exists(object.hlod.get_baker_path()):
-				control.disabled = false
-			else:
-				control.disabled = true
-		validate_button.call()
-		object.property_list_changed.connect(validate_button)					
+		control = Button.new()		
+		if not is_instance_valid(object.hlod):# and FileAccess.file_exists(object.hlod.get_baker_path()):
+			control.disabled = true			
+		
 		control.text = "Edit HLOD"				
-		control.pressed.connect(func():			
-			EditorInterface.open_scene_from_path(object.hlod.get_baker_path())
+		control.pressed.connect(func():		
+			print(object.hlod.get_baker_path())	
+			#EditorInterface.open_scene_from_path(object.hlod.get_baker_path())
 		)		
 	elif object.has_meta("collection_id"):		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_inspector.tscn").instantiate()
