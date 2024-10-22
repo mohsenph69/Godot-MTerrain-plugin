@@ -8,6 +8,7 @@ func _can_handle(object):
 	if object.has_meta("mesh_id") and object.get_meta("mesh_id") != -1: return true
 	if object is MAssetTable:return true
 	if object is HLod_Baker: return true
+	if object is MHlodScene: return true
 	if object is MMaterialTable: return true
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
 	if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is HLod_Baker: return true
@@ -22,6 +23,19 @@ func _parse_begin(object):
 	elif object is HLod_Baker:	
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()
 		control.object = object
+	elif object is MHlodScene:
+		control = Button.new()
+		var validate_button = func():			
+			if is_instance_valid(object.hlod) and FileAccess.file_exists(object.hlod.get_baker_path()):
+				control.disabled = false
+			else:
+				control.disabled = true
+		validate_button.call()
+		object.property_list_changed.connect(validate_button)					
+		control.text = "Edit HLOD"				
+		control.pressed.connect(func():			
+			EditorInterface.open_scene_from_path(object.hlod.get_baker_path())
+		)		
 	elif object.has_meta("collection_id"):		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_inspector.tscn").instantiate()
 		control.object = object	

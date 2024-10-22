@@ -131,18 +131,18 @@ static func glb_update_objects(scene:Array, glb_path):
 			var packed_scene:PackedScene = PackedScene.new()
 			packed_scene.pack(object)
 			ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")
-		else: #if "static_body" in extras:
+		else: #if "static_body" in extras:			
 			var collection_id = asset_library.collection_get_id(object.name.split(".")[0])
 			#var collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1			
 			if collection_id == -1:			
 				print("collection ", object.name.split(".")[0], " does not exist yet")
 				if "glb" in extras:					
 					collection_id = asset_library.collection_get_id(glb_get_root_node_name("res://addons/m_terrain/asset_manager/example_asset_library/export/" + object.get_meta("glb")))
-					if collection_id == -1:									
-						var collection_name = object.name.to_lower()
-						collection_id = asset_library.collection_get_id(collection_name)
-						if collection_id == -1:
-							collection_id = asset_library.collection_create(collection_name)			
+				if collection_id == -1:									
+					var collection_name = object.name.to_lower()
+					collection_id = asset_library.collection_get_id(collection_name)
+					if collection_id == -1:
+						collection_id = asset_library.collection_create(collection_name)			
 						
 			var mesh_children = []						
 			asset_library.collection_remove_all_items(collection_id)

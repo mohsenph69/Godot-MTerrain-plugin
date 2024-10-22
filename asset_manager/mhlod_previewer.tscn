@@ -4,3 +4,6 @@
 
 [node name="MHlodScene" type="MHlodScene"]
 script = ExtResource("1_p66ot")
+
+[node name="MHlodScene" type="MHlodScene" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)

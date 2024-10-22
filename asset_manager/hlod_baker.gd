@@ -94,6 +94,10 @@ func bake_to_hlod_resource():
 	for child:MHlodScene in find_children("*", "MHlodScene", true, false):
 		if child.hlod is MHlod:
 			hlod.add_sub_hlod(child.transform, child.hlod_resource)	
+	#For some reason, resourcesSaver.save wont overwrite existing resources. 
+	if FileAccess.file_exists(bake_path):
+		DirAccess.remove_absolute(bake_path)
+	#print(bake_path)
 	ResourceSaver.save(hlod, bake_path)
 
 func find_matching_static_body(arr, body):
