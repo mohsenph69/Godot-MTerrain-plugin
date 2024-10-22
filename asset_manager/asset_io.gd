@@ -74,25 +74,16 @@ static func glb_load(path, paths_loaded=[]):
 			push_error("trying to load sub-glb that doesn't exist: ", new_path)
 	var scene = gltf_document.generate_scene(gltf_state).get_children()	
 	glb_update_objects(scene, path)
-	
-static func get_glb_table()->Dictionary:
-	var json_path = "res://massets/collection_to_glb_map.json"	
-	if not FileAccess.file_exists(json_path):
-		save_glb_table({})		
-	return JSON.parse_string( FileAccess.get_file_as_string(json_path) )	
-	
-static func save_glb_table(data):
-	var json_path = "res://massets/collection_to_glb_map.json"	
-	var file = FileAccess.open(json_path, FileAccess.WRITE)
-	file.store_string( JSON.stringify(data) )		
-	
+		
 #Parse GLB file and update asset library
-static func glb_update_objects(scene, glb_path):		
-	var asset_library:MAssetTable = MAssetTable.get_singleton()
-	var glb_table = get_glb_table()
+static func glb_update_objects(scene:Array, glb_path):		
+	var asset_library:MAssetTable = MAssetTable.get_singleton()	
 	for object: Node3D in scene:		
 		var extras = object.get_meta_list() #("extras")		
-		if "hlod_id" in extras:			
+		if object is ImporterMeshInstance3D:
+			#Import as mesh asset with single lod, ignore transform
+			var data = import_mesh_item_from_nodes([object])												
+		elif "hlod_id" in extras:			
 			object.set_meta("hlod_id", object.get_meta("hlod_id"))
 			object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
 			object.set_meta("glb", glb_path.split("/")[-1])
@@ -126,7 +117,7 @@ static func glb_update_objects(scene, glb_path):
 						var collection_id = asset_library.collection_get_id(new_name.to_lower())						
 						if collection_id != -1:
 							child.set_meta("collection_id", collection_id)
-			var data = import_mesh_item_from_nodes(asset_library, mesh_children)			
+			var data = import_mesh_item_from_nodes(mesh_children)			
 			for child in mesh_children:
 				child.owner = null
 			for i in data.ids.size():				
@@ -140,17 +131,18 @@ static func glb_update_objects(scene, glb_path):
 			var packed_scene:PackedScene = PackedScene.new()
 			packed_scene.pack(object)
 			ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")
-		if "static_body" in extras:
-			var collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1			
+		else: #if "static_body" in extras:
+			var collection_id = asset_library.collection_get_id(object.name.split(".")[0])
+			#var collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1			
 			if collection_id == -1:			
+				print("collection ", object.name.split(".")[0], " does not exist yet")
 				if "glb" in extras:					
 					collection_id = asset_library.collection_get_id(glb_get_root_node_name("res://addons/m_terrain/asset_manager/example_asset_library/export/" + object.get_meta("glb")))
-				if collection_id == -1:									
-					var collection_name = object.name.to_lower()
-					collection_id = asset_library.collection_get_id(collection_name)
-					if collection_id == -1:
-						collection_id = asset_library.collection_create(collection_name)
-			glb_table[collection_id] = glb_path
+					if collection_id == -1:									
+						var collection_name = object.name.to_lower()
+						collection_id = asset_library.collection_get_id(collection_name)
+						if collection_id == -1:
+							collection_id = asset_library.collection_create(collection_name)			
 						
 			var mesh_children = []						
 			asset_library.collection_remove_all_items(collection_id)
@@ -165,14 +157,13 @@ static func glb_update_objects(scene, glb_path):
 						pass
 					elif "collection_id" in child_extras:
 						asset_library.collection_add_sub_collection(collection_id, child.get_meta(collection_id), child.transform)
-			var data = import_mesh_item_from_nodes(asset_library, mesh_children)			
+			var data = import_mesh_item_from_nodes(mesh_children)			
 			for i in data.ids.size():				
-				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])			
-		
-	save_glb_table(glb_table)
+				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])					
 	asset_library.save()
 	
-static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):	
+static func import_mesh_item_from_nodes(nodes, ignore_transform = true):	
+	var asset_library := MAssetTable.get_singleton()
 	var mesh_item_ids = []
 	var mesh_item_names = []
 	var mesh_item_transforms = []
@@ -297,8 +288,9 @@ static func import_mesh_item_from_nodes(asset_library:MAssetTable, nodes):
 		if collection_ids.size() == 0:
 			var collection_id = collection_ids
 			collection_id = asset_library.collection_create(name)			
-			asset_library.collection_add_tag(collection_id,0)
-			asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], mesh_item_transforms[i])
+			asset_library.collection_add_tag(collection_id,0)			
+			var transform = Transform3D() if ignore_transform else mesh_item_transforms[i]
+			asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], transform)
 	return {"ids":mesh_item_ids, "transforms": mesh_item_transforms, "sibling_ids": sibling_ids}
 #endregion
 #region Mesh Item
@@ -423,8 +415,7 @@ static func reload_collection(node:Node3D, collection_id):
 	return new_root
 	
 static func collection_instantiate(collection_id, overrides = {})->Node3D:
-	var asset_library:MAssetTable = MAssetTable.get_singleton()
-	var glb_table = get_glb_table() 
+	var asset_library:MAssetTable = MAssetTable.get_singleton()	
 	if not asset_library.has_collection(collection_id):
 		print("collection doesn't exist")
 		#TODO: CHECK IF THERE"S A GLB THAT NEEDS TO BE LOADED
@@ -471,17 +462,11 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 			var sub_collection = collection_instantiate(sub_collections[i])			
 			#var sub_collection = Node3D.new()
 			#sub_collection.set_meta("collection_id", id)
-			node.add_child(sub_collection)					
-			if sub_collections[i] in glb_table:
-				sub_collection.set_meta("glb", glb_table[sub_collections[i]])
+			node.add_child(sub_collection)								
 			sub_collection.transform = sub_collections_transforms[i]
 		#for hlod in asset_library.collection_get_sub_hlods(collection_id):
 			#var hlod_baker_scene = load().instantiate()
-			#add_child(hlod_baker_scene)	
-		if str(collection_id) in glb_table:
-			node.set_meta("glb", glb_table[str(collection_id)])
-			print("set glb meta for node ", node.name)
-		save_glb_table(glb_table)
+			#add_child(hlod_baker_scene)			
 		return node
 
 static func edit_collection(object, toggle_on):
