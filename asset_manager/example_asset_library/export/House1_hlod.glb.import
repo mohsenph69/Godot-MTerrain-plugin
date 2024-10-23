@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bdio2m5topdi5"
-path="res://.godot/imported/Sphere1.glb-625c17e0248da485123f7a3d75be6303.scn"
+uid="uid://duwv6ajdwn6ue"
+path="res://.godot/imported/House1_hlod.glb-d526a1b864e0c9e8b5211830d482beb2.scn"
 
 [deps]
 
-source_file="res://addons/m_terrain/asset_manager/example_asset_library/export/Sphere1.glb"
-dest_files=["res://.godot/imported/Sphere1.glb-625c17e0248da485123f7a3d75be6303.scn"]
+source_file="res://addons/m_terrain/asset_manager/example_asset_library/export/House1_hlod.glb"
+dest_files=["res://.godot/imported/House1_hlod.glb-d526a1b864e0c9e8b5211830d482beb2.scn"]
 
 [params]
 

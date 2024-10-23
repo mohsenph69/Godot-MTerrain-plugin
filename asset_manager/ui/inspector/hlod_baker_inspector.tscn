@@ -1,10 +1,12 @@
-[gd_scene load_steps=4 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=5 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="2_cvmba"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg4xs"]
 bg_color = Color(0.25098, 0.266667, 0.298039, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_1f66q"]
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
 offset_right = 323.0
@@ -15,6 +17,7 @@ script = ExtResource("1_2wg81")
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_bg4xs")
 text = "Bake HLod"
+label_settings = SubResource("LabelSettings_1f66q")
 horizontal_alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
@@ -41,6 +44,7 @@ text = "Bake"
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_bg4xs")
 text = "Join Meshes"
+label_settings = SubResource("LabelSettings_1f66q")
 horizontal_alignment = 1
 
 [node name="HBoxContainer3" type="HBoxContainer" parent="."]
@@ -87,6 +91,7 @@ text = "Export"
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_bg4xs")
 text = "Export HLOD as GLB"
+label_settings = SubResource("LabelSettings_1f66q")
 horizontal_alignment = 1
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="."]

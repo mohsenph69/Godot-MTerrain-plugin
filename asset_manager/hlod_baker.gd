@@ -78,7 +78,7 @@ func bake_to_hlod_resource():
 		var arr := Array()
 		arr.resize(len(mesh_item_info.mesh))
 		arr.fill(0)
-		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.mesh_index, mesh_item_info.material, arr, arr, 1 )
+		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.material, arr, arr, 1 )
 		var i = 0
 		var max_lod = child.get_meta("max_lod") if child.has_meta("max_lod") else AssetIO.LOD_COUNT
 		while i < max_lod:

@@ -45,7 +45,7 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 	node.queue_free()	
 	
 #Load glb file containing one or more assets
-static func glb_load_asset(path):
+static func glb_load(path):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var gltf_document = GLTFDocument.new()
 	if not Engine.is_editor_hint():		
@@ -56,7 +56,7 @@ static func glb_load_asset(path):
 	glb_update_objects(scene, path)
 	
 #Load glb file with sub-scenes and recursive loading
-static func glb_load(path, paths_loaded=[]):		
+static func glb_load_with_subscenes(path, paths_loaded=[]):		
 	if path in paths_loaded: return	
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	paths_loaded.push_back(path)	
@@ -69,7 +69,7 @@ static func glb_load(path, paths_loaded=[]):
 	for node in nodes_with_glb:		
 		var new_path = "res://addons/m_terrain/asset_manager/example_asset_library/export/" + node.extras.glb 		
 		if FileAccess.file_exists(new_path):
-			glb_load(new_path, paths_loaded)		
+			glb_load_with_subscenes(new_path, paths_loaded)		
 		else:
 			push_error("trying to load sub-glb that doesn't exist: ", new_path)
 	var scene = gltf_document.generate_scene(gltf_state).get_children()	
@@ -82,44 +82,36 @@ static func glb_update_objects(scene:Array, glb_path):
 		var extras = object.get_meta_list() #("extras")		
 		if object is ImporterMeshInstance3D:
 			#Import as mesh asset with single lod, ignore transform
+			if not "_lod_" in object.name:
+				object.name += "_lod_0"
 			var data = import_mesh_item_from_nodes([object])												
-		elif "_hlod" in object.name:				
-			#object.set_meta("hlod_id", object.get_meta("hlod_id"))
-			object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
-			#object.set_meta("glb", glb_path.split("/")[-1])
+		elif "_hlod" in object.name:							
+			object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))											
 			var mesh_children = []
-			for child in object.find_children("*", "Node3D", true, false):
+			for child in object.get_children():				
 				child.owner = object
 				if child is ImporterMeshInstance3D:
 					mesh_children.push_back(child)					
-				if child.has_meta("extras"):				
-					var child_extras = child.get_meta_list()
-					if "collection" in child_extras:
-						child.set_meta("collection_id", child.get_meta("collection"))
-					elif "hlod_id" in child_extras:
-						if "glb" in child_extras:
-							var path = "res://addons/m_terrain/asset_manager/example_asset_library/hlods/"
-							path += glb_get_root_node_name("res://addons/m_terrain/asset_manager/example_asset_library/export/" + child.get_meta("glb"))
-							path += ".tscn"
-							child.scene_file_path = path
-							#var new_node = load(path).instantiate() 
-							#child.add_sibling(new_node)
-							#new_node.owner = object
-							#new_node.scene_file_path = path
-							#child.get_parent().remove_node(child)
-							#for sub_child in new_node.find_children("*"):
-							#	sub_child.owner = new_node
-						child.set_meta("hlod_id", child.get_meta("hlod_id"))
-						#child.replace_by(load( asset_library.hlod_lookup(child_extras.hlod)))
-					elif "glb" in child_extras:						
-						var path = "res://addons/m_terrain/asset_manager/example_asset_library/export/" + child.get_meta("glb")						
-						var new_name = glb_get_root_node_name(path)												
-						var collection_id = asset_library.collection_get_id(new_name.to_lower())						
-						if collection_id != -1:
-							child.set_meta("collection_id", collection_id)
+				else:
+					#Check if collection exists
+					var collection_id = asset_library.collection_get_id( child.name.split(".")[0] )
+					if collection_id != -1:						
+						var node = collection_instantiate(collection_id)						
+						object.add_child(node)
+						node.owner = object
+					elif "_hlod" in child.name:
+						var node = MHlodScene.new()
+						#node.hlod = load()
+						child.add_sibling(node)
+						child.get_parent().remove_child(child)						
+						node.name = child.name
+						node.owner = object
+						child.queue_free()						
 			var data = import_mesh_item_from_nodes(mesh_children)			
+			var nodes_to_delete = []
 			for child in mesh_children:
 				child.owner = null
+				nodes_to_delete.push_back(child)
 			for i in data.ids.size():				
 				var single_item_collections = asset_library.tag_get_collections_in_collections( asset_library.mesh_item_find_collections(data.ids[i]) ,0)
 				if len(single_item_collections) == 1:
@@ -130,10 +122,11 @@ static func glb_update_objects(scene:Array, glb_path):
 						
 			var packed_scene:PackedScene = PackedScene.new()
 			packed_scene.pack(object)
-			ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")
-		else: #if "static_body" in extras:			
-			var collection_id = asset_library.collection_get_id(object.name.split(".")[0])
-			#var collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1			
+			ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")			
+			for node:Node in nodes_to_delete:
+				node.queue_free()
+		else: 
+			var collection_id = asset_library.collection_get_id(object.name.split(".")[0])			
 			if collection_id == -1:			
 				print("collection ", object.name.split(".")[0], " does not exist yet")
 				if "glb" in extras:					
@@ -147,7 +140,7 @@ static func glb_update_objects(scene:Array, glb_path):
 			var mesh_children = []						
 			asset_library.collection_remove_all_items(collection_id)
 			for child in object.get_children():
-				if child is ImporterMeshInstance3D:
+				if "_lod_" in child.name:
 					mesh_children.push_back(child)					
 				else:
 					var child_extras = child.get_meta_list()
@@ -160,7 +153,15 @@ static func glb_update_objects(scene:Array, glb_path):
 			var data = import_mesh_item_from_nodes(mesh_children)			
 			for i in data.ids.size():				
 				asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])					
-	asset_library.save()
+	var popup = Window.new()
+	popup.wrap_controls = true	
+	EditorInterface.get_editor_main_screen().add_child(popup)
+	var panel = preload("res://addons/m_terrain/asset_manager/ui/import_window.tscn").instantiate()
+	panel.file_name = glb_path
+	panel.nodes	= scene
+	popup.add_child(panel)
+	popup.popup_centered(Vector2i(600,480))
+	#asset_library.save()
 	
 static func import_mesh_item_from_nodes(nodes, ignore_transform = true):	
 	var asset_library := MAssetTable.get_singleton()
@@ -169,11 +170,6 @@ static func import_mesh_item_from_nodes(nodes, ignore_transform = true):
 	var mesh_item_transforms = []
 	var sibling_ids = []
 		
-	var material_table:MMaterialTable = MMaterialTable.get_singleton()
-	var material_ids = []
-	var existing_material_hashes = {}
-	for material_id in material_table.table:		
-		existing_material_hashes[hash_material( load(material_table.table[material_id]) )] = material_id
 	for child:Node in nodes:			
 		if not child.get_parent(): continue				
 		if "_lod_" in child.name:				
@@ -186,97 +182,48 @@ static func import_mesh_item_from_nodes(nodes, ignore_transform = true):
 					continue							
 				#print("mesh lod first but: ", child.name, " in ", all_mesh_lod_nodes)
 				sibling_ids.push_back(child.get_index())
-				var mesh_hash_array = []				
-				var mesh_hash_index_array = []
+				var mesh_item_array = []								
 				var meshes = []						
 				#Save Meshes using hash
 				for mesh_node in all_mesh_lod_nodes:					
 					var current_lod = int(mesh_node.name.to_lower().split("_lod_")[1])
-					var mesh
+					var mesh:Mesh
 					if mesh_node is MeshInstance3D:
 						mesh = mesh_node.mesh 
 					elif mesh_node is ImporterMeshInstance3D:
 						mesh = mesh_node.mesh.get_mesh()						
 					else:						
-						mesh = null
-					var mesh_hash = 0
-					var mesh_index = 0				
-					if mesh:												
-						var all_surfaces = []
-						for i in mesh.get_surface_count():
-							all_surfaces.push_back(mesh.surface_get_arrays(i))
-						mesh_hash = hash(all_surfaces)																					
-						var mesh_save_path = MHlod.get_mesh_path(mesh_hash,mesh_index)										
-						while FileAccess.file_exists(mesh_save_path):
-							var existing_mesh = load(mesh_save_path)						
-							var existing_mesh_hash = hash_mesh(existing_mesh)
-							if existing_mesh_hash == mesh_hash:	#same mesh -> overwrite
-								mesh = existing_mesh								
-								break 
-							else:
-								mesh_index += 1
-								mesh_save_path = MHlod.get_mesh_path(mesh_hash,mesh_index)					
-						mesh.resource_path = mesh_save_path
-						ResourceSaver.save(mesh, mesh_save_path)
-											
-					while len(mesh_hash_array) < current_lod:
-						if len(mesh_hash_array) == 0:
-							mesh_hash_array.push_back(0)
-							mesh_hash_index_array.push_back(0)
-							material_ids.push_back(-1)
+						mesh = null					
+					if mesh:																																
+						var mesh_save_path = asset_library.mesh_get_path(mesh)																
+						if FileAccess.file_exists(mesh_save_path):
+							mesh.take_over_path(mesh_save_path)
 						else:
-							mesh_hash_array.push_back(mesh_hash_array.back())
-							mesh_hash_index_array.push_back(mesh_hash_index_array.back())
-							material_ids.push_back(material_ids.back())
-					mesh_hash_array.push_back(mesh_hash)
-					mesh_hash_index_array.push_back(mesh_index)
+							ResourceSaver.save(mesh, mesh_save_path)
+											
+					while len(mesh_item_array) < current_lod:
+						if len(mesh_item_array) == 0:
+							mesh_item_array.push_back(0)							
+							#material_ids.push_back(-1)
+						else:
+							mesh_item_array.push_back(mesh_item_array.back())							
+							#material_ids.push_back(material_ids.back())
+					mesh_item_array.push_back(asset_library.mesh_get_id(mesh))					
 					meshes.push_back(mesh)
-					
-					#Deal with materials					
-					
-					if mesh_node.has_meta("material_id"):						
-						var material_id = mesh_node.get_meta("material_id")
-						if int(material_id) in material_table.table:
-							material_ids.push_back( material_id )
-							print("added material ", material_id)
-						else:		
-							print(material_id, " not in ", material_table.table, "\n", material_table.table.keys())	
-							material_ids.push_back(-1)				
-							push_error("mesh is trying to use material_id ", material_id, " from material table, but id doesn't exist")
-					elif mesh is Mesh and mesh.get_surface_count() == 1:						
-						var material:StandardMaterial3D = mesh.surface_get_material(0)									
-						var material_hash = hash_material(material)												
-						if material_hash in existing_material_hashes:
-							var material_id = existing_material_hashes[material_hash ]
-							material_ids.push_back( material_id )
-							mesh.surface_set_material(0, load(material_table.table[material_id]))
-						elif false:  #if name exists in material table, use that material
-							pass
-						else:							
-							if material.resource_name == "":
-								material.resource_name = str("material_", material_hash)
-							var path = "res://masset/materials/" + material.resource_name + ".tres"
-							ResourceSaver.save(material, path)							
-							material_ids.push_back(material_table.add_material(path))						
-					else:
-						material_ids.push_back(-1)
-					
-								
+																							
 				#Fill empty lod with last mesh
-				var last_mesh = mesh_hash_array[-1]
-				while mesh_hash_array.size() < LOD_COUNT:
-					mesh_hash_array.push_back(mesh_hash_array[-1])
-					mesh_hash_index_array.push_back(mesh_hash_index_array[-1])
-					material_ids.push_back(material_ids[-1])
+				var last_mesh = mesh_item_array[-1]
+				while mesh_item_array.size() < LOD_COUNT:
+					mesh_item_array.push_back(mesh_item_array[-1])					
 							
 				#Add Mesh Item								
-				var mesh_item_id = asset_library.mesh_item_find_by_info(mesh_hash_array, mesh_hash_index_array, material_ids)
-				print(material_ids)
+				var material_ids = mesh_item_array.map(func(a): return -1)
+				var mesh_item_id = asset_library.mesh_item_find_by_info( mesh_item_array, material_ids)				
 				if mesh_item_id == -1:
 					#print("doesn't have mesh item")
-					mesh_item_id = asset_library.mesh_item_add(mesh_hash_array, mesh_hash_index_array, material_ids)										
+					mesh_item_id = asset_library.mesh_item_add( mesh_item_array, material_ids)										
 				else:	
-					asset_library.mesh_item_update(mesh_item_id, mesh_hash_array, mesh_hash_index_array, material_ids)		
+					asset_library.mesh_item_update(mesh_item_id, mesh_item_array, material_ids)		
 					print("has mesh item ", mesh_item_id)
 				mesh_item_ids.push_back(mesh_item_id)				
 				mesh_item_names.push_back(child.name.split("_lod_")[0].to_lower())
@@ -299,46 +246,32 @@ static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
 	if asset_library.has_mesh_item(mesh_id):
 		var meshes = []	
 		var data = asset_library.mesh_item_get_info(mesh_id)		
-		for mesh_hash in data.mesh:		
-			var mesh_index = 0 #TODO replace with mesh index from mesh_item_get_info
-			var path = MHlod.get_mesh_path(mesh_hash,mesh_index)
+		for mesh_resource_id in data.mesh:					
+			var path = MHlod.get_mesh_path(mesh_resource_id)
 			if FileAccess.file_exists(path):
 				meshes.push_back(load(path))
 			else:
 				meshes.push_back(null)
 		return meshes
 		
-static func mesh_item_save_from_resources(mesh_id, meshes, material_ids)->int:	
+static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->int:	
 	var asset_library = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
-	var mesh_hash_array = []	
+	var mesh_item_array = []	
 	var mesh_hash_index_array = []	
 	
-	for mesh in meshes:		
-		var mesh_hash_index = 0		
-		var mesh_hash = hash_mesh(mesh)
-		var is_saved = false
-		while not is_saved:
-			var mesh_save_path = MHlod.get_mesh_path(mesh_hash,mesh_hash_index)
-			if not FileAccess.file_exists(mesh_save_path): #File doesn't exist yet
-				mesh.resource_path = mesh_save_path
-				ResourceSaver.save(mesh, mesh_save_path)
-				mesh_hash_index_array.push_back(mesh_hash_index)
-				is_saved = true				
-			else:			
-				var existing_mesh = load(mesh_save_path)			
-				var existing_mesh_hash = hash_mesh(existing_mesh)						
-				if existing_mesh_hash == mesh_hash: #File exists, meshes are identical
-					mesh_hash_index_array.push_back(mesh_hash_index)
-					is_saved = true
-				else:	#Hash collision: File exist, different mesh
-					mesh_hash_index += 1					
-		mesh_hash_array.push_back(mesh_hash)
+	for mesh:Mesh in meshes:								
+		var mesh_save_path = asset_library.mesh_get_path(mesh)
+		if FileAccess.file_exists(mesh_save_path): 
+			mesh.take_over_path(mesh_save_path)
+		else:				
+			ResourceSaver.save(mesh, mesh_save_path)													
+		mesh_item_array.push_back(asset_library.mesh_get_id(mesh))
 			
-	if asset_library.has_mesh_item(mesh_id):
-		asset_library.mesh_item_update(mesh_id, mesh_hash_array, mesh_hash_index_array, material_ids )
+	if asset_library.has_mesh_item(mesh_item_id):
+		asset_library.mesh_item_update(mesh_item_id, mesh_item_array, material_ids )
 	else:
-		mesh_id = asset_library.mesh_item_add(mesh_hash_array, mesh_hash_index_array, material_ids )
-	return mesh_id
+		mesh_item_id = asset_library.mesh_item_add(mesh_item_array, material_ids )
+	return mesh_item_id
 
 static func hash_mesh(mesh):
 	var all_surfaces = []

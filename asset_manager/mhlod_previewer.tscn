@@ -1,10 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://byq2krnjsg1oc"]
+[gd_scene load_steps=2 format=3 uid="uid://byq2krnjsg1oc"]
 
-[ext_resource type="MHlod" uid="uid://bhwptwavvucij" path="res://massets/baked_wall_1.res" id="1_33tk2"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/m_hlod_previewer.gd" id="1_p66ot"]
 
 [node name="MHlodScene" type="MHlodScene"]
-hlod = ExtResource("1_33tk2")
 script = ExtResource("1_p66ot")
 
 [node name="MHlodScene" type="MHlodScene" parent="."]
