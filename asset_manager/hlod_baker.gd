@@ -72,9 +72,7 @@ func bake_to_hlod_resource():
 	hlod.set_baker_path(scene_file_path)
 	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):
 		if not child.has_meta("mesh_id"): continue
-		var mesh_item_info = asset_library.mesh_item_get_info(child.get_meta("mesh_id"))
-		var mesh_hash_array = Array(mesh_item_info.mesh).map(func(a): return int(a))		
-		var mesh_hash_index = Array(mesh_item_info.mesh_index).map(func(a): return int(a))		
+		var mesh_item_info = asset_library.mesh_item_get_info(child.get_meta("mesh_id"))		
 		var arr := Array()
 		arr.resize(len(mesh_item_info.mesh))
 		arr.fill(0)
