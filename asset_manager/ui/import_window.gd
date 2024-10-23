@@ -9,13 +9,17 @@ extends PanelContainer
 var file_name = "file.glb"
 var nodes: Array
 func _ready():	
-	import_label.text = "Importing " + file_name.split("/")[-1]
+	import_label.text = "Importing " + file_name.split("/")[-1]	
+	if get_parent() is Window:
+		get_parent().close_requested.connect(get_parent().queue_free)
 	cancel_button.pressed.connect(func():
 		if get_parent() is Window:
 			get_parent().queue_free()
 	)
 	import_button.pressed.connect(func():
 		MAssetTable.get_singleton().save()		
+		if get_parent() is Window:
+			get_parent().queue_free()
 	)
 	for child in node_container.get_children():
 		node_container.remove_child(child)
