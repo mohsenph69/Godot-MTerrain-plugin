@@ -28,7 +28,7 @@ func _ready():
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1
 	%JoinLod.value_changed.connect(func(value): 
 		object.join_at_lod = value
-		%Join.disabled = not %joined_mesh_export_path.text.ends_with(".glb") or object.join_at_lod == -1
+		%Join.disabled = not can_join_mesh() 
 	)	
 	%Join.pressed.connect(func():		
 		var root_node = Node3D.new()
@@ -58,7 +58,7 @@ func _ready():
 	%joined_mesh_export_path.text = object.joined_mesh_export_path
 	%joined_mesh_export_path.text_changed.connect(func(text):
 		object.joined_mesh_export_path = text
-		%Join.disabled = not %joined_mesh_export_path.text.ends_with(".glb") or object.join_at_lod == -1
+		%Join.disabled = not can_join_mesh()
 	)
 	%select_joined_mesh_export_path.pressed.connect(func():
 		var popup := FileDialog.new()
@@ -92,4 +92,8 @@ func _ready():
 	%Export.disabled = not object.export_path.ends_with(".glb")
 	%Export.pressed.connect(AssetIO.glb_export.bind(object, object.export_path))
 	
+func can_join_mesh():
+	if not %joined_mesh_export_path.text.ends_with(".glb") or object.join_at_lod == -1 or len(object.meshes_to_join) == 0:
+		return false
+	return true
 	

@@ -3,63 +3,62 @@
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_pnagl"]
 [ext_resource type="ArrayMesh" uid="uid://cj5x5pxtc18wi" path="res://massets/meshes/1989727880.res" id="2_tqyff"]
 
-[sub_resource type="MMeshLod" id="MMeshLod_cnt44"]
+[sub_resource type="MMeshLod" id="MMeshLod_b21f6"]
 meshes = Array[Mesh]([null, null, null, ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff")])
 lod_count = 8
 
 [node name="House1_hlod" type="Node3D" node_paths=PackedStringArray("joined_mesh_node", "meshes_to_join")]
 script = ExtResource("1_pnagl")
-join_at_lod = 3
-joined_mesh_node = NodePath("house1_hlod_joined_mesh*")
+joined_mesh_node = NodePath("house1_hlod_joined_mesh")
 bake_path = "res://massets/House1_hlod.res"
 joined_mesh_export_path = "res://massets/House1_hlod_joined_mesh.glb"
 export_path = "res://massets/House1_hlod.glb"
-meshes_to_join = [NodePath("Sphere1_002")]
+meshes_to_join = [null]
 metadata/extras = true
 metadata/hlod_id = 0.0
 
-[node name="Sphere1_002" type="Node3D" parent="."]
+[node name="Sphere1_003" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0325475, 4.37643, 0)
 metadata/collection_id = 4
 metadata/max_lod = 2
 
-[node name="Table1_005" type="Node3D" parent="."]
+[node name="Table1_009" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.36793, 0, 0)
 metadata/collection_id = 6
 
-[node name="Table1_006" type="Node3D" parent="."]
+[node name="Table1_010" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.46363, 0, 0)
 metadata/collection_id = 6
 
-[node name="Table1_007" type="Node3D" parent="."]
+[node name="Table1_011" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, -5.59739)
 metadata/collection_id = 6
 
-[node name="Table1_008" type="Node3D" parent="."]
+[node name="Table1_012" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, 5.32449)
 metadata/collection_id = 6
 
-[node name="Wall1_006" type="Node3D" parent="."]
+[node name="Wall1_011" type="Node3D" parent="."]
 transform = Transform3D(9.30696, 0, 0, 0, 1, 0, 0, 0, 1, 1.08067, 0, -8.67685)
 metadata/collection_id = 2
 
-[node name="Wall1_007" type="Node3D" parent="."]
+[node name="Wall1_012" type="Node3D" parent="."]
 transform = Transform3D(10.2671, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.35473)
 metadata/collection_id = 2
 
-[node name="Wall1_008" type="Node3D" parent="."]
+[node name="Wall1_013" type="Node3D" parent="."]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, -10.0452, 0, 0)
 metadata/collection_id = 2
 
-[node name="Wall1_009" type="Node3D" parent="."]
+[node name="Wall1_014" type="Node3D" parent="."]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, 10.3008, 0, 0)
 metadata/collection_id = 2
 
-[node name="Wall1_010" type="Node3D" parent="."]
+[node name="Wall1_015" type="Node3D" parent="."]
 transform = Transform3D(0, 0, 107.291, 0, 0.149278, 0, -10.2671, 0, 0, 0, 0, 0)
 metadata/collection_id = 2
 
-[node name="house1_hlod_joined_mesh*" type="MAssetMesh" parent="."]
-meshes = SubResource("MMeshLod_cnt44")
+[node name="house1_hlod_joined_mesh" type="MAssetMesh" parent="."]
+meshes = SubResource("MMeshLod_b21f6")
 metadata/mesh_id = 6
 metadata/collection_id = 0

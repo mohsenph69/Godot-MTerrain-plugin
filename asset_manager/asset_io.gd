@@ -86,51 +86,7 @@ static func glb_update_objects(scene:Array, glb_path):
 				object.name += "_lod_0"
 			var data = import_mesh_item_from_nodes([object])													
 		elif object.name.ends_with("_hlod"):							
-			object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))											
-			var mesh_children = []
-			for child in object.get_children():				
-				child.owner = object
-				if child is ImporterMeshInstance3D:
-					mesh_children.push_back(child)					
-				else:
-					#Check if collection exists
-					var collection_name = child.name.left(len(child.name) - len(child.name.split("_")[-1])-1)
-					var collection_id = asset_library.collection_get_id( collection_name.to_lower())
-					if collection_id != -1:						
-						object.remove_child(child)
-						var node = collection_instantiate(collection_id)												
-						object.add_child(node)
-						node.transform = child.transform
-						node.owner = object
-						node.set_meta("collection_id", collection_id)
-						node.name = child.name
-						child.queue_free()
-					elif "_hlod" in child.name:
-						var node = MHlodScene.new()
-						#node.hlod = load()
-						child.add_sibling(node)
-						child.get_parent().remove_child(child)						
-						node.name = child.name
-						node.owner = object
-						child.queue_free()													
-			var data = import_mesh_item_from_nodes(mesh_children)			
-			var nodes_to_delete = []
-			for child in mesh_children:
-				child.owner = null
-				nodes_to_delete.push_back(child)
-			for i in data.ids.size():				
-				var single_item_collections = asset_library.tag_get_collections_in_collections( asset_library.mesh_item_find_collections(data.ids[i]) ,0)
-				if len(single_item_collections) == 1:
-					var node = collection_instantiate(single_item_collections[0])
-					object.add_child(node)
-					object.move_child(node, data.sibling_ids[i])
-					node.owner = object
-						
-			var packed_scene:PackedScene = PackedScene.new()
-			packed_scene.pack(object)
-			ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")			
-			for node:Node in nodes_to_delete:
-				node.queue_free()
+			convert_node_to_hlod_baker(object)			
 		else: 
 			var collection_name = object.name.left(len(object.name) - len(object.name.split("_")[-1])-1)
 			var collection_id = asset_library.collection_get_id(collection_name)			
@@ -142,8 +98,7 @@ static func glb_update_objects(scene:Array, glb_path):
 					collection_name = collection_name.to_lower()
 					collection_id = asset_library.collection_get_id(collection_name)
 					if collection_id == -1:
-						collection_id = asset_library.collection_create(collection_name)			
-			
+						collection_id = asset_library.collection_create(collection_name)						
 			object.set_meta("collection_id", collection_id)
 			var mesh_children = []						
 			asset_library.collection_remove_all_items(collection_id)
@@ -170,7 +125,55 @@ static func glb_update_objects(scene:Array, glb_path):
 	popup.add_child(panel)
 	popup.popup_centered(Vector2i(600,480))
 	#asset_library.save()
-	
+
+static func convert_node_to_hlod_baker(object):
+	var asset_library = MAssetTable.get_singleton()
+	object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))											
+	var mesh_children = []
+	for child in object.get_children():				
+		child.owner = object
+		if child is ImporterMeshInstance3D:
+			mesh_children.push_back(child)					
+		else:
+			#Check if collection exists
+			var collection_name = child.name.left(len(child.name) - len(child.name.split("_")[-1])-1)
+			var collection_id = asset_library.collection_get_id( collection_name.to_lower())
+			if collection_id != -1:						
+				object.remove_child(child)
+				var node = collection_instantiate(collection_id)												
+				object.add_child(node)
+				node.transform = child.transform
+				node.owner = object
+				node.set_meta("collection_id", collection_id)
+				node.name = child.name
+				child.queue_free()
+			elif "_hlod" in child.name:
+				var node = MHlodScene.new()
+				#node.hlod = load()
+				child.add_sibling(node)
+				child.get_parent().remove_child(child)						
+				node.name = child.name
+				node.owner = object
+				child.queue_free()													
+	var data = import_mesh_item_from_nodes(mesh_children)			
+	var nodes_to_delete = []
+	for child in mesh_children:
+		child.owner = null
+		nodes_to_delete.push_back(child)
+	for i in data.ids.size():				
+		var single_item_collections = asset_library.tag_get_collections_in_collections( asset_library.mesh_item_find_collections(data.ids[i]) ,0)
+		if len(single_item_collections) == 1:
+			var node = collection_instantiate(single_item_collections[0])
+			object.add_child(node)
+			object.move_child(node, data.sibling_ids[i])
+			node.owner = object
+				
+	var packed_scene:PackedScene = PackedScene.new()
+	packed_scene.pack(object)
+	ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")			
+	for node:Node in nodes_to_delete:
+		node.queue_free()
+
 static func import_mesh_item_from_nodes(nodes, ignore_transform = true):	
 	var asset_library := MAssetTable.get_singleton()
 	var mesh_item_ids = []
