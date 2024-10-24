@@ -31,14 +31,14 @@ func _ready():
 		%Join.disabled = not %joined_mesh_export_path.text.ends_with(".glb") or object.join_at_lod == -1
 	)	
 	%Join.pressed.connect(func():		
-		var node = Node3D.new()
+		var root_node = Node3D.new()
 		var mesh_instance = MeshInstance3D.new()
-		node.add_child(mesh_instance)
+		root_node.add_child(mesh_instance)
 		
 		mesh_instance.name = object.name.to_lower() + "_joined_mesh_lod_" + str(object.join_at_lod)
 		mesh_instance.mesh = object.make_joined_mesh()				
 		mesh_instance.mesh.resource_name = mesh_instance.name		
-		AssetIO.glb_export(node, object.joined_mesh_export_path)
+		AssetIO.glb_export(root_node, object.joined_mesh_export_path)
 		AssetIO.glb_load(object.joined_mesh_export_path)
 		var collection_name = object.name.to_lower() + "_joined_mesh"
 		var collection_id = MAssetTable.get_singleton().collection_get_id(collection_name)
@@ -50,8 +50,9 @@ func _ready():
 				current_joined_mesh_node.queue_free()
 			object.add_child(joined_mesh_collection)
 			joined_mesh_collection.owner = object				
-		
-		object.update_joined_mesh(mesh_instance.mesh)
+			object.joined_mesh_node = joined_mesh_collection
+			for node in object.meshes_to_join:
+				node.set_meta("max_lod", object.join_at_lod-1 )		
 	)
 	
 	%joined_mesh_export_path.text = object.joined_mesh_export_path

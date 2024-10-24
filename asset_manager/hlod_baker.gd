@@ -2,12 +2,7 @@
 class_name HLod_Baker extends Node3D
 
 @export_storage var join_at_lod: int = -1
-@export var joined_mesh: MMeshLod:
-	get():
-		if not is_instance_valid(joined_mesh):
-			joined_mesh = MMeshLod.new()
-			joined_mesh.meshes.resize(AssetIO.LOD_COUNT)
-		return joined_mesh
+@export var joined_mesh_node: MAssetMesh
 		
 @export_storage var bake_path = "res://massets/":
 	get():
@@ -62,15 +57,12 @@ func make_joined_mesh():
 		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))
 	mesh_joiner.insert_mesh_data(all_mesh_nodes.map(func(a:MAssetMesh): return a.meshes.meshes[0]), all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
 	return mesh_joiner.join_meshes()					
-				
-func update_joined_mesh(mesh = make_joined_mesh()):
-	joined_mesh.meshes[join_at_lod] = mesh 
-	
+					
 func bake_to_hlod_resource():	
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var hlod := MHlod.new()
 	hlod.set_baker_path(scene_file_path)
-	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):
+	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):		
 		if not child.has_meta("mesh_id"): continue
 		var mesh_item_info = asset_library.mesh_item_get_info(child.get_meta("mesh_id"))		
 		var arr := Array()
@@ -78,7 +70,7 @@ func bake_to_hlod_resource():
 		arr.fill(0)
 		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.material, arr, arr, 1 )
 		var i = 0
-		var max_lod = child.get_meta("max_lod") if child.has_meta("max_lod") else AssetIO.LOD_COUNT
+		var max_lod = child.get_meta("max_lod") if child.has_meta("max_lod") else AssetIO.LOD_COUNT		
 		while i < max_lod:
 			hlod.insert_item_in_lod_table(mesh_id, i)
 			i += 1
