@@ -113,7 +113,7 @@ func import_gltf(path):
 	asset_library.notify_property_list_changed()
 			
 func regroup(category = "None", filtered_collections = asset_library.collection_get_list()):	
-	filtered_collections = Array(filtered_collections).filter(func(a): return not a in asset_library.tag_get_collections(0))
+	#filtered_collections = Array(filtered_collections).filter(func(a): return not a in asset_library.tag_get_collections(0))
 	if current_category != category:		
 		for child in groups.get_children():
 			groups.remove_child(child)

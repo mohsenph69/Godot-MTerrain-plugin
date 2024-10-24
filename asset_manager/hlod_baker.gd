@@ -18,7 +18,7 @@ class_name HLod_Baker extends Node3D
 @export_storage var joined_mesh_export_path = "res://massets/":
 	get():		
 		if not joined_mesh_export_path.ends_with(".glb"):
-			joined_mesh_export_path = joined_mesh_export_path + name + ".glb"
+			joined_mesh_export_path = joined_mesh_export_path + name + "_joined_mesh.glb"
 		return joined_mesh_export_path
 
 @export_storage var export_path = "res://massets/":

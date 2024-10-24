@@ -47,6 +47,21 @@ text = "Join Meshes"
 label_settings = SubResource("LabelSettings_1f66q")
 horizontal_alignment = 1
 
+[node name="HBoxContainer4" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="joined_mesh_export_path" type="LineEdit" parent="HBoxContainer4"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="select_joined_mesh_export_path" type="Button" parent="HBoxContainer4"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+icon = ExtResource("2_cvmba")
+expand_icon = true
+
 [node name="HBoxContainer3" type="HBoxContainer" parent="."]
 layout_mode = 2
 
@@ -66,26 +81,6 @@ value = -1.0
 unique_name_in_owner = true
 layout_mode = 2
 text = "Join Meshes"
-
-[node name="HBoxContainer4" type="HBoxContainer" parent="."]
-layout_mode = 2
-
-[node name="joined_mesh_export_path" type="LineEdit" parent="HBoxContainer4"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="select_joined_mesh_export_path" type="Button" parent="HBoxContainer4"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-icon = ExtResource("2_cvmba")
-expand_icon = true
-
-[node name="export_joined_meshes" type="Button" parent="HBoxContainer4"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Export"
 
 [node name="Label3" type="Label" parent="."]
 layout_mode = 2

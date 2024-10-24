@@ -52,7 +52,7 @@ static func glb_load(path):
 		GLTFDocument.register_gltf_document_extension(GLTFExtras.new())
 	var gltf_state = GLTFState.new()	
 	gltf_document.append_from_file(path,gltf_state)		
-	var scene = gltf_document.generate_scene(gltf_state).get_children()	
+	var scene = gltf_document.generate_scene(gltf_state).get_children()		
 	glb_update_objects(scene, path)
 	
 #Load glb file with sub-scenes and recursive loading
@@ -84,8 +84,8 @@ static func glb_update_objects(scene:Array, glb_path):
 			#Import as mesh asset with single lod, ignore transform
 			if not "_lod_" in object.name:
 				object.name += "_lod_0"
-			var data = import_mesh_item_from_nodes([object])												
-		elif "_hlod" in object.name:							
+			var data = import_mesh_item_from_nodes([object])													
+		elif object.name.ends_with("_hlod"):							
 			object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))											
 			var mesh_children = []
 			for child in object.get_children():				
@@ -94,11 +94,17 @@ static func glb_update_objects(scene:Array, glb_path):
 					mesh_children.push_back(child)					
 				else:
 					#Check if collection exists
-					var collection_id = asset_library.collection_get_id( child.name.split(".")[0] )
+					var collection_name = child.name.left(len(child.name) - len(child.name.split("_")[-1])-1)
+					var collection_id = asset_library.collection_get_id( collection_name.to_lower())
 					if collection_id != -1:						
-						var node = collection_instantiate(collection_id)						
+						object.remove_child(child)
+						var node = collection_instantiate(collection_id)												
 						object.add_child(node)
+						node.transform = child.transform
 						node.owner = object
+						node.set_meta("collection_id", collection_id)
+						node.name = child.name
+						child.queue_free()
 					elif "_hlod" in child.name:
 						var node = MHlodScene.new()
 						#node.hlod = load()
@@ -106,7 +112,7 @@ static func glb_update_objects(scene:Array, glb_path):
 						child.get_parent().remove_child(child)						
 						node.name = child.name
 						node.owner = object
-						child.queue_free()						
+						child.queue_free()													
 			var data = import_mesh_item_from_nodes(mesh_children)			
 			var nodes_to_delete = []
 			for child in mesh_children:
@@ -126,17 +132,19 @@ static func glb_update_objects(scene:Array, glb_path):
 			for node:Node in nodes_to_delete:
 				node.queue_free()
 		else: 
-			var collection_id = asset_library.collection_get_id(object.name.split(".")[0])			
+			var collection_name = object.name.left(len(object.name) - len(object.name.split("_")[-1])-1)
+			var collection_id = asset_library.collection_get_id(collection_name)			
 			if collection_id == -1:			
-				print("collection ", object.name.split(".")[0], " does not exist yet")
-				if "glb" in extras:					
-					collection_id = asset_library.collection_get_id(glb_get_root_node_name("res://addons/m_terrain/asset_manager/example_asset_library/export/" + object.get_meta("glb")))
+				print("collection ", collection_name, " does not exist yet")
+				#if "glb" in extras:					
+				#	collection_id = asset_library.collection_get_id(glb_get_root_node_name("res://addons/m_terrain/asset_manager/example_asset_library/export/" + object.get_meta("glb")))
 				if collection_id == -1:									
-					var collection_name = object.name.to_lower()
+					collection_name = collection_name.to_lower()
 					collection_id = asset_library.collection_get_id(collection_name)
 					if collection_id == -1:
 						collection_id = asset_library.collection_create(collection_name)			
-						
+			
+			object.set_meta("collection_id", collection_id)
 			var mesh_children = []						
 			asset_library.collection_remove_all_items(collection_id)
 			for child in object.get_children():
@@ -230,14 +238,19 @@ static func import_mesh_item_from_nodes(nodes, ignore_transform = true):
 				mesh_item_transforms.push_back(child.transform)
 	#Create single item collections	
 	for i in mesh_item_ids.size():
-		var name = mesh_item_names[i] + "_mesh"		
-		var collection_ids = asset_library.tag_get_collections_in_collections(asset_library.mesh_item_find_collections(mesh_item_ids[i]),0)
-		if collection_ids.size() == 0:
-			var collection_id = collection_ids
+		var name = mesh_item_names[i] + "_mesh" if not mesh_item_names[i].ends_with("_mesh") else mesh_item_names[i]
+		var collection_id = asset_library.collection_get_id(name)
+		print(collection_id, " is the single item collection id for ", name)
+		#var collection_ids = asset_library.tag_get_collections_in_collections(asset_library.mesh_item_find_collections(mesh_item_ids[i]),0)
+		if collection_id == -1:
+		#if collection_ids.size() == 0:
+			#var collection_id = collection_ids
 			collection_id = asset_library.collection_create(name)			
 			asset_library.collection_add_tag(collection_id,0)			
-			var transform = Transform3D() if ignore_transform else mesh_item_transforms[i]
-			asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], transform)
+		asset_library.collection_remove_all_items(collection_id)
+		var transform = Transform3D() if ignore_transform else mesh_item_transforms[i]
+		asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], transform)
+		
 	return {"ids":mesh_item_ids, "transforms": mesh_item_transforms, "sibling_ids": sibling_ids}
 #endregion
 #region Mesh Item

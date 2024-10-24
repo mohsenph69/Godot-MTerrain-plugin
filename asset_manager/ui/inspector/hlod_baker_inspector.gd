@@ -28,14 +28,36 @@ func _ready():
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1
 	%JoinLod.value_changed.connect(func(value): 
 		object.join_at_lod = value
-		%Join.disabled = value == -1
+		%Join.disabled = not %joined_mesh_export_path.text.ends_with(".glb") or object.join_at_lod == -1
 	)	
-	%Join.pressed.connect(object.update_joined_mesh)
+	%Join.pressed.connect(func():		
+		var node = Node3D.new()
+		var mesh_instance = MeshInstance3D.new()
+		node.add_child(mesh_instance)
+		
+		mesh_instance.name = object.name.to_lower() + "_joined_mesh_lod_" + str(object.join_at_lod)
+		mesh_instance.mesh = object.make_joined_mesh()				
+		mesh_instance.mesh.resource_name = mesh_instance.name		
+		AssetIO.glb_export(node, object.joined_mesh_export_path)
+		AssetIO.glb_load(object.joined_mesh_export_path)
+		var collection_name = object.name.to_lower() + "_joined_mesh"
+		var collection_id = MAssetTable.get_singleton().collection_get_id(collection_name)
+		if collection_id != -1:
+			var joined_mesh_collection = AssetIO.collection_instantiate(collection_id)
+			var current_joined_mesh_node = object.find_child(joined_mesh_collection.name + "*")
+			if is_instance_valid(current_joined_mesh_node):
+				object.remove_child(current_joined_mesh_node)
+				current_joined_mesh_node.queue_free()
+			object.add_child(joined_mesh_collection)
+			joined_mesh_collection.owner = object				
+		
+		object.update_joined_mesh(mesh_instance.mesh)
+	)
 	
 	%joined_mesh_export_path.text = object.joined_mesh_export_path
 	%joined_mesh_export_path.text_changed.connect(func(text):
 		object.joined_mesh_export_path = text
-		%export_joined_meshes.disabled = not text.ends_with(".glb")
+		%Join.disabled = not %joined_mesh_export_path.text.ends_with(".glb") or object.join_at_lod == -1
 	)
 	%select_joined_mesh_export_path.pressed.connect(func():
 		var popup := FileDialog.new()
@@ -48,13 +70,6 @@ func _ready():
 		)
 		add_child(popup)	
 		popup.popup_centered(Vector2i(300,500))		
-	)
-	%export_joined_meshes.pressed.connect(func():
-		var mesh_instance = MeshInstance3D.new()
-		mesh_instance.mesh = object.make_joined_mesh()
-		mesh_instance.name = object.name
-		AssetIO.glb_export(mesh_instance, object.joined_mesh_export_path)
-		EditorInterface.get_resource_filesystem().scan()
 	)	
 	
 	%export_path.text = object.export_path
