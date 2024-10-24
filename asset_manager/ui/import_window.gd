@@ -7,7 +7,7 @@ extends PanelContainer
 @onready var node_container = find_child("node_container")
 
 var file_name = "file.glb"
-var nodes: Array
+var collections_to_import: Dictionary
 func _ready():	
 	import_label.text = "Importing " + file_name.split("/")[-1]	
 	if get_parent() is Window:
@@ -17,7 +17,8 @@ func _ready():
 			get_parent().queue_free()
 	)
 	import_button.pressed.connect(func():
-		MAssetTable.get_singleton().save()		
+		AssetIO.glb_import_collections(collections_to_import)
+		
 		if get_parent() is Window:
 			get_parent().queue_free()
 	)
@@ -29,22 +30,23 @@ func _ready():
 	import_how.add_item("new")
 	import_how.add_item("overwrite")
 	import_how.add_item("ignore")	
-	var add_import_item = func(node):		
-		var hbox = HBoxContainer.new()
+	var add_import_item = func(collection_name, collection, indent = 0):		
+		var hbox = HBoxContainer.new()		
 		var label = Label.new()
 		hbox.add_child(label)
 		import_how.select(0)
-		if MAssetTable.get_singleton().collection_get_id(node.name.split("_")[0]) != -1:
+		if MAssetTable.get_singleton().collection_get_id(collection_name) != -1:
 			import_how.select(1)		
-		hbox.add_child(import_how.duplicate())
-		
-		label.text = node.name
+		hbox.add_child(import_how.duplicate())		
+		var prefix = ""
+		for i in indent:
+			prefix += "\u2014 "
+		label.text = prefix + collection_name		
 		node_container.add_child(hbox)
-	for node:Node in nodes:
-		if node is ImporterMeshInstance3D: continue
-		add_import_item.call(node)
-		for node1:Node in node.get_children():
-			if node1 is ImporterMeshInstance3D: continue			
-			add_import_item.call(node1)
+	for collection_name in collections_to_import.keys():		
+		add_import_item.call(collection_name, collections_to_import[collection_name])
+		if not "collections" in collections_to_import[collection_name]: continue
+		for sub_collection_name in collections_to_import[collection_name].collections.keys():			
+			add_import_item.call(sub_collection_name, collections_to_import[collection_name].collections, 1)
 		
 		

@@ -31,23 +31,6 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/node_container"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/node_container/HBoxContainer"]
-layout_mode = 2
-text = "Node name"
-
-[node name="OptionButton" type="OptionButton" parent="MarginContainer/VBoxContainer/node_container/HBoxContainer"]
-layout_mode = 2
-selected = 0
-item_count = 3
-popup/item_0/text = "New"
-popup/item_1/text = "Overwrite"
-popup/item_1/id = 1
-popup/item_2/text = "Ignore"
-popup/item_2/id = 2
-
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 8

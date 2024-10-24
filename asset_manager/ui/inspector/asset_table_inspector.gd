@@ -29,6 +29,7 @@ func _ready():
 		mesh_node.find_child("remove").pressed.connect(func():
 			asset_library.remove_mesh_item(mesh_item_id)
 			asset_library.notify_property_list_changed()
+			asset_library.save()
 		)		
 		mesh_node.find_child("meshes").text = str(asset_library.mesh_item_get_info(mesh_item_id))
 		
@@ -53,11 +54,15 @@ func _ready():
 			else:
 				name_node.text += "!"
 			asset_library.notify_property_list_changed()
+			asset_library.save()
 		)
 		collection_node.find_child("remove").pressed.connect(func():
 			asset_library.remove_collection(collection_id)
 			asset_library.notify_property_list_changed()
+			asset_library.save()
 		)		
 		var mesh_items_info = asset_library.collection_get_mesh_items_info(collection_id)
-		collection_text += str(collection_id,"| ", asset_library.collection_get_name(collection_id), " | ", mesh_items_info, "\n","tags: ", asset_library.collection_get_tags(collection_id), "\n")
+		var subcollections = asset_library.collection_get_sub_collections(collection_id)
+		if len(subcollections) == 0: subcollections = ""
+		collection_text += str(collection_id,"| ", asset_library.collection_get_name(collection_id), " | ", mesh_items_info.map(func(a):return a.id), " ", subcollections, "\n","tags: ", asset_library.collection_get_tags(collection_id), "\n")
 	collections_label.text = collection_text

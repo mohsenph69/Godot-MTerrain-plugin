@@ -113,7 +113,6 @@ script = SubResource("GDScript_tq7tq")
 [node name="filter_popup_menu" type="Popup" parent="VBoxContainer/HBoxContainer/filter_by_button"]
 position = Vector2i(491, 0)
 size = Vector2i(188, 505)
-visible = true
 
 [node name="PanelContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu" instance=ExtResource("3_dfwqm")]
 
