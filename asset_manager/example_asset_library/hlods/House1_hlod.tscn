@@ -3,14 +3,14 @@
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_pnagl"]
 [ext_resource type="ArrayMesh" uid="uid://cj5x5pxtc18wi" path="res://massets/meshes/1989727880.res" id="2_tqyff"]
 
-[sub_resource type="MMeshLod" id="MMeshLod_3gjkq"]
-meshes = Array[Mesh]([null, ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff")])
+[sub_resource type="MMeshLod" id="MMeshLod_cnt44"]
+meshes = Array[Mesh]([null, null, null, ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff"), ExtResource("2_tqyff")])
 lod_count = 8
 
 [node name="House1_hlod" type="Node3D" node_paths=PackedStringArray("joined_mesh_node", "meshes_to_join")]
 script = ExtResource("1_pnagl")
-join_at_lod = 1
-joined_mesh_node = NodePath("house1_hlod_joined_mesh")
+join_at_lod = 3
+joined_mesh_node = NodePath("house1_hlod_joined_mesh*")
 bake_path = "res://massets/House1_hlod.res"
 joined_mesh_export_path = "res://massets/House1_hlod_joined_mesh.glb"
 export_path = "res://massets/House1_hlod.glb"
@@ -21,6 +21,7 @@ metadata/hlod_id = 0.0
 [node name="Sphere1_002" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0325475, 4.37643, 0)
 metadata/collection_id = 4
+metadata/max_lod = 2
 
 [node name="Table1_005" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.36793, 0, 0)
@@ -58,7 +59,7 @@ metadata/collection_id = 2
 transform = Transform3D(0, 0, 107.291, 0, 0.149278, 0, -10.2671, 0, 0, 0, 0, 0)
 metadata/collection_id = 2
 
-[node name="house1_hlod_joined_mesh" type="MAssetMesh" parent="."]
-meshes = SubResource("MMeshLod_3gjkq")
-metadata/mesh_id = 7
+[node name="house1_hlod_joined_mesh*" type="MAssetMesh" parent="."]
+meshes = SubResource("MMeshLod_cnt44")
+metadata/mesh_id = 6
 metadata/collection_id = 0

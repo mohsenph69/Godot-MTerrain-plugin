@@ -71,7 +71,7 @@ func bake_to_hlod_resource():
 		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.material, arr, arr, 1 )
 		var i = 0
 		var max_lod = child.get_meta("max_lod") if child.has_meta("max_lod") else AssetIO.LOD_COUNT		
-		while i < max_lod:
+		while i <= max_lod:
 			hlod.insert_item_in_lod_table(mesh_id, i)
 			i += 1
 	for child:HLod_Baker in find_children("*", "HLod_Baker", true, false):
