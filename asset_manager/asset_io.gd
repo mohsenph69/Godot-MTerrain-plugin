@@ -7,6 +7,30 @@ class_name AssetIO extends Object
 # - static functions for instantiating collections
 # - static functions for updating MAssetTable from nodes
 
+# AssetTable Import Info is structured as follows:
+#{
+#	"glb_paths":{
+#		collection_id: glb_file_path	
+#	}
+#	glb_file_path: {	
+#		root_collections: [collection_name]
+#		collection_name: {
+#			id: collection_id
+#			collections: [sub_collection_name]
+#			meshes: [single_item_collection_id]
+#		}
+#		sub_collection_name:{
+#			id: sub_collection_id
+#			collections: [etc]
+#			meshes: [etc]
+#		}
+#	}
+#	"hlods": {
+#		hlod_name:{
+#			"baker": path_to_baker_scene.tscn
+#		}
+#	}
+#}
 const LOD_COUNT = 8  # The number of different LODs in your project
 
 #region GLB	
@@ -48,8 +72,8 @@ static func glb_load(path):
 	var gltf_state = GLTFState.new()	
 	gltf_document.append_from_file(path,gltf_state)		
 	var scene = gltf_document.generate_scene(gltf_state).get_children()		
-	glb_show_import_window(path, glb_generate_preview(scene, path))	
-	
+	var preview_dictionary = glb_generate_preview(scene, path)
+	glb_show_import_window(path, preview_dictionary)	
 			
 #Parse GLB file and prepare a preview of changes to asset library
 static func glb_generate_preview(scene:Array, glb_path):		
@@ -87,8 +111,21 @@ static func glb_import_add_child_to_collection_dictionary(collections: Dictionar
 		collections[name_data.name] = {"meshes":[]}
 	collections[name_data.name].meshes.push_back(child)	
 	collections[name_data.name]["transform"] = child.transform
+
+static func glb_import_commit_changes(collections_to_import:Dictionary, glb_path): 
+	var asset_library = MAssetTable.get_singleton()	
+	#for collection_name in collections_to_import.keys():
+		#if "ignore" in collections_to_import[collection_name].keys() and collections_to_import[collection_name].ignore == true:
+			#pass
+			#collections_to_import
 	
-static func glb_import_collections(collections_to_import:Dictionary, glb_path) -> Array[int]: 
+	if not "glb_paths" in asset_library.import_info.keys():
+		asset_library.import_info["glb_paths"] = {}	
+	asset_library.import_info[glb_path] = {"root_collections":[]}
+	glb_import_collections(collections_to_import, glb_path)
+	asset_library.save()
+	
+static func glb_import_collections(collections_to_import:Dictionary, glb_path, is_root = true) -> Array[int]: 
 	#collections_to_import is structure as follows:
 	#collection_name:{
 	#	meshes: [ImporterMeshInstance3D], 
@@ -99,56 +136,30 @@ static func glb_import_collections(collections_to_import:Dictionary, glb_path) -
 	#		}
 	#	}
 	#}	
-	#
-	#AssetTable Import Info is structured as follows:
-	#{
-	#	"glb_paths":{
-	#		collection_id: glb_file_path	
-	#	}
-	#	glb_file_path: {	
-	#		collection_name:{
-	#			id: collection_id
-	#			collections: [sub_collection_name]
-	#			meshes: [single_item_collection_id]
-	#		}
-	#		sub_collection_name:{
-	#			id: sub_collection_id
-	#			collections: [etc]
-	#			meshes: [etc]
-	#		}
-	#	}
-	#	"hlods": {
-	#		hlod_name:{
-	#			"baker": path_to_baker_scene.tscn
-	#		}
-	#	}
+		
 	var asset_library = MAssetTable.get_singleton()	
-	if not "glb_paths" in asset_library.import_info.keys():
-		asset_library.import_info["glb_paths"] = {}
-	if not glb_path in asset_library.import_info.keys():
-		asset_library.import_info[glb_path] = {}
 	var result: Array[int] = [] #array of collection ids
-	for collection_name in collections_to_import.keys():				
+	
+	for collection_name in collections_to_import.keys():						
+		var original_sub_collections = []
 		var collection_id = asset_library.collection_get_id(collection_name)				
 		if collection_id == -1:
 			collection_id = asset_library.collection_create(collection_name)						
 		else:
-			asset_library.collection_remove_all_items(collection_id)
-			asset_library.collection_remove_all_sub_collection(collection_id)
-		#print("collection ", collection_id, " is ", collection_name)
+			asset_library.collection_remove_all_items(collection_id)						
+			asset_library.collection_remove_all_sub_collection(collection_id)				
 		asset_library.import_info[glb_path][collection_name] = {"id": collection_id}
-		asset_library.import_info["glb_paths"][collection_id] = glb_path
-		
+		asset_library.import_info["glb_paths"][collection_id] = glb_path		
+		if is_root:
+			asset_library.import_info[glb_path]["root_collections"].push_back(collection_name)
 		if "collections" in collections_to_import[collection_name] and len(collections_to_import[collection_name].collections.keys())>0:
 			var collection_names = collections_to_import[collection_name].collections.keys()
 			asset_library.import_info[glb_path][collection_name]["collections"] = collection_names
-			var sub_collection_ids = glb_import_collections(collections_to_import[collection_name].collections, glb_path)	
-			result.append_array(sub_collection_ids)
-			#if "transform" in collections_to_import[collection_name].collections.keys():						
+			var sub_collection_ids = glb_import_collections(collections_to_import[collection_name].collections, glb_path, false)	
+			result.append_array(sub_collection_ids)			
 			for i in len(sub_collection_ids):				
 				var transform = collections_to_import[collection_name].collections[collection_names[i]].transform
-				asset_library.collection_add_sub_collection(collection_id, sub_collection_ids[i], transform)
-				print(asset_library.collection_get_sub_collections(collection_id))
+				asset_library.collection_add_sub_collection(collection_id, sub_collection_ids[i], transform)				
 		if "meshes" in collections_to_import[collection_name]:
 			var data = mesh_item_import_from_nodes(collections_to_import[collection_name].meshes)						
 			asset_library.import_info[glb_path][collection_name]["meshes"] = data.collection_ids			
@@ -159,8 +170,7 @@ static func glb_import_collections(collections_to_import:Dictionary, glb_path) -
 			result.push_back(collection_id)
 		if "hlods" in collections_to_import[collection_name].keys():
 			for hlod in collections_to_import[collection_name].hlods:
-				pass
-	asset_library.save()
+				pass	
 	return result
 
 static func collection_parse_name(name):
@@ -172,7 +182,7 @@ static func glb_show_import_window(glb_path, collections_to_import):
 	popup.wrap_controls = true	
 	EditorInterface.get_editor_main_screen().add_child(popup)
 	var panel = preload("res://addons/m_terrain/asset_manager/ui/import_window.tscn").instantiate()
-	panel.file_name = glb_path
+	panel.glb_path = glb_path
 	panel.collections_to_import	= collections_to_import
 	popup.add_child(panel)
 	popup.popup_centered(Vector2i(600,480))
@@ -244,7 +254,7 @@ static func mesh_item_import_from_nodes(nodes, ignore_transform = true):
 		var mesh_item_array = []								
 		var meshes = []						
 		for node in mesh_items[item_name]:				
-			var name_data = mesh_node_parse_name(node.name)						
+			var name_data = mesh_node_parse_name(node.name)									
 			#Save Meshes						
 			var mesh:Mesh
 			if node is MeshInstance3D:
@@ -254,7 +264,7 @@ static func mesh_item_import_from_nodes(nodes, ignore_transform = true):
 			else:						
 				mesh = null					
 			if mesh:																																
-				var mesh_save_path = asset_library.mesh_get_path(mesh)																
+				var mesh_save_path = asset_library.mesh_get_path(mesh)																				
 				if FileAccess.file_exists(mesh_save_path):
 					mesh.take_over_path(mesh_save_path)
 				else:
@@ -292,6 +302,9 @@ static func mesh_item_import_from_nodes(nodes, ignore_transform = true):
 		if collection_id == -1:		
 			collection_id = asset_library.collection_create(name)						
 		else:
+			for mesh_id in asset_library.collection_get_mesh_items_ids(collection_id):
+				
+				asset_library.remove_mesh_item(mesh_id)
 			asset_library.collection_remove_all_items(collection_id)
 			asset_library.collection_remove_all_sub_collection(collection_id)
 		if not collection_id in asset_library.tag_get_collections(0):
@@ -338,8 +351,13 @@ static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->i
 static func mesh_node_parse_name(name:String):
 	var result = {"name": "", "lod": -1}
 	if "_lod" in name:
-		result.name = name.get_slice("_lod", 0).to_lower() + "_mesh"
-		result.lod = int(name.get_slice("_lod", 1).get_slice("_", 0))
+		result.name = name.get_slice("_lod", 0).to_lower() + "_mesh"				
+		result.lod = name.get_slice("_lod", 1)
+		if result.lod.begins_with("_"):
+			result.lod = result.lod.trim_prefix("_")
+		if "_" in result.lod:
+			result.lod = result.lod.get_slice("_", 0)
+		result.lod = int(result.lod)
 	return result
 
 #endregion

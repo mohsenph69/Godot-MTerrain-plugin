@@ -59,6 +59,7 @@ func make_joined_mesh():
 	return mesh_joiner.join_meshes()					
 					
 func bake_to_hlod_resource():	
+	MHlodScene.sleep()
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var hlod := MHlod.new()
 	hlod.set_baker_path(scene_file_path)
@@ -75,12 +76,15 @@ func bake_to_hlod_resource():
 			hlod.insert_item_in_lod_table(mesh_id, i)
 			i += 1
 	for child:HLod_Baker in find_children("*", "HLod_Baker", true, false):
+		child.bake_to_hlod_resource()
 		if is_instance_valid(child.hlod_resource):
 			hlod.add_sub_hlod(child.transform, child.hlod_resource)
-		elif FileAccess.file_exists(bake_path):
-			var child_hlod_resource = load(bake_path)
+		elif FileAccess.file_exists(child.bake_path):
+			var child_hlod_resource = load(child.bake_path)
 			if child_hlod_resource is MHlod:
-				hlod.add_sub_hlod(child.transform, child.hlod_resource)
+				hlod.add_sub_hlod(child.transform, child.hlod_resource)							
+		else:
+			push_error("trying to bake hlod ", scene_file_path, " but it has a subhold without bake_path: ", child.name )
 	for child:MHlodScene in find_children("*", "MHlodScene", true, false):
 		if child.hlod is MHlod:
 			hlod.add_sub_hlod(child.transform, child.hlod_resource)	
@@ -89,7 +93,8 @@ func bake_to_hlod_resource():
 		hlod.take_over_path(bake_path)
 	else:
 		ResourceSaver.save(hlod, bake_path)
-
+	MHlodScene.awake()
+	
 func find_matching_static_body(arr, body):
 	for sb in arr:
 		if compare_static_bodies(sb,body):
