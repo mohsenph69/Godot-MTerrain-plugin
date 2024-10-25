@@ -2,15 +2,12 @@
 class_name AssetIO extends Object
 
 ############################################
-# AssetIO contains all static functions for importing/exporting glb files
-# 1. 
-#
-#
-#
-#
-#
+# AssetIO contains:
+# - static functions for importing/exporting glb files
+# - static functions for instantiating collections
+# - static functions for updating MAssetTable from nodes
 
-const LOD_COUNT = 8
+const LOD_COUNT = 8  # The number of different LODs in your project
 
 #region GLB	
 static func glb_get_root_node_name(path):
@@ -40,11 +37,9 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 	
 	gltf_document.append_from_scene(node, gltf_save_state)	
 	print("exporting to ", path)
-	var error = gltf_document.write_to_filesystem(gltf_save_state, path)	
-	
+	var error = gltf_document.write_to_filesystem(gltf_save_state, path)		
 	node.queue_free()	
 	
-#Load glb file containing one or more assets
 static func glb_load(path):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var gltf_document = GLTFDocument.new()
@@ -53,39 +48,47 @@ static func glb_load(path):
 	var gltf_state = GLTFState.new()	
 	gltf_document.append_from_file(path,gltf_state)		
 	var scene = gltf_document.generate_scene(gltf_state).get_children()		
-	glb_generate_preview(scene, path)
+	glb_show_import_window(path, glb_generate_preview(scene, path))	
+	
 			
-#Parse GLB file and update asset library
+#Parse GLB file and prepare a preview of changes to asset library
 static func glb_generate_preview(scene:Array, glb_path):		
-	var asset_library:MAssetTable = MAssetTable.get_singleton()	
-	var collections_to_import = {}
-	for object: Node3D in scene:						
-		if object.name.ends_with("_hlod"):							
+	var asset_library:MAssetTable = MAssetTable.get_singleton()		
+	var collections_to_import = {}	
+	for object: Node3D in scene:
+		var mesh_name = mesh_node_parse_name(object.name).name
+		if "_hlod" in object.name:
 			pass
-			#convert_node_to_hlod_baker(object)			
-		elif object is ImporterMeshInstance3D:		
-			glb_import_add_child_to_collection_dictionary(collections_to_import, object)			
-		elif mesh_node_parse_name(object.name).name in collections_to_import.keys():
-			#This happens if you want to have an empty as an LOD to stop mesh from appearing at higher lod
-			glb_import_add_child_to_collection_dictionary(collections_to_import, object)			
+			#if not "hlods" in collections_to_import:
+				#collections_to_import["hlods"] = []
+			#collections_to_import["hlods"].push_back(object.name.get_slice("_hlod", 0))
+			#if object.get_child_count() > 0:				
+				#collections_to_import.hlods.push_back( glb_generate_preview(object.get_children(), glb_path) )						
+		elif object is ImporterMeshInstance3D or (mesh_name != "" and mesh_name in collections_to_import.keys()):
+			glb_import_add_child_to_collection_dictionary(collections_to_import, object)					
 		else: 
 			var collection_name = collection_parse_name(object.name) 					
 			collections_to_import[collection_name] = {"collections":{}}
 			for child in object.get_children():				
-				if child is ImporterMeshInstance3D:					
-					glb_import_add_child_to_collection_dictionary(collections_to_import[collection_name].collections, child)													
-	glb_show_import_window(glb_path, collections_to_import)	
+				var child_mesh_name = mesh_node_parse_name(child.name).name
+				if child is ImporterMeshInstance3D or (child_mesh_name != "" and child_mesh_name in collections_to_import[collection_name].collections.keys()):		
+					glb_import_add_child_to_collection_dictionary(collections_to_import[collection_name].collections, child)									
+				elif "_hlod" in child.name:
+					pass #replace with MHlodScene
+				else:					
+					collections_to_import[collection_name].collections = glb_generate_preview(child.get_children(), glb_path)
+	return collections_to_import
 	
-
-static func glb_import_add_child_to_collection_dictionary(collections: Dictionary, child: ImporterMeshInstance3D):
+static func glb_import_add_child_to_collection_dictionary(collections: Dictionary, child):
 	var name_data = mesh_node_parse_name(child.name)
-	if name_data.lod == -1:				
+	if name_data.lod == -1:			
 		child.name += "_lod_0"
 	if not name_data.name in collections:
 		collections[name_data.name] = {"meshes":[]}
 	collections[name_data.name].meshes.push_back(child)	
+	collections[name_data.name]["transform"] = child.transform
 	
-static func glb_import_collections(collections_to_import:Dictionary) -> Array[int]: 
+static func glb_import_collections(collections_to_import:Dictionary, glb_path) -> Array[int]: 
 	#collections_to_import is structure as follows:
 	#collection_name:{
 	#	meshes: [ImporterMeshInstance3D], 
@@ -96,26 +99,68 @@ static func glb_import_collections(collections_to_import:Dictionary) -> Array[in
 	#		}
 	#	}
 	#}	
-	var asset_library = MAssetTable.get_singleton()
+	#
+	#AssetTable Import Info is structured as follows:
+	#{
+	#	"glb_paths":{
+	#		collection_id: glb_file_path	
+	#	}
+	#	glb_file_path: {	
+	#		collection_name:{
+	#			id: collection_id
+	#			collections: [sub_collection_name]
+	#			meshes: [single_item_collection_id]
+	#		}
+	#		sub_collection_name:{
+	#			id: sub_collection_id
+	#			collections: [etc]
+	#			meshes: [etc]
+	#		}
+	#	}
+	#	"hlods": {
+	#		hlod_name:{
+	#			"baker": path_to_baker_scene.tscn
+	#		}
+	#	}
+	var asset_library = MAssetTable.get_singleton()	
+	if not "glb_paths" in asset_library.import_info.keys():
+		asset_library.import_info["glb_paths"] = {}
+	if not glb_path in asset_library.import_info.keys():
+		asset_library.import_info[glb_path] = {}
 	var result: Array[int] = [] #array of collection ids
-	for collection_name in collections_to_import.keys():
-		var collection_id = asset_library.collection_get_id(collection_name)			
-		print("adding collection ", collection_name, " id: ", collection_id)
+	for collection_name in collections_to_import.keys():				
+		var collection_id = asset_library.collection_get_id(collection_name)				
 		if collection_id == -1:
 			collection_id = asset_library.collection_create(collection_name)						
 		else:
 			asset_library.collection_remove_all_items(collection_id)
 			asset_library.collection_remove_all_sub_collection(collection_id)
-		if "collections" in collections_to_import[collection_name]:
-			result.append_array( glb_import_collections(collections_to_import[collection_name].collections)	)
+		#print("collection ", collection_id, " is ", collection_name)
+		asset_library.import_info[glb_path][collection_name] = {"id": collection_id}
+		asset_library.import_info["glb_paths"][collection_id] = glb_path
+		
+		if "collections" in collections_to_import[collection_name] and len(collections_to_import[collection_name].collections.keys())>0:
+			var collection_names = collections_to_import[collection_name].collections.keys()
+			asset_library.import_info[glb_path][collection_name]["collections"] = collection_names
+			var sub_collection_ids = glb_import_collections(collections_to_import[collection_name].collections, glb_path)	
+			result.append_array(sub_collection_ids)
+			#if "transform" in collections_to_import[collection_name].collections.keys():						
+			for i in len(sub_collection_ids):				
+				var transform = collections_to_import[collection_name].collections[collection_names[i]].transform
+				asset_library.collection_add_sub_collection(collection_id, sub_collection_ids[i], transform)
+				print(asset_library.collection_get_sub_collections(collection_id))
 		if "meshes" in collections_to_import[collection_name]:
 			var data = mesh_item_import_from_nodes(collections_to_import[collection_name].meshes)						
-			for i in data.collection_ids.size():				
-				asset_library.collection_add_sub_collection(collection_id, data.collection_ids[i],data.transforms[i])
+			asset_library.import_info[glb_path][collection_name]["meshes"] = data.collection_ids			
+			for i in data.collection_ids.size():										
+				asset_library.import_info["glb_paths"][data.collection_ids[i]] = glb_path
+				#asset_library.collection_add_sub_collection(collection_id, data.collection_ids[i],data.transforms[i])
 				#asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])					
 			result.push_back(collection_id)
-		if "hlods" in collections_to_import[collection_name]:
-			pass #to do: add support for sub hlods
+		if "hlods" in collections_to_import[collection_name].keys():
+			for hlod in collections_to_import[collection_name].hlods:
+				pass
+	asset_library.save()
 	return result
 
 static func collection_parse_name(name):
@@ -241,15 +286,16 @@ static func mesh_item_import_from_nodes(nodes, ignore_transform = true):
 		mesh_item_transforms.push_back(mesh_items[item_name][0].transform)	
 	#Create single item collections	
 	var collection_ids = []
-	for i in mesh_item_ids.size():
+	for i in mesh_item_ids.size():		
 		var name = mesh_items.keys()[i] + "_mesh" if not mesh_items.keys()[i].ends_with("_mesh") else mesh_items.keys()[i]
 		var collection_id = asset_library.collection_get_id(name)		
 		if collection_id == -1:		
-			collection_id = asset_library.collection_create(name)			
-			asset_library.collection_add_tag(collection_id,0)			
+			collection_id = asset_library.collection_create(name)						
 		else:
 			asset_library.collection_remove_all_items(collection_id)
 			asset_library.collection_remove_all_sub_collection(collection_id)
+		if not collection_id in asset_library.tag_get_collections(0):
+			asset_library.collection_add_tag(collection_id,0)			
 		collection_ids.push_back(collection_id)
 		var transform = Transform3D() if ignore_transform else mesh_item_transforms[i]
 		asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], transform)
@@ -366,7 +412,8 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		#TODO: CHECK IF THERE"S A GLB THAT NEEDS TO BE LOADED
 		return null
 	var node	
-	if collection_id in asset_library.tag_get_collections(0):
+	if collection_id in asset_library.tag_get_collections(0):		
+		print("instantiating single item collection ", asset_library.collection_get_name(collection_id))
 		node = MAssetMesh.new()
 		var mesh_id = asset_library.collection_get_mesh_items_ids(collection_id)[0]
 		node.set_meta("mesh_id", mesh_id)
@@ -403,7 +450,7 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 			
 		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 		var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)		
-		for i in sub_collections.size():			
+		for i in sub_collections.size():						
 			var sub_collection = collection_instantiate(sub_collections[i])			
 			#var sub_collection = Node3D.new()
 			#sub_collection.set_meta("collection_id", id)

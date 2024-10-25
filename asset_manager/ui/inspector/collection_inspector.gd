@@ -27,6 +27,8 @@ func _ready():
 			%collection_name.text = asset_library.collection_get_name(collection_id)			
 			var data = asset_library.collection_get_mesh_items_info(collection_id)
 			%collection_details.text = str("items: ", data.size(), "\npositions: ", data.map(func(a): return a.transform.origin))						
+			data = asset_library.collection_get_sub_collections(collection_id)
+			%collection_details.text += str("\nsubcollections: ", data.size())
 		else:
 			%collection_name.text = "Collection doesn't exist"
 		

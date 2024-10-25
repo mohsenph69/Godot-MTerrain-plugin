@@ -17,7 +17,7 @@ func _ready():
 			get_parent().queue_free()
 	)
 	import_button.pressed.connect(func():
-		AssetIO.glb_import_collections(collections_to_import)
+		AssetIO.glb_import_collections(collections_to_import, file_name)
 		
 		if get_parent() is Window:
 			get_parent().queue_free()
