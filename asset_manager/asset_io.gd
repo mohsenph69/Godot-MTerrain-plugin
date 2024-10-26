@@ -81,9 +81,9 @@ static func glb_generate_preview_dictionary(scene:Array, glb_path):
 	var preview_dictionary = {}
 	for node: Node3D in scene:
 		glb_import_add_node_to_preview_dictionary(preview_dictionary, node)
-	for glb_collection_name in preview_dictionary[glb_path].keys():
-		if "meshes" in preview_dictionary[glb_path][glb_collection_name]:
-			preview_dictionary[glb_path][glb_collection_name].meshes = process_mesh_array(preview_dictionary[glb_path][glb_collection_name].meshes)
+	for glb_collection_name in preview_dictionary.keys():
+		if "meshes" in preview_dictionary[glb_collection_name]:
+			preview_dictionary[glb_collection_name].meshes = process_mesh_array(preview_dictionary[glb_collection_name].meshes)
 	return preview_dictionary
 
 #Recursive function that flattens the collections heirarchy
@@ -135,11 +135,10 @@ static func process_mesh_array(original_mesh_array:Array):
 static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_dictionary:Dictionary):	
 	#here we should add collection id or -1 to each collection
 	var asset_library = MAssetTable.get_singleton()
-	var import_dictionary = convert_import_dictionary_to_preview_dictionary(glb_path)	
-	
+	var import_dictionary = convert_import_dictionary_to_preview_dictionary(glb_path)		
 	for glb_collection_name in preview_dictionary.keys():
-		if glb_collection_name in import_dictionary.keys():
-			preview_dictionary[glb_collection_name]["collection_id"] = import_dictionary[glb_collection_name].collection_id						
+		if glb_collection_name in import_dictionary.keys():			
+			preview_dictionary[glb_collection_name]["collection_id"] = import_dictionary[glb_collection_name].collection_id	
 			var preview_has_meshes = "meshes" in preview_dictionary[glb_collection_name].keys()
 			var original_has_meshes = "meshes" in import_dictionary[glb_collection_name].keys()
 			if preview_has_meshes and original_has_meshes:
@@ -165,6 +164,12 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 					preview_dictionary[glb_collection_name]["original_collection_transforms"] = import_dictionary[glb_collection_name].collection_transforms												
 		else:
 			preview_dictionary[glb_collection_name]["collection_id"] = -1 #this is new collection
+			if "meshes" in preview_dictionary[glb_collection_name].keys():
+				preview_dictionary[glb_collection_name]["original_meshes"] = []
+			if "collections" in preview_dictionary[glb_collection_name].keys():
+				preview_dictionary[glb_collection_name]["original_collections"] = []
+				preview_dictionary[glb_collection_name]["original_collection_transforms"] = []
+			
 	
 	for glb_collection_name in import_dictionary.keys():
 		if not glb_collection_name in preview_dictionary.keys():
@@ -193,7 +198,7 @@ static func convert_import_dictionary_to_preview_dictionary(glb_path):
 		for sub_collection_id in sub_collections:			
 			var sub_collection_name = asset_library.import_info[glb_path].find_key(sub_collection_id)
 			if sub_collection_name and sub_collection_name != "":
-				result[glb_collection_name]["collections"].push_back(sub_collection_name)
+				result[glb_collection_name]["collections"].push_back(sub_collection_name)	
 	return result
 
 static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path):
@@ -202,10 +207,11 @@ static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path):
 		asset_library.import_info[glb_path] = {}		
 	
 	var glb_collection_names = preview_dictionary.keys()
-	glb_collection_names.reverse()
+	glb_collection_names.reverse()		
 	for glb_collection_name in glb_collection_names:
 		if not "ignore" in preview_dictionary[glb_collection_name].keys():						
 			var collection_id = glb_import_collection(glb_collection_name, preview_dictionary)			
+			print(collection_id)
 			if collection_id == -1:
 				asset_library.import_info[glb_path].erase(glb_collection_name)
 			else:
@@ -222,8 +228,9 @@ static func glb_import_collection(glb_collection_name, preview_dictionary:Dictio
 				asset_library.remove_mesh_item(mesh_item_id)
 		asset_library.remove_collection(collection.collection_id)
 		return -1
-	elif collection.collection_id == -1:
+	elif collection.collection_id == -1:		
 		collection.collection_id = asset_library.collection_create(glb_collection_name)
+		print("created new collection: ", collection.collection_id)
 		if "meshes" in collection.keys():
 			collection["mesh_item_id"] = -1
 	else:				
@@ -234,8 +241,12 @@ static func glb_import_collection(glb_collection_name, preview_dictionary:Dictio
 	if "meshes" in collection.keys():		
 		asset_library.collection_add_tag(collection.collection_id, 0)			 
 		if collection.mesh_item_id == -1:
-			collection.mesh_item_id = asset_library.mesh_item_add([],[])
+			var null_array = []
+			null_array.resize(LOD_COUNT)
+			null_array.fill(-1)
+			collection.mesh_item_id = asset_library.mesh_item_add(null_array,null_array)
 			asset_library.collection_add_item(collection.collection_id, MAssetTable.MESH, collection.mesh_item_id, Transform3D())	
+		print("creating mesh item: ", collection.mesh_item_id)
 		mesh_item_update_from_collection_dictionary(collection)
 	else:
 		asset_library.collection_remove_tag(collection.collection_id, 0)
@@ -244,6 +255,7 @@ static func glb_import_collection(glb_collection_name, preview_dictionary:Dictio
 				var sub_collection_id = preview_dictionary[collection.collections[i]].collection_id
 				if sub_collection_id != -1:
 					asset_library.collection_add_sub_collection(collection.collection_id, sub_collection_id, collection.collection_transforms[i])
+					print("adding subcollection ", sub_collection_id, " to collection ", collection.collection_id)
 	return collection.collection_id
 	
 static func collection_parse_name(name:String):
@@ -253,13 +265,14 @@ static func collection_parse_name(name:String):
 
 static func mesh_item_update_from_collection_dictionary(collection):
 	var asset_library := MAssetTable.get_singleton()			
-			
-	for mesh in collection.original_meshes:
-		if not mesh in collection.meshes:
-			#first check if anyone else is still using this mesh:
-			#if len(asset_library.mesh_get_mesh_items(collection.original_meshes[i])) == 1:
-				DirAccess.remove_absolute(asset_library.mesh_get_path(mesh))						
-	
+	if "original_meshes" in collection.keys():		
+		for mesh in collection.original_meshes:
+			if not mesh in collection.meshes:
+				#first check if anyone else is still using this mesh:
+				#if len(asset_library.mesh_get_mesh_items(collection.original_meshes[i])) == 1:				
+					print("erased mesh resource ", asset_library.mesh_get_path(mesh))
+					DirAccess.remove_absolute(asset_library.mesh_get_path(mesh))						
+		
 	var mesh_item_array = []
 	for i in len(collection.meshes):		
 		if collection.meshes[i].get_surface_count() == 0: 
@@ -275,6 +288,7 @@ static func mesh_item_update_from_collection_dictionary(collection):
 		mesh_item_array.push_back(new_id)
 	#Add Mesh Item
 	var material_ids = mesh_item_array.map(func(a): return -1)				
+	print("adding mesh item with meshes: ", mesh_item_array)
 	asset_library.mesh_item_update(collection.mesh_item_id, mesh_item_array, material_ids)							
 
 static func glb_show_import_window(glb_path, preview_dictionary):

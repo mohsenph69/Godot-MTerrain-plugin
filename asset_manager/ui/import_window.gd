@@ -20,7 +20,7 @@ func _ready():
 			get_parent().queue_free()
 	)
 	import_button.pressed.connect(func():		
-		AssetIO.glb_import_commit_changes(preview_dictionary, import_settings, glb_path)		
+		AssetIO.glb_import_commit_changes(preview_dictionary, glb_path)		
 		if get_parent() is Window:
 			get_parent().queue_free()
 	)
