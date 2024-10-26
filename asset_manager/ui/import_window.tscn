@@ -27,7 +27,15 @@ layout_mode = 2
 text = "Importing path_to_file.glb"
 horizontal_alignment = 1
 
+[node name="preview_dictionary_label" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = " 
+}"
+
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 
