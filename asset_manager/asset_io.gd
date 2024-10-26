@@ -8,18 +8,9 @@ class_name AssetIO extends Object
 # - static functions for updating MAssetTable from nodes
 
 # AssetTable Import Info is structured as follows: {
-#	"glb_paths": {
-#		"path_to_glb_file.glb": glb_path_id
+#	gbl_path.glb: {
+#		object_name: collection_id
 #	}
-#	"collections": {
-#		collection_id: glb_path_id
-#	}
-#	"import_settings": {
-#		collection_id: {
-#			import_setting1: value
-#		}
-#	}
-#}
 
 const LOD_COUNT = 8  # The number of different LODs in your project
 
@@ -70,18 +61,18 @@ static func glb_load(path):
 	var preview_dictionary = glb_generate_preview_dictionary(scene, path)
 	#STEP 3: compare to previous import, and mark up changes
 	compare_preview_dictionary_to_import_dictionary(path, preview_dictionary)
-	#STEP 4: diplay import window and allow user to change import settings
-	var import_settings = {} # this should be handled by import window
-	glb_show_import_window(path, preview_dictionary, import_settings)
+	#STEP 4: diplay import window and allow user to change import settings	
+	glb_show_import_window(path, preview_dictionary)
 	#STEP 5: apply changes to asset table and update import dictionary - called by import window
-	#glb_import_commit_changes(preview_dictionary, import_settings, path)
+	#glb_import_commit_changes(preview_dictionary, path)
 
 #Parse GLB file and prepare a preview of changes to asset library
 static func glb_generate_preview_dictionary(scene:Array, glb_path):
 	#preview_dictionary = {
+	#	single_item_collection_name: {
+	#		meshes: Array[Mesh or null]		
+	#	}
 	#	collection_name: {
-	#		meshes: Array[Mesh or null]
-	#		mesh_transforms: Array[Transform3D]
 	#		collections: Array[sub_collection_name]
 	#		collection_transforms: Array[sub_collection Transform3D]
 	#	}
@@ -90,26 +81,22 @@ static func glb_generate_preview_dictionary(scene:Array, glb_path):
 	var preview_dictionary = {}
 	for node: Node3D in scene:
 		glb_import_add_node_to_preview_dictionary(preview_dictionary, node)
+	for glb_collection_name in preview_dictionary[glb_path].keys():
+		if "meshes" in preview_dictionary[glb_path][glb_collection_name]:
+			preview_dictionary[glb_path][glb_collection_name].meshes = process_mesh_array(preview_dictionary[glb_path][glb_collection_name].meshes)
 	return preview_dictionary
 
 #Recursive function that flattens the collections heirarchy
 static func glb_import_add_node_to_preview_dictionary(preview_dictionary:Dictionary, node):
-	var name_data = mesh_node_parse_name(node.name)
-	if "_hlod" in node.name:
-		pass
+	var name_data = mesh_node_parse_name(node.name)	
 	#If node should be converted to become part of a mesh_item:
-	elif node is ImporterMeshInstance3D or (name_data.name != "" and name_data.name in preview_dictionary.keys()):
-		if name_data.lod == -1:
-			node.name += "_lod_0"
+	if node is ImporterMeshInstance3D or (name_data.name != "" and name_data.name in preview_dictionary.keys()):		
 		if not name_data.name in preview_dictionary:
 			preview_dictionary[name_data.name] = {"meshes":[]}
-		var mesh = node.mesh.get_mesh() if node is ImporterMeshInstance3D else ArrayMesh.new()
-		if mesh is Mesh:
-			mesh.resource_name = node.name
-		preview_dictionary[name_data.name].meshes.push_back(mesh)
-		if not "transform" in preview_dictionary[name_data.name]:
-			#take the first LOD's transform only
-			preview_dictionary[name_data.name]["transform"] = node.transform
+		var mesh = node.mesh.get_mesh() if node is ImporterMeshInstance3D else ArrayMesh.new()		
+		mesh.resource_name = node.name if name_data.lod != -1 else node.name + "_lod_0"				
+		preview_dictionary[name_data.name].meshes.push_back(mesh)		
+		
 		if node.get_child_count() > 0:
 			push_error("glb import error: while building preview dictionary, ", node.name, " was processed as a mesh/lod node, but also has child nodes")
 		return name_data.name
@@ -118,241 +105,188 @@ static func glb_import_add_node_to_preview_dictionary(preview_dictionary:Diction
 	#If node is an empty that contains subcollections:
 	else:
 		if not node.get_child_count() > 0: return null
-		var collection_name = collection_parse_name(node.name)
-		preview_dictionary[collection_name] = {"collections":[], "collection_transforms":[]}
+		var glb_collection_name = node.name #collection_parse_name(node.name)
+		preview_dictionary[glb_collection_name] = {"collections":[], "collection_transforms":[]}
 		for child in node.get_children():
 			var sub_collection_name = glb_import_add_node_to_preview_dictionary(preview_dictionary, child)
-			if sub_collection_name and not sub_collection_name in preview_dictionary[collection_name].collections:
-				preview_dictionary[collection_name].collections.push_back(sub_collection_name)
-				preview_dictionary[collection_name].collection_transforms.push_back(child.transform)			
-		return collection_name
+			if sub_collection_name and not sub_collection_name in preview_dictionary[glb_collection_name].collections:
+				preview_dictionary[glb_collection_name].collections.push_back(sub_collection_name)
+				preview_dictionary[glb_collection_name].collection_transforms.push_back(child.transform)			
+		return glb_collection_name
 
-static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_dictionary:Dictionary):
+static func process_mesh_array(original_mesh_array:Array): 
+	#eg. mesh_lod_1, mesh_lod3 =>mesh_lod_null,mesh_lod_1, mesh_lod1, mesh_lod3,mesh_lod3,mesh_lod3
+	var mesh_array = []		
+	for mesh in original_mesh_array:
+		var name_data = mesh_node_parse_name(mesh.resource_name)
+		while len(mesh_array) < name_data.lod:
+			if len(mesh_array) == 0:
+				var blank_mesh = ArrayMesh.new()
+				blank_mesh.resource_name = name_data.name + "_lod_0" 
+				mesh_array.push_back(blank_mesh)
+			else:
+				mesh_array.push_back(mesh_array[-1])
+		mesh_array.push_back(mesh)	
+	var last_mesh = mesh_array[-1]
+	while mesh_array.size() < LOD_COUNT:
+		mesh_array.push_back(mesh_array[-1])
+	return mesh_array
+
+static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_dictionary:Dictionary):	
+	#here we should add collection id or -1 to each collection
 	var asset_library = MAssetTable.get_singleton()
-	var import_dictionary = convert_import_dictionary_to_preview_dictionary(glb_path)
-	if import_dictionary == {}:
-		import_dictionary = preview_dictionary
-	else:
-		var all_collection_names := preview_dictionary.keys()
-		for key in import_dictionary.keys():
-			if not key in all_collection_names:
-				all_collection_names.push_back(key)
-		all_collection_names.reverse()
-		for collection_name in all_collection_names:
-			var exists_in_import_dictionary = collection_name in import_dictionary.keys()
-			var exists_in_preview_dictionary = collection_name in preview_dictionary.keys()
-			if exists_in_import_dictionary and exists_in_preview_dictionary:
-				pass #possibly update
-			elif exists_in_import_dictionary:
-				pass #removed
-			elif exists_in_preview_dictionary:
-				pass #new
+	var import_dictionary = convert_import_dictionary_to_preview_dictionary(glb_path)	
+	
+	for glb_collection_name in preview_dictionary.keys():
+		if glb_collection_name in import_dictionary.keys():
+			preview_dictionary[glb_collection_name]["collection_id"] = import_dictionary[glb_collection_name].collection_id						
+			var preview_has_meshes = "meshes" in preview_dictionary[glb_collection_name].keys()
+			var original_has_meshes = "meshes" in import_dictionary[glb_collection_name].keys()
+			if preview_has_meshes and original_has_meshes:
+				preview_dictionary[glb_collection_name]["original_meshes"] = import_dictionary[glb_collection_name].meshes
+			elif preview_has_meshes:
+				preview_dictionary[glb_collection_name]["original_meshes"] = null
+			elif original_has_meshes:
+				preview_dictionary[glb_collection_name]["original_meshes"] = import_dictionary[glb_collection_name].meshes
+				preview_dictionary[glb_collection_name]["meshes"] = null
+			else:
+				var preview_has_collections = "collections" in preview_dictionary[glb_collection_name].keys()
+				var original_has_collections = "collections" in import_dictionary[glb_collection_name].keys()
+				if preview_has_collections and original_has_collections:
+					preview_dictionary[glb_collection_name]["original_collections"] = import_dictionary[glb_collection_name].collections
+					preview_dictionary[glb_collection_name]["original_collection_transforms"] = import_dictionary[glb_collection_name].collection_transforms
+				elif preview_has_collections:
+					preview_dictionary[glb_collection_name]["original_collections"] = null
+					preview_dictionary[glb_collection_name]["original_collection_transforms"] = null
+				elif original_has_collections:
+					preview_dictionary[glb_collection_name]["collections"] = null
+					preview_dictionary[glb_collection_name]["collection_transforms"] = null
+					preview_dictionary[glb_collection_name]["original_collections"] = import_dictionary[glb_collection_name].collections
+					preview_dictionary[glb_collection_name]["original_collection_transforms"] = import_dictionary[glb_collection_name].collection_transforms												
+		else:
+			preview_dictionary[glb_collection_name]["collection_id"] = -1 #this is new collection
+	
+	for glb_collection_name in import_dictionary.keys():
+		if not glb_collection_name in preview_dictionary.keys():
+			preview_dictionary[glb_collection_name] = import_dictionary[glb_collection_name].duplicate(true)
+			preview_dictionary[glb_collection_name]["remove_collection"] = true #to remove collection!		
 
 static func convert_import_dictionary_to_preview_dictionary(glb_path):
 	var asset_library = MAssetTable.get_singleton()
 	var result = {}
-
-#	"glb_paths": { "path_to_glb_file.glb": glb_path_id}
-#	"collections": {glb_path_id: [collection_id]}
-#	"import_settings": {collection_id: {import_setting1: value,  etc}}
-	if not "glb_paths" in asset_library.import_info.keys():
-		return {}
-	if not glb_path in asset_library.import_info["glb_paths"].keys():
-		return {}
-	var glb_path_id: int = asset_library.import_info["glb_paths"][glb_path]
-	if not glb_path_id in asset_library.import_info["collections"].keys():
-		push_error("import dictionary is broken: glb_path seems to have no collections ")
-	for collection_id in asset_library.import_info["collections"][glb_path_id]:
-		var name = asset_library.collection_get_name(collection_id)
+	if not glb_path in asset_library.import_info.keys():
+		return {}		
+	for glb_collection_name in asset_library.import_info[glb_path].keys():
+		var collection_id = asset_library.import_info[glb_path][glb_collection_name]		
 		var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)
 		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
-		result[name] = {}
+		result[glb_collection_name] = {}
 		if mesh_items:
-			result[name]["meshes"] = []
+			result[glb_collection_name]["meshes"] = []
 		for mesh_item in mesh_items:
-			for mesh_id in mesh_item.mesh:
-				var mesh = load(MHlod.get_mesh_path(mesh_id))
-				result[name]["meshes"].push_back(mesh)
-			if not "transform" in result[name]:
-				result[name]["transform"] = mesh_item.transform
+			for mesh_id in mesh_item.mesh:				
+				var mesh = load(MHlod.get_mesh_path(mesh_id)) if mesh_id != -1 else ArrayMesh.new()
+				result[glb_collection_name]["meshes"].push_back(mesh)			
 			#TODO: Materials
 		if sub_collections:
-			result[name]["collections"] = []
-		for sub_collection_id in sub_collections:
-			var sub_collection_name = asset_library.collection_get_name(sub_collection_id)
+			result[glb_collection_name]["collections"] = []
+		for sub_collection_id in sub_collections:			
+			var sub_collection_name = asset_library.import_info[glb_path].find_key(sub_collection_id)
 			if sub_collection_name and sub_collection_name != "":
-				result[name]["collections"].push_back(sub_collection_name)
+				result[glb_collection_name]["collections"].push_back(sub_collection_name)
 	return result
 
-static func glb_import_commit_changes(preview_dictionary:Dictionary, import_settings: Dictionary, glb_path):
-	var asset_library = MAssetTable.get_singleton()
-	var glb_path_id = 0
-	if not "glb_paths" in asset_library.import_info.keys():
-		asset_library.import_info["glb_paths"] = {glb_path:glb_path_id}
-	elif not glb_path in asset_library.import_info["glb_paths"].keys():
-		glb_path_id = int(asset_library.import_info["glb_paths"].values()[-1]) + 1
-		asset_library.import_info["glb_paths"][glb_path] = glb_path_id
-	if not "collections" in asset_library.import_info.keys():
-		asset_library.import_info["collections"] = {}
-
-	var collection_names = preview_dictionary.keys()
-	collection_names.reverse()
-	for collection_name in collection_names:
-		var ignore = false
-		if collection_name in import_settings.keys():
-			if "ignore" in import_settings[collection_name]:
-				ignore = import_settings[collection_name]["ignore"]
-		if not ignore:
-			var collection_id = glb_import_collection(collection_name, preview_dictionary[collection_name])
+static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path):
+	var asset_library = MAssetTable.get_singleton()	
+	if not glb_path in asset_library.import_info.keys():
+		asset_library.import_info[glb_path] = {}		
+	
+	var glb_collection_names = preview_dictionary.keys()
+	glb_collection_names.reverse()
+	for glb_collection_name in glb_collection_names:
+		if not "ignore" in preview_dictionary[glb_collection_name].keys():						
+			var collection_id = glb_import_collection(glb_collection_name, preview_dictionary)			
 			if collection_id == -1:
-				push_error("glb import error with collection ", collection_name)			
-			asset_library.import_info["collections"][collection_id] = glb_path_id
-			#asset_library.import_info["import_settings"][collection_id] = import_settings[collection_name]
+				asset_library.import_info[glb_path].erase(glb_collection_name)
+			else:
+				asset_library.import_info[glb_path][glb_collection_name] = collection_id
 	asset_library.save()
 
-static func glb_import_collection(collection_name, collection:Dictionary)->int: #returns collection_id	
-	var asset_library = MAssetTable.get_singleton()
-	var collection_id = asset_library.collection_get_id(collection_name)
-	if collection_id == -1:
-		collection_id = asset_library.collection_create(collection_name)
-		print("begin importing new collection: ", collection_name)
-	else:
-		asset_library.collection_remove_all_items(collection_id)
-		asset_library.collection_remove_all_sub_collection(collection_id)
-		print("begin updating existing collection: ", collection_name)
+static func glb_import_collection(glb_collection_name, preview_dictionary:Dictionary)->int: #returns collection_id	
+	var asset_library = MAssetTable.get_singleton()	
+	var collection = preview_dictionary[glb_collection_name]
+	if "remove_collection" in collection.keys():
+		#if single item collection, remove mesh item also
+		if "meshes" in collection.keys():
+			for mesh_item_id in asset_library.collection_get_mesh_items_ids(collection.collection_id):
+				asset_library.remove_mesh_item(mesh_item_id)
+		asset_library.remove_collection(collection.collection_id)
+		return -1
+	elif collection.collection_id == -1:
+		collection.collection_id = asset_library.collection_create(glb_collection_name)
+		if "meshes" in collection.keys():
+			collection["mesh_item_id"] = -1
+	else:				
+		collection["mesh_item_id"] = asset_library.collection_get_mesh_items_ids(collection.collection_id)[0] if "original_meshes" in collection.keys() else -1
+		if collection.collections != collection.original_collections: 
+			asset_library.collection_remove_all_sub_collection(collection.collection_id)		
 		
-	if "meshes" in collection.keys():
-		print("collection is single item collection: ", collection_name)
-		asset_library.collection_add_tag(collection_id, 0)	
-		var mesh_item_id = mesh_item_import_from_array(collection.meshes)		
-		print("imported mesh item: ", mesh_item_id)
-		asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_id, collection.transform)
-		print("added mesh item ", mesh_item_id," to collection: ", collection_name)		
+	if "meshes" in collection.keys():		
+		asset_library.collection_add_tag(collection.collection_id, 0)			 
+		if collection.mesh_item_id == -1:
+			collection.mesh_item_id = asset_library.mesh_item_add([],[])
+			asset_library.collection_add_item(collection.collection_id, MAssetTable.MESH, collection.mesh_item_id, Transform3D())	
+		mesh_item_update_from_collection_dictionary(collection)
 	else:
-		asset_library.collection_remove_tag(collection_id, 0)
-	if "collections" in collection.keys():
-		for i in len(collection.collections):
-			var sub_collection_id = asset_library.collection_get_id(collection.collections[i])
-			if sub_collection_id != -1:
-				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, collection.collection_transforms[i])
-				print("added subcollection ", collection.collections[i], " to collection ", collection_name)
-			else:
-				push_error("error trying to add non-existant subcollection ", collection.collections[i], " to ", collection_name)
-	return collection_id
+		asset_library.collection_remove_tag(collection.collection_id, 0)
+		if "collections" in collection.keys() and collection.collections != collection.original_collections:		
+			for i in len(collection.collections):
+				var sub_collection_id = preview_dictionary[collection.collections[i]].collection_id
+				if sub_collection_id != -1:
+					asset_library.collection_add_sub_collection(collection.collection_id, sub_collection_id, collection.collection_transforms[i])
+	return collection.collection_id
 	
 static func collection_parse_name(name:String):
 	if name.right(3).is_valid_int():  #remove the .001 suffix
 		return name.left(len(name)-4)
 	return name
 
-static func mesh_item_import_from_array(mesh_array)->int:
-	var asset_library := MAssetTable.get_singleton()
-	print("meshes: ",  mesh_array)
-	var mesh_item_array = []	
-	for mesh:ArrayMesh in mesh_array:
-		var name_data = mesh_node_parse_name(mesh.resource_name)
-		print("mesh name: ",  name_data.name)
-		#Save Meshes			
-		if mesh.get_surface_count() == 0:
-			mesh = null
-		if mesh: 
-			var mesh_save_path = asset_library.mesh_get_path(mesh)
+static func mesh_item_update_from_collection_dictionary(collection):
+	var asset_library := MAssetTable.get_singleton()			
+			
+	for mesh in collection.original_meshes:
+		if not mesh in collection.meshes:
+			#first check if anyone else is still using this mesh:
+			#if len(asset_library.mesh_get_mesh_items(collection.original_meshes[i])) == 1:
+				DirAccess.remove_absolute(asset_library.mesh_get_path(mesh))						
+	
+	var mesh_item_array = []
+	for i in len(collection.meshes):		
+		if collection.meshes[i].get_surface_count() == 0: 
+			mesh_item_array.push_back(-1)
+			continue
+		var new_id = asset_library.mesh_get_id(collection.meshes[i])
+		if new_id == -1:			
+			var mesh_save_path = asset_library.mesh_get_path(collection.meshes[i])
 			if FileAccess.file_exists(mesh_save_path):
-				mesh.take_over_path(mesh_save_path)
-				print("mesh take over path: ",  mesh_save_path)
+				collection.meshes[i].take_over_path(mesh_save_path)				
 			else:
-				ResourceSaver.save(mesh, mesh_save_path)
-				print("new mesh saved: ",  mesh_save_path)
-
-		while len(mesh_item_array) < name_data.lod:
-			if len(mesh_item_array) == 0:
-				mesh_item_array.push_back(0)
-				#material_ids.push_back(-1)
-			else:
-				mesh_item_array.push_back(mesh_item_array.back())
-				#material_ids.push_back(material_ids.back())
-		mesh_item_array.push_back(asset_library.mesh_get_id(mesh))		
-
-	#Fill empty lod with last mesh
-	var last_mesh = mesh_item_array[-1]
-	while mesh_item_array.size() < LOD_COUNT:
-		mesh_item_array.push_back(mesh_item_array[-1])
-
+				ResourceSaver.save(collection.meshes[i], mesh_save_path)
+		mesh_item_array.push_back(new_id)
 	#Add Mesh Item
-	var material_ids = mesh_item_array.map(func(a): return -1)		
-	print("mesh item array: ",  mesh_item_array)
-	var mesh_item_id = asset_library.mesh_item_find_by_info( mesh_item_array, material_ids)		
-	if mesh_item_id == -1:
-		mesh_item_id = asset_library.mesh_item_add( mesh_item_array, material_ids)			
-		print("new mesh item: ", mesh_item_id)
-	else:
-		asset_library.mesh_item_update(mesh_item_id, mesh_item_array, material_ids)				
-		print("updated mesh item: ", mesh_item_id)
-	return mesh_item_id
+	var material_ids = mesh_item_array.map(func(a): return -1)				
+	asset_library.mesh_item_update(collection.mesh_item_id, mesh_item_array, material_ids)							
 
-
-#DEPRECATED ====
-static func glb_import_collections(collections_to_import:Dictionary, glb_path, is_root = true) -> Array[int]:
-	#collections_to_import is structure as follows:
-	#collection_name:{
-	#	meshes: [ImporterMeshInstance3D],
-	#	collections: {
-	#		collection_name: {
-	#			meshes: [ImporterMeshInstance3D],
-	#			collections: {etc}
-	#		}
-	#	}
-	#}
-
-	var asset_library = MAssetTable.get_singleton()
-	var result: Array[int] = [] #array of collection ids
-
-	for collection_name in collections_to_import.keys():
-		var original_sub_collections = []
-		var collection_id = asset_library.collection_get_id(collection_name)
-		if collection_id == -1:
-			collection_id = asset_library.collection_create(collection_name)
-		else:
-			asset_library.collection_remove_all_items(collection_id)
-			asset_library.collection_remove_all_sub_collection(collection_id)
-		asset_library.import_info[glb_path][collection_name] = {"id": collection_id}
-		asset_library.import_info["glb_paths"][collection_id] = glb_path
-		if is_root:
-			asset_library.import_info[glb_path]["root_collections"].push_back(collection_name)
-		if "collections" in collections_to_import[collection_name] and len(collections_to_import[collection_name].collections.keys())>0:
-			var collection_names = collections_to_import[collection_name].collections.keys()
-			asset_library.import_info[glb_path][collection_name]["collections"] = collection_names
-			var sub_collection_ids = glb_import_collections(collections_to_import[collection_name].collections, glb_path, false)
-			result.append_array(sub_collection_ids)
-			for i in len(sub_collection_ids):
-				var transform = collections_to_import[collection_name].collections[collection_names[i]].transform
-				asset_library.collection_add_sub_collection(collection_id, sub_collection_ids[i], transform)
-		if "meshes" in collections_to_import[collection_name]:
-			var data = mesh_item_import_from_nodes(collections_to_import[collection_name].meshes)
-			asset_library.import_info[glb_path][collection_name]["meshes"] = data.collection_ids
-			for i in data.collection_ids.size():
-				asset_library.import_info["glb_paths"][data.collection_ids[i]] = glb_path
-				#asset_library.collection_add_sub_collection(collection_id, data.collection_ids[i],data.transforms[i])
-				#asset_library.collection_add_item(collection_id, MAssetTable.MESH, data.ids[i],data.transforms[i])
-			result.push_back(collection_id)
-		if "hlods" in collections_to_import[collection_name].keys():
-			for hlod in collections_to_import[collection_name].hlods:
-				pass
-	return result
-
-
-static func glb_show_import_window(glb_path, preview_dictionary, import_settings):
+static func glb_show_import_window(glb_path, preview_dictionary):
 	var popup = Window.new()
 	popup.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
 	popup.wrap_controls = true
 	EditorInterface.get_editor_main_screen().add_child(popup)
 	var panel = preload("res://addons/m_terrain/asset_manager/ui/import_window.tscn").instantiate()
 	panel.glb_path = glb_path
-	panel.preview_dictionary = preview_dictionary
-	panel.import_settings = import_settings
+	panel.preview_dictionary = preview_dictionary	
 	popup.add_child(panel)
-	popup.popup_centered(Vector2i(600,480))
-	#asset_library.save()
+	popup.popup_centered(Vector2i(600,480))	
 
 static func convert_node_to_hlod_baker(object):
 	var asset_library = MAssetTable.get_singleton()
