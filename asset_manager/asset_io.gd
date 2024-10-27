@@ -245,19 +245,13 @@ static func convert_import_dictionary_to_preview_dictionary(glb_path):
 	for glb_node_name in asset_library.import_info[glb_path].keys():		
 		var collection_id = asset_library.import_info[glb_path][glb_node_name]		
 		print(collection_id)
-		var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)
+		var mesh_item = asset_library.collection_get_mesh_items_info(collection_id)[0]
 		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 		result[glb_node_name] = {
-			"collection_id" = collection_id			
-		}		
-		
-		if mesh_items:
-			result[glb_node_name]["meshes"] = []
-		for mesh_item in mesh_items:
-			for mesh_id in mesh_item.mesh:				
-				var mesh = load(MHlod.get_mesh_path(mesh_id)) if mesh_id != -1 else ArrayMesh.new()
-				result[glb_node_name]["meshes"].push_back(mesh)			
-			#TODO: Materials
+			"collection_id": collection_id,			
+		}				
+		if mesh_item:
+			result[glb_node_name]["meshes"] = mesh_item.mesh 	
 		if sub_collections:
 			result[glb_node_name]["collections"] = []
 		for sub_collection_id in sub_collections:			
