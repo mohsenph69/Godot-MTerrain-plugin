@@ -186,19 +186,18 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 			preview_dictionary[glb_node_name] = import_dictionary[glb_node_name].duplicate(true)
 			preview_dictionary[glb_node_name]["remove_collection"] = true #to remove collection!		
 	
-	#########################
-	#STEP 2: ADD IMPORT TAGS#
-	#########################
-	for glb_node_name in preview_dictionary.keys():
-		if "remove_collection" in preview_dictionary[glb_node_name].keys():
-			preview_dictionary[glb_node_name]["import_state"] = {"state": IMPORT_STATE.REMOVE}
-			preview_dictionary[glb_node_name].erase("remove_collection")
-			
+	###########################
+	# STEP 2: ADD IMPORT TAGS #
+	###########################
+	for glb_node_name in preview_dictionary.keys():		
 		if "meshes" in preview_dictionary[glb_node_name]:
 			#Set import state based on mesh array compare
 			preview_dictionary[glb_node_name]["import_state"] = compare_mesh_arrays(preview_dictionary[glb_node_name].original_meshes, preview_dictionary[glb_node_name].meshes)						
 		#elif "collections" in preview_dictionary[glb_node_name]:
 			#preview_dictionary.import_state = {}
+		if "remove_collection" in preview_dictionary[glb_node_name].keys():
+			preview_dictionary[glb_node_name]["import_state"] = {"state": IMPORT_STATE.REMOVE}
+			preview_dictionary[glb_node_name].erase("remove_collection")			
 		preview_dictionary[glb_node_name].import_state["ignore"] = false
 	
 static func compare_mesh_arrays(original, new)->Dictionary:
