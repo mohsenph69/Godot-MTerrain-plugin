@@ -184,10 +184,10 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 	for glb_node_name in import_dictionary.keys():
 		if not glb_node_name in preview_dictionary.keys():
 			if "meshes" in import_dictionary[glb_node_name]:
-				preview_dictionary[glb_node_name]["original_meshes"] = import_dictionary[glb_node_name].meshes
+				preview_dictionary[glb_node_name] = {"original_meshes": import_dictionary[glb_node_name].meshes}
 			if "collections" in import_dictionary[glb_node_name]:
-				preview_dictionary[glb_node_name]["original_collections"] = import_dictionary[glb_node_name].collections
-				preview_dictionary[glb_node_name]["original_collection_transforms"] = import_dictionary[glb_node_name].collection_transforms						
+				preview_dictionary[glb_node_name]= {"original_collections": import_dictionary[glb_node_name].collections}
+				preview_dictionary[glb_node_name]= {"original_collection_transforms": import_dictionary[glb_node_name].collection_transforms}
 			preview_dictionary[glb_node_name]["remove_collection"] = true #to remove collection!		
 	
 	###########################
