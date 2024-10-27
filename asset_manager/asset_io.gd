@@ -190,6 +190,9 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 	#STEP 2: ADD IMPORT TAGS#
 	#########################
 	for glb_node_name in preview_dictionary.keys():
+		if "remove_collection" in preview_dictionary[glb_node_name]:
+			preview_dictionary[glb_node_name].import_state.state = IMPORT_STATE.REMOVE			
+			preview_dictionary[glb_node_name].erase("remove_collection")			
 		if "meshes" in preview_dictionary[glb_node_name]:
 			#Set import state based on mesh array compare
 			preview_dictionary[glb_node_name].import_state = compare_mesh_arrays(preview_dictionary[glb_node_name].original_meshes, preview_dictionary[glb_node_name].meshes)						
