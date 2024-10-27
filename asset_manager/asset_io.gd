@@ -66,7 +66,7 @@ static func glb_load(path):
 	#STEP 3: compare to previous import, and mark up changes
 	#print("===before===\n", preview_dictionary)
 	compare_preview_dictionary_to_import_dictionary(path, preview_dictionary)
-	#print("===after===\n", preview_dictionary)	
+	#print("===after===\n", preview_dictionary)		
 	#STEP 4: diplay import window and allow user to change import settings			
 	glb_show_import_window(path, preview_dictionary)
 	#STEP 5: commit changes to asset table and update import dictionary - called by import window
@@ -173,6 +173,7 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 					preview_dictionary[glb_collection_name]["original_collections"] = import_dictionary[glb_collection_name].collections
 					preview_dictionary[glb_collection_name]["original_collection_transforms"] = import_dictionary[glb_collection_name].collection_transforms												
 		else:		
+			
 			preview_dictionary[glb_collection_name]["collection_id"] = -1 #this is new collection
 			if "meshes" in preview_dictionary[glb_collection_name].keys():
 				preview_dictionary[glb_collection_name]["original_meshes"] = []
@@ -191,14 +192,21 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 	for glb_collection_name in preview_dictionary.keys():
 		if "meshes" in preview_dictionary[glb_collection_name]:
 			#Set import state based on mesh array compare
-			preview_dictionary.import_state = compare_mesh_arrays(preview_dictionary[glb_collection_name].original_meshes, preview_dictionary[glb_collection_name].meshes)
-			pass
-		elif "collections" in preview_dictionary[glb_collection_name]:
-			pass
-	
+			preview_dictionary[glb_collection_name].import_state = compare_mesh_arrays(preview_dictionary[glb_collection_name].original_meshes, preview_dictionary[glb_collection_name].meshes)			
+		#elif "collections" in preview_dictionary[glb_collection_name]:
+			#preview_dictionary.import_state = {}
 static func compare_mesh_arrays(original, new)->Dictionary:
 	var result := {}
 	var mesh_states = []
+	if len(original) == 0:
+		result["state"] = IMPORT_STATE.NEW
+		result["mesh_state"] = original.map(func(a):return IMPORT_STATE.NEW)
+		return result
+	elif len(new) == 0:
+		result["state"] = IMPORT_STATE.REMOVE
+		result["mesh_state"] = original.map(func(a):return IMPORT_STATE.REMOVE)
+		return result
+		
 	if len(original) > len(new):
 		while len(new) != len(original):
 			new.push_back(null)
