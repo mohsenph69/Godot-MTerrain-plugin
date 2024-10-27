@@ -310,7 +310,7 @@ static func import_new_collection(node_info, glb_node_name):
 static func import_change_collection(node_info):
 	var asset_library = MAssetTable.get_singleton()		
 	if "meshes" in node_info:
-		var mesh_states = node_info.import_state.mesh_state
+		var mesh_states = node_info.import_state.mesh_states
 		var mesh_array := []													
 		for i in len(mesh_states):
 			if mesh_states == IMPORT_STATE.NONE:
