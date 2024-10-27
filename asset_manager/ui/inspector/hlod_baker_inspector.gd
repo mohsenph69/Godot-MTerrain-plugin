@@ -35,19 +35,25 @@ func _ready():
 			push_error("cannot join meshes because Baker Scene is not saved yet. Please save first")
 			return
 		var root_node = Node3D.new()
+		root_node.name = "root_node"
 		var mesh_instance = MeshInstance3D.new()
-		root_node.add_child(mesh_instance)
+		root_node.add_child(mesh_instance)		
 		
 		mesh_instance.name = object.name.to_lower() + "_joined_mesh_lod_" + str(object.join_at_lod)
-		mesh_instance.mesh = object.make_joined_mesh()				
-		mesh_instance.mesh.resource_name = mesh_instance.name		
+		mesh_instance.mesh = object.make_joined_mesh()						
+		mesh_instance.mesh.resource_name = mesh_instance.name						
 		AssetIO.glb_export(root_node, object.joined_mesh_export_path)
+		return
 		
-		var asset_library = MAssetTable.get_singleton()		
-		if not asset_library.import_info.has(object.joined_mesh_export_path):
-			asset_library.import_info[object.joined_mesh_export_path] = {"metadata":{}}		
-		asset_library.import_info[object.joined_mesh_export_path].metadata = AssetIO.combine_metadata(asset_library.import_info[object.joined_mesh_export_path].metadata, {"baker_scene_path":object.scene_file_path	})		
-		AssetIO.glb_load(object.joined_mesh_export_path, asset_library.import_info[object.joined_mesh_export_path].metadata)		
+		var import_info = MAssetTable.get_singleton().import_info
+		var path = object.joined_mesh_export_path
+		if not import_info.has(path):
+			import_info[path] = {"metadata":{}}		
+		if not import_info[path].has("metadata"):
+			import_info[path]["metadata"] = {}		
+		if not import_info[path]["metadata"].has("baker_path"):
+			import_info[path]["metadata"]["baker_path"] = object.scene_file_path		
+		AssetIO.glb_load(path, import_info[path]["metadata"])		
 	)
 	
 	%joined_mesh_export_path.text = object.joined_mesh_export_path

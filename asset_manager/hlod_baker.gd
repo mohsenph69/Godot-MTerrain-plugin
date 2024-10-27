@@ -63,10 +63,10 @@ func process_import(path:String):
 				
 func make_joined_mesh():
 	var mesh_joiner := MMeshJoiner.new()
-	var all_mesh_nodes = []
+	var all_mesh_nodes = meshes_to_join
 	for child in meshes_to_join:
-		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))
-	mesh_joiner.insert_mesh_data(all_mesh_nodes.map(func(a:MAssetMesh): return a.meshes.meshes[0]), all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
+		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))	
+	mesh_joiner.insert_mesh_data(all_mesh_nodes.map(func(a:MAssetMesh): return a.meshes.meshes[-1]), all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
 	return mesh_joiner.join_meshes()					
 					
 func bake_to_hlod_resource():	
