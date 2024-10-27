@@ -8,7 +8,7 @@ extends PanelContainer
 
 var glb_path = "path_to_file.glb"
 var preview_dictionary: Dictionary = {}
-var import_settings: Dictionary = {}
+var metadata: Dictionary = {}
 
 func _ready():	
 	var asset_library = MAssetTable.get_singleton()
@@ -19,9 +19,8 @@ func _ready():
 		if get_parent() is Window:
 			get_parent().queue_free()
 	)
-	import_button.pressed.connect(func():				
-		print(preview_dictionary)
-		AssetIO.glb_import_commit_changes(preview_dictionary, glb_path)		
+	import_button.pressed.connect(func():						
+		AssetIO.glb_import_commit_changes(preview_dictionary, glb_path, metadata)		
 		if get_parent() is Window:
 			get_parent().queue_free()
 	)

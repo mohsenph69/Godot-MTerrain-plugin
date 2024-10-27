@@ -37,7 +37,7 @@ func _notification(what):
 					grandchild.owner = null
 					
 
-func _ready():		
+func _ready():			
 	asset_mesh_updater.update_auto_lod()
 	for child in get_children():
 		if child.has_meta("hlod"):
@@ -48,8 +48,19 @@ func _ready():
 			var node = AssetIO.reload_collection(child, child.get_meta("collection_id"))
 			if is_instance_valid(node):
 				node.transform = original_transform
-		
 
+func process_import(path:String):
+	var asset_library := MAssetTable.get_singleton()
+	if not asset_library.import_info.has(path):
+		push_error("import info doesnt have ", path)
+		return	
+	if asset_library.import_info[path].has("metadata"):
+		if asset_library.import_info[path]["metadata"].has("baker_path"):
+			if asset_library.import_info[path]["metadata"]["baker_path"] == scene_file_path:
+				joined_mesh_node = AssetIO.collection_instantiate(asset_library.import_info[path].values()[0])
+				add_child(joined_mesh_node)
+				
+				
 func make_joined_mesh():
 	var mesh_joiner := MMeshJoiner.new()
 	var all_mesh_nodes = []
@@ -62,7 +73,7 @@ func bake_to_hlod_resource():
 	MHlodScene.sleep()
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 	var hlod := MHlod.new()
-	hlod.set_baker_path(scene_file_path)
+	hlod.set_baker_path(scene_file_path)	
 	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):		
 		if not child.has_meta("mesh_id"): continue
 		var mesh_item_info = asset_library.mesh_item_get_info(child.get_meta("mesh_id"))		
@@ -70,11 +81,17 @@ func bake_to_hlod_resource():
 		arr.resize(len(mesh_item_info.mesh))
 		arr.fill(0)
 		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.material, arr, arr, 1 )
-		var i = 0
-		var max_lod = child.get_meta("max_lod") if child.has_meta("max_lod") else AssetIO.LOD_COUNT		
-		while i <= max_lod:
-			hlod.insert_item_in_lod_table(mesh_id, i)
-			i += 1
+		var i = 0	
+		if child != joined_mesh_node:
+			while i < join_at_lod:
+				hlod.insert_item_in_lod_table(mesh_id, i)
+				i += 1
+		else:
+			i = join_at_lod
+			while i < AssetIO.LOD_COUNT:
+				hlod.insert_item_in_lod_table(mesh_id, i)
+				i += 1
+			
 	for child:HLod_Baker in find_children("*", "HLod_Baker", true, false):
 		child.bake_to_hlod_resource()
 		if is_instance_valid(child.hlod_resource):
@@ -111,6 +128,9 @@ func compare_static_bodies(a:StaticBody3D,b):
 	return true
 		
 func _enter_tree():
+	var asset_library := MAssetTable.get_singleton()
+	asset_library.finish_import.connect(process_import)
+	
 	asset_mesh_updater = MAssetMeshUpdater.new()	
 	asset_mesh_updater.set_root_node(self)
 	timer = Timer.new()

@@ -51,7 +51,11 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 #endregion
 
 #region GLB Import	
-static func glb_load(path):
+static func glb_load(path, metadata={}):
+	# metadata {
+	#	glb_type: Asset / Scene / HLod?
+	#	join_mesh_baker_scene_path: path.tscn
+	# }
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var gltf_document = GLTFDocument.new()
 	if not Engine.is_editor_hint():
@@ -62,18 +66,17 @@ static func glb_load(path):
 	#STEP 1: convert gltf file into nodes
 	var scene = gltf_document.generate_scene(gltf_state).get_children()
 	#STEP 2: flatten nodes into a dictionary
-	var preview_dictionary = glb_generate_preview_dictionary(scene, path)
-	#STEP 3: compare to previous import, and mark up changes
-	#print("===before===\n", preview_dictionary)
-	compare_preview_dictionary_to_import_dictionary(path, preview_dictionary)
-	#print("===after===\n", preview_dictionary)		
+	var preview_dictionary = generate_preview_dictionary(scene, path)		
+	#STEP 3: compare to previous import, and mark up changes					
+	var import_dictionary = convert_import_dictionary_to_preview_dictionary(path, metadata)			
+	compare_preview_dictionary_to_import_dictionary(preview_dictionary, import_dictionary)	
 	#STEP 4: diplay import window and allow user to change import settings			
-	glb_show_import_window(path, preview_dictionary)
+	glb_show_import_window(path, preview_dictionary, metadata)
 	#STEP 5: commit changes to asset table and update import dictionary - called by import window
 	#glb_import_commit_changes(preview_dictionary, path)
 
 #Parse GLB file and prepare a preview of changes to asset library
-static func glb_generate_preview_dictionary(scene:Array, glb_path):
+static func generate_preview_dictionary(scene:Array, glb_path):
 	#preview_dictionary = {
 	#	single_item_collection_name: {
 	#		meshes: Array[Mesh or null]		
@@ -86,23 +89,24 @@ static func glb_generate_preview_dictionary(scene:Array, glb_path):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var preview_dictionary = {}
 	for node: Node3D in scene:
-		glb_import_add_node_to_preview_dictionary(preview_dictionary, node)
-	for glb_node_name in preview_dictionary.keys():
-		if "meshes" in preview_dictionary[glb_node_name]:
-			preview_dictionary[glb_node_name].meshes = process_mesh_array(preview_dictionary[glb_node_name].meshes)
+		add_node_to_preview_dictionary(preview_dictionary, node)
+	for node_name in preview_dictionary.keys():
+		if "meshes" in preview_dictionary[node_name]:
+			preview_dictionary[node_name].meshes = process_mesh_array(preview_dictionary[node_name].meshes)
 	return preview_dictionary
 
 #Recursive function that flattens the collections heirarchy
-static func glb_import_add_node_to_preview_dictionary(preview_dictionary:Dictionary, node):
+static func add_node_to_preview_dictionary(preview_dictionary:Dictionary, node):
 	var name_data = mesh_node_parse_name(node.name)	
 	#If node should be converted to become part of a mesh_item:
-	if node is ImporterMeshInstance3D or (name_data.name != "" and name_data.name in preview_dictionary.keys()):		
+	if node is ImporterMeshInstance3D or node is MeshInstance3D or (name_data.name != "" and name_data.name in preview_dictionary.keys()):		
 		if not name_data.name in preview_dictionary:
 			preview_dictionary[name_data.name] = {"meshes":[]}
-		var mesh = node.mesh.get_mesh() if node is ImporterMeshInstance3D else ArrayMesh.new()		
+		var mesh = ArrayMesh.new()		
+		if node is ImporterMeshInstance3D: mesh = node.mesh.get_mesh() 
+		if node is MeshInstance3D: mesh = node.mesh
 		mesh.resource_name = node.name if name_data.lod != -1 else node.name + "_lod_0"				
-		preview_dictionary[name_data.name].meshes.push_back(mesh)		
-		
+		preview_dictionary[name_data.name].meshes.push_back(mesh)				
 		if node.get_child_count() > 0:
 			push_error("glb import error: while building preview dictionary, ", node.name, " was processed as a mesh/lod node, but also has child nodes")
 		return name_data.name
@@ -114,7 +118,7 @@ static func glb_import_add_node_to_preview_dictionary(preview_dictionary:Diction
 		var glb_node_name = node.name #collection_parse_name(node.name)
 		preview_dictionary[glb_node_name] = {"collections":[], "collection_transforms":[]}
 		for child in node.get_children():
-			var sub_collection_name = glb_import_add_node_to_preview_dictionary(preview_dictionary, child)
+			var sub_collection_name = add_node_to_preview_dictionary(preview_dictionary, child)
 			if sub_collection_name and not sub_collection_name in preview_dictionary[glb_node_name].collections:
 				preview_dictionary[glb_node_name].collections.push_back(sub_collection_name)
 				preview_dictionary[glb_node_name].collection_transforms.push_back(child.transform)			
@@ -142,15 +146,15 @@ static func process_mesh_array(original_mesh_array:Array):
 			mesh_array[i] = mesh_id			
 	return mesh_array
 
-static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_dictionary:Dictionary):	
+static func compare_preview_dictionary_to_import_dictionary(preview_dictionary:Dictionary, import_dictionary):	
 	#here we should add collection id or -1 to each collection
-	var asset_library = MAssetTable.get_singleton()
-	var import_dictionary = convert_import_dictionary_to_preview_dictionary(glb_path)			
+	var asset_library = MAssetTable.get_singleton()	
 	for glb_node_name in preview_dictionary.keys():
-		if glb_node_name in import_dictionary.keys():			
+		if glb_node_name == "metadata": continue
+		if import_dictionary.has(glb_node_name):
 			preview_dictionary[glb_node_name]["collection_id"] = import_dictionary[glb_node_name].collection_id				
-			var preview_has_meshes = "meshes" in preview_dictionary[glb_node_name].keys()
-			var original_has_meshes = "meshes" in import_dictionary[glb_node_name].keys()
+			var preview_has_meshes = preview_dictionary[glb_node_name].has("meshes")
+			var original_has_meshes = import_dictionary[glb_node_name].has("meshes")
 			if preview_has_meshes and original_has_meshes:
 				preview_dictionary[glb_node_name]["original_meshes"] = import_dictionary[glb_node_name].meshes
 			elif preview_has_meshes:
@@ -159,8 +163,8 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 				preview_dictionary[glb_node_name]["original_meshes"] = import_dictionary[glb_node_name].meshes
 				preview_dictionary[glb_node_name]["meshes"] = null
 			else:
-				var preview_has_collections = "collections" in preview_dictionary[glb_node_name].keys()
-				var original_has_collections = "collections" in import_dictionary[glb_node_name].keys()
+				var preview_has_collections = preview_dictionary[glb_node_name].has("collections")
+				var original_has_collections = import_dictionary[glb_node_name].has("collections")
 				if preview_has_collections and original_has_collections:
 					preview_dictionary[glb_node_name]["original_collections"] = import_dictionary[glb_node_name].collections
 					preview_dictionary[glb_node_name]["original_collection_transforms"] = import_dictionary[glb_node_name].collection_transforms
@@ -175,14 +179,15 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 		else:		
 			
 			preview_dictionary[glb_node_name]["collection_id"] = -1 #this is new collection
-			if "meshes" in preview_dictionary[glb_node_name].keys():
+			if preview_dictionary[glb_node_name].has("meshes"):
 				preview_dictionary[glb_node_name]["original_meshes"] = []
-			if "collections" in preview_dictionary[glb_node_name].keys():
+			if preview_dictionary[glb_node_name].has("collections" ):
 				preview_dictionary[glb_node_name]["original_collections"] = []
 				preview_dictionary[glb_node_name]["original_collection_transforms"] = []
 	
 	for glb_node_name in import_dictionary.keys():
-		if not glb_node_name in preview_dictionary.keys():
+		if glb_node_name == "metadata": continue
+		if not preview_dictionary.has(glb_node_name):
 			if "meshes" in import_dictionary[glb_node_name]:
 				preview_dictionary[glb_node_name] = {"original_meshes": import_dictionary[glb_node_name].meshes}
 			if "collections" in import_dictionary[glb_node_name]:
@@ -195,6 +200,7 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 	# STEP 2: ADD IMPORT TAGS #
 	###########################
 	for glb_node_name in preview_dictionary.keys():				
+		if glb_node_name == "metadata": continue
 		if "meshes" in preview_dictionary[glb_node_name]:
 			#Set import state based on mesh array compare
 			preview_dictionary[glb_node_name]["import_state"] = compare_mesh_arrays(preview_dictionary[glb_node_name].original_meshes, preview_dictionary[glb_node_name].meshes)						
@@ -244,31 +250,54 @@ static func compare_mesh_arrays(original, new)->Dictionary:
 	result["mesh_states"] = mesh_states
 	return result
 		
-static func convert_import_dictionary_to_preview_dictionary(glb_path):
+static func convert_import_dictionary_to_preview_dictionary(glb_path, metadata):
 	var asset_library = MAssetTable.get_singleton()
 	var result = {}
-	if not glb_path in asset_library.import_info.keys():
+	if not asset_library.import_info.has(glb_path):
 		print("import dictionary: empty")
 		return {}			
 	for glb_node_name in asset_library.import_info[glb_path].keys():		
-		var collection_id = asset_library.import_info[glb_path][glb_node_name]		
-		print(collection_id)
-		var mesh_item = asset_library.collection_get_mesh_items_info(collection_id)[0]
-		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
-		result[glb_node_name] = {
-			"collection_id": collection_id,			
-		}				
-		if mesh_item:
-			result[glb_node_name]["meshes"] = mesh_item.mesh 	
-		if sub_collections:
-			result[glb_node_name]["collections"] = []
-		for sub_collection_id in sub_collections:			
-			var sub_collection_name = asset_library.import_info[glb_path].find_key(sub_collection_id)
-			if sub_collection_name and sub_collection_name != "":
-				result[glb_node_name]["collections"].push_back(sub_collection_name)	
+		if glb_node_name == "metadata": 
+			continue
+		var collection_id = asset_library.import_info[glb_path][glb_node_name]				
+		result[glb_node_name] = convert_collection_to_preview_dictionary(collection_id, result, glb_path)
+			
+	metadata = combine_metadata(asset_library.import_info[glb_path].metadata, metadata)
 	return result
 
-static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path):
+static func combine_metadata(old_metadata, new_metadata):
+	var result = old_metadata.duplicate()
+	for key in new_metadata.keys():
+		result[key] = new_metadata[key]
+	return result
+
+static func convert_collection_to_preview_dictionary(collection_id, result={}, glb_path=null):
+	var asset_library = MAssetTable.get_singleton()
+	var mesh_item = asset_library.collection_get_mesh_items_info(collection_id)[0]
+	var sub_collections = asset_library.collection_get_sub_collections(collection_id)
+	result = {
+		"collection_id": collection_id,			
+	}				
+	if mesh_item:
+		result["meshes"] = mesh_item.mesh 	
+	if sub_collections:
+		result["collections"] = []
+	for sub_collection_id in sub_collections:					
+		var sub_collection_name = null
+		if glb_path != null:
+			sub_collection_name = asset_library.import_info[glb_path].find_key(sub_collection_id)
+		else:
+			for glb_path_key in asset_library.import_info.keys():
+				sub_collection_name = asset_library.import_info[glb_path_key].find_key(sub_collection_id)
+				if sub_collection_name != null: 
+					break					
+					
+		if sub_collection_name and sub_collection_name != "":
+			result["collections"].push_back(sub_collection_name)	
+	return result
+
+static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path, metadata):
+	print("Metadata: ", metadata)
 	var asset_library = MAssetTable.get_singleton()	
 	if not glb_path in asset_library.import_info.keys():
 		asset_library.import_info[glb_path] = {}		
@@ -299,8 +328,10 @@ static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path):
 		if node_info.import_state.state == IMPORT_STATE.REMOVE:
 			continue		
 		result[glb_node_name] = node_info.collection_id
-	asset_library.import_info[glb_path] = result
+	result["metadata"] = metadata
+	asset_library.import_info[glb_path] = result	
 	asset_library.save()
+	asset_library.finish_import.emit(glb_path)
 	
 static func import_new_collection(node_info, glb_node_name):
 	var asset_library = MAssetTable.get_singleton()		
@@ -449,14 +480,15 @@ static func mesh_item_update_from_collection_dictionary(collection):
 	print("adding mesh item with meshes: ", mesh_item_array)
 	asset_library.mesh_item_update(collection.mesh_item_id, mesh_item_array, material_ids)							
 
-static func glb_show_import_window(glb_path, preview_dictionary):
+static func glb_show_import_window(glb_path, preview_dictionary, metadata):
 	var popup = Window.new()
 	popup.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
 	popup.wrap_controls = true
 	EditorInterface.get_editor_main_screen().add_child(popup)
 	var panel = preload("res://addons/m_terrain/asset_manager/ui/import_window.tscn").instantiate()
-	panel.glb_path = glb_path
+	panel.glb_path = glb_path	
 	panel.preview_dictionary = preview_dictionary		
+	panel.metadata = metadata
 	popup.add_child(panel)
 	popup.popup_centered(Vector2i(600,480))	
 
@@ -601,10 +633,8 @@ static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
 		return meshes
 
 static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->int:
-	var asset_library = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
-	var mesh_item_array = []
-	var mesh_hash_index_array = []
-
+	var asset_library = MAssetTable.get_singleton()
+	var mesh_item_array = []	
 	for mesh:Mesh in meshes:
 		var mesh_save_path = asset_library.mesh_get_path(mesh)
 		if FileAccess.file_exists(mesh_save_path):
@@ -633,8 +663,37 @@ static func mesh_node_parse_name(name:String):
 
 #endregion
 #region Collection
+static func convert_node_to_preview_dictionary(root_node):
+	var asset_library:MAssetTable = MAssetTable.get_singleton()
+	#preview_dictionary = {
+	#	single_item_collection_name: {
+	#		meshes: Array[Mesh or null]		
+	#	}
+	#	collection_name: {
+	#		collections: Array[sub_collection_name]
+	#		collection_transforms: Array[sub_collection Transform3D]
+	#	}
+	#}
+	var result = { "collection_id": root_node.get_meta("collection_id") }
+	if root_node is MAssetMesh:				
+		result["meshes"] = root_node.meshes.meshes	
+	else:
+		result["collections"] = []
+		result["collection_transforms"] = []
+		var overrides = root_node.get_meta("overrides") if root_node.has_meta("overrides") else {}						
+		#for child in root_node.get_children():
+			#if child.has_meta("mesh_id"):
+				#var mesh_id = child.get_meta("mesh_id")
+				#asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_id, child.transform)
+			#elif child is CollisionShape3D:
+				#pass
+			#elif child.has_meta("collection_id"):
+				#var sub_collection_id = child.get_meta("collection_id")
+				#asset_library.collection_add_sub_collection(collection_id, sub_collection_id, child.transform)
+		#return collection_id
+
 static func collection_save_from_nodes(root_node) -> int: #returns collection_id
-	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	if root_node is MAssetMesh:
 		var material_overrides = root_node.get_meta("material_overrides") if root_node.has_meta("material_overrides") else []
 		var mesh_id = root_node.get_meta("mesh_id") if root_node.has_meta("mesh_id") else -1
@@ -680,8 +739,7 @@ static func reload_collection(node:Node3D, collection_id):
 		var old_meta = {}
 		for meta in node.get_meta_list():
 			old_meta[meta] = node.get_meta(meta)
-		node.add_sibling(new_root)
-		#node.replace_by(new_root)
+		node.add_sibling(new_root)		
 		new_root.name = node.name.trim_suffix("*")
 		new_root.owner = node.owner
 		EditorInterface.get_selection().add_node.call_deferred(new_root)
@@ -696,14 +754,10 @@ static func reload_collection(node:Node3D, collection_id):
 
 static func collection_instantiate(collection_id, overrides = {})->Node3D:
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
-	if not asset_library.has_collection(collection_id):
-		print("collection doesn't exist")
-		#TODO: CHECK IF THERE"S A GLB THAT NEEDS TO BE LOADED
-		return null
-	var node
-	if collection_id in asset_library.tag_get_collections(0):
-		print("instantiating single item collection ", asset_library.collection_get_name(collection_id))
-		node = MAssetMesh.new()
+	if not asset_library.has_collection(collection_id):		
+		return null	
+	if collection_id in asset_library.tag_get_collections(0):		
+		var node = MAssetMesh.new()
 		var mesh_id = asset_library.collection_get_mesh_items_ids(collection_id)[0]
 		node.set_meta("mesh_id", mesh_id)
 		node.set_meta("collection_id", collection_id)
@@ -716,7 +770,7 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 			node.transform = asset_library.collection_get_mesh_items_info(collection_id)[0].transform
 		return node
 	else:
-		node = Node3D.new()
+		var node = Node3D.new()
 		node.name = asset_library.collection_get_name(collection_id)
 		node.set_meta("collection_id", collection_id)
 		if "transform" in overrides:
@@ -728,7 +782,8 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 			var mesh_id = item_ids[i]
 			mesh_item.set_meta("mesh_id", mesh_id)
 			var single_item_collection_ids = asset_library.tag_get_collections_in_collections(asset_library.mesh_item_find_collections(mesh_id), 0)
-			if len(single_item_collection_ids) == 0: push_error("single item collection doesn't exist! mesh_id: ", mesh_id)
+			if len(single_item_collection_ids) == 0: 
+				push_error("single item collection doesn't exist! mesh_id: ", mesh_id)
 			mesh_item.set_meta("collection_id", single_item_collection_ids[0])
 			var mesh_item_name = asset_library.collection_get_name(single_item_collection_ids[0])
 			mesh_item.meshes = MMeshLod.new()
@@ -740,14 +795,9 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 		var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
 		for i in sub_collections.size():
-			var sub_collection = collection_instantiate(sub_collections[i])
-			#var sub_collection = Node3D.new()
-			#sub_collection.set_meta("collection_id", id)
+			var sub_collection = collection_instantiate(sub_collections[i])			
 			node.add_child(sub_collection)
-			sub_collection.transform = sub_collections_transforms[i]
-		#for hlod in asset_library.collection_get_sub_hlods(collection_id):
-			#var hlod_baker_scene = load().instantiate()
-			#add_child(hlod_baker_scene)
+			sub_collection.transform = sub_collections_transforms[i]		
 		return node
 
 static func edit_collection(object, toggle_on):
