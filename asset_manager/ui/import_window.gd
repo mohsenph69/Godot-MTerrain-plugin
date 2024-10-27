@@ -20,6 +20,7 @@ func _ready():
 			get_parent().queue_free()
 	)
 	import_button.pressed.connect(func():		
+		print("commit changes preview dictionary:\n", preview_dictionary)
 		AssetIO.glb_import_commit_changes(preview_dictionary, glb_path)		
 		if get_parent() is Window:
 			get_parent().queue_free()

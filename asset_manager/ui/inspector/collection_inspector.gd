@@ -35,7 +35,7 @@ func _ready():
 		if has_collection:						
 			%remove_button.disabled = 0 in asset_library.collection_get_tags(collection_id)
 			%remove_button.pressed.connect(func():
-				asset_library.remove_collection(collection_id)
+				asset_library.collection_remove(collection_id)
 				object.set_meta("collection_id", -1)
 				object.remove_meta("overrides")
 			)
@@ -113,7 +113,7 @@ func _ready():
 			#hbox.add_child(button)
 			#button.text = "remove item"
 			#button.pressed.connect(func():
-				#asset_library.remove_mesh_item(mesh_id)
+				#asset_library.mesh_item_remove(mesh_id)
 				#object.set_meta("mesh_id", -1)
 			#)
 			#button = Button.new()

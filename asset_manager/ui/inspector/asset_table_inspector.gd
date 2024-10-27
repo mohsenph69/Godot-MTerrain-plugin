@@ -27,7 +27,7 @@ func _ready():
 		mesh_node.find_child("name").queue_free()		
 		
 		mesh_node.find_child("remove").pressed.connect(func():
-			asset_library.remove_mesh_item(mesh_item_id)
+			asset_library.mesh_item_remove(mesh_item_id)
 			asset_library.notify_property_list_changed()
 			asset_library.save()
 		)		
@@ -57,7 +57,7 @@ func _ready():
 			asset_library.save()
 		)
 		collection_node.find_child("remove").pressed.connect(func():
-			asset_library.remove_collection(collection_id)
+			asset_library.collection_remove(collection_id)
 			asset_library.notify_property_list_changed()
 			asset_library.save()
 		)		
