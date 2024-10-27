@@ -289,15 +289,18 @@ static func convert_collection_to_preview_dictionary(collection_id, glb_path=nul
 	var result := {}
 	var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)
 	var sub_collections = asset_library.collection_get_sub_collections(collection_id)
+	var sub_collection_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
 	result["collection_id"] = collection_id					
 	if len(mesh_items) != 0:
 		result["meshes"] = mesh_items[0].mesh 	
 	if sub_collections:
 		result["collections"] = []
-	for sub_collection_id in sub_collections:					
-		var sub_collection_name = null
+		result["collection_transforms"] = []
+	for i in len(sub_collections):					
+		var sub_collection_id = sub_collections[i]
+		var sub_collection_name = null		
 		if glb_path != null:
-			sub_collection_name = asset_library.import_info[glb_path].find_key(sub_collection_id)
+			sub_collection_name = asset_library.import_info[glb_path].find_key(sub_collection_id)			
 		else:
 			for glb_path_key in asset_library.import_info.keys():
 				sub_collection_name = asset_library.import_info[glb_path_key].find_key(sub_collection_id)
@@ -305,6 +308,7 @@ static func convert_collection_to_preview_dictionary(collection_id, glb_path=nul
 					break									
 		if sub_collection_name and sub_collection_name != "":
 			result["collections"].push_back(sub_collection_name)			
+			result["collection_transforms"].push_back(sub_collection_transforms[i])
 	return result
 
 static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path, metadata):	
