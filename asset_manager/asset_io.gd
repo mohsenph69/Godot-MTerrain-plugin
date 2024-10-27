@@ -148,7 +148,7 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 	var import_dictionary = convert_import_dictionary_to_preview_dictionary(glb_path)		
 	for glb_collection_name in preview_dictionary.keys():
 		if glb_collection_name in import_dictionary.keys():			
-			preview_dictionary[glb_collection_name]["collection_id"] = import_dictionary[glb_collection_name].collection_id	
+			preview_dictionary[glb_collection_name]["collection_id"] = import_dictionary[glb_collection_name]	
 			var preview_has_meshes = "meshes" in preview_dictionary[glb_collection_name].keys()
 			var original_has_meshes = "meshes" in import_dictionary[glb_collection_name].keys()
 			if preview_has_meshes and original_has_meshes:
@@ -192,9 +192,11 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 	for glb_collection_name in preview_dictionary.keys():
 		if "meshes" in preview_dictionary[glb_collection_name]:
 			#Set import state based on mesh array compare
-			preview_dictionary[glb_collection_name].import_state = compare_mesh_arrays(preview_dictionary[glb_collection_name].original_meshes, preview_dictionary[glb_collection_name].meshes)			
+			preview_dictionary[glb_collection_name].import_state = compare_mesh_arrays(preview_dictionary[glb_collection_name].original_meshes, preview_dictionary[glb_collection_name].meshes)						
 		#elif "collections" in preview_dictionary[glb_collection_name]:
 			#preview_dictionary.import_state = {}
+		preview_dictionary[glb_collection_name].import_state["ignore"] = false
+	
 static func compare_mesh_arrays(original, new)->Dictionary:
 	var result := {}
 	var mesh_states = []
@@ -216,7 +218,7 @@ static func compare_mesh_arrays(original, new)->Dictionary:
 	mesh_states.resize(len(new))
 	var is_same := true
 	for i in len(original):
-		if original[i] != new[i]:
+		if typeof(original[i]) != typeof(new[i]) or original[i] != new[i]:
 			is_same = false
 			if new[i] == null:
 				mesh_states[i] = IMPORT_STATE.REMOVE
@@ -264,18 +266,112 @@ static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path):
 	if not glb_path in asset_library.import_info.keys():
 		asset_library.import_info[glb_path] = {}		
 	
-	var glb_collection_names = preview_dictionary.keys()
-	glb_collection_names.reverse()		
-	for glb_collection_name in glb_collection_names:
-		if not "ignore" in preview_dictionary[glb_collection_name].keys():						
-			var collection_id = glb_import_collection(glb_collection_name, preview_dictionary)			
-			print(collection_id)
-			if collection_id == -1:
-				asset_library.import_info[glb_path].erase(glb_collection_name)
-			else:
-				asset_library.import_info[glb_path][glb_collection_name] = collection_id
+	var glb_node_names = preview_dictionary.keys()
+	glb_node_names.reverse()		
+	
+	print("======starting commit changes to asset table=======\n",preview_dictionary)
+	for glb_node_name in glb_node_names:		
+		var node_info = preview_dictionary[glb_node_name]		
+		if node_info.import_state.ignore:
+			continue
+		if node_info.import_state.state == IMPORT_STATE.NEW:
+			node_info.collection_id = import_new_collection(node_info, glb_node_name)
+		elif node_info.import_state.state == IMPORT_STATE.CHANGE:
+			import_change_collection(node_info)
+		elif node_info.import_state.state == IMPORT_STATE.REMOVE:
+			import_remove_collection(node_info)			
+		else:
+			print("no changes for ", glb_node_name)		
+	
+	########################
+	# UPDATING IMPORT INFO #
+	########################
+	var result = {}
+	for glb_node_name in glb_node_names:
+		var node_info = preview_dictionary[glb_node_name]		
+		if node_info.import_state.state == IMPORT_STATE.REMOVE:
+			continue		
+		result[glb_node_name] = node_info.collection_id
+	asset_library.import_info[glb_path] = result
 	asset_library.save()
+static func import_new_collection(node_info, glb_node_name):
+	var asset_library = MAssetTable.get_singleton()		
+	print("adding new: ", glb_node_name)			
+	if "meshes" in node_info:
+		var mesh_array := []
+		for mesh in node_info.meshes:					
+			var mesh_id = save_mesh_to_file(mesh)
+			mesh_array.push_back(mesh_id)
+		var mesh_item_id = asset_library.mesh_item_add(mesh_array, mesh_array.map(func(a):return -1))
+		var collection_id = asset_library.collection_create(glb_node_name)		
+		asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_id,Transform3D())
+		asset_library.collection_add_tag(collection_id, 0)
+		return collection_id
+		
+static func import_change_collection(node_info):
+	var asset_library = MAssetTable.get_singleton()		
+	if "meshes" in node_info:
+		var mesh_states = node_info.import_state.mesh_state
+		var mesh_array := []													
+		for i in len(mesh_states):
+			if mesh_states == IMPORT_STATE.NONE:
+				mesh_array.push_back(node_info.original_meshes[i])																
+			elif mesh_states == IMPORT_STATE.NEW:
+				var mesh_id = save_mesh_to_file(node_info.meshes[i])
+				mesh_array.push_back(mesh_id)
+				print("changing: adding new mesh to mesh_item",)
+			elif mesh_states == IMPORT_STATE.CHANGE:
+				#delete old mesh
+				pass
+				#save new mesh
+				var mesh_id = save_mesh_to_file(node_info.meshes[i])
+				mesh_array.push_back(mesh_id)						
+				print("changing: changing mesh for mesh_item")
+			elif mesh_states == IMPORT_STATE.REMOVE:
+				#delete old mesh
+				pass
+				mesh_array.push_back(-1)												
+				print("changing: removing mesh for mesh_item")
+		var collection_id = node_info.collection_id
+		var mesh_id = asset_library.collection_get_mesh_items_ids(collection_id)[0]
+		asset_library.mesh_item_update(mesh_id, mesh_array, mesh_array.map(func(a):return-1))
 
+
+static func import_remove_collection(node_info):
+	print("removing collection ")
+	var asset_library = MAssetTable.get_singleton()		
+	var collection_id = node_info.collection_id
+	var mesh_id = asset_library.collection_get_mesh_items_ids(collection_id)[0]
+	asset_library.mesh_item_remove(mesh_id)	
+		
+		#if preview_dictionary[glb_node_name].state in preview_dictionary[glb_node_name].keys():						
+			#var collection_id = glb_import_collection(glb_collection_name, preview_dictionary)						
+			#if collection_id == -1:
+				#asset_library.import_info[glb_path].erase(glb_collection_name)
+			#else:
+				#asset_library.import_info[glb_path][glb_collection_name] = collection_id
+		
+
+static func save_mesh_to_file(mesh):
+	if mesh == null:
+		return -1
+	if mesh is int:
+		return mesh
+	if not mesh is Mesh:
+		push_error("trying to save mesh to file but it is not type mesh or int")
+		return -1
+	var asset_library = MAssetTable.get_singleton()
+	var mesh_id = asset_library.mesh_get_id(mesh)
+	if mesh_id == -1:
+		#Save mesh
+		var path = asset_library.mesh_get_path(mesh)
+		ResourceSaver.save(mesh, path)
+		mesh_id = asset_library.mesh_get_id(mesh)
+		if mesh_id == -1:
+			push_error("asset library cannot save mesh")			
+			return -1
+	return mesh_id
+	
 static func glb_import_collection(glb_collection_name, preview_dictionary:Dictionary)->int: #returns collection_id	
 	var asset_library = MAssetTable.get_singleton()	
 	var collection = preview_dictionary[glb_collection_name]
