@@ -313,20 +313,20 @@ static func import_change_collection(node_info):
 		var mesh_states = node_info.import_state.mesh_states
 		var mesh_array := []													
 		for i in len(mesh_states):
-			if mesh_states == IMPORT_STATE.NONE:
+			if mesh_states[i] == IMPORT_STATE.NONE:
 				mesh_array.push_back(node_info.original_meshes[i])																
-			elif mesh_states == IMPORT_STATE.NEW:
+			elif mesh_states[i] == IMPORT_STATE.NEW:
 				var mesh_id = save_mesh_to_file(node_info.meshes[i])
 				mesh_array.push_back(mesh_id)
 				print("changing: adding new mesh to mesh_item",)
-			elif mesh_states == IMPORT_STATE.CHANGE:
+			elif mesh_states[i] == IMPORT_STATE.CHANGE:
 				#delete old mesh
 				pass
 				#save new mesh
 				var mesh_id = save_mesh_to_file(node_info.meshes[i])
 				mesh_array.push_back(mesh_id)						
 				print("changing: changing mesh for mesh_item")
-			elif mesh_states == IMPORT_STATE.REMOVE:
+			elif mesh_states[i] == IMPORT_STATE.REMOVE:
 				#delete old mesh
 				pass
 				mesh_array.push_back(-1)												
