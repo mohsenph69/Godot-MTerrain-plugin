@@ -66,9 +66,16 @@ func make_joined_mesh():
 	var all_mesh_nodes = meshes_to_join
 	for child in meshes_to_join:
 		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))	
-	mesh_joiner.insert_mesh_data(all_mesh_nodes.map(func(a:MAssetMesh): return a.meshes.meshes[-1]), all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
+	
+	mesh_joiner.insert_mesh_data(all_mesh_nodes.map(get_correct_mesh_lod_for_joining), all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
 	return mesh_joiner.join_meshes()					
-					
+
+func get_correct_mesh_lod_for_joining(a:MAssetMesh):
+	var lod_to_use = min(join_at_lod, len(a.meshes.meshes))
+	while a.meshes.meshes[lod_to_use] == null and lod_to_use >-1:
+		lod_to_use -= 1
+	return null if lod_to_use == -1 else a.meshes.meshes[lod_to_use]		
+
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
