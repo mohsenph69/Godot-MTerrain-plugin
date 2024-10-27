@@ -148,7 +148,7 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 	var import_dictionary = convert_import_dictionary_to_preview_dictionary(glb_path)			
 	for glb_node_name in preview_dictionary.keys():
 		if glb_node_name in import_dictionary.keys():			
-			preview_dictionary[glb_node_name]["collection_id"] = import_dictionary[glb_node_name]				
+			preview_dictionary[glb_node_name]["collection_id"] = import_dictionary[glb_node_name].collection_id				
 			var preview_has_meshes = "meshes" in preview_dictionary[glb_node_name].keys()
 			var original_has_meshes = "meshes" in import_dictionary[glb_node_name].keys()
 			if preview_has_meshes and original_has_meshes:
