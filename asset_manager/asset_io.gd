@@ -196,7 +196,7 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 		#elif "collections" in preview_dictionary[glb_node_name]:
 			#preview_dictionary.import_state = {}
 		if "remove_collection" in preview_dictionary[glb_node_name].keys():
-			preview_dictionary[glb_node_name]["import_state"] = {"state": IMPORT_STATE.REMOVE}
+			preview_dictionary[glb_node_name]["import_state"].state = IMPORT_STATE.REMOVE
 			preview_dictionary[glb_node_name].erase("remove_collection")			
 		preview_dictionary[glb_node_name].import_state["ignore"] = false
 	
