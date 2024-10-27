@@ -189,6 +189,7 @@ static func compare_preview_dictionary_to_import_dictionary(glb_path, preview_di
 				preview_dictionary[glb_node_name]= {"original_collections": import_dictionary[glb_node_name].collections}
 				preview_dictionary[glb_node_name]= {"original_collection_transforms": import_dictionary[glb_node_name].collection_transforms}
 			preview_dictionary[glb_node_name]["remove_collection"] = true #to remove collection!		
+			preview_dictionary[glb_node_name]["collection_id"] = import_dictionary[glb_node_name].collection_id				
 	
 	###########################
 	# STEP 2: ADD IMPORT TAGS #
