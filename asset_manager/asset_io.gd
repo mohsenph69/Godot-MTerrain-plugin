@@ -301,6 +301,7 @@ static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path):
 		result[glb_node_name] = node_info.collection_id
 	asset_library.import_info[glb_path] = result
 	asset_library.save()
+	
 static func import_new_collection(node_info, glb_node_name):
 	var asset_library = MAssetTable.get_singleton()		
 	print("adding new: ", glb_node_name)			
@@ -345,19 +346,12 @@ static func import_change_collection(node_info):
 
 static func import_remove_collection(node_info):
 	print("removing collection ")
-	var asset_library = MAssetTable.get_singleton()		
+	var asset_library := MAssetTable.get_singleton()		
 	var collection_id = node_info.collection_id
 	var mesh_id = asset_library.collection_get_mesh_items_ids(collection_id)[0]
 	asset_library.mesh_item_remove(mesh_id)	
-		
-		#if preview_dictionary[glb_node_name].state in preview_dictionary[glb_node_name].keys():						
-			#var collection_id = glb_import_collection(glb_node_name, preview_dictionary)						
-			#if collection_id == -1:
-				#asset_library.import_info[glb_path].erase(glb_node_name)
-			#else:
-				#asset_library.import_info[glb_path][glb_node_name] = collection_id
-		
-
+	asset_library.collection_remove(collection_id)
+	
 static func save_mesh_to_file(mesh):
 	if mesh == null:
 		return -1
