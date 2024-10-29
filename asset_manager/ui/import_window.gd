@@ -24,10 +24,37 @@ func _ready():
 		if get_parent() is Window:
 			get_parent().queue_free()
 	)
-	var preview_dictionary_label = find_child("preview_dictionary_label")
-	preview_dictionary_label.text = str(preview_dictionary).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
-	
+	#var preview_dictionary_label = find_child("preview_dictionary_label")
+	#preview_dictionary_label.text = str(preview_dictionary).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
+	var tree: Tree = %preview_dictionary_tree		
+	tree.item_selected.connect(update_label)
+	var root = tree.create_item()	
+	for key in preview_dictionary.keys():		
+		if preview_dictionary[key].has("is_root"):
+			build_tree(key, root)
 	return
+	
+func update_label():
+	var tree: Tree = %preview_dictionary_tree			
+	var item = tree.get_selected()
+	var node_name = item.get_text(0)
+	%preview_dictionary_label.text = str(preview_dictionary[node_name]).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
+	
+func build_tree(node_name, root:TreeItem):	
+	var item := root.create_child()
+	#item.set_text(0, node_name)		
+	var node = preview_dictionary[node_name]
+	var suffix = ""	
+	if node.import_state.state > 0:				
+		suffix += " " + AssetIO.IMPORT_STATE.keys()[node.import_state.state]	
+	if node.has("tag_as_hidden"):
+		suffix += " (hidden)"
+	#item.set_suffix(0, suffix) #set_custom_bg_color(0,Color.RED) #set_text(1, "hidden")	
+	item.set_text(0, node_name + suffix)
+	if node.has("collections"):		
+		for key in node.collections:			
+			build_tree(key, item)
+	
 	#for child in node_container.get_children():
 		#node_container.remove_child(child)
 		#child.queue_free()								

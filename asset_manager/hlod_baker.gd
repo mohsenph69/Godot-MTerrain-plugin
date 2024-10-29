@@ -25,6 +25,7 @@ class_name HLod_Baker extends Node3D
 @export var meshes_to_join: Array[Node3D]
 @export var hlod_resource: MHlod
 
+var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
 var timer: Timer
@@ -49,8 +50,7 @@ func _ready():
 			if is_instance_valid(node):
 				node.transform = original_transform
 
-func process_import(path:String):
-	var asset_library := MAssetTable.get_singleton()
+func process_import(path:String):	
 	if not asset_library.import_info.has(path):
 		push_error("import info doesnt have ", path)
 		return	
@@ -77,8 +77,7 @@ func get_correct_mesh_lod_for_joining(a:MAssetMesh):
 	return null if lod_to_use == -1 else a.meshes.meshes[lod_to_use]		
 
 func bake_to_hlod_resource():	
-	MHlodScene.sleep()
-	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
+	MHlodScene.sleep()	
 	var hlod := MHlod.new()
 	hlod.set_baker_path(scene_file_path)	
 	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):		
@@ -134,8 +133,7 @@ func compare_static_bodies(a:StaticBody3D,b):
 		return false
 	return true
 		
-func _enter_tree():
-	var asset_library := MAssetTable.get_singleton()
+func _enter_tree():	
 	asset_library.finish_import.connect(process_import)
 	
 	asset_mesh_updater = MAssetMeshUpdater.new()	
@@ -152,5 +150,6 @@ func update_lod():
 	asset_mesh_updater.update_auto_lod()		
 	
 func _exit_tree():
+	asset_library.finish_import.disconnect(process_import)
 	if is_instance_valid(timer):
 		timer.queue_free()

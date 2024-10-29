@@ -47,9 +47,13 @@ func set_group_name(text):
 
 func item_clicked():
 	for child in get_parent().get_children():	
-		child.selected = child == self
-		child.update_selection()
-		child.toggle_editing(false)
+		if child == self:
+			selected = true
+			update_selection()
+		elif child.selected:
+			child.selected = false
+			child.update_selection()
+		toggle_editing(false)			
 	group_selected.emit(current_name)
 	
 func _gui_input(event: InputEvent):

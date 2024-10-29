@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=6 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -39,6 +39,7 @@ func _toggled(toggle_on):
 			rect.position.y = owner.global_position.y + size.y
 			popup.max_size.y = get_viewport_rect().size.y - owner.global_position.y - size.y
 		popup.popup(rect)
+		
 	else:
 		popup.visible = false
 
@@ -47,41 +48,6 @@ func _input(event: InputEvent):
 		if not get_rect().has_point(event.position):
 			release_focus()		
 			button_pressed = false
-"
-
-[sub_resource type="GDScript" id="GDScript_5o4lw"]
-script/source = "@tool
-extends Button
-
-func _pressed():
-	owner.update_grouping_options()
-	var popup:PopupMenu = get_child(0)
-	popup.visible = true
-	popup.position.x = global_position.x
-	popup.position.y = size.y + owner.global_position.y
-	popup.index_pressed.connect(func(i):
-		owner.regroup(popup.get_item_text(i))
-	)
-"
-
-[sub_resource type="GDScript" id="GDScript_s34fs"]
-script/source = "@tool
-extends Button
-
-var asset_builder
-var main_screen
-
-func _pressed():
-	var popup = Window.new()
-	popup.wrap_controls = true
-	popup.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
-	popup.close_requested.connect(popup.queue_free)
-	var settings_control = preload(\"res://addons/m_terrain/asset_manager/ui/asset_manager_settings.tscn\").instantiate()	
-	settings_control.asset_library = owner.asset_library
-	popup.add_child(settings_control)
-	add_child(popup)		
-	popup.popup_centered(Vector2i(0,0))
-	popup.window_input.connect(func(e): if e is InputEventKey and e.keycode == KEY_ESCAPE: popup.queue_free())
 "
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -123,7 +89,6 @@ text = "sort by"
 [node name="group_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "group by"
-script = SubResource("GDScript_5o4lw")
 
 [node name="grouping_popup_menu" type="PopupMenu" parent="VBoxContainer/HBoxContainer/group_by_button"]
 auto_translate_mode = 1
@@ -174,10 +139,28 @@ item_20/id = 20
 item_21/text = "building_parts"
 item_21/id = 21
 
-[node name="edit" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="edit_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "Edit"
-script = SubResource("GDScript_s34fs")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "debug:"
+
+[node name="clear_assets" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove All"
+
+[node name="remove_asset" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove selected"
+
+[node name="generate_thumbnails_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Generate Thumbnails"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 140)
@@ -194,3 +177,4 @@ layout_mode = 2
 
 [node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
 layout_mode = 2
+size_flags_vertical = 3

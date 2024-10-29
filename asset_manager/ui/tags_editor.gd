@@ -41,6 +41,12 @@ func set_options(tag_data): #{tag_name: tag_id}
 		control.checkbox.disabled = not selectable #or tag_data[tag] == 0
 		control.checkbox.toggled.connect(toggle_tag.bind(tag_data[tag]))
 		biggest_size = max(biggest_size, control.size.x)
+		control.tag_renamed.connect(func(id,new_name):
+			tag_option_renamed.emit(id, new_name)	
+		)
+		control.tag_removed.connect(func(id):
+			tag_option_removed.emit(id)
+		)
 	if get_window() != EditorInterface.get_editor_main_screen().get_window():
 		get_window().size.x = biggest_size
 			
@@ -51,6 +57,3 @@ func set_tags_from_data(tags: PackedInt32Array): #data: Array[int32]
 	if not is_instance_valid(tag_list): await ready	
 	for control in tag_list.get_children():											
 		control.checkbox.button_pressed = control.tag_id in tags		
-	
-func rename_tag(id, new_name):	
-	tag_option_renamed.emit(id, new_name)

@@ -12,6 +12,8 @@ class_name AssetIO extends Object
 #		object_name: collection_id
 #	}
 
+# QUESTION: If I have a fence with 100 fence posts, is it better to have 1 mesh with 8000 verticies or 100 instances of a single mesh with 80vertices?
+
 const LOD_COUNT = 8  # The number of different LODs in your project
 
 enum IMPORT_STATE {
@@ -89,40 +91,118 @@ static func generate_preview_dictionary(scene:Array, glb_path):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var preview_dictionary = {}
 	for node: Node3D in scene:
-		add_node_to_preview_dictionary(preview_dictionary, node)
+		add_node_to_preview_dictionary(preview_dictionary, node, glb_path, true)						
 	for node_name in preview_dictionary.keys():
 		if "meshes" in preview_dictionary[node_name]:
 			preview_dictionary[node_name].meshes = process_mesh_array(preview_dictionary[node_name].meshes)		
 	return preview_dictionary
 
-#Recursive function that flattens the collections heirarchy
-static func add_node_to_preview_dictionary(preview_dictionary:Dictionary, node):
+#Recursive function that flattens the collections heirarchy, returns node name (for adding as subcollection)
+static func add_node_to_preview_dictionary(preview_dictionary:Dictionary, node, glb_path, is_root=false)->String:
 	var name_data = mesh_node_parse_name(node.name)	
+	var node_name
+	if "_hlod" in node.name:
+		node_name = add_hlod_to_preview_dictionary(preview_dictionary, node, glb_path)		
+	elif "collision" in node.name:		
+		node_name = add_collision_node_to_preview_dictionary(preview_dictionary, node)
 	#If node should be converted to become part of a mesh_item:
-	if node is ImporterMeshInstance3D or node is MeshInstance3D or (name_data.name != "" and name_data.name in preview_dictionary.keys()):		
-		if not name_data.name in preview_dictionary:
-			preview_dictionary[name_data.name] = {"meshes":[]}
-		var mesh = ArrayMesh.new()		
-		if node is ImporterMeshInstance3D: mesh = node.mesh.get_mesh() 
-		if node is MeshInstance3D: mesh = node.mesh
-		mesh.resource_name = node.name if name_data.lod != -1 else node.name + "_lod_0"				
-		preview_dictionary[name_data.name].meshes.push_back(mesh)				
-		if node.get_child_count() > 0:
-			push_error("glb import error: while building preview dictionary, ", node.name, " was processed as a mesh/lod node, but also has child nodes")
-		return name_data.name
-	elif "collision" in node.name:
-		pass	
+	elif node is ImporterMeshInstance3D or node is MeshInstance3D or (name_data.name != "" and name_data.name in preview_dictionary.keys()):		
+		node_name = add_mesh_node_to_preview_dictionary(preview_dictionary, node, name_data)
+	elif node is Light3D:		
+		node_name = add_light_node_to_preview_dictionary(preview_dictionary, node)		
 	else: #If node is an empty that contains subcollections:
-		if not node.get_child_count() > 0: return null
+		node_name = add_collection_node_to_preview_dictionary(preview_dictionary, node, glb_path)
+	if is_root:
+		preview_dictionary[node_name]["is_root"] = true	
+	return node_name
+		
+static func add_collection_node_to_preview_dictionary(preview_dictionary, node, glb_path):
+	if node.get_child_count() > 0: # this is defining a new collection
 		var glb_node_name = node.name 
 		preview_dictionary[glb_node_name] = {"collections":[], "collection_transforms":[]}
 		for child in node.get_children():
-			var sub_collection_name = add_node_to_preview_dictionary(preview_dictionary, child)
-			if sub_collection_name and not sub_collection_name in preview_dictionary[glb_node_name].collections:
+			var sub_collection_name = add_node_to_preview_dictionary(preview_dictionary, child, glb_path)
+			if preview_dictionary[sub_collection_name].has("meshes"):
+				preview_dictionary[sub_collection_name]["tag_as_hidden"] = true
+			if sub_collection_name == null or sub_collection_name in preview_dictionary[glb_node_name].collections:
+				continue
+			#elif "collision" in sub_collection_name or "light" in sub_collection_name:
+			#	continue # temporary... until this is implemented correctly
+			else:
 				preview_dictionary[glb_node_name].collections.push_back(sub_collection_name)
 				preview_dictionary[glb_node_name].collection_transforms.push_back(child.transform)			
 		return glb_node_name
+	else: #This is a reference to an existing collection, replace.				
+		if node.has_meta("blend_file"): 
+			var blend_file_name = node.get_meta("blend_file")
+			if blend_file_name in MAssetTable.get_singleton().import_info.keys():
+				preview_dictionary[node.name] = {"replace_with_collection": node.name, "blend_file": blend_file_name}
+			else:
+				#TO DO: try to import this blend file first?
+				push_error("cannot add node to preview dictionary because it references a collection from a blend file that has not been imported yet: ", blend_file_name)
+		else: #this node is referencing a collection from it's own file.
+			preview_dictionary[node.name] = {"replace_with_collection": node.name}
+			return node.name
 
+static func add_collision_node_to_preview_dictionary(preview_dictionary,node)->String:		
+	var name = node.get_parent().name + "_collisions"
+	if not preview_dictionary.has(name) or not preview_dictionary[name].has("collisions"):
+		preview_dictionary[name] = {"collisions": []}
+	if "collision_box" in node.name:					
+		preview_dictionary[name]["collisions"].push_back({"type": "box", "position":node.position, "rotation": node.rotation, "size": abs(node.scale)})
+	elif "collision_sphere" in node.name:
+		preview_dictionary[name]["collisions"].push_back({"type": "sphere", "position":node.position, "rotation": node.rotation, "radius": abs(node.scale.x)})
+	elif "collision_capsule" in node.name:
+		preview_dictionary[name]["collisions"].push_back({"type": "capsule", "position":node.position, "rotation": node.rotation, "radius": abs(node.scale.x), "height": abs(node.scale.y)})
+	elif "collision_cylinder" in node.name:
+		preview_dictionary[name]["collisions"].push_back({"type": "cylinder", "position":node.position, "rotation": node.rotation, "radius": abs(node.scale.x), "height": abs(node.scale.y)})
+	elif "collision_convex" in node.name:
+		if node is ImporterMeshInstance3D or node is MeshInstance3D:							
+			var mesh:ArrayMesh = node.mesh if node is MeshInstance3D else node.mesh.get_mesh()				
+			preview_dictionary[name]["collisions"].push_back({"type": "convex", "position":node.position, "rotation": node.rotation, "points": mesh.surface_get_arrays(0)[0]})				
+		else:
+			push_error("cannot add convex collision node to preview dictionary because it doesn't have a mesh")
+	else:
+		pass #generate collision from mesh?						
+	return name
+	
+static func add_mesh_node_to_preview_dictionary(preview_dictionary, node, name_data)->String:
+	if not name_data.name in preview_dictionary:
+			preview_dictionary[name_data.name] = {"meshes":[]}
+	var mesh = ArrayMesh.new()		
+	if node is ImporterMeshInstance3D: mesh = node.mesh.get_mesh() 
+	if node is MeshInstance3D: mesh = node.mesh
+	mesh.resource_name = node.name if name_data.lod != -1 else node.name + "_lod_0"				
+	preview_dictionary[name_data.name].meshes.push_back(mesh)				
+	if node.get_child_count() > 0:
+		push_error("glb import error: while building preview dictionary, ", node.name, " was processed as a mesh/lod node, but also has child nodes")
+	return name_data.name
+
+static func add_light_node_to_preview_dictionary(preview_dictionary, node):
+	var light_name = node.name
+	preview_dictionary[light_name] = {"color": node.light_color, "energy":node.light_energy}
+	var light_type = DirectionalLight3D
+	if node is OmniLight3D:
+		light_type = OmniLight3D			
+		preview_dictionary[light_name]["range"] = node.omni_range
+		preview_dictionary[light_name]["attenuation"] = node.omni_attenuation
+	var a:SpotLight3D		
+	if node is SpotLight3D:
+		light_type = SpotLight3D		
+		preview_dictionary[light_name]["range"] = node.spot_range
+		preview_dictionary[light_name]["attenuation"] = node.spot_attenuation
+		preview_dictionary[light_name]["angle"] = node.spot_angle
+	preview_dictionary[light_name]["light_type"] = light_type
+	return light_name
+	
+static func add_hlod_to_preview_dictionary(preview_dictionary, node:Node3D, glb_path):
+	if node.get_child_count() == 0:		
+		preview_dictionary[node.name] = {"replace_with_hlod": node.name}
+		return node.name		
+	else:
+		preview_dictionary[node.name] = {"hlod": generate_preview_dictionary(node.get_children(), glb_path)}		
+		return node.name
+	
 static func process_mesh_array(original_mesh_array:Array):
 	#eg. mesh_lod_1, mesh_lod3 =>mesh_lod_null,mesh_lod_1, mesh_lod1, mesh_lod3,mesh_lod3,mesh_lod3
 	var mesh_array = []		
@@ -146,68 +226,73 @@ static func process_mesh_array(original_mesh_array:Array):
 	return mesh_array
 
 static func compare_preview_dictionary_to_import_dictionary(preview_dictionary:Dictionary, import_dictionary):	
-	#here we should add collection id or -1 to each collection
+	#######################################################
+	# STEP 1: ADD IMPORT DICTIONARY TO PREVIEW DICTIONARY #
+	#######################################################
 	var asset_library = MAssetTable.get_singleton()	
-	for glb_node_name in preview_dictionary.keys():		
+	for glb_node_name in preview_dictionary.keys():	
+		var preview_node = preview_dictionary[glb_node_name]		
 		if import_dictionary.has(glb_node_name):
-			preview_dictionary[glb_node_name]["collection_id"] = import_dictionary[glb_node_name].collection_id				
-			var preview_has_meshes = preview_dictionary[glb_node_name].has("meshes")
-			var original_has_meshes = import_dictionary[glb_node_name].has("meshes")
-			if preview_has_meshes and original_has_meshes:
-				preview_dictionary[glb_node_name]["original_meshes"] = import_dictionary[glb_node_name].meshes
-			elif preview_has_meshes:
-				preview_dictionary[glb_node_name]["original_meshes"] = null
-			elif original_has_meshes:
-				preview_dictionary[glb_node_name]["original_meshes"] = import_dictionary[glb_node_name].meshes
-				preview_dictionary[glb_node_name]["meshes"] = null
-			else:
-				var preview_has_collections = preview_dictionary[glb_node_name].has("collections")
-				var original_has_collections = import_dictionary[glb_node_name].has("collections")				
-				if preview_has_collections and original_has_collections:
-					preview_dictionary[glb_node_name]["original_collections"] = import_dictionary[glb_node_name].collections
-					preview_dictionary[glb_node_name]["original_collection_transforms"] = import_dictionary[glb_node_name].collection_transforms
-				elif preview_has_collections:
-					preview_dictionary[glb_node_name]["original_collections"] = []
-					preview_dictionary[glb_node_name]["original_collection_transforms"] = []
-				elif original_has_collections:
-					preview_dictionary[glb_node_name]["collections"] = []
-					preview_dictionary[glb_node_name]["collection_transforms"] = []
-					preview_dictionary[glb_node_name]["original_collections"] = import_dictionary[glb_node_name].collections
-					preview_dictionary[glb_node_name]["original_collection_transforms"] = import_dictionary[glb_node_name].collection_transforms												
-		else:					
-			preview_dictionary[glb_node_name]["collection_id"] = -1 #this is new collection
-			if preview_dictionary[glb_node_name].has("meshes"):
-				preview_dictionary[glb_node_name]["original_meshes"] = []
-			if preview_dictionary[glb_node_name].has("collections" ):
-				preview_dictionary[glb_node_name]["original_collections"] = []
-				preview_dictionary[glb_node_name]["original_collection_transforms"] = []
-	
+			var original_node = import_dictionary[glb_node_name]			
+			var original_keys = original_node.keys()
+			var preview_keys = preview_node.keys()
+			for key in original_keys:				
+				if original_node[key] is Dictionary:
+					preview_node["original_" + key] = original_node[key].duplicate(true)
+				else:
+					preview_node["original_" + key] = original_node[key]					
+			for key in preview_keys:
+				if not key in original_keys:					
+					preview_node["original_" + key] = null		
+			preview_node["collection_id"] = original_node.collection_id																														
+		else:			
+			for key in preview_node.keys():				
+				preview_node["original_" + key] = null																	
+			preview_node["collection_id"] = -1 #this is new collection
 	for glb_node_name in import_dictionary.keys():		
 		if not preview_dictionary.has(glb_node_name):
-			if "meshes" in import_dictionary[glb_node_name]:
-				preview_dictionary[glb_node_name] = {"original_meshes": import_dictionary[glb_node_name].meshes}
-			if "collections" in import_dictionary[glb_node_name]:
-				preview_dictionary[glb_node_name]= {"original_collections": import_dictionary[glb_node_name].collections}
-				preview_dictionary[glb_node_name]= {"original_collection_transforms": import_dictionary[glb_node_name].collection_transforms}
-			preview_dictionary[glb_node_name]["remove_collection"] = true #to remove collection!		
-			preview_dictionary[glb_node_name]["collection_id"] = import_dictionary[glb_node_name].collection_id				
+			preview_dictionary[glb_node_name] = { "remove_collection": true }
+			for key in import_dictionary[glb_node_name].keys():				
+				if key == "collection_id":
+					preview_dictionary[glb_node_name]["collection_id"] = import_dictionary[glb_node_name].collection_id				
+				else:
+					if import_dictionary[glb_node_name][key] is Dictionary:
+						preview_dictionary[glb_node_name]["original_" + key] = import_dictionary[glb_node_name][key].duplicate(true)
+					else:
+						preview_dictionary[glb_node_name]["original_" + key] = import_dictionary[glb_node_name][key]									
 	
 	###########################
 	# STEP 2: ADD IMPORT TAGS #
 	###########################
-	for glb_node_name in preview_dictionary.keys():						
-		preview_dictionary[glb_node_name]["import_state"] = {"state":IMPORT_STATE.NONE}
-		if "meshes" in preview_dictionary[glb_node_name]:
-			#Set import state based on mesh array compare
-			preview_dictionary[glb_node_name]["import_state"] = compare_mesh_arrays(preview_dictionary[glb_node_name].original_meshes, preview_dictionary[glb_node_name].meshes)						
-		elif "collections" in preview_dictionary[glb_node_name]:
-			if len(preview_dictionary[glb_node_name].original_collections) == 0:
-				preview_dictionary[glb_node_name].import_state.state = IMPORT_STATE.NEW
+	for glb_node_name in preview_dictionary.keys():					
+		var preview_node = preview_dictionary[glb_node_name]			
+		preview_node["import_state"] = {"state":IMPORT_STATE.NONE}
+		if preview_node.has("meshes"):
+			#Set import state based on mesh array comparison
+			preview_node.import_state = compare_mesh_arrays(preview_node.original_meshes, preview_node.meshes)						
+		if preview_node.has("collections"):
+			if preview_node.original_collections == null:
+				preview_node.import_state.state = IMPORT_STATE.NEW
 			else:
-				preview_dictionary[glb_node_name]["import_state"] = compare_subcollections(glb_node_name, preview_dictionary)						
-		if "remove_collection" in preview_dictionary[glb_node_name].keys():
-			preview_dictionary[glb_node_name].import_state["state"] = IMPORT_STATE.REMOVE
-			preview_dictionary[glb_node_name].erase("remove_collection")			
+				preview_node.import_state = compare_subcollections(glb_node_name, preview_dictionary)						
+		if preview_node.has("collisions"):
+			if preview_node.original_collisions == null:
+				preview_node.import_state.state = IMPORT_STATE.NEW
+			else:
+				preview_node.import_state = compare_collisions(glb_node_name, preview_dictionary)									
+		if preview_node.has("light_type"):
+			if preview_node.original_light_type == null:
+				preview_node.import_state.state = IMPORT_STATE.NEW
+			else:
+				preview_node.import_state = compare_lights(preview_node)										
+		if preview_node.has("hlod"):
+			if preview_node.original_hlod == null:
+				preview_node.import_state.state = IMPORT_STATE.NEW
+			else:
+				preview_node.import_state = compare_hlod(preview_node)
+		if preview_node.has("remove_collection"):
+			preview_node.import_state.state = IMPORT_STATE.REMOVE
+			preview_node.erase("remove_collection")			
 		preview_dictionary[glb_node_name].import_state["ignore"] = false
 	
 static func compare_mesh_arrays(original, new)->Dictionary:
@@ -265,6 +350,31 @@ static func compare_subcollections(node_name, preview_dictionary):
 			result.collection_states[sub_node_name] = IMPORT_STATE.REMOVE					
 			result.state = IMPORT_STATE.CHANGE	
 	return result
+
+static func compare_collisions(glb_node_name, preview_dictionary):
+	var result = {"state": IMPORT_STATE.NONE, "collision_states": []}
+	var node = preview_dictionary[glb_node_name]
+	result.collision_states.resize(len(node.collisions))
+	for i in len(node.collisions):
+		result.collision_states[i] = IMPORT_STATE.NONE
+		for key in node.collisions[i].keys():			
+			if node.collisions[i][key] != node.original_collisions[i][key]:
+				result.collision_states[i] = IMPORT_STATE.CHANGE
+				result.state = IMPORT_STATE.CHANGE
+				break
+		
+static func compare_lights(preview_node):
+	var result = {"state": IMPORT_STATE.NONE}	
+	var keys_to_check = ["light_type", "energy", "color", "range", "attenuation", "angle"]
+	for key in keys_to_check:
+		if not preview_node.has(key): continue
+		if preview_node[key] != preview_node["original_" + key]:
+			result.state = IMPORT_STATE.CHANGE
+			return result
+	return result
+
+static func compare_hlod(preview_node):	
+	pass
 	
 static func convert_import_dictionary_to_preview_dictionary(glb_path, metadata):
 	var asset_library = MAssetTable.get_singleton()
@@ -276,7 +386,7 @@ static func convert_import_dictionary_to_preview_dictionary(glb_path, metadata):
 		if glb_node_name == "metadata": 
 			continue
 		var collection_id = asset_library.import_info[glb_path][glb_node_name]				
-		result[glb_node_name] = convert_collection_to_preview_dictionary(collection_id, glb_path)
+		result[glb_node_name] = convert_collection_to_preview_dictionary_format(collection_id, glb_path)
 	
 	if asset_library.import_info[glb_path].has(metadata):
 		for key in asset_library.import_info[glb_path].metadata:
@@ -284,13 +394,12 @@ static func convert_import_dictionary_to_preview_dictionary(glb_path, metadata):
 				metadata[key] = asset_library.import_info[glb_path].metadata[key]
 	return result
 	
-static func convert_collection_to_preview_dictionary(collection_id, glb_path=null):
+static func convert_collection_to_preview_dictionary_format(collection_id, glb_path=null):			
 	var asset_library = MAssetTable.get_singleton()
-	var result := {}
+	var result := {"collection_id": collection_id}
 	var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)
 	var sub_collections = asset_library.collection_get_sub_collections(collection_id)
-	var sub_collection_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
-	result["collection_id"] = collection_id					
+	var sub_collection_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)					
 	if len(mesh_items) != 0:
 		result["meshes"] = mesh_items[0].mesh 	
 	if sub_collections:
@@ -319,9 +428,8 @@ static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path, m
 	var glb_node_names = preview_dictionary.keys()
 	glb_node_names.reverse()		
 	
-	print("======starting commit changes to asset table=======\n",preview_dictionary)
-	for glb_node_name in glb_node_names:		
-		var node_info = preview_dictionary[glb_node_name]		
+	for glb_node_name in glb_node_names:				
+		var node_info = preview_dictionary[glb_node_name]				
 		if node_info.import_state.ignore:
 			continue
 		if node_info.import_state.state == IMPORT_STATE.NEW:
@@ -341,6 +449,9 @@ static func glb_import_commit_changes(preview_dictionary:Dictionary, glb_path, m
 		var node_info = preview_dictionary[glb_node_name]		
 		if node_info.import_state.state == IMPORT_STATE.REMOVE:
 			continue		
+		if node_info.collection_id in [-1, null]: #ERROR 
+			push_warning("import warning: ", glb_node_name, " has collection id -1 after import")
+			continue
 		result[glb_node_name] = node_info.collection_id
 	result["metadata"] = metadata
 	asset_library.import_info[glb_path] = result	
@@ -359,19 +470,18 @@ static func import_new_collection(node_info, glb_node_name, preview_dictionary):
 		var collection_id = asset_library.collection_create(glb_node_name)		
 		asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_id,Transform3D())
 		asset_library.collection_add_tag(collection_id, 0)
+		if node_info.has("tag_as_hidden"):
+			asset_library.collection_add_tag(collection_id, 1)
 		return collection_id
 	elif node_info.has("collections"):
 		var collection_id = asset_library.collection_create(glb_node_name)					
 		for i in len(node_info.collections):
 			var sub_node_name = node_info.collections[i]
-			var subcollection_id = preview_dictionary[sub_node_name].collection_id			
-			var success = asset_library.collection_add_sub_collection(collection_id, subcollection_id, node_info.collection_transforms[i])
-			if success:
-				print("added subcollection ", collection_id, " | ", subcollection_id)
-			else:
-				print("failed to add subcollection ", collection_id, " | ", subcollection_id )
-				print("collection name: ", asset_library.collection_get_name(collection_id))
-				print("subcollection name: ", asset_library.collection_get_name(subcollection_id))
+			var subcollection_id = preview_dictionary[sub_node_name].collection_id						
+			var subcollection_transform = node_info.collection_transforms[i]
+			if subcollection_id is int and subcollection_id != -1 and subcollection_transform is Transform3D:
+				asset_library.collection_add_sub_collection(collection_id, subcollection_id, subcollection_transform)
+			
 		return collection_id
 		
 static func import_change_collection(node_info, preview_dictionary):
@@ -401,13 +511,18 @@ static func import_change_collection(node_info, preview_dictionary):
 		var collection_id = node_info.collection_id
 		var mesh_id = asset_library.collection_get_mesh_items_ids(collection_id)[0]
 		asset_library.mesh_item_update(mesh_id, mesh_array, mesh_array.map(func(a):return-1))
+		if node_info.has("tag_as_hidden"):			
+			asset_library.collection_add_tag(collection_id, 1)
 	elif node_info.has("collections"):						
 		for i in len(node_info.collections):
-			var sub_node_name = node_info.collections[i]			
-			if node_info.import_state.collections[sub_node_name] == IMPORT_STATE.NEW:							
+			var sub_node_name = node_info.collections[i]
+			if node_info.import_state.collection_states[sub_node_name] == IMPORT_STATE.NEW:							
 				var sub_collection_id = preview_dictionary[sub_node_name].collection_id				
+				if sub_collection_id in [null, -1]:
+					push_warning("can't add subcollection ", sub_node_name )
+					continue
 				asset_library.collection_add_sub_collection(node_info.collection_id, sub_collection_id, node_info.collection_transforms[i])
-			elif node_info.import_state.collections[sub_node_name] == IMPORT_STATE.REMOVE:							
+			elif node_info.import_state.collection_states[sub_node_name] == IMPORT_STATE.REMOVE:							
 				var sub_collection_id = preview_dictionary[sub_node_name].collection_id				
 				asset_library.collection_remove_sub_collection(node_info.collection_id, sub_collection_id)							
 		
