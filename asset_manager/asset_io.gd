@@ -600,7 +600,7 @@ static func glb_show_import_window(glb_path, preview_dictionary, metadata):
 	panel.preview_dictionary = preview_dictionary		
 	panel.metadata = metadata
 	popup.add_child(panel)
-	popup.popup_centered(Vector2i(600,480))	
+	popup.popup_centered(Vector2i(800,600))	
 
 static func convert_node_to_hlod_baker(object):
 	var asset_library = MAssetTable.get_singleton()
