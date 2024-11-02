@@ -16,14 +16,8 @@ class_name AssetIO extends Object
 
 const LOD_COUNT = 8  # The number of different LODs in your project
 
-enum IMPORT_STATE {
-	NONE, NEW, CHANGE, REMOVE, 
-}
-
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
-#static var regex_col_match := RegEx.create_from_string("(.*)collision_(box|sphere|capsule|cylinder|concave|mesh).*")
-#static var regex_col_match := RegEx.create_from_string("(.*)(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
-static var regex_col_match:= RegEx.create_from_string("(.*)[_|\\s](col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
+static var regex_col_match:= RegEx.create_from_string("(.*)?[_|\\s]?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
 static var asset_data:AssetIOData = null
 
 #region GLB	Export
@@ -97,11 +91,12 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				asset_data.add_mesh_to_collection(active_collection,name_data["name"],false)
 			if child_count > 0:
 				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")
-		elif not name_data["col"].is_empty():		
-			var collection_name = node_parse_name(node.get_parent())['name']
+		elif name_data["col"] != null:
+			var collection_name = name_data.name if active_collection=="__root__" else active_collection
 			if node is ImporterMeshInstance3D:
 				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform, node.mesh.get_mesh())
 			else:
+				print(collection_name, " is collision imported from ", node.get_parent().name)
 				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform)				
 			if child_count > 0:
 				push_error(node.name + " is detected as a collission due to using _col in its name! ignoring its children!")
@@ -378,8 +373,10 @@ static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
 		return meshes
 
 static func mesh_item_get_name(mesh_id):
-	return asset_data.mesh_items[mesh_id]	
-	pass
+	for i in len(asset_data.mesh_items.keys()):
+		if asset_data.mesh_items.values()[i].id == mesh_id:
+			return asset_data.mesh_items.keys()[i]
+	return -1	
 
 static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->int:
 	var asset_library = MAssetTable.get_singleton()
@@ -401,7 +398,7 @@ static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->i
 
 #IF return a dictionary with lod >= 0 the result is mesh
 static func node_parse_name(node:Node)->Dictionary:
-	var result = {"name":"","lod":-1,"col":""}
+	var result = {"name":"","lod":-1,"col":null}
 	var lod:int = -1
 	var search_result = regex_mesh_match.search(node.name)
 	if search_result:		
@@ -524,44 +521,30 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 	if not asset_library.has_collection(collection_id):
 		return null
 	var mesh_ids = asset_library.collection_get_mesh_items_ids(collection_id)
-	var sub_collection_ids = asset_library.collection_get_sub_collections(collection_id)
-	if mesh_ids.size() == 1 and len(sub_collection_ids) == 0: #and len(collision_ids) == 0:
-		var node = MAssetMesh.new()
-		var mesh_id = mesh_ids[0]
-		node.set_meta("mesh_id", mesh_id)
-		node.set_meta("collection_id", collection_id)
-		node.meshes = MMeshLod.new()
-		node.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
-		node.name = mesh_item_get_name(mesh_id)
-		if "transform" in overrides:
-			node.transform = overrides.transform
-		else:
-			node.transform = asset_library.collection_get_mesh_items_info(collection_id)[0].transform
-		return node
-	else:
-		var node = Node3D.new()
-		node.name = asset_library.collection_get_name(collection_id)
-		node.set_meta("collection_id", collection_id)
-		if "transform" in overrides:
-			node.transform = overrides.transform
-		var item_ids = asset_library.collection_get_mesh_items_ids(collection_id)
-		var items_info = asset_library.collection_get_mesh_items_info(collection_id)
-		for i in item_ids.size():
-			var mesh_item = MAssetMesh.new()
-			var mesh_id = item_ids[i]
-			mesh_item.set_meta("mesh_id", mesh_id)		
-			mesh_item.meshes = MMeshLod.new()
-			mesh_item.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
-			mesh_item.transform = items_info[i].transform
-			node.add_child(mesh_item)
-			mesh_item.name = mesh_item_get_name(mesh_id)
-		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
-		var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
-		for i in sub_collections.size():
-			var sub_collection = collection_instantiate(sub_collections[i])			
-			node.add_child(sub_collection)
-			sub_collection.transform = sub_collections_transforms[i]		
-		return node
+	var sub_collection_ids = asset_library.collection_get_sub_collections(collection_id)	
+	var node = Node3D.new()
+	node.name = asset_library.collection_get_name(collection_id)
+	node.set_meta("collection_id", collection_id)
+	if "transform" in overrides:
+		node.transform = overrides.transform
+	var item_ids = asset_library.collection_get_mesh_items_ids(collection_id)
+	var items_info = asset_library.collection_get_mesh_items_info(collection_id)
+	for i in item_ids.size():
+		var mesh_item = MAssetMesh.new()
+		var mesh_id = item_ids[i]
+		mesh_item.set_meta("mesh_id", mesh_id)		
+		mesh_item.meshes = MMeshLod.new()
+		mesh_item.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
+		mesh_item.transform = items_info[i].transform
+		node.add_child(mesh_item)
+		mesh_item.name = mesh_item_get_name(mesh_id)
+	var sub_collections = asset_library.collection_get_sub_collections(collection_id)
+	var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
+	for i in sub_collections.size():
+		var sub_collection = collection_instantiate(sub_collections[i])			
+		node.add_child(sub_collection)
+		sub_collection.transform = sub_collections_transforms[i]		
+	return node
 
 static func edit_collection(object, toggle_on):
 	for child in object.get_children():

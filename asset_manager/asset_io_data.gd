@@ -137,7 +137,7 @@ func finalize_glb_parse():
 		for sub_collection_name in sub_collections:
 			if not sub_collection_name in collections:
 				push_error("finalise glb error: subcollection ", sub_collection_name, " does not exist, but is needed for collection ", collection_name )		
-		check_for_infinite_recursion_in_collections()				
+		check_for_infinite_recursion_in_collections(collection_name)
 		#Fix Mesh Transforms...if collection is_root is active local_transform should be used base on the lowest avaliable lod mesh node		
 		if not collections[collection_name]["is_root"]:
 			for mesh_name in collection_mesh_items:
@@ -151,15 +151,14 @@ func finalize_glb_parse():
 	for mesh_name in mesh_items:
 		mesh_items[mesh_name].erase("mesh_nodes")
 
-func check_for_infinite_recursion_in_collections(checked_collections = []):		
-	for name in collections:
-		if name in checked_collections:			
-			return true
-		checked_collections.push_back(name)
-		for sub_collection_name in collections[name]["sub_collections"]:
-			if check_for_infinite_recursion_in_collections(checked_collections):
-				push_error("infinite recursion in subcollections: ", checked_collections.duplicate())
-				return
+func check_for_infinite_recursion_in_collections(name, checked_collections = []):			
+	if name in checked_collections:			
+		return true
+	checked_collections.push_back(name)
+	for sub_collection_name in collections[name]["sub_collections"]:
+		if check_for_infinite_recursion_in_collections(sub_collection_name, checked_collections):
+			push_error("infinite recursion in subcollections: ", checked_collections.duplicate())
+			return
 						
 func find_mesh_item_transform(mesh_name:String)->Transform3D:
 	if mesh_items.has(mesh_name):
@@ -282,18 +281,19 @@ func get_glb_import_info():
 			if not collections.has(collection_name): continue
 			result[key]["sub_collections"][collection_name] = get_collection_id(collection_name)
 		for original_collision_item in collections[key].collision_items:
-			var collision_item = original_collision_item.duplicate
+			var collision_item = original_collision_item.duplicate()
 			collision_item.mesh = null
 			result[key].collision_items.push_back(collision_item)
 		
 		
 		result[key]["id"] = collections[key]["id"]		
-	result["metadata"] = meta_data
+	result["__metadata"] = meta_data
 	return result
 
 func add_glb_import_info(info:Dictionary)->void:
 	var asset_library := MAssetTable.get_singleton()
 	for collection_glb_name in info:
+		if collection_glb_name.begins_with("__"): continue
 		var collection_id = info[collection_glb_name]["id"]
 		if collection_id < 0:
 			push_error(collection_id," Invalid collection ID in set_glb_import_info")
@@ -307,7 +307,9 @@ func add_glb_import_info(info:Dictionary)->void:
 			add_original_sub_collection(collection_glb_name,sub_collection_name,asset_library.collection_get_sub_collections_transform(collection_id,original_sub_collections[sub_collection_name]))
 		collections[collection_glb_name]["original_collision_items"] = collections[collection_glb_name].collision_items
 		collections[collection_glb_name]["id"] = collection_id
-	add_metadata_to_data(info.metadata, meta_data)
+	add_metadata_to_data(info["__metadata"], meta_data)
+	
+## blend1 has 2 assets, table and chair. Blend2 is a scene, it has subcollection table
 	
 func add_metadata_to_data(old:Dictionary, new:Dictionary):
 	var result = old.duplicate()

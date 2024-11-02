@@ -70,7 +70,7 @@ func build_tree(node_name:String, root:TreeItem):
 	var suffix = ""		
 	item.set_checked(0, not node.ignore)			
 	if node.state > 0:				
-		suffix += "" + AssetIO.IMPORT_STATE.keys()[node.state]							
+		suffix += "" + AssetIOData.IMPORT_STATE.keys()[node.state]							
 	
 	item.set_text(1, suffix)
 	if node.has("collections"):		
