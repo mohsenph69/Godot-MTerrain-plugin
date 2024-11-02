@@ -10,7 +10,10 @@ class_name HLod_Baker extends Node3D
 			bake_path = bake_path + name + ".res"
 		return bake_path
 
-@export var meshes_to_join: Array[Node3D]
+@export var meshes_to_join: Array[Node3D]:
+	set(value):
+		meshes_to_join = value
+		notify_property_list_changed()
 @export var hlod_resource: MHlod
 
 var asset_library := MAssetTable.get_singleton()
