@@ -72,7 +72,7 @@ func bake_to_hlod_resource():
 		arr.fill(0)
 		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.material, arr, arr, 1 )
 		var i = 0	
-		if child != joined_mesh_node:
+		if child != joined_mesh_node.get_child(0):
 			while i < join_at_lod:
 				hlod.insert_item_in_lod_table(mesh_id, i)
 				i += 1

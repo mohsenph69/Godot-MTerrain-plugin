@@ -58,7 +58,10 @@ func _ready():
 		AssetIO.glb_load(glb_path, import_info[glb_path]["__metadata"], true)		
 				
 	)
-func finish_import(glb_path, glb_collection_name):		
+func finish_import(glb_path, glb_collection_name=""):
+	if not "joined_mesh" in glb_collection_name:
+		return
+	#CHECK IF IS JOINED MESH		
 	var asset_library = MAssetTable.get_singleton()
 	var import_info = asset_library.import_info		
 	var collection_id = -1
