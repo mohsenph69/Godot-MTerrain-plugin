@@ -195,7 +195,7 @@ func selection_changed():
 			#get_editor_interface().get_selection().add_node(node)
 		#return
 	#Auto edit nodes:	
-	if selection.size() > 0:
+	if false and selection.size() > 0:
 		for child in EditorInterface.get_edited_scene_root().find_children("*"):			
 			if child.has_meta("collection_id"):
 				if selection.size() == 1:

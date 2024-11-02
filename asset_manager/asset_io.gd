@@ -372,12 +372,6 @@ static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
 				meshes.push_back(null)
 		return meshes
 
-static func mesh_item_get_name(mesh_id):
-	for i in len(asset_data.mesh_items.keys()):
-		if asset_data.mesh_items.values()[i].id == mesh_id:
-			return asset_data.mesh_items.keys()[i]
-	return -1	
-
 static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->int:
 	var asset_library = MAssetTable.get_singleton()
 	var mesh_item_array = []	
@@ -536,8 +530,7 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		mesh_item.meshes = MMeshLod.new()
 		mesh_item.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
 		mesh_item.transform = items_info[i].transform
-		node.add_child(mesh_item)
-		mesh_item.name = mesh_item_get_name(mesh_id)
+		node.add_child(mesh_item)		
 	var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 	var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
 	for i in sub_collections.size():
