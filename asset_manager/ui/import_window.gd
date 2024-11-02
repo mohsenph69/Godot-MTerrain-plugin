@@ -36,57 +36,58 @@ func _ready():
 		var item := tree.get_selected()	
 		item.propagate_check(0)
 	)
-	#tree.check_propagated_to_item.connect(func(item:TreeItem,column):		
-		#var node = item.get_metadata(column)
-		#if node.has("import_state") and node.import_state.has("ignore"):
-			#node.import_state.ignore = not item.is_checked(column)
-			#update_label()
-		##if not preview_dictionary.has(item_name):
-		##	print(item_name, " not in ", preview_dictionary.keys())
-		##preview_dictionary[item_name].ignore = item.is_checked(0)
-		#
-	#)
-	#tree.set_column_expand(0,true)
-	#tree.set_column_expand(1,false)		
-	#tree.set_column_custom_minimum_width(1,120)
-	#tree.item_selected.connect(update_label)
-	#var root = tree.create_item()	
-	#root.set_text(0, asset_data.glb_path)
-	#for key in preview_dictionary.keys():		
-	#	if preview_dictionary[key].has("is_root"):
-	#		build_tree(key, root)
+	tree.check_propagated_to_item.connect(func(item:TreeItem,column):		
+		var node = item.get_metadata(column)
+		if node.has("import_state") and node.import_state.has("ignore"):
+			node.import_state.ignore = not item.is_checked(column)
+			update_label()
+		#if not preview_dictionary.has(item_name):
+		#	print(item_name, " not in ", preview_dictionary.keys())
+		#preview_dictionary[item_name].ignore = item.is_checked(0)
+		
+	)
+	tree.set_column_expand(0,true)
+	tree.set_column_expand(1,false)		
+	tree.set_column_custom_minimum_width(1,120)
+	tree.item_selected.connect(update_label)
+	var root = tree.create_item()	
+	root.set_text(0, asset_data.glb_path)
+	for key in asset_data.collections:		
+		if asset_data.collections[key].has("is_root"):
+			build_tree(key, root)
 	return
 	
-#func update_label():
-	#var tree: Tree = %preview_dictionary_tree				
-	#var item = tree.get_selected()
-	#var node_name = item.get_text(0)
-	#%preview_dictionary_label.text = str(preview_dictionary[node_name]).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
-	#
-#func build_tree(node_name:String, root:TreeItem):	
-	#var item := root.create_child()		
-	#var node = preview_dictionary[node_name] if preview_dictionary.has(node_name) else {}
-	#item.set_cell_mode(0,TreeItem.CELL_MODE_CHECK)		
-	#item.set_editable(0, true)
-	#item.set_text(0, node_name)		
-	#item.set_metadata(0, node)		
-	#var suffix = ""	
-	#if node.has("import_state"):
-		#if node.import_state.has("ignore"):				
-			#item.set_checked(0, not node.import_state["ignore"])							
-		#if node.import_state.has("state") and node.import_state.state > 0:				
-			#suffix += "" + AssetIO.IMPORT_STATE.keys()[node.import_state.state]			
-	#if node.has("tag_as_hidden"):			
-		#item.set_custom_color(0, Color(1,1,1,0.4))			
-	#
-	#item.set_text(1, suffix)
-	#if node.has("collections"):		
-		#for key in node.collections:			
-			#build_tree(key, item)
+func update_label():
+	var tree: Tree = %preview_dictionary_tree				
+	var item = tree.get_selected()
+	var node_name = item.get_text(0)
+	%preview_dictionary_label.text = str(asset_data.collections[node_name]).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
+	
+func build_tree(node_name:String, root:TreeItem):	
+	var item := root.create_child()		
+	var node = asset_data.collections[node_name] if asset_data.collections.has(node_name) else {}
+	
+	item.set_cell_mode(0,TreeItem.CELL_MODE_CHECK)		
+	item.set_editable(0, true)
+	item.set_text(0, node_name)		
+	item.set_metadata(0, node)		
+	var suffix = ""	
+	if node.has("import_state"):
+		if node.import_state.has("ignore"):				
+			item.set_checked(0, not node.import_state["ignore"])							
+		if node.import_state.has("state") and node.import_state.state > 0:				
+			suffix += "" + AssetIO.IMPORT_STATE.keys()[node.import_state.state]			
+	if node.has("tag_as_hidden"):			
+		item.set_custom_color(0, Color(1,1,1,0.4))			
+	
+	item.set_text(1, suffix)
+	if node.has("collections"):		
+		for key in node.collections:			
+			build_tree(key, item)
 	#if node.has("meshes"):
 		#for i in len(node.meshes):
 			#build_mesh_items(node.meshes[i], i, node_name, item)
-#
+
 #func build_mesh_items(mesh, i, node_name, root:TreeItem):
 	#var node = preview_dictionary[node_name]
 	#var item := root.create_child()		
@@ -98,13 +99,3 @@ func _ready():
 	#item.set_text(0, str("lod ", i))
 	#item.set_metadata(0, mesh)		
 	#item.set_text(1, AssetIO.IMPORT_STATE.keys()[ preview_dictionary[node_name].import_state.mesh_states[i] ])
-	#
-	#
-	#
-	#
-	
-	
-	
-	
-	
-	

@@ -20,8 +20,10 @@ enum IMPORT_STATE {
 	NONE, NEW, CHANGE, REMOVE, 
 }
 
-static var regex_mesh_match:= RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
-static var regex_col_match:= RegEx.create_from_string("(.*)[_|\\s]col[_|\\s](box|sphere|capsul).*")
+static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
+static var regex_col_match := RegEx.create_from_string("collision_(box|sphere|capsule|cylinder|concave|mesh).*")
+#static var regex_col_match := RegEx.create_from_string("(.*)(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
+#static var regex_col_match:= RegEx.create_from_string("(.*)[_|\\s](col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
 static var asset_data:AssetIOData = null
 
 #region GLB	Export
@@ -57,14 +59,15 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 
 #region GLB Import	
 static func glb_load(path, metadata={},no_window:bool=false):
-	asset_data = AssetIOData.new()
-	asset_data.glb_path = path
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var gltf_document = GLTFDocument.new()
 	if not Engine.is_editor_hint():
 		GLTFDocument.register_gltf_document_extension(GLTFExtras.new())
 	var gltf_state = GLTFState.new()
 	gltf_document.append_from_file(path,gltf_state)
+	
+	asset_data = AssetIOData.new()
+	asset_data.glb_path = path
 	#STEP 1: convert gltf file into nodes
 	var scene_root = gltf_document.generate_scene(gltf_state)
 	var scene = scene_root.get_children()
@@ -83,9 +86,9 @@ static func glb_load(path, metadata={},no_window:bool=false):
 static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	for node in scene:
-		var name_data := mesh_node_parse_name(node)
+		var name_data := node_parse_name(node)		
 		var child_count:int = node.get_child_count()
-		if name_data["lod"] >=0: ## Then defently is a mesh
+		if name_data["lod"] >=0: ## Then defently is a mesh			
 			asset_data.add_mesh_item(name_data["name"],name_data["lod"],node)
 			if active_collection == "__root__":
 				asset_data.add_mesh_to_collection(name_data["name"],name_data["name"],true)
@@ -93,7 +96,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				asset_data.add_mesh_to_collection(active_collection,name_data["name"],false)
 			if child_count > 0:
 				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")
-		elif not name_data["col"].is_empty():
+		elif not name_data["col"].is_empty():			
 			print(name_data["name"]," has a collision of type ",name_data["col"])
 			if child_count > 0:
 				push_error(node.name + " is detected as a collission due to using _col in its name! ignoring its children!")
@@ -118,7 +121,7 @@ static func glb_import_commit_changes():
 			asset_library.mesh_item_remove(minfo["id"])
 			continue
 		### Other State
-		asset_data.save_unsave_meshes(k) ## now all mesh are saved with and integer ID
+		asset_data.save_unsaved_meshes(k) ## now all mesh are saved with and integer ID
 		var meshes = minfo["meshes"]
 		var materials:PackedInt32Array
 		## for now later we change
@@ -189,7 +192,6 @@ static func import_collection(glb_name:String):
 		var sub_c_transform = sub_collections[sub_c_name]
 		asset_library.collection_add_sub_collection(cid,sub_c_id,sub_c_transform)
 		
-
 static func mesh_item_update_from_collection_dictionary(collection):
 	var asset_library := MAssetTable.get_singleton()			
 	if "original_meshes" in collection.keys():		
@@ -286,7 +288,7 @@ static func mesh_item_import_from_nodes(nodes, ignore_transform = true):
 
 	var mesh_items = {}
 	for child:Node in nodes:
-		var name_data = mesh_node_parse_name(child)
+		var name_data = node_parse_name(child)
 		if not name_data.name in mesh_items.keys():
 			mesh_items[name_data.name] = []
 		mesh_items[name_data.name].push_back(child)
@@ -296,7 +298,7 @@ static func mesh_item_import_from_nodes(nodes, ignore_transform = true):
 		var mesh_item_array = []
 		var meshes = []
 		for node in mesh_items[item_name]:
-			var name_data = mesh_node_parse_name(node)
+			var name_data = node_parse_name(node)
 			#Save Meshes
 			var mesh:Mesh
 			if node is MeshInstance3D:
@@ -370,6 +372,10 @@ static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
 				meshes.push_back(null)
 		return meshes
 
+static func mesh_item_get_name(mesh_id):
+	return asset_data.mesh_items[mesh_id]	
+	pass
+
 static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->int:
 	var asset_library = MAssetTable.get_singleton()
 	var mesh_item_array = []	
@@ -389,21 +395,23 @@ static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->i
 
 
 #IF return a dictionary with lod >= 0 the result is mesh
-static func mesh_node_parse_name(node:Node)->Dictionary:
+static func node_parse_name(node:Node)->Dictionary:
 	var result = {"name":"","lod":-1,"col":""}
 	var lod:int = -1
 	var search_result = regex_mesh_match.search(node.name)
-	if search_result:
+	if search_result:		
 		result["name"] = search_result.strings[1]
 		result["lod"] = search_result.strings[2].to_int()
 	elif node is ImporterMeshInstance3D:
 		result["name"] = String(node.name)
 		result["lod"] = 0
 	else:
-		search_result = regex_col_match.search(node.name)
+		search_result = regex_col_match.search(node.name)		
+		print(node.name)
 		if search_result:
+			print("found col: ", search_result.strings[1])
 			result["name"] = search_result.strings[1]
-			result["col"] = search_result.strings[2]
+			result["col"] = search_result.strings[2]		
 	return result
 
 static func collection_parse_name(name:String)->String:
@@ -508,14 +516,14 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		return null
 	var mesh_ids = asset_library.collection_get_mesh_items_ids(collection_id)
 	var sub_collection_ids = asset_library.collection_get_sub_collections(collection_id)
-	if mesh_ids.size() == 1 and sub_collection_ids.size() == 0:
+	if mesh_ids.size() > 0:
 		var node = MAssetMesh.new()
 		var mesh_id = mesh_ids[0]
 		node.set_meta("mesh_id", mesh_id)
 		node.set_meta("collection_id", collection_id)
 		node.meshes = MMeshLod.new()
 		node.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
-		node.name = asset_library.collection_get_name(collection_id)
+		node.name = mesh_item_get_name(mesh_id)
 		if "transform" in overrides:
 			node.transform = overrides.transform
 		else:
@@ -532,17 +540,12 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		for i in item_ids.size():
 			var mesh_item = MAssetMesh.new()
 			var mesh_id = item_ids[i]
-			mesh_item.set_meta("mesh_id", mesh_id)
-			var single_item_collection_ids = asset_library.tag_get_collections_in_collections(asset_library.mesh_item_find_collections(mesh_id), 0)
-			if len(single_item_collection_ids) == 0: 
-				push_error("single item collection doesn't exist! mesh_id: ", mesh_id)
-			mesh_item.set_meta("collection_id", single_item_collection_ids[0])
-			var mesh_item_name = asset_library.collection_get_name(single_item_collection_ids[0])
+			mesh_item.set_meta("mesh_id", mesh_id)		
 			mesh_item.meshes = MMeshLod.new()
 			mesh_item.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
 			mesh_item.transform = items_info[i].transform
 			node.add_child(mesh_item)
-			mesh_item.name = mesh_item_name
+			mesh_item.name = mesh_item_get_name(mesh_id)
 		var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 		var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
 		for i in sub_collections.size():
