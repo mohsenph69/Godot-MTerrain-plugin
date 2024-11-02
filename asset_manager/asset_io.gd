@@ -21,9 +21,9 @@ enum IMPORT_STATE {
 }
 
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
-static var regex_col_match := RegEx.create_from_string("collision_(box|sphere|capsule|cylinder|concave|mesh).*")
+#static var regex_col_match := RegEx.create_from_string("(.*)collision_(box|sphere|capsule|cylinder|concave|mesh).*")
 #static var regex_col_match := RegEx.create_from_string("(.*)(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
-#static var regex_col_match:= RegEx.create_from_string("(.*)[_|\\s](col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
+static var regex_col_match:= RegEx.create_from_string("(.*)[_|\\s](col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
 static var asset_data:AssetIOData = null
 
 #region GLB	Export
@@ -68,13 +68,14 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	
 	asset_data = AssetIOData.new()
 	asset_data.glb_path = path
+	asset_data.meta_data = metadata
 	#STEP 1: convert gltf file into nodes
 	var scene_root = gltf_document.generate_scene(gltf_state)
 	var scene = scene_root.get_children()
 	generate_asset_data_from_glb(scene)
 	asset_data.finalize_glb_parse()
 	if asset_library.import_info.has(path):
-		asset_data.set_glb_import_info(asset_library.import_info[path])
+		asset_data.add_glb_import_info(asset_library.import_info[path])
 	asset_data.generate_import_tags()
 	scene_root.queue_free() ## Really important otherwise memory leaks
 	if no_window:
@@ -96,8 +97,12 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				asset_data.add_mesh_to_collection(active_collection,name_data["name"],false)
 			if child_count > 0:
 				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")
-		elif not name_data["col"].is_empty():			
-			print(name_data["name"]," has a collision of type ",name_data["col"])
+		elif not name_data["col"].is_empty():		
+			var collection_name = node_parse_name(node.get_parent())['name']
+			if node is ImporterMeshInstance3D:
+				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform, node.mesh.get_mesh())
+			else:
+				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform)				
 			if child_count > 0:
 				push_error(node.name + " is detected as a collission due to using _col in its name! ignoring its children!")
 		elif child_count > 0:
@@ -127,9 +132,9 @@ static func glb_import_commit_changes():
 		## for now later we change
 		materials.resize(meshes.size())
 		materials.fill(-1)
-		if minfo["state"] == AssetIOData.IMPORT_STATE.NEW:
+		if minfo["state"] == AssetIOData.IMPORT_STATE.NEW:			
 			var mid = asset_library.mesh_item_add(meshes,materials)
-			asset_data.update_mesh_items_id(k,mid)
+			asset_data.update_mesh_items_id(k,mid)			
 		elif minfo["state"] == AssetIOData.IMPORT_STATE.CHANGE:
 			if minfo["id"] == -1:
 				push_error("something bad happened mesh id should not be -1")
@@ -146,7 +151,7 @@ static func glb_import_commit_changes():
 	### Adding Import Info
 	#####################################
 	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()
-	print("\nImport Info\n",asset_library.import_info[asset_data.glb_path])
+	#print("\nImport Info\n",asset_library.import_info[asset_data.glb_path])
 	MAssetTable.save()
 
 static func import_collection(glb_name:String):
@@ -407,11 +412,15 @@ static func node_parse_name(node:Node)->Dictionary:
 		result["lod"] = 0
 	else:
 		search_result = regex_col_match.search(node.name)		
-		print(node.name)
-		if search_result:
-			print("found col: ", search_result.strings[1])
+		if search_result:			
 			result["name"] = search_result.strings[1]
-			result["col"] = search_result.strings[2]		
+			match(search_result.strings[-1]):
+				"box": result["col"] = AssetIOData.COLLISION_TYPE.BOX
+				"sphere": result["col"] = AssetIOData.COLLISION_TYPE.SPHERE
+				"cylinder": result["col"] = AssetIOData.COLLISION_TYPE.CYLINDER
+				"capsule": result["col"] = AssetIOData.COLLISION_TYPE.CAPSULE
+				"convex": result["col"] = AssetIOData.COLLISION_TYPE.CONVEX
+				"mesh": result["col"] = AssetIOData.COLLISION_TYPE.MESH							
 	return result
 
 static func collection_parse_name(name:String)->String:
@@ -516,7 +525,7 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		return null
 	var mesh_ids = asset_library.collection_get_mesh_items_ids(collection_id)
 	var sub_collection_ids = asset_library.collection_get_sub_collections(collection_id)
-	if mesh_ids.size() > 0:
+	if mesh_ids.size() == 1 and len(sub_collection_ids) == 0: #and len(collision_ids) == 0:
 		var node = MAssetMesh.new()
 		var mesh_id = mesh_ids[0]
 		node.set_meta("mesh_id", mesh_id)

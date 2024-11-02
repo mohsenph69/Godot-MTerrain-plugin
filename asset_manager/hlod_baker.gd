@@ -1,6 +1,6 @@
 @tool
 class_name HLod_Baker extends Node3D
-
+#edit in blender: EditorSettings("filesystem/import/blender/blender_path")
 @export_storage var join_at_lod: int = -1
 @export var joined_mesh_node: MAssetMesh
 		
@@ -9,18 +9,6 @@ class_name HLod_Baker extends Node3D
 		if not bake_path.ends_with(".res"):
 			bake_path = bake_path + name + ".res"
 		return bake_path
-
-@export_storage var joined_mesh_export_path = "res://massets/":
-	get():		
-		if not joined_mesh_export_path.ends_with(".glb"):
-			joined_mesh_export_path = joined_mesh_export_path + name + "_joined_mesh.glb"
-		return joined_mesh_export_path
-
-@export_storage var export_path = "res://massets/":
-	get():		
-		if not export_path.ends_with(".glb"):
-			export_path = export_path + name + ".glb"
-		return export_path
 
 @export var meshes_to_join: Array[Node3D]
 @export var hlod_resource: MHlod
@@ -48,18 +36,7 @@ func _ready():
 			var original_transform = child.transform
 			var node = AssetIO.reload_collection(child, child.get_meta("collection_id"))
 			if is_instance_valid(node):
-				node.transform = original_transform
-
-func process_import(path:String):	
-	if not asset_library.import_info.has(path):
-		push_error("import info doesnt have ", path)
-		return	
-	if asset_library.import_info[path].has("metadata"):
-		if asset_library.import_info[path]["metadata"].has("baker_path"):
-			if asset_library.import_info[path]["metadata"]["baker_path"] == scene_file_path:
-				joined_mesh_node = AssetIO.collection_instantiate(asset_library.import_info[path].values()[0])
-				add_child(joined_mesh_node)
-				
+				node.transform = original_transform				
 				
 func make_joined_mesh():
 	var mesh_joiner := MMeshJoiner.new()
@@ -133,9 +110,7 @@ func compare_static_bodies(a:StaticBody3D,b):
 		return false
 	return true
 		
-func _enter_tree():	
-	asset_library.finish_import.connect(process_import)
-	
+func _enter_tree():			
 	asset_mesh_updater = MAssetMeshUpdater.new()	
 	asset_mesh_updater.set_root_node(self)
 	timer = Timer.new()
@@ -149,7 +124,6 @@ func _enter_tree():
 func update_lod():	
 	asset_mesh_updater.update_auto_lod()		
 	
-func _exit_tree():
-	asset_library.finish_import.disconnect(process_import)
+func _exit_tree():	
 	if is_instance_valid(timer):
 		timer.queue_free()

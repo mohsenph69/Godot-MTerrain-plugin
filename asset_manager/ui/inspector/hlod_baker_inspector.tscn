@@ -47,21 +47,6 @@ text = "Join Meshes"
 label_settings = SubResource("LabelSettings_1f66q")
 horizontal_alignment = 1
 
-[node name="HBoxContainer4" type="HBoxContainer" parent="."]
-layout_mode = 2
-
-[node name="joined_mesh_export_path" type="LineEdit" parent="HBoxContainer4"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="select_joined_mesh_export_path" type="Button" parent="HBoxContainer4"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-icon = ExtResource("2_cvmba")
-expand_icon = true
-
 [node name="HBoxContainer3" type="HBoxContainer" parent="."]
 layout_mode = 2
 
@@ -80,31 +65,10 @@ value = -1.0
 [node name="Join" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
+disabled = true
 text = "Join Meshes"
 
-[node name="Label3" type="Label" parent="."]
-layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_bg4xs")
-text = "Export HLOD as GLB"
-label_settings = SubResource("LabelSettings_1f66q")
-horizontal_alignment = 1
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="."]
-layout_mode = 2
-
-[node name="export_path" type="LineEdit" parent="HBoxContainer2"]
+[node name="join_hint" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="select_export_path" type="Button" parent="HBoxContainer2"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-icon = ExtResource("2_cvmba")
-expand_icon = true
-
-[node name="Export" type="Button" parent="HBoxContainer2"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Export"
+autowrap_mode = 2
