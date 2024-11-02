@@ -9,26 +9,35 @@ func _ready():
 	if object.has_meta("collection_id"):
 		var collection_id = object.get_meta("collection_id")
 		if collection_id == -1: return
-		if object is Node3D:
-			object.child_entered_tree.connect(func(child):
-				if child.has_meta("collection_id"):
-					update_overrides(child)					
-			)
+		#if object is Node3D:
+			#object.child_entered_tree.connect(func(child):
+				#if child.has_meta("collection_id"):
+					#update_overrides(child)					
+			#)
 		
-		if object.get_parent().has_meta("collection_id"):
-			if not object.property_list_changed.is_connected(update_overrides.bind(object)):				
-				object.property_list_changed.connect(update_overrides.bind(object))
-		else:
-			if object.property_list_changed.is_connected(update_overrides.bind(object)):
-				object.property_list_changed.disconnect(update_overrides.bind(object))
+		#if object.get_parent().has_meta("collection_id"):
+			#if not object.property_list_changed.is_connected(update_overrides.bind(object)):				
+				#object.property_list_changed.connect(update_overrides.bind(object))
+		#else:
+			#if object.property_list_changed.is_connected(update_overrides.bind(object)):
+				#object.property_list_changed.disconnect(update_overrides.bind(object))
 				
 		var has_collection = asset_library.has_collection(collection_id)
 		if has_collection:
 			%collection_name.text = asset_library.collection_get_name(collection_id)			
-			var data = asset_library.collection_get_mesh_items_info(collection_id)
-			%collection_details.text = str("items: ", data.size(), "\npositions: ", data.map(func(a): return a.transform.origin))						
-			data = asset_library.collection_get_sub_collections(collection_id)
-			%collection_details.text += str("\nsubcollections: ", data.size())
+			var details = ""
+			var data = asset_library.collection_get_mesh_items_info(collection_id)						
+			if len(data)>0:
+				details += str("mesh array | position: \n")
+				for item in data:
+					details += str(item.mesh, " | ", item.transform.origin.snappedf(0.01), "\n")			
+			var subcollection_ids = asset_library.collection_get_sub_collections(collection_id)			
+			if len(subcollection_ids)>0:				
+				details += "sub_collections | position: \n"
+				for id in subcollection_ids:				
+					var transform = asset_library.collection_get_sub_collections_transform(collection_id, id)
+					details += str(asset_library.collection_get_name(id), ": ", transform.origin.snappedf(0.01), "\n")
+			%collection_details.text = details
 		else:
 			%collection_name.text = "Collection doesn't exist"
 		

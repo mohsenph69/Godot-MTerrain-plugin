@@ -2,7 +2,7 @@
 class_name HLod_Baker extends Node3D
 #edit in blender: EditorSettings("filesystem/import/blender/blender_path")
 @export_storage var join_at_lod: int = -1
-@export var joined_mesh_node: MAssetMesh
+@export var joined_mesh_node: Node3D
 		
 @export_storage var bake_path = "res://massets/":
 	get():
@@ -40,18 +40,22 @@ func _ready():
 				
 func make_joined_mesh():
 	var mesh_joiner := MMeshJoiner.new()
-	var all_mesh_nodes = meshes_to_join
+	var all_mesh_nodes = meshes_to_join.duplicate()
 	for child in meshes_to_join:
-		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))	
-	
-	mesh_joiner.insert_mesh_data(all_mesh_nodes.map(get_correct_mesh_lod_for_joining), all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
+		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))		
+	all_mesh_nodes.filter(func(a): return a is MAssetMesh and len(a.meshes.meshes) > 0)
+	var mesh_array = all_mesh_nodes.map(get_correct_mesh_lod_for_joining)	
+	mesh_joiner.insert_mesh_data(mesh_array, all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
 	return mesh_joiner.join_meshes()					
 
-func get_correct_mesh_lod_for_joining(a:MAssetMesh):
-	var lod_to_use = min(join_at_lod, len(a.meshes.meshes))
-	while a.meshes.meshes[lod_to_use] == null and lod_to_use >-1:
+func get_correct_mesh_lod_for_joining(a):
+	if not a is MAssetMesh:		
+		return null
+	var lod_to_use = min(join_at_lod, len(a.meshes.meshes)-1)	
+	while lod_to_use >-1 and a.meshes.meshes[lod_to_use] == null:
 		lod_to_use -= 1
-	return null if lod_to_use == -1 else a.meshes.meshes[lod_to_use]		
+	var mesh = a.meshes.meshes[lod_to_use]
+	return null if lod_to_use == -1 and mesh.get_surface_count()>0 else a.meshes.meshes[lod_to_use]		
 
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	

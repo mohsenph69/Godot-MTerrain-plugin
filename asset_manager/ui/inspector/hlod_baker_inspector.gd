@@ -45,19 +45,42 @@ func _ready():
 	
 		var import_info = MAssetTable.get_singleton().import_info		
 		if not import_info.has(glb_path):
-			import_info[glb_path] = {"metadata":{}}		
-		if not import_info[glb_path].has("metadata"):
-			import_info[glb_path]["metadata"] = {}		
-		if not import_info[glb_path]["metadata"].has("baker_path"):
-			import_info[glb_path]["metadata"]["baker_path"] = object.scene_file_path		
-		AssetIO.glb_load(glb_path, import_info[glb_path]["metadata"])		
+			import_info[glb_path] = {"__metadata":{}}		
+		if not import_info[glb_path].has("__metadata"):
+			import_info[glb_path]["__metadata"] = {}		
+		if not import_info[glb_path]["__metadata"].has("baker_path"):
+			import_info[glb_path]["__metadata"]["baker_path"] = object.scene_file_path		
+		var glb_collection_name = AssetIO.node_parse_name( mesh_instance ).name
 		
-		var collection_id = -1
-		if import_info[glb_path].has( mesh_instance.name ):			
-			collection_id = import_info[glb_path][mesh_instance.name]["id"]
-			object.joined_mesh_node = AssetIO.collection_instantiate(collection_id)
-			object.add_child(object.joined_mesh_node)
-	)	
+		if not MAssetTable.get_singleton().finish_import.is_connected(finish_import.bind(glb_collection_name)):
+			MAssetTable.get_singleton().finish_import.connect(finish_import.bind(glb_collection_name))
+		
+		AssetIO.glb_load(glb_path, import_info[glb_path]["__metadata"], true)		
+				
+	)
+func finish_import(glb_path, glb_collection_name):		
+	var asset_library = MAssetTable.get_singleton()
+	var import_info = asset_library.import_info		
+	var collection_id = -1
+	if import_info[glb_path].has( glb_collection_name ):
+		collection_id = import_info[glb_path][glb_collection_name]["id"]				
+		asset_library.collection_add_tag(collection_id, 0)
+		var node
+		if object.has_node( glb_collection_name ):
+			node = object.get_node(glb_collection_name)
+			var original_node = AssetIO.collection_instantiate(collection_id)			
+			original_node.get_child(0).reparent( node )
+			original_node.queue_free()			
+		else:
+			node = AssetIO.collection_instantiate(collection_id)
+			object.add_child(node)		
+			node.owner = object	
+			node.name = glb_collection_name
+		object.joined_mesh_node = node	
+		
+	MAssetTable.get_singleton().finish_import.disconnect(finish_import)
+	
+	
 func check_if_can_join_meshes(object):
 	if object.join_at_lod == -1:
 		%Join.disabled = true

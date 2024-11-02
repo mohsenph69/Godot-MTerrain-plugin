@@ -83,7 +83,7 @@ func _drop_data(at_position, data):
 # GROUPS AND ITEMS #
 ####################
 func regroup(group = "None", filtered_collections = asset_library.collection_get_list()):			
-	filtered_collections = Array(filtered_collections).filter(func(a): return not a in asset_library.tag_get_collections(1))
+	filtered_collections = Array(filtered_collections).filter(func(a): return not a in asset_library.tag_get_collections(0) )
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)

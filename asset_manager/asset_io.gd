@@ -74,6 +74,7 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	scene_root.queue_free() ## Really important otherwise memory leaks
 	if no_window:
 		glb_import_commit_changes()
+		
 	else:
 		glb_show_import_window(asset_data)
 
@@ -111,86 +112,86 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 static func glb_import_commit_changes():
 	var asset_library = MAssetTable.get_singleton()
 	### First Adding Mesh Item order matter as collection depend on mesh_item and not reverse
-	var mkeys = asset_data.mesh_items.keys()
-	for k in mkeys:
-		var minfo = asset_data.mesh_items[k]
-		if minfo["ignore"] or minfo["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
+	var mesh_names = asset_data.mesh_items.keys()
+	for mesh_name in mesh_names:
+		var mesh_info = asset_data.mesh_items[mesh_name]
+		if mesh_info["ignore"] or mesh_info["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 			continue
 		### Handling Remove First
-		if minfo["state"] == AssetIOData.IMPORT_STATE.REMOVE:
-			asset_library.mesh_item_remove(minfo["id"])
+		if mesh_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:
+			asset_library.mesh_item_remove(mesh_info["id"])
 			continue
 		### Other State
-		asset_data.save_unsaved_meshes(k) ## now all mesh are saved with and integer ID
-		var meshes = minfo["meshes"]
+		asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID
+		var meshes = mesh_info["meshes"]
 		var materials:PackedInt32Array
 		## for now later we change
 		materials.resize(meshes.size())
 		materials.fill(-1)
-		if minfo["state"] == AssetIOData.IMPORT_STATE.NEW:			
+		if mesh_info["state"] == AssetIOData.IMPORT_STATE.NEW:			
 			var mid = asset_library.mesh_item_add(meshes,materials)
-			asset_data.update_mesh_items_id(k,mid)			
-		elif minfo["state"] == AssetIOData.IMPORT_STATE.CHANGE:
-			if minfo["id"] == -1:
+			asset_data.update_mesh_items_id(mesh_name,mid)			
+		elif mesh_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
+			if mesh_info["id"] == -1:
 				push_error("something bad happened mesh id should not be -1")
 				continue
-			asset_library.mesh_item_update(minfo["id"],meshes,materials)
+			asset_library.mesh_item_update(mesh_info["id"],meshes,materials)
 	####### Finish Mesh Item
 	#####################################
 	### commiting Collections
 	#####################################
-	var ckeys = asset_data.collections.keys()
-	for k in ckeys:
-		import_collection(k)
+	var collection_names = asset_data.collections.keys()
+	for collection_name in collection_names:
+		import_collection(collection_name)
 	#####################################
 	### Adding Import Info
 	#####################################
-	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()
-	#print("\nImport Info\n",asset_library.import_info[asset_data.glb_path])
+	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()	
+	asset_library.finish_import.emit(asset_data.glb_path)
 	MAssetTable.save()
 
 static func import_collection(glb_name:String):
 	if not asset_data.collections.has(glb_name) or asset_data.collections[glb_name]["ignore"] or asset_data.collections[glb_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 		return
 	asset_data.collections[glb_name]["ignore"] = true # this means this collection has been handled
-	var cinfo:Dictionary = asset_data.collections[glb_name]
+	var collection_info:Dictionary = asset_data.collections[glb_name]
 	var asset_library = MAssetTable.get_singleton()
-	if cinfo["state"] == AssetIOData.IMPORT_STATE.REMOVE:
-		if cinfo["id"] == -1:
+	if collection_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:
+		if collection_info["id"] == -1:
 			push_error("Invalid collection to remove")
 			return
-		asset_library.remove_collection(cinfo["id"])
+		asset_library.remove_collection(collection_info["id"])
 		return
-	var mesh_items = cinfo["mesh_items"]
-	var cid := -1
-	if cinfo["state"] == AssetIOData.IMPORT_STATE.NEW:
-		cid = asset_library.collection_create(glb_name)
-		asset_data.update_collection_id(glb_name,cid)
-	elif cinfo["id"] != -1 and cinfo["state"] == AssetIOData.IMPORT_STATE.CHANGE:
-		cid = cinfo["id"]
-		asset_library.collection_clear(cid)
+	var mesh_items = collection_info["mesh_items"]
+	var collection_id := -1
+	if collection_info["state"] == AssetIOData.IMPORT_STATE.NEW:
+		collection_id = asset_library.collection_create(glb_name)
+		asset_data.update_collection_id(glb_name, collection_id)
+	elif collection_info["id"] != -1 and collection_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
+		collection_id = collection_info["id"]
+		asset_library.collection_clear(collection_id)
 	else:
 		push_error("Invalid collection!!!")
 		return
 	###### Adding Mesh Items into Collection
-	for m in mesh_items:
-		var mid = asset_data.get_mesh_items_id(m)
-		if mid == -1:
+	for mesh_item_name in mesh_items:
+		var mesh_item_id = asset_data.get_mesh_items_id(mesh_item_name)
+		if mesh_item_id == -1:
 			push_error("invalid mesh item to insert in collection ",glb_name)
 			return
-		asset_library.collection_add_item(cid,MAssetTable.MESH,mid,mesh_items[m])
+		asset_library.collection_add_item(collection_id,MAssetTable.MESH,mesh_item_id,mesh_items[mesh_item_name])
 	###### Adding Sub Collection into Collection
-	var sub_collections:Dictionary = cinfo["sub_collections"]
-	for sub_c_name in sub_collections:
-		var sub_c_id = asset_data.get_collection_id(sub_c_name)
+	var sub_collections:Dictionary = collection_info["sub_collections"]
+	for sub_collection_name in sub_collections:
+		var sub_collection_id = asset_data.get_collection_id(sub_collection_name)
 		## Trying to import that sub collection and hope to not stuck in infinit loop
-		if sub_c_id == -1:
-			import_collection(sub_c_name)
-		sub_c_id = asset_data.get_collection_id(sub_c_name)
-		if sub_c_id == -1:
-			push_error("Invalid sub collection ",sub_c_name)
-		var sub_c_transform = sub_collections[sub_c_name]
-		asset_library.collection_add_sub_collection(cid,sub_c_id,sub_c_transform)
+		if sub_collection_id == -1:
+			import_collection(sub_collection_name)
+		sub_collection_id = asset_data.get_collection_id(sub_collection_name)
+		if sub_collection_id == -1:
+			push_error("Invalid sub collection ",sub_collection_name)
+		var sub_collection_transform = sub_collections[sub_collection_name]
+		asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)
 		
 static func mesh_item_update_from_collection_dictionary(collection):
 	var asset_library := MAssetTable.get_singleton()			
@@ -231,132 +232,6 @@ static func glb_show_import_window(asset_data:AssetIOData):
 	panel.asset_data = asset_data
 	popup.add_child(panel)
 	popup.popup_centered(Vector2i(800,600))	
-
-static func convert_node_to_hlod_baker(object):
-	var asset_library = MAssetTable.get_singleton()
-	object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
-	var mesh_children = []
-	for child in object.get_children():
-		child.owner = object
-		if child is ImporterMeshInstance3D:
-			mesh_children.push_back(child)
-		else:
-			#Check if collection exists
-			var collection_name = child.name.left(len(child.name) - len(child.name.split("_")[-1])-1)
-			var collection_id = asset_library.collection_get_id( collection_name.to_lower())
-			if collection_id != -1:
-				object.remove_child(child)
-				var node = collection_instantiate(collection_id)
-				object.add_child(node)
-				node.transform = child.transform
-				node.owner = object
-				node.set_meta("collection_id", collection_id)
-				node.name = child.name
-				child.queue_free()
-			elif "_hlod" in child.name:
-				var node = MHlodScene.new()
-				#node.hlod = load()
-				child.add_sibling(node)
-				child.get_parent().remove_child(child)
-				node.name = child.name
-				node.owner = object
-				child.queue_free()
-	var data = mesh_item_import_from_nodes(mesh_children)
-	var nodes_to_delete = []
-	for child in mesh_children:
-		child.owner = null
-		nodes_to_delete.push_back(child)
-	for i in data.ids.size():
-		var single_item_collections = asset_library.tag_get_collections_in_collections( asset_library.mesh_item_find_collections(data.ids[i]) ,0)
-		if len(single_item_collections) == 1:
-			var node = collection_instantiate(single_item_collections[0])
-			object.add_child(node)
-			object.move_child(node, data.sibling_ids[i])
-			node.owner = object
-
-	var packed_scene:PackedScene = PackedScene.new()
-	packed_scene.pack(object)
-	ResourceSaver.save(packed_scene, "res://addons/m_terrain/asset_manager/example_asset_library/hlods/" + object.name + ".tscn")
-	for node:Node in nodes_to_delete:
-		node.queue_free()
-
-static func mesh_item_import_from_nodes(nodes, ignore_transform = true):
-	var asset_library := MAssetTable.get_singleton()
-	var mesh_item_ids = []
-	var mesh_item_transforms = []
-	var sibling_ids = []
-
-	var mesh_items = {}
-	for child:Node in nodes:
-		var name_data = node_parse_name(child)
-		if not name_data.name in mesh_items.keys():
-			mesh_items[name_data.name] = []
-		mesh_items[name_data.name].push_back(child)
-
-	for item_name in mesh_items.keys():
-		sibling_ids.push_back(mesh_items[item_name][0].get_index())
-		var mesh_item_array = []
-		var meshes = []
-		for node in mesh_items[item_name]:
-			var name_data = node_parse_name(node)
-			#Save Meshes
-			var mesh:Mesh
-			if node is MeshInstance3D:
-				mesh = node.mesh
-			elif node is ImporterMeshInstance3D:
-				mesh = node.mesh.get_mesh()
-			else:
-				mesh = null
-			if mesh:
-				var mesh_save_path = asset_library.mesh_get_path(mesh)
-				if FileAccess.file_exists(mesh_save_path):
-					mesh.take_over_path(mesh_save_path)
-				else:
-					ResourceSaver.save(mesh, mesh_save_path)
-
-			while len(mesh_item_array) < name_data.lod:
-				if len(mesh_item_array) == 0:
-					mesh_item_array.push_back(0)
-					#material_ids.push_back(-1)
-				else:
-					mesh_item_array.push_back(mesh_item_array.back())
-					#material_ids.push_back(material_ids.back())
-			mesh_item_array.push_back(asset_library.mesh_get_id(mesh))
-			meshes.push_back(mesh)
-
-		#Fill empty lod with last mesh
-		var last_mesh = mesh_item_array[-1]
-		while mesh_item_array.size() < LOD_COUNT:
-			mesh_item_array.push_back(mesh_item_array[-1])
-
-		#Add Mesh Item
-		var material_ids = mesh_item_array.map(func(a): return -1)
-		var mesh_item_id = asset_library.mesh_item_find_by_info( mesh_item_array, material_ids)
-		if mesh_item_id == -1:
-			mesh_item_id = asset_library.mesh_item_add( mesh_item_array, material_ids)
-		else:
-			asset_library.mesh_item_update(mesh_item_id, mesh_item_array, material_ids)
-		mesh_item_ids.push_back(mesh_item_id)
-		mesh_item_transforms.push_back(mesh_items[item_name][0].transform)
-	#Create single item collections
-	var collection_ids = []
-	for i in mesh_item_ids.size():
-		var name = mesh_items.keys()[i] + "_mesh" if not mesh_items.keys()[i].ends_with("_mesh") else mesh_items.keys()[i]
-		var collection_id = asset_library.collection_get_id(name)
-		if collection_id == -1:
-			collection_id = asset_library.collection_create(name)
-		else:
-			for mesh_id in asset_library.collection_get_mesh_items_ids(collection_id):
-				asset_library.mesh_item_remove(mesh_id)
-			asset_library.collection_remove_all_items(collection_id)
-			asset_library.collection_remove_all_sub_collection(collection_id)
-		if not collection_id in asset_library.tag_get_collections(0):
-			asset_library.collection_add_tag(collection_id,0)
-		collection_ids.push_back(collection_id)
-		var transform = Transform3D() if ignore_transform else mesh_item_transforms[i]
-		asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_item_ids[i], transform)
-
-	return {"ids":mesh_item_ids, "collection_ids": collection_ids , "transforms": mesh_item_transforms, "sibling_ids": sibling_ids}
 #endregion
 #region Mesh Item
 static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
