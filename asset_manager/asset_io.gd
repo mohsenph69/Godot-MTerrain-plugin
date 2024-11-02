@@ -123,7 +123,8 @@ static func glb_import_commit_changes():
 			continue
 		### Other State
 		asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID
-		var meshes = mesh_info["meshes"]
+		var meshes = fill_mesh_lod_gaps(mesh_info["meshes"])
+		
 		var materials:PackedInt32Array
 		## for now later we change
 		materials.resize(meshes.size())
@@ -149,6 +150,16 @@ static func glb_import_commit_changes():
 	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()	
 	asset_library.finish_import.emit(asset_data.glb_path)
 	MAssetTable.save()
+	
+static func fill_mesh_lod_gaps(mesh_array):
+	var result = mesh_array.duplicate()
+	var last_mesh = null
+	for i in len(mesh_array):		
+		if mesh_array[i] == -1 and last_mesh != null:
+			result[i] = last_mesh
+		else:
+			last_mesh = mesh_array[i]
+	return result		
 
 static func import_collection(glb_name:String):
 	if not asset_data.collections.has(glb_name) or asset_data.collections[glb_name]["ignore"] or asset_data.collections[glb_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
