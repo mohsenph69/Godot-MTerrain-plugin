@@ -71,10 +71,10 @@ func recursive_check(node:Node):
 		if node.has_meta("replace_root"):				
 			#node.owner.replace_by(node)
 			node.owner.name+="1"						
-		if node.has_meta("static_body"):
-			node = replace_node_with_static_body(node)
-		if node.has_meta("rigid_body"):
-			node = replace_node_with_rigid_body(node)
+		#if node.has_meta("static_body"):
+			#node = replace_node_with_static_body(node)
+		#if node.has_meta("rigid_body"):
+			#node = replace_node_with_rigid_body(node)
 		if node.has_meta("collision_box"):			
 			var collision_box = node.get_meta("collision_box")
 			node = replace_node_with_collision_box(node, collision_box[0],collision_box[2],collision_box[1])			

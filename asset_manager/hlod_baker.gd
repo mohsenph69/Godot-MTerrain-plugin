@@ -10,10 +10,11 @@ class_name HLod_Baker extends Node3D
 			bake_path = bake_path + name + ".res"
 		return bake_path
 
-@export var meshes_to_join: Array[Node3D]:
-	set(value):
-		meshes_to_join = value
-		notify_property_list_changed()
+@export var meshes_to_join: Array[Node3D]
+	#set(value):
+		#meshes_to_join = value
+		#notify_property_list_changed()
+
 @export var hlod_resource: MHlod
 
 var asset_library := MAssetTable.get_singleton()
@@ -120,9 +121,10 @@ func compare_static_bodies(a:StaticBody3D,b):
 func _enter_tree():			
 	asset_mesh_updater = MAssetMeshUpdater.new()	
 	asset_mesh_updater.set_root_node(self)
-	timer = Timer.new()
-	add_child(timer)
-	timer.timeout.connect(update_lod)
+	if not is_instance_valid(timer):
+		timer = Timer.new()
+		timer.timeout.connect(update_lod)
+	add_child(timer)	
 	timer.start(1)
 	for child in get_children():
 		if child is Node3D:

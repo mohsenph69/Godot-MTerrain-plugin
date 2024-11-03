@@ -2,7 +2,7 @@
 class_name AssetIOData extends RefCounted
 
 enum IMPORT_STATE {
-	NOT_HANDLE,NO_CHANGE, NEW, CHANGE, REMOVE, 
+	NOT_HANDLE,NO_CHANGE, NEW, CHANGE, REMOVE,
 }
 enum COLLISION_TYPE {
 	BOX,SPHERE,CYLINDER, CAPSULE, CONVEX, MESH
@@ -11,6 +11,7 @@ enum COLLISION_TYPE {
 var mesh_items:Dictionary
 var collections:Dictionary
 var glb_path:String
+var blend_file: String
 var meta_data:Dictionary
 
 func clear():
@@ -46,11 +47,11 @@ func get_empty_collection()->Dictionary:
 func get_empty_collision_item()->Dictionary:
 	return {
 		"type":null, # box / sphere / cylinder / capsule / concave / mesh
-		"transform":[],		
+		"transform":[],
 		"mesh": null, #only exists if mesh type
 		"id":-1,
 		"ignore":false,
-		"state":IMPORT_STATE.NOT_HANDLE,		
+		"state":IMPORT_STATE.NOT_HANDLE,
 	}.duplicate()
 
 # collection[name]["collision_items"] = [ ]
@@ -80,17 +81,17 @@ func add_mesh_to_collection(collection_name:String, mesh_name:String, is_root:bo
 func add_collision_to_collection(collection_name, collision_type:COLLISION_TYPE, transform, mesh:Mesh=null):
 	if not collections.has(collection_name):
 		collections[collection_name] = get_empty_collection()
-	var item = get_empty_collision_item()	
+	var item = get_empty_collision_item()
 	item.type = collision_type
 	item.transform = transform
 	if is_instance_valid(mesh):
-		if collision_type == COLLISION_TYPE.CONVEX:	
+		if collision_type == COLLISION_TYPE.CONVEX:
 			item.mesh = mesh.create_convex_shape() #array of points
 		else:
 			item.mesh = mesh
 	collections[collection_name]["collision_items"].push_back(item)
 	
-func get_collection_id(collection_name:String)->int:
+func get_collection_id(collection_name:String)->int:	
 	if collections.has(collection_name):
 		return collections[collection_name]["id"]
 	return -1
@@ -106,7 +107,7 @@ func add_sub_collection(collection_name:String,sub_collection_name:String,transf
 
 
 func finalize_glb_parse():
-	var asset_library = MAssetTable.get_singleton()	
+	var asset_library = MAssetTable.get_singleton()
 	############
 	## MESHES ##
 	############	
@@ -129,14 +130,23 @@ func finalize_glb_parse():
 	#################
 	## COLLECTIONS ##
 	#################
-	for collection_name in collections:			
+	for collection_name in collections:
 		var collection_mesh_items = collections[collection_name]["mesh_items"]
 		var collection_collision_items = collections[collection_name]["collision_items"]
 		var sub_collections = collections[collection_name]["sub_collections"]
 		#check if all the collection name which used as sub_collection exist otherwise generate error
 		for sub_collection_name in sub_collections:
-			if not sub_collection_name in collections:
-				push_error("finalise glb error: subcollection ", sub_collection_name, " does not exist, but is needed for collection ", collection_name )		
+			if "::" in sub_collection_name and ".glb" in sub_collection_name:				
+				var node_name = sub_collection_name.get_slice("::", 0)
+				var glb_path = sub_collection_name.get_slice("::", 1)
+				if not glb_path in asset_library.import_info:
+					push_error("finalize glb parse error: subcollection is trying to reference a glb path that has not been imported yet: ", glb_path)
+					sub_collections.erase(sub_collection_name)
+				if not node_name in asset_library.import_info[glb_path]:
+					push_error("finalize glb parse error: subcollection is trying to reference an asset in external glb file, but glb_node_name does not exist: ", sub_collection_name)																			
+					sub_collections.erase(sub_collection_name)
+			elif not sub_collection_name in collections:
+				push_error("finalise glb error: subcollection ", sub_collection_name, " does not exist, but is needed for collection ", collection_name )
 		check_for_infinite_recursion_in_collections(collection_name)
 		#Fix Mesh Transforms...if collection is_root is active local_transform should be used base on the lowest avaliable lod mesh node		
 		if not collections[collection_name]["is_root"]:
@@ -151,14 +161,24 @@ func finalize_glb_parse():
 	for mesh_name in mesh_items:
 		mesh_items[mesh_name].erase("mesh_nodes")
 
-func check_for_infinite_recursion_in_collections(name, checked_collections = []):			
-	if name in checked_collections:			
+func check_for_infinite_recursion_in_collections(name, checked_collections = []):
+	var asset_library = MAssetTable.get_singleton()
+	if name in checked_collections:
 		return true
-	checked_collections.push_back(name)
-	for sub_collection_name in collections[name]["sub_collections"]:
-		if check_for_infinite_recursion_in_collections(sub_collection_name, checked_collections):
-			push_error("infinite recursion in subcollections: ", checked_collections.duplicate())
-			return
+	if "::" in name:
+		var node_name = name.get_slice("::", 0)
+		var glb_path = name.get_slice("::", 1)					
+		checked_collections.push_back(name)
+		for sub_collection_name in asset_library.import_info[glb_path][node_name]["sub_collections"]:
+			if check_for_infinite_recursion_in_collections(sub_collection_name, checked_collections.duplicate()):
+				push_error("infinite recursion in subcollections: ", checked_collections)
+				return
+	else:		
+		checked_collections.push_back(name)
+		for sub_collection_name in collections[name]["sub_collections"]:
+			if check_for_infinite_recursion_in_collections(sub_collection_name, checked_collections.duplicate()):
+				push_error("infinite recursion in subcollections: ", checked_collections)
+				return
 						
 func find_mesh_item_transform(mesh_name:String)->Transform3D:
 	if mesh_items.has(mesh_name):
@@ -198,7 +218,9 @@ func add_original_collisions(collection_name:String,transform:Transform3D)->void
 
 # After add_original stuff generating import tags base on the difference between these new and original
 func generate_import_tags():
-	#### ITEM MESH
+	###############
+	## ITEM MESH ##
+	###############
 	for mesh_item_name in mesh_items:
 		if mesh_items[mesh_item_name]["id"] == -1: # new mesh
 			mesh_items[mesh_item_name]["state"] = IMPORT_STATE.NEW
@@ -225,10 +247,10 @@ func generate_import_tags():
 			if is_same:
 				mesh_items[mesh_item_name]["state"] = IMPORT_STATE.NO_CHANGE
 			else:
-				mesh_items[mesh_item_name]["state"] = IMPORT_STATE.CHANGE
-	############################
-	#### Collections
-	###########################
+				mesh_items[mesh_item_name]["state"] = IMPORT_STATE.CHANGE	
+	#################
+	## Collections ##
+	#################
 	for key in collections: #key = collection_name
 		if collections[key]["mesh_items"].size() == 0 and collections[key]["sub_collections"].is_empty():
 			collections[key]["state"] = IMPORT_STATE.REMOVE
@@ -257,7 +279,7 @@ func save_unsaved_meshes(mesh_item_name:String):
 	var asset_library = MAssetTable.get_singleton()
 	if not mesh_item_name in mesh_items:
 		push_error("trying to save meshes for a mesh item whose name does not exist")
-		return 
+		return
 	var meshes = mesh_items[mesh_item_name]["meshes"]
 	for i in range(meshes.size()):
 		if meshes[i] is Mesh:
@@ -286,10 +308,10 @@ func get_glb_import_info():
 			result[key].collision_items.push_back(collision_item)
 		
 		
-		result[key]["id"] = collections[key]["id"]		
+		result[key]["id"] = collections[key]["id"]
 	result["__metadata"] = meta_data
 	return result
-
+#Add original mesh and collection data to asset_data
 func add_glb_import_info(info:Dictionary)->void:
 	var asset_library := MAssetTable.get_singleton()
 	for collection_glb_name in info:
@@ -299,7 +321,7 @@ func add_glb_import_info(info:Dictionary)->void:
 			push_error(collection_id," Invalid collection ID in set_glb_import_info")
 			continue
 		var original_meshes:Dictionary= info[collection_glb_name]["mesh_items"]
-		var original_sub_collections:Dictionary= info[collection_glb_name]["sub_collections"]		
+		var original_sub_collections:Dictionary= info[collection_glb_name]["sub_collections"]
 		for mesh_name in original_meshes:
 			add_original_mesh_item(mesh_name,original_meshes[mesh_name])
 			add_original_mesh_to_collection(collection_glb_name, mesh_name, asset_library.collection_get_item_transform(collection_id, MAssetTable.MESH, original_meshes[mesh_name]))

@@ -11,8 +11,11 @@ signal selection_changed
 @onready var group_by_button = find_child("group_by_button")
 	
 var asset_library: MAssetTable = MAssetTable.get_singleton()
-var current_selection = [] #array of collection id
+var current_selection = [] #array of collection name
 var current_group = "None" #group name
+
+var queued_thumbnails = {}
+
 func _ready():		
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 
@@ -159,36 +162,30 @@ func process_selection(who:ItemList, id, selected):
 func remove_asset(collection_id):
 	for i in asset_library.collection_get_mesh_items_ids(collection_id):
 		asset_library.mesh_item_remove(i)			
-	asset_library.collection_remove(collection_id)
+	asset_library.collection_remove_tag(collection_id, 0)	
+	asset_library.collection_remove(collection_id)	
+	var path = str("res://massets/thumbnails/", collection_id, ".png")
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
 	
 #region Thumbnails
 ##############
 # THUMBNAILS #
 ##############
 func generate_thumbnails_for_selected_collections():
+	queued_thumbnails = {}
+	print(current_selection)
 	for collection_name in current_selection:
-		var collection_id = asset_library.collection_get_id(collection_name)
-		if collection_id in asset_library.tag_get_collections(0):
-			var mesh_item = asset_library.collection_get_mesh_items_info(collection_id)
-			var i = 0
-			while i < len(mesh_item[0].mesh):
-				var mesh_path = MHlod.get_mesh_path(mesh_item[0].mesh[i])													
-				var mesh:Mesh = load(mesh_path)
-				if mesh.get_surface_count() > 0:												
-					EditorInterface.get_resource_previewer().queue_edited_resource_preview(mesh, self, "save_thumbnail", collection_id)								
-					break
-				i += 1
-		else:							
-			var data = {"meshes":[], "transforms":[]}
-			combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)											
-			var mesh_joiner := MMeshJoiner.new()					
-			mesh_joiner.insert_mesh_data(data.meshes, data.transforms, data.transforms.map(func(a):return -1))
-			var mesh = mesh_joiner.join_meshes()	
-			EditorInterface.get_resource_previewer().queue_edited_resource_preview(mesh, self, "save_thumbnail", collection_id)								
-			var selected = EditorInterface.get_selection().get_selected_nodes()[0]
-			if selected is MeshInstance3D:
-				selected.mesh = mesh
-
+		var collection_id = asset_library.collection_get_id(collection_name)		
+		var data = {"meshes":[], "transforms":[]}
+		combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)											
+		var mesh_joiner := MMeshJoiner.new()					
+		mesh_joiner.insert_mesh_data(data.meshes, data.transforms, data.transforms.map(func(a):return -1))
+		var mesh = mesh_joiner.join_meshes()	
+		queued_thumbnails[collection_id] = {"mesh":mesh, "generated": false}		
+	var collection_id = queued_thumbnails.keys()[0]
+	EditorInterface.get_resource_previewer().queue_edited_resource_preview(queued_thumbnails[collection_id].mesh, self, "save_thumbnail", collection_id)					
+	
 
 func combine_collection_meshes_and_transforms_recursive(collection_id, data, combined_transform):
 	var subcollection_ids = asset_library.collection_get_sub_collections(collection_id)
@@ -196,29 +193,42 @@ func combine_collection_meshes_and_transforms_recursive(collection_id, data, com
 	if len(subcollection_ids) > 0:
 		for i in len(subcollection_ids):
 			combine_collection_meshes_and_transforms_recursive(subcollection_ids[i], data, combined_transform * subcollection_transforms[i])
-	else:
-		var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)
+	var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)	
+	for item in mesh_items:
 		var i = 0
-		while i < len(mesh_items[0].mesh):
-			var mesh_path = MHlod.get_mesh_path(mesh_items[0].mesh[i])													
+		while i < len(item.mesh):
+			var mesh_path = MHlod.get_mesh_path(item.mesh[i])													
 			var mesh:Mesh = load(mesh_path)
 			if mesh.get_surface_count() > 0:		
 				data.meshes.push_back(mesh)
-				data.transforms.push_back(combined_transform)
+				data.transforms.push_back(combined_transform * item.transform)
 				break	
 			
-func save_thumbnail(path, preview, thumbnail_preview, collection_id):	
+func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):			
+	#Save the current one 	
 	if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
 		DirAccess.make_dir_recursive_absolute("res://massets/thumbnails/")
-	ResourceSaver.save(preview, str("res://massets/thumbnails/", collection_id,".png") )								
+	var thumbnail_path = str("res://massets/thumbnails/", this_collection_id,".png")
+	if FileAccess.file_exists(thumbnail_path):
+		preview.take_over_path(thumbnail_path)
+	else:
+		ResourceSaver.save(preview, thumbnail_path )										
+	queued_thumbnails[this_collection_id].generated = true
+	#Queue the next one if there are more
+	for collection_id in queued_thumbnails.keys():
+		if queued_thumbnails[collection_id].generated == true:
+			continue
+		EditorInterface.get_resource_previewer().queue_edited_resource_preview(queued_thumbnails[collection_id].mesh, self, "save_thumbnail", collection_id)							
+		return
+	#If the queue is finished, then refresh	
 	var fs := EditorInterface.get_resource_filesystem()	
 	if not fs.resources_reimported.is_connected(resources_reimported):
 		fs.resources_reimported.connect(resources_reimported)	
-	fs.scan()	
-
-func resources_reimported(paths):
+	fs.scan()		
+	
+func resources_reimported(paths):		
 	for path in paths:
-		if "res://massets/thumbnails" in path:
+		if "res://massets/thumbnails" in path:			
 			regroup()
 			return
 #endregion

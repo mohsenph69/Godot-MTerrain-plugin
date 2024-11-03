@@ -57,7 +57,8 @@ func update_label():
 	var tree: Tree = %preview_dictionary_tree				
 	var item = tree.get_selected()
 	var node_name = item.get_text(0)
-	%preview_dictionary_label.text = str(asset_data.collections[node_name]).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
+	if node_name in asset_data.collections:
+		%preview_dictionary_label.text = str(asset_data.collections[node_name]).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
 	
 func build_tree(node_name:String, root:TreeItem):	
 	var item := root.create_child()		

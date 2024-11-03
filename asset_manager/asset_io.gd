@@ -59,10 +59,13 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		GLTFDocument.register_gltf_document_extension(GLTFExtras.new())
 	var gltf_state = GLTFState.new()
 	gltf_document.append_from_file(path,gltf_state)
-	
+		
 	asset_data = AssetIOData.new()
+	if gltf_state.json.scenes[0].has("extras") and gltf_state.json.scenes[0].extras.has("blend_file"):
+		asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
 	asset_data.glb_path = path
 	asset_data.meta_data = metadata
+	
 	#STEP 1: convert gltf file into nodes
 	var scene_root = gltf_document.generate_scene(gltf_state)
 	var scene = scene_root.get_children()
@@ -73,8 +76,7 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	asset_data.generate_import_tags()
 	scene_root.queue_free() ## Really important otherwise memory leaks
 	if no_window:
-		glb_import_commit_changes()
-		
+		glb_import_commit_changes()	
 	else:
 		glb_show_import_window(asset_data)
 
@@ -106,12 +108,25 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				generate_asset_data_from_glb(node.get_children(),node.name)
 			else:
 				push_error(node.name," is two deep level which is not allowed")
-		elif active_collection != "__root__": # can be sub collection
-			asset_data.add_sub_collection(active_collection,collection_parse_name(node.name),node.transform)
+		elif active_collection != "__root__": # can be sub collection			
+			var subcollection_name = collection_parse_name(node.name)			
+			if node.has_meta("blend_file"):				
+				var blend_file = node.get_meta("blend_file").trim_prefix("//")
+				print(blend_file)
+				if asset_data.blend_file != blend_file:
+					if blend_file in asset_library.import_info["__blend_files"]:
+						var glb_path = asset_library.import_info["__blend_files"][blend_file]
+						subcollection_name += "::" + glb_path					
+					else:
+						print(asset_library.import_info["__blend_files"].keys())
+			asset_data.add_sub_collection(active_collection,subcollection_name,node.transform)
 
 static func glb_import_commit_changes():
 	var asset_library = MAssetTable.get_singleton()
-	### First Adding Mesh Item order matter as collection depend on mesh_item and not reverse
+	######################
+	## Commit Mesh Item ##
+	######################
+	# mesh_item must be processed before collection, because collection depeneds on mesh item
 	var mesh_names = asset_data.mesh_items.keys()
 	for mesh_name in mesh_names:
 		var mesh_info = asset_data.mesh_items[mesh_name]
@@ -137,17 +152,20 @@ static func glb_import_commit_changes():
 				push_error("something bad happened mesh id should not be -1")
 				continue
 			asset_library.mesh_item_update(mesh_info["id"],meshes,materials)
-	####### Finish Mesh Item
-	#####################################
-	### commiting Collections
-	#####################################
+	
+	###########################
+	## Commiting Collections ##
+	###########################
 	var collection_names = asset_data.collections.keys()
 	for collection_name in collection_names:
 		import_collection(collection_name)
-	#####################################
-	### Adding Import Info
-	#####################################
+	########################
+	## Adding Import Info ##
+	########################
 	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()	
+	if not "__blend_files" in asset_library.import_info:
+		asset_library.import_info["__blend_files"] = {}
+	asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path
 	asset_library.finish_import.emit(asset_data.glb_path)
 	MAssetTable.save()
 	
@@ -161,12 +179,12 @@ static func fill_mesh_lod_gaps(mesh_array):
 			last_mesh = mesh_array[i]
 	return result		
 
-static func import_collection(glb_name:String):
-	if not asset_data.collections.has(glb_name) or asset_data.collections[glb_name]["ignore"] or asset_data.collections[glb_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
+static func import_collection(glb_node_name:String):		
+	if glb_node_name and not asset_data.collections.has(glb_node_name) or asset_data.collections[glb_node_name]["ignore"] or asset_data.collections[glb_node_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 		return
-	asset_data.collections[glb_name]["ignore"] = true # this means this collection has been handled
-	var collection_info:Dictionary = asset_data.collections[glb_name]
-	var asset_library = MAssetTable.get_singleton()
+	asset_data.collections[glb_node_name]["ignore"] = true # this means this collection has been handled
+	var asset_library := MAssetTable.get_singleton()
+	var collection_info: Dictionary = asset_data.collections[glb_node_name]	
 	if collection_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:
 		if collection_info["id"] == -1:
 			push_error("Invalid collection to remove")
@@ -176,33 +194,45 @@ static func import_collection(glb_name:String):
 	var mesh_items = collection_info["mesh_items"]
 	var collection_id := -1
 	if collection_info["state"] == AssetIOData.IMPORT_STATE.NEW:
-		collection_id = asset_library.collection_create(glb_name)
-		asset_data.update_collection_id(glb_name, collection_id)
+		collection_id = asset_library.collection_create(glb_node_name)
+		asset_data.update_collection_id(glb_node_name, collection_id)
 	elif collection_info["id"] != -1 and collection_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
 		collection_id = collection_info["id"]
 		asset_library.collection_clear(collection_id)
 	else:
 		push_error("Invalid collection!!!")
 		return
-	###### Adding Mesh Items into Collection
+	
+	#Add Mesh Items to Collection
 	for mesh_item_name in mesh_items:
 		var mesh_item_id = asset_data.get_mesh_items_id(mesh_item_name)
 		if mesh_item_id == -1:
-			push_error("invalid mesh item to insert in collection ",glb_name)
+			push_error("invalid mesh item to insert in collection ",glb_node_name)
 			return
 		asset_library.collection_add_item(collection_id,MAssetTable.MESH,mesh_item_id,mesh_items[mesh_item_name])
-	###### Adding Sub Collection into Collection
+	
+	#Adding Sub Collection to Collection
 	var sub_collections:Dictionary = collection_info["sub_collections"]
 	for sub_collection_name in sub_collections:
-		var sub_collection_id = asset_data.get_collection_id(sub_collection_name)
-		## Trying to import that sub collection and hope to not stuck in infinit loop
-		if sub_collection_id == -1:
-			import_collection(sub_collection_name)
-		sub_collection_id = asset_data.get_collection_id(sub_collection_name)
-		if sub_collection_id == -1:
-			push_error("Invalid sub collection ",sub_collection_name)
-		var sub_collection_transform = sub_collections[sub_collection_name]
-		asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)
+		#If sub_collection in different glb...				
+		if "::" in sub_collection_name:			
+			var glb_path = sub_collection_name.get_slice("::", 1)	
+			var node_name = sub_collection_name.get_slice("::", 0)			
+			if node_name in asset_library.import_info[glb_path]:
+				var sub_collection_id = asset_library.import_info[glb_path][node_name].id
+				var sub_collection_transform = sub_collections[sub_collection_name]
+				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)				
+		#If sub_collection is from THIS glb
+		else: 
+			var sub_collection_id = asset_data.get_collection_id(sub_collection_name)			
+			if sub_collection_id == -1:
+				import_collection(sub_collection_name)			
+			#get sub_collection_id after import_collection for subcollection
+			sub_collection_id = asset_data.get_collection_id(sub_collection_name)
+			if sub_collection_id == -1:
+				push_error("Invalid sub collection ",sub_collection_name)
+			var sub_collection_transform = sub_collections[sub_collection_name]
+			asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)
 		
 static func mesh_item_update_from_collection_dictionary(collection):
 	var asset_library := MAssetTable.get_singleton()			
