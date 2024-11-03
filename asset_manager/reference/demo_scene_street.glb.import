@@ -4,11 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://dg2t1huu2i463"
-valid=false
+path="res://.godot/imported/demo_scene_street.glb-bad1d7b027023963778a45fbcb392636.scn"
 
 [deps]
 
 source_file="res://addons/m_terrain/asset_manager/reference/demo_scene_street.glb"
+dest_files=["res://.godot/imported/demo_scene_street.glb-bad1d7b027023963778a45fbcb392636.scn"]
 
 [params]
 

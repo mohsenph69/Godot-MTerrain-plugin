@@ -20,9 +20,9 @@ func _parse_begin(object):
 	elif object is MMaterialTable: 		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/material_table_inspector.tscn").instantiate()				
 		control.material_table = object
-	#elif object is HLod_Baker:	
-	#	control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()
-	#	control.object = object
+	elif object is HLod_Baker:	
+		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()
+		control.object = object
 	elif object is MHlodScene:
 		control = Button.new()		
 		if not is_instance_valid(object.hlod):# and FileAccess.file_exists(object.hlod.get_baker_path()):

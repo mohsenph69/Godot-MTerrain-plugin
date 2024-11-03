@@ -152,10 +152,16 @@ static func glb_import_commit_changes():
 				push_error("something bad happened mesh id should not be -1")
 				continue
 			asset_library.mesh_item_update(mesh_info["id"],meshes,materials)
+	#######################
+	## Commit collisions ##
+	#######################
+	#for collision_item_name in asset_data.collision_items:
+		#var collision_item_id = asset_library.collision_item_add(collision_item.type, collision_item.transform, collision_item.data)
+		#asset_data.collision_items[collision_item_name].id = collision_item_id
 	
-	###########################
-	## Commiting Collections ##
-	###########################
+	########################
+	## Commit Collections ##
+	########################
 	var collection_names = asset_data.collections.keys()
 	for collection_name in collection_names:
 		import_collection(collection_name)
@@ -195,6 +201,7 @@ static func import_collection(glb_node_name:String):
 	var collection_id := -1
 	if collection_info["state"] == AssetIOData.IMPORT_STATE.NEW:
 		collection_id = asset_library.collection_create(glb_node_name)
+		asset_library.collection_update_name(collection_id, glb_node_name)
 		asset_data.update_collection_id(glb_node_name, collection_id)
 	elif collection_info["id"] != -1 and collection_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
 		collection_id = collection_info["id"]
@@ -211,6 +218,12 @@ static func import_collection(glb_node_name:String):
 			return
 		asset_library.collection_add_item(collection_id,MAssetTable.MESH,mesh_item_id,mesh_items[mesh_item_name])
 	
+	#Add Collision Items to Collection
+	#var collision_items = collection_info["collision_items"] #this is Array of {type, transform, }
+	#for collision_item_name in collision_items:
+		#var collision_item_id = asset_data.get_collision_item_id(collision_item_name)		
+		#asset_library.collection_add_item(collection_id,MAssetTable.COLLISION,collision_item_id, )
+	
 	#Adding Sub Collection to Collection
 	var sub_collections:Dictionary = collection_info["sub_collections"]
 	for sub_collection_name in sub_collections:
@@ -223,7 +236,7 @@ static func import_collection(glb_node_name:String):
 				var sub_collection_transform = sub_collections[sub_collection_name]
 				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)				
 		#If sub_collection is from THIS glb
-		else: 
+		else: 			
 			var sub_collection_id = asset_data.get_collection_id(sub_collection_name)			
 			if sub_collection_id == -1:
 				import_collection(sub_collection_name)			

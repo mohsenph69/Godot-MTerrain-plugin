@@ -22,13 +22,39 @@ var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
 var timer: Timer
 
+class MeshBakeData:
+	var meshes:MMeshLod
+	var tr:Transform3D
+	var materials:Array # for later
+	var is_join_mesh: bool = false
+
+func get_all_meshes(baker_node:Node3D,search_nodes:Array)->Array:
+	var stack:Array
+	stack.append_array(search_nodes)
+	var result:Array
+	var baker_invers_transform = baker_node.global_transform.inverse()
+	while stack.size()!=0:
+		var current_node = stack[stack.size() - 1]
+		stack.remove_at(stack.size() - 1)
+		if current_node is HLod_Baker and current_node != baker_node:
+			continue
+		if current_node is MAssetMesh:
+			if current_node.meshes != null:
+				var mdata := MeshBakeData.new()
+				mdata.meshes = current_node.meshes
+				mdata.tr = baker_invers_transform * current_node.global_transform
+				result.push_back(mdata)
+				if "joined_mesh" in current_node.name:
+					current_node = true
+			stack.append_array(current_node.get_children())
+	return result
+
 func _notification(what):	
 	if what == NOTIFICATION_EDITOR_PRE_SAVE:
 		for child in get_children():
 			if child.has_meta("collection_id"):
 				for grandchild in child.get_children():
-					grandchild.owner = null
-					
+					grandchild.owner = null					
 
 func _ready():			
 	asset_mesh_updater.update_auto_lod()
@@ -44,45 +70,40 @@ func _ready():
 				
 func make_joined_mesh():
 	var mesh_joiner := MMeshJoiner.new()
-	var all_mesh_nodes = meshes_to_join.duplicate()
-	for child in meshes_to_join:
-		all_mesh_nodes.append_array(child.find_children("*", "MAssetMesh", true, false))		
-	all_mesh_nodes.filter(func(a): return a is MAssetMesh and len(a.meshes.meshes) > 0)
-	var mesh_array = all_mesh_nodes.map(get_correct_mesh_lod_for_joining)	
-	mesh_joiner.insert_mesh_data(mesh_array, all_mesh_nodes.map(func(a): return a.global_transform),all_mesh_nodes.map(func(a): return -1))
+	var all_meshes_data = get_all_meshes(self, meshes_to_join)		
+	var mesh_array = all_meshes_data.map(get_correct_mesh_lod_for_joining)	
+	mesh_joiner.insert_mesh_data(mesh_array, all_meshes_data.map(func(a): return a.tr), all_meshes_data.map(func(a): return -1))
 	return mesh_joiner.join_meshes()					
 
-func get_correct_mesh_lod_for_joining(a):
-	if not a is MAssetMesh:		
-		return null
+func get_correct_mesh_lod_for_joining(a):	
 	var lod_to_use = min(join_at_lod, len(a.meshes.meshes)-1)	
 	while lod_to_use >-1 and a.meshes.meshes[lod_to_use] == null:
 		lod_to_use -= 1
 	var mesh = a.meshes.meshes[lod_to_use]
-	return null if lod_to_use == -1 and mesh.get_surface_count()>0 else a.meshes.meshes[lod_to_use]		
+	return null if lod_to_use == -1 or mesh.get_surface_count() == 0 else a.meshes.meshes[lod_to_use]		
 
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
 	var hlod := MHlod.new()
 	hlod.set_baker_path(scene_file_path)	
-	for child:MAssetMesh in find_children("*", "MAssetMesh", true, false):		
-		if not child.has_meta("mesh_id"): continue
-		var mesh_item_info = asset_library.mesh_item_get_info(child.get_meta("mesh_id"))		
-		var arr := Array()
-		arr.resize(len(mesh_item_info.mesh))
-		arr.fill(0)
-		var mesh_id = hlod.add_mesh_item(child.global_transform, mesh_item_info.mesh, mesh_item_info.material, arr, arr, 1 )
+	var all_meshes_data = get_all_meshes(self, get_children())
+	for item in all_meshes_data:		
+		var mesh_array = item.meshes.meshes.map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh))
+		var material_array = mesh_array.map(func(a): return -1)
+		var shadow_array = mesh_array.map(func(a): return 0)
+		var gi_array = mesh_array.map(func(a): return 0)
+		var mesh_id = hlod.add_mesh_item(item.tr, mesh_array, material_array, shadow_array, gi_array, 1 )
 		var i = 0	
-		if child != joined_mesh_node.get_child(0):
-			while i < join_at_lod:
-				hlod.insert_item_in_lod_table(mesh_id, i)
-				i += 1
-		else:
-			i = join_at_lod
-			while i < AssetIO.LOD_COUNT:
-				hlod.insert_item_in_lod_table(mesh_id, i)
-				i += 1
-			
+		#if child != joined_mesh_node.get_child(0):
+			#while i < join_at_lod:
+				#hlod.insert_item_in_lod_table(mesh_id, i)
+				#i += 1
+		#else:
+			#i = join_at_lod
+			#while i < AssetIO.LOD_COUNT:
+				#hlod.insert_item_in_lod_table(mesh_id, i)
+				#i += 1
+			#
 	for child:HLod_Baker in find_children("*", "HLod_Baker", true, false):
 		child.bake_to_hlod_resource()
 		if is_instance_valid(child.hlod_resource):

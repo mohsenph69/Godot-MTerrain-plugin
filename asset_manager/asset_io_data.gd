@@ -103,11 +103,10 @@ func update_collection_id(collection_name:String,id:int):
 func add_sub_collection(collection_name:String,sub_collection_name:String,transform:Transform3D):
 	if not collections.has(collection_name):
 		collections[collection_name] = get_empty_collection()
-	collections[collection_name]["sub_collections"][sub_collection_name] = transform
-
+	collections[collection_name]["sub_collections"][sub_collection_name] = [transform]
 
 func finalize_glb_parse():
-	var asset_library = MAssetTable.get_singleton()
+	var asset_library = MAssetTable.get_singleton()	
 	############
 	## MESHES ##
 	############	
