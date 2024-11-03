@@ -29,9 +29,10 @@ func _ready():
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1
 	%JoinLod.value_changed.connect(func(value): 
 		object.join_at_lod = value				
+		object.update_joined_mesh_limits()
 		check_if_can_join_meshes(object)
 	)	
-	%Join.pressed.connect(func():			
+	%Join.pressed.connect(func():					
 		var root_node = Node3D.new()
 		root_node.name = "root_node"
 		var mesh_instance = MeshInstance3D.new()
