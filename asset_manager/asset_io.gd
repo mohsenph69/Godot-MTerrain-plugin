@@ -428,7 +428,9 @@ static func reload_collection(node:Node3D, collection_id):
 			old_meta[meta] = node.get_meta(meta)
 		node.add_sibling(new_root)		
 		new_root.name = node.name.trim_suffix("*")
-		new_root.owner = node.owner
+		new_root.owner = EditorInterface.get_edited_scene_root() #node.owner
+		for child in new_root.get_children():
+			child.owner = EditorInterface.get_edited_scene_root() 
 		EditorInterface.get_selection().add_node.call_deferred(new_root)
 
 		node.queue_free()
@@ -459,7 +461,7 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		mesh_item.meshes = MMeshLod.new()
 		mesh_item.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
 		mesh_item.transform = items_info[i].transform
-		node.add_child(mesh_item)		
+		node.add_child(mesh_item)					
 	var sub_collections = asset_library.collection_get_sub_collections(collection_id)
 	var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
 	for i in sub_collections.size():

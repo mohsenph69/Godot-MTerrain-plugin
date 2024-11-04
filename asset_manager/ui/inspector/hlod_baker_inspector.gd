@@ -43,7 +43,7 @@ func _ready():
 		mesh_instance.mesh.resource_name = mesh_instance.name								
 		var glb_path = object.scene_file_path.get_basename() + "_joined_mesh.glb"
 		AssetIO.glb_export(root_node, glb_path)
-	
+		object.update_joined_mesh_limits()
 		var import_info = MAssetTable.get_singleton().import_info		
 		if not import_info.has(glb_path):
 			import_info[glb_path] = {"__metadata":{}}		
@@ -60,9 +60,9 @@ func _ready():
 				
 	)
 func finish_import(glb_path, glb_collection_name=""):
+	#CHECK IF IS JOINED MESH
 	if not "joined_mesh" in glb_collection_name:
-		return
-	#CHECK IF IS JOINED MESH		
+		return			
 	var asset_library = MAssetTable.get_singleton()
 	var import_info = asset_library.import_info		
 	var collection_id = -1
@@ -72,9 +72,9 @@ func finish_import(glb_path, glb_collection_name=""):
 		var node
 		if object.has_node( glb_collection_name ):
 			node = object.get_node(glb_collection_name)
-			var original_node = AssetIO.collection_instantiate(collection_id)			
-			original_node.get_child(0).reparent( node )
-			original_node.queue_free()			
+			var original_node = AssetIO.reload_collection(node, collection_id) #.collection_instantiate(collection_id)			
+			#original_node.get_child(0).reparent( node )
+			#original_node.queue_free()			
 		else:
 			node = AssetIO.collection_instantiate(collection_id)
 			object.add_child(node)		
