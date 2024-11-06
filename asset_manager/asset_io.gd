@@ -61,6 +61,8 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	gltf_document.append_from_file(path,gltf_state)
 		
 	asset_data = AssetIOData.new()
+	if not gltf_state.json.has("scenes"):
+		print(gltf_state.json.keys())
 	if gltf_state.json.scenes[0].has("extras") and gltf_state.json.scenes[0].extras.has("blend_file"):
 		asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
 	asset_data.glb_path = path

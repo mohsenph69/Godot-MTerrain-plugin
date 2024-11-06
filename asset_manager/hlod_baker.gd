@@ -173,8 +173,9 @@ func make_joined_mesh(nodes_to_join):
 			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
 	mesh_joiner.insert_mesh_data(mesh_array, transforms, transforms.map(func(a): return -1))		
 	mesh_instance.mesh = mesh_joiner.join_meshes()						
-	mesh_instance.mesh.resource_name = mesh_instance.name								
+	mesh_instance.mesh.resource_name = mesh_instance.name			
 	var glb_path = get_joined_mesh_path()
+	print(glb_path)						
 	AssetIO.glb_export(root_node, glb_path)
 	root_node.queue_free()
 	update_joined_mesh_limits()
@@ -198,8 +199,11 @@ func import_joined_mesh_glb():
 		AssetIO.glb_load(get_joined_mesh_path(), metadata, true)
 		asset_library.finish_import.connect(finish_import)
 
-func get_joined_mesh_path():
-	return scene_file_path.get_basename() + "_joined_mesh.glb"
+func get_joined_mesh_path():	
+	if FileAccess.file_exists(scene_file_path):
+		return scene_file_path.get_basename() + "_joined_mesh.glb"
+	else:		
+		return owner.scene_file_path.get_basename() + "_" + name + "_joined_mesh.glb"
 
 func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
 	var mesh_lod = a.get_mesh_lod()
@@ -221,18 +225,20 @@ func get_joined_mesh_node():
 	
 func finish_import(glb_path, glb_collection_name=""):
 	#CHECK IF IS JOINED MESH
-	if not "joined_mesh" in glb_collection_name:
+	if not "_joined_mesh" in glb_collection_name:
 		return					
 	var node = get_joined_mesh_node() if get_joined_mesh_node() else MAssetMesh.new()	
+	
 	if asset_library.import_info.has(glb_path) and asset_library.import_info[glb_path].has(glb_collection_name):		
 		node.collection_id = asset_library.import_info[glb_path][glb_collection_name].id	
 	if not node in get_children():
 		if node.get_parent():
 			node.reparent(self)
+			node.owner = self if scene_file_path else owner
 		else:
-			add_child(node)
+			add_child(node)		
 		node.name = glb_collection_name
-		node.owner = self
+		node.owner = self if scene_file_path else owner
 	asset_library.collection_add_tag(node.collection_id, 0)				
 	asset_library.finish_import.disconnect(finish_import)	
 	for id in asset_library.collection_get_mesh_items_info(node.collection_id)[0].mesh:
@@ -259,9 +265,8 @@ func resources_reimported(paths):
 func get_joined_mesh_thumbnail():
 	joined_mesh_node = get_joined_mesh_node()	
 	if not is_instance_valid(joined_mesh_node): return null
-	if not joined_mesh_node.has_meta("collection_id"): return null
-	var collection_id = get_joined_mesh_node().get_meta("collection_id")
-	var path = str("res://massets/thumbnails/", collection_id, ".png")
+	if not joined_mesh_node is MAssetMesh: return null	
+	var path = str("res://massets/thumbnails/", joined_mesh_node.collection_id, ".png")
 	if FileAccess.file_exists(path):
 		return load(path)
 	else:
