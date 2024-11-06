@@ -5,7 +5,7 @@ extends Popup
 @onready var tags = find_child("Tags")
 var asset_library = MAssetTable.get_singleton()
 var items := {}
-var active_collection = -1
+var active_collections = []
 
 func _ready():		
 	var root = tree.create_item()
@@ -24,15 +24,23 @@ func _ready():
 	tags.editable = false		
 	tags.set_options(asset_library.tag_get_names())			
 	tags.tag_changed.connect(func(tag_id, toggle_on):
+		print("tag_changed ", tag_id)
 		if toggle_on:
-			asset_library.collection_add_tag(active_collection, tag_id)
+			for id in active_collections:
+				asset_library.collection_add_tag(id, tag_id)
 		else:
-			asset_library.collection_remove_tag(active_collection, tag_id)
+			for id in active_collections:
+				asset_library.collection_remove_tag(id, tag_id)
 	)
-	tree.item_selected.connect(func():
-		var item = tree.get_selected()		
-		active_collection = item.get_metadata(0)
-		tags.set_tags_from_data( asset_library.collection_get_tags(active_collection))		
+	tree.multi_selected.connect(func(item, column, selected):		
+		var id = item.get_metadata(0)
+		if selected and not id in active_collections:
+			active_collections.push_back(id)
+		elif not selected and id in active_collections:
+			active_collections.erase(id)
+		%DEBUG.text= str(active_collections)
+		if len(active_collections)>0:
+			tags.set_tags_from_data( asset_library.collection_get_tags(active_collections[-1]))		
 	)
 	visibility_changed.connect(update_tag_options)	
 

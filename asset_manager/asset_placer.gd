@@ -125,13 +125,14 @@ func regroup(group = current_group, sort_mode="asc"):
 			if not groups.has_node(tag_name):				
 				group_control = group_control_scene.instantiate()								
 				groups.add_child(group_control)							
+				if not group_control.group_list:
+					continue
 				group_control.group_list.multi_selected.connect(func(id, selected):
 					process_selection(group_control.group_list, id, selected)
 				)
 				group_control.set_group(asset_library.tag_get_name(tag_id))					
 				group_control.group_list.item_activated.connect(collection_item_activated.bind(group_control.group_list))
-				group_control.name = tag_name
-				print(group_control.group_list, tag_name)
+				group_control.name = tag_name				
 			else:
 				group_control = groups.get_node(tag_name)			
 				group_control.group_list.clear()
