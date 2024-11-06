@@ -1,5 +1,5 @@
 @tool
-extends PanelContainer
+extends Window
 @onready var tags_control = find_child("Tags")
 @onready var group_list = find_child("group_list")
 @onready var add_group_button:Button = find_child("add_group_button")
@@ -7,8 +7,12 @@ extends PanelContainer
 var selected_group
 @onready var asset_library: MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
-func _ready():
+func _ready():	
 	if EditorInterface.get_edited_scene_root() == self: return
+	wrap_controls = true
+	initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
+	close_requested.connect(queue_free)
+	window_input.connect(func(e): if e is InputEventKey and e.keycode == KEY_ESCAPE: queue_free())
 
 	add_group_button.pressed.connect(add_group)
 	tags_control.tag_changed.connect(func(tag, toggle_on):

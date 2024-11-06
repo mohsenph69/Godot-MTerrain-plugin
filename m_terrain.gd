@@ -187,43 +187,12 @@ func selection_changed():
 	
 	var selection = get_editor_interface().get_selection().get_selected_nodes()
 	
-	#Asset Library: 
-	#var asset_library:MAssetTable = load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
-	#for node in selection:
-		#if node.has_meta("collection_id") and not asset_library.collection_get_name(node.get_meta("collection_id")) in node.name:
-			#node = AssetIO.reload_collection(node, node.get_meta("collection_id"))
-			#get_editor_interface().get_selection().add_node(node)
-		#return
-	#Auto edit nodes:	
-	if false and selection.size() > 0:
-		for child in EditorInterface.get_edited_scene_root().find_children("*"):			
-			if child.has_meta("collection_id"):
-				if selection.size() == 1:
-					if selection[0] == child:
-						AssetIO.edit_collection(child,true)				
-						if not child.name.ends_with("*"):
-							child.name += "*"
-					elif not child.is_ancestor_of(selection[0]):					
-						AssetIO.edit_collection(child,false)
-						if child.name.ends_with("*"):							
-							child.name = child.name.trim_suffix("*")
-				elif selection.size() > 1:					
-					for node in selection:
-						if node.get_parent() in selection:																					
-							get_editor_interface().get_selection().remove_node(node)
-							AssetIO.edit_collection(node.get_parent(),false)
-					
-	
 	if selection.size() != 1 or not current_main_screen_name == "3D":		
 		tools.request_hide()
 		#exit edit mode
 		return
 
 	tools.on_selection_changed(selection[0])
-	
-	
-			
-	
 
 func _handles(object):
 	if not Engine.is_editor_hint(): return false

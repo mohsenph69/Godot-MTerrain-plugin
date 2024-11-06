@@ -7,14 +7,16 @@ signal selection_changed
 @onready var groups = find_child("groups")
 @onready var ungrouped = find_child("other")
 @onready var grouping_popup_menu:PopupMenu = find_child("grouping_popup_menu")
-@onready var search_collections:LineEdit = find_child("search_collections")
-@onready var group_by_button = find_child("group_by_button")
+@onready var search_collections:Control = find_child("search_collections")
+@onready var group_by_button:Button = find_child("group_by_button")
+@onready var tag_collections_button:Button = find_child("tag_collections_button")
 	
 var asset_library: MAssetTable = MAssetTable.get_singleton()
 var current_selection = [] #array of collection name
 var current_group = "None" #group name
 
 var queued_thumbnails = {}
+var edit_window
 
 func _ready():		
 	if EditorInterface.get_edited_scene_root() == self: return
@@ -47,7 +49,11 @@ func _ready():
 	for child in tags_control.tag_list.get_children():
 		child.set_editable(false)
 
-	
+	tag_collections_button.pressed.connect(func():
+		var popup = preload("res://addons/m_terrain/asset_manager/ui/tag_collections_window.tscn").instantiate()
+		add_child(popup)
+		popup.popup_centered(Vector2i(800,600))
+	)
 
 func search_items(text):				
 	var filtered_collections = asset_library.collection_names_begin_with(text) if text != "" else asset_library.collection_get_list()			
@@ -59,17 +65,12 @@ func group_by_pressed():
 	grouping_popup_menu.position.x = group_by_button.global_position.x
 	grouping_popup_menu.position.y = group_by_button.size.y + global_position.y
 	
-func edit_pressed():
-	var popup = Window.new()
-	popup.wrap_controls = true
-	popup.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
-	popup.close_requested.connect(popup.queue_free)
-	var settings_control = preload("res://addons/m_terrain/asset_manager/ui/asset_manager_settings.tscn").instantiate()		
-	popup.add_child(settings_control)
-	add_child(popup)		
-	popup.popup_centered(Vector2i(0,0))
-	popup.window_input.connect(func(e): if e is InputEventKey and e.keycode == KEY_ESCAPE: popup.queue_free())
-
+func edit_pressed():	
+	if not is_instance_valid(edit_window):		 	
+		edit_window = preload("res://addons/m_terrain/asset_manager/ui/asset_manager_settings.tscn").instantiate()				
+		add_child(edit_window)		
+		edit_window.popup_centered(Vector2i(0,0))
+		
 func update_grouping_options():
 	grouping_popup_menu.clear()
 	grouping_popup_menu.add_item("None")	
@@ -136,8 +137,10 @@ func regroup(group = "None", filtered_collections = asset_library.collection_get
 	current_group = group
 
 func collection_item_activated(id, group_list:ItemList):					
-	var node = AssetIO.collection_instantiate(group_list.get_item_metadata(id))		
-	node.set_meta("collection_id", group_list.get_item_metadata(id))	
+	#var node = AssetIO.collection_instantiate(group_list.get_item_metadata(id))		
+	#node.set_meta("collection_id", group_list.get_item_metadata(id))	
+	var node = MAssetMesh.new()
+	node.collection_id = group_list.get_item_metadata(id)
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	if len(selected_nodes) != 1:

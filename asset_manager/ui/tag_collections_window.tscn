@@ -1,0 +1,48 @@
+[gd_scene load_steps=5 format=3 uid="uid://bi0irn0esi4sx"]
+
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_4s2sk"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/tag_collections_window.gd" id="1_7m350"]
+[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="2_ufjis"]
+[ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="3_sgf30"]
+
+[node name="Window" type="Window"]
+mode = 2
+initial_position = 4
+size = Vector2i(1000, 600)
+script = ExtResource("1_7m350")
+
+[node name="Control" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_4s2sk")
+
+[node name="MarginContainer" type="MarginContainer" parent="Control"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="HBoxContainer" type="HSplitContainer" parent="Control/MarginContainer"]
+layout_mode = 2
+split_offset = 120
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="search" parent="Control/MarginContainer/HBoxContainer/VBoxContainer" instance=ExtResource("2_ufjis")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+
+[node name="Tree" type="Tree" parent="Control/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+hide_root = true
+
+[node name="Tags" parent="Control/MarginContainer/HBoxContainer" instance=ExtResource("3_sgf30")]
+layout_mode = 2

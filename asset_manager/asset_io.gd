@@ -106,6 +106,9 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		elif child_count > 0:
 			if active_collection=="__root__":
 				generate_asset_data_from_glb(node.get_children(),node.name)
+				if node.has_meta("tags"):										
+					if asset_data.collections.has(node.name):
+						asset_data.collections[node.name].tags = node.get_meta("tags")
 			else:
 				push_error(node.name," is two deep level which is not allowed")
 		elif active_collection != "__root__": # can be sub collection			
@@ -294,7 +297,7 @@ static func glb_show_import_window(asset_data:AssetIOData):
 #endregion
 #region Mesh Item
 static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
-	var asset_library = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+	var asset_library = MAssetTable.get_singleton()
 	if asset_library.has_mesh_item(mesh_id):
 		var meshes = []
 		var data = asset_library.mesh_item_get_info(mesh_id)
@@ -306,25 +309,6 @@ static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
 				meshes.push_back(null)
 		return meshes
 
-static func mesh_item_save_from_resources(mesh_item_id, meshes, material_ids)->int:
-	var asset_library = MAssetTable.get_singleton()
-	var mesh_item_array = []	
-	for mesh:Mesh in meshes:
-		var mesh_save_path = asset_library.mesh_get_path(mesh)
-		if FileAccess.file_exists(mesh_save_path):
-			mesh.take_over_path(mesh_save_path)
-		else:
-			ResourceSaver.save(mesh, mesh_save_path)
-		mesh_item_array.push_back(asset_library.mesh_get_id(mesh))
-
-	if asset_library.has_mesh_item(mesh_item_id):
-		asset_library.mesh_item_update(mesh_item_id, mesh_item_array, material_ids )
-	else:
-		mesh_item_id = asset_library.mesh_item_add(mesh_item_array, material_ids )
-	return mesh_item_id
-
-
-#IF return a dictionary with lod >= 0 the result is mesh
 static func node_parse_name(node:Node)->Dictionary:
 	var result = {"name":"","lod":-1,"col":null}
 	var lod:int = -1
@@ -355,61 +339,6 @@ static func collection_parse_name(name:String)->String:
 
 #endregion
 #region Collection
-static func convert_node_to_preview_dictionary(root_node):
-	var asset_library:MAssetTable = MAssetTable.get_singleton()
-	#preview_dictionary = {
-	#	single_item_collection_name: {
-	#		meshes: Array[Mesh or null]		
-	#	}
-	#	collection_name: {
-	#		collections: Array[sub_collection_name]
-	#		collection_transforms: Array[sub_collection Transform3D]
-	#	}
-	#}
-	var result = { "collection_id": root_node.get_meta("collection_id") }
-	if root_node is MAssetMesh:				
-		result["meshes"] = root_node.meshes.meshes	
-	else:
-		result["collections"] = []
-		result["collection_transforms"] = []
-		var overrides = root_node.get_meta("overrides") if root_node.has_meta("overrides") else {}						
-		#for child in root_node.get_children():
-			#if child.has_meta("mesh_id"):
-				#var mesh_id = child.get_meta("mesh_id")
-				#asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_id, child.transform)
-			#elif child is CollisionShape3D:
-				#pass
-			#elif child.has_meta("collection_id"):
-				#var sub_collection_id = child.get_meta("collection_id")
-				#asset_library.collection_add_sub_collection(collection_id, sub_collection_id, child.transform)
-		#return collection_id
-
-static func collection_save_from_nodes(root_node) -> int: #returns collection_id
-	var asset_library:MAssetTable = MAssetTable.get_singleton()
-	if root_node is MAssetMesh:
-		var material_overrides = root_node.get_meta("material_overrides") if root_node.has_meta("material_overrides") else []
-		var mesh_id = root_node.get_meta("mesh_id") if root_node.has_meta("mesh_id") else -1
-		mesh_id = mesh_item_save_from_resources(mesh_id, root_node.meshes.meshes, material_overrides)
-		root_node.set_meta("mesh_id", mesh_id)
-		root_node.notify_property_list_changed()
-		return root_node.get_meta("collection_id")
-	else:
-		var overrides = root_node.get_meta("overrides") if root_node.has_meta("overrides") else {}
-		var collection_id = root_node.get_meta("collection_id")
-		if collection_id == -1:	return collection_id
-		asset_library.collection_remove_all_items(collection_id)
-		asset_library.collection_remove_all_sub_collection(collection_id)
-		for child in root_node.get_children():
-			if child.has_meta("mesh_id"):
-				var mesh_id = child.get_meta("mesh_id")
-				asset_library.collection_add_item(collection_id, MAssetTable.MESH, mesh_id, child.transform)
-			elif child is CollisionShape3D:
-				pass
-			elif child.has_meta("collection_id"):
-				var sub_collection_id = child.get_meta("collection_id")
-				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, child.transform)
-		return collection_id
-
 static func reload_collection(node:Node3D, collection_id):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 	if not collection_id in asset_library.collection_get_list(): return
@@ -447,6 +376,7 @@ static func reload_collection(node:Node3D, collection_id):
 
 static func collection_instantiate(collection_id, overrides = {})->Node3D:
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
+	asset_library
 	if not asset_library.has_collection(collection_id):
 		return null
 	var mesh_ids = asset_library.collection_get_mesh_items_ids(collection_id)
@@ -470,33 +400,10 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 	for sub_collection_id in sub_collections.size():
 		for sub_collections_transform in asset_library.collection_get_sub_collections_transform(collection_id, sub_collection_id):
 			var sub_collection = collection_instantiate(sub_collection_id)			
-			var name = sub_collection.name
-			
+			var name = sub_collection.name			
 			node.add_child(sub_collection)
 			sub_collection.transform = sub_collections_transform
 			sub_collection.name = name
 	return node
-
-static func edit_collection(object, toggle_on):
-	for child in object.get_children():
-		if toggle_on:
-			child.owner = EditorInterface.get_edited_scene_root()
-			object.notify_property_list_changed()
-		else:
-			child.owner = null
-			object.notify_property_list_changed()
-	var n = Node.new()
-	object.add_child(n)
-	n.queue_free()
-
-static func collections_load_recursive(root:Node)->Node:
-	if root.has_meta("collection_id"):
-		var new_root = reload_collection(root, root.get_meta("collection_id"))
-		return new_root if is_instance_valid(new_root) else null
-	else:
-		for child in root.get_children():
-			if child.has_meta("collection_id"):
-				reload_collection(child, child.get_meta("collection_id"))
-		return root
 
 #endregion

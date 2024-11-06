@@ -24,6 +24,7 @@ layout_mode = 2
 mouse_filter = 1
 select_mode = 1
 allow_reselect = true
+allow_rmb_select = true
 max_text_lines = 2
 auto_height = true
 text_overrun_behavior = 1

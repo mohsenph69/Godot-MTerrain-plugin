@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3 uid="uid://dluujoajca0ja"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/search_component.gd" id="1_ohmcf"]
+[ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="2_kncb0"]
+[ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="3_nmuht"]
+
+[node name="HBoxContainer" type="HBoxContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_ohmcf")
+
+[node name="search_button" type="Button" parent="."]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("2_kncb0")
+expand_icon = true
+
+[node name="search_box" type="LineEdit" parent="."]
+visible = false
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+placeholder_text = "search"
+
+[node name="clear_button" type="Button" parent="."]
+visible = false
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+icon = ExtResource("3_nmuht")
+expand_icon = true

@@ -1,9 +1,15 @@
-[gd_scene load_steps=6 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=12 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
 [ext_resource type="PackedScene" uid="uid://5wjjba4i6uji" path="res://addons/m_terrain/asset_manager/ui/group_control.tscn" id="3_4shpx"]
 [ext_resource type="PackedScene" uid="uid://bq3mcnrp6nw4k" path="res://addons/m_terrain/asset_manager/ui/filter_by_tags_control.tscn" id="3_dfwqm"]
+[ext_resource type="Texture2D" uid="uid://chlti18m8qfsx" path="res://addons/m_terrain/icons/filter_icon.svg" id="3_thf0h"]
+[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="4_c73sy"]
+[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="5_14byr"]
+[ext_resource type="Texture2D" uid="uid://8qcyrpxdy2po" path="res://addons/m_terrain/icons/sort_icon.svg" id="5_vcl6i"]
+[ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="6_rsi1g"]
+[ext_resource type="Texture2D" uid="uid://bo00mqw6wv8av" path="res://addons/m_terrain/icons/tag_icon.svg" id="9_d56ce"]
 
 [sub_resource type="GDScript" id="GDScript_tq7tq"]
 script/source = "@tool
@@ -25,9 +31,11 @@ func _ready():
 		else:
 			tags_control.set_tags_from_data(owner.asset_library.tag_get_names().keys())
 	)
+	toggled.connect(toggle_popup)
 	
-func _toggled(toggle_on):	
+func toggle_popup(toggle_on):	
 	var popup:Popup = get_child(0)
+	print(\"toggle \", toggle_on)
 	if toggle_on:		
 		tags_control.set_options(owner.asset_library.tag_get_names())		
 		var rect = Rect2i(Vector2i(), popup.size)
@@ -38,14 +46,13 @@ func _toggled(toggle_on):
 		else:
 			rect.position.y = owner.global_position.y + size.y
 			popup.max_size.y = get_viewport_rect().size.y - owner.global_position.y - size.y
-		popup.popup(rect)
-		
+		popup.popup(rect)		
 	else:
 		popup.visible = false
 
 func _input(event: InputEvent):
-	if event is InputEventMouseButton and event.pressed:
-		if not get_rect().has_point(event.position):
+	if event is InputEventMouseButton and not event.pressed:		
+		if not get_global_rect().has_point(event.position):
 			release_focus()		
 			button_pressed = false
 "
@@ -64,31 +71,36 @@ layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
-alignment = 1
-
-[node name="search_collections" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
-layout_mode = 2
-placeholder_text = "search"
 
 [node name="filter_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
+theme_type_variation = &"button_icon_only"
 toggle_mode = true
-text = "filter"
+icon = ExtResource("3_thf0h")
+expand_icon = true
 script = SubResource("GDScript_tq7tq")
 
 [node name="filter_popup_menu" type="Popup" parent="VBoxContainer/HBoxContainer/filter_by_button"]
-position = Vector2i(491, 0)
+position = Vector2i(0, 33)
 size = Vector2i(188, 505)
+max_size = Vector2i(16384, 670)
 
 [node name="PanelContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu" instance=ExtResource("3_dfwqm")]
 
 [node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = "sort by"
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("5_vcl6i")
+expand_icon = true
 
 [node name="group_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = "group by"
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("6_rsi1g")
+expand_icon = true
 
 [node name="grouping_popup_menu" type="PopupMenu" parent="VBoxContainer/HBoxContainer/group_by_button"]
 auto_translate_mode = 1
@@ -140,8 +152,26 @@ item_21/text = "building_parts"
 item_21/id = 21
 
 [node name="edit_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-text = "Edit"
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("4_c73sy")
+expand_icon = true
+
+[node name="search_collections" parent="VBoxContainer/HBoxContainer" instance=ExtResource("5_14byr")]
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="tag_collections_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("9_d56ce")
+expand_icon = true
 
 [node name="Label" type="Label" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2

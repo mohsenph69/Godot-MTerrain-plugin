@@ -39,6 +39,8 @@ func get_empty_collection()->Dictionary:
 		"original_mesh_items":{},
 		"original_sub_collections":{},
 		"original_collision_items":[],
+		"tags": [],
+		"original_tags": [],
 		"id":-1,
 		"is_root":true,
 		"ignore":false,
@@ -330,7 +332,7 @@ func add_glb_import_info(info:Dictionary)->void:
 			push_error(collection_id," Invalid collection ID in set_glb_import_info")
 			continue
 		var original_meshes:Dictionary= info[collection_glb_name]["mesh_items"]
-		var original_sub_collections:Dictionary = info[collection_glb_name]["sub_collections"]
+		var original_sub_collections:Dictionary = info[collection_glb_name]["sub_collections"]		
 		for mesh_name in original_meshes:
 			add_original_mesh_item(mesh_name,original_meshes[mesh_name])
 			add_original_mesh_to_collection(collection_glb_name, mesh_name, asset_library.collection_get_item_transform(collection_id, MAssetTable.MESH, original_meshes[mesh_name]))
@@ -338,12 +340,11 @@ func add_glb_import_info(info:Dictionary)->void:
 			for transform in asset_library.collection_get_sub_collections_transform(collection_id, original_sub_collections[sub_collection_name]):
 				add_original_sub_collection(collection_glb_name,sub_collection_name,transform)
 		collections[collection_glb_name]["original_collision_items"] = collections[collection_glb_name].collision_items
+		collections[collection_glb_name]["original_tags"] = asset_library.collection_get_tags(collection_id)
 		collections[collection_glb_name]["id"] = collection_id
 	add_metadata_to_data(info["__metadata"], meta_data)
 	if "__materials" in info:
 		materials = info["__materials"].duplicate()
-	
-## blend1 has 2 assets, table and chair. Blend2 is a scene, it has subcollection table
 	
 func add_metadata_to_data(old:Dictionary, new:Dictionary):
 	var result = old.duplicate()
