@@ -111,14 +111,13 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		elif active_collection != "__root__": # can be sub collection			
 			var subcollection_name = collection_parse_name(node.name)			
 			if node.has_meta("blend_file"):				
-				var blend_file = node.get_meta("blend_file").trim_prefix("//")
-				print(blend_file)
+				var blend_file = node.get_meta("blend_file").trim_prefix("//")				
 				if asset_data.blend_file != blend_file:
 					if blend_file in asset_library.import_info["__blend_files"]:
 						var glb_path = asset_library.import_info["__blend_files"][blend_file]
 						subcollection_name += "::" + glb_path					
 					else:
-						print(asset_library.import_info["__blend_files"].keys())
+						print("error with subcollection from different blend file. Here is the list of blend files in import_info:\n", asset_library.import_info["__blend_files"].keys())
 			asset_data.add_sub_collection(active_collection,subcollection_name,node.transform)
 
 static func glb_import_commit_changes():
@@ -205,11 +204,15 @@ static func import_collection(glb_node_name:String):
 		asset_data.update_collection_id(glb_node_name, collection_id)
 	elif collection_info["id"] != -1 and collection_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
 		collection_id = collection_info["id"]
+		if not asset_library.has_collection(collection_id):
+			push_error("import collection error: trying to change existing collection, but ", collection_id, " does not exist")
 		asset_library.collection_clear(collection_id)
 	else:
 		push_error("Invalid collection!!!")
 		return
-	
+	if not asset_library.has_collection(collection_id):
+		push_error("import collection error: ", collection_id, " does not exist")
+					
 	#Add Mesh Items to Collection
 	for mesh_item_name in mesh_items:
 		var mesh_item_id = asset_data.get_mesh_items_id(mesh_item_name)
@@ -232,9 +235,11 @@ static func import_collection(glb_node_name:String):
 			var glb_path = sub_collection_name.get_slice("::", 1)	
 			var node_name = sub_collection_name.get_slice("::", 0)			
 			if node_name in asset_library.import_info[glb_path]:
-				var sub_collection_id = asset_library.import_info[glb_path][node_name].id
-				var sub_collection_transform = sub_collections[sub_collection_name]
-				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)				
+				var sub_collection_id = asset_library.import_info[glb_path][node_name].id							
+				for sub_collection_transform in sub_collections[sub_collection_name]:
+					if not asset_library.has_collection(sub_collection_id):
+						push_error("trying to add subcollection to collection, but sub_collection_id ", sub_collection_id, " does not exist")
+					asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)				
 		#If sub_collection is from THIS glb
 		else: 			
 			var sub_collection_id = asset_data.get_collection_id(sub_collection_name)			
@@ -242,10 +247,10 @@ static func import_collection(glb_node_name:String):
 				import_collection(sub_collection_name)			
 			#get sub_collection_id after import_collection for subcollection
 			sub_collection_id = asset_data.get_collection_id(sub_collection_name)
-			if sub_collection_id == -1:
-				push_error("Invalid sub collection ",sub_collection_name)
-			var sub_collection_transform = sub_collections[sub_collection_name]
-			asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)
+			if not asset_library.has_collection(sub_collection_id):
+				push_error("trying to add subcollection to collection, but sub_collection_id ", sub_collection_id, " does not exist")
+			for sub_collection_transform in sub_collections[sub_collection_name]:
+				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)
 		
 static func mesh_item_update_from_collection_dictionary(collection):
 	var asset_library := MAssetTable.get_singleton()			
@@ -416,29 +421,28 @@ static func reload_collection(node:Node3D, collection_id):
 		if node.name in parents_overrides:
 			overrides_for_this_node = parents_overrides[node.name]
 	var new_root = collection_instantiate(collection_id, overrides_for_this_node)
+	if not is_instance_valid(new_root):
+		push_error("failed to reload collection: collection instantiate returned null root")
+		new_root = null		
 	new_root.transform = node.transform
 	for node_name in overrides:
 		if new_root.has_node(node_name):
 			new_root.get_node(node_name).transform = overrides[node_name].transform
 		else:
 			print(new_root.name, " is trying to override ", node_name, " but node does not exist " )
-	if is_instance_valid(new_root):
-		var old_meta = {}
-		for meta in node.get_meta_list():
-			old_meta[meta] = node.get_meta(meta)
-		node.add_sibling(new_root)		
-		new_root.name = node.name.trim_suffix("*")
-		new_root.owner = EditorInterface.get_edited_scene_root() #node.owner
-		for child in new_root.get_children():
-			child.owner = EditorInterface.get_edited_scene_root() 
-		EditorInterface.get_selection().add_node.call_deferred(new_root)
-
-		node.queue_free()
-		for meta in old_meta:
-			new_root.set_meta(meta, old_meta[meta])
-	else:
-		new_root = null
-		print("NULL ROOT")
+	
+	var old_meta = {}
+	for meta in node.get_meta_list():
+		old_meta[meta] = node.get_meta(meta)
+	node.add_sibling(new_root)		
+	new_root.name = node.name.trim_suffix("*")
+	new_root.owner = EditorInterface.get_edited_scene_root() #node.owner
+	for child in new_root.get_children():
+		child.owner = EditorInterface.get_edited_scene_root() 
+	EditorInterface.get_selection().add_node.call_deferred(new_root)
+	node.queue_free()
+	for meta in old_meta:
+		new_root.set_meta(meta, old_meta[meta])
 	return new_root
 
 static func collection_instantiate(collection_id, overrides = {})->Node3D:
@@ -462,12 +466,15 @@ static func collection_instantiate(collection_id, overrides = {})->Node3D:
 		mesh_item.meshes.meshes = mesh_item_get_mesh_resources(mesh_id)
 		mesh_item.transform = items_info[i].transform
 		node.add_child(mesh_item)					
-	var sub_collections = asset_library.collection_get_sub_collections(collection_id)
-	var sub_collections_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
-	for i in sub_collections.size():
-		var sub_collection = collection_instantiate(sub_collections[i])			
-		node.add_child(sub_collection)
-		sub_collection.transform = sub_collections_transforms[i]		
+	var sub_collections = asset_library.collection_get_sub_collections(collection_id)	
+	for sub_collection_id in sub_collections.size():
+		for sub_collections_transform in asset_library.collection_get_sub_collections_transform(collection_id, sub_collection_id):
+			var sub_collection = collection_instantiate(sub_collection_id)			
+			var name = sub_collection.name
+			
+			node.add_child(sub_collection)
+			sub_collection.transform = sub_collections_transform
+			sub_collection.name = name
 	return node
 
 static func edit_collection(object, toggle_on):

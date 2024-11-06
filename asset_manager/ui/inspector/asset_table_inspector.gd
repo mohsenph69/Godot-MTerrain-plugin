@@ -12,13 +12,15 @@ extends Node
 
 
 func _ready():	
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 	tags_label.text = str("tags: ", asset_library.tag_get_names())
 	groups_label.text = str("groups: ", asset_library.group_get_list())
 	
 	var mesh_text = "mesh_items: \n"
 	for mesh_item_id in asset_library.mesh_item_get_list():		
-		mesh_text += str(mesh_item_id, "| ", asset_library.mesh_item_get_info(mesh_item_id), "\n")
+		#mesh_text += str(mesh_item_id, "| ", asset_library.mesh_item_get_info(mesh_item_id), "\n")
 		var mesh_node = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_item.tscn").instantiate()		
 		meshes_container.add_child(mesh_node)
 		
@@ -31,7 +33,7 @@ func _ready():
 			asset_library.notify_property_list_changed()
 			asset_library.save()
 		)		
-		mesh_node.find_child("meshes").text = str(asset_library.mesh_item_get_info(mesh_item_id))
+		mesh_node.find_child("meshes").text = str(asset_library.mesh_item_get_info(mesh_item_id).mesh)
 		
 		
 	mesh_items_label.text = mesh_text
@@ -45,7 +47,7 @@ func _ready():
 		collections_container.add_child(collection_node)
 		collection_node.find_child("id").text = str(collection_id)
 		collection_node.find_child("meshes").text = str(asset_library.collection_get_mesh_items_ids(collection_id))
-		
+		collection_node.find_child("meshes").text += str("  ", asset_library.collection_get_sub_collections(collection_id))
 		var name_node = collection_node.find_child("name")
 		name_node.text = asset_library.collection_get_name(collection_id)
 		name_node.text_submitted.connect(func(new_text):
@@ -64,5 +66,5 @@ func _ready():
 		var mesh_items_info = asset_library.collection_get_mesh_items_info(collection_id)
 		var subcollections = asset_library.collection_get_sub_collections(collection_id)
 		if len(subcollections) == 0: subcollections = ""
-		collection_text += str(collection_id,"| ", asset_library.collection_get_name(collection_id), " | ", mesh_items_info.map(func(a):return a.id), " ", subcollections, "\n","tags: ", asset_library.collection_get_tags(collection_id), "\n")
+		#collection_text += str(collection_id,"| ", asset_library.collection_get_name(collection_id), " | ", mesh_items_info.map(func(a):return a.id), " ", subcollections, "\n","tags: ", asset_library.collection_get_tags(collection_id), "\n")
 	collections_label.text = collection_text

@@ -3,13 +3,18 @@ extends HFlowContainer
 var material_table: MMaterialTable = MMaterialTable.get_singleton()
 
 func _enter_tree():		
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	for m in material_table.table:			
 		var texture_rect = TextureRect.new()
 		add_child(texture_rect)
 		EditorInterface.get_resource_previewer().queue_resource_preview(material_table.table[m], self, "update_material_preview",texture_rect)					
 func _ready():
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	if get_child_count()>1:
 		$Label.queue_free()
+		
 func _can_drop_data(at_position: Vector2, data: Variant):
 	if "files" in data:
 		for file in data.files:

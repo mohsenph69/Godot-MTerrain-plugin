@@ -9,6 +9,8 @@ extends PanelContainer
 var asset_data:AssetIOData
 
 func _ready():
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	if get_parent() is Window:
 		get_parent().close_requested.connect(get_parent().queue_free)
 	cancel_button.pressed.connect(func():
@@ -47,6 +49,16 @@ func _ready():
 	tree.set_column_custom_minimum_width(1,120)
 	tree.item_selected.connect(update_label)
 	var root = tree.create_item()	
+	var materials_node = root.create_child()
+	materials_node.set_text(0, "Materials")
+	for material_name in asset_data.materials.keys():
+		var material_node = materials_node.create_child()
+		if material_name == "":	
+			material_node.set_text(0, "(unnamed material)")
+		else:
+			material_node.set_text(0, material_name)
+		if asset_data.materials[material_name] != null:
+			material_node.set_text(1, asset_data.materials[material_name])
 	root.set_text(0, asset_data.glb_path)
 	for key in asset_data.collections:		
 		if asset_data.collections[key].has("is_root"):

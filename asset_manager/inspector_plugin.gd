@@ -22,7 +22,7 @@ func _parse_begin(object):
 		control.material_table = object
 	elif object is HLod_Baker:	
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()
-		control.object = object
+		control.baker = object
 	elif object is MHlodScene:
 		control = Button.new()		
 		if not is_instance_valid(object.hlod):# and FileAccess.file_exists(object.hlod.get_baker_path()):
@@ -52,16 +52,7 @@ func _parse_begin(object):
 				if child.has_meta("collection_id"):
 					AssetIO.reload_collection(child, child.get_meta("collection_id"))
 		)
-		vbox.add_child(button)
-		if root is HLod_Baker:
-			button = Button.new()
-			button.text = "set as joiner meshes"
-			if root in nodes:
-				nodes.erase(root)
-			button.pressed.connect(func():
-				EditorInterface.get_edited_scene_root().meshes_to_join = nodes
-			)
-			vbox.add_child(button)
+		vbox.add_child(button)		
 		control = vbox
 	add_custom_control(control)			
 		

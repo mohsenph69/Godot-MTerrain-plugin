@@ -8,6 +8,8 @@ var selected_group
 @onready var asset_library: MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
 func _ready():
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	add_group_button.pressed.connect(add_group)
 	tags_control.tag_changed.connect(func(tag, toggle_on):
 		print("tag changed: ", selected_group, " ", tag, " ", toggle_on)

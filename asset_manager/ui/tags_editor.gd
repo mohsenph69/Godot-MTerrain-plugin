@@ -17,6 +17,8 @@ func get_tag_array():
 	return arr
 	
 func _ready():
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	var asset_library:MAssetTable = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))		
 
 	var search:LineEdit = find_child("search")

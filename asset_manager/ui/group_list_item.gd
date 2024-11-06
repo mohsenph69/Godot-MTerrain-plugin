@@ -12,6 +12,8 @@ var current_name
 var selected = false
 
 func _ready():	
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	$HBoxContainer/remove.pressed.connect(func():
 		group_removed.emit(current_name)
 		queue_free()

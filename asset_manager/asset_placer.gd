@@ -17,9 +17,12 @@ var current_group = "None" #group name
 var queued_thumbnails = {}
 
 func _ready():		
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 
-		regroup())	
+		regroup()
+	)	
 	init_debug_buttons()
 	
 	ungrouped.set_group("other")	
@@ -137,11 +140,11 @@ func collection_item_activated(id, group_list:ItemList):
 	node.set_meta("collection_id", group_list.get_item_metadata(id))	
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
-	if len(selected_nodes) == 0:
+	if len(selected_nodes) != 1:
 		scene_root.add_child(node)
 		if scene_root is HLod_Baker:
 			update_lod_limit(node)
-	elif len(selected_nodes) == 1:
+	else:
 		var parent = selected_nodes[0]
 		while parent is MAssetMesh and parent != scene_root:
 			parent = parent.get_parent()			
@@ -191,7 +194,7 @@ func generate_thumbnails_for_selected_collections():
 	for collection_name in current_selection:
 		var collection_id = asset_library.collection_get_id(collection_name)		
 		var data = {"meshes":[], "transforms":[]}
-		combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)											
+		combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)													
 		var mesh_joiner := MMeshJoiner.new()					
 		mesh_joiner.insert_mesh_data(data.meshes, data.transforms, data.transforms.map(func(a):return -1))
 		var mesh = mesh_joiner.join_meshes()	
@@ -209,13 +212,17 @@ func combine_collection_meshes_and_transforms_recursive(collection_id, data, com
 	var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)	
 	for item in mesh_items:
 		var i = 0
-		while i < len(item.mesh):
+		while i < len(item.mesh):			
+			if item.mesh[i] == -1: 
+				i += 1
+				continue
 			var mesh_path = MHlod.get_mesh_path(item.mesh[i])													
 			var mesh:Mesh = load(mesh_path)
 			if mesh.get_surface_count() > 0:		
 				data.meshes.push_back(mesh)
 				data.transforms.push_back(combined_transform * item.transform)
 				break	
+			i+= 1
 			
 func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):			
 	#Save the current one 	

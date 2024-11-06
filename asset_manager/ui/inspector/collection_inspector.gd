@@ -4,6 +4,8 @@ extends VBoxContainer
 var object
 
 func _ready():
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	var asset_library: MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))	
 	if not object: return
 	if object.has_meta("collection_id"):
@@ -32,11 +34,12 @@ func _ready():
 				for item in data:
 					details += str(item.mesh, " | ", item.transform.origin.snappedf(0.01), "\n")			
 			var subcollection_ids = asset_library.collection_get_sub_collections(collection_id)			
+			var subcollection_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)					
+			
 			if len(subcollection_ids)>0:				
 				details += "sub_collections | position: \n"
-				for id in subcollection_ids:				
-					var transform = asset_library.collection_get_sub_collections_transform(collection_id, id)
-					details += str(asset_library.collection_get_name(id), ": ", transform.origin.snappedf(0.01), "\n")
+				for i in len(subcollection_ids):								
+					details += str(asset_library.collection_get_name(subcollection_ids[i]), ": ", subcollection_transforms[i].origin.snappedf(0.01), "\n")
 			%collection_details.text = details
 		else:
 			%collection_name.text = "Collection doesn't exist"

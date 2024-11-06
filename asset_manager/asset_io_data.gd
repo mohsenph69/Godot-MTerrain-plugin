@@ -10,6 +10,7 @@ enum COLLISION_TYPE {
 
 var mesh_items:Dictionary
 var collections:Dictionary
+var materials:Dictionary #Key is import material, value is replacement material
 var glb_path:String
 var blend_file: String
 var meta_data:Dictionary
@@ -71,6 +72,12 @@ func add_mesh_item(name:String,lod:int,node:Node)->void:
 		mesh_items[name]["mesh_nodes"].resize(lod + 1)
 	if node is ImporterMeshInstance3D:
 		mesh_items[name]["mesh_nodes"][lod] = node
+		if node.mesh:
+			var mesh:Mesh = node.mesh.get_mesh()			
+			for i in mesh.get_surface_count():
+				var material = mesh.surface_get_material(i)
+				if material:
+					materials[material.resource_name] = null
 
 func add_mesh_to_collection(collection_name:String, mesh_name:String, is_root:bool):
 	if not collections.has(collection_name):
@@ -103,7 +110,9 @@ func update_collection_id(collection_name:String,id:int):
 func add_sub_collection(collection_name:String,sub_collection_name:String,transform:Transform3D):
 	if not collections.has(collection_name):
 		collections[collection_name] = get_empty_collection()
-	collections[collection_name]["sub_collections"][sub_collection_name] = [transform]
+	if not collections[collection_name]["sub_collections"].has(sub_collection_name):
+		collections[collection_name]["sub_collections"][sub_collection_name] = []		
+	collections[collection_name]["sub_collections"][sub_collection_name].push_back(transform)
 
 func finalize_glb_parse():
 	var asset_library = MAssetTable.get_singleton()	
@@ -191,9 +200,8 @@ func add_original_mesh_item(name:String,id:int)->void:
 	var asset_library := MAssetTable.get_singleton()
 	if not mesh_items.has(name):
 		mesh_items[name] = get_empty_mesh_item()
-	if not mesh_items[name]["original_meshes"].is_empty():
-		#print("Existtt ")
-		return # already set
+	if not mesh_items[name]["original_meshes"].is_empty():		
+		return # already set by added by a different node
 	var mesh_info = asset_library.mesh_item_get_info(id)
 	var mesh_arr:Array = mesh_info["mesh"]
 	mesh_items[name]["original_meshes"] = mesh_arr
@@ -207,7 +215,9 @@ func add_original_mesh_to_collection(collection_name:String,mesh_name:String,tra
 func add_original_sub_collection(collection_name:String,sub_collection_name:String,transform:Transform3D)->void:
 	if not collections.has(collection_name):
 		collections[collection_name] = get_empty_collection()
-	collections[collection_name]["original_sub_collections"][sub_collection_name] = transform
+	if not collections[collection_name]["original_sub_collections"].has(sub_collection_name):
+		collections[collection_name]["original_sub_collections"][sub_collection_name] = []
+	collections[collection_name]["original_sub_collections"][sub_collection_name].push_back(transform)
 
 func add_original_collisions(collection_name:String,transform:Transform3D)->void:
 	if not collections.has(collection_name):
@@ -280,7 +290,7 @@ func save_unsaved_meshes(mesh_item_name:String):
 		push_error("trying to save meshes for a mesh item whose name does not exist")
 		return
 	var meshes = mesh_items[mesh_item_name]["meshes"]
-	for i in range(meshes.size()):
+	for i in len(meshes):
 		if meshes[i] is Mesh:
 			var path = asset_library.mesh_get_path(meshes[i])
 			ResourceSaver.save(meshes[i],path)
@@ -304,12 +314,12 @@ func get_glb_import_info():
 		for original_collision_item in collections[key].collision_items:
 			var collision_item = original_collision_item.duplicate()
 			collision_item.mesh = null
-			result[key].collision_items.push_back(collision_item)
-		
-		
+			result[key].collision_items.push_back(collision_item)					
 		result[key]["id"] = collections[key]["id"]
+	result["__materials"] = materials.duplicate()		
 	result["__metadata"] = meta_data
 	return result
+	
 #Add original mesh and collection data to asset_data
 func add_glb_import_info(info:Dictionary)->void:
 	var asset_library := MAssetTable.get_singleton()
@@ -320,15 +330,18 @@ func add_glb_import_info(info:Dictionary)->void:
 			push_error(collection_id," Invalid collection ID in set_glb_import_info")
 			continue
 		var original_meshes:Dictionary= info[collection_glb_name]["mesh_items"]
-		var original_sub_collections:Dictionary= info[collection_glb_name]["sub_collections"]
+		var original_sub_collections:Dictionary = info[collection_glb_name]["sub_collections"]
 		for mesh_name in original_meshes:
 			add_original_mesh_item(mesh_name,original_meshes[mesh_name])
 			add_original_mesh_to_collection(collection_glb_name, mesh_name, asset_library.collection_get_item_transform(collection_id, MAssetTable.MESH, original_meshes[mesh_name]))
 		for sub_collection_name in original_sub_collections:
-			add_original_sub_collection(collection_glb_name,sub_collection_name,asset_library.collection_get_sub_collections_transform(collection_id,original_sub_collections[sub_collection_name]))
+			for transform in asset_library.collection_get_sub_collections_transform(collection_id, original_sub_collections[sub_collection_name]):
+				add_original_sub_collection(collection_glb_name,sub_collection_name,transform)
 		collections[collection_glb_name]["original_collision_items"] = collections[collection_glb_name].collision_items
 		collections[collection_glb_name]["id"] = collection_id
 	add_metadata_to_data(info["__metadata"], meta_data)
+	if "__materials" in info:
+		materials = info["__materials"].duplicate()
 	
 ## blend1 has 2 assets, table and chair. Blend2 is a scene, it has subcollection table
 	

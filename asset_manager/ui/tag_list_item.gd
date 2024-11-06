@@ -11,6 +11,8 @@ var current_name
 var tag_id
 
 func _ready():	
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	$HBoxContainer/remove.pressed.connect(func():
 		tag_removed.emit(tag_id)
 		queue_free()

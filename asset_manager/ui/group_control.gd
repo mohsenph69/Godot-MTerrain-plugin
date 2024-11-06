@@ -8,6 +8,8 @@ signal collection_activated
 @onready var group_list:ItemList = find_child("group_list")
 
 func _ready():
+	if EditorInterface.get_edited_scene_root() == self: return
+
 	group_button.toggled.connect(func(toggle_on):
 		group_container.visible = toggle_on	
 	)
