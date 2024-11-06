@@ -1,20 +1,41 @@
 @tool
 extends Popup
 
-signal sort_mode_changed
+signal filter_changed
 
-@onready var sort_type_list = find_child("sort_type_list")
+@onready var all_button = find_child("all_button")
+@onready var clear_button = find_child("clear_button")
+@onready var tags_control = find_child("Tags")
 
-var button_group = preload("res://addons/m_terrain/asset_manager/ui/sort_button_group.tres")
-var sort_mode
+var current_filter = []
 
 func _ready():
-	if EditorInterface.get_edited_scene_root() == self: return
-	if not is_instance_valid(sort_type_list): return
-	for button in sort_type_list.get_children():
-		button.button_group = button_group
-	button_group.pressed.connect(func(button):
-		if sort_mode != button.name:
-			sort_mode = button.name
-			sort_mode_changed.emit(button.name)		
+	all_button.toggled.connect(func(toggle_on):
+		if toggle_on:
+			all_button.text = "match all"
+		else:
+			all_button.text = "match any"
+	)	
+	tags_control.editable = false	
+	tags_control.tag_changed.connect(update_filter)
+	clear_button.pressed.connect(func():
+		if all_button.button_pressed:
+			tags_control.set_tags_from_data([])
+		else:
+			tags_control.set_tags_from_data(owner.asset_library.tag_get_names().keys())
 	)
+	visibility_changed.connect(init_options)
+
+func init_options(toggle_on):
+	if toggle_on:	
+		tags_control.set_options(owner.asset_library.tag_get_names())		
+		
+func update_filter(tag_id, toggled_on ):
+	if toggled_on:
+		if not tag_id in current_filter:
+			current_filter.push_back(tag_id)
+	else:
+		if tag_id in current_filter:
+			current_filter.erase(tag_id)
+			
+	filter_changed.emit(current_filter, all_button.button_pressed)
