@@ -34,4 +34,8 @@ func _ready():
 		active_collection = item.get_metadata(0)
 		tags.set_tags_from_data( asset_library.collection_get_tags(active_collection))		
 	)
-	
+	visibility_changed.connect(update_tag_options)	
+
+func update_tag_options():
+	if visible:
+		tags.set_options(asset_library.tag_get_names())			

@@ -7,15 +7,17 @@ signal selection_changed
 @onready var groups = find_child("groups")
 @onready var ungrouped = find_child("ungrouped")
 @onready var grouping_popup:Popup = find_child("grouping_popup")
-@onready var search_collections:Control = find_child("search_collections")
+@onready var search_collections_node:Control = find_child("search_collections")
 @onready var group_by_button:Button = find_child("group_by_button")	
-var asset_library: MAssetTable = MAssetTable.get_singleton()
-var current_selection = [] #array of collection name
-var current_filter: String = ""
-var current_group = "None" #group name
+
+var asset_library := MAssetTable.get_singleton()
+var current_selection := [] #array of collection name
+var current_search := ""
+var current_filter_mode_all := false
+var current_filter_tags := []
+var current_group := "None" #group name
 
 var queued_thumbnails = {}
-var edit_window
 
 func _ready():		
 	if EditorInterface.get_edited_scene_root() == self: return
@@ -28,12 +30,17 @@ func _ready():
 	
 	ungrouped.set_group("other")	
 	regroup()	
-	find_child("sort_popup_menu").sort_mode_changed.connect(func(mode):
+	find_child("sort_popup").sort_mode_changed.connect(func(mode):
 		regroup(current_group, mode)
 	)
 	
 	#Connect signals for buttons	
-	search_collections.text_changed.connect(search_items)	
+	search_collections_node.text_changed.connect(search_items)	
+	find_child("filter_popup").filter_changed.connect(func(tags,mode):		
+		current_filter_tags = tags
+		current_filter_mode_all = mode
+		regroup()		
+	)
 	ungrouped.group_list.multi_selected.connect(func(id, selected):
 		process_selection(ungrouped.group_list, id, selected)
 	)
@@ -47,8 +54,8 @@ func _ready():
 	for child in tags_control.tag_list.get_children():
 		child.set_editable(false)
 
-func search_items(text=""):				
-	current_filter = text		
+func search_items(text=""):					
+	current_search = text		
 	regroup()	
 						
 func _can_drop_data(at_position: Vector2, data: Variant):		
@@ -62,14 +69,26 @@ func _drop_data(at_position, data):
 ####################
 # GROUPS AND ITEMS #
 ####################
-func get_filtered_collections(text="", tags_to_excluded=[]):
-	print("filter: ", text)
-	var filterered_collections = asset_library.collection_names_begin_with(text) if text != "" else asset_library.collection_get_list()	
-	filterered_collections = Array(filterered_collections).filter(func(a): return not a in asset_library.tags_get_collections_any(tags_to_excluded) )	
-	return filterered_collections
+func get_filtered_collections(text="", tags_to_excluded=[]):		
+	var result = []
+	var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
+	var searched_collections = asset_library.collection_names_begin_with(text) if not text in [null, ""]  else asset_library.collection_get_list()		
+	if current_filter_tags and len(current_filter_tags)>0:
+		if current_filter_mode_all:		
+			result = Array(asset_library.tags_get_collections_all(current_filter_tags))
+		else:		
+			result = Array(asset_library.tags_get_collections_any(current_filter_tags))	
+	else:
+		result = Array(searched_collections)		
+	for id in result.duplicate():				
+		if not id in searched_collections:			
+			result.erase(id)		
+		if id in collections_to_exclude:
+			result.erase(id)			
+	return result
 	
 func regroup(group = current_group, sort_mode="asc"):				
-	var filtered_collections = get_filtered_collections(current_filter, [0])
+	var filtered_collections = get_filtered_collections(current_search, [0])
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
@@ -96,19 +115,23 @@ func regroup(group = current_group, sort_mode="asc"):
 		ungrouped.group_button.visible = true
 		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
 		for tag_id in asset_library.group_get_tags(group):
+			if current_filter_tags and len(current_filter_tags) >0:
+				if not tag_id in current_filter_tags: 
+					continue							
 			var tag_name = asset_library.tag_get_name(tag_id)
 			if tag_name == "": continue
 			var group_control
 			var sorted_items = []
-			if not groups.has_node(tag_name):						
+			if not groups.has_node(tag_name):				
 				group_control = group_control_scene.instantiate()								
-				groups.add_child(group_control)			
+				groups.add_child(group_control)							
 				group_control.group_list.multi_selected.connect(func(id, selected):
 					process_selection(group_control.group_list, id, selected)
 				)
 				group_control.set_group(asset_library.tag_get_name(tag_id))					
 				group_control.group_list.item_activated.connect(collection_item_activated.bind(group_control.group_list))
 				group_control.name = tag_name
+				print(group_control.group_list, tag_name)
 			else:
 				group_control = groups.get_node(tag_name)			
 				group_control.group_list.clear()
@@ -123,15 +146,20 @@ func regroup(group = current_group, sort_mode="asc"):
 			for item in sorted_items:
 				group_control.add_item(item.name, item.thumbnail, item.id)		
 		ungrouped.group_list.clear()
+		var sorted_items = []
 		for id in filtered_collections:
 			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):
-				var thumbnail = null
-				ungrouped.add_item(asset_library.collection_get_name(id), thumbnail, id )
+				var thumbnail = null				
+				sorted_items.push_back({"name": asset_library.collection_get_name(id), "thumbnail":thumbnail, "id":id})				
+		if sort_mode == "asc":
+			sorted_items.sort_custom(func(a,b): return a.name < b.name)
+		elif sort_mode == "desc":
+			sorted_items.sort_custom(func(a,b): return a.name > b.name)
+		for item in sorted_items:			
+			ungrouped.add_item(item.name, item.thumbnail, item.id)		
 	current_group = group
 
-func collection_item_activated(id, group_list:ItemList):					
-	#var node = AssetIO.collection_instantiate(group_list.get_item_metadata(id))		
-	#node.set_meta("collection_id", group_list.get_item_metadata(id))	
+func collection_item_activated(id, group_list:ItemList):						
 	var node = MAssetMesh.new()
 	node.collection_id = group_list.get_item_metadata(id)
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	

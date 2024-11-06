@@ -11,6 +11,8 @@ func _ready():
 	baker.asset_mesh_updated.connect(func():
 		%debug_lod.text = str("DEBUG Current Lod is ???", ) 
 	)
+	%Join.tooltip_text = str(baker.meshes_to_join_overrides)
+	
 	%joined_mesh_thumbnail.texture = baker.get_joined_mesh_thumbnail()
 	%disable_joined_mesh_button.toggled.connect(baker.toggle_joined_mesh_disabled)
 	if not baker.joined_mesh_disabled:

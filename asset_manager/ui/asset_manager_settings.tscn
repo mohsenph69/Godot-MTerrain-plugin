@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/asset_manager_settings.gd" id="2_766no"]
 [ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="3_x8u7q"]
 
-[node name="settings" type="Popup"]
+[node name="settings_popup" type="Popup"]
 size = Vector2i(800, 600)
 visible = true
 min_size = Vector2i(800, 600)

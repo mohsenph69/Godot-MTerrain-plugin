@@ -16,12 +16,6 @@ var timer: Timer
 
 const MAX_LOD = 10
 
-class MeshBakeData:
-	var meshes:MMeshLod
-	var node:MAssetMesh
-	var tr:Transform3D
-	var materials:Array # for later
-
 class SubHlodBakeData:
 	var sub_hlod: MHlod
 	var tr: Transform3D	
@@ -37,26 +31,28 @@ func bake_to_hlod_resource():
 	#################
 	## BAKE MESHES ##
 	#################
-	var all_meshes_data = get_all_meshes(self, get_children())		
-	for item in all_meshes_data:		
-		var mesh_array = item.meshes.meshes.map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh) if mesh is Mesh else -1)
-		var material_array = mesh_array.map(func(a): return -1)
-		var shadow_array = mesh_array.map(func(a): return 0)
-		var gi_array = mesh_array.map(func(a): return 0)
-		var mesh_id = hlod_resource.add_mesh_item(item.tr, mesh_array, material_array, shadow_array, gi_array, 1 )
-		if mesh_id == -1:
-			push_error("failed to add mesh item to HLod during baking")
-		var i = -1
-		var max = join_at_lod if join_at_lod >= 0 else MAX_LOD		
-		while i < max:
-			i += 1
-			if mesh_array[min(i, len(mesh_array)-1) ] != -1:
-				hlod_resource.insert_item_in_lod_table(mesh_id, i)
-					
+	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())		
+	var baker_inverse_transform = global_transform.inverse()
+	for item:MAssetMesh in all_masset_mesh_nodes:		
+		for mdata in item.get_mesh_data():		
+			var mesh_array = mdata.get_mesh_lod().meshes.map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh) if mesh is Mesh else -1)
+			var material_array = mesh_array.map(func(a): return -1)
+			var shadow_array = mesh_array.map(func(a): return 0)
+			var gi_array = mesh_array.map(func(a): return 0)			
+			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_array, shadow_array, gi_array, 1 )
+			if mesh_id == -1:
+				push_error("failed to add mesh item to HLod during baking")
+			var i = -1
+			var max = join_at_lod if join_at_lod >= 0 else MAX_LOD		
+			while i < max:
+				i += 1
+				if mesh_array[min(i, len(mesh_array)-1) ] != -1:
+					hlod_resource.insert_item_in_lod_table(mesh_id, i)
+						
 	######################
 	## BAKE JOINED_MESH ##
 	######################
-	if join_at_lod >= 0 and is_instance_valid(joined_mesh_node) and joined_mesh_node.meshes != null and len(joined_mesh_node.meshes.meshes) != 0:
+	if not joined_mesh_disabled and join_at_lod >= 0 and is_instance_valid(joined_mesh_node) and joined_mesh_node.meshes != null and len(joined_mesh_node.meshes.meshes) != 0:
 		var mesh_array = joined_mesh_node.meshes.meshes.map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh))
 		var material_array = mesh_array.map(func(a): return -1)
 		var shadow_array = mesh_array.map(func(a): return 0)
@@ -99,7 +95,7 @@ func bake_to_hlod_resource():
 	return
 
 #region Getters	
-func get_all_meshes(baker_node:Node3D,search_nodes:Array)->Array:
+func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
 	var stack:Array
 	stack.append_array(search_nodes)
 	var result:Array
@@ -109,13 +105,8 @@ func get_all_meshes(baker_node:Node3D,search_nodes:Array)->Array:
 		stack.remove_at(stack.size() -1)
 		if (current_node is HLod_Baker and current_node != baker_node) or current_node == joined_mesh_node:
 			continue
-		if current_node is MAssetMesh:
-			if current_node.meshes != null:
-				var mdata := MeshBakeData.new()
-				mdata.meshes = current_node.meshes
-				mdata.node = current_node
-				mdata.tr = baker_invers_transform * current_node.global_transform
-				result.push_back(mdata)				
+		if current_node is MAssetMesh:	
+			result.push_back(current_node)
 		stack.append_array(current_node.get_children())		
 	return result
 
@@ -163,8 +154,6 @@ func get_bake_path():
 #endregion
 
 #region JOINED MESH				
-
-
 func make_joined_mesh(nodes_to_join):	
 	var root_node = Node3D.new()
 	root_node.name = "root_node"
@@ -174,12 +163,16 @@ func make_joined_mesh(nodes_to_join):
 	###################
 	## JOIN THE MESH ##
 	###################
-	var mesh_joiner := MMeshJoiner.new()
-	var all_meshes_data = get_all_meshes(self, nodes_to_join)				
-	var mesh_array = all_meshes_data.map(get_correct_mesh_lod_for_joining)	
-	mesh_joiner.insert_mesh_data(mesh_array, all_meshes_data.map(func(a): return a.tr), all_meshes_data.map(func(a): return -1))		
-	mesh_instance.mesh = mesh_joiner.join_meshes()					
-		
+	var mesh_joiner := MMeshJoiner.new()				
+	var baker_inverse_transform = global_transform.inverse()	
+	var mesh_array := []
+	var transforms := []
+	for node:MAssetMesh in get_all_masset_mesh_nodes(self, nodes_to_join):					
+		for mesh_item:MAssetMeshData in node.get_mesh_data():			
+			mesh_array.push_back(get_correct_mesh_lod_for_joining(mesh_item))
+			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
+	mesh_joiner.insert_mesh_data(mesh_array, transforms, transforms.map(func(a): return -1))		
+	mesh_instance.mesh = mesh_joiner.join_meshes()						
 	mesh_instance.mesh.resource_name = mesh_instance.name								
 	var glb_path = get_joined_mesh_path()
 	AssetIO.glb_export(root_node, glb_path)
@@ -208,16 +201,16 @@ func import_joined_mesh_glb():
 func get_joined_mesh_path():
 	return scene_file_path.get_basename() + "_joined_mesh.glb"
 
-func get_correct_mesh_lod_for_joining(a):
-	var lod_to_use = min(join_at_lod, len(a.meshes.meshes)-1)	
-	while lod_to_use >-1 and a.meshes.meshes[lod_to_use] == null:
+func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
+	var mesh_lod = a.get_mesh_lod()
+	var lod_to_use = min(join_at_lod, len(mesh_lod.meshes)-1)	
+	while lod_to_use >-1 and mesh_lod.meshes[lod_to_use] == null:
 		lod_to_use -= 1
-	var mesh = a.meshes.meshes[lod_to_use]
-	return null if lod_to_use == -1 or mesh.get_surface_count() == 0 else a.meshes.meshes[lod_to_use]		
+	var mesh = mesh_lod.meshes[lod_to_use]
+	return null if lod_to_use == -1 or mesh.get_surface_count() == 0 else mesh_lod.meshes[lod_to_use]		
 
 func update_joined_mesh_limits(limit = join_at_lod):		
-	for data in get_all_meshes(self, get_children()):
-		var node: MAssetMesh = data.node		
+	for node in get_all_masset_mesh_nodes(self, get_children()):		
 		node.lod_limit = limit
 
 func get_joined_mesh_node():
@@ -230,36 +223,21 @@ func finish_import(glb_path, glb_collection_name=""):
 	#CHECK IF IS JOINED MESH
 	if not "joined_mesh" in glb_collection_name:
 		return					
-	var collection_id = -1		
-	if is_instance_valid(joined_mesh_node) and joined_mesh_node.has_meta("collection_id"):
-		collection_id = joined_mesh_node.get_meta("collection_id")
-		if not asset_library.has_collection(collection_id):
-			push_error("imported joined mesh, but collection id does not exists")		
-		AssetIO.reload_collection(joined_mesh_node, collection_id)
-	else:
-		joined_mesh_node = find_child("*_joined_mesh*")		
-		if is_instance_valid(joined_mesh_node):
-			collection_id = joined_mesh_node.get_meta("collection_id")
-			if not asset_library.has_collection(collection_id):
-				push_error("imported joined mesh, but collection id does not exists")		
-			AssetIO.reload_collection(joined_mesh_node, collection_id)			
+	var node = get_joined_mesh_node() if get_joined_mesh_node() else MAssetMesh.new()	
+	if asset_library.import_info.has(glb_path) and asset_library.import_info[glb_path].has(glb_collection_name):		
+		node.collection_id = asset_library.import_info[glb_path][glb_collection_name].id	
+	if not node in get_children():
+		if node.get_parent():
+			node.reparent(self)
 		else:
-			var node = Node3D.new()
 			add_child(node)
-			node.owner = self		
-			node.name = glb_collection_name	
-			joined_mesh_node = node
-			if asset_library.import_info[glb_path].has( glb_collection_name ):
-				collection_id = asset_library.import_info[glb_path][glb_collection_name]["id"]
-				asset_library.collection_add_tag(collection_id, 0)
-				AssetIO.reload_collection(node, collection_id)												
-	asset_library.finish_import.disconnect(finish_import)
-	
-	if collection_id == -1:
-		push_error("error joining meshes: on finish import, collection_id does not exist for joined mesh")	
-	for id in asset_library.collection_get_mesh_items_info(collection_id)[0].mesh:
+		node.name = glb_collection_name
+		node.owner = self
+	asset_library.collection_add_tag(node.collection_id, 0)				
+	asset_library.finish_import.disconnect(finish_import)	
+	for id in asset_library.collection_get_mesh_items_info(node.collection_id)[0].mesh:
 		if id != -1:			
-			EditorInterface.get_resource_previewer().queue_resource_preview(MHlod.get_mesh_path(id),self, "save_thumbnail", collection_id)
+			EditorInterface.get_resource_previewer().queue_resource_preview(MHlod.get_mesh_path(id),self, "save_thumbnail", node.collection_id)
 			break	
 			
 func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):				
@@ -313,18 +291,7 @@ func _notification(what):
 					grandchild.owner = null		
 	
 func _ready():			
-	#activate_mesh_updater()
 	asset_mesh_updater.update_auto_lod()	
-	for child in get_children():		
-		if child.has_meta("collection_id"):
-			var original_transform = child.transform
-			var node = AssetIO.reload_collection(child, child.get_meta("collection_id"))
-			if is_instance_valid(node):
-				node.transform = original_transform				
-		#if child.has_meta("hlod"):
-			#for node in child.find_children("*"):
-				#node.owner = child
-
 	
 func activate_mesh_updater():
 	if not is_inside_tree():
@@ -337,6 +304,8 @@ func activate_mesh_updater():
 		timer.timeout.connect(update_asset_mesh)
 	if not timer.get_parent():
 		add_child(timer)	
+	elif not timer.is_inside_tree():
+		timer.reparent(self)
 	timer.start(1)
 	#for child in find_children("*",  "Node3D", true, false):
 		#if child is Node3D:

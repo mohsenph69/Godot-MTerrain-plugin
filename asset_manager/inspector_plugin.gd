@@ -35,25 +35,7 @@ func _parse_begin(object):
 		)		
 	elif object.has_meta("collection_id"):		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_inspector.tscn").instantiate()
-		control.object = object	
-	else:
-		var nodes:Array[Node3D] = []
-		for node in EditorInterface.get_selection().get_selected_nodes():
-			if node is Node3D:
-				nodes.push_back(node)
-		
-		if len(nodes) < 2: return
-		var root = EditorInterface.get_edited_scene_root() 
-		var vbox = VBoxContainer.new()
-		var button = Button.new()
-		button.text = "reload collections"		
-		button.pressed.connect(func():
-			for child in nodes:
-				if child.has_meta("collection_id"):
-					AssetIO.reload_collection(child, child.get_meta("collection_id"))
-		)
-		vbox.add_child(button)		
-		control = vbox
+		control.object = object		
 	add_custom_control(control)			
 		
 func save_changes(object):

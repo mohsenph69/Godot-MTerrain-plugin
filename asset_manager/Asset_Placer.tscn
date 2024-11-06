@@ -40,7 +40,7 @@ icon = ExtResource("3_thf0h")
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="filter_popup_menu" parent="VBoxContainer/HBoxContainer/filter_button" instance=ExtResource("3_dfwqm")]
+[node name="filter_popup" parent="VBoxContainer/HBoxContainer/filter_button" instance=ExtResource("3_dfwqm")]
 visible = false
 
 [node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
@@ -52,7 +52,7 @@ icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="sort_popup_menu" parent="VBoxContainer/HBoxContainer/sort_by_button" instance=ExtResource("7_uoy1f")]
+[node name="sort_popup" parent="VBoxContainer/HBoxContainer/sort_by_button" instance=ExtResource("7_uoy1f")]
 visible = false
 
 [node name="group_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
@@ -75,8 +75,9 @@ toggle_mode = true
 icon = ExtResource("4_c73sy")
 expand_icon = true
 script = ExtResource("4_he502")
+centered = true
 
-[node name="settings" parent="VBoxContainer/HBoxContainer/edit_button" instance=ExtResource("11_48d7o")]
+[node name="settings_popup" parent="VBoxContainer/HBoxContainer/edit_button" instance=ExtResource("11_48d7o")]
 initial_position = 4
 visible = false
 
@@ -96,6 +97,7 @@ toggle_mode = true
 icon = ExtResource("9_d56ce")
 expand_icon = true
 script = ExtResource("4_he502")
+centered = true
 
 [node name="tag_collections_popup" parent="VBoxContainer/HBoxContainer/tag_collections_button" instance=ExtResource("14_x30ua")]
 visible = false

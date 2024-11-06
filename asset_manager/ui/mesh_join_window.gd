@@ -69,8 +69,8 @@ func build_tree(parent_node, parent_item:TreeItem):
 	item.set_editable(0, true)
 	item.set_metadata(0, parent_node)
 	item.set_text(0, parent_node.name)		
-	if parent_node.has_meta("collection_id"):
-		var tags = MAssetTable.get_singleton().collection_get_tags(parent_node.get_meta("collection_id"))
+	if parent_node is MAssetMesh:
+		var tags = MAssetTable.get_singleton().collection_get_tags(parent_node.collection_id)
 		var should_join = null
 		if baker.meshes_to_join_overrides.has(parent_node.name):
 			should_join = baker.meshes_to_join_overrides[parent_node.name] #true or false							
@@ -85,7 +85,7 @@ func build_tree(parent_node, parent_item:TreeItem):
 			nodes_to_join.push_back(parent_node)
 			item.propagate_check(0,  true)			
 			
-	if not parent_node.has_meta("collection_id"):
+	if not parent_node is MAssetMesh:
 		for child in parent_node.get_children():
 			build_tree(child, item)
 

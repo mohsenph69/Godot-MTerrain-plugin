@@ -30,10 +30,7 @@ func _ready():
 			%collection_details.text = details
 		else:
 			%collection_name.text = "Collection doesn't exist"
-			%reload_button.pressed.connect(func():
-				AssetIO.reload_collection(object, collection_id)
-				object.remove_meta("overrides")
-			)								
+			
 		%Tags.editable = false
 		%Tags.set_options(asset_library.tag_get_names())
 		%Tags.set_tags_from_data(asset_library.collection_get_tags(collection_id))
