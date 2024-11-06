@@ -21,22 +21,12 @@ func _init():
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	gizmo.clear()
-	var node = gizmo.get_node_3d()
-	var nodes:Array = node.find_children("*","MAssetMesh",true,false)
-	var meshes:Array
-	var mesh_transforms:Array
-	for n:MAssetMesh in nodes:
-		if n.meshes:
-			for i in range(n.meshes.meshes.size()-1,-1,-1):
-				if n.meshes.meshes[i] != null:
-					meshes.push_back(n.meshes.meshes[i])
-					mesh_transforms.push_back(n.transform)
-					break
-	if meshes.size() == 0:
+	var masset:MAssetMesh = gizmo.get_node_3d()
+	var tm = masset.get_joined_triangle_mesh()
+	if not tm:
 		return
-	var collission_mesh = MMeshJoiner.get_collission_mesh(meshes,mesh_transforms)
-	gizmo.add_collision_triangles(collission_mesh.generate_triangle_mesh())
-	var aabb:AABB= collission_mesh.get_aabb()
+	gizmo.add_collision_triangles(tm)
+	var aabb:AABB= masset.get_joined_aabb()
 	aabb.position -= Vector3(0.02,0.02,0.02)
 	aabb.size += Vector3(0.04,0.04,0.04)
 	var s = aabb.position
@@ -67,7 +57,7 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	l[21] = Vector3(e.x,e.y,s.z)
 	l[22] = Vector3(e.x,s.y,e.z)
 	l[23] = Vector3(s.x,s.y,e.z)
-	if selection.get_selected_nodes().has(node):
+	if selection.get_selected_nodes().has(masset):
 		gizmo.add_lines(l,sel_line_mat,false)
 	else:
 		# we add invisible line
@@ -92,7 +82,7 @@ func _get_priority():
 	return 2
 
 func _has_gizmo(for_node_3d):
-	return for_node_3d.has_meta("collection_id")
+	return for_node_3d is MAssetMesh
 
 func on_selection_change():
 	var snodes = selection.get_selected_nodes()
@@ -105,7 +95,7 @@ func on_selection_change():
 			selected_mesh.remove_at(i)
 		i-=1
 	for n in snodes:
-		if n.has_meta("collection_id") and n.is_inside_tree():
+		if n is MAssetMesh and n.is_inside_tree():
 			n.update_gizmos()
 			if not selected_mesh.has(n):
 				selected_mesh.push_back(n)

@@ -5,10 +5,11 @@
 [ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="2_ufjis"]
 [ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="3_sgf30"]
 
-[node name="Window" type="Window"]
+[node name="tag_collections_popup" type="Popup"]
 mode = 2
-initial_position = 4
-size = Vector2i(1000, 600)
+size = Vector2i(800, 600)
+visible = true
+min_size = Vector2i(800, 600)
 script = ExtResource("1_7m350")
 
 [node name="Control" type="PanelContainer" parent="."]

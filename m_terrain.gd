@@ -14,6 +14,7 @@ var current_window_info=null
 
 var gizmo_moctmesh
 var gizmo_mpath
+var gizmo_masset_mesh
 
 var inspector_mpath
 
@@ -111,6 +112,8 @@ func _enter_tree():
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)				
 				
 		###### GIZMO
+		gizmo_masset_mesh = load("res://addons/m_terrain/gizmos/masset_mesh_gizmo.gd").new()
+		add_node_3d_gizmo_plugin(gizmo_masset_mesh)
 		gizmo_moctmesh = load("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
 		gizmo_mpath = load("res://addons/m_terrain/gizmos/mpath_gizmo.gd").new()
 		add_node_3d_gizmo_plugin(gizmo_moctmesh)
@@ -125,9 +128,9 @@ func _enter_tree():
 				
 		add_keymap()		
 		
-		asset_browser = preload("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
+		asset_browser = load("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
 		add_control_to_bottom_panel(asset_browser, "Assets")
-		asset_browser_inspector_plugin = preload("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
+		asset_browser_inspector_plugin = load("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
 		add_inspector_plugin(asset_browser_inspector_plugin)
 		gltf_extras_importer = GLTFExtras.new()
 		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)
@@ -157,6 +160,7 @@ func _exit_tree():
 		tools.queue_free()
 		
 		###### GIZMO
+		remove_node_3d_gizmo_plugin(gizmo_masset_mesh)
 		remove_node_3d_gizmo_plugin(gizmo_moctmesh)
 		remove_node_3d_gizmo_plugin(gizmo_mpath)
 		

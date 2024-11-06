@@ -5,14 +5,13 @@ extends PanelContainer
 signal selection_changed
 
 @onready var groups = find_child("groups")
-@onready var ungrouped = find_child("other")
-@onready var grouping_popup_menu:PopupMenu = find_child("grouping_popup_menu")
+@onready var ungrouped = find_child("ungrouped")
+@onready var grouping_popup:Popup = find_child("grouping_popup")
 @onready var search_collections:Control = find_child("search_collections")
-@onready var group_by_button:Button = find_child("group_by_button")
-@onready var tag_collections_button:Button = find_child("tag_collections_button")
-	
+@onready var group_by_button:Button = find_child("group_by_button")	
 var asset_library: MAssetTable = MAssetTable.get_singleton()
 var current_selection = [] #array of collection name
+var current_filter: String = ""
 var current_group = "None" #group name
 
 var queued_thumbnails = {}
@@ -29,6 +28,9 @@ func _ready():
 	
 	ungrouped.set_group("other")	
 	regroup()	
+	find_child("sort_popup_menu").sort_mode_changed.connect(func(mode):
+		regroup(current_group, mode)
+	)
 	
 	#Connect signals for buttons	
 	search_collections.text_changed.connect(search_items)	
@@ -36,12 +38,8 @@ func _ready():
 		process_selection(ungrouped.group_list, id, selected)
 	)
 	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
-	grouping_popup_menu.index_pressed.connect(func(i):
-		regroup(grouping_popup_menu.get_item_text(i))
-	)	
-	find_child("edit_button").pressed.connect(edit_pressed)
-	group_by_button.pressed.connect(group_by_pressed)
-	
+	grouping_popup.group_selected.connect(regroup)	
+			
 	#Filters tags control
 	var tags_control = find_child("Tags")	
 	tags_control.set_options(asset_library.tag_get_names())
@@ -49,35 +47,10 @@ func _ready():
 	for child in tags_control.tag_list.get_children():
 		child.set_editable(false)
 
-	tag_collections_button.pressed.connect(func():
-		var popup = preload("res://addons/m_terrain/asset_manager/ui/tag_collections_window.tscn").instantiate()
-		add_child(popup)
-		popup.popup_centered(Vector2i(800,600))
-	)
-
-func search_items(text):				
-	var filtered_collections = asset_library.collection_names_begin_with(text) if text != "" else asset_library.collection_get_list()			
-	regroup(current_group, filtered_collections)							
-
-func group_by_pressed():	
-	update_grouping_options()		
-	grouping_popup_menu.visible = true
-	grouping_popup_menu.position.x = group_by_button.global_position.x
-	grouping_popup_menu.position.y = group_by_button.size.y + global_position.y
-	
-func edit_pressed():	
-	if not is_instance_valid(edit_window):		 	
-		edit_window = preload("res://addons/m_terrain/asset_manager/ui/asset_manager_settings.tscn").instantiate()				
-		add_child(edit_window)		
-		edit_window.popup_centered(Vector2i(0,0))
-		
-func update_grouping_options():
-	grouping_popup_menu.clear()
-	grouping_popup_menu.add_item("None")	
-	#for category in categories:		
-	for category in asset_library.group_get_list():
-		grouping_popup_menu.add_item(category)
-		
+func search_items(text=""):				
+	current_filter = text		
+	regroup()	
+						
 func _can_drop_data(at_position: Vector2, data: Variant):		
 	if "files" in data and ".glb" in data.files[0]:
 		return true
@@ -89,23 +62,35 @@ func _drop_data(at_position, data):
 ####################
 # GROUPS AND ITEMS #
 ####################
-func regroup(group = "None", filtered_collections = asset_library.collection_get_list()):			
-	filtered_collections = Array(filtered_collections).filter(func(a): return not a in asset_library.tag_get_collections(0) )
+func get_filtered_collections(text="", tags_to_excluded=[]):
+	print("filter: ", text)
+	var filterered_collections = asset_library.collection_names_begin_with(text) if text != "" else asset_library.collection_get_list()	
+	filterered_collections = Array(filterered_collections).filter(func(a): return not a in asset_library.tags_get_collections_any(tags_to_excluded) )	
+	return filterered_collections
+	
+func regroup(group = current_group, sort_mode="asc"):				
+	var filtered_collections = get_filtered_collections(current_filter, [0])
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
 			child.queue_free()
 	if group == "None":		
-		ungrouped.group_list.clear()						
+		ungrouped.group_list.clear()	
+		var sorted_items = []				
 		for collection_id in filtered_collections:
 			var collection_name = asset_library.collection_get_name(collection_id)
 			var thumbnail = null
 			var thumbnail_path = str("res://massets/thumbnails/", collection_id, ".png")
 			if FileAccess.file_exists(thumbnail_path):
 				thumbnail = load(thumbnail_path)
-			ungrouped.add_item(collection_name, thumbnail, collection_id)	
+			sorted_items.push_back({"name":collection_name, "thumbnail":thumbnail, "id":collection_id})			
 			collection_id += 1
-		#for collection in asset_library.data.collections:							
+		if sort_mode == "asc":
+			sorted_items.sort_custom(func(a,b): return a.name < b.name)
+		elif sort_mode == "desc":
+			sorted_items.sort_custom(func(a,b): return a.name > b.name)
+		for item in sorted_items:
+			ungrouped.add_item(item.name, item.thumbnail, item.id)							
 		ungrouped.group_button.visible = false	
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
@@ -114,6 +99,7 @@ func regroup(group = "None", filtered_collections = asset_library.collection_get
 			var tag_name = asset_library.tag_get_name(tag_id)
 			if tag_name == "": continue
 			var group_control
+			var sorted_items = []
 			if not groups.has_node(tag_name):						
 				group_control = group_control_scene.instantiate()								
 				groups.add_child(group_control)			
@@ -128,7 +114,14 @@ func regroup(group = "None", filtered_collections = asset_library.collection_get
 				group_control.group_list.clear()
 			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
 				var thumbnail = null								
-				group_control.add_item(asset_library.collection_get_name(collection_id), thumbnail, collection_id)							
+				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "thumbnail":thumbnail, "id":collection_id})
+				#group_control.add_item(asset_library.collection_get_name(collection_id), thumbnail, collection_id)							
+			if sort_mode == "asc":
+				sorted_items.sort_custom(func(a,b): return a.name < b.name)
+			elif sort_mode == "desc":
+				sorted_items.sort_custom(func(a,b): return a.name > b.name)
+			for item in sorted_items:
+				group_control.add_item(item.name, item.thumbnail, item.id)		
 		ungrouped.group_list.clear()
 		for id in filtered_collections:
 			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):

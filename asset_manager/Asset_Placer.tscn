@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=16 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -6,56 +6,15 @@
 [ext_resource type="PackedScene" uid="uid://bq3mcnrp6nw4k" path="res://addons/m_terrain/asset_manager/ui/filter_by_tags_control.tscn" id="3_dfwqm"]
 [ext_resource type="Texture2D" uid="uid://chlti18m8qfsx" path="res://addons/m_terrain/icons/filter_icon.svg" id="3_thf0h"]
 [ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="4_c73sy"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="4_he502"]
 [ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="5_14byr"]
 [ext_resource type="Texture2D" uid="uid://8qcyrpxdy2po" path="res://addons/m_terrain/icons/sort_icon.svg" id="5_vcl6i"]
 [ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="6_rsi1g"]
+[ext_resource type="PackedScene" uid="uid://dwqtl6yv318k2" path="res://addons/m_terrain/asset_manager/ui/sort_popup.tscn" id="7_uoy1f"]
+[ext_resource type="PackedScene" uid="uid://cysovcswko088" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.tscn" id="9_40ifn"]
 [ext_resource type="Texture2D" uid="uid://bo00mqw6wv8av" path="res://addons/m_terrain/icons/tag_icon.svg" id="9_d56ce"]
-
-[sub_resource type="GDScript" id="GDScript_tq7tq"]
-script/source = "@tool
-extends Button
-@onready var all_button = find_child(\"all_button\")
-@onready var clear_button = find_child(\"clear_button\")
-@onready var tags_control = find_child(\"Tags\")
-func _ready():
-	all_button.toggled.connect(func(toggle_on):
-		if toggle_on:
-			all_button.text = \"match all\"
-		else:
-			all_button.text = \"match any\"
-	)	
-	tags_control.editable = false	
-	clear_button.pressed.connect(func():
-		if all_button.button_pressed:
-			tags_control.set_tags_from_data([])
-		else:
-			tags_control.set_tags_from_data(owner.asset_library.tag_get_names().keys())
-	)
-	toggled.connect(toggle_popup)
-	
-func toggle_popup(toggle_on):	
-	var popup:Popup = get_child(0)
-	print(\"toggle \", toggle_on)
-	if toggle_on:		
-		tags_control.set_options(owner.asset_library.tag_get_names())		
-		var rect = Rect2i(Vector2i(), popup.size)
-		rect.position.x = global_position.x
-		if get_viewport_rect().size.y - owner.global_position.y + size.y < owner.global_position.y:
-			rect.position.y = owner.global_position.y - popup.size.y
-			popup.max_size.y = owner.global_position.y
-		else:
-			rect.position.y = owner.global_position.y + size.y
-			popup.max_size.y = get_viewport_rect().size.y - owner.global_position.y - size.y
-		popup.popup(rect)		
-	else:
-		popup.visible = false
-
-func _input(event: InputEvent):
-	if event is InputEventMouseButton and not event.pressed:		
-		if not get_global_rect().has_point(event.position):
-			release_focus()		
-			button_pressed = false
-"
+[ext_resource type="PackedScene" uid="uid://ybj3nflkwptb" path="res://addons/m_terrain/asset_manager/ui/asset_manager_settings.tscn" id="11_48d7o"]
+[ext_resource type="PackedScene" uid="uid://bi0irn0esi4sx" path="res://addons/m_terrain/asset_manager/ui/tag_collections_window.tscn" id="14_x30ua"]
 
 [node name="AssetPlacer" type="PanelContainer"]
 anchors_preset = 15
@@ -72,91 +31,54 @@ layout_mode = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
-[node name="filter_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="filter_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 icon = ExtResource("3_thf0h")
 expand_icon = true
-script = SubResource("GDScript_tq7tq")
+script = ExtResource("4_he502")
 
-[node name="filter_popup_menu" type="Popup" parent="VBoxContainer/HBoxContainer/filter_by_button"]
-position = Vector2i(0, 33)
-size = Vector2i(188, 505)
-max_size = Vector2i(16384, 670)
-
-[node name="PanelContainer" parent="VBoxContainer/HBoxContainer/filter_by_button/filter_popup_menu" instance=ExtResource("3_dfwqm")]
+[node name="filter_popup_menu" parent="VBoxContainer/HBoxContainer/filter_button" instance=ExtResource("3_dfwqm")]
+visible = false
 
 [node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
+toggle_mode = true
 icon = ExtResource("5_vcl6i")
 expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="sort_popup_menu" parent="VBoxContainer/HBoxContainer/sort_by_button" instance=ExtResource("7_uoy1f")]
+visible = false
 
 [node name="group_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
+toggle_mode = true
 icon = ExtResource("6_rsi1g")
 expand_icon = true
+script = ExtResource("4_he502")
 
-[node name="grouping_popup_menu" type="PopupMenu" parent="VBoxContainer/HBoxContainer/group_by_button"]
-auto_translate_mode = 1
-position = Vector2i(641, 32)
-size = Vector2i(130, 602)
-item_count = 22
-item_0/text = "None"
-item_1/text = "colors"
-item_1/id = 1
-item_2/text = "sizes"
-item_2/id = 2
-item_3/text = "building_parts"
-item_3/id = 3
-item_4/text = "colors"
-item_4/id = 4
-item_5/text = "sizes"
-item_5/id = 5
-item_6/text = "building_parts"
-item_6/id = 6
-item_7/text = "colors"
-item_7/id = 7
-item_8/text = "sizes"
-item_8/id = 8
-item_9/text = "building_parts"
-item_9/id = 9
-item_10/text = "colors"
-item_10/id = 10
-item_11/text = "sizes"
-item_11/id = 11
-item_12/text = "building_parts"
-item_12/id = 12
-item_13/text = "colors"
-item_13/id = 13
-item_14/text = "sizes"
-item_14/id = 14
-item_15/text = "building_parts"
-item_15/id = 15
-item_16/text = "colors"
-item_16/id = 16
-item_17/text = "sizes"
-item_17/id = 17
-item_18/text = "building_parts"
-item_18/id = 18
-item_19/text = "colors"
-item_19/id = 19
-item_20/text = "sizes"
-item_20/id = 20
-item_21/text = "building_parts"
-item_21/id = 21
+[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_40ifn")]
+visible = false
 
 [node name="edit_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
+toggle_mode = true
 icon = ExtResource("4_c73sy")
 expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="settings" parent="VBoxContainer/HBoxContainer/edit_button" instance=ExtResource("11_48d7o")]
+initial_position = 4
+visible = false
 
 [node name="search_collections" parent="VBoxContainer/HBoxContainer" instance=ExtResource("5_14byr")]
 layout_mode = 2
@@ -170,8 +92,13 @@ size_flags_horizontal = 3
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
+toggle_mode = true
 icon = ExtResource("9_d56ce")
 expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="tag_collections_popup" parent="VBoxContainer/HBoxContainer/tag_collections_button" instance=ExtResource("14_x30ua")]
+visible = false
 
 [node name="Label" type="Label" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -205,6 +132,7 @@ size_flags_vertical = 3
 [node name="groups" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/PanelContainer"]
 layout_mode = 2
 
-[node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
+[node name="ungrouped" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3

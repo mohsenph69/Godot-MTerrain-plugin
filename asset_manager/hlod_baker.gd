@@ -335,7 +335,8 @@ func activate_mesh_updater():
 	if not is_instance_valid(timer):
 		timer = Timer.new()
 		timer.timeout.connect(update_asset_mesh)
-	add_child(timer)	
+	if not timer.get_parent():
+		add_child(timer)	
 	timer.start(1)
 	#for child in find_children("*",  "Node3D", true, false):
 		#if child is Node3D:

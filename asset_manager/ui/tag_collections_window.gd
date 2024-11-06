@@ -1,13 +1,13 @@
 @tool
-extends Window
+extends Popup
 
 @onready var tree:Tree = find_child("Tree")
 @onready var tags = find_child("Tags")
 var asset_library = MAssetTable.get_singleton()
 var items := {}
 var active_collection = -1
-func _ready():	
-	close_requested.connect(queue_free)
+
+func _ready():		
 	var root = tree.create_item()
 	for collection_id in asset_library.collection_get_list():
 		var collection_name = asset_library.collection_get_name(collection_id)

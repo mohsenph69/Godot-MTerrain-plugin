@@ -10,13 +10,10 @@ var selected_group
 func _ready():	
 	if EditorInterface.get_edited_scene_root() == self: return
 	wrap_controls = true
-	initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
-	close_requested.connect(queue_free)
-	window_input.connect(func(e): if e is InputEventKey and e.keycode == KEY_ESCAPE: queue_free())
-
+	visibility_changed.connect(init_settings)
+	
 	add_group_button.pressed.connect(add_group)
-	tags_control.tag_changed.connect(func(tag, toggle_on):
-		print("tag changed: ", selected_group, " ", tag, " ", toggle_on)
+	tags_control.tag_changed.connect(func(tag, toggle_on):	
 		if not selected_group: return
 		if tag is String:
 			tag = asset_library.tag_get_id(tag)
@@ -33,12 +30,17 @@ func _ready():
 		asset_library.tag_set_name(id, "")
 		asset_library.save()
 	)
+	var add_tag_button = find_child("add_tag_button")
+	add_tag_button.pressed.connect(add_tag)	
+
+func init_settings():	
 	set_tag_options(asset_library.tag_get_names())
+	for child in group_list.get_children():
+		group_list.remove_child(child)
+		child.queue_free()		
 	for group in asset_library.group_get_list():
 		init_group(group)
-	var add_tag_button = find_child("add_tag_button")
-	add_tag_button.pressed.connect(add_tag)
-
+		
 func add_tag():	
 	var i = 0
 	var tag_name = "new tag 0"		
