@@ -2,7 +2,7 @@
 extends VBoxContainer
 
 var baker: HLod_Baker
-
+var rotating = false
 func _ready():	
 	if EditorInterface.get_edited_scene_root() == self: return
 	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return	
@@ -13,13 +13,31 @@ func _ready():
 	)
 	%Join.tooltip_text = str(baker.meshes_to_join_overrides)
 	
-	%joined_mesh_thumbnail.texture = baker.get_joined_mesh_thumbnail()
+	#%joined_mesh_thumbnail.texture = baker.get_joined_mesh_thumbnail()
 	%disable_joined_mesh_button.toggled.connect(baker.toggle_joined_mesh_disabled)
 	if not baker.joined_mesh_disabled:
 		baker.joined_mesh_disabled = false
 	%disable_joined_mesh_button.button_pressed = baker.joined_mesh_disabled 
-		
+	%joined_mesh_preview.mesh = baker.get_joined_mesh()	
+	%joined_mesh_thumbnail.gui_input.connect(on_thumbnail_gui_input)
+
 func show_join_mesh_window():	
 	var window = preload("res://addons/m_terrain/asset_manager/ui/mesh_join_window.tscn").instantiate()	
 	window.baker = baker
 	add_child(window)	
+
+func on_thumbnail_gui_input(event: InputEvent):
+	if event is InputEventMouseButton: 
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			%joined_mesh_preview_camera.position -= %joined_mesh_preview_camera.basis.z
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			%joined_mesh_preview_camera.position += %joined_mesh_preview_camera.basis.z
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				rotating = true
+			else:
+				rotating = false
+	elif event is InputEventMouseMotion:
+		if rotating:
+			%joined_mesh_preview_camera_pivot.rotation.y -= event.relative.x / 100
+			%joined_mesh_preview_camera_pivot.rotation.x = clamp(%joined_mesh_preview_camera_pivot.rotation.x - event.relative.y / 100, -0.7,1)				

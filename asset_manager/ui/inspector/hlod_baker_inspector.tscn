@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=4 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
+[ext_resource type="ArrayMesh" uid="uid://cmdh23b75qgsa" path="res://massets/meshes/46.res" id="2_6aylo"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_6s11i"]
+viewport_path = NodePath("SubViewport")
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
 offset_right = 323.0
@@ -27,6 +31,7 @@ text = "Joined Mesh Settings"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
+texture = SubResource("ViewportTexture_6s11i")
 expand_mode = 5
 stretch_mode = 5
 
@@ -44,3 +49,17 @@ grow_horizontal = 0
 grow_vertical = 0
 text = "Disable joined mesh"
 alignment = 2
+
+[node name="SubViewport" type="SubViewport" parent="."]
+
+[node name="joined_mesh_preview" type="MeshInstance3D" parent="SubViewport"]
+unique_name_in_owner = true
+mesh = ExtResource("2_6aylo")
+
+[node name="joined_mesh_preview_camera_pivot" type="Node3D" parent="SubViewport"]
+unique_name_in_owner = true
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0, 0, 0)
+
+[node name="joined_mesh_preview_camera" type="Camera3D" parent="SubViewport/joined_mesh_preview_camera_pivot"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 2.583, 3.095)

@@ -52,6 +52,79 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 #endregion
 
 #region GLB Import	
+static func load_glb_as_hlod(original_scene,root_name):	
+	var asset_library:MAssetTable = MAssetTable.get_singleton()	
+	var scene = original_scene.get_child(0)			
+	scene.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
+	var nodes = scene.find_children("*", "Node3D", true, false)	
+	var baker_path := str("res://addons/m_terrain/asset_manager/reference/" + root_name + "_baker.tscn" )
+	nodes.reverse()
+	for node in nodes:		
+		if node is ImporterMeshInstance3D:			
+			var parent_node = Node3D.new()
+			var mesh_node = MeshInstance3D.new()
+			parent_node.add_child(mesh_node)
+			var name_data = node_parse_name(node)			
+			scene.join_at_lod = name_data.lod
+			parent_node.name = name_data.name + "_joined_mesh" if not "_joined_mesh" in name_data.name else name_data.name
+			mesh_node.owner = parent_node
+			mesh_node.name = node.name
+			mesh_node.transform = node.transform
+			mesh_node.mesh = node.mesh.get_mesh()											
+			node.queue_free()
+			var path = baker_path.get_basename() + "_joined_mesh.glb"			
+			glb_export(parent_node, path)			
+			parent_node.queue_free()
+			glb_load(path, {}, true)
+			var new_node = MAssetMesh.new()	
+			scene.joined_mesh_node = new_node
+			if not path in asset_library.import_info:
+				print("no joined mesh path in import info", path)
+				continue
+			if not name_data.name in asset_library.import_info[path]:
+				print("no node name in import info", name_data.name)				
+				continue			
+			new_node.collection_id = asset_library.import_info[path][name_data.name].id
+			asset_library.collection_add_tag(new_node.collection_id, 0)			
+			scene.add_child(new_node)									
+			new_node.transform = node.transform
+			node.get_parent().remove_child(node)	
+			new_node.name = name_data.name + "_joined_mesh" if not "_joined_mesh" in name_data.name else name_data.name
+			if scene.is_ancestor_of(new_node):
+				new_node.owner = scene
+			else:				
+				new_node.queue_free()
+			continue			
+		if not node.has_meta("blend_file"):			
+			continue
+		if not asset_library.import_info["__blend_files"].has(node.get_meta("blend_file")):			
+			continue
+		var glb_path = asset_library.import_info["__blend_files"][node.get_meta("blend_file")]			
+		var node_name := collection_parse_name(node.name)
+		if not asset_library.import_info[glb_path].has(node_name):			
+			continue
+		var new_node = MAssetMesh.new()	
+		new_node.collection_id = asset_library.import_info[glb_path][node_name].id
+		var parent = node.get_parent()
+		parent.add_child(new_node)
+		new_node.transform = node.transform
+		parent.remove_child(node)	
+		new_node.name = node.name			
+		if scene.is_ancestor_of(new_node):
+			new_node.owner = scene
+		else:				
+			new_node.queue_free()
+		node.queue_free()				
+	var packed_scene = PackedScene.new()		
+	scene.update_joined_mesh_limits()
+	packed_scene.pack(scene)
+	if FileAccess.file_exists(baker_path):
+		packed_scene.take_over_path(baker_path)
+		ResourceSaver.save(packed_scene, baker_path)			
+	else:
+		ResourceSaver.save(packed_scene, baker_path)
+	original_scene.queue_free()	
+
 static func glb_load(path, metadata={},no_window:bool=false):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var gltf_document = GLTFDocument.new()
@@ -59,10 +132,14 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		GLTFDocument.register_gltf_document_extension(GLTFExtras.new())
 	var gltf_state = GLTFState.new()
 	gltf_document.append_from_file(path,gltf_state)
-		
-	asset_data = AssetIOData.new()
-	if not gltf_state.json.has("scenes"):
-		print(gltf_state.json.keys())
+	
+	var root_name = gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
+	if "_hlod" in root_name and not "_joined_mesh" in root_name:
+		load_glb_as_hlod(gltf_document.generate_scene(gltf_state), root_name)
+		return		
+	
+	#STEP 0: Init Asset Data
+	asset_data = AssetIOData.new()	
 	if gltf_state.json.scenes[0].has("extras") and gltf_state.json.scenes[0].extras.has("blend_file"):
 		asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
 	asset_data.glb_path = path
@@ -71,16 +148,21 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	#STEP 1: convert gltf file into nodes
 	var scene_root = gltf_document.generate_scene(gltf_state)
 	var scene = scene_root.get_children()
+	#STEP 2: convert gltf scene into AssetData format	
 	generate_asset_data_from_glb(scene)
 	asset_data.finalize_glb_parse()
+	#STEP 3: add data from last import for comparisons
 	if asset_library.import_info.has(path):
 		asset_data.add_glb_import_info(asset_library.import_info[path])
 	asset_data.generate_import_tags()
 	scene_root.queue_free() ## Really important otherwise memory leaks
-	if no_window:
-		glb_import_commit_changes()	
-	else:
+	#STEP 4: Allow user to change import settings
+	if not no_window:
 		glb_show_import_window(asset_data)
+	#STEP 5: Commit changes - import window will call this step when user clicks "import"
+	else:
+		glb_import_commit_changes()		
+		
 
 #Parse GLB file and prepare a preview of changes to asset library
 static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):

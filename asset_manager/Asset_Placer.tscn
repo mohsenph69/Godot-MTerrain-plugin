@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=14 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -12,9 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="6_rsi1g"]
 [ext_resource type="PackedScene" uid="uid://dwqtl6yv318k2" path="res://addons/m_terrain/asset_manager/ui/sort_popup.tscn" id="7_uoy1f"]
 [ext_resource type="PackedScene" uid="uid://cysovcswko088" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.tscn" id="9_40ifn"]
-[ext_resource type="Texture2D" uid="uid://bo00mqw6wv8av" path="res://addons/m_terrain/icons/tag_icon.svg" id="9_d56ce"]
-[ext_resource type="PackedScene" uid="uid://ybj3nflkwptb" path="res://addons/m_terrain/asset_manager/ui/asset_manager_settings.tscn" id="11_48d7o"]
-[ext_resource type="PackedScene" uid="uid://bi0irn0esi4sx" path="res://addons/m_terrain/asset_manager/ui/tag_collections_window.tscn" id="14_x30ua"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/settings_button.gd" id="12_ec46f"]
 
 [node name="AssetPlacer" type="PanelContainer"]
 anchors_preset = 15
@@ -29,6 +27,7 @@ script = ExtResource("2_b0v3a")
 layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 
 [node name="filter_button" type="Button" parent="VBoxContainer/HBoxContainer"]
@@ -67,20 +66,6 @@ script = ExtResource("4_he502")
 [node name="grouping_popup" parent="VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_40ifn")]
 visible = false
 
-[node name="edit_button" type="Button" parent="VBoxContainer/HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-theme_type_variation = &"button_icon_only"
-toggle_mode = true
-icon = ExtResource("4_c73sy")
-expand_icon = true
-script = ExtResource("4_he502")
-centered = true
-
-[node name="settings_popup" parent="VBoxContainer/HBoxContainer/edit_button" instance=ExtResource("11_48d7o")]
-initial_position = 4
-visible = false
-
 [node name="search_collections" parent="VBoxContainer/HBoxContainer" instance=ExtResource("5_14byr")]
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
@@ -89,35 +74,35 @@ theme_type_variation = &"button_icon_only"
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="tag_collections_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="settings_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-icon = ExtResource("9_d56ce")
+icon = ExtResource("4_c73sy")
 expand_icon = true
-script = ExtResource("4_he502")
-centered = true
-
-[node name="tag_collections_popup" parent="VBoxContainer/HBoxContainer/tag_collections_button" instance=ExtResource("14_x30ua")]
-visible = false
+script = ExtResource("12_ec46f")
 
 [node name="Label" type="Label" parent="VBoxContainer/HBoxContainer"]
+visible = false
 layout_mode = 2
 text = "debug:"
 
 [node name="clear_assets" type="Button" parent="VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "Remove All"
 
 [node name="remove_asset" type="Button" parent="VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "Remove selected"
 
 [node name="generate_thumbnails_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "Generate Thumbnails"
 

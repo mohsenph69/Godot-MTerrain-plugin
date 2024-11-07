@@ -17,6 +17,14 @@ script = ExtResource("1_vx466")
 [node name="Debug" type="VBoxContainer" parent="."]
 layout_mode = 2
 
+[node name="collection_name" type="Label" parent="Debug"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Collection"
+label_settings = SubResource("LabelSettings_ascgn")
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="collection_details" type="Label" parent="Debug"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -28,15 +36,8 @@ layout_mode = 2
 autowrap_mode = 2
 
 [node name="Release" type="VBoxContainer" parent="."]
+visible = false
 layout_mode = 2
-
-[node name="collection_name" type="Label" parent="Release"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Collection"
-label_settings = SubResource("LabelSettings_ascgn")
-horizontal_alignment = 1
-autowrap_mode = 2
 
 [node name="button_hbox" type="HBoxContainer" parent="Release"]
 unique_name_in_owner = true

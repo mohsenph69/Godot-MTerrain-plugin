@@ -4,7 +4,7 @@ class_name HLod_Baker extends Node3D
 signal asset_mesh_updated
 
 @export_storage var join_at_lod: int = -1
-@export_storage var joined_mesh_node: Node3D
+@export_storage var joined_mesh_node: MAssetMesh
 @export_storage var joined_mesh_disabled := false
 @export_storage var hlod_resource: MHlod
 @export_storage var bake_path = "res://massets/": get = get_bake_path
@@ -23,7 +23,7 @@ class SubHlodBakeData:
 class SubBakerBakeData:
 	var sub_baker: HLod_Baker
 	var tr: Transform3D	
-
+	
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
 	hlod_resource = MHlod.new()
@@ -52,14 +52,17 @@ func bake_to_hlod_resource():
 	######################
 	## BAKE JOINED_MESH ##
 	######################
-	if not joined_mesh_disabled and join_at_lod >= 0 and is_instance_valid(joined_mesh_node) and joined_mesh_node.meshes != null and len(joined_mesh_node.meshes.meshes) != 0:
-		var mesh_array = joined_mesh_node.meshes.meshes.map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh))
-		var material_array = mesh_array.map(func(a): return -1)
-		var shadow_array = mesh_array.map(func(a): return 0)
-		var gi_array = mesh_array.map(func(a): return 0)		
+	if not joined_mesh_disabled and join_at_lod >= 0 and get_joined_mesh_id_array() != null: 		
+		var mesh_array = get_joined_mesh_id_array()		
+		var material_array = []
+		material_array.resize(len(mesh_array))
+		material_array.fill(-1)		
+		var shadow_array = material_array.map(func(a): return 0)
+		var gi_array = material_array.map(func(a): return 0)		
 		var mesh_id = hlod_resource.add_mesh_item(joined_mesh_node.transform, mesh_array, material_array, shadow_array, gi_array, 1 )		
 		if mesh_id != -1:
-			for i in range(join_at_lod, MAX_LOD):		
+			for i in range(join_at_lod, MAX_LOD):
+				print("inserting joined mesh at lod ", i)		
 				hlod_resource.insert_item_in_lod_table(mesh_id, i)		
 		else:
 			push_error("Hlod baker error: cannot add joined mesh to hlod table because mesh_id is -1")
@@ -103,7 +106,7 @@ func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
 	while stack.size()!=0:
 		var current_node = stack[-1]
 		stack.remove_at(stack.size() -1)
-		if (current_node is HLod_Baker and current_node != baker_node) or current_node == joined_mesh_node:
+		if (current_node is HLod_Baker and current_node != baker_node) or current_node == get_joined_mesh_node():
 			continue
 		if current_node is MAssetMesh:	
 			result.push_back(current_node)
@@ -151,6 +154,27 @@ func get_bake_path():
 	if not bake_path.ends_with(".res"):
 		bake_path = bake_path + name + ".res"
 	return bake_path
+	
+func get_joined_mesh():
+	var node: MAssetMesh = get_joined_mesh_node()
+	if not node: return null
+	var mesh_data = node.get_mesh_data()
+	if len(mesh_data) != 1: return null
+	var mesh_lod = mesh_data[0].get_mesh_lod()
+	if not mesh_lod: return null
+	for mesh in mesh_lod.meshes:
+		if mesh is Mesh:
+			return mesh
+	return null
+
+func get_joined_mesh_id_array():
+	var node: MAssetMesh = get_joined_mesh_node()
+	if not node: return []
+	if not asset_library.has_collection(node.collection_id): return null
+	var mesh_items = asset_library.collection_get_mesh_items_info(node.collection_id)
+	if len(mesh_items) != 1: return null
+	return mesh_items[0].mesh
+	
 #endregion
 
 #region JOINED MESH				

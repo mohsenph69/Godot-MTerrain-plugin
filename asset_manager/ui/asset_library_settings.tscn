@@ -1,0 +1,194 @@
+[gd_scene load_steps=11 format=3 uid="uid://cvkbd1wtigq55"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/asset_library_settings.gd" id="1_e10cw"]
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_s06u1"]
+[ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="2_cjh4i"]
+[ext_resource type="Texture2D" uid="uid://bo00mqw6wv8av" path="res://addons/m_terrain/icons/tag_icon.svg" id="4_0n4l3"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/manage_groups.gd" id="5_3av1a"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/manage_tags.gd" id="5_xuw7t"]
+[ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="6_0bgin"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/manage_glbs.gd" id="7_vfheg"]
+[ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="8_4gf8a"]
+[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="8_wny8y"]
+
+[node name="PanelContainer" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_s06u1")
+script = ExtResource("1_e10cw")
+
+[node name="tab_container" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="manage_groups" type="PanelContainer" parent="tab_container"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("1_s06u1")
+script = ExtResource("5_3av1a")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="tab_container/manage_groups"]
+layout_mode = 2
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="tab_container/manage_groups/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="group_names" type="VBoxContainer" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="grouping_label" type="Label" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2/group_names"]
+layout_mode = 2
+text = "Groups"
+horizontal_alignment = 1
+
+[node name="add_group_button" type="Button" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2/group_names"]
+layout_mode = 2
+text = "Add Group"
+
+[node name="group_list" type="VBoxContainer" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2/group_names"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="tab_container/manage_groups/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Tags" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer" instance=ExtResource("6_0bgin")]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="manage_tags" type="HSplitContainer" parent="tab_container"]
+visible = false
+layout_mode = 2
+split_offset = 65
+script = ExtResource("5_xuw7t")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="tab_container/manage_tags"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_tags/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="search" parent="tab_container/manage_tags/ScrollContainer/VBoxContainer" instance=ExtResource("8_wny8y")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+
+[node name="Tree" type="Tree" parent="tab_container/manage_tags/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+hide_root = true
+select_mode = 2
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="tab_container/manage_tags"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Tags" parent="tab_container/manage_tags/ScrollContainer2" instance=ExtResource("6_0bgin")]
+layout_mode = 2
+
+[node name="add_tag_button" type="Button" parent="tab_container/manage_tags/ScrollContainer2/Tags"]
+layout_mode = 2
+text = "+"
+
+[node name="manage_glbs" type="MarginContainer" parent="tab_container"]
+layout_mode = 2
+script = ExtResource("7_vfheg")
+
+[node name="HSplitContainer" type="HSplitContainer" parent="tab_container/manage_glbs"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_glbs/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="search" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer" instance=ExtResource("8_wny8y")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+
+[node name="glb_tree" type="Tree" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+hide_root = true
+select_mode = 1
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="tab_container/manage_glbs/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="search2" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2" instance=ExtResource("8_wny8y")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="glb_details" type="ItemList" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+max_columns = 10
+icon_mode = 0
+
+[node name="Control" type="Control" parent="."]
+custom_minimum_size = Vector2(81.795, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -52.0
+offset_right = 52.0
+offset_bottom = 40.0
+grow_horizontal = 2
+alignment = 1
+
+[node name="manage_groups_button" type="Button" parent="Control/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("2_cjh4i")
+expand_icon = true
+
+[node name="manage_tags_button" type="Button" parent="Control/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("4_0n4l3")
+expand_icon = true
+
+[node name="manage_glbs_button" type="Button" parent="Control/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("4_0n4l3")
+expand_icon = true
+
+[node name="close_settings_button" type="Button" parent="Control/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("8_4gf8a")
+expand_icon = true
