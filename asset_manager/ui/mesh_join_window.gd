@@ -54,9 +54,19 @@ func _ready():
 		
 	%JoinLod.value = baker.join_at_lod
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1	
-		
-	%reimport_joined_mesh_button.visible = baker.has_joined_mesh_glb()
-	%reimport_joined_mesh_button.pressed.connect(baker.update_joined_mesh_from_glb)
+						
+	set_update_mode(not baker.has_joined_mesh_glb())
+	%export_joined_mesh_toggle.toggled.connect(set_update_mode)
+
+func set_update_mode(toggle_on):
+	%node_tree.visible = toggle_on
+	%warning_label.visible = toggle_on and baker.has_joined_mesh_glb()
+	if toggle_on:
+		%export_joined_mesh_toggle.text = "Export from scene"
+	else:
+		%export_joined_mesh_toggle.text = "Reimport GLB"
+	
+	
 func build_tree(parent_node, parent_item:TreeItem):		
 	if not parent_node is Node3D: return
 	#if not parent_node.owner == baker: return
@@ -87,15 +97,17 @@ func build_tree(parent_node, parent_item:TreeItem):
 			build_tree(child, item)
 
 func commit():			
-	baker.make_joined_mesh(nodes_to_join, %JoinLod.value)
-	for node in original_nodes_to_join:
-		if not node in nodes_to_join:						
-			baker.meshes_to_join_overrides[node.name] = false
-		else:
-			baker.meshes_to_join_overrides.erase(node.name)
-	for node in nodes_to_join:
-		if not node in original_nodes_to_join:
-			baker.meshes_to_join_overrides[node.name] = true
-		else:
-			baker.meshes_to_join_overrides.erase(node.name)
-			
+	if %export_joined_mesh_toggle.button_pressed:				
+		baker.make_joined_mesh(nodes_to_join, %JoinLod.value)
+		for node in original_nodes_to_join:
+			if not node in nodes_to_join:						
+				baker.meshes_to_join_overrides[node.name] = false
+			else:
+				baker.meshes_to_join_overrides.erase(node.name)
+		for node in nodes_to_join:
+			if not node in original_nodes_to_join:
+				baker.meshes_to_join_overrides[node.name] = true
+			else:
+				baker.meshes_to_join_overrides.erase(node.name)
+	else:
+		baker.update_joined_mesh_from_glb()

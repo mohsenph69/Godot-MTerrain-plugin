@@ -1,18 +1,21 @@
-[gd_scene load_steps=6 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=7 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_6s11i"]
 viewport_path = NodePath("SubViewport")
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_srhel"]
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_rp5cl"]
 
-[sub_resource type="Sky" id="Sky_4v12r"]
-sky_material = SubResource("ProceduralSkyMaterial_srhel")
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_5026g"]
+sky_energy_multiplier = 2.4
 
-[sub_resource type="Environment" id="Environment_0l3th"]
-sky = SubResource("Sky_4v12r")
-ambient_light_source = 3
+[sub_resource type="Sky" id="Sky_ogdcp"]
+sky_material = SubResource("ProceduralSkyMaterial_5026g")
+
+[sub_resource type="Environment" id="Environment_t186p"]
+background_mode = 2
+sky = SubResource("Sky_ogdcp")
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
 offset_right = 323.0
@@ -78,6 +81,10 @@ own_world_3d = true
 
 [node name="joined_mesh_preview" type="MeshInstance3D" parent="SubViewport"]
 unique_name_in_owner = true
+mesh = SubResource("CapsuleMesh_rp5cl")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewport"]
+environment = SubResource("Environment_t186p")
 
 [node name="joined_mesh_preview_camera_pivot" type="Node3D" parent="SubViewport"]
 unique_name_in_owner = true
@@ -86,6 +93,3 @@ transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 
 [node name="joined_mesh_preview_camera" type="Camera3D" parent="SubViewport/joined_mesh_preview_camera_pivot"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 2.583, 3.095)
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewport"]
-environment = SubResource("Environment_0l3th")

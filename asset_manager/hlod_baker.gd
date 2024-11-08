@@ -9,6 +9,9 @@ signal asset_mesh_updated
 @export_storage var hlod_resource: MHlod
 @export_storage var bake_path = "res://massets/": get = get_bake_path
 @export_storage var meshes_to_join_overrides := {}
+@export_storage var force_lod_enabled := false
+@export_storage var force_lod_value := 0
+
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
@@ -25,6 +28,7 @@ class SubBakerBakeData:
 	var tr: Transform3D	
 
 func force_lod(lod:int):
+	force_lod_value = lod	
 	if lod == -1:
 		asset_mesh_updater.update_auto_lod()
 		activate_mesh_updater()		
@@ -53,13 +57,13 @@ func bake_to_hlod_resource():
 			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_array, shadow_array, gi_array, 1 )
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
-			var i = -1
+			var i = 0			
 			var max = join_at_lod if join_at_lod >= 0 else MAX_LOD		
-			while i < max:
-				i += 1
+			while i < max:				
 				if mesh_array[min(i, len(mesh_array)-1) ] != -1:
 					hlod_resource.insert_item_in_lod_table(mesh_id, i)
-						
+				i += 1
+							
 	######################
 	## BAKE JOINED_MESH ##
 	######################
