@@ -1,11 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=8 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_6s11i"]
 viewport_path = NodePath("SubViewport")
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_rp5cl"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_5026g"]
 sky_energy_multiplier = 2.4
@@ -16,6 +14,11 @@ sky_material = SubResource("ProceduralSkyMaterial_5026g")
 [sub_resource type="Environment" id="Environment_t186p"]
 background_mode = 2
 sky = SubResource("Sky_ogdcp")
+
+[sub_resource type="World3D" id="World3D_mobyx"]
+environment = SubResource("Environment_t186p")
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_rp5cl"]
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
 offset_right = 323.0
@@ -83,13 +86,11 @@ text = "Remove"
 
 [node name="SubViewport" type="SubViewport" parent="."]
 own_world_3d = true
+world_3d = SubResource("World3D_mobyx")
 
 [node name="joined_mesh_preview" type="MeshInstance3D" parent="SubViewport"]
 unique_name_in_owner = true
 mesh = SubResource("CapsuleMesh_rp5cl")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewport"]
-environment = SubResource("Environment_t186p")
 
 [node name="joined_mesh_preview_camera_pivot" type="Node3D" parent="SubViewport"]
 unique_name_in_owner = true

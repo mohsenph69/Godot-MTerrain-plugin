@@ -42,6 +42,7 @@ size_flags_vertical = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
+button_pressed = true
 text = "Export from scene"
 
 [node name="warning_label" type="Label" parent="PanelContainer/VBoxContainer/VBoxContainer"]

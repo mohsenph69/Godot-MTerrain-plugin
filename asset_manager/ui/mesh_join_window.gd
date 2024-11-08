@@ -99,6 +99,8 @@ func build_tree(parent_node, parent_item:TreeItem):
 			build_tree(child, item)
 
 func commit():			
+	baker.join_at_lod = %JoinLod.value
+	print(baker.join_at_lod)
 	if %export_joined_mesh_toggle.button_pressed:				
 		baker.make_joined_mesh(nodes_to_join, %JoinLod.value)
 		for node in original_nodes_to_join:

@@ -10,7 +10,7 @@ signal asset_mesh_updated
 @export_storage var bake_path = "res://massets/": get = get_bake_path
 @export_storage var meshes_to_join_overrides := {}
 @export_storage var force_lod_enabled := false
-@export_storage var force_lod_value := 0
+@export_storage var force_lod_value: int
 
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
@@ -28,7 +28,7 @@ class SubBakerBakeData:
 	var tr: Transform3D	
 
 func force_lod(lod:int):
-	force_lod_value = lod	
+	force_lod_value = lod		
 	if lod == -1:
 		asset_mesh_updater.update_auto_lod()
 		activate_mesh_updater()		
@@ -227,29 +227,33 @@ func has_joined_mesh_glb()->bool:
 func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
 	var mesh_lod = a.get_mesh_lod()
 	var lod_to_use = min(join_at_lod, len(mesh_lod.meshes)-1)	
+	print("lod to use for join: ",lod_to_use, " join at lod: ", join_at_lod, " mesh items: ", len(mesh_lod.meshes)-1)
 	while lod_to_use >-1 and mesh_lod.meshes[lod_to_use] == null:
 		lod_to_use -= 1
+	if lod_to_use == -1: return null
 	var mesh = mesh_lod.meshes[lod_to_use]
-	return null if lod_to_use == -1 or mesh.get_surface_count() == 0 else mesh_lod.meshes[lod_to_use]		
+	return null if mesh.get_surface_count() == 0 else mesh_lod.meshes[lod_to_use]		
 	
 func update_joined_mesh_from_glb():
 	var glb_path = get_joined_mesh_glb_path()
-	if FileAccess.file_exists(glb_path):		
-		AssetIO.glb_load(glb_path,{}, true)		
-		if asset_library.import_info.has(glb_path):
-			var import_info = {}
-			for key in asset_library.import_info[glb_path].keys():
-				if key.begins_with("__"): continue
-				import_info[key] = asset_library.import_info[glb_path][key]				
-			if len(import_info.keys()) != 1:
-				push_error("trying to update join mesh from glb but after import it doesn't have correct collection count")		
-			joined_mesh_collection_id = asset_library.import_info[glb_path].values()[0].id
-			asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
-			asset_library.collection_add_tag(joined_mesh_collection_id, 0) #add "hidden" tag
-		else:
-			push_error("joined mesh glb loaded, but import info does not have glb path ", glb_path)
-	else:
-		push_error("trying to update joined mesh from glb, but glb does not exist at ", glb_path)
+	print(asset_mesh_updater.get_join_at_lod())
+	if not FileAccess.file_exists(glb_path):		
+		push_error("trying to update joined mesh from glb, but glb does not exist at ", glb_path)	
+		return
+	AssetIO.glb_load(glb_path,{}, true)		
+	if not asset_library.import_info.has(glb_path):
+		push_error("joined mesh glb loaded, but import info does not have glb path ", glb_path)
+		return
+	var import_info = {}
+	for key in asset_library.import_info[glb_path].keys():
+		if key.begins_with("__"): continue
+		import_info[key] = asset_library.import_info[glb_path][key]				
+	if len(import_info.keys()) != 1:
+		push_error("trying to update join mesh from glb but after import it doesn't have correct collection count")		
+	joined_mesh_collection_id = asset_library.import_info[glb_path].values()[0].id
+	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id			
+	asset_library.collection_add_tag(joined_mesh_collection_id, 0) #add "hidden" tag	
+
 			
 func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):				
 	if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
