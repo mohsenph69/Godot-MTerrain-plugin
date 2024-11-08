@@ -111,3 +111,4 @@ func commit():
 				baker.meshes_to_join_overrides.erase(node.name)
 	else:
 		baker.update_joined_mesh_from_glb()
+	queue_free()

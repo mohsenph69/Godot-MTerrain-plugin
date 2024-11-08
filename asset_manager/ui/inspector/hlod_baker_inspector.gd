@@ -35,7 +35,12 @@ func _ready():
 	%disable_joined_mesh_button.button_pressed = baker.joined_mesh_disabled 
 	%joined_mesh_preview.mesh = baker.get_joined_mesh()	
 	%joined_mesh_thumbnail.gui_input.connect(on_thumbnail_gui_input)
-
+	%remove_joined_mesh.pressed.connect(func():
+		if %remove_joined_mesh.text == "Remove":
+			%remove_joined_mesh.text = "Are you sure? this will delete the glb file for this joined mesh"
+		else:
+			baker.remove_joined_mesh()
+	)
 func show_join_mesh_window():	
 	var window = preload("res://addons/m_terrain/asset_manager/ui/mesh_join_window.tscn").instantiate()	
 	window.baker = baker

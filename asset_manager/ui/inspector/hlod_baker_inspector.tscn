@@ -76,6 +76,11 @@ grow_vertical = 0
 text = "Disable joined mesh"
 alignment = 2
 
+[node name="remove_joined_mesh" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Remove"
+
 [node name="SubViewport" type="SubViewport" parent="."]
 own_world_3d = true
 
