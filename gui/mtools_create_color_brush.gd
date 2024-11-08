@@ -153,4 +153,3 @@ func load_brush(layer_group, bname, bicon, data={}):
 		paint256.value_changed(data.paint256Layer)
 	create_button.text = "Update"
 	is_update_mode = true
-

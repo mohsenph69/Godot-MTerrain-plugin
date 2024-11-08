@@ -124,8 +124,6 @@ _data = {
 [node name="House1_hlod" type="Node3D"]
 script = ExtResource("1_y0djt")
 join_at_lod = 3
-joined_mesh_node = Object(MAssetMesh,"collection_id":5,"lod_limit":-1,"_import_path":NodePath(""),"unique_name_in_owner":false,"process_mode":0,"process_priority":0,"process_physics_priority":0,"process_thread_group":0,"physics_interpolation_mode":0,"auto_translate_mode":0,"editor_description":"","transform":Transform3D(10.186, 0, 0, 0, 2.72996, 0, 0, 0, 10.186, 0, 2.60217, 0),"rotation_edit_mode":0,"rotation_order":2,"top_level":false,"visible":true,"visibility_parent":NodePath(""),"script":null)
-
 hlod_resource = SubResource("MHlod_f3064")
 bake_path = "res://massets/House1_hlod.res"
 metadata/extras = true
@@ -134,52 +132,42 @@ metadata/tags = []
 
 [node name="Wall1_005" type="MAssetMesh" parent="."]
 collection_id = 2
-lod_limit = 3
 transform = Transform3D(0, 0, 107.291, 0, 0.149278, 0, -10.2671, 0, 0, 0, -0.292326, 0)
 
 [node name="Wall1_004" type="MAssetMesh" parent="."]
 collection_id = 2
-lod_limit = 3
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, 10.3008, 0, 0)
 
 [node name="Wall1_003" type="MAssetMesh" parent="."]
 collection_id = 2
-lod_limit = 3
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, -10.0452, 0, 0)
 
 [node name="Wall1_002" type="MAssetMesh" parent="."]
 collection_id = 2
-lod_limit = 3
 transform = Transform3D(10.2671, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.35473)
 
 [node name="Wall1_001" type="MAssetMesh" parent="."]
 collection_id = 2
-lod_limit = 3
 transform = Transform3D(9.30696, 0, 0, 0, 1, 0, 0, 0, 1, 1.08067, 0, -8.67685)
 
 [node name="Table1_004" type="MAssetMesh" parent="."]
 collection_id = 4
-lod_limit = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, 5.32449)
 
 [node name="Table1_003" type="MAssetMesh" parent="."]
 collection_id = 4
-lod_limit = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, -5.59739)
 
 [node name="Table1_002" type="MAssetMesh" parent="."]
 collection_id = 4
-lod_limit = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.46363, 0, 0)
 
 [node name="Table1_001" type="MAssetMesh" parent="."]
 collection_id = 4
-lod_limit = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.36793, 0, 0)
 
 [node name="Sphere1_001" type="MAssetMesh" parent="."]
 collection_id = 3
-lod_limit = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0325475, 4.37643, 0)
 
 [node name="House1_hlod_joined_mesh" type="MAssetMesh" parent="."]

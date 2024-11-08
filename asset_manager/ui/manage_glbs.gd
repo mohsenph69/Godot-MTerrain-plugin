@@ -43,9 +43,10 @@ func init_tree():
 		if glb_path.begins_with("__"): continue
 		var item = root.create_child()
 		item.set_text(0, glb_path)		
-		var image := Image.load_from_file("res://addons/m_terrain/icons/icon_close.svg")
+		var texture:Texture2D = load("res://addons/m_terrain/icons/icon_close.svg")
+		var image := texture.get_image()
 		image.resize(32,32)
-		var texture := ImageTexture.create_from_image(image)				
+		texture = ImageTexture.create_from_image(image)				
 		texture.get_image().resize(12,12)
 		item.add_button(1, texture)
 		

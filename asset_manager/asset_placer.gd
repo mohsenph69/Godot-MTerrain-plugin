@@ -166,27 +166,14 @@ func collection_item_activated(id, group_list:ItemList):
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	if len(selected_nodes) != 1:
-		scene_root.add_child(node)
-		if scene_root is HLod_Baker:
-			update_lod_limit(node)
+		scene_root.add_child(node)		
 	else:
 		var parent = selected_nodes[0]
 		while parent is MAssetMesh and parent != scene_root:
 			parent = parent.get_parent()			
-		selected_nodes[0].add_child(node)
-		update_lod_limit(node)
+		selected_nodes[0].add_child(node)	
 	node.owner = EditorInterface.get_edited_scene_root()
 	node.name = group_list.get_item_text(id)	
-
-func update_lod_limit(node_added: Node3D):	
-	if not node_added.is_inside_tree():
-		return
-	var hlod_baker = node_added
-	while not hlod_baker is HLod_Baker and not hlod_baker == EditorInterface.get_edited_scene_root():
-		hlod_baker = hlod_baker.get_parent()
-	if hlod_baker is HLod_Baker:		
-		for child:MAssetMesh in node_added.find_children("*", "MAssetMesh", true, false):
-			child.lod_limit = hlod_baker.join_at_lod
 	
 func process_selection(who:ItemList, id, selected):
 	current_selection = []

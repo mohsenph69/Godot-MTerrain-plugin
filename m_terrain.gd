@@ -28,6 +28,8 @@ var loaded_scenes = []
 
 var gltf_extras_importer
 
+var asset_table
+
 func check_restart():
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
 		if needs_restart:
@@ -70,9 +72,19 @@ func remove_keymap():
 		InputMap.erase_action(action.name)
 #endregion
 
+func init_asset_table():
+	var path = MAssetTable.get_asset_table_path()
+	if ResourceLoader.exists(path):
+		asset_table = ResourceLoader.load(path)
+	if not asset_table:
+		asset_table = MAssetTable.new()
+	asset_table.initialize_mesh_hashes()
+	MAssetTable.set_singleton(asset_table)
+
 #region init and de-init
 func _enter_tree():		
 	if Engine.is_editor_hint():	
+		init_asset_table()
 		timer.one_shot = true
 		timer.timeout.connect(check_restart)
 		add_child(timer)
@@ -126,25 +138,22 @@ func _enter_tree():
 		inspector_mpath.gizmo = gizmo_mpath
 		add_inspector_plugin(inspector_mpath)
 				
-		add_keymap()		
+		add_keymap()				
 		
 		asset_browser = load("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
 		add_control_to_bottom_panel(asset_browser, "Assets")
+		
 		asset_browser_inspector_plugin = load("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
 		add_inspector_plugin(asset_browser_inspector_plugin)
 		gltf_extras_importer = GLTFExtras.new()
-		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)
-		scene_saved.connect(func(_path):
-			var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))				
-			ResourceSaver.save(asset_library, asset_library.resource_path)
-		)
+		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)		
 	
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
-	EditorInterface.set_main_screen_editor("3D")
+	EditorInterface.set_main_screen_editor("3D")	
 	
 func _exit_tree():	
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint():				
 		timer.queue_free()
 		remove_keymap()	
 		remove_tool_menu_item("MTerrain import/export")
@@ -163,18 +172,15 @@ func _exit_tree():
 		remove_node_3d_gizmo_plugin(gizmo_masset_mesh)
 		remove_node_3d_gizmo_plugin(gizmo_moctmesh)
 		remove_node_3d_gizmo_plugin(gizmo_mpath)
-		
-		### Inspector
-		remove_inspector_plugin(inspector_mpath)
 				
-		remove_control_from_bottom_panel(asset_browser)
-		remove_inspector_plugin(asset_browser_inspector_plugin)
-		var asset_library = MAssetTable.get_singleton()#load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
-		ResourceSaver.save(asset_library, asset_library.resource_path)
-		GLTFDocument.unregister_gltf_document_extension(gltf_extras_importer)
-		#GLTFDocument.unregister_gltf_document_extension(MLOD_Mesh_Importer)
-		#remove_import_plugin(MLOD_Mesh_Importer)
+				
+		### Inspector
+		remove_inspector_plugin(inspector_mpath)						
+		remove_control_from_bottom_panel(asset_browser)		
 		
+		remove_inspector_plugin(asset_browser_inspector_plugin)
+		MAssetTable.set_singleton(null)
+		GLTFDocument.unregister_gltf_document_extension(gltf_extras_importer)		
 #endregion
 
 func _on_main_screen_changed(screen_name):

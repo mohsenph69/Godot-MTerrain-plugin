@@ -98,8 +98,11 @@ var walking_terrain = false
 var editor_camera: Camera3D = null #this is set by forward_gui_input
 var walk_speed = 5 #in meters per seccond
 
+var is_initial_size_set := false
+
 #region Initialisations
 func _ready():	
+	if EditorInterface.get_edited_scene_root() == self: return
 	timer = Timer.new()
 	timer.timeout.connect(func(): current_popup_button.button_pressed = false)
 	add_child(timer)
@@ -577,8 +580,6 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
 	
-	
-
 func draw(brush_position):		
 	if active_object is MGrass:
 		active_object.draw_grass(brush_position,brush_decal.radius,brush_popup_button.is_grass_add)
@@ -597,7 +598,6 @@ func draw(brush_position):
 			push_warning("trying to 'draw' on mterrain, but not in sculpt or paint mode")
 	else:
 		print("draw mterrain fail: active object is ", active_object.name)	
-
 
 func remove_image(active_terrain, dname):
 	var is_grid_created = active_terrain.is_grid_created()
@@ -650,8 +650,6 @@ func remove_image(active_terrain, dname):
 	set_edit_mode(null,null)
 	#todo: dont' exit edit mode, just change layer selection to 0 or -1
 
-
-
 #region responding to signals
 func _on_human_male_toggled(button_pressed):	
 	edit_human_position = true
@@ -674,16 +672,20 @@ func _on_image_creator_button_pressed():
 #endregion	
 
 #region theme: sizes and colors etc
-func _on_resized():			
-	if not has_node("VSplitContainer") or not mtools_root:
-		call_deferred( "_on_resized" )	
+func _on_resized():				
+	if not is_node_ready():
+		_on_resized.call_deferred()
 		return
-	var vsplit  = $VSplitContainer
+	if not is_initial_size_set:
+		is_initial_size_set = true
+		_on_resized.call_deferred()
+	if not has_node("VSplitContainer") or not mtools_root:		
+		return
+	var vsplit:VSplitContainer  = $VSplitContainer
 	var max_size = get_viewport_rect().size.y / 16 + 2
-	var min_size = get_viewport_rect().size.y / 32
-	vsplit.size.y = max_size
-	vsplit.position.y = -vsplit.size.y
-	#print(vsplit.split_offset, " and minsize: ", min_size, " and max: ", max_size)
+	var min_size = get_viewport_rect().size.y / 32	
+	#vsplit.size.y = max_size
+	vsplit.position.y = -vsplit.size.y	
 	vsplit.split_offset = clamp(vsplit.split_offset, -max_size,-min_size)
 	resize_children_recursive(mtools_root, clamp(mtools_root.size.y, min_size, max_size ))
 	theme.default_font_size = clamp( clamp(mtools_root.size.y, min_size, max_size) /2 , 12,32)

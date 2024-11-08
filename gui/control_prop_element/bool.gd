@@ -7,7 +7,7 @@ var prop_name:String
 var value:bool
 
 
-func set_name(input:String):
+func update_name(input:String):
 	prop_name = input
 	$label.text = input
 

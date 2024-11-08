@@ -372,7 +372,7 @@ func process_input(event):
 #endregion
 
 
-func _on_resized():	
+func _on_resized():		
 	var vbox = get_child(0)
 	var settings = find_child("brush_settings_panel")
 	settings.custom_minimum_size.x = global_position.x-owner.global_position.x

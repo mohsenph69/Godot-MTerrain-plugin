@@ -7,7 +7,7 @@ extends Window
 var baker: HLod_Baker
 var nodes_to_join = []	
 var original_nodes_to_join = []
-	
+
 func _ready():
 	if EditorInterface.get_edited_scene_root() == self: return
 	commit_button.pressed.connect(commit)
@@ -53,14 +53,11 @@ func _ready():
 			#if import_info[joined_mesh_glb_path]["__metadata"].has
 		
 	%JoinLod.value = baker.join_at_lod
-	%JoinLod.max_value = AssetIO.LOD_COUNT-1
-	%JoinLod.value_changed.connect(func(value): 
-		baker.join_at_lod = value				
-		baker.update_joined_mesh_limits()		
-	)	
-
-func build_tree(parent_node, parent_item:TreeItem):	
-	if parent_node == baker.get_joined_mesh_node(): return	
+	%JoinLod.max_value = AssetIO.LOD_COUNT-1	
+		
+	%reimport_joined_mesh_button.visible = baker.has_joined_mesh_glb()
+	%reimport_joined_mesh_button.pressed.connect(baker.update_joined_mesh_from_glb)
+func build_tree(parent_node, parent_item:TreeItem):		
 	if not parent_node is Node3D: return
 	#if not parent_node.owner == baker: return
 	var item := parent_item.create_child()		
@@ -89,8 +86,8 @@ func build_tree(parent_node, parent_item:TreeItem):
 		for child in parent_node.get_children():
 			build_tree(child, item)
 
-func commit():		
-	baker.make_joined_mesh(nodes_to_join)
+func commit():			
+	baker.make_joined_mesh(nodes_to_join, %JoinLod.value)
 	for node in original_nodes_to_join:
 		if not node in nodes_to_join:						
 			baker.meshes_to_join_overrides[node.name] = false

@@ -33,6 +33,7 @@ func _ready():
 		max_width = min(max_width, owner.mtools_root.get_child(0).size.x)		
 		panel.custom_minimum_size.x = max_width
 		panel.size.x = max_width
+		#panel.set_deferred("size", Vector2(max_width, panel.size.y))
 	)
 	
 	merge_height_layers_button.pressed.connect(merge_all_heightmap_layers)

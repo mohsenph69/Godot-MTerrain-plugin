@@ -71,7 +71,7 @@ func change_size(amount:float):
 	is_dirty = true
 	set_absolute_terrain_pos(position)
 
-func set_size(value):	
+func set_mask_size(value):	
 	if current_size < active_terrain.get_h_scale():
 		current_size = active_terrain.min_h_scale
 	current_size = value * active_terrain.get_h_scale()
@@ -89,7 +89,6 @@ func _process(delta):
 	if (desire_position - position).length() < 0.01:
 		set_process(false)
 	position = position.lerp(desire_position,0.15)
-
 
 func set_mask(img:Image,tex:Texture2D):
 	#image_rotation = 0

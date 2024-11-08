@@ -45,6 +45,11 @@ alignment = 1
 layout_mode = 2
 text = "Cancel"
 
+[node name="reimport_joined_mesh_button" type="Button" parent="PanelContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reimport Existing "
+
 [node name="commit_button" type="Button" parent="PanelContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-text = "Join Meshes"
+text = "Create Joined Mesh"

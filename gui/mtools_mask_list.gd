@@ -39,8 +39,8 @@ func load_images(mask_decal):
 		if allowed_extension.has(f.get_extension()):
 			files_path.push_back(brush_masks_dir.path_join(f))
 	## Creating image and texture
-	for p in files_path:
-		var img = Image.load_from_file(p)
+	for p in files_path:		
+		var img = Image.load_from_file(ProjectSettings.globalize_path(p))
 		img.convert(Image.FORMAT_RF)
 		if img:
 			images.push_back(img)

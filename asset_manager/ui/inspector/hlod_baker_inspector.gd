@@ -13,6 +13,18 @@ func _ready():
 	)
 	%Join.tooltip_text = str(baker.meshes_to_join_overrides)
 	
+	%force_lod_checkbox.toggled.connect(func(toggle_on):
+		%force_lod_value.editable = toggle_on
+		if toggle_on:			
+			baker.force_lod(%force_lod_value.value)		
+		else:
+			baker.force_lod(-1)
+	)
+	%force_lod_value.max_value = AssetIO.LOD_COUNT-1
+	%force_lod_value.value_changed.connect(func(value):
+		baker.force_lod(value)
+	)
+	
 	#%joined_mesh_thumbnail.texture = baker.get_joined_mesh_thumbnail()
 	%disable_joined_mesh_button.toggled.connect(baker.toggle_joined_mesh_disabled)
 	if not baker.joined_mesh_disabled:

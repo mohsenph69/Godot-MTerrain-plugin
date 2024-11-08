@@ -31,7 +31,7 @@ func set_soft_min(input):
 func set_step(input):
 	slider.step = input
 
-func set_name(input:String):
+func update_name(input:String):
 	prop_name = input
 	label.text = input
 

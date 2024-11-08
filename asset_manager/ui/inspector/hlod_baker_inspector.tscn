@@ -1,10 +1,18 @@
-[gd_scene load_steps=4 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=6 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
-[ext_resource type="ArrayMesh" uid="uid://cmdh23b75qgsa" path="res://massets/meshes/46.res" id="2_6aylo"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_6s11i"]
 viewport_path = NodePath("SubViewport")
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_srhel"]
+
+[sub_resource type="Sky" id="Sky_4v12r"]
+sky_material = SubResource("ProceduralSkyMaterial_srhel")
+
+[sub_resource type="Environment" id="Environment_0l3th"]
+sky = SubResource("Sky_4v12r")
+ambient_light_source = 3
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
 offset_right = 323.0
@@ -26,6 +34,21 @@ text = "Bake"
 unique_name_in_owner = true
 layout_mode = 2
 text = "Joined Mesh Settings"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+alignment = 1
+
+[node name="force_lod_checkbox" type="CheckBox" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Force Lod"
+
+[node name="force_lod_value" type="SpinBox" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10.0
+editable = false
 
 [node name="joined_mesh_thumbnail" type="TextureRect" parent="."]
 unique_name_in_owner = true
@@ -51,10 +74,10 @@ text = "Disable joined mesh"
 alignment = 2
 
 [node name="SubViewport" type="SubViewport" parent="."]
+own_world_3d = true
 
 [node name="joined_mesh_preview" type="MeshInstance3D" parent="SubViewport"]
 unique_name_in_owner = true
-mesh = ExtResource("2_6aylo")
 
 [node name="joined_mesh_preview_camera_pivot" type="Node3D" parent="SubViewport"]
 unique_name_in_owner = true
@@ -63,3 +86,6 @@ transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 
 [node name="joined_mesh_preview_camera" type="Camera3D" parent="SubViewport/joined_mesh_preview_camera_pivot"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 2.583, 3.095)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewport"]
+environment = SubResource("Environment_0l3th")

@@ -4,7 +4,7 @@ class_name HLod_Baker extends Node3D
 signal asset_mesh_updated
 
 @export_storage var join_at_lod: int = -1
-@export_storage var joined_mesh_node: MAssetMesh
+@export_storage var joined_mesh_collection_id := -1
 @export_storage var joined_mesh_disabled := false
 @export_storage var hlod_resource: MHlod
 @export_storage var bake_path = "res://massets/": get = get_bake_path
@@ -23,11 +23,22 @@ class SubHlodBakeData:
 class SubBakerBakeData:
 	var sub_baker: HLod_Baker
 	var tr: Transform3D	
-	
+
+func force_lod(lod:int):
+	if lod == -1:
+		asset_mesh_updater.update_auto_lod()
+		activate_mesh_updater()		
+	else:		
+		asset_mesh_updater.update_force_lod(lod)
+		deactivate_mesh_updater()
+		
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
 	hlod_resource = MHlod.new()
 	hlod_resource.set_baker_path(scene_file_path)		
+
+	var join_at_lod = asset_mesh_updater.get_join_at_lod()
+	
 	#################
 	## BAKE MESHES ##
 	#################
@@ -52,14 +63,14 @@ func bake_to_hlod_resource():
 	######################
 	## BAKE JOINED_MESH ##
 	######################
-	if not joined_mesh_disabled and join_at_lod >= 0 and get_joined_mesh_id_array() != null: 		
-		var mesh_array = get_joined_mesh_id_array()		
+	var joined_mesh_array = asset_mesh_updater.get_joined_mesh_ids()	
+	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
-		material_array.resize(len(mesh_array))
+		material_array.resize(len(joined_mesh_array))
 		material_array.fill(-1)		
 		var shadow_array = material_array.map(func(a): return 0)
-		var gi_array = material_array.map(func(a): return 0)		
-		var mesh_id = hlod_resource.add_mesh_item(joined_mesh_node.transform, mesh_array, material_array, shadow_array, gi_array, 1 )		
+		var gi_array = material_array.map(func(a): return 0)				
+		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, material_array, shadow_array, gi_array, 1 )		
 		if mesh_id != -1:
 			for i in range(join_at_lod, MAX_LOD):
 				print("inserting joined mesh at lod ", i)		
@@ -106,7 +117,7 @@ func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
 	while stack.size()!=0:
 		var current_node = stack[-1]
 		stack.remove_at(stack.size() -1)
-		if (current_node is HLod_Baker and current_node != baker_node) or current_node == get_joined_mesh_node():
+		if (current_node is HLod_Baker and current_node != baker_node):
 			continue
 		if current_node is MAssetMesh:	
 			result.push_back(current_node)
@@ -156,29 +167,20 @@ func get_bake_path():
 	return bake_path
 	
 func get_joined_mesh():
-	var node: MAssetMesh = get_joined_mesh_node()
-	if not node: return null
-	var mesh_data = node.get_mesh_data()
-	if len(mesh_data) != 1: return null
-	var mesh_lod = mesh_data[0].get_mesh_lod()
-	if not mesh_lod: return null
-	for mesh in mesh_lod.meshes:
-		if mesh is Mesh:
-			return mesh
-	return null
-
-func get_joined_mesh_id_array():
-	var node: MAssetMesh = get_joined_mesh_node()
-	if not node: return []
-	if not asset_library.has_collection(node.collection_id): return null
-	var mesh_items = asset_library.collection_get_mesh_items_info(node.collection_id)
-	if len(mesh_items) != 1: return null
-	return mesh_items[0].mesh
+	var join_at_lod = asset_mesh_updater.get_join_at_lod()
+	if join_at_lod == -1: return null
+	var mesh_lod = asset_mesh_updater.get_mesh_lod() 
+	return mesh_lod.meshes[join_at_lod]
 	
+func get_joined_mesh_id_array():		
+	if not asset_library.has_collection(asset_mesh_updater.joined_mesh_collection_id): return null
+	var mesh_items = asset_library.collection_get_mesh_items_info(asset_mesh_updater.joined_mesh_collection_id)
+	if len(mesh_items) != 1: return null
+	return mesh_items[0].mesh	
 #endregion
 
 #region JOINED MESH				
-func make_joined_mesh(nodes_to_join):	
+func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):	
 	var root_node = Node3D.new()
 	root_node.name = "root_node"
 	var mesh_instance = MeshInstance3D.new()
@@ -198,36 +200,25 @@ func make_joined_mesh(nodes_to_join):
 	mesh_joiner.insert_mesh_data(mesh_array, transforms, transforms.map(func(a): return -1))		
 	mesh_instance.mesh = mesh_joiner.join_meshes()						
 	mesh_instance.mesh.resource_name = mesh_instance.name			
-	var glb_path = get_joined_mesh_path()
-	print(glb_path)						
-	AssetIO.glb_export(root_node, glb_path)
+	var glb_path = get_joined_mesh_glb_path()					
+	AssetIO.glb_export(root_node, glb_path)		
 	root_node.queue_free()
-	update_joined_mesh_limits()
-	var import_info = asset_library.import_info		
-	if not import_info.has(glb_path):
-		import_info[glb_path] = {"__metadata":{}}		
-	if not import_info[glb_path].has("__metadata"):
-		import_info[glb_path]["__metadata"] = {}			
-	import_info[glb_path]["__metadata"]["baker_path"] = scene_file_path			
-	var glb_node_name = AssetIO.node_parse_name( mesh_instance ).name
 	
-	if not asset_library.finish_import.is_connected(finish_import.bind(glb_node_name)):
-		asset_library.finish_import.connect(finish_import.bind(glb_node_name))	
-	AssetIO.glb_load(glb_path, import_info[glb_path]["__metadata"], true)				
+	#################################
+	## IMPORT GLB WE JUST EXPORTED ##
+	#################################	
+	update_joined_mesh_from_glb()
 	
-
-func import_joined_mesh_glb():
-	var joined_mesh_glb_path = get_joined_mesh_path()
-	if FileAccess.file_exists(joined_mesh_glb_path):
-		var metadata = asset_library.import_info[joined_mesh_glb_path]["__metadata"]
-		AssetIO.glb_load(get_joined_mesh_path(), metadata, true)
-		asset_library.finish_import.connect(finish_import)
-
-func get_joined_mesh_path():	
+func get_joined_mesh_glb_path()->String:	
 	if FileAccess.file_exists(scene_file_path):
 		return scene_file_path.get_basename() + "_joined_mesh.glb"
-	else:		
+	elif owner is HLod_Baker and FileAccess.file_exists(owner.scene_file_path):		
 		return owner.scene_file_path.get_basename() + "_" + name + "_joined_mesh.glb"
+	return ""
+
+func has_joined_mesh_glb()->bool:
+	var path = get_joined_mesh_glb_path()	
+	return path != "" and FileAccess.file_exists(path)
 
 func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
 	var mesh_lod = a.get_mesh_lod()
@@ -236,39 +227,21 @@ func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
 		lod_to_use -= 1
 	var mesh = mesh_lod.meshes[lod_to_use]
 	return null if lod_to_use == -1 or mesh.get_surface_count() == 0 else mesh_lod.meshes[lod_to_use]		
-
-func update_joined_mesh_limits(limit = join_at_lod):		
-	for node in get_all_masset_mesh_nodes(self, get_children()):		
-		node.lod_limit = limit
-
-func get_joined_mesh_node():
-	if is_instance_valid(joined_mesh_node): return joined_mesh_node
-	joined_mesh_node = find_child("*_joined_mesh*")	
-	if is_instance_valid(joined_mesh_node): return joined_mesh_node
-	return null
 	
-func finish_import(glb_path, glb_collection_name=""):
-	#CHECK IF IS JOINED MESH
-	if not "_joined_mesh" in glb_collection_name:
-		return					
-	var node = get_joined_mesh_node() if get_joined_mesh_node() else MAssetMesh.new()	
-	
-	if asset_library.import_info.has(glb_path) and asset_library.import_info[glb_path].has(glb_collection_name):		
-		node.collection_id = asset_library.import_info[glb_path][glb_collection_name].id	
-	if not node in get_children():
-		if node.get_parent():
-			node.reparent(self)
-			node.owner = self if scene_file_path else owner
-		else:
-			add_child(node)		
-		node.name = glb_collection_name
-		node.owner = self if scene_file_path else owner
-	asset_library.collection_add_tag(node.collection_id, 0)				
-	asset_library.finish_import.disconnect(finish_import)	
-	for id in asset_library.collection_get_mesh_items_info(node.collection_id)[0].mesh:
-		if id != -1:			
-			EditorInterface.get_resource_previewer().queue_resource_preview(MHlod.get_mesh_path(id),self, "save_thumbnail", node.collection_id)
-			break	
+func update_joined_mesh_from_glb():
+	var glb_path = get_joined_mesh_glb_path()
+	if FileAccess.file_exists(glb_path):		
+		AssetIO.glb_load(glb_path,{}, true)		
+		if asset_library.import_info.has(glb_path):
+			var import_info = {}
+			for key in asset_library.import_info[glb_path].keys():
+				if key.begins_with("__"): continue
+				import_info[key] = asset_library.import_info[glb_path][key]				
+			if len(import_info.keys()) != 1:
+				push_error("trying to updtae join mesh from glb but after import it doesn't have correct collection count")		
+			joined_mesh_collection_id = asset_library.import_info[glb_path].values()[0].id
+			asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
+			asset_library.collection_add_tag(joined_mesh_collection_id, 0) #add "hidden" tag
 			
 func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):				
 	if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
@@ -287,10 +260,7 @@ func resources_reimported(paths):
 	notify_property_list_changed()
 
 func get_joined_mesh_thumbnail():
-	joined_mesh_node = get_joined_mesh_node()	
-	if not is_instance_valid(joined_mesh_node): return null
-	if not joined_mesh_node is MAssetMesh: return null	
-	var path = str("res://massets/thumbnails/", joined_mesh_node.collection_id, ".png")
+	var path = str("res://massets/thumbnails/", asset_mesh_updater.joined_mesh_collection_id, ".png")
 	if FileAccess.file_exists(path):
 		return load(path)
 	else:
@@ -299,9 +269,9 @@ func get_joined_mesh_thumbnail():
 func toggle_joined_mesh_disabled(toggle_on):
 	joined_mesh_disabled = toggle_on
 	if toggle_on:
-		update_joined_mesh_limits(-1)
+		pass
 	else:
-		update_joined_mesh_limits()
+		pass
 #endregion
 
 #region MAssetMesh Updater			
@@ -321,6 +291,7 @@ func _notification(what):
 	
 func _ready():			
 	asset_mesh_updater.update_auto_lod()	
+	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
 	
 func activate_mesh_updater():
 	if not is_inside_tree():
@@ -339,7 +310,9 @@ func activate_mesh_updater():
 	#for child in find_children("*",  "Node3D", true, false):
 		#if child is Node3D:
 			#child.owner = EditorInterface.get_edited_scene_root()
-			
+func deactivate_mesh_updater():
+	timer.stop()
+	
 func update_asset_mesh():
 	asset_mesh_updater.update_auto_lod()
 	asset_mesh_updated.emit()

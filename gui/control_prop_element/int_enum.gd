@@ -14,7 +14,7 @@ func set_options(input:String):
 	for o in options:
 		item_list.add_item(o)	
 
-func set_name(input:String):
+func update_name(input:String):
 	prop_name = input
 	for i in item_list.item_count:
 		if item_list.get_item_text(i) == input:

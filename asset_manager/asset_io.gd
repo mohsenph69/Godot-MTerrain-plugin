@@ -75,26 +75,15 @@ static func load_glb_as_hlod(original_scene,root_name):
 			var path = baker_path.get_basename() + "_joined_mesh.glb"			
 			glb_export(parent_node, path)			
 			parent_node.queue_free()
-			glb_load(path, {}, true)
-			var new_node = MAssetMesh.new()	
-			scene.joined_mesh_node = new_node
+			glb_load(path, {}, true)					
 			if not path in asset_library.import_info:
 				print("no joined mesh path in import info", path)
 				continue
 			if not name_data.name in asset_library.import_info[path]:
 				print("no node name in import info", name_data.name)				
 				continue			
-			new_node.collection_id = asset_library.import_info[path][name_data.name].id
-			asset_library.collection_add_tag(new_node.collection_id, 0)			
-			scene.add_child(new_node)									
-			new_node.transform = node.transform
-			node.get_parent().remove_child(node)	
-			new_node.name = name_data.name + "_joined_mesh" if not "_joined_mesh" in name_data.name else name_data.name
-			if scene.is_ancestor_of(new_node):
-				new_node.owner = scene
-			else:				
-				new_node.queue_free()
-			continue			
+			scene.joined_mesh_collection_id = asset_library.import_info[path][name_data.name].id
+			asset_library.collection_add_tag(scene.joined_mesh_collection_id, 0)						
 		if not node.has_meta("blend_file"):			
 			continue
 		if not asset_library.import_info["__blend_files"].has(node.get_meta("blend_file")):			
