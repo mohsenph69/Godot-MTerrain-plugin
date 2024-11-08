@@ -55,7 +55,9 @@ func _ready():
 	%JoinLod.value = baker.join_at_lod
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1	
 						
+	%export_joined_mesh_toggle.button_pressed = not baker.has_joined_mesh_glb() 
 	set_update_mode(not baker.has_joined_mesh_glb())
+	%export_joined_mesh_toggle.disabled = not baker.has_joined_mesh_glb()
 	%export_joined_mesh_toggle.toggled.connect(set_update_mode)
 
 func set_update_mode(toggle_on):

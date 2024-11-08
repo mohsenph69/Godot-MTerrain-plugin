@@ -46,8 +46,11 @@ func _ready():
 		var collection_node = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_item.tscn").instantiate()		
 		collections_container.add_child(collection_node)
 		collection_node.find_child("id").text = str(collection_id)
-		collection_node.find_child("meshes").text = str(asset_library.collection_get_mesh_items_ids(collection_id))
-		collection_node.find_child("meshes").text += str("  ", asset_library.collection_get_sub_collections(collection_id))
+		var meshes_control = collection_node.find_child("meshes")
+		meshes_control.text = str(asset_library.collection_get_mesh_items_ids(collection_id))
+		meshes_control.text += str("  ", asset_library.collection_get_sub_collections(collection_id))
+		meshes_control.text += str(" Tags: ", asset_library.collection_get_tags(collection_id))
+		
 		var name_node = collection_node.find_child("name")
 		name_node.text = asset_library.collection_get_name(collection_id)
 		name_node.text_submitted.connect(func(new_text):

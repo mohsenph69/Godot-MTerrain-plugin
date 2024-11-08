@@ -242,10 +242,14 @@ func update_joined_mesh_from_glb():
 				if key.begins_with("__"): continue
 				import_info[key] = asset_library.import_info[glb_path][key]				
 			if len(import_info.keys()) != 1:
-				push_error("trying to updtae join mesh from glb but after import it doesn't have correct collection count")		
+				push_error("trying to update join mesh from glb but after import it doesn't have correct collection count")		
 			joined_mesh_collection_id = asset_library.import_info[glb_path].values()[0].id
 			asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
 			asset_library.collection_add_tag(joined_mesh_collection_id, 0) #add "hidden" tag
+		else:
+			push_error("joined mesh glb loaded, but import info does not have glb path ", glb_path)
+	else:
+		push_error("trying to update joined mesh from glb, but glb does not exist at ", glb_path)
 			
 func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):				
 	if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
