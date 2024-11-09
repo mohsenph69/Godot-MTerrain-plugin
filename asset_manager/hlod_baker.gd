@@ -281,9 +281,10 @@ func get_joined_mesh_thumbnail():
 func toggle_joined_mesh_disabled(toggle_on):
 	joined_mesh_disabled = toggle_on
 	if toggle_on:
-		pass
+		asset_mesh_updater.joined_mesh_collection_id = -1
 	else:
-		pass
+		asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
+
 		
 func remove_joined_mesh():
 	var path = get_joined_mesh_glb_path()
