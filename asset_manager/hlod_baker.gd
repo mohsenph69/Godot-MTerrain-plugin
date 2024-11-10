@@ -22,7 +22,8 @@ const MAX_LOD = 10
 class SubHlodBakeData:
 	var sub_hlod: MHlod
 	var tr: Transform3D	
-
+	var node: MHlodScene
+	
 class SubBakerBakeData:
 	var sub_baker: HLod_Baker
 	var tr: Transform3D	
@@ -103,13 +104,14 @@ func bake_to_hlod_resource():
 	for hlod_data in all_hlod:
 		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod)
 		#hlod.lod_limit = join_at_lod
-		
+	
+	hlod_resource.join_at_lod = join_at_lod
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
 	else:
 		ResourceSaver.save(hlod_resource, bake_path)
-	MHlodScene.awake()	
-	hlod_resource
+	print(bake_path, " : ", hlod_resource)
+	MHlodScene.awake()		
 	return
 
 #region Getters	
@@ -142,6 +144,7 @@ func get_all_sub_hlod(baker_node:Node3D,search_nodes:Array)->Array:
 			if current_node.hlod != null:
 				var hlod_data := SubHlodBakeData.new()
 				hlod_data.sub_hlod = current_node.hlod
+				hlod_data.node = current_node
 				hlod_data.tr = baker_invers_transform * current_node.global_transform
 				result.push_back(hlod_data)				
 		stack.append_array(current_node.get_children())	
@@ -201,6 +204,17 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 		for mesh_item:MAssetMeshData in node.get_mesh_data():			
 			mesh_array.push_back(get_correct_mesh_lod_for_joining(mesh_item))
 			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
+	for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
+		if not is_instance_valid(data.node):
+			push_error("trying to join mesh with mhlod_scenes, but node is invalid: ")
+			continue
+		var mesh_transforms = data.node.get_last_lod_mesh_ids_transforms()
+		for mesh_transform in mesh_transforms:			
+			var mesh = load(MHlod.get_mesh_path(mesh_transform[0]))
+			if mesh:
+				mesh_array.push_back( mesh )
+				transforms.push_back(baker_inverse_transform * mesh_transform[1])
+	
 	mesh_joiner.insert_mesh_data(mesh_array, transforms, transforms.map(func(a): return -1))		
 	mesh_instance.mesh = mesh_joiner.join_meshes()						
 	mesh_instance.mesh.resource_name = mesh_instance.name			
@@ -301,7 +315,7 @@ func _enter_tree():
 
 func _exit_tree():	
 	if is_instance_valid(timer):
-		timer.queue_free()
+		timer.stop()
 
 func _notification(what):	
 	if what == NOTIFICATION_EDITOR_PRE_SAVE:
@@ -332,7 +346,8 @@ func activate_mesh_updater():
 		#if child is Node3D:
 			#child.owner = EditorInterface.get_edited_scene_root()
 func deactivate_mesh_updater():
-	timer.stop()
+	if is_instance_valid(timer):
+		timer.stop()
 	
 func update_asset_mesh():
 	asset_mesh_updater.update_auto_lod()

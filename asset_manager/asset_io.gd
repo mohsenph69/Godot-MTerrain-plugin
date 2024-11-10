@@ -108,8 +108,8 @@ static func load_glb_as_hlod(original_scene,root_name):
 			new_node.owner = scene
 		else:						
 			new_node.queue_free()
-		node.queue_free()						
-	var packed_scene = PackedScene.new()				
+		node.queue_free()	
+	var packed_scene = PackedScene.new()	
 	packed_scene.pack(scene)
 	original_scene.queue_free()		
 	if FileAccess.file_exists(baker_path):
@@ -213,11 +213,21 @@ static func glb_import_commit_changes():
 		if mesh_info["ignore"] or mesh_info["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 			continue
 		### Handling Remove First
-		if mesh_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:
+		if mesh_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:			
+			for mesh_id in asset_library.mesh_item_get_info(mesh_info["id"]).mesh:
+				if len(asset_library.mesh_get_mesh_items_users(mesh_id)) > 1:
+					continue
+				var path = MHlod.get_mesh_path(mesh_id)
+				asset_library.erase_mesh_hash(load(path))
+				if FileAccess.file_exists(path):
+					DirAccess.remove_absolute(path)				
 			asset_library.mesh_item_remove(mesh_info["id"])
 			continue
 		### Other State
-		asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID
+		var saved_successful = asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID
+		if not saved_successful:
+			push_error("GLB import cannot import meshes: mesh could not be saved to file", str())
+			return
 		var meshes = fill_mesh_lod_gaps(mesh_info["meshes"])
 		
 		var materials:PackedInt32Array

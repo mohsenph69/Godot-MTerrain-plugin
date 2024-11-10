@@ -33,12 +33,12 @@ func _ready():
 		baker.joined_mesh_disabled = false
 	%disable_joined_mesh_button.button_pressed = baker.joined_mesh_disabled 		
 	
-	var preview_scene = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector_joined_mesh_preview.tscn").instantiate()
-	preview_scene.mesh = baker.get_joined_mesh()	
-	if preview_scene.mesh is Mesh:
-		add_child(preview_scene)
-		%joined_mesh_thumbnail.texture = preview_scene.get_texture()				
-		%joined_mesh_thumbnail.gui_input.connect(preview_scene.on_thumbnail_gui_input)
+	#var preview_scene = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector_joined_mesh_preview.tscn").instantiate()
+	#preview_scene.mesh = baker.get_joined_mesh()	
+	#if preview_scene.mesh is Mesh:
+		#add_child(preview_scene)
+		#%joined_mesh_thumbnail.texture = preview_scene.get_texture()				
+		#%joined_mesh_thumbnail.gui_input.connect(preview_scene.on_thumbnail_gui_input)
 	var remove_joined_mesh = %remove_joined_mesh
 	remove_joined_mesh.visible = baker.has_joined_mesh_glb()
 	remove_joined_mesh.pressed.connect(func():

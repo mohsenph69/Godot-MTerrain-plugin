@@ -286,18 +286,22 @@ func compare_mesh(new_mesh,original_mesh)->IMPORT_STATE:
 		return IMPORT_STATE.REMOVE
 	return IMPORT_STATE.NOT_HANDLE
 
-func save_unsaved_meshes(mesh_item_name:String):
+func save_unsaved_meshes(mesh_item_name:String)->bool:
 	var asset_library = MAssetTable.get_singleton()
 	if not mesh_item_name in mesh_items:
 		push_error("trying to save meshes for a mesh item whose name does not exist")
-		return
+		return false
 	var meshes = mesh_items[mesh_item_name]["meshes"]
 	for i in len(meshes):
 		if meshes[i] is Mesh:
 			var path = asset_library.mesh_get_path(meshes[i])
-			ResourceSaver.save(meshes[i],path)
+			var error = ResourceSaver.save(meshes[i],path)
+			if error != OK:	
+				push_error("Savead unsaved meshes could not save mesh to path ", path, " error: ", error)						
+				return false
 			meshes[i] = asset_library.mesh_get_id(meshes[i])
 	mesh_items[mesh_item_name]["meshes"] = meshes
+	return true
 
 # will return the information which is need to save with glb_path in import_info in AssetTable
 func get_glb_import_info():
