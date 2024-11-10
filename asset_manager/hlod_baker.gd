@@ -285,13 +285,14 @@ func toggle_joined_mesh_disabled(toggle_on):
 	else:
 		asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
 
-		
 func remove_joined_mesh():
 	var path = get_joined_mesh_glb_path()
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
+	var id = joined_mesh_collection_id
 	joined_mesh_collection_id = -1
 	asset_mesh_updater.joined_mesh_collection_id = -1	
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)		
+	AssetIO.remove_collection(id)
 #endregion
 
 #region MAssetMesh Updater			

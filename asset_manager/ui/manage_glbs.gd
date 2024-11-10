@@ -25,11 +25,7 @@ func _ready():
 		for collection in import_info[glb_path].keys():
 			if "__" in collection: continue
 			var collection_id = import_info[glb_path][collection].id
-			if asset_library.has_collection(collection_id):
-				for mesh_item_id in import_info[glb_path][collection].mesh_items.values():
-					if asset_library.has_mesh_item(mesh_item_id):
-						asset_library.remove_mesh_item(mesh_item_id)										
-				asset_library.remove_collection(collection_id)
+			AssetIO.remove_collection(collection_id)
 		import_info.erase(glb_path)		
 		init_tree()
 	)

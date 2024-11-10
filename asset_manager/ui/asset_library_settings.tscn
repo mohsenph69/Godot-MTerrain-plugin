@@ -28,7 +28,6 @@ theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
 [node name="manage_groups" type="PanelContainer" parent="tab_container"]
-visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_s06u1")
@@ -105,6 +104,7 @@ layout_mode = 2
 text = "+"
 
 [node name="manage_glbs" type="MarginContainer" parent="tab_container"]
+visible = false
 layout_mode = 2
 script = ExtResource("7_vfheg")
 

@@ -52,15 +52,15 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 #endregion
 
 #region GLB Import	
-static func load_glb_as_hlod(original_scene,root_name):	
+static func load_glb_as_hlod(original_scene,root_name):		
 	var asset_library:MAssetTable = MAssetTable.get_singleton()	
 	var scene = original_scene.get_child(0)			
 	scene.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
 	var nodes = scene.find_children("*", "Node3D", true, false)	
 	var baker_path := str("res://addons/m_terrain/asset_manager/reference/" + root_name + "_baker.tscn" )
-	nodes.reverse()
+	nodes.reverse()	
 	for node in nodes:		
-		if node is ImporterMeshInstance3D:			
+		if node is ImporterMeshInstance3D:						
 			var parent_node = Node3D.new()
 			var mesh_node = MeshInstance3D.new()
 			parent_node.add_child(mesh_node)
@@ -70,27 +70,32 @@ static func load_glb_as_hlod(original_scene,root_name):
 			mesh_node.owner = parent_node
 			mesh_node.name = node.name
 			mesh_node.transform = node.transform
-			mesh_node.mesh = node.mesh.get_mesh()											
+			mesh_node.mesh = node.mesh.get_mesh()
+			node.get_parent().remove_child(node)
 			node.queue_free()
 			var path = baker_path.get_basename() + "_joined_mesh.glb"			
 			glb_export(parent_node, path)			
-			parent_node.queue_free()
+			parent_node.queue_free()			
 			glb_load(path, {}, true)					
 			if not path in asset_library.import_info:
-				print("no joined mesh path in import info", path)
+				print("joined mesh reimport: no joined mesh path in import info", path)
 				continue
 			if not name_data.name in asset_library.import_info[path]:
-				print("no node name in import info", name_data.name)				
+				print("joined mesh reimport: no node name in import info", name_data.name)				
 				continue			
 			scene.joined_mesh_collection_id = asset_library.import_info[path][name_data.name].id
 			asset_library.collection_add_tag(scene.joined_mesh_collection_id, 0)						
+			continue					
 		if not node.has_meta("blend_file"):			
+			print("NO BLend file in node")
 			continue
 		if not asset_library.import_info["__blend_files"].has(node.get_meta("blend_file")):			
+			print("NO BLend file in import info")
 			continue
 		var glb_path = asset_library.import_info["__blend_files"][node.get_meta("blend_file")]			
 		var node_name := collection_parse_name(node.name)
 		if not asset_library.import_info[glb_path].has(node_name):			
+			print("import info does not have this node name for this glb")
 			continue
 		var new_node = MAssetMesh.new()	
 		new_node.collection_id = asset_library.import_info[glb_path][node_name].id
@@ -99,14 +104,14 @@ static func load_glb_as_hlod(original_scene,root_name):
 		new_node.transform = node.transform
 		parent.remove_child(node)	
 		new_node.name = node.name			
-		if scene.is_ancestor_of(new_node):
+		if scene.is_ancestor_of(new_node):			
 			new_node.owner = scene
-		else:				
+		else:						
 			new_node.queue_free()
-		node.queue_free()				
-	var packed_scene = PackedScene.new()		
-	scene.update_joined_mesh_limits()
+		node.queue_free()						
+	var packed_scene = PackedScene.new()				
 	packed_scene.pack(scene)
+	original_scene.queue_free()		
 	if FileAccess.file_exists(baker_path):
 		packed_scene.take_over_path(baker_path)
 		ResourceSaver.save(packed_scene, baker_path)			
@@ -367,21 +372,7 @@ static func glb_show_import_window(asset_data:AssetIOData):
 	panel.asset_data = asset_data
 	popup.add_child(panel)
 	popup.popup_centered(Vector2i(800,600))	
-#endregion
-#region Mesh Item
-static func mesh_item_get_mesh_resources(mesh_id): #return meshes[.res]
-	var asset_library = MAssetTable.get_singleton()
-	if asset_library.has_mesh_item(mesh_id):
-		var meshes = []
-		var data = asset_library.mesh_item_get_info(mesh_id)
-		for mesh_resource_id in data.mesh:
-			var path = MHlod.get_mesh_path(mesh_resource_id)
-			if FileAccess.file_exists(path):
-				meshes.push_back(load(path))
-			else:
-				meshes.push_back(null)
-		return meshes
-
+	
 static func node_parse_name(node:Node)->Dictionary:
 	var result = {"name":"","lod":-1,"col":null}
 	var lod:int = -1
@@ -409,5 +400,26 @@ static func collection_parse_name(name:String)->String:
 	if name.right(3).is_valid_int():  #remove the .001 suffix
 		return name.left(len(name)-4)
 	return name
-
 #endregion
+
+static func remove_collection(collection_id):
+	var asset_library = MAssetTable.get_singleton()
+	if not asset_library.has_collection(collection_id):
+		push_error("trying to remove collection that doesn't exist: ", collection_id)
+	var mesh_item_ids = asset_library.collection_get_mesh_items_ids(collection_id)
+	for mesh_item_id in mesh_item_ids:
+		if not asset_library.has_mesh_item(mesh_item_id):
+			push_error("trying to remove a mesh item that doesn't exist: ", mesh_item_id)
+		var mesh_array = asset_library.mesh_item_get_info(mesh_item_id).mesh
+		asset_library.mesh_item_remove(mesh_item_id)
+		for mesh_id in mesh_array:
+			if len(asset_library.mesh_get_mesh_items_users(mesh_id)) == 0:				
+				if FileAccess.file_exists(MHlod.get_mesh_path(mesh_id)):					
+					var path = MHlod.get_mesh_path(mesh_id)
+					asset_library.erase_mesh_hash(load(path))
+					DirAccess.remove_absolute(path)	
+	asset_library.collection_remove(collection_id)
+	var thumbnail_path = "res://massets/thumbnails/" + str(collection_id) + ".png"
+	if FileAccess.file_exists(thumbnail_path):
+		DirAccess.remove_absolute(thumbnail_path)	
+		
