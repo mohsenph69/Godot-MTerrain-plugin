@@ -11,6 +11,26 @@ metadata/extras = true
 metadata/hlod_id = 0.0
 metadata/tags = []
 
+[node name="Sphere1_001" type="MAssetMesh" parent="."]
+collection_id = 1
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0325475, 4.37643, 0)
+
+[node name="Table1_004" type="MAssetMesh" parent="."]
+collection_id = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, 5.32449)
+
+[node name="Table1_003" type="MAssetMesh" parent="."]
+collection_id = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, -5.59739)
+
+[node name="Table1_002" type="MAssetMesh" parent="."]
+collection_id = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.46363, 0, 0)
+
+[node name="Table1_001" type="MAssetMesh" parent="."]
+collection_id = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.36793, 0, 0)
+
 [node name="Wall1_005" type="MAssetMesh" parent="."]
 collection_id = 2
 transform = Transform3D(0, 0, 107.291, 0, 0.149278, 0, -10.2671, 0, 0, 0, -0.292326, 0)
@@ -30,23 +50,3 @@ transform = Transform3D(10.2671, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.35473)
 [node name="Wall1_001" type="MAssetMesh" parent="."]
 collection_id = 2
 transform = Transform3D(9.30696, 0, 0, 0, 1, 0, 0, 0, 1, 1.08067, 0, -8.67685)
-
-[node name="Table1_004" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, 5.32449)
-
-[node name="Table1_003" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, -5.59739)
-
-[node name="Table1_002" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.46363, 0, 0)
-
-[node name="Table1_001" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.36793, 0, 0)
-
-[node name="Sphere1_001" type="MAssetMesh" parent="."]
-collection_id = 1
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0325475, 4.37643, 0)

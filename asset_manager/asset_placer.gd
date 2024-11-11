@@ -19,15 +19,15 @@ var current_group := "None" #group name
 
 var queued_thumbnails = {}
 
+var last_regroup = null
+
 func _ready():		
 	if EditorInterface.get_edited_scene_root() == self: return
 
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 
 		regroup()
-	)	
-	init_debug_buttons()
-	
+	)			
 	ungrouped.set_group("other")	
 	regroup()	
 	find_child("sort_popup").sort_mode_changed.connect(func(mode):
@@ -87,7 +87,22 @@ func get_filtered_collections(text="", tags_to_excluded=[]):
 			result.erase(id)			
 	return result
 	
-func regroup(group = current_group, sort_mode="asc"):				
+func debounce_regroup():
+	if last_regroup is int and Time.get_ticks_msec() - last_regroup < 1000:
+		last_regroup = get_tree().create_timer(1)
+		last_regroup.timeout.connect(func():
+			last_regroup = 0
+			regroup()
+		)
+		return false
+	elif last_regroup is SceneTreeTimer:
+		return false
+	last_regroup = Time.get_ticks_msec()
+	return true
+	
+func regroup(group = current_group, sort_mode="asc"):	
+	if not debounce_regroup(): 
+		return
 	var filtered_collections = get_filtered_collections(current_search, [0])
 	if current_group != group:		
 		for child in groups.get_children():
@@ -98,10 +113,9 @@ func regroup(group = current_group, sort_mode="asc"):
 		var sorted_items = []				
 		for collection_id in filtered_collections:
 			var collection_name = asset_library.collection_get_name(collection_id)
-			var thumbnail = null
-			var thumbnail_path = str("res://massets/thumbnails/", collection_id, ".png")
-			if FileAccess.file_exists(thumbnail_path):
-				thumbnail = load(thumbnail_path)
+			var thumbnail = AssetIO.generate_collection_thumbnail(collection_id)			
+			if not thumbnail:
+				regroup.call_deferred()
 			sorted_items.push_back({"name":collection_name, "thumbnail":thumbnail, "id":collection_id})			
 			collection_id += 1
 		if sort_mode == "asc":
@@ -137,7 +151,9 @@ func regroup(group = current_group, sort_mode="asc"):
 				group_control = groups.get_node(tag_name)			
 				group_control.group_list.clear()
 			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
-				var thumbnail = null								
+				var thumbnail = AssetIO.generate_collection_thumbnail(collection_id)							
+				if not thumbnail:
+					regroup.call_deferred()
 				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "thumbnail":thumbnail, "id":collection_id})
 				#group_control.add_item(asset_library.collection_get_name(collection_id), thumbnail, collection_id)							
 			if sort_mode == "asc":
@@ -150,7 +166,8 @@ func regroup(group = current_group, sort_mode="asc"):
 		var sorted_items = []
 		for id in filtered_collections:
 			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):
-				var thumbnail = null				
+				var thumbnail = AssetIO.generate_collection_thumbnail(id)
+				print("generating thumbnail")
 				sorted_items.push_back({"name": asset_library.collection_get_name(id), "thumbnail":thumbnail, "id":id})				
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)
@@ -186,104 +203,11 @@ func process_selection(who:ItemList, id, selected):
 			for item in	group.get_selected_items():
 				current_selection.push_back( group.get_item_text(item) )
 	selection_changed.emit()
-
-func remove_asset(collection_id):
-	for i in asset_library.collection_get_mesh_items_ids(collection_id):
-		asset_library.mesh_item_remove(i)			
-	asset_library.collection_remove_tag(collection_id, 0)	
-	asset_library.collection_remove(collection_id)	
-	var path = str("res://massets/thumbnails/", collection_id, ".png")
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
 	
-#region Thumbnails
-##############
-# THUMBNAILS #
-##############
-func generate_thumbnails_for_selected_collections():
-	queued_thumbnails = {}
-	print(current_selection)
-	for collection_name in current_selection:
-		var collection_id = asset_library.collection_get_id(collection_name)		
-		var data = {"meshes":[], "transforms":[]}
-		combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)													
-		var mesh_joiner := MMeshJoiner.new()					
-		mesh_joiner.insert_mesh_data(data.meshes, data.transforms, data.transforms.map(func(a):return -1))
-		var mesh = mesh_joiner.join_meshes()	
-		queued_thumbnails[collection_id] = {"mesh":mesh, "generated": false}		
-	var collection_id = queued_thumbnails.keys()[0]
-	EditorInterface.get_resource_previewer().queue_edited_resource_preview(queued_thumbnails[collection_id].mesh, self, "save_thumbnail", collection_id)					
-	
-
-func combine_collection_meshes_and_transforms_recursive(collection_id, data, combined_transform):
-	var subcollection_ids = asset_library.collection_get_sub_collections(collection_id)
-	var subcollection_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
-	if len(subcollection_ids) > 0:
-		for i in len(subcollection_ids):
-			combine_collection_meshes_and_transforms_recursive(subcollection_ids[i], data, combined_transform * subcollection_transforms[i])
-	var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)	
-	for item in mesh_items:
-		var i = 0
-		while i < len(item.mesh):			
-			if item.mesh[i] == -1: 
-				i += 1
-				continue
-			var mesh_path = MHlod.get_mesh_path(item.mesh[i])													
-			var mesh:Mesh = load(mesh_path)
-			if mesh.get_surface_count() > 0:		
-				data.meshes.push_back(mesh)
-				data.transforms.push_back(combined_transform * item.transform)
-				break	
-			i+= 1
-			
-func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):			
-	#Save the current one 	
-	if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
-		DirAccess.make_dir_recursive_absolute("res://massets/thumbnails/")
-	var thumbnail_path = str("res://massets/thumbnails/", this_collection_id,".png")
-	if FileAccess.file_exists(thumbnail_path):
-		preview.take_over_path(thumbnail_path)
-	else:
-		ResourceSaver.save(preview, thumbnail_path )										
-	queued_thumbnails[this_collection_id].generated = true
-	#Queue the next one if there are more
-	for collection_id in queued_thumbnails.keys():
-		if queued_thumbnails[collection_id].generated == true:
-			continue
-		EditorInterface.get_resource_previewer().queue_edited_resource_preview(queued_thumbnails[collection_id].mesh, self, "save_thumbnail", collection_id)							
-		return
-	#If the queue is finished, then refresh	
-	var fs := EditorInterface.get_resource_filesystem()	
-	if not fs.resources_reimported.is_connected(resources_reimported):
-		fs.resources_reimported.connect(resources_reimported)	
-	fs.scan()		
-	
-func resources_reimported(paths):		
-	for path in paths:
-		if "res://massets/thumbnails" in path:			
-			regroup()
-			return
-#endregion
 #region Debug	
 #########
 # DEBUG #
 #########			
-func init_debug_buttons():
-	%clear_assets.pressed.connect(func():
-		for collection_id in asset_library.collection_get_list():
-			remove_asset(collection_id)
-			asset_library.import_info = {}
-			asset_library.save()
-		regroup()
-	)	
-	%remove_asset.pressed.connect(func():
-		for collection_name in current_selection:
-			var collection_id = asset_library.collection_get_id(collection_name)			
-			remove_asset(collection_id)
-		regroup()
-	)
-	%generate_thumbnails_button.pressed.connect(generate_thumbnails_for_selected_collections)
-
 func init_debug_tags():
 	var groups = {"colors": [0,1,2], "sizes":[3,4,5], "building_parts": [6,7,8,9]}   #data.categories
 	var tags = ["red", "green", "blue", "small", "medium", "large", "wall", "floor", "roof", "door"]#data.tags		

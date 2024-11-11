@@ -176,8 +176,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 			var collection_name = name_data.name if active_collection=="__root__" else active_collection
 			if node is ImporterMeshInstance3D:
 				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform, node.mesh.get_mesh())
-			else:
-				print(collection_name, " is collision imported from ", node.get_parent().name)
+			else:				
 				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform)				
 			if child_count > 0:
 				push_error(node.name + " is detected as a collission due to using _col in its name! ignoring its children!")
@@ -224,11 +223,15 @@ static func glb_import_commit_changes():
 			asset_library.mesh_item_remove(mesh_info["id"])
 			continue
 		### Other State
-		var saved_successful = asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID
+		var saved_successful = asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID		
 		if not saved_successful:
 			push_error("GLB import cannot import meshes: mesh could not be saved to file", str())
-			return
-		var meshes = fill_mesh_lod_gaps(mesh_info["meshes"])
+			return		
+		saved_successful = asset_data.replace_mesh_materials(mesh_name)
+		if not saved_successful:
+			push_error("GLB import error: cannot update saved meshes' materials", str())
+			return				
+		var meshes = fill_mesh_lod_gaps(mesh_info["meshes"])				
 		
 		var materials:PackedInt32Array
 		## for now later we change
@@ -266,13 +269,16 @@ static func glb_import_commit_changes():
 	MAssetTable.save()
 	
 static func fill_mesh_lod_gaps(mesh_array):
+	print("before fill ", mesh_array)
 	var result = mesh_array.duplicate()
 	var last_mesh = null
-	for i in len(mesh_array):		
-		if mesh_array[i] == -1 and last_mesh != null:
+	for i in len(mesh_array):						
+		if mesh_array[i] == -1 and last_mesh != null and i != len(mesh_array)-1:			
+			print(i, ": ", last_mesh)
 			result[i] = last_mesh
-		else:
+		else:			
 			last_mesh = mesh_array[i]
+	print("after fill ", result)
 	return result		
 
 static func import_collection(glb_node_name:String):		
@@ -341,8 +347,8 @@ static func import_collection(glb_node_name:String):
 			if not asset_library.has_collection(sub_collection_id):
 				push_error("trying to add subcollection to collection, but sub_collection_id ", sub_collection_id, " does not exist")
 			for sub_collection_transform in sub_collections[sub_collection_name]:
-				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)
-		
+				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)	
+	
 static func mesh_item_update_from_collection_dictionary(collection):
 	var asset_library := MAssetTable.get_singleton()			
 	if "original_meshes" in collection.keys():		
@@ -412,6 +418,99 @@ static func collection_parse_name(name:String)->String:
 	return name
 #endregion
 
+#region THUMBNAILS
+static func generate_material_thumbnail(material_id, callback: Callable):			
+	if not MMaterialTable.get_singleton().table.has(material_id):
+		push_error("trying to generate thumbnail for material id that does not exist:", material_id)
+		return null
+	var path = MMaterialTable.get_singleton().table[material_id]
+	var thumbnail_path = get_thumbnail_path(material_id, false)
+	var thumbnail_import_path = thumbnail_path + ".import"
+	if path and FileAccess.get_modified_time(path) < FileAccess.get_modified_time( thumbnail_path ):		
+		if not FileAccess.file_exists(thumbnail_import_path):
+			EditorInterface.get_resource_filesystem().scan()			
+			return
+		return load(thumbnail_path)
+	var material = load(path)
+	EditorInterface.get_resource_previewer().queue_edited_resource_preview(material, AssetIO, "material_thumbnail_generated", material_id)						
+
+static func generate_collection_thumbnail(collection_id):	
+	if not MAssetTable.get_singleton().has_collection(collection_id):
+		push_error("trying to generate thumbnail for collection that does not exist:", collection_id)
+		return null
+	#Check if glb has changed since last thumbnail generation					
+	var glb_path = get_glb_path_from_collection_id(collection_id)	
+	var thumbnail_path = get_thumbnail_path(collection_id)
+	var thumbnail_import_path = thumbnail_path + ".import"
+	if glb_path and FileAccess.get_modified_time(glb_path) < FileAccess.get_modified_time( thumbnail_path):		
+		if not FileAccess.file_exists(thumbnail_import_path):
+			EditorInterface.get_resource_filesystem().scan()
+			return					
+		return load(thumbnail_path)
+	var data = {"meshes":[], "transforms":[]}
+	combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)													
+	var mesh_joiner := MMeshJoiner.new()					
+	mesh_joiner.insert_mesh_data(data.meshes, data.transforms, data.transforms.map(func(a):return -1))
+	var mesh = mesh_joiner.join_meshes()			
+	EditorInterface.get_resource_previewer().queue_edited_resource_preview(mesh, AssetIO, "collection_thumbnail_generated", collection_id)						
+	return null
+	
+static func get_glb_path_from_collection_id(collection_id):
+	var import_info = MAssetTable.get_singleton().import_info
+	for glb_path in import_info.keys():
+		if glb_path.begins_with("__"): continue
+		for node_name in import_info[glb_path].keys():
+			if node_name.begins_with("__"): continue
+			if import_info[glb_path][node_name].has("id") and import_info[glb_path][node_name].id == collection_id:
+				return glb_path
+				
+static func combine_collection_meshes_and_transforms_recursive(collection_id, data, combined_transform):
+	var asset_library = MAssetTable.get_singleton()
+	var subcollection_ids = asset_library.collection_get_sub_collections(collection_id)
+	var subcollection_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
+	if len(subcollection_ids) > 0:
+		for i in len(subcollection_ids):
+			combine_collection_meshes_and_transforms_recursive(subcollection_ids[i], data, combined_transform * subcollection_transforms[i])
+	var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)	
+	for item in mesh_items:
+		var i = 0
+		while i < len(item.mesh):			
+			if item.mesh[i] == -1: 
+				i += 1
+				continue
+			var mesh_path = MHlod.get_mesh_path(item.mesh[i])													
+			var mesh:Mesh = load(mesh_path)
+			if mesh.get_surface_count() > 0:		
+				data.meshes.push_back(mesh)
+				data.transforms.push_back(combined_transform * item.transform)
+				break	
+			i+= 1
+
+static func material_thumbnail_generated(path, preview, thumbnail_preview, material_id):	
+	var thumbnail_path = AssetIO.get_thumbnail_path(material_id, false)
+	save_thumbnail(preview, thumbnail_path)						
+			
+static func collection_thumbnail_generated(path, preview, thumbnail_preview, collection_id):	
+	var thumbnail_path = AssetIO.get_thumbnail_path(collection_id)
+	save_thumbnail(preview, thumbnail_path)						
+
+
+static func get_thumbnail_path(id: int, is_collection:bool=true):
+	if is_collection:
+		return "res://massets/thumbnails/" + str(id) + ".png"
+	else:
+		return "res://massets/thumbnails/material_" + str(id) + ".png"				
+
+static func save_thumbnail(preview, thumbnail_path):
+	if FileAccess.file_exists(thumbnail_path):
+		preview.take_over_path(thumbnail_path)		
+		#EditorInterface.get_resource_filesystem().reimport_files(PackedStringArray([thumbnail_path]))
+	else:
+		if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
+			DirAccess.make_dir_recursive_absolute("res://massets/thumbnails/")
+		ResourceSaver.save(preview, thumbnail_path )
+#endregion
+
 static func remove_collection(collection_id):
 	var asset_library = MAssetTable.get_singleton()
 	if not asset_library.has_collection(collection_id):
@@ -429,7 +528,7 @@ static func remove_collection(collection_id):
 					asset_library.erase_mesh_hash(load(path))
 					DirAccess.remove_absolute(path)	
 	asset_library.collection_remove(collection_id)
-	var thumbnail_path = "res://massets/thumbnails/" + str(collection_id) + ".png"
+	var thumbnail_path = get_thumbnail_path(collection_id)
 	if FileAccess.file_exists(thumbnail_path):
-		DirAccess.remove_absolute(thumbnail_path)	
+		DirAccess.remove_absolute(thumbnail_path)		
 		

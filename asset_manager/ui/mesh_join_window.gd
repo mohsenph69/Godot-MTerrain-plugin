@@ -65,15 +65,16 @@ func set_update_mode(toggle_on):
 	%warning_label.visible = toggle_on and baker.has_joined_mesh_glb()
 	if toggle_on:
 		%export_joined_mesh_toggle.text = "Export from scene"
+		commit_button.text = "Make Joined Mesh"
 	else:
 		%export_joined_mesh_toggle.text = "Reimport GLB"
+		commit_button.text = "Reimport"
 	
 	
 func build_tree(parent_node, parent_item:TreeItem):		
 	if not parent_node is Node3D: return
 	#if not parent_node.owner == baker: return
-	var item := parent_item.create_child()		
-	item.set_cell_mode(0, TreeItem.CELL_MODE_RANGE)	
+	var item := parent_item.create_child()			
 	item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)	
 	item.set_editable(0, true)
 	item.set_metadata(0, parent_node)

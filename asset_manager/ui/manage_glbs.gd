@@ -16,7 +16,7 @@ func _ready():
 		glb_details.clear()
 		for collection_name in import_info[glb_path].keys():
 			if "__" in collection_name: continue
-			var thumbnail_path = str("res://massets/thumbnails/", import_info[glb_path][collection_name].id, ".png")		
+			var thumbnail_path = AssetIO.get_thumbnail_path(import_info[glb_path][collection_name].id)	
 			var texture = load(thumbnail_path) if FileAccess.file_exists(thumbnail_path) else null
 			glb_details.add_item(collection_name, texture)
 	)

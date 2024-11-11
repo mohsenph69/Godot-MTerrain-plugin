@@ -10,7 +10,7 @@ enum COLLISION_TYPE {
 
 var mesh_items:Dictionary
 var collections:Dictionary
-var materials:Dictionary #Key is import material, value is replacement material
+var materials:Dictionary #Key is import material name
 var glb_path:String
 var blend_file: String
 var meta_data:Dictionary
@@ -19,6 +19,14 @@ func clear():
 	mesh_items.clear()
 	collections.clear()
 	glb_path = ""
+
+func get_empty_material()->Dictionary:
+	return {
+		"material": null,
+		"original_material": null,
+		"glb_material": null, #the material in the glb file
+		"meshes": [] #array of meshes that use this material...should be converted to ids later
+	}.duplicate()
 
 func get_empty_mesh_item()->Dictionary:
 	return {
@@ -79,7 +87,11 @@ func add_mesh_item(name:String,lod:int,node:Node)->void:
 			for i in mesh.get_surface_count():
 				var material = mesh.surface_get_material(i)
 				if material:
-					materials[material.resource_name] = null
+					if not materials.has(material.resource_name):
+						materials[material.resource_name] = get_empty_material()						
+						materials[material.resource_name].glb_material = material
+					if not mesh in materials[material.resource_name].meshes:
+						materials[material.resource_name].meshes.push_back(mesh)
 
 func add_mesh_to_collection(collection_name:String, mesh_name:String, is_root:bool):
 	if not collections.has(collection_name):
@@ -165,6 +177,7 @@ func finalize_glb_parse():
 		#else: # FIX COLLISION transform for root level meshes... should be relative to first lod
 			#for collision in collection_collision_items:
 				#pass
+	
 	#############################################
 	## Remove things that are no longer needed ##
 	#############################################
@@ -271,6 +284,27 @@ func generate_import_tags():
 			collections[key]["state"] = IMPORT_STATE.NO_CHANGE
 		else:
 			collections[key]["state"] = IMPORT_STATE.CHANGE
+	
+	##############
+	## MATERIAL ##
+	##############
+	for material_name in materials:
+		if materials[material_name].original_material != null:
+			materials[material_name].material = materials[material_name].original_material
+			continue
+		else:			
+			var material_id = get_material_id_by_name(material_name)
+			if material_id != null:			
+				materials[material_name].material = material_id
+			else:			
+				materials[material_name].material = materials[material_name].glb_material						
+
+func get_material_id_by_name(material_name):
+	var material_table := MMaterialTable.get_singleton()
+	for path in material_table.table.values():		
+		if material_name.to_lower() == path.get_file().get_slice(".", 0).to_lower():			
+			return material_table.table.find_key(path)		
+	return null
 
 func compare_mesh(new_mesh,original_mesh)->IMPORT_STATE:
 	if typeof(new_mesh) == TYPE_OBJECT:
@@ -286,26 +320,45 @@ func compare_mesh(new_mesh,original_mesh)->IMPORT_STATE:
 		return IMPORT_STATE.REMOVE
 	return IMPORT_STATE.NOT_HANDLE
 
+func replace_mesh_materials(mesh_item_name):	
+	var asset_library = MAssetTable.get_singleton()	
+	for material_name in materials:
+		if materials[material_name].original_material == materials[material_name].material:
+			continue
+		for mesh in materials[material_name].meshes						
+			if not mesh is Mesh:
+				push_error("trying to replace mesh materials, but ", mesh, " inside ", material_name, " is not a mesh")
+			for surface_id in mesh.get_surface_count():						
+				if mesh.surface_get_material(surface_id).resource_name == material_name:						
+					if materials[material_name].material is int:
+						mesh.surface_set_material(surface_id, load(MMaterialTable.get_singleton().table[materials[material_name].material]))
+						materials[material_name].meshes.erase(mesh)
+						materials[material_name].meshes.push_back(asset_library.mesh_get_id(mesh))					
+						return
+					else:
+						print("TODO: save unsaved material when replacing materials during save_unsaved_meshes")
+						pass #save unsaved material
+		
 func save_unsaved_meshes(mesh_item_name:String)->bool:
 	var asset_library = MAssetTable.get_singleton()
 	if not mesh_item_name in mesh_items:
 		push_error("trying to save meshes for a mesh item whose name does not exist")
 		return false
-	var meshes = mesh_items[mesh_item_name]["meshes"]
-	for i in len(meshes):
-		if meshes[i] is Mesh:
-			var path = asset_library.mesh_get_path(meshes[i])
+	var meshes = mesh_items[mesh_item_name]["meshes"]	
+	for i in len(meshes):				
+		if meshes[i] is Mesh:			
+			var path = asset_library.mesh_get_path(meshes[i])									
 			var error = ResourceSaver.save(meshes[i],path)
 			if error != OK:	
-				push_error("Savead unsaved meshes could not save mesh to path ", path, " error: ", error)						
+				push_error("Save unsaved meshes could not save mesh to path ", path, ". error: ", error)						
 				return false
-			meshes[i] = asset_library.mesh_get_id(meshes[i])
+			meshes[i] = asset_library.mesh_get_id(meshes[i])			
 	mesh_items[mesh_item_name]["meshes"] = meshes
 	return true
 
 # will return the information which is need to save with glb_path in import_info in AssetTable
 func get_glb_import_info():
-	var result:Dictionary
+	var result:Dictionary = {}
 	for key in collections:
 		#print("Getting ------------------- ",key)
 		if collections[key]["state"] == IMPORT_STATE.REMOVE:
@@ -321,11 +374,13 @@ func get_glb_import_info():
 			var collision_item = original_collision_item.duplicate()
 			collision_item.mesh = null
 			result[key].collision_items.push_back(collision_item)					
-		result[key]["id"] = collections[key]["id"]
-	result["__materials"] = materials.duplicate()		
+		result[key]["id"] = collections[key]["id"]	
+	result["__materials"] = {}
+	for key in materials:		
+		result["__materials"][key] = materials[key].material
 	result["__metadata"] = meta_data
 	return result
-	
+		
 #Add original mesh and collection data to asset_data
 func add_glb_import_info(info:Dictionary)->void:
 	var asset_library := MAssetTable.get_singleton()
@@ -348,7 +403,9 @@ func add_glb_import_info(info:Dictionary)->void:
 		collections[collection_glb_name]["id"] = collection_id
 	add_metadata_to_data(info["__metadata"], meta_data)
 	if "__materials" in info:
-		materials = info["__materials"].duplicate()
+		for key in info["__materials"]:
+			if key in materials:
+				materials[key].original_material = info["__materials"][key]
 	
 func add_metadata_to_data(old:Dictionary, new:Dictionary):
 	var result = old.duplicate()

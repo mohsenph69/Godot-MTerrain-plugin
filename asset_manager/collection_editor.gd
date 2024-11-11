@@ -4,12 +4,7 @@ var asset_mesh_updater: MAssetMeshUpdater
 var timer: Timer
 func _notification(what: int):
 	if what == NOTIFICATION_EDITOR_PRE_SAVE:
-		for child in get_children():						
-			if child.has_meta("collection_id"):
-				#if child.has_meta("overrides"):
-					#for grandchild in child.get_children():
-						#print("pre_save: ", grandchild.position)
-				AssetIO.collection_save_from_nodes(child)
+		for child in get_children():												
 			child.owner = null
 	if what == NOTIFICATION_EDITOR_POST_SAVE:
 		for child in get_children():

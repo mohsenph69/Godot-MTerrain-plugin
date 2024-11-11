@@ -1,8 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://byq2krnjsg1oc"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/m_hlod_previewer.gd" id="1_p66ot"]
-[ext_resource type="MHlod" uid="uid://cems1x08huhj7" path="res://massets/Node3D.res" id="1_v6hk5"]
 
 [node name="MHlodScene" type="MHlodScene"]
-hlod = ExtResource("1_v6hk5")
 script = ExtResource("1_p66ot")

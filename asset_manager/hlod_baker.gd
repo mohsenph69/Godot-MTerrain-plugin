@@ -7,7 +7,7 @@ signal asset_mesh_updated
 @export_storage var joined_mesh_collection_id := -1
 @export_storage var joined_mesh_disabled := false
 @export_storage var hlod_resource: MHlod
-@export_storage var bake_path = "res://massets/": get = get_bake_path
+@export_storage var bake_path = "res://massets/hlod/": get = get_bake_path
 @export_storage var meshes_to_join_overrides := {}
 @export_storage var force_lod_enabled := false
 @export_storage var force_lod_value: int
@@ -109,6 +109,8 @@ func bake_to_hlod_resource():
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
 	else:
+		if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
+			DirAccess.make_dir_absolute(bake_path.get_base_dir())
 		ResourceSaver.save(hlod_resource, bake_path)
 	print(bake_path, " : ", hlod_resource)
 	MHlodScene.awake()		
@@ -268,30 +270,6 @@ func update_joined_mesh_from_glb():
 	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id			
 	asset_library.collection_add_tag(joined_mesh_collection_id, 0) #add "hidden" tag	
 
-			
-func save_thumbnail(path, preview, thumbnail_preview, this_collection_id):				
-	if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
-		DirAccess.make_dir_recursive_absolute("res://massets/thumbnails/")
-	var thumbnail_path = str("res://massets/thumbnails/", this_collection_id,".png")
-	if FileAccess.file_exists(thumbnail_path):
-		preview.take_over_path(thumbnail_path)
-	else:
-		ResourceSaver.save(preview, thumbnail_path )												
-	var fs := EditorInterface.get_resource_filesystem()	
-	if not fs.resources_reimported.is_connected(resources_reimported):
-		fs.resources_reimported.connect(resources_reimported)	
-	fs.scan()		
-
-func resources_reimported(paths):	
-	notify_property_list_changed()
-
-func get_joined_mesh_thumbnail():
-	var path = str("res://massets/thumbnails/", asset_mesh_updater.joined_mesh_collection_id, ".png")
-	if FileAccess.file_exists(path):
-		return load(path)
-	else:
-		return null
-
 func toggle_joined_mesh_disabled(toggle_on):
 	joined_mesh_disabled = toggle_on
 	if toggle_on:
@@ -310,11 +288,13 @@ func remove_joined_mesh():
 #endregion
 
 #region MAssetMesh Updater			
-func _enter_tree():			
+func _enter_tree():		
+	if not is_node_ready(): 	
+		await ready
 	activate_mesh_updater()
 
 func _exit_tree():	
-	if is_instance_valid(timer):
+	if is_instance_valid(timer) and timer.is_inside_tree():
 		timer.stop()
 
 func _notification(what):	
@@ -325,7 +305,8 @@ func _notification(what):
 					grandchild.owner = null		
 	
 func _ready():			
-	asset_mesh_updater.update_auto_lod()	
+	activate_mesh_updater()
+	#asset_mesh_updater.update_auto_lod()	
 	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
 	
 func activate_mesh_updater():
@@ -337,19 +318,18 @@ func activate_mesh_updater():
 	if not is_instance_valid(timer):
 		timer = Timer.new()
 		timer.timeout.connect(update_asset_mesh)
-	if not timer.get_parent():
+	if not timer.get_parent():		
 		add_child(timer)	
-	elif not timer.is_inside_tree():
+	elif not timer.is_inside_tree():		
 		timer.reparent(self)
-	timer.start(1)
-	#for child in find_children("*",  "Node3D", true, false):
-		#if child is Node3D:
-			#child.owner = EditorInterface.get_edited_scene_root()
+	if timer.is_inside_tree():		
+		timer.start(1)
+
 func deactivate_mesh_updater():
 	if is_instance_valid(timer):
 		timer.stop()
 	
-func update_asset_mesh():
+func update_asset_mesh():	
 	asset_mesh_updater.update_auto_lod()
 	asset_mesh_updated.emit()
 #endregion
