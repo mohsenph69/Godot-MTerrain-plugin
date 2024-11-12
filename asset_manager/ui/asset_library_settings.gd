@@ -8,6 +8,7 @@ func _ready():
 	%manage_groups_button.pressed.connect(select_tab.bind("manage_groups"))
 	%manage_tags_button.pressed.connect(select_tab.bind("manage_tags"))	
 	%manage_glbs_button.pressed.connect(select_tab.bind("manage_glbs"))	
+	%manage_physics_button.pressed.connect(select_tab.bind("manage_physics"))	
 	
 func select_tab(tab_name):
 	for child in tab_container.get_children():

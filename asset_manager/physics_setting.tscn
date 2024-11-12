@@ -1,0 +1,69 @@
+[gd_scene load_steps=4 format=3 uid="uid://bqkvkqxjl8sx6"]
+
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_fc1wt"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/physics_setting.gd" id="1_xbhqy"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/materials_list.gd" id="3_jc8wk"]
+
+[node name="physics_setting" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_fc1wt")
+script = ExtResource("1_xbhqy")
+
+[node name="HBoxContainer" type="HSplitContainer" parent="."]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Materials"
+horizontal_alignment = 1
+
+[node name="debug_select_material_table_button" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Debug: Select Material Table"
+
+[node name="materials_list" type="Tree" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 3
+hide_root = true
+select_mode = 1
+script = ExtResource("3_jc8wk")
+
+[node name="vb" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="HBoxContainer/vb"]
+layout_mode = 2
+text = "Static Bodies"
+horizontal_alignment = 1
+
+[node name="static_body_list" type="Tree" parent="HBoxContainer/vb"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 320)
+layout_mode = 2
+size_flags_horizontal = 3
+allow_reselect = true
+hide_root = true
+
+[node name="add_static_body_error" type="Label" parent="HBoxContainer/vb"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+text = "Error Adding new setting "
+
+[node name="add_static_body_button" type="Button" parent="HBoxContainer/vb"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add"

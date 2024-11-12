@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://cvkbd1wtigq55"]
+[gd_scene load_steps=13 format=3 uid="uid://cvkbd1wtigq55"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/asset_library_settings.gd" id="1_e10cw"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_s06u1"]
@@ -8,8 +8,10 @@
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/manage_tags.gd" id="5_xuw7t"]
 [ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="6_0bgin"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/manage_glbs.gd" id="7_vfheg"]
+[ext_resource type="PackedScene" uid="uid://bqkvkqxjl8sx6" path="res://addons/m_terrain/asset_manager/physics_setting.tscn" id="8_0najd"]
 [ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="8_4gf8a"]
 [ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="8_wny8y"]
+[ext_resource type="Texture2D" uid="uid://da03coo0w347n" path="res://addons/m_terrain/icons/physics_icon.svg" id="11_xca31"]
 
 [node name="PanelContainer" type="PanelContainer"]
 anchors_preset = 15
@@ -144,6 +146,10 @@ size_flags_vertical = 3
 max_columns = 10
 icon_mode = 0
 
+[node name="manage_physics" parent="tab_container" instance=ExtResource("8_0najd")]
+visible = false
+layout_mode = 2
+
 [node name="Control" type="Control" parent="."]
 custom_minimum_size = Vector2(81.795, 36)
 layout_mode = 2
@@ -182,7 +188,16 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
+text = "GLB"
 icon = ExtResource("4_0n4l3")
+expand_icon = true
+
+[node name="manage_physics_button" type="Button" parent="Control/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("11_xca31")
 expand_icon = true
 
 [node name="close_settings_button" type="Button" parent="Control/HBoxContainer"]

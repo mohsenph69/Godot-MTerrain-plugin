@@ -82,17 +82,21 @@ func add_mesh_item(name:String,lod:int,node:Node)->void:
 		mesh_items[name]["mesh_nodes"].resize(lod + 1)
 	if node is ImporterMeshInstance3D:
 		mesh_items[name]["mesh_nodes"][lod] = node
-		if node.mesh:
-			var mesh:Mesh = node.mesh.get_mesh()			
-			for i in mesh.get_surface_count():
-				var material = mesh.surface_get_material(i)
-				if material:
-					if not materials.has(material.resource_name):
-						materials[material.resource_name] = get_empty_material()						
-						materials[material.resource_name].glb_material = material
-					if not mesh in materials[material.resource_name].meshes:
-						materials[material.resource_name].meshes.push_back(mesh)
+		if not node.mesh: 
+			return		
+		add_materials_from_mesh(node.mesh.get_mesh())	
 
+func add_materials_from_mesh(mesh:Mesh):
+	for i in mesh.get_surface_count():			
+		var material = mesh.surface_get_material(i)
+		if not material: continue
+		if not materials.has(material.resource_name):
+			materials[material.resource_name] = get_empty_material()						
+			materials[material.resource_name].glb_material = material
+		var mesh_id = MAssetTable.get_singleton().mesh_get_id(mesh)
+		if not mesh_id in materials[material.resource_name].meshes:		
+			materials[material.resource_name].meshes.push_back(mesh_id)
+			
 func add_mesh_to_collection(collection_name:String, mesh_name:String, is_root:bool):
 	if not collections.has(collection_name):
 		collections[collection_name] = get_empty_collection()
@@ -320,25 +324,31 @@ func compare_mesh(new_mesh,original_mesh)->IMPORT_STATE:
 		return IMPORT_STATE.REMOVE
 	return IMPORT_STATE.NOT_HANDLE
 
-func replace_mesh_materials(mesh_item_name):	
+func replace_mesh_materials():	
 	var asset_library = MAssetTable.get_singleton()	
 	for material_name in materials:
+		print(material_name, ": ", materials[material_name].meshes)
 		if materials[material_name].original_material == materials[material_name].material:
+			print("keepting original material for ", material_name, ": ",materials[material_name].material)
 			continue
-		for mesh in materials[material_name].meshes						
-			if not mesh is Mesh:
-				push_error("trying to replace mesh materials, but ", mesh, " inside ", material_name, " is not a mesh")
-			for surface_id in mesh.get_surface_count():						
-				if mesh.surface_get_material(surface_id).resource_name == material_name:						
-					if materials[material_name].material is int:
-						mesh.surface_set_material(surface_id, load(MMaterialTable.get_singleton().table[materials[material_name].material]))
-						materials[material_name].meshes.erase(mesh)
-						materials[material_name].meshes.push_back(asset_library.mesh_get_id(mesh))					
-						return
+		for i in len(materials[material_name].meshes):			
+			var path = MHlod.get_mesh_path(materials[material_name].meshes[i])			
+			var mesh = load(path) if FileAccess.file_exists(path) else null			
+			for surface_id in mesh.get_surface_count():										
+				if mesh.surface_get_material(surface_id).resource_path != MMaterialTable.get_singleton().table[materials[material_name].original_material]: 										
+					#print("surface material path is not current material path: ", mesh.surface_get_material(surface_id).resource_path, " : ", MMaterialTable.get_singleton().table[materials[material_name].original_material])
+					continue
+				if materials[material_name].material is int:
+					mesh.surface_set_material(surface_id, load(MMaterialTable.get_singleton().table[materials[material_name].material]))																								
+					#print("saveing mesh ", materials[material_name].meshes[i], " with new material: ", materials[material_name].material)					
+					if FileAccess.file_exists(path):
+						mesh.take_over_path(path)
 					else:
-						print("TODO: save unsaved material when replacing materials during save_unsaved_meshes")
-						pass #save unsaved material
-		
+						ResourceSaver.save(mesh, path)
+				else:
+					print("TODO: save unsaved material when replacing materials during save_unsaved_meshes")
+					pass #save unsaved material
+						
 func save_unsaved_meshes(mesh_item_name:String)->bool:
 	var asset_library = MAssetTable.get_singleton()
 	if not mesh_item_name in mesh_items:

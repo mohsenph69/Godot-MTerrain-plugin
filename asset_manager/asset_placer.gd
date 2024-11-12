@@ -104,6 +104,7 @@ func regroup(group = current_group, sort_mode="asc"):
 	if not debounce_regroup(): 
 		return
 	var filtered_collections = get_filtered_collections(current_search, [0])
+	AssetIO.generate_collection_thumbnails(filtered_collections)
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
@@ -113,7 +114,7 @@ func regroup(group = current_group, sort_mode="asc"):
 		var sorted_items = []				
 		for collection_id in filtered_collections:
 			var collection_name = asset_library.collection_get_name(collection_id)
-			var thumbnail = AssetIO.generate_collection_thumbnail(collection_id)			
+			var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))			
 			if not thumbnail:
 				regroup.call_deferred()
 			sorted_items.push_back({"name":collection_name, "thumbnail":thumbnail, "id":collection_id})			
@@ -151,7 +152,7 @@ func regroup(group = current_group, sort_mode="asc"):
 				group_control = groups.get_node(tag_name)			
 				group_control.group_list.clear()
 			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
-				var thumbnail = AssetIO.generate_collection_thumbnail(collection_id)							
+				var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
 				if not thumbnail:
 					regroup.call_deferred()
 				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "thumbnail":thumbnail, "id":collection_id})
@@ -166,8 +167,7 @@ func regroup(group = current_group, sort_mode="asc"):
 		var sorted_items = []
 		for id in filtered_collections:
 			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):
-				var thumbnail = AssetIO.generate_collection_thumbnail(id)
-				print("generating thumbnail")
+				var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id))				
 				sorted_items.push_back({"name": asset_library.collection_get_name(id), "thumbnail":thumbnail, "id":id})				
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)

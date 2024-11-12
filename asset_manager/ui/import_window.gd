@@ -121,7 +121,7 @@ func init_materials_tree():
 	
 	var root := materials_tree.create_item()	
 	var material_table := MMaterialTable.get_singleton()
-	
+	AssetIO.generate_material_thumbnails(material_table.table.keys())
 	for material_name in asset_data.materials.keys():
 		var material_node = root.create_child()
 		var text = str(material_name) if material_name != "" else "(unnamed material)" 
@@ -162,8 +162,8 @@ func init_materials_tree():
 	)
 	
 func update_material_icon(item:TreeItem, id):
-	var thumbnail = AssetIO.generate_material_thumbnail(id, update_material_icon.bind(item,id))	
-	if thumbnail:		
+	var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id, false))
+	if thumbnail:				
 		item.set_icon(0, thumbnail)
 	else:		
 		await get_tree().create_timer(0.5).timeout.connect(update_material_icon.bind(item, id))

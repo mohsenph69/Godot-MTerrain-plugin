@@ -55,7 +55,7 @@ func bake_to_hlod_resource():
 			var material_array = mesh_array.map(func(a): return -1)
 			var shadow_array = mesh_array.map(func(a): return 0)
 			var gi_array = mesh_array.map(func(a): return 0)			
-			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_array, shadow_array, gi_array, 1 )
+			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_array, shadow_array, gi_array, 1)
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
 			var i = 0			
@@ -201,10 +201,12 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	var mesh_joiner := MMeshJoiner.new()				
 	var baker_inverse_transform = global_transform.inverse()	
 	var mesh_array := []
+	var material_array := []
 	var transforms := []
 	for node:MAssetMesh in get_all_masset_mesh_nodes(self, nodes_to_join):					
 		for mesh_item:MAssetMeshData in node.get_mesh_data():			
 			mesh_array.push_back(get_correct_mesh_lod_for_joining(mesh_item))
+			material_array.push_back(mesh_array[-1].surface_get_material(0))
 			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
 	for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
 		if not is_instance_valid(data.node):

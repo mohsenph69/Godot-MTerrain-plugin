@@ -226,11 +226,10 @@ static func glb_import_commit_changes():
 		var saved_successful = asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID		
 		if not saved_successful:
 			push_error("GLB import cannot import meshes: mesh could not be saved to file", str())
-			return		
-		saved_successful = asset_data.replace_mesh_materials(mesh_name)
-		if not saved_successful:
-			push_error("GLB import error: cannot update saved meshes' materials", str())
 			return				
+		#if not saved_successful:
+			#push_error("GLB import error: cannot update saved meshes' materials")
+			#return				
 		var meshes = fill_mesh_lod_gaps(mesh_info["meshes"])				
 		
 		var materials:PackedInt32Array
@@ -245,6 +244,11 @@ static func glb_import_commit_changes():
 				push_error("something bad happened mesh id should not be -1")
 				continue
 			asset_library.mesh_item_update(mesh_info["id"],meshes,materials)
+	######################
+	## Update Materials ##
+	######################
+	asset_data.replace_mesh_materials()
+	
 	#######################
 	## Commit collisions ##
 	#######################
@@ -268,17 +272,14 @@ static func glb_import_commit_changes():
 	asset_library.finish_import.emit(asset_data.glb_path)
 	MAssetTable.save()
 	
-static func fill_mesh_lod_gaps(mesh_array):
-	print("before fill ", mesh_array)
+static func fill_mesh_lod_gaps(mesh_array):	
 	var result = mesh_array.duplicate()
 	var last_mesh = null
 	for i in len(mesh_array):						
-		if mesh_array[i] == -1 and last_mesh != null and i != len(mesh_array)-1:			
-			print(i, ": ", last_mesh)
+		if mesh_array[i] == -1 and last_mesh != null and i != len(mesh_array)-1:						
 			result[i] = last_mesh
 		else:			
-			last_mesh = mesh_array[i]
-	print("after fill ", result)
+			last_mesh = mesh_array[i]	
 	return result		
 
 static func import_collection(glb_node_name:String):		
@@ -419,41 +420,40 @@ static func collection_parse_name(name:String)->String:
 #endregion
 
 #region THUMBNAILS
-static func generate_material_thumbnail(material_id, callback: Callable):			
+static func generate_material_thumbnails(material_ids):	
+	for id in material_ids:
+		generate_material_thumbnail(id)
+
+static func generate_material_thumbnail(material_id):			
 	if not MMaterialTable.get_singleton().table.has(material_id):
 		push_error("trying to generate thumbnail for material id that does not exist:", material_id)
 		return null
 	var path = MMaterialTable.get_singleton().table[material_id]
-	var thumbnail_path = get_thumbnail_path(material_id, false)
-	var thumbnail_import_path = thumbnail_path + ".import"
-	if path and FileAccess.get_modified_time(path) < FileAccess.get_modified_time( thumbnail_path ):		
-		if not FileAccess.file_exists(thumbnail_import_path):
-			EditorInterface.get_resource_filesystem().scan()			
-			return
-		return load(thumbnail_path)
+	var thumbnail_path = get_thumbnail_path(material_id, false)	
+	if FileAccess.file_exists(thumbnail_path) and FileAccess.file_exists(path) and FileAccess.get_modified_time(path) < FileAccess.get_modified_time( thumbnail_path ):							
+		return		
 	var material = load(path)
 	EditorInterface.get_resource_previewer().queue_edited_resource_preview(material, AssetIO, "material_thumbnail_generated", material_id)						
+
+static func generate_collection_thumbnails(collection_ids):	
+	for id in collection_ids:
+		generate_collection_thumbnail(id)	
 
 static func generate_collection_thumbnail(collection_id):	
 	if not MAssetTable.get_singleton().has_collection(collection_id):
 		push_error("trying to generate thumbnail for collection that does not exist:", collection_id)
-		return null
+		return
 	#Check if glb has changed since last thumbnail generation					
 	var glb_path = get_glb_path_from_collection_id(collection_id)	
-	var thumbnail_path = get_thumbnail_path(collection_id)
-	var thumbnail_import_path = thumbnail_path + ".import"
-	if glb_path and FileAccess.get_modified_time(glb_path) < FileAccess.get_modified_time( thumbnail_path):		
-		if not FileAccess.file_exists(thumbnail_import_path):
-			EditorInterface.get_resource_filesystem().scan()
-			return					
-		return load(thumbnail_path)
+	var thumbnail_path = get_thumbnail_path(collection_id)	
+	if thumbnail_path and glb_path and FileAccess.file_exists(thumbnail_path) and FileAccess.file_exists(glb_path) and FileAccess.get_modified_time(glb_path) < FileAccess.get_modified_time( thumbnail_path):				
+		return
 	var data = {"meshes":[], "transforms":[]}
 	combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)													
 	var mesh_joiner := MMeshJoiner.new()					
 	mesh_joiner.insert_mesh_data(data.meshes, data.transforms, data.transforms.map(func(a):return -1))
 	var mesh = mesh_joiner.join_meshes()			
-	EditorInterface.get_resource_previewer().queue_edited_resource_preview(mesh, AssetIO, "collection_thumbnail_generated", collection_id)						
-	return null
+	EditorInterface.get_resource_previewer().queue_edited_resource_preview(mesh, AssetIO, "collection_thumbnail_generated", collection_id)							
 	
 static func get_glb_path_from_collection_id(collection_id):
 	var import_info = MAssetTable.get_singleton().import_info
@@ -494,21 +494,26 @@ static func collection_thumbnail_generated(path, preview, thumbnail_preview, col
 	var thumbnail_path = AssetIO.get_thumbnail_path(collection_id)
 	save_thumbnail(preview, thumbnail_path)						
 
-
 static func get_thumbnail_path(id: int, is_collection:bool=true):
 	if is_collection:
-		return "res://massets/thumbnails/" + str(id) + ".png"
+		return "res://massets/thumbnails/" + str(id) + ".dat"
 	else:
-		return "res://massets/thumbnails/material_" + str(id) + ".png"				
+		return "res://massets/thumbnails/material_" + str(id) + ".dat"
 
-static func save_thumbnail(preview, thumbnail_path):
-	if FileAccess.file_exists(thumbnail_path):
-		preview.take_over_path(thumbnail_path)		
-		#EditorInterface.get_resource_filesystem().reimport_files(PackedStringArray([thumbnail_path]))
-	else:
-		if not DirAccess.dir_exists_absolute("res://massets/thumbnails/"):
-			DirAccess.make_dir_recursive_absolute("res://massets/thumbnails/")
-		ResourceSaver.save(preview, thumbnail_path )
+static func save_thumbnail(preview:ImageTexture, thumbnail_path:String):		
+	var data = preview.get_image().save_png_to_buffer()
+	var file = FileAccess.open(thumbnail_path, FileAccess.WRITE)
+	file.store_var(data)
+	file.close()
+	
+static func get_thumbnail(path):	
+	if not FileAccess.file_exists(path):
+		return null
+	var file = FileAccess.open(path, FileAccess.READ)		
+	var image:= Image.new()
+	image.load_png_from_buffer(file.get_var())
+	file.close()		
+	return ImageTexture.create_from_image(image)		
 #endregion
 
 static func remove_collection(collection_id):
