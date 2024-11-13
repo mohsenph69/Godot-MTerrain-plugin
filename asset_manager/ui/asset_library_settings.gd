@@ -9,7 +9,7 @@ func _ready():
 	%manage_tags_button.pressed.connect(select_tab.bind("manage_tags"))	
 	%manage_glbs_button.pressed.connect(select_tab.bind("manage_glbs"))	
 	%manage_physics_button.pressed.connect(select_tab.bind("manage_physics"))	
-	
+
 func select_tab(tab_name):
 	for child in tab_container.get_children():
 		child.visible = child.name == tab_name	

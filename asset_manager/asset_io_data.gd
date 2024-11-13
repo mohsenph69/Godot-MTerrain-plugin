@@ -87,6 +87,7 @@ func add_mesh_item(name:String,lod:int,node:Node)->void:
 		add_materials_from_mesh(node.mesh.get_mesh())	
 
 func add_materials_from_mesh(mesh:Mesh):
+	if mesh == null: return
 	for i in mesh.get_surface_count():			
 		var material = mesh.surface_get_material(i)
 		if not material: continue
@@ -334,6 +335,7 @@ func replace_mesh_materials():
 		for i in len(materials[material_name].meshes):			
 			var path = MHlod.get_mesh_path(materials[material_name].meshes[i])			
 			var mesh = load(path) if FileAccess.file_exists(path) else null			
+			if not mesh: continue
 			for surface_id in mesh.get_surface_count():										
 				if mesh.surface_get_material(surface_id).resource_path != MMaterialTable.get_singleton().table[materials[material_name].original_material]: 										
 					#print("surface material path is not current material path: ", mesh.surface_get_material(surface_id).resource_path, " : ", MMaterialTable.get_singleton().table[materials[material_name].original_material])

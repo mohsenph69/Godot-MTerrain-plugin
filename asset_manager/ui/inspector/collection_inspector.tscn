@@ -59,6 +59,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Export To GLB"
 
+[node name="Label2" type="Label" parent="Release"]
+layout_mode = 2
+text = "Tags"
+horizontal_alignment = 1
+
 [node name="Tags" parent="Release" instance=ExtResource("2_afk15")]
 unique_name_in_owner = true
 layout_mode = 2

@@ -38,6 +38,7 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 68)
 layout_mode = 2
 columns = 3
+hide_folding = true
 scroll_horizontal_enabled = false
 scroll_vertical_enabled = false
 

@@ -195,6 +195,7 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	var mesh_instance = MeshInstance3D.new()
 	root_node.add_child(mesh_instance)			
 	mesh_instance.name = name.to_lower() + "_joined_mesh_lod_" + str(join_at_lod)
+	print(mesh_instance.name)
 	###################
 	## JOIN THE MESH ##
 	###################
@@ -254,7 +255,7 @@ func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
 	
 func update_joined_mesh_from_glb():
 	var glb_path = get_joined_mesh_glb_path()
-	print(asset_mesh_updater.get_join_at_lod())
+	#print(asset_mesh_updater.get_join_at_lod())
 	if not FileAccess.file_exists(glb_path):		
 		push_error("trying to update joined mesh from glb, but glb does not exist at ", glb_path)	
 		return
@@ -274,10 +275,14 @@ func update_joined_mesh_from_glb():
 
 func toggle_joined_mesh_disabled(toggle_on):
 	joined_mesh_disabled = toggle_on
-	if toggle_on:
-		asset_mesh_updater.joined_mesh_collection_id = -1
+	if toggle_on:		
+		asset_mesh_updater.joined_mesh_collection_id = -1		
 	else:
 		asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
+	if force_lod_enabled:
+		force_lod(force_lod_value)
+	else:
+		force_lod(-1)
 
 func remove_joined_mesh():
 	var path = get_joined_mesh_glb_path()

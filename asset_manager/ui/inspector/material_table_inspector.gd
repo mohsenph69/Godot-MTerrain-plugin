@@ -3,7 +3,7 @@ extends HFlowContainer
 var material_table: MMaterialTable = MMaterialTable.get_singleton()
 
 func _enter_tree():		
-	if EditorInterface.get_edited_scene_root() == self: return
+	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	for id in material_table.table:			
 		var texture_rect = TextureRect.new()
@@ -17,7 +17,8 @@ func _enter_tree():
 			
 		
 func _ready():
-	if EditorInterface.get_edited_scene_root() == self: return
+	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+
 
 	if get_child_count()>1:
 		$Label.queue_free()

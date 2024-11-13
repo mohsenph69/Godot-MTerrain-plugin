@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://cvkbd1wtigq55"]
+[gd_scene load_steps=17 format=3 uid="uid://cvkbd1wtigq55"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/asset_library_settings.gd" id="1_e10cw"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_s06u1"]
@@ -10,8 +10,14 @@
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/manage_glbs.gd" id="7_vfheg"]
 [ext_resource type="PackedScene" uid="uid://bqkvkqxjl8sx6" path="res://addons/m_terrain/asset_manager/physics_setting.tscn" id="8_0najd"]
 [ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="8_4gf8a"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/settings_glb_tree.gd" id="8_283tb"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="8_u04fb"]
 [ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="8_wny8y"]
+[ext_resource type="PackedScene" uid="uid://cysovcswko088" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.tscn" id="9_l487g"]
 [ext_resource type="Texture2D" uid="uid://da03coo0w347n" path="res://addons/m_terrain/icons/physics_icon.svg" id="11_xca31"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_fxsq8"]
+font_color = Color(1, 0, 0, 1)
 
 [node name="PanelContainer" type="PanelContainer"]
 anchors_preset = 15
@@ -30,6 +36,7 @@ theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
 [node name="manage_groups" type="PanelContainer" parent="tab_container"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_s06u1")
@@ -38,72 +45,118 @@ script = ExtResource("5_3av1a")
 [node name="HBoxContainer" type="HBoxContainer" parent="tab_container/manage_groups"]
 layout_mode = 2
 
-[node name="ScrollContainer2" type="ScrollContainer" parent="tab_container/manage_groups/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="group_names" type="VBoxContainer" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2"]
+[node name="group_names" type="VBoxContainer" parent="tab_container/manage_groups/HBoxContainer"]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="grouping_label" type="Label" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2/group_names"]
+[node name="grouping_label" type="Label" parent="tab_container/manage_groups/HBoxContainer/group_names"]
 layout_mode = 2
 text = "Groups"
 horizontal_alignment = 1
 
-[node name="add_group_button" type="Button" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2/group_names"]
+[node name="group_search" parent="tab_container/manage_groups/HBoxContainer/group_names" instance=ExtResource("8_wny8y")]
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-text = "Add Group"
 
-[node name="group_list" type="VBoxContainer" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer2/group_names"]
+[node name="group_rename_error" type="Label" parent="tab_container/manage_groups/HBoxContainer/group_names"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Group with that name already exists!"
+label_settings = SubResource("LabelSettings_fxsq8")
+horizontal_alignment = 1
+
+[node name="group_list" type="Tree" parent="tab_container/manage_groups/HBoxContainer/group_names"]
 layout_mode = 2
 size_flags_vertical = 3
+allow_reselect = true
+hide_folding = true
+hide_root = true
+select_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="tab_container/manage_groups/HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="tab_container/manage_groups/HBoxContainer/group_names"]
+layout_mode = 2
+alignment = 1
+
+[node name="add_group_button" type="Button" parent="tab_container/manage_groups/HBoxContainer/group_names/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Add Group"
+
+[node name="remove_selected_groups_button" type="Button" parent="tab_container/manage_groups/HBoxContainer/group_names/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Remove Group(s)"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_groups/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Tags" parent="tab_container/manage_groups/HBoxContainer/ScrollContainer" instance=ExtResource("6_0bgin")]
+[node name="Label2" type="Label" parent="tab_container/manage_groups/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Tags"
+horizontal_alignment = 1
+
+[node name="tag_list" parent="tab_container/manage_groups/HBoxContainer/VBoxContainer" instance=ExtResource("6_0bgin")]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
 [node name="manage_tags" type="HSplitContainer" parent="tab_container"]
-visible = false
 layout_mode = 2
 split_offset = 65
 script = ExtResource("5_xuw7t")
 
-[node name="ScrollContainer" type="ScrollContainer" parent="tab_container/manage_tags"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_tags/ScrollContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_tags"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="search" parent="tab_container/manage_tags/ScrollContainer/VBoxContainer" instance=ExtResource("8_wny8y")]
-custom_minimum_size = Vector2(0, 36)
+[node name="HBoxContainer" type="HBoxContainer" parent="tab_container/manage_tags/VBoxContainer"]
 layout_mode = 2
 
-[node name="Tree" type="Tree" parent="tab_container/manage_tags/ScrollContainer/VBoxContainer"]
+[node name="group_by_button" type="Button" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("2_cjh4i")
+expand_icon = true
+script = ExtResource("8_u04fb")
+
+[node name="grouping_popup" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_l487g")]
+visible = false
+
+[node name="search" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer" instance=ExtResource("8_wny8y")]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+align_right = null
+
+[node name="MarginContainer" type="MarginContainer" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.37
+
+[node name="collection_list" type="Tree" parent="tab_container/manage_tags/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 hide_root = true
 select_mode = 2
 
-[node name="ScrollContainer2" type="ScrollContainer" parent="tab_container/manage_tags"]
+[node name="VBoxContainer2" type="VBoxContainer" parent="tab_container/manage_tags"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Tags" parent="tab_container/manage_tags/ScrollContainer2" instance=ExtResource("6_0bgin")]
+[node name="Label2" type="Label" parent="tab_container/manage_tags/VBoxContainer2"]
 layout_mode = 2
+text = "Tags"
+horizontal_alignment = 1
 
-[node name="add_tag_button" type="Button" parent="tab_container/manage_tags/ScrollContainer2/Tags"]
+[node name="tag_list" parent="tab_container/manage_tags/VBoxContainer2" instance=ExtResource("6_0bgin")]
 layout_mode = 2
-text = "+"
 
 [node name="manage_glbs" type="MarginContainer" parent="tab_container"]
 visible = false
@@ -118,9 +171,19 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="search" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer" instance=ExtResource("8_wny8y")]
+[node name="HBoxContainer" type="HBoxContainer" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="glb_search" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer/HBoxContainer" instance=ExtResource("8_wny8y")]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+size_flags_horizontal = 3
+align_right = null
+
+[node name="MarginContainer" type="MarginContainer" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.3
 
 [node name="glb_tree" type="Tree" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer"]
 layout_mode = 2
@@ -129,22 +192,34 @@ size_flags_vertical = 3
 columns = 2
 hide_root = true
 select_mode = 1
+script = ExtResource("8_283tb")
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="tab_container/manage_glbs/HSplitContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="search2" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2" instance=ExtResource("8_wny8y")]
+[node name="HBoxContainer2" type="HBoxContainer" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2"]
+layout_mode = 2
+alignment = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.3
+
+[node name="collection_search" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2/HBoxContainer2" instance=ExtResource("8_wny8y")]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 3
+align_right = true
 
-[node name="glb_details" type="ItemList" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2"]
+[node name="glb_details" type="Tree" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-max_columns = 10
-icon_mode = 0
+columns = 2
+hide_folding = true
+hide_root = true
 
 [node name="manage_physics" parent="tab_container" instance=ExtResource("8_0najd")]
 visible = false

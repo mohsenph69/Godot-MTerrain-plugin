@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://bqkvkqxjl8sx6"]
+[gd_scene load_steps=5 format=3 uid="uid://bqkvkqxjl8sx6"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_fc1wt"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/physics_setting.gd" id="1_xbhqy"]
+[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="3_7reqd"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/materials_list.gd" id="3_jc8wk"]
 
 [node name="physics_setting" type="PanelContainer"]
@@ -27,8 +28,17 @@ horizontal_alignment = 1
 
 [node name="debug_select_material_table_button" type="Button" parent="HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "Debug: Select Material Table"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="materials_search" parent="HBoxContainer/VBoxContainer" instance=ExtResource("3_7reqd")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
 
 [node name="materials_list" type="Tree" parent="HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
@@ -39,6 +49,11 @@ hide_root = true
 select_mode = 1
 script = ExtResource("3_jc8wk")
 
+[node name="add_material_button" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Add"
+
 [node name="vb" type="VBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -47,6 +62,11 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "Static Bodies"
 horizontal_alignment = 1
+
+[node name="static_body_search" parent="HBoxContainer/vb" instance=ExtResource("3_7reqd")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
 
 [node name="static_body_list" type="Tree" parent="HBoxContainer/vb"]
 unique_name_in_owner = true

@@ -4,14 +4,17 @@ extends VBoxContainer
 var baker: HLod_Baker
 
 func _ready():	
-	if EditorInterface.get_edited_scene_root() == self: return
+	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+
 	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return	
 	%Bake.pressed.connect(baker.bake_to_hlod_resource)				
 	%Join.pressed.connect( show_join_mesh_window )			
 	
 	var force_lod_checkbox = %force_lod_checkbox
 	var force_lod_value = %force_lod_value
+	%show_joined_button.visible = false
 	force_lod_checkbox.toggled.connect(func(toggle_on):
+		%show_joined_button.visible = toggle_on
 		force_lod_value.editable = toggle_on
 		baker.force_lod_enabled = toggle_on
 		force_lod_value.visible = toggle_on
@@ -47,6 +50,10 @@ func _ready():
 		else:
 			baker.remove_joined_mesh()
 			remove_joined_mesh.visible = false
+	)
+	%show_joined_button.pressed.connect(func():
+		baker.force_lod(baker.join_at_lod)
+		baker.notify_property_list_changed()		
 	)
 func show_join_mesh_window():	
 	var window = preload("res://addons/m_terrain/asset_manager/ui/mesh_join_window.tscn").instantiate()	

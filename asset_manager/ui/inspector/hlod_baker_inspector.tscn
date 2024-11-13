@@ -38,6 +38,11 @@ layout_mode = 2
 max_value = 10.0
 editable = false
 
+[node name="show_joined_button" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Show Joined"
+
 [node name="joined_mesh_thumbnail" type="TextureRect" parent="."]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)

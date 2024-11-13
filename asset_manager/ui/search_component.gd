@@ -6,8 +6,10 @@ signal text_changed
 @onready var search_box:LineEdit = find_child("search_box")
 @onready var search_button:Button = find_child("search_button")
 @onready var clear_button:Button = find_child("clear_button")
-
+@export var align_right = false
 func _ready():
+	if align_right:
+		move_child(search_button, -1)
 	search_button.pressed.connect(func():
 		clear_button.visible = true
 		search_box.visible = true

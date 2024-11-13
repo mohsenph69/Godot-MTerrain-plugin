@@ -22,7 +22,7 @@ var queued_thumbnails = {}
 var last_regroup = null
 
 func _ready():		
-	if EditorInterface.get_edited_scene_root() == self: return
+	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 
@@ -46,13 +46,6 @@ func _ready():
 	)
 	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
 	grouping_popup.group_selected.connect(regroup)	
-			
-	#Filters tags control
-	var tags_control = find_child("Tags")	
-	tags_control.set_options(asset_library.tag_get_names())
-	tags_control.set_tags_from_data([])
-	for child in tags_control.tag_list.get_children():
-		child.set_editable(false)
 
 func search_items(text=""):					
 	current_search = text		
@@ -88,27 +81,29 @@ func get_filtered_collections(text="", tags_to_excluded=[]):
 	return result
 	
 func debounce_regroup():
+	if not is_inside_tree():  return false
 	if last_regroup is int and Time.get_ticks_msec() - last_regroup < 1000:
-		last_regroup = get_tree().create_timer(1)
+		last_regroup = get_tree().create_timer(0.2)
 		last_regroup.timeout.connect(func():
 			last_regroup = 0
 			regroup()
 		)
 		return false
 	elif last_regroup is SceneTreeTimer:
-		return false
+		return false	
 	last_regroup = Time.get_ticks_msec()
 	return true
 	
 func regroup(group = current_group, sort_mode="asc"):	
-	if not debounce_regroup(): 
-		return
-	var filtered_collections = get_filtered_collections(current_search, [0])
-	AssetIO.generate_collection_thumbnails(filtered_collections)
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
 			child.queue_free()
+		current_group = group
+	if not debounce_regroup(): 
+		return
+	var filtered_collections = get_filtered_collections(current_search, [0])
+	AssetIO.generate_collection_thumbnails(filtered_collections)	
 	if group == "None":		
 		ungrouped.group_list.clear()	
 		var sorted_items = []				

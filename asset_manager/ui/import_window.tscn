@@ -54,7 +54,6 @@ text = "Materials"
 
 [node name="collections_hsplit" type="HSplitContainer" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -76,6 +75,7 @@ hide_root = true
 
 [node name="materials_hsplit" type="HSplitContainer" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 

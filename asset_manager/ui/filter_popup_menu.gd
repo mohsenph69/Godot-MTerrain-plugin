@@ -5,7 +5,7 @@ signal filter_changed
 
 @onready var all_button = find_child("all_button")
 @onready var clear_button = find_child("clear_button")
-@onready var tags_control = find_child("Tags")
+@onready var tag_list = find_child("tag_list")
 
 var current_filter = []
 
@@ -17,20 +17,24 @@ func _ready():
 			all_button.text = "match any"
 		filter_changed.emit(current_filter, all_button.button_pressed)
 	)	
-	tags_control.editable = false	
-	tags_control.tag_changed.connect(update_filter)
+	tag_list.set_editable(false)
+	tag_list.tag_changed.connect(update_filter)
 	clear_button.pressed.connect(func():
+		current_filter = []
+		tag_list.set_options()		
+		filter_changed.emit(current_filter, all_button.button_pressed)
 		if all_button.button_pressed:
-			tags_control.set_tags_from_data([])
+			tag_list.set_tags_from_data(current_filter)
 		else:
-			tags_control.set_tags_from_data(owner.asset_library.tag_get_names().keys())
+			tag_list.set_tags_from_data(MAssetTable.get_singleton().tag_get_names().keys())
+		
 	)
-	#visibility_changed.connect(init_options)
+	visibility_changed.connect(init_options)
 
 func init_options():
 	if visible:	
-		tags_control.set_options(owner.asset_library.tag_get_names())		
-		tags_control.set_tags_from_data(current_filter)
+		tag_list.set_options()		
+		tag_list.set_tags_from_data(current_filter)
 		
 func update_filter(tag_id, toggled_on ):
 	if toggled_on:

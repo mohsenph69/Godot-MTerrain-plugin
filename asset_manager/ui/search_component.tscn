@@ -20,6 +20,7 @@ expand_icon = true
 visible = false
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 placeholder_text = "search"
 
 [node name="clear_button" type="Button" parent="."]

@@ -10,7 +10,7 @@ var asset_data:AssetIOData
 var asset_library = MAssetTable.get_singleton()
 var material_table_items = {}
 func _ready():
-	if EditorInterface.get_edited_scene_root() == self: return
+	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	if get_parent() is Window:
 		get_parent().close_requested.connect(get_parent().queue_free)

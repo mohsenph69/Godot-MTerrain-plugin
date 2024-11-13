@@ -8,8 +8,9 @@ var baker: HLod_Baker
 var nodes_to_join = []	
 var original_nodes_to_join = []
 
-func _ready():
-	if EditorInterface.get_edited_scene_root() == self: return
+func _ready():	
+	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	title = "\"" + baker.name + "\" joined mesh settings"
 	commit_button.pressed.connect(commit)
 	cancel_button.pressed.connect(queue_free)
 	close_requested.connect(queue_free)
@@ -59,9 +60,14 @@ func _ready():
 	set_update_mode(not baker.has_joined_mesh_glb())
 	%export_joined_mesh_toggle.disabled = not baker.has_joined_mesh_glb()
 	%export_joined_mesh_toggle.toggled.connect(set_update_mode)
-
+	%show_joined_mesh_glb_button.pressed.connect(func():
+		var path = baker.get_joined_mesh_glb_path()
+		EditorInterface.get_file_system_dock().navigate_to_path(path)		
+	)
 func set_update_mode(toggle_on):
 	%node_tree.visible = toggle_on
+	%join_at_lod_hbox.visible = toggle_on
+	%show_joined_mesh_glb_button.visible = not toggle_on
 	%warning_label.visible = toggle_on and baker.has_joined_mesh_glb()
 	if toggle_on:
 		%export_joined_mesh_toggle.text = "Export from scene"
@@ -100,8 +106,7 @@ func build_tree(parent_node, parent_item:TreeItem):
 			build_tree(child, item)
 
 func commit():			
-	baker.join_at_lod = %JoinLod.value
-	print(baker.join_at_lod)
+	baker.join_at_lod = %JoinLod.value	
 	if %export_joined_mesh_toggle.button_pressed:				
 		baker.make_joined_mesh(nodes_to_join, %JoinLod.value)
 		for node in original_nodes_to_join:

@@ -270,7 +270,7 @@ static func glb_import_commit_changes():
 		asset_library.import_info["__blend_files"] = {}
 	asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path
 	asset_library.finish_import.emit(asset_data.glb_path)
-	MAssetTable.save()
+	asset_library.save()	
 	
 static func fill_mesh_lod_gaps(mesh_array):	
 	var result = mesh_array.duplicate()
@@ -500,8 +500,8 @@ static func get_thumbnail_path(id: int, is_collection:bool=true):
 	else:
 		return "res://massets/thumbnails/material_" + str(id) + ".dat"
 
-static func save_thumbnail(preview:ImageTexture, thumbnail_path:String):		
-	var data = preview.get_image().save_png_to_buffer()
+static func save_thumbnail(preview:ImageTexture, thumbnail_path:String):			
+	var data = preview.get_image().save_png_to_buffer() if preview else Image.create_empty(64,64,false, Image.FORMAT_R8).save_png_to_buffer()
 	var file = FileAccess.open(thumbnail_path, FileAccess.WRITE)
 	file.store_var(data)
 	file.close()
@@ -524,6 +524,7 @@ static func remove_collection(collection_id):
 	for mesh_item_id in mesh_item_ids:
 		if not asset_library.has_mesh_item(mesh_item_id):
 			push_error("trying to remove a mesh item that doesn't exist: ", mesh_item_id)
+			continue
 		var mesh_array = asset_library.mesh_item_get_info(mesh_item_id).mesh
 		asset_library.mesh_item_remove(mesh_item_id)
 		for mesh_id in mesh_array:
@@ -532,8 +533,28 @@ static func remove_collection(collection_id):
 					var path = MHlod.get_mesh_path(mesh_id)
 					asset_library.erase_mesh_hash(load(path))
 					DirAccess.remove_absolute(path)	
-	asset_library.collection_remove(collection_id)
+	asset_library.collection_remove(collection_id)				
 	var thumbnail_path = get_thumbnail_path(collection_id)
-	if FileAccess.file_exists(thumbnail_path):
+	if FileAccess.file_exists(thumbnail_path):		
 		DirAccess.remove_absolute(thumbnail_path)		
-		
+	for glb_path in asset_library.import_info.keys():
+		if glb_path.begins_with("__"): continue
+		for node_name in asset_library.import_info[glb_path].keys():
+			if node_name.begins_with("__"): continue
+			if asset_library.import_info[glb_path][node_name].has("id"):
+				if asset_library.import_info[glb_path][node_name].id == collection_id:
+					asset_library.import_info[glb_path].erase(node_name)
+					return
+
+static func get_orphaned_collections():
+	var asset_library := MAssetTable.get_singleton()
+	var ids = asset_library.collection_get_list()			
+	var result = Array(ids)
+	for glb in asset_library.import_info.keys():
+		if glb.begins_with("__"): continue
+		for node_name in asset_library.import_info[glb]:
+			if node_name.begins_with("__"): continue
+			if asset_library.import_info[glb][node_name].has("id"):						
+				if asset_library.import_info[glb][node_name].id in result:
+					result.erase(asset_library.import_info[glb][node_name].id)
+	return result

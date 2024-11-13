@@ -9,11 +9,12 @@ func _input(event: InputEvent):
 
 func _toggled(toggle_on):
 	var popup:Popup = get_child(0)	
-	if toggle_on:				
+	if toggle_on:		
+		popup.visible = true		
 		var rect = Rect2i(Vector2i(), popup.size)				
 		if get_viewport_rect().size.y - global_position.y + size.y < global_position.y:			
 			popup.max_size.y = global_position.y
-			rect.position.y = global_position.y - popup.size.y
+			rect.position.y = global_position.y - popup.size.y	 -10
 		else:
 			rect.position.y = global_position.y + size.y
 			popup.max_size.y = get_viewport_rect().size.y - global_position.y - size.y		

@@ -8,7 +8,7 @@
 [node name="filter_popup" type="Popup"]
 auto_translate_mode = 1
 position = Vector2i(0, 33)
-size = Vector2i(188, 505)
+size = Vector2i(230, 505)
 visible = true
 max_size = Vector2i(16384, 670)
 script = ExtResource("1_xo84l")
@@ -42,8 +42,7 @@ size_flags_vertical = 0
 [node name="all_button" type="CheckButton" parent="PanelContainer/VBoxContainer/MarginContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 6
-button_pressed = true
-text = "match all"
+text = "match any"
 icon_alignment = 2
 
 [node name="clear_button" type="Button" parent="PanelContainer/VBoxContainer/MarginContainer/HBoxContainer"]
@@ -55,18 +54,14 @@ icon = ExtResource("1_jimx1")
 icon_alignment = 1
 expand_icon = true
 
-[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/VBoxContainer/ScrollContainer"]
+[node name="MarginContainer2" type="MarginContainer" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 2
+size_flags_vertical = 3
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="Tags" parent="PanelContainer/VBoxContainer/ScrollContainer/MarginContainer" instance=ExtResource("2_h2171")]
+[node name="tag_list" parent="PanelContainer/VBoxContainer/MarginContainer2" instance=ExtResource("2_h2171")]
 layout_mode = 2

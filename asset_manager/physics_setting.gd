@@ -20,17 +20,31 @@ func _ready() -> void:
 	materials_list.item_selected.connect(show_material_in_file_system_dock)
 	materials_list.item_activated.connect(show_replace_material_popup)
 	materials_list.material_table_changed.connect(update_materials_list)		
+	%materials_search.text_changed.connect(update_materials_list)
+	%add_material_button.pressed.connect(func():
+		var popup = load("res://addons/m_terrain/asset_manager/ui/select_resources_by_type.tscn").instantiate()		
+		popup.resources_selected.connect(add_materials_to_table)
+		popup.types = ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]
+		add_child(popup)
+		popup.popup()
+		
+	)
 	
-	update_setting_list()
+	update_static_body_list()
 	static_body_list.item_selected.connect(show_static_body_in_file_system_dock)
 	static_body_list.item_edited.connect(rename_static_body)
 	%add_static_body_button.pressed.connect(add_static_body)
+	%static_body_search.text_changed.connect(update_static_body_list)
 	
 	%debug_select_material_table_button.pressed.connect(func():		
 		file_system_dock.navigate_to_path(material_table.resource_path)
 		EditorInterface.edit_resource(material_table)
 	)
 	
+func add_materials_to_table(paths):
+	for path in paths:
+		material_table.add_material(path)
+		
 func show_replace_material_popup():
 	var popup:Popup = preload("res://addons/m_terrain/asset_manager/ui/replace_material_popup.tscn").instantiate()	
 	popup.original_material_id = materials_list.get_selected().get_metadata(0)
@@ -44,13 +58,14 @@ func replace_material(original_id, new_path):
 	material_table.save()
 	update_materials_list()
 	
-func update_materials_list():
+func update_materials_list(filter = null):
 	var list = MMaterialTable.get_singleton().table	
 	materials_list.clear()
 	var root = materials_list.get_root()
 	if not root:
 		root = materials_list.create_item()		
 	for i in list:
+		if filter and not filter in list[i]: continue
 		var item := root.create_child()
 		item.set_text(0, str(i))
 		item.set_metadata(0, i)
@@ -65,13 +80,14 @@ func update_materials_list():
 					#AssetIO.get_thumbnail(AssetIO.get_thumbnail_path())
 		item.collapsed = true
 			
-func update_setting_list():
+func update_static_body_list(filter = null):
 	var list = get_setting_list()
 	static_body_list.clear()
 	var root = static_body_list.get_root()
 	if not root:
 		root = static_body_list.create_item()
 	for sname in list:
+		if filter and not filter in sname: continue
 		print("adding ", sname)
 		var item := root.create_child()
 		item.set_editable(0, true)		
@@ -187,5 +203,5 @@ func add_static_body() -> void:
 	if not DirAccess.dir_exists_absolute(MHlod.get_physics_settings_dir()):
 		DirAccess.make_dir_recursive_absolute(MHlod.get_physics_settings_dir())
 	ResourceSaver.save(ns,npath)
-	update_setting_list()
+	update_static_body_list()
 	editor_file_system.scan()
