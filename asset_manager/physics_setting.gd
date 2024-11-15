@@ -4,7 +4,7 @@ extends Control
 @onready var add_err := %add_static_body_error
 @onready var materials_list: Tree = %materials_list
 @onready var static_body_list: Tree = %static_body_list
-@onready var material_table = MMaterialTable.get_singleton()
+@onready var material_table = AssetIO.get_material_table()
 var file_system_dock:FileSystemDock
 var editor_file_system:EditorFileSystem
 
@@ -21,14 +21,7 @@ func _ready() -> void:
 	materials_list.item_activated.connect(show_replace_material_popup)
 	materials_list.material_table_changed.connect(update_materials_list)		
 	%materials_search.text_changed.connect(update_materials_list)
-	%add_material_button.pressed.connect(func():
-		var popup = load("res://addons/m_terrain/asset_manager/ui/select_resources_by_type.tscn").instantiate()		
-		popup.resources_selected.connect(add_materials_to_table)
-		popup.types = ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]
-		add_child(popup)
-		popup.popup()
-		
-	)
+	%add_material_button.pressed.connect(show_add_material_popup)
 	
 	update_static_body_list()
 	static_body_list.item_selected.connect(show_static_body_in_file_system_dock)
@@ -36,44 +29,48 @@ func _ready() -> void:
 	%add_static_body_button.pressed.connect(add_static_body)
 	%static_body_search.text_changed.connect(update_static_body_list)
 	
-	%debug_select_material_table_button.pressed.connect(func():		
-		file_system_dock.navigate_to_path(material_table.resource_path)
-		EditorInterface.edit_resource(material_table)
-	)
 	
 func add_materials_to_table(paths):
 	for path in paths:
-		material_table.add_material(path)
+		AssetIO.update_material(-1, path)
+	
+func show_add_material_popup():
+	var popup = load("res://addons/m_terrain/asset_manager/ui/select_resources_by_type.tscn").instantiate()		
+	popup.resources_selected.connect(add_materials_to_table)
+	popup.types = ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]
+	popup.title = "Add Material(s)"
+	add_child(popup)
+	popup.popup()
 		
 func show_replace_material_popup():
-	var popup:Popup = preload("res://addons/m_terrain/asset_manager/ui/replace_material_popup.tscn").instantiate()	
-	popup.original_material_id = materials_list.get_selected().get_metadata(0)
-	print("popup with id ", popup.original_material_id)
+	var popup:Popup = preload("res://addons/m_terrain/asset_manager/ui/select_resources_by_type.tscn").instantiate()	
+	popup.resource_selected.connect(replace_material)
+	popup.types = ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]	
+	popup.title = material_table[materials_list.get_selected().get_metadata(0)]
 	add_child(popup)
-	popup.replace_material_requested.connect(replace_material)
+	popup.popup_centered()
 	
-func replace_material(original_id, new_path):
+func replace_material(new_path):
+	var original_id = materials_list.get_selected().get_metadata(0)
 	print("replacing ",original_id, " with ", new_path)
-	material_table.table[original_id] = new_path
-	material_table.save()
+	AssetIO.update_material(original_id,new_path)		
 	update_materials_list()
 	
-func update_materials_list(filter = null):
-	var list = MMaterialTable.get_singleton().table	
+func update_materials_list(filter = null):	
 	materials_list.clear()
 	var root = materials_list.get_root()
 	if not root:
 		root = materials_list.create_item()		
-	for i in list:
-		if filter and not filter in list[i]: continue
+	for i in material_table.keys():
+		if filter and not filter in material_table[i]: continue
 		var item := root.create_child()
 		item.set_text(0, str(i))
 		item.set_metadata(0, i)
 		item.set_icon(1, AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(i, false)))
-		item.set_text(2, list[i])		
+		item.set_text(2, material_table[i])		
 		for file in DirAccess.get_files_at("res://massets/meshes/"):
 			for dependency in ResourceLoader.get_dependencies("res://massets/meshes/" + file):
-				if list[i] in dependency: 				
+				if material_table[i] in dependency: 				
 					var mesh_item := item.create_child()
 					mesh_item.set_text(2, file)
 					break
@@ -114,7 +111,7 @@ func get_setting_list()->Dictionary: #key -> asset_name, value asset
 	return out
 	
 func show_material_in_file_system_dock() -> void:	
-	var list = MMaterialTable.get_singleton().table.values()
+	var list = material_table.values()
 	var sname = materials_list.get_selected().get_text(2)
 	if not sname in list:
 		printerr("Can not find Item ",sname)
@@ -153,7 +150,7 @@ func rename_static_body():
 	if not original_name in list: 
 		print("static body with original name ", original_name,  " does not exist")
 		return
-	if validate_item_name(item.get_text(0)):
+	if validate_static_body_name(item.get_text(0)):
 		print("renamed ", original_name, " to ", item.get_text(0))
 		list[original_name].name = item.get_text(0)
 		item.set_metadata(0, list[original_name].name)
@@ -161,7 +158,7 @@ func rename_static_body():
 		print("cannot rename ", original_name, " to ", item.get_text(0))
 		item.set_text(0, original_name)
 
-func validate_item_name(sname)->bool:
+func validate_static_body_name(sname)->bool:
 	add_err.visible = false
 	if sname == "":
 		add_err.visible = true

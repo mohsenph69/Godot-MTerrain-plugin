@@ -26,12 +26,6 @@ layout_mode = 2
 text = "Materials"
 horizontal_alignment = 1
 
-[node name="debug_select_material_table_button" type="Button" parent="HBoxContainer/VBoxContainer"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-text = "Debug: Select Material Table"
-
 [node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 

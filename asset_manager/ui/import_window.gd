@@ -29,15 +29,35 @@ func _ready():
 	get_window().title = "Importing: " + asset_data.glb_path
 	init_collections_tree()	
 	init_materials_tree()	
+	init_meshes_tree()
 	%materials_tab_button.button_group.pressed.connect(func(button):		
 		if button == %materials_tab_button:
-			%collections_hsplit.visible = false
 			%materials_hsplit.visible = true
-		else:
-			%collections_hsplit.visible = true
+			%meshes_hsplit.visible = false
+			%collections_hsplit.visible = false			
+		elif button == %meshes_tab_button:
 			%materials_hsplit.visible = false
+			%meshes_hsplit.visible = true
+			%collections_hsplit.visible = false
+		elif button == %collections_tab_button:
+			%materials_hsplit.visible = false
+			%meshes_hsplit.visible = false
+			%collections_hsplit.visible = true
 	)
+func init_meshes_tree():
+	var tree: Tree = %meshes_tree
+	var root = tree.create_item()
+	for mesh_name in asset_data.mesh_data:
+		var mesh_node = root.create_child()
+		mesh_node.set_text(0, mesh_name)
+		for material_array in asset_data.mesh_data[mesh_name]:
+			var set_node = mesh_node.create_child()
+			set_node.set_text(0, "Set")
+			for mat in material_array:
+				var material_node = set_node.create_child()
+				material_node.set_text(0, mat)	
 	
+		
 func init_collections_tree():
 	var tree: Tree = %collection_tree	
 	tree.item_edited.connect(func():				
@@ -120,8 +140,9 @@ func init_materials_tree():
 	)
 	
 	var root := materials_tree.create_item()	
-	var material_table := MMaterialTable.get_singleton()
-	AssetIO.generate_material_thumbnails(material_table.table.keys())
+	var material_table = AssetIO.get_material_table()	
+	AssetIO.generate_material_thumbnails(material_table.keys())
+	
 	for material_name in asset_data.materials.keys():
 		var material_node = root.create_child()
 		var text = str(material_name) if material_name != "" else "(unnamed material)" 
@@ -131,10 +152,10 @@ func init_materials_tree():
 			
 	var material_details_tree:Tree = %material_details_tree
 	root = material_details_tree.create_item()		
-	for id in material_table.table:				
+	for id in material_table:				
 		var item = root.create_child() 		
 		material_table_items[id] = item
-		var material_path = material_table.table[id]
+		var material_path = material_table[id]
 		item.set_text(0,material_path.get_file())
 		item.set_metadata(0, id)
 		item.set_tooltip_text(0, material_path)
@@ -155,10 +176,10 @@ func init_materials_tree():
 		var glb_material_name = selected_glb_material_item.get_text(0) 
 		if glb_material_name == "(unnamed material)": glb_material_name = ""
 		if asset_data.materials.has(glb_material_name):
-			var selected_material = material_details_tree.get_selected()
-			asset_data.materials[glb_material_name].material = int(selected_material.get_metadata(0))
+			var selected_material_item = material_details_tree.get_selected()
+			asset_data.materials[glb_material_name].material = int(selected_material_item.get_metadata(0))
 			selected_glb_material_item.set_text(1, str(asset_data.materials[glb_material_name].material))						
-			selected_glb_material_item.set_icon(1, selected_material.get_icon(0))
+			selected_glb_material_item.set_icon(1, selected_material_item.get_icon(0))
 	)
 	
 func update_material_icon(item:TreeItem, id):

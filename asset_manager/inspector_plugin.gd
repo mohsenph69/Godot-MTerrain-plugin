@@ -9,18 +9,14 @@ func _can_handle(object):
 	if object is MAssetTable:return true
 	if object is HLod_Baker: return true
 	if object is MHlodScene: return true
-	if object is MAssetMesh: return true
-	if object is MMaterialTable: return true
+	if object is MAssetMesh: return true	
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
 	if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is HLod_Baker: return true
 	#if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is : return true
 func _parse_begin(object):
 	var control
 	if object is MAssetTable:
-		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/asset_table_inspector.tscn").instantiate()
-	elif object is MMaterialTable: 		
-		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/material_table_inspector.tscn").instantiate()				
-		control.material_table = object
+		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/asset_table_inspector.tscn").instantiate()	
 	elif object is HLod_Baker:	
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()
 		control.baker = object

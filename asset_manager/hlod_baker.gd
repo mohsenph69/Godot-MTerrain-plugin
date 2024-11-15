@@ -18,6 +18,9 @@ var asset_mesh_updater := MAssetMeshUpdater.new()
 var timer: Timer
 
 const MAX_LOD = 10
+const UPDATE_INTERVAL = 0.5
+
+
 
 class SubHlodBakeData:
 	var sub_hlod: MHlod
@@ -51,7 +54,7 @@ func bake_to_hlod_resource():
 	var baker_inverse_transform = global_transform.inverse()
 	for item:MAssetMesh in all_masset_mesh_nodes:		
 		for mdata in item.get_mesh_data():		
-			var mesh_array = mdata.get_mesh_lod().meshes.map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh) if mesh is Mesh else -1)
+			var mesh_array = mdata.get_mesh_lod().map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh) if mesh is MMesh else -1)
 			var material_array = mesh_array.map(func(a): return -1)
 			var shadow_array = mesh_array.map(func(a): return 0)
 			var gi_array = mesh_array.map(func(a): return 0)			
@@ -330,7 +333,7 @@ func activate_mesh_updater():
 	elif not timer.is_inside_tree():		
 		timer.reparent(self)
 	if timer.is_inside_tree():		
-		timer.start(1)
+		timer.start(UPDATE_INTERVAL)
 
 func deactivate_mesh_updater():
 	if is_instance_valid(timer):

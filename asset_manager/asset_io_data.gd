@@ -9,6 +9,7 @@ enum COLLISION_TYPE {
 }
 
 var mesh_items:Dictionary
+var mesh_data: Dictionary
 var collections:Dictionary
 var materials:Dictionary #Key is import material name
 var glb_path:String
@@ -23,8 +24,7 @@ func clear():
 func get_empty_material()->Dictionary:
 	return {
 		"material": null,
-		"original_material": null,
-		"glb_material": null, #the material in the glb file
+		"original_material": null,		
 		"meshes": [] #array of meshes that use this material...should be converted to ids later
 	}.duplicate()
 
@@ -83,20 +83,17 @@ func add_mesh_item(name:String,lod:int,node:Node)->void:
 	if node is ImporterMeshInstance3D:
 		mesh_items[name]["mesh_nodes"][lod] = node
 		if not node.mesh: 
-			return		
-		add_materials_from_mesh(node.mesh.get_mesh())	
+			return				
 
-func add_materials_from_mesh(mesh:Mesh):
-	if mesh == null: return
-	for i in mesh.get_surface_count():			
-		var material = mesh.surface_get_material(i)
-		if not material: continue
-		if not materials.has(material.resource_name):
-			materials[material.resource_name] = get_empty_material()						
-			materials[material.resource_name].glb_material = material
-		var mesh_id = MAssetTable.get_singleton().mesh_get_id(mesh)
-		if not mesh_id in materials[material.resource_name].meshes:		
-			materials[material.resource_name].meshes.push_back(mesh_id)
+func add_mesh_data(sets, name):	
+	mesh_data[name] = []
+	for set_id in sets:
+		var material_names = set_id.materials.map(func(a): return a.material.name)
+		for material_name in material_names:
+			if not materials.has(material_name):
+				materials[material_name] = get_empty_material()
+		mesh_data[name].push_back(material_names)
+		
 			
 func add_mesh_to_collection(collection_name:String, mesh_name:String, is_root:bool):
 	if not collections.has(collection_name):
@@ -142,16 +139,24 @@ func finalize_glb_parse():
 		# fill meshes with mesh_id	
 		var mesh_nodes = mesh_items[mesh_item_name]["mesh_nodes"]
 		var meshes:=[]
-		for mesh_node in mesh_nodes:
+		for mesh_node in mesh_nodes:			
 			if mesh_node == null or not mesh_node is ImporterMeshInstance3D or mesh_node.mesh == null:
 				meshes.push_back(-1)
-				continue
-			var mesh:Mesh = mesh_node.mesh.get_mesh()
-			var mesh_id = asset_library.mesh_get_id(mesh)
+				continue			
+			var mesh: Mesh = mesh_node.mesh.get_mesh()
+			if mesh_node.has_meta("material_sets"):
+				var material_sets = mesh_node.get_meta("material_sets")
+				if "sets" in material_sets:					
+					add_mesh_data(material_sets.sets, mesh.resource_name) 				
+			for i in mesh.get_surface_count():
+				mesh.surface_set_material(i, null )
+			var mmesh:= MMesh.new()			
+			mmesh.create_from_mesh( mesh )			
+			var mesh_id = asset_library.mesh_get_id(mmesh)
 			if mesh_id == -1: ## then is a new mesh
-				meshes.push_back(mesh)
+				meshes.push_back(mmesh)
 				continue
-			meshes.push_back(mesh_id)
+			meshes.push_back(mesh_id)			
 		mesh_items[mesh_item_name]["meshes"] = meshes
 	
 	#################
@@ -271,8 +276,7 @@ func generate_import_tags():
 			if original_meshes.size() > meshes.size():
 				is_same = false
 				for i in range(original_meshes.size(),meshes.size()):
-					mesh_items[mesh_item_name]["mesh_state"].push_back(IMPORT_STATE.REMOVE)
-			#print("IS Same ",is_same)
+					mesh_items[mesh_item_name]["mesh_state"].push_back(IMPORT_STATE.REMOVE)			
 			if is_same:
 				mesh_items[mesh_item_name]["state"] = IMPORT_STATE.NO_CHANGE
 			else:
@@ -302,13 +306,13 @@ func generate_import_tags():
 			if material_id != null:			
 				materials[material_name].material = material_id
 			else:			
-				materials[material_name].material = materials[material_name].glb_material						
+				materials[material_name].material = -1 #materials[material_name].glb_material						
 
 func get_material_id_by_name(material_name):
-	var material_table := MMaterialTable.get_singleton()
-	for path in material_table.table.values():		
+	var material_table = AssetIO.get_material_table()
+	for path in material_table.values():		
 		if material_name.to_lower() == path.get_file().get_slice(".", 0).to_lower():			
-			return material_table.table.find_key(path)		
+			return material_table.find_key(path)		
 	return null
 
 func compare_mesh(new_mesh,original_mesh)->IMPORT_STATE:
@@ -325,8 +329,9 @@ func compare_mesh(new_mesh,original_mesh)->IMPORT_STATE:
 		return IMPORT_STATE.REMOVE
 	return IMPORT_STATE.NOT_HANDLE
 
-func replace_mesh_materials():	
+func replace_mesh_materials():		
 	var asset_library = MAssetTable.get_singleton()	
+	var material_table = AssetIO.get_material_table()
 	for material_name in materials:
 		print(material_name, ": ", materials[material_name].meshes)
 		if materials[material_name].original_material == materials[material_name].material:
@@ -337,11 +342,10 @@ func replace_mesh_materials():
 			var mesh = load(path) if FileAccess.file_exists(path) else null			
 			if not mesh: continue
 			for surface_id in mesh.get_surface_count():										
-				if mesh.surface_get_material(surface_id).resource_path != MMaterialTable.get_singleton().table[materials[material_name].original_material]: 										
-					#print("surface material path is not current material path: ", mesh.surface_get_material(surface_id).resource_path, " : ", MMaterialTable.get_singleton().table[materials[material_name].original_material])
+				if mesh.surface_get_material(surface_id).resource_path != material_table[materials[material_name].original_material]: 															
 					continue
 				if materials[material_name].material is int:
-					mesh.surface_set_material(surface_id, load(MMaterialTable.get_singleton().table[materials[material_name].material]))																								
+					mesh.surface_set_material(surface_id, load(material_table[materials[material_name].material]))																								
 					#print("saveing mesh ", materials[material_name].meshes[i], " with new material: ", materials[material_name].material)					
 					if FileAccess.file_exists(path):
 						mesh.take_over_path(path)
@@ -358,7 +362,7 @@ func save_unsaved_meshes(mesh_item_name:String)->bool:
 		return false
 	var meshes = mesh_items[mesh_item_name]["meshes"]	
 	for i in len(meshes):				
-		if meshes[i] is Mesh:			
+		if meshes[i] is MMesh:			
 			var path = asset_library.mesh_get_path(meshes[i])									
 			var error = ResourceSaver.save(meshes[i],path)
 			if error != OK:	
@@ -388,8 +392,8 @@ func get_glb_import_info():
 			result[key].collision_items.push_back(collision_item)					
 		result[key]["id"] = collections[key]["id"]	
 	result["__materials"] = {}
-	for key in materials:		
-		result["__materials"][key] = materials[key].material
+	for key in materials:				
+		result["__materials"][key] = materials[key].material		
 	result["__metadata"] = meta_data
 	return result
 		

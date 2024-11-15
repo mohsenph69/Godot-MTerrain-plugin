@@ -162,6 +162,8 @@ static func glb_load(path, metadata={},no_window:bool=false):
 static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	for node in scene:
+		if not node:
+			print(node, " is not a node")
 		var name_data := node_parse_name(node)		
 		var child_count:int = node.get_child_count()
 		if name_data["lod"] >=0: ## Then defently is a mesh			
@@ -393,6 +395,7 @@ static func glb_show_import_window(asset_data:AssetIOData):
 static func node_parse_name(node:Node)->Dictionary:
 	var result = {"name":"","lod":-1,"col":null}
 	var lod:int = -1
+	print(node)
 	var search_result = regex_mesh_match.search(node.name)
 	if search_result:		
 		result["name"] = search_result.strings[1]
@@ -425,10 +428,10 @@ static func generate_material_thumbnails(material_ids):
 		generate_material_thumbnail(id)
 
 static func generate_material_thumbnail(material_id):			
-	if not MMaterialTable.get_singleton().table.has(material_id):
+	if not AssetIO.get_material_table().has(material_id):
 		push_error("trying to generate thumbnail for material id that does not exist:", material_id)
 		return null
-	var path = MMaterialTable.get_singleton().table[material_id]
+	var path = get_material_table()[material_id]
 	var thumbnail_path = get_thumbnail_path(material_id, false)	
 	if FileAccess.file_exists(thumbnail_path) and FileAccess.file_exists(path) and FileAccess.get_modified_time(path) < FileAccess.get_modified_time( thumbnail_path ):							
 		return		
@@ -479,9 +482,9 @@ static func combine_collection_meshes_and_transforms_recursive(collection_id, da
 				i += 1
 				continue
 			var mesh_path = MHlod.get_mesh_path(item.mesh[i])													
-			var mesh:Mesh = load(mesh_path)
-			if mesh.get_surface_count() > 0:		
-				data.meshes.push_back(mesh)
+			var mmesh:MMesh = load(mesh_path)						
+			if mmesh.get_surface_count() > 0:		
+				data.meshes.push_back(mmesh.get_mesh())
 				data.transforms.push_back(combined_transform * item.transform)
 				break	
 			i+= 1
@@ -558,3 +561,79 @@ static func get_orphaned_collections():
 				if asset_library.import_info[glb][node_name].id in result:
 					result.erase(asset_library.import_info[glb][node_name].id)
 	return result
+
+static func get_material_table():
+	var asset_library := MAssetTable.get_singleton()	
+	if not asset_library.import_info.has("__materials"):
+		asset_library.import_info["__materials"] = {}
+	return asset_library.import_info["__materials"]
+
+static func update_material(id, path):
+	var asset_library := MAssetTable.get_singleton()	
+	var materials = get_material_table()
+	if id == -1:
+		id = 0		
+		while materials.has(id):
+			id += 1
+	materials[id] = path
+	asset_library.import_info["__materials"] = materials
+	
+static func remove_material(id):
+	var asset_library := MAssetTable.get_singleton()	
+	var materials = get_material_table()
+	if materials.has(id):	
+		materials.erase(id)
+	asset_library.import_info["__materials"] = materials
+	
+static func import_settings(path):
+	var asset_library = MAssetTable.get_singleton()
+	var data = JSON.parse_string( FileAccess.get_file_as_string(path))
+	if not asset_library.import_info.has("__materials"):
+		asset_library.import_info["__materials"] = {}
+	for material in data.materials:
+		asset_library.import_info["__materials"][int(material)] = data.materials[material]	
+	if not asset_library.import_info.has("__blend_files"):
+		asset_library.import_info["__blend_files"] = {}
+	for blend_file in data.blend_files:
+		asset_library.import_info["__blend_files"][blend_file] = data.blend_files[blend_file]
+	for tag in data.tags.keys():
+		asset_library.tag_set_name(int(data.tags[tag]), tag)		
+	for group in data.groups:
+		#if asset_library.group_exist(group):
+			#print(group, " exists: ", asset_library.group_get_tags(group))
+			#asset_library.group_remove(group)	
+		asset_library.group_create(group)
+		for tag in data.groups[group]:
+			asset_library.group_add_tag(group, tag)
+	for glb_path in data.collections.keys():
+		for node_name in data.collections[glb_path].keys():
+			var id = data.collections[glb_path][node_name].id
+			if not asset_library.has_collection(id): continue
+			for tag in data.collections[glb_path][node_name].tags:
+				asset_library.collection_add_tag(id, tag)
+	#
+	
+static func export_settings(path):
+	var asset_library = MAssetTable.get_singleton()	
+	var result = {}
+	result["tags"] = asset_library.tag_get_names()
+	result["groups"] = {}
+	for group in asset_library.group_get_list():
+		result["groups"][group] = asset_library.group_get_tags(group)
+	result["materials"] = asset_library.import_info["__materials"] if asset_library.import_info.has("__materials") else {}
+	result["blend_files"] = asset_library.import_info["__blend_files"] if asset_library.import_info.has("__blend_files") else {}
+	result["collections"] = {}	
+	#COLLECTIONS
+	for glb_path in asset_library.import_info.keys():
+		if glb_path.begins_with("__"): continue #not a glb!
+		if not glb_path in result["blend_files"].values(): continue # not from a blend file
+		var key = result["blend_files"].find_key(glb_path) #  return the blend file that made this glb		
+		result.collections[key] = {}
+		for node_name in asset_library.import_info[glb_path]:
+			if node_name.begins_with("__"): continue #not a node!			
+			result.collections[key][node_name] = {"id": asset_library.import_info[glb_path][node_name].id} #store the glb node names that came from that blend file
+			result.collections[key][node_name]["tags"] = asset_library.collection_get_tags(result.collections[key][node_name].id)
+			
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(result))
+	file.close()

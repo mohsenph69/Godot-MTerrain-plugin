@@ -9,7 +9,14 @@ signal resources_selected
 @onready var search = find_child("search")
 
 var types = []# ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]:
+var select_multiple = false
+
 func _ready():
+	if select_multiple:
+		list.select_mode = Tree.SELECT_MULTI
+	else:
+		list.select_mode = Tree.SELECT_ROW
+		
 	list.set_column_expand(0, false)
 	list.set_column_custom_minimum_width(0, 64)	
 	search.text_changed.connect(filter_tree)
