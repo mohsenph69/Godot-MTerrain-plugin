@@ -9,7 +9,7 @@ var button_group = preload("res://addons/m_terrain/asset_manager/ui/sort_button_
 var sort_mode
 
 func _ready():
-	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	if not is_instance_valid(sort_type_list): return
 	for button in sort_type_list.get_children():
 		button.button_group = button_group

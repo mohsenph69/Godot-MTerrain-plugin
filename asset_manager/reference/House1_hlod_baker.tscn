@@ -1,52 +1,51 @@
 [gd_scene load_steps=2 format=3 uid="uid://bgsccshx83pjo"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_p8aww"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_856jx"]
 
 [node name="House1_hlod" type="Node3D"]
-script = ExtResource("1_p8aww")
+script = ExtResource("1_856jx")
 join_at_lod = 3
-joined_mesh_collection_id = 5
-bake_path = "res://massets/House1_hlod.res"
+bake_path = "res://massets/hlod/House1_hlod.res"
 metadata/extras = true
 metadata/hlod_id = 0.0
 metadata/tags = []
 
-[node name="Sphere1_001" type="MAssetMesh" parent="."]
-collection_id = 1
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0325475, 4.37643, 0)
-
-[node name="Table1_004" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, 5.32449)
-
-[node name="Table1_003" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, -5.59739)
-
-[node name="Table1_002" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.46363, 0, 0)
-
-[node name="Table1_001" type="MAssetMesh" parent="."]
-collection_id = 0
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.36793, 0, 0)
-
 [node name="Wall1_005" type="MAssetMesh" parent="."]
-collection_id = 2
+collection_id = 8
 transform = Transform3D(0, 0, 107.291, 0, 0.149278, 0, -10.2671, 0, 0, 0, -0.292326, 0)
 
 [node name="Wall1_004" type="MAssetMesh" parent="."]
-collection_id = 2
+collection_id = 8
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, 10.3008, 0, 0)
 
 [node name="Wall1_003" type="MAssetMesh" parent="."]
-collection_id = 2
+collection_id = 8
 transform = Transform3D(0, 0, 1, 0, 1, 0, -10.2671, 0, 0, -10.0452, 0, 0)
 
 [node name="Wall1_002" type="MAssetMesh" parent="."]
-collection_id = 2
+collection_id = 8
 transform = Transform3D(10.2671, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.35473)
 
 [node name="Wall1_001" type="MAssetMesh" parent="."]
-collection_id = 2
+collection_id = 8
 transform = Transform3D(9.30696, 0, 0, 0, 1, 0, 0, 0, 1, 1.08067, 0, -8.67685)
+
+[node name="Table1_004" type="MAssetMesh" parent="."]
+collection_id = 10
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, 5.32449)
+
+[node name="Table1_003" type="MAssetMesh" parent="."]
+collection_id = 10
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.090034, 0, -5.59739)
+
+[node name="Table1_002" type="MAssetMesh" parent="."]
+collection_id = 10
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.46363, 0, 0)
+
+[node name="Table1_001" type="MAssetMesh" parent="."]
+collection_id = 10
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.36793, 0, 0)
+
+[node name="Sphere1_001" type="MAssetMesh" parent="."]
+collection_id = 9
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0325475, 4.37643, 0)

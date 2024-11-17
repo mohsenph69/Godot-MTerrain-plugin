@@ -85,7 +85,7 @@ func update_static_body_list(filter = null):
 		root = static_body_list.create_item()
 	for sname in list:
 		if filter and not filter in sname: continue
-		print("adding ", sname)
+		#print("adding ", sname)
 		var item := root.create_child()
 		item.set_editable(0, true)		
 		item.set_text(0, sname)

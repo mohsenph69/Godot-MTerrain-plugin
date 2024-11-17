@@ -9,6 +9,9 @@ extends PanelContainer
 var asset_data:AssetIOData
 var asset_library = MAssetTable.get_singleton()
 var material_table_items = {}
+
+var invalid_materials := []
+
 func _ready():
 	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
@@ -27,6 +30,11 @@ func _ready():
 			get_parent().queue_free()
 	)
 	get_window().title = "Importing: " + asset_data.glb_path
+	
+	#print(asset_data.mesh_data)
+	#print(asset_data.materials)
+	#print(asset_data.mesh_items)
+	#print(asset_data.collections)
 	init_collections_tree()	
 	init_materials_tree()	
 	init_meshes_tree()
@@ -44,47 +52,71 @@ func _ready():
 			%meshes_hsplit.visible = false
 			%collections_hsplit.visible = true
 	)
+
 func init_meshes_tree():
-	var tree: Tree = %meshes_tree
-	var root = tree.create_item()
-	for mesh_name in asset_data.mesh_data:
-		var mesh_node = root.create_child()
-		mesh_node.set_text(0, mesh_name)
-		for material_array in asset_data.mesh_data[mesh_name]:
-			var set_node = mesh_node.create_child()
-			set_node.set_text(0, "Set")
-			for mat in material_array:
-				var material_node = set_node.create_child()
-				material_node.set_text(0, mat)	
+	var mesh_tree: Tree = %meshes_tree	
+	mesh_tree.item_edited.connect(func():				
+		var item := mesh_tree.get_selected()			
+		item.propagate_check(0)
+	)
+	mesh_tree.check_propagated_to_item.connect(func(item:TreeItem,column):
+		pass		
+		#var node = item.get_metadata(1)		
+		#if is_instance_valid(node):
+		#	node.ignore = not item.is_checked(column)
+		#	update_collection_details(true, mesh_tree.get_selected().get_metadata(0))
+	)	
+	var root = mesh_tree.create_item()	
+	for mesh_id in asset_data.mesh_data:
+		var mesh_name = asset_data.mesh_data[mesh_id].name
+		var mesh_tree_node = root.create_child()		
+		mesh_tree_node.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
+		mesh_tree_node.set_editable(0, true)				
+		mesh_tree_node.set_checked(0, true)
+		mesh_tree_node.set_text(0, mesh_name)		
+		for material_array in asset_data.mesh_data[mesh_id].material_sets:
+			var set_tree_node = mesh_tree_node.create_child()
+			set_tree_node.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
+			set_tree_node.set_checked(0, true)
+			set_tree_node.set_editable(0, true)
+						
+			var text = material_array.duplicate()
+			for i in len(text):
+				if text[i] == "":
+					text[i] = "???"
+			set_tree_node.set_text(0, "[" + ", ".join(text	) + "]")# "Set")
+			#for mat in material_array:
+				#var material_tree_node = set_tree_node.create_child()
+				#if mat == "":
+					#material_tree_node.set_text(0, "(unnamed material)")					
+				#else:
+					#material_tree_node.set_text(0, mat)	
 	
 		
 func init_collections_tree():
-	var tree: Tree = %collection_tree	
-	tree.item_edited.connect(func():				
-		var item := tree.get_selected()	
+	var collections_tree: Tree = %collection_tree	
+	collections_tree.item_edited.connect(func():				
+		var item := collections_tree.get_selected()	
 		item.propagate_check(0)
 	)
-	tree.check_propagated_to_item.connect(func(item:TreeItem,column):		
+	collections_tree.check_propagated_to_item.connect(func(item:TreeItem,column):		
 		var node = item.get_metadata(1)		
 		if is_instance_valid(node):
 			node.ignore = not item.is_checked(column)
-			update_collection_details(true, tree.get_selected().get_metadata(0))
+			update_collection_details(true, collections_tree.get_selected().get_metadata(0))
 	)
-	tree.set_column_expand(0,false)
-	tree.set_column_expand(1,true)
-	tree.set_column_expand(2,false)		
-	tree.set_column_custom_minimum_width(1,120)
-	tree.set_column_custom_minimum_width(2,120)	
-	tree.item_selected.connect(func():				
-		#tree.select_mode = Tree.SELECT_SINGLE
-		update_collection_details(true, tree.get_selected().get_metadata(0))
-		#tree.select_mode = Tree.SELECT_ROW
-		
+	collections_tree.set_column_expand(0,false)
+	collections_tree.set_column_expand(1,true)
+	collections_tree.set_column_expand(2,false)		
+	collections_tree.set_column_custom_minimum_width(1,120)
+	collections_tree.set_column_custom_minimum_width(2,120)	
+	collections_tree.item_selected.connect(func():						
+		update_collection_details(true, collections_tree.get_selected().get_metadata(0))				
 	)
-	var root = tree.create_item()			
+	var root = collections_tree.create_item()			
 	for key in asset_data.collections:		
 		if asset_data.collections[key].has("is_root"):
-			build_tree(key, root)
+			build_collection_tree(key, root)
 	
 func update_collection_details(is_collection:bool, item_node:Dictionary ):
 	if not item_node:
@@ -132,24 +164,26 @@ func update_collection_details(is_collection:bool, item_node:Dictionary ):
 func init_materials_tree():
 	var materials_tree: Tree = %materials_tree	
 	materials_tree.set_column_expand(1, false)	
-	materials_tree.set_column_custom_minimum_width(1, 64)	
-	materials_tree.item_edited.connect(func():
-		var item = materials_tree.get_edited()
-		var i = item.get_range(2)
-		
-	)
+	materials_tree.set_column_custom_minimum_width(1, 64)		
 	
 	var root := materials_tree.create_item()	
 	var material_table = AssetIO.get_material_table()	
 	AssetIO.generate_material_thumbnails(material_table.keys())
 	
 	for material_name in asset_data.materials.keys():
-		var material_node = root.create_child()
-		var text = str(material_name) if material_name != "" else "(unnamed material)" 
-		material_node.set_text(0, text)										
+		var material_tree_node = root.create_child()
+		var text = str(material_name) if material_name != "" else "???" 
+		material_tree_node.set_text(0, text)										
 		if asset_data.materials[material_name].material is int:								
-			material_node.set_text(1, str(asset_data.materials[material_name].material))								
-			
+			var material_id = str(asset_data.materials[material_name].material)
+			material_tree_node.set_text(1, material_id)								
+		else:
+			invalid_materials.push_back(material_name)
+			%materials_tab_button.text = "Materials (!)"
+			import_button.disabled = true
+			material_tree_node.set_text(1, "???")
+			material_tree_node.set_custom_color(1, Color.ORANGE)
+					
 	var material_details_tree:Tree = %material_details_tree
 	root = material_details_tree.create_item()		
 	for id in material_table:				
@@ -174,13 +208,29 @@ func init_materials_tree():
 		if not selected_glb_material_item:
 			return
 		var glb_material_name = selected_glb_material_item.get_text(0) 
-		if glb_material_name == "(unnamed material)": glb_material_name = ""
+		if glb_material_name == "???": glb_material_name = ""
 		if asset_data.materials.has(glb_material_name):
-			var selected_material_item = material_details_tree.get_selected()
-			asset_data.materials[glb_material_name].material = int(selected_material_item.get_metadata(0))
+			var selected_material_item = material_details_tree.get_selected()			
+			if glb_material_name in invalid_materials:
+				invalid_material_fixed(glb_material_name)
+			asset_data.materials[glb_material_name].material = int(selected_material_item.get_metadata(0))			
+			if asset_data.materials[glb_material_name].material != asset_data.materials[glb_material_name].original_material:				
+				for mesh_id in asset_data.materials[glb_material_name].meshes:
+					pass
+					#if asset_data.meshes[mesh_id].state = 
 			selected_glb_material_item.set_text(1, str(asset_data.materials[glb_material_name].material))						
 			selected_glb_material_item.set_icon(1, selected_material_item.get_icon(0))
 	)
+func invalid_material_fixed(material_name):
+	invalid_materials.erase(material_name)
+	if len(invalid_materials) == 0:
+		%materials_tab_button.text = "Materials"
+		validate_can_import()
+		
+func validate_can_import():
+	import_button.disabled = true
+	if len(invalid_materials) == 0:
+		import_button.disabled = false
 	
 func update_material_icon(item:TreeItem, id):
 	var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id, false))
@@ -189,7 +239,7 @@ func update_material_icon(item:TreeItem, id):
 	else:		
 		await get_tree().create_timer(0.5).timeout.connect(update_material_icon.bind(item, id))
 					
-func build_tree(node_name:String, root:TreeItem):	
+func build_collection_tree(node_name:String, root:TreeItem):	
 	var item := root.create_child()		
 	var node = asset_data.collections[node_name] if asset_data.collections.has(node_name) else {}
 	
@@ -205,4 +255,4 @@ func build_tree(node_name:String, root:TreeItem):
 		item.set_text(2, AssetIOData.IMPORT_STATE.keys()[node.state])
 	if node.has("collections"):		
 		for key in node.collections:			
-			build_tree(key, item)
+			build_collection_tree(key, item)

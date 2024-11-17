@@ -102,7 +102,7 @@ var is_initial_size_set := false
 
 #region Initialisations
 func _ready():	
-	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	timer = Timer.new()
 	timer.timeout.connect(func(): current_popup_button.button_pressed = false)
 	add_child(timer)

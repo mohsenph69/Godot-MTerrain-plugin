@@ -7,7 +7,7 @@ signal group_selected
 var button_group:ButtonGroup #= load("res://addons/m_terrain/asset_manager/ui/grouping_button_group.tres")
 
 func _ready():
-	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	visible = false
 	button_group = ButtonGroup.new()
 	group_list.get_child(0).button_group = button_group

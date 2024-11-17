@@ -9,7 +9,7 @@ var editable = false
 var asset_library:MAssetTable = MAssetTable.get_singleton()
 var current_tags = []
 func _ready():
-	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	var search = find_child("search")
 	search.text_changed.connect(search_tags)
 	set_options()

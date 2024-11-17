@@ -1,12 +1,11 @@
 [gd_scene load_steps=2 format=3 uid="uid://jpt0n2jqdvtn"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_n4yxl"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_e57t4"]
 
 [node name="Street_hlod" type="Node3D"]
-script = ExtResource("1_n4yxl")
+script = ExtResource("1_e57t4")
 join_at_lod = 5
-joined_mesh_collection_id = 8
-bake_path = "res://massets/Street_hlod.res"
+bake_path = "res://massets/hlod/Street_hlod.res"
 metadata/extras = true
 metadata/hlod_id = 1.0
 metadata/booleans = {}

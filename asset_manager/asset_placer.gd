@@ -22,7 +22,7 @@ var queued_thumbnails = {}
 var last_regroup = null
 
 func _ready():		
-	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 

@@ -137,14 +137,12 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	if gltf_state.json.scenes[0].has("extras") and gltf_state.json.scenes[0].extras.has("blend_file"):
 		asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
 	asset_data.glb_path = path
-	asset_data.meta_data = metadata
-	
+	asset_data.meta_data = metadata		
 	#STEP 1: convert gltf file into nodes
 	var scene_root = gltf_document.generate_scene(gltf_state)
 	var scene = scene_root.get_children()
 	#STEP 2: convert gltf scene into AssetData format	
-	generate_asset_data_from_glb(scene)
-	asset_data.finalize_glb_parse()
+	generate_asset_data_from_glb(scene)	
 	#STEP 3: add data from last import for comparisons
 	if asset_library.import_info.has(path):
 		asset_data.add_glb_import_info(asset_library.import_info[path])
@@ -159,21 +157,28 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		
 
 #Parse GLB file and prepare a preview of changes to asset library
-static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):
+static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):	
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	for node in scene:
 		if not node:
 			print(node, " is not a node")
 		var name_data := node_parse_name(node)		
 		var child_count:int = node.get_child_count()
-		if name_data["lod"] >=0: ## Then defently is a mesh			
-			asset_data.add_mesh_item(name_data["name"],name_data["lod"],node)
-			if active_collection == "__root__":
-				asset_data.add_mesh_to_collection(name_data["name"],name_data["name"],true)
-			else:
-				asset_data.add_mesh_to_collection(active_collection,name_data["name"],false)
+		#######################
+		## PROCESS MESH NODE ##
+		#######################
+		if name_data["lod"] >=0: ## Then definitly is a mesh					
+			for set_id in len(node.get_meta("material_sets")):
+				var mesh_item_name = name_data["name"] + str("_", set_id)								
+				asset_data.add_mesh_data(node.get_meta("material_sets"), node.mesh.get_mesh(), mesh_item_name)						
+				asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, set_id)			
+				var collection_name = name_data["name"] + str("_", set_id) if active_collection == "__root__" else active_collection				
+				asset_data.add_mesh_to_collection(collection_name, mesh_item_name, active_collection == "__root__")				
 			if child_count > 0:
-				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")
+				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")						
+		############################
+		## PROCESS COLLISION NODE ##
+		############################
 		elif name_data["col"] != null:
 			var collection_name = name_data.name if active_collection=="__root__" else active_collection
 			if node is ImporterMeshInstance3D:
@@ -182,6 +187,9 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform)				
 			if child_count > 0:
 				push_error(node.name + " is detected as a collission due to using _col in its name! ignoring its children!")
+		#############################
+		## PROCESS COLLECTION NODE ##
+		#############################
 		elif child_count > 0:
 			if active_collection=="__root__":
 				generate_asset_data_from_glb(node.get_children(),node.name)
@@ -189,9 +197,12 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 					if asset_data.collections.has(node.name):
 						asset_data.collections[node.name].tags = node.get_meta("tags")
 			else:
-				push_error(node.name," is two deep level which is not allowed")
+				push_error(active_collection, " has sub_collection with children: ", node.name)
+		#################################
+		## PROCESS SUB_COLLECTION NODE ##	
+		#################################
 		elif active_collection != "__root__": # can be sub collection			
-			var subcollection_name = collection_parse_name(node.name)			
+			var subcollection_name = collection_parse_name(node.name)						
 			if node.has_meta("blend_file"):				
 				var blend_file = node.get_meta("blend_file").trim_prefix("//")				
 				if asset_data.blend_file != blend_file:
@@ -200,16 +211,24 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 						subcollection_name += "::" + glb_path					
 					else:
 						print("error with subcollection from different blend file. Here is the list of blend files in import_info:\n", asset_library.import_info["__blend_files"].keys())
-			asset_data.add_sub_collection(active_collection,subcollection_name,node.transform)
-
+			asset_data.add_sub_collection(active_collection,subcollection_name,node.transform)	
+	if active_collection == "__root__":
+		asset_data.finalize_glb_parse()
+		
 static func glb_import_commit_changes():
 	var asset_library = MAssetTable.get_singleton()
+	#################
+	## Save Meshes ##
+	#################
+	var saved_successful = asset_data.save_unsaved_meshes() 
+	if not saved_successful == OK:
+		push_error("GLB import cannot import meshes: mesh could not be saved to file \n", str(asset_data.glb_path))
+		return					
 	######################
 	## Commit Mesh Item ##
 	######################
 	# mesh_item must be processed before collection, because collection depeneds on mesh item
-	var mesh_names = asset_data.mesh_items.keys()
-	for mesh_name in mesh_names:
+	for mesh_name in asset_data.mesh_items.keys(): #mesh_names:
 		var mesh_info = asset_data.mesh_items[mesh_name]
 		if mesh_info["ignore"] or mesh_info["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 			continue
@@ -224,33 +243,20 @@ static func glb_import_commit_changes():
 					DirAccess.remove_absolute(path)				
 			asset_library.mesh_item_remove(mesh_info["id"])
 			continue
-		### Other State
-		var saved_successful = asset_data.save_unsaved_meshes(mesh_name) ## now all mesh are saved with and integer ID		
-		if not saved_successful:
-			push_error("GLB import cannot import meshes: mesh could not be saved to file", str())
-			return				
-		#if not saved_successful:
-			#push_error("GLB import error: cannot update saved meshes' materials")
-			#return				
-		var meshes = fill_mesh_lod_gaps(mesh_info["meshes"])				
-		
-		var materials:PackedInt32Array
-		## for now later we change
-		materials.resize(meshes.size())
-		materials.fill(-1)
+		### Other State	
+		var mesh_id_array = fill_mesh_lod_gaps(mesh_info["meshes"])						
+		var material_set_id_array:PackedInt32Array		
+		material_set_id_array.resize(mesh_id_array.size())
+		material_set_id_array.fill(-1) ## TODO - replace with code that gets the right 
 		if mesh_info["state"] == AssetIOData.IMPORT_STATE.NEW:			
-			var mid = asset_library.mesh_item_add(meshes,materials)
+			var mid = asset_library.mesh_item_add(mesh_id_array,material_set_id_array)
 			asset_data.update_mesh_items_id(mesh_name,mid)			
 		elif mesh_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
 			if mesh_info["id"] == -1:
 				push_error("something bad happened mesh id should not be -1")
 				continue
-			asset_library.mesh_item_update(mesh_info["id"],meshes,materials)
-	######################
-	## Update Materials ##
-	######################
-	asset_data.replace_mesh_materials()
-	
+			asset_library.mesh_item_update(mesh_info["id"],mesh_id_array,material_set_id_array)
+		
 	#######################
 	## Commit collisions ##
 	#######################
@@ -274,7 +280,7 @@ static func glb_import_commit_changes():
 	asset_library.finish_import.emit(asset_data.glb_path)
 	asset_library.save()	
 	
-static func fill_mesh_lod_gaps(mesh_array):	
+static func fill_mesh_lod_gaps(mesh_array):		
 	var result = mesh_array.duplicate()
 	var last_mesh = null
 	for i in len(mesh_array):						
@@ -352,36 +358,6 @@ static func import_collection(glb_node_name:String):
 			for sub_collection_transform in sub_collections[sub_collection_name]:
 				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)	
 	
-static func mesh_item_update_from_collection_dictionary(collection):
-	var asset_library := MAssetTable.get_singleton()			
-	if "original_meshes" in collection.keys():		
-		for mesh in collection.original_meshes:
-			if not mesh in collection.meshes:
-				#first check if anyone else is still using this mesh:
-				#if len(asset_library.mesh_get_mesh_items(collection.original_meshes[i])) == 1:				
-					print("erased mesh resource ", asset_library.mesh_get_path(mesh))
-					DirAccess.remove_absolute(asset_library.mesh_get_path(mesh))						
-		
-	var mesh_item_array = []
-	for i in len(collection.meshes):				
-		if collection.meshes[i].get_surface_count() == 0: 
-			mesh_item_array.push_back(-1)
-			continue
-		var new_id = asset_library.mesh_get_id(collection.meshes[i])
-		print("processing mesh id:", new_id)
-		if new_id == -1:			
-			var mesh_save_path = asset_library.mesh_get_path(collection.meshes[i])
-			print("saving mesh to ", mesh_save_path)
-			if FileAccess.file_exists(mesh_save_path):
-				collection.meshes[i].take_over_path(mesh_save_path)				
-			else:
-				ResourceSaver.save(collection.meshes[i], mesh_save_path)		
-		mesh_item_array.push_back(new_id)
-	#Add Mesh Item
-	var material_ids = mesh_item_array.map(func(a): return -1)				
-	print("adding mesh item with meshes: ", mesh_item_array)
-	asset_library.mesh_item_update(collection.mesh_item_id, mesh_item_array, material_ids)							
-
 static func glb_show_import_window(asset_data:AssetIOData):
 	var popup = Window.new()
 	popup.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
@@ -394,8 +370,7 @@ static func glb_show_import_window(asset_data:AssetIOData):
 	
 static func node_parse_name(node:Node)->Dictionary:
 	var result = {"name":"","lod":-1,"col":null}
-	var lod:int = -1
-	print(node)
+	var lod:int = -1	
 	var search_result = regex_mesh_match.search(node.name)
 	if search_result:		
 		result["name"] = search_result.strings[1]
