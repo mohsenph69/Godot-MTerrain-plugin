@@ -40,6 +40,7 @@ expand_icon = true
 script = ExtResource("4_he502")
 
 [node name="filter_popup" parent="VBoxContainer/HBoxContainer/filter_button" instance=ExtResource("3_dfwqm")]
+initial_position = 4
 visible = false
 
 [node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
@@ -52,6 +53,7 @@ expand_icon = true
 script = ExtResource("4_he502")
 
 [node name="sort_popup" parent="VBoxContainer/HBoxContainer/sort_by_button" instance=ExtResource("7_uoy1f")]
+initial_position = 4
 visible = false
 
 [node name="group_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
@@ -64,6 +66,7 @@ expand_icon = true
 script = ExtResource("4_he502")
 
 [node name="grouping_popup" parent="VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_40ifn")]
+initial_position = 4
 visible = false
 
 [node name="search_collections" parent="VBoxContainer/HBoxContainer" instance=ExtResource("5_14byr")]
@@ -119,7 +122,7 @@ size_flags_vertical = 3
 [node name="groups" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/PanelContainer"]
 layout_mode = 2
 
-[node name="ungrouped" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
+[node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
