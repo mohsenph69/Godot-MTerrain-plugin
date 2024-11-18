@@ -47,6 +47,7 @@ func get_empty_mesh_item()->Dictionary:
 		"meshes":[],
 		"original_meshes":[],		
 		"id":-1,
+		"material_set_id": -1,
 		"ignore":false,
 		"state":IMPORT_STATE.NOT_HANDLE,
 		"mesh_state":[]
@@ -95,6 +96,7 @@ func add_mesh_item(name:String,lod:int,node:Node, set_id:int)->void:
 		mesh_items[name]["mesh_nodes"].resize(lod + 1)
 	if node is ImporterMeshInstance3D:
 		mesh_items[name]["mesh_nodes"][lod] = node	
+	mesh_items[name].material_set_id = set_id
 	
 func add_mesh_data(sets, mesh:Mesh, mesh_item_name):						
 	if not mesh_data.has(mesh): 
@@ -109,10 +111,10 @@ func add_mesh_data(sets, mesh:Mesh, mesh_item_name):
 			mesh_data[mesh].material_sets.push_back(material_names)
 	mesh_data[mesh].mesh_item_users.push_back(mesh_item_name)
 					
-func add_mesh_to_collection(collection_name:String, mesh_name:String, is_root:bool):
+func add_mesh_item_to_collection(collection_name:String, mesh_item_name:String, is_root:bool):
 	if not collections.has(collection_name):
 		collections[collection_name] = get_empty_collection()
-	collections[collection_name]["mesh_items"][mesh_name] = Transform3D()
+	collections[collection_name]["mesh_items"][mesh_item_name] = Transform3D()
 	collections[collection_name]["is_root"] = is_root
 
 func add_collision_to_collection(collection_name, collision_type:COLLISION_TYPE, transform, mesh:Mesh=null):
@@ -321,9 +323,11 @@ func generate_import_tags():
 
 func get_material_id_by_name(material_name):
 	var material_table = AssetIO.get_material_table()
-	for path in material_table.values():		
+	var ids = material_table.keys()
+	for i in len(ids):
+		var path = material_table[ ids[i] ].path
 		if material_name.to_lower() == path.get_file().get_slice(".", 0).to_lower():			
-			return material_table.find_key(path)		
+			return i		
 	return null
 
 func compare_mesh(new_mesh,original_mesh)->IMPORT_STATE:
@@ -358,7 +362,7 @@ func save_unsaved_meshes()->int:
 				var material_name = material_set[j]					
 				var material_id = materials[material_name].material
 				if material_id == null: continue # THIS SHOULD NOT BE ALLOWED! it means user hasn't set material during import window
-				var material_path = AssetIO.get_material_table()[material_id]			
+				var material_path = AssetIO.get_material_table()[material_id].path
 				mmesh.surface_set_material(set_id, j, material_path)		
 				print("adding material path ", material_path, " to material set ", j, " in " ,mmesh.resource_name)						
 		var path = asset_library.mesh_get_path(mmesh)									
@@ -396,7 +400,7 @@ func get_glb_import_info():
 		result[key]["id"] = collections[key]["id"]	
 	result["__materials"] = {}
 	for key in materials:				
-		result["__materials"][key] = materials[key].material		
+		result["__materials"][key] = {"path":materials[key].material, "meshes":materials[key].meshes}
 	result["__metadata"] = meta_data
 	return result
 		
@@ -424,7 +428,7 @@ func add_glb_import_info(info:Dictionary)->void:
 	if "__materials" in info:
 		for key in info["__materials"]:
 			if key in materials:
-				materials[key].original_material = info["__materials"][key]
+				materials[key].original_material = info["__materials"][key].path
 	
 func add_metadata_to_data(old:Dictionary, new:Dictionary):
 	var result = old.duplicate()

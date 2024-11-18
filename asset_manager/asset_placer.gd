@@ -5,7 +5,7 @@ extends PanelContainer
 signal selection_changed
 
 @onready var groups = find_child("groups")
-@onready var ungrouped = find_child("ungrouped")
+@onready var ungrouped = find_child("other")
 @onready var grouping_popup:Popup = find_child("grouping_popup")
 @onready var search_collections_node:Control = find_child("search_collections")
 @onready var group_by_button:Button = find_child("group_by_button")	

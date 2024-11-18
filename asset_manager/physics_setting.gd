@@ -4,10 +4,10 @@ extends Control
 @onready var add_err := %add_static_body_error
 @onready var materials_list: Tree = %materials_list
 @onready var static_body_list: Tree = %static_body_list
-@onready var material_table = AssetIO.get_material_table()
+
 var file_system_dock:FileSystemDock
 var editor_file_system:EditorFileSystem
-
+var empty_double_click_time = 0
 func _ready() -> void:	
 	file_system_dock = EditorInterface.get_file_system_dock()
 	editor_file_system = EditorInterface.get_resource_filesystem()
@@ -15,10 +15,14 @@ func _ready() -> void:
 	materials_list.set_column_expand(0,false)
 	materials_list.set_column_expand(1,false)	
 	materials_list.set_column_custom_minimum_width(0, 36)
-	materials_list.set_column_custom_minimum_width(1, 36)	
+	materials_list.set_column_custom_minimum_width(1, 36)		
 	update_materials_list()	
 	materials_list.item_selected.connect(show_material_in_file_system_dock)
 	materials_list.item_activated.connect(show_replace_material_popup)
+	materials_list.button_clicked.connect(func(item: TreeItem, column, id, mouse_button_index):
+		materials_list.set_selected(item, 0)
+		show_replace_material_popup())
+	materials_list.empty_clicked.connect(empty_clicked)
 	materials_list.material_table_changed.connect(update_materials_list)		
 	%materials_search.text_changed.connect(update_materials_list)
 	%add_material_button.pressed.connect(show_add_material_popup)
@@ -29,10 +33,15 @@ func _ready() -> void:
 	%add_static_body_button.pressed.connect(add_static_body)
 	%static_body_search.text_changed.connect(update_static_body_list)
 	
+func empty_clicked(_click_position,_mouse_button_index):
+	if abs(empty_double_click_time - Time.get_ticks_msec()) < 320:
+		show_add_material_popup()
+	empty_double_click_time = Time.get_ticks_msec()
 	
 func add_materials_to_table(paths):
 	for path in paths:
 		AssetIO.update_material(-1, path)
+	update_materials_list()
 	
 func show_add_material_popup():
 	var popup = load("res://addons/m_terrain/asset_manager/ui/select_resources_by_type.tscn").instantiate()		
@@ -41,18 +50,17 @@ func show_add_material_popup():
 	popup.title = "Add Material(s)"
 	add_child(popup)
 	popup.popup()
-		
+	
 func show_replace_material_popup():
-	var popup:Popup = preload("res://addons/m_terrain/asset_manager/ui/select_resources_by_type.tscn").instantiate()	
-	popup.resource_selected.connect(replace_material)
-	popup.types = ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]	
-	popup.title = material_table[materials_list.get_selected().get_metadata(0)]
+	var popup:Window = preload("res://addons/m_terrain/asset_manager/ui/select_resources_by_type.tscn").instantiate()	
+	popup.resources_selected.connect(replace_material)
+	popup.types = ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]		
+	popup.title = "Replace Material: " + materials_list.get_selected().get_text(2)
 	add_child(popup)
 	popup.popup_centered()
 	
 func replace_material(new_path):
-	var original_id = materials_list.get_selected().get_metadata(0)
-	print("replacing ",original_id, " with ", new_path)
+	var original_id = materials_list.get_selected().get_metadata(0)	
 	AssetIO.update_material(original_id,new_path)		
 	update_materials_list()
 	
@@ -61,20 +69,23 @@ func update_materials_list(filter = null):
 	var root = materials_list.get_root()
 	if not root:
 		root = materials_list.create_item()		
+	var material_table = AssetIO.get_material_table()
+	AssetIO.generate_material_thumbnails(material_table.keys())
 	for i in material_table.keys():
-		if filter and not filter in material_table[i]: continue
+		if filter and not filter in material_table[i].path: continue
 		var item := root.create_child()
 		item.set_text(0, str(i))
 		item.set_metadata(0, i)
 		item.set_icon(1, AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(i, false)))
-		item.set_text(2, material_table[i])		
-		for file in DirAccess.get_files_at("res://massets/meshes/"):
-			for dependency in ResourceLoader.get_dependencies("res://massets/meshes/" + file):
-				if material_table[i] in dependency: 				
-					var mesh_item := item.create_child()
-					mesh_item.set_text(2, file)
-					break
-					#AssetIO.get_thumbnail(AssetIO.get_thumbnail_path())
+		item.set_text(2, material_table[i].path)		
+		var img = Image.load_from_file(ProjectSettings.globalize_path("res://addons/m_terrain/icons/edit_icon.svg"))
+		img.resize(24,24)
+		var edit_button_texture = ImageTexture.create_from_image(img) 
+		item.add_button(2, edit_button_texture)		
+				
+		for mesh_id in material_table[i].meshes:	
+			var mesh_item := item.create_child()
+			mesh_item.set_text(2, str("Mesh ", mesh_id))
 		item.collapsed = true
 			
 func update_static_body_list(filter = null):
@@ -111,20 +122,11 @@ func get_setting_list()->Dictionary: #key -> asset_name, value asset
 	return out
 	
 func show_material_in_file_system_dock() -> void:	
-	var list = material_table.values()
+	var material_table = AssetIO.get_material_table()
 	var sname = materials_list.get_selected().get_text(2)
-	if not sname in list:
-		printerr("Can not find Item ",sname)
-		return
-	var s:Material = load(sname)
-	if not s:
-		printerr("Material is not valid ",sname)
-		return
-	if s.resource_path == "":
-		printerr("Material has invalid path ",sname)
-		return
-	file_system_dock.navigate_to_path(s.resource_path)
-	EditorInterface.edit_resource(s)
+	if FileAccess.file_exists(sname):
+		file_system_dock.navigate_to_path(sname)
+		EditorInterface.edit_resource(load(sname))
 
 func show_static_body_in_file_system_dock() -> void:	
 	add_err.visible = false

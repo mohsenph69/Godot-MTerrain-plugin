@@ -133,7 +133,7 @@ func update_collection_details(is_collection:bool, item_node:Dictionary ):
 			var mesh_item = meshes.create_child()
 			var mesh_array = asset_data.mesh_items[mesh_item_name].meshes.duplicate()
 			mesh_array = Array(mesh_array).map(func(a): return a if a is int else "Mesh" )
-			var text = str(mesh_item_name, ": ",mesh_array ) #item_node.mesh_items[mesh_item_name].origin)
+			var text = str(mesh_item_name, ": ",mesh_array, " set ", asset_data.mesh_items[mesh_item_name].material_set_id  ) #item_node.mesh_items[mesh_item_name].origin)
 			##for mesh_id in asset_data.meshes[mesh_item_name].meshes:
 				
 			mesh_item.set_text(0, text)
@@ -189,7 +189,7 @@ func init_materials_tree():
 	for id in material_table:				
 		var item = root.create_child() 		
 		material_table_items[id] = item
-		var material_path = material_table[id]
+		var material_path = material_table[id].path
 		item.set_text(0,material_path.get_file())
 		item.set_metadata(0, id)
 		item.set_tooltip_text(0, material_path)

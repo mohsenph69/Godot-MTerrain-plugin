@@ -6,10 +6,23 @@ extends Control
 
 var asset_library = MAssetTable.get_singleton()
 var button_texture: Texture2D
+var empty_click_debounce_time := 0
 func _ready():
 	visibility_changed.connect(init_tree)
 	glb_tree.set_column_expand(1, false)
 	glb_details.set_column_expand(1, false)	
+	glb_tree.empty_clicked.connect(func(_click_position, _mouse_button):
+		if Time.get_ticks_msec() - empty_click_debounce_time < 320:
+			var dialog := EditorFileDialog.new()
+			dialog.access = EditorFileDialog.ACCESS_RESOURCES
+			dialog.add_filter("*.glb")
+			dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+			dialog.file_selected.connect(func(path): AssetIO.glb_load(path))
+			add_child(dialog)
+			dialog.popup_file_dialog()
+			#dialog.close_requested.connect(dialog.queue_free)
+		empty_click_debounce_time = Time.get_ticks_msec()	
+	)
 	glb_tree.item_selected.connect(func():
 		var glb_path = glb_tree.get_selected().get_text(0)				
 		glb_details.clear()
