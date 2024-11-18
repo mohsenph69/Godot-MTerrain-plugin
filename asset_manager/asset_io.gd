@@ -228,34 +228,35 @@ static func glb_import_commit_changes():
 	## Commit Mesh Item ##
 	######################
 	# mesh_item must be processed before collection, because collection depeneds on mesh item
-	for mesh_name in asset_data.mesh_items.keys(): #mesh_names:
-		var mesh_info = asset_data.mesh_items[mesh_name]
-		if mesh_info["ignore"] or mesh_info["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
+	for mesh_item_name in asset_data.mesh_items.keys(): #mesh_names:
+		var mesh_item_info = asset_data.mesh_items[mesh_item_name]
+		if mesh_item_info["ignore"] or mesh_item_info["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 			continue
 		### Handling Remove First
-		if mesh_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:			
-			for mesh_id in asset_library.mesh_item_get_info(mesh_info["id"]).mesh:
+		if mesh_item_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:			
+			for mesh_id in asset_library.mesh_item_get_info(mesh_item_info["id"]).mesh:
 				if len(asset_library.mesh_get_mesh_items_users(mesh_id)) > 1:
 					continue
 				var path = MHlod.get_mesh_path(mesh_id)
 				asset_library.erase_mesh_hash(load(path))
 				if FileAccess.file_exists(path):
 					DirAccess.remove_absolute(path)				
-			asset_library.mesh_item_remove(mesh_info["id"])
+			asset_library.mesh_item_remove(mesh_item_info["id"])
 			continue
 		### Other State	
-		var mesh_id_array = fill_mesh_lod_gaps(mesh_info["meshes"])						
-		var material_set_id_array:PackedInt32Array		
+		var mesh_id_array = fill_mesh_lod_gaps(mesh_item_info["meshes"])						
+		var material_set_id_array:PackedInt32Array
 		material_set_id_array.resize(mesh_id_array.size())
-		material_set_id_array.fill(-1) ## TODO - replace with code that gets the right 
-		if mesh_info["state"] == AssetIOData.IMPORT_STATE.NEW:			
+		var material_set_id = int(mesh_item_name.split("_")[-1])
+		material_set_id_array.fill(material_set_id) ## TODO - replace with code that gets the right material
+		if mesh_item_info["state"] == AssetIOData.IMPORT_STATE.NEW:			
 			var mid = asset_library.mesh_item_add(mesh_id_array,material_set_id_array)
-			asset_data.update_mesh_items_id(mesh_name,mid)			
-		elif mesh_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
-			if mesh_info["id"] == -1:
+			asset_data.update_mesh_items_id(mesh_item_name,mid)			
+		elif mesh_item_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
+			if mesh_item_info["id"] == -1:
 				push_error("something bad happened mesh id should not be -1")
 				continue
-			asset_library.mesh_item_update(mesh_info["id"],mesh_id_array,material_set_id_array)
+			asset_library.mesh_item_update(mesh_item_info["id"],mesh_id_array,material_set_id_array)
 		
 	#######################
 	## Commit collisions ##
@@ -499,12 +500,14 @@ static func remove_collection(collection_id):
 	if not asset_library.has_collection(collection_id):
 		push_error("trying to remove collection that doesn't exist: ", collection_id)
 	var mesh_item_ids = asset_library.collection_get_mesh_items_ids(collection_id)
+	print(mesh_item_ids)
 	for mesh_item_id in mesh_item_ids:
 		if not asset_library.has_mesh_item(mesh_item_id):
 			push_error("trying to remove a mesh item that doesn't exist: ", mesh_item_id)
 			continue
 		var mesh_array = asset_library.mesh_item_get_info(mesh_item_id).mesh
 		asset_library.mesh_item_remove(mesh_item_id)
+		
 		for mesh_id in mesh_array:
 			if len(asset_library.mesh_get_mesh_items_users(mesh_id)) == 0:				
 				if FileAccess.file_exists(MHlod.get_mesh_path(mesh_id)):					

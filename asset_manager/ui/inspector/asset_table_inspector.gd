@@ -33,7 +33,8 @@ func _ready():
 			asset_library.notify_property_list_changed()
 			asset_library.save()
 		)		
-		mesh_node.find_child("meshes").text = str(asset_library.mesh_item_get_info(mesh_item_id).mesh)
+		var mesh_item_info = asset_library.mesh_item_get_info(mesh_item_id)
+		mesh_node.find_child("meshes").text = str(mesh_item_info.mesh, " | ", mesh_item_info.material )
 		
 		
 	mesh_items_label.text = mesh_text

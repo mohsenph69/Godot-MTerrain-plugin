@@ -102,7 +102,8 @@ var is_initial_size_set := false
 
 #region Initialisations
 func _ready():	
-	if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	MTool.enable_editor_plugin()
+	#if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	timer = Timer.new()
 	timer.timeout.connect(func(): current_popup_button.button_pressed = false)
 	add_child(timer)
@@ -115,7 +116,7 @@ func _ready():
 	theme_changed.connect(update_theme)
 	visibility_changed.connect(_on_resized)
 	
-	MTool.enable_editor_plugin()
+	
 
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
