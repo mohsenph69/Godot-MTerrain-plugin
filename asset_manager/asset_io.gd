@@ -168,12 +168,20 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		## PROCESS MESH NODE ##
 		#######################
 		if name_data["lod"] >=0: ## Then definitly is a mesh					
-			for set_id in len(node.get_meta("material_sets")):
-				var mesh_item_name = name_data["name"] + str("_", set_id)								
-				asset_data.add_mesh_data(node.get_meta("material_sets"), node.mesh.get_mesh(), mesh_item_name)						
-				asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, set_id)			
-				var collection_name = name_data["name"] + str("_", set_id) if active_collection == "__root__" else active_collection				
+			if not node.has_meta("material_sets"):
+				var mesh_item_name = name_data["name"] + "_0"
+				var mesh :Mesh= node.mesh.get_mesh()
+				asset_data.add_mesh_data([[mesh.surface_get_material(0).resource_name]],mesh , mesh_item_name)						
+				asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, 0)			
+				var collection_name = name_data["name"] + "_0" if active_collection == "__root__" else active_collection				
 				asset_data.add_mesh_to_collection(collection_name, mesh_item_name, active_collection == "__root__")				
+			else:
+				for set_id in len(node.get_meta("material_sets")):
+					var mesh_item_name = name_data["name"] + str("_", set_id)								
+					asset_data.add_mesh_data(node.get_meta("material_sets"), node.mesh.get_mesh(), mesh_item_name)						
+					asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, set_id)			
+					var collection_name = name_data["name"] + str("_", set_id) if active_collection == "__root__" else active_collection				
+					asset_data.add_mesh_to_collection(collection_name, mesh_item_name, active_collection == "__root__")				
 			if child_count > 0:
 				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")						
 		############################
