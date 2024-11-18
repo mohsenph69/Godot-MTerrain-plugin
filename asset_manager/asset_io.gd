@@ -490,6 +490,8 @@ static func get_thumbnail_path(id: int, is_collection:bool=true):
 static func save_thumbnail(preview:ImageTexture, thumbnail_path:String):			
 	var data = preview.get_image().save_png_to_buffer() if preview else Image.create_empty(64,64,false, Image.FORMAT_R8).save_png_to_buffer()
 	var file = FileAccess.open(thumbnail_path, FileAccess.WRITE)
+	if not DirAccess.dir_exists_absolute( thumbnail_path.get_base_dir() ):
+		DirAccess.make_dir_recursive_absolute( thumbnail_path.get_base_dir() )
 	file.store_var(data)
 	file.close()
 	
