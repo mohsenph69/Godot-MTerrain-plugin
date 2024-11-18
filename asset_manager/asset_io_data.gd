@@ -364,13 +364,8 @@ func save_unsaved_meshes()->int:
 				if material_id == null: continue # THIS SHOULD NOT BE ALLOWED! it means user hasn't set material during import window
 				var material_path = AssetIO.get_material_table()[material_id].path
 				mmesh.surface_set_material(set_id, j, material_path)		
-				print("adding material path ", material_path, " to material set ", j, " in " ,mmesh.resource_name)						
-		var path = asset_library.mesh_get_path(mmesh)									
-		var error = ResourceSaver.save(mmesh,path)
-		if error != OK:	
-			push_error("Save unsaved meshes could not save mesh to path ", path, ". error: ", error)						
-			return ERR_CANT_CREATE
-		var mesh_id = asset_library.mesh_get_id(mmesh)
+				#print("adding material path ", material_path, " to material set ", j, " in " ,mmesh.resource_name)								
+		var mesh_id = asset_library.mesh_add(mmesh)		
 		result[mesh_id] = mesh_data[mesh]		
 		## Replace mesh with mesh id inside mesh_items dictionary		
 		for mesh_item_name in mesh_data[mesh].mesh_item_users:			

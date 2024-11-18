@@ -31,7 +31,7 @@ func save_mesh_new_mesh():
 	
 	
 func add_item_new_item():				
-	var mesh_item_id = asset_table.mesh_item_add([],[])
+	var mesh_item_id = asset_table.mesh_item_add([],-1)
 	if not has_mesh_item(mesh_item_id):		
 		push_error("add_item_new_item failed, table does not have mesh item id ", mesh_item_id)
 		return false
@@ -55,15 +55,15 @@ func add_item_existing_item():
 	asset_table.mesh_item_add(existing_item.mesh, existing_item.material)
 	
 func add_item_no_meshes():
-	asset_table.mesh_item_add([],[])
+	asset_table.mesh_item_add([],-1)
 	
 func add_item_array_lengths_mismatched():
-	asset_table.mesh_item_add([],[0])
+	asset_table.mesh_item_add([],0)
 
 func add_item_mesh_file_does_not_exist():
 	var mesh_files = DirAccess.get_files_at(MHlod.get_mesh_root_dir())		
 	var last_id = int(mesh_files[-1].split("/")[-1])	
-	asset_table.mesh_item_add([last_id + 1],[0])
+	asset_table.mesh_item_add([last_id + 1],-1)
 	
 
 

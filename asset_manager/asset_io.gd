@@ -247,19 +247,16 @@ static func glb_import_commit_changes():
 			asset_library.mesh_item_remove(mesh_item_info["id"])
 			continue
 		### Other State	
-		var mesh_id_array = fill_mesh_lod_gaps(mesh_item_info["meshes"])						
-		var material_set_id_array:PackedInt32Array
-		material_set_id_array.resize(mesh_id_array.size())
-		var material_set_id = int(mesh_item_name.split("_")[-1])
-		material_set_id_array.fill(material_set_id) ## TODO - replace with code that gets the right material
+		var mesh_id_array = fill_mesh_lod_gaps(mesh_item_info["meshes"])										
+		#var material_set_id = int(mesh_item_name.split("_")[-1])			
 		if mesh_item_info["state"] == AssetIOData.IMPORT_STATE.NEW:			
-			var mid = asset_library.mesh_item_add(mesh_id_array,material_set_id_array)
+			var mid = asset_library.mesh_item_add(mesh_id_array, mesh_item_info.material_set_id)
 			asset_data.update_mesh_items_id(mesh_item_name,mid)			
 		elif mesh_item_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
 			if mesh_item_info["id"] == -1:
 				push_error("something bad happened mesh id should not be -1")
 				continue
-			asset_library.mesh_item_update(mesh_item_info["id"],mesh_id_array,material_set_id_array)
+			asset_library.mesh_item_update(mesh_item_info.id, mesh_id_array, mesh_item_info.material_set_id)
 		
 	#######################
 	## Commit collisions ##
@@ -565,7 +562,9 @@ static func update_material(id, path):
 			
 	## 2. Update all mmesh resources that use this material
 	for mesh_id in material_table[id].keys():
-		var mmesh:MMesh = load(MHlod.get_mesh_path(mesh_id))
+		var mesh_path = MHlod.get_mesh_path(mesh_id)
+		if not FileAccess.file_exists(mesh_path): continue
+		var mmesh:MMesh = load(path)
 		for set_id in mmesh.material_set_get_count():
 			var material_names = mmesh.material_set_get(set_id)
 			for i in len(material_names):
@@ -587,14 +586,11 @@ static func remove_material(id):
 			DirAccess.remove_absolute( thumbnail_path )
 	asset_library.import_info["__materials"] = materials
 
-static func remove_mesh(mesh_id):
-	var asset_library =MAssetTable.get_singleton()
+static func remove_mesh(mesh_id):	
+	var asset_library =MAssetTable.get_singleton()	
 	if len(asset_library.mesh_get_mesh_items_users(mesh_id)) > 1:
 		return
-	var path = MHlod.get_mesh_path(mesh_id)
-	asset_library.erase_mesh_hash(load(path))
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)	
+	asset_library.mesh_remove(mesh_id)	
 	var material_table = get_material_table()
 	for material_id in material_table:
 		if mesh_id in material_table[material_id].meshes:
