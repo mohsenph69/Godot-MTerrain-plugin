@@ -53,12 +53,12 @@ func bake_to_hlod_resource():
 	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())		
 	var baker_inverse_transform = global_transform.inverse()
 	for item:MAssetMesh in all_masset_mesh_nodes:		
-		for mdata in item.get_mesh_data():		
-			var mesh_array = mdata.get_mesh_lod().map(func(mesh): return MAssetTable.get_singleton().mesh_get_id(mesh) if mesh is MMesh else -1)
-			var material_array = mesh_array.map(func(a): return -1)
+		for mdata in item.get_mesh_data():							
+			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
+			var material_set_id = mdata.get_material_set_id()
 			var shadow_array = mesh_array.map(func(a): return 0)
 			var gi_array = mesh_array.map(func(a): return 0)			
-			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_array, shadow_array, gi_array, 1)
+			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_set_id	, shadow_array, gi_array, 1)
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
 			var i = 0			
@@ -247,14 +247,14 @@ func has_joined_mesh_glb()->bool:
 	return path != "" and FileAccess.file_exists(path)
 
 func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
-	var mesh_lod = a.get_mesh_lod()
-	var lod_to_use = min(join_at_lod, len(mesh_lod.meshes)-1)	
-	print("lod to use for join: ",lod_to_use, " join at lod: ", join_at_lod, " mesh items: ", len(mesh_lod.meshes)-1)
-	while lod_to_use >-1 and mesh_lod.meshes[lod_to_use] == null:
+	var mmesh_array = a.get_mesh_lod()
+	var lod_to_use = min(join_at_lod, len(mmesh_array)-1)	
+	#print("lod to use for join: ",lod_to_use, " join at lod: ", join_at_lod, " mesh items: ", len(mesh_lod.meshes)-1)
+	while lod_to_use >-1 and mmesh_array[lod_to_use] == null:
 		lod_to_use -= 1
 	if lod_to_use == -1: return null
-	var mesh = mesh_lod.meshes[lod_to_use]
-	return null if mesh.get_surface_count() == 0 else mesh_lod.meshes[lod_to_use]		
+	var mesh = mmesh_array[lod_to_use]
+	return null if mesh.get_surface_count() == 0 else mmesh_array[lod_to_use]		
 	
 func update_joined_mesh_from_glb():
 	var glb_path = get_joined_mesh_glb_path()
