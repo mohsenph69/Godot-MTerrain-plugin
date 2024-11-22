@@ -260,7 +260,7 @@ static func glb_import_commit_changes():
 				push_error("something bad happened mesh id should not be -1")
 				continue
 			for i in len(mesh_item_info.mesh_state):
-				if mesh_item_info.mesh_state[i] == AssetIOData.IMPORT_STATE.REMOVE:
+				if mesh_item_info.mesh_state[i] in [AssetIOData.IMPORT_STATE.CHANGE, AssetIOData.IMPORT_STATE.REMOVE]:
 					meshes_to_remove[ mesh_item_info.original_meshes[i].id ] = true
 			asset_library.mesh_item_update(mesh_item_info.id, mesh_id_array, mesh_item_info.material_set_id)
 	
