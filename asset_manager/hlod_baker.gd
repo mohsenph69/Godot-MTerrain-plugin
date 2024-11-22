@@ -193,10 +193,10 @@ func get_joined_mesh_id_array():
 
 #region JOINED MESH				
 func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):	
-	var root_node = Node3D.new()
-	root_node.name = "root_node"
+	#var root_node = Node3D.new()
+	#root_node.name = "root_node"
 	var mesh_instance = MeshInstance3D.new()
-	root_node.add_child(mesh_instance)			
+	#root_node.add_child(mesh_instance)			
 	mesh_instance.name = name.to_lower() + "_joined_mesh_lod_" + str(join_at_lod)	
 	###################
 	## JOIN THE MESH ##
@@ -212,10 +212,11 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 			material_set_id_array.push_back( mesh_item.get_material_set_id() )			
 			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
 	for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
+		var mhlod_node: MHlodScene = data.node
 		if not is_instance_valid(data.node):
 			push_error("trying to join mesh with mhlod_scenes, but node is invalid: ")
 			continue
-		var mesh_transforms = data.node.get_last_lod_mesh_ids_transforms()
+		var mesh_transforms = mhlod_node.get_last_lod_data()
 		for mesh_transform in mesh_transforms:			
 			var mmesh:MMesh = load(MHlod.get_mesh_path(mesh_transform[0]))
 			if mmesh:
@@ -223,14 +224,19 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 				transforms.push_back(baker_inverse_transform * mesh_transform[1])
 				material_set_id_array.push_back( mesh_transform[2] )
 		
-	mesh_joiner.insert_mesh_data(mesh_array, transforms, material_set_id_array)		
+	mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
 	mesh_instance.mesh = mesh_joiner.join_meshes()						
+	ResourceSaver.save(mesh_instance.mesh, "res://joined_mesh_test.res")
 	#print(mesh_instance.mesh.get_surface_count())
 	mesh_instance.mesh.resource_name = mesh_instance.name			
 	var glb_path = get_joined_mesh_glb_path()					
-	AssetIO.glb_export(root_node, glb_path)		
-	root_node.queue_free()
+	#AssetIO.glb_export(root_node, glb_path)		
+	AssetIO.glb_export(mesh_instance, glb_path)		
+	mesh_instance.queue_free()
+	#root_node.queue_free()
 	
+	for surface_id in mesh_instance.mesh.get_surface_count():
+		pass
 	#################################
 	## IMPORT GLB WE JUST EXPORTED ##
 	#################################	
@@ -274,6 +280,7 @@ func update_joined_mesh_from_glb():
 	if len(import_info.keys()) != 1:
 		push_error("trying to update join mesh from glb but after import it doesn't have correct collection count")		
 	joined_mesh_collection_id = asset_library.import_info[glb_path].values()[0].id
+	print(joined_mesh_collection_id)
 	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id			
 	asset_library.collection_add_tag(joined_mesh_collection_id, 0) #add "hidden" tag	
 
