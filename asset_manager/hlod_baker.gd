@@ -197,20 +197,19 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	root_node.name = "root_node"
 	var mesh_instance = MeshInstance3D.new()
 	root_node.add_child(mesh_instance)			
-	mesh_instance.name = name.to_lower() + "_joined_mesh_lod_" + str(join_at_lod)
-	print(mesh_instance.name)
+	mesh_instance.name = name.to_lower() + "_joined_mesh_lod_" + str(join_at_lod)	
 	###################
 	## JOIN THE MESH ##
 	###################
 	var mesh_joiner := MMeshJoiner.new()				
 	var baker_inverse_transform = global_transform.inverse()	
-	var mesh_array := []
-	var material_array := []
+	var mesh_array := []	
+	var material_set_id_array:  PackedInt32Array = []
 	var transforms := []
 	for node:MAssetMesh in get_all_masset_mesh_nodes(self, nodes_to_join):					
 		for mesh_item:MAssetMeshData in node.get_mesh_data():			
 			mesh_array.push_back(get_correct_mesh_lod_for_joining(mesh_item))
-			material_array.push_back(mesh_array[-1].surface_get_material(0))
+			material_set_id_array.push_back( mesh_item.get_material_set_id() )			
 			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
 	for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
 		if not is_instance_valid(data.node):
@@ -218,13 +217,15 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 			continue
 		var mesh_transforms = data.node.get_last_lod_mesh_ids_transforms()
 		for mesh_transform in mesh_transforms:			
-			var mesh = load(MHlod.get_mesh_path(mesh_transform[0]))
-			if mesh:
-				mesh_array.push_back( mesh )
+			var mmesh:MMesh = load(MHlod.get_mesh_path(mesh_transform[0]))
+			if mmesh:
+				mesh_array.push_back( mmesh )
 				transforms.push_back(baker_inverse_transform * mesh_transform[1])
-	
-	mesh_joiner.insert_mesh_data(mesh_array, transforms, transforms.map(func(a): return -1))		
+				material_set_id_array.push_back( mesh_transform[2] )
+		
+	mesh_joiner.insert_mesh_data(mesh_array, transforms, material_set_id_array)		
 	mesh_instance.mesh = mesh_joiner.join_meshes()						
+	#print(mesh_instance.mesh.get_surface_count())
 	mesh_instance.mesh.resource_name = mesh_instance.name			
 	var glb_path = get_joined_mesh_glb_path()					
 	AssetIO.glb_export(root_node, glb_path)		
