@@ -302,7 +302,7 @@ func generate_import_tags():
 				is_same = false
 			if original_meshes.size() > meshes.size():
 				is_same = false
-				for i in range(original_meshes.size(),meshes.size()):
+				for i in range(meshes.size(), original_meshes.size()):
 					mesh_items[mesh_item_name]["mesh_state"].push_back(IMPORT_STATE.REMOVE)			
 			if is_same:
 				mesh_items[mesh_item_name]["state"] = IMPORT_STATE.NO_CHANGE

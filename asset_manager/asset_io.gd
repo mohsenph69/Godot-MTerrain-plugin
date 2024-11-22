@@ -1,6 +1,8 @@
 @tool
 class_name AssetIO extends Object
 
+####### TODO - material don't allow duplicates, exclude addons folder, CHANGE	
+
 ############################################
 # AssetIO contains:
 # - static functions for importing/exporting glb files
@@ -235,6 +237,7 @@ static func glb_import_commit_changes():
 	######################
 	## Commit Mesh Item ##
 	######################
+	var meshes_to_remove := {}
 	# mesh_item must be processed before collection, because collection depeneds on mesh item
 	for mesh_item_name in asset_data.mesh_items.keys(): #mesh_names:
 		var mesh_item_info = asset_data.mesh_items[mesh_item_name]
@@ -243,7 +246,7 @@ static func glb_import_commit_changes():
 		### Handling Remove First
 		if mesh_item_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:			
 			for mesh_id in asset_library.mesh_item_get_info(mesh_item_info["id"]).mesh:
-				remove_mesh(mesh_id)
+				meshes_to_remove[mesh_id] = true				
 			asset_library.mesh_item_remove(mesh_item_info["id"])
 			continue
 		### Other State	
@@ -256,8 +259,14 @@ static func glb_import_commit_changes():
 			if mesh_item_info["id"] == -1:
 				push_error("something bad happened mesh id should not be -1")
 				continue
+			for i in len(mesh_item_info.mesh_state):
+				if mesh_item_info.mesh_state[i] == AssetIOData.IMPORT_STATE.REMOVE:
+					meshes_to_remove[ mesh_item_info.original_meshes[i].id ] = true
 			asset_library.mesh_item_update(mesh_item_info.id, mesh_id_array, mesh_item_info.material_set_id)
-		
+	
+	
+	for mesh_id in meshes_to_remove:
+		remove_mesh(mesh_id)
 	#######################
 	## Commit collisions ##
 	#######################
