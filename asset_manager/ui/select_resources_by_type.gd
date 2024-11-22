@@ -49,6 +49,7 @@ func build_tree(root:TreeItem, path:="res://"):
 		item.set_text(1, current_path)				
 		EditorInterface.get_resource_previewer().queue_resource_preview(current_path, self, "update_icon_preview", item)				
 	for folder in DirAccess.get_directories_at(path):
+		if folder == "addons": continue
 		build_tree(root, path.path_join(folder))
 	
 	

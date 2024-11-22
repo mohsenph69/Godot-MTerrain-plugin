@@ -1,7 +1,7 @@
 @tool
 class_name AssetIO extends Object
 
-####### TODO - material don't allow duplicates, exclude addons folder, CHANGE	
+####### TODO - Change state propagate to collection
 
 ############################################
 # AssetIO contains:
@@ -239,7 +239,7 @@ static func glb_import_commit_changes():
 	######################
 	var meshes_to_remove := {}
 	# mesh_item must be processed before collection, because collection depeneds on mesh item
-	for mesh_item_name in asset_data.mesh_items.keys(): #mesh_names:
+	for mesh_item_name in asset_data.mesh_items.keys(): 
 		var mesh_item_info = asset_data.mesh_items[mesh_item_name]
 		if mesh_item_info["ignore"] or mesh_item_info["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 			continue
@@ -261,7 +261,7 @@ static func glb_import_commit_changes():
 				continue
 			for i in len(mesh_item_info.mesh_state):
 				if mesh_item_info.mesh_state[i] in [AssetIOData.IMPORT_STATE.CHANGE, AssetIOData.IMPORT_STATE.REMOVE]:
-					meshes_to_remove[ mesh_item_info.original_meshes[i].id ] = true
+					meshes_to_remove[ mesh_item_info.original_meshes[i] ] = true
 			asset_library.mesh_item_update(mesh_item_info.id, mesh_id_array, mesh_item_info.material_set_id)
 	
 	

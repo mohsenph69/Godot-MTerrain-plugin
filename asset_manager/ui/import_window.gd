@@ -186,6 +186,10 @@ func init_materials_tree():
 					
 	var material_details_tree:Tree = %material_details_tree
 	root = material_details_tree.create_item()		
+	var null_item = root.create_child() 		
+	material_table_items[-1] = null_item	
+	null_item.set_text(0,"(no material)")
+	null_item.set_metadata(0, -1)
 	for id in material_table:				
 		var item = root.create_child() 		
 		material_table_items[id] = item

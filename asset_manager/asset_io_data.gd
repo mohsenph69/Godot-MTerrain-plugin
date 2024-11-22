@@ -316,11 +316,19 @@ func generate_import_tags():
 			collections[key]["state"] = IMPORT_STATE.REMOVE
 		elif collections[key]["id"] == -1:
 			collections[key]["state"] = IMPORT_STATE.NEW
-		elif collections[key]["mesh_items"] == collections[key]["original_mesh_items"] and collections[key]["sub_collections"] == collections[key]["original_sub_collections"]:
-			collections[key]["state"] = IMPORT_STATE.NO_CHANGE
-		else:
-			collections[key]["state"] = IMPORT_STATE.CHANGE	
+		else: 	
+			collections[key]["state"] = IMPORT_STATE.CHANGE		
+			if collections[key]["mesh_items"] != collections[key]["original_mesh_items"]: continue 
+			if collections[key]["sub_collections"] != collections[key]["original_sub_collections"]:	continue
+			if check_if_mesh_items_are_changed(collections[key]["mesh_items"], ):
+				continue
+				
+			collections[key]["state"] = IMPORT_STATE.NO_CHANGE			
 
+func check_if_mesh_items_are_changed(mesh_item_names):
+	for mesh_item_name in mesh_item_names:
+		if mesh_items[mesh_item_name].state != IMPORT_STATE.NO_CHANGE:
+			return true			
 func get_material_id_by_name(material_name):
 	var material_table = AssetIO.get_material_table()
 	var ids = material_table.keys()
@@ -361,10 +369,11 @@ func save_unsaved_meshes()->int:
 			for j in len(material_set): 					
 				var material_name = material_set[j]					
 				var material_id = materials[material_name].material
-				if material_id == null: continue # THIS SHOULD NOT BE ALLOWED! it means user hasn't set material during import window
-				var material_path = AssetIO.get_material_table()[material_id].path
-				mmesh.surface_set_material(set_id, j, material_path)		
-				#print("adding material path ", material_path, " to material set ", j, " in " ,mmesh.resource_name)								
+				if material_id in [-1, null]:
+					mmesh.surface_set_material(set_id, j, "")		
+				else:
+					var material_path = AssetIO.get_material_table()[material_id].path
+					mmesh.surface_set_material(set_id, j, material_path)						
 		var mesh_id = asset_library.mesh_add(mmesh)		
 		result[mesh_id] = mesh_data[mesh]		
 		## Replace mesh with mesh id inside mesh_items dictionary		

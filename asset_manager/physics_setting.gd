@@ -40,7 +40,8 @@ func empty_clicked(_click_position,_mouse_button_index):
 	
 func add_materials_to_table(paths):
 	for path in paths:
-		AssetIO.update_material(-1, path)
+		if not path in AssetIO.get_material_table().values().map(func(a):return a.path):
+			AssetIO.update_material(-1, path)
 	update_materials_list()
 	
 func show_add_material_popup():
@@ -71,6 +72,9 @@ func update_materials_list(filter = null):
 		root = materials_list.create_item()		
 	var material_table = AssetIO.get_material_table()
 	AssetIO.generate_material_thumbnails(material_table.keys())
+	var null_item := root.create_child()
+	null_item.set_text(0, "-1")
+	null_item.set_text(2, "(no material)")
 	for i in material_table.keys():
 		if filter and not filter in material_table[i].path: continue
 		var item := root.create_child()
