@@ -141,8 +141,8 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	asset_data.glb_path = path
 	asset_data.meta_data = metadata		
 	#STEP 1: convert gltf file into nodes
-	var scene_root = gltf_document.generate_scene(gltf_state)
-	var scene = scene_root.get_children()
+	var scene_root = gltf_document.generate_scene(gltf_state)	
+	var scene = scene_root.get_children() if not scene_root is ImporterMeshInstance3D else [scene_root]
 	#STEP 2: convert gltf scene into AssetData format	
 	generate_asset_data_from_glb(scene)	
 	#STEP 3: add data from last import for comparisons
