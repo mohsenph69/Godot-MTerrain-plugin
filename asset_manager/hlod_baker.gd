@@ -78,7 +78,7 @@ func bake_to_hlod_resource():
 		material_array.fill(-1)		
 		var shadow_array = material_array.map(func(a): return 0)
 		var gi_array = material_array.map(func(a): return 0)				
-		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, material_array, shadow_array, gi_array, 1 )		
+		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, 0, shadow_array, gi_array, 1 )		
 		if mesh_id != -1:
 			for i in range(join_at_lod, MAX_LOD):
 				print("inserting joined mesh at lod ", i)		

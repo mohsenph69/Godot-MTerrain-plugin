@@ -13,7 +13,7 @@ var material_table_items = {}
 var invalid_materials := []
 
 func _ready():
-	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
+	#if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	if get_parent() is Window:
 		get_parent().close_requested.connect(get_parent().queue_free)
