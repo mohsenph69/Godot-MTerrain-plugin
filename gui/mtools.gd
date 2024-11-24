@@ -26,6 +26,13 @@ extends Control
 #
 ###############################################################
 
+#TODO:
+# - paint on multiple mgrass at the same time
+# - floating brush panel
+# - remember last brush
+# - inspector plugin for editing brushes
+
+
 # fix icon-only button margins
 # fix brush bool-property button 
 # added ctrl mouse wheel to increase brush size
@@ -87,11 +94,11 @@ var active_object = null
 
 
 
-var brush_manager:MBrushManager = MBrushManager.new()
+var brush_manager := MBrushManager.new()
 var brush_decal # set by m_terrain.gd on enter_tree()
 var mask_decal # set by m_terrain.gd on enter_tree()
 var human_male # set by m_terrain.gd on enter_tree()
-var edit_human_position = false
+var edit_human_position := false
 @onready var human_button = find_child("human_male")
 @onready var grass_merge_sublayer_button = find_child("grass_merge_sublayer")
 @onready var walk_terrain_button = find_child("walk_terrain")
@@ -101,7 +108,9 @@ var editor_camera: Camera3D = null #this is set by forward_gui_input
 var walk_speed = 5 #in meters per seccond
 
 var is_initial_size_set := false
-var last_edit_mode = {}
+var last_edit_mode := {}
+var last_paint_settings := {}
+
 #region Initialisations
 func _ready():	
 	MTool.enable_editor_plugin()
@@ -113,13 +122,16 @@ func _ready():
 	for button in popup_buttons:
 		init_popup_button_signals(button)	
 
+	edit_mode_button.clear_last_edit_mode_setting.connect(clear_last_edit_mode)
 	edit_mode_button.edit_mode_changed.connect(set_edit_mode)		
-
+	
+	
 	theme_changed.connect(update_theme)
 	visibility_changed.connect(_on_resized)
 	
+func clear_last_edit_mode(active_object):
+	last_edit_mode[active_object]=null			
 	
-
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
 	brush_decal.visible = false
@@ -494,7 +506,7 @@ func request_show():
 	_on_resized()
 	update_edit_mode_options()
 
-func deactivate_editing():	
+func deactivate_editing():		
 	if is_instance_valid(edit_mode_button):
 		edit_mode_button.text = ""
 		edit_mode_button.theme_type_variation = "button_icon_only"
@@ -515,8 +527,7 @@ func deactivate_editing():
 	
 func set_edit_mode(object = active_object, mode=current_edit_mode):	
 	if object == active_object and current_edit_mode == mode:	
-		return
-	
+		return	
 	if object==null or mode ==&"": 
 		deactivate_editing()
 		return	
@@ -560,8 +571,9 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 			layers_popup_button.layer_changed.connect(func(id):
 				brush_popup_button.visible = id > -1
 				mask_popup_button.visible = id > -1
+				last_paint_settings[object]['layer'] = id
 			)
-			layers_popup_button.init_color_layers(object, brush_popup_button)
+			layers_popup_button.init_color_layers(object, brush_popup_button, last_paint_settings[object])
 			#Colol layers will init there own brushes
 		mask_decal.active_terrain = object
 		if not get_active_mterrain().is_grid_created():

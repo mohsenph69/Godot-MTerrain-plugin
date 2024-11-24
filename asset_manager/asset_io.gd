@@ -136,8 +136,11 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	
 	#STEP 0: Init Asset Data
 	asset_data = AssetIOData.new()	
-	if gltf_state.json.scenes[0].has("extras") and gltf_state.json.scenes[0].extras.has("blend_file"):
-		asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
+	if gltf_state.json.scenes[0].has("extras"):
+		if gltf_state.json.scenes[0].extras.has("blend_file"):
+			asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
+		if gltf_state.json.scenes[0].extras.has("variation_groups"):
+			asset_data.variation_group = gltf_state.json.scenes[0].extras.variation_groups
 	asset_data.glb_path = path
 	asset_data.meta_data = metadata		
 	#STEP 1: convert gltf file into nodes
@@ -155,9 +158,12 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		glb_show_import_window(asset_data)
 	#STEP 5: Commit changes - import window will call this step when user clicks "import"
 	else:
+		auto_assign_material()
 		glb_import_commit_changes()		
 		
-
+static func auto_assign_material():
+	for material in asset_data.materials:
+		
 #Parse GLB file and prepare a preview of changes to asset library
 static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):	
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
@@ -286,7 +292,10 @@ static func glb_import_commit_changes():
 	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()	
 	if not "__blend_files" in asset_library.import_info:
 		asset_library.import_info["__blend_files"] = {}
-	asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path
+	asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path	
+	
+	asset_library.import_info[asset_data.glb_path]["__variation_groups"] = asset_data.variation_groups
+	
 	asset_library.finish_import.emit(asset_data.glb_path)
 	asset_library.save()	
 	

@@ -15,7 +15,7 @@ var mesh_data: Dictionary # key is mesh_name, value is array of material sets, e
 var materials:Dictionary #Key is import material name
 var mesh_items:Dictionary
 var collections:Dictionary
-
+var variation_groups: Array #array of array of glb node names
 var meta_data:Dictionary
 
 func clear():
@@ -62,7 +62,7 @@ func get_empty_collection()->Dictionary:
 		"original_sub_collections":{},
 		"original_collision_items":[],
 		"tags": [],
-		"original_tags": [],
+		"original_tags": [],		
 		"id":-1,
 		"is_root":true,
 		"ignore":false,

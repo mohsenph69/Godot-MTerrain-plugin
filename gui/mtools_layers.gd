@@ -141,7 +141,7 @@ func rename_heightmap_layer(name_button, new_name):
 #endregion
 
 #region Color Layers
-func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_control):
+func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_control, last_settings:={}):
 	if not mterrain or not brush_button:
 		push_error("init color layers failed: no mterrain or no brush button" )
 		return
@@ -158,6 +158,11 @@ func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_
 			active_terrain.brush_layers.erase(active_terrain.brush_layers[i])
 			active_terrain.brush_layers_groups_num -= 1
 	if valid_count > 0:
+		if last_settings.has("layer"):
+			var layer_id = last_settings.layer
+			if layers_container.get_child_count() >layer_id:
+				layers_container.get_child(layer_id).select_layer()				
+				return
 		layers_container.get_child(0).select_layer()
 	else:
 		text = "(click to add a color layer)"
