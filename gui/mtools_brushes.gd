@@ -109,7 +109,7 @@ func on_height_brush_select(item):
 	height_brush_id = item.get_index()
 	var brush_props = height_brush_manager.get_height_brush_property(height_brush_id)
 	for p in brush_props:
-		create_props(p)
+		create_props(p)	
 	text = ""
 	set("theme_override_styles/normal", null)
 	icon = item.label.icon
@@ -148,7 +148,7 @@ func create_props(dic:Dictionary):
 	element.set_name(dic["name"])
 	property_element_list.append(element)	
 	if element.prop_name.to_lower() == "revers":
-		reverse_property_control = element
+		reverse_property_control = element	
 
 func clear_property_element():
 	for e in property_element_list:

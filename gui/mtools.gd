@@ -76,6 +76,7 @@ var undo_redo: EditorUndoRedoManager
 	brush_popup_button, 	
 	mask_popup_button,
 ]
+@onready var pin_mask_button = mask_popup_button.find_child("pin_mask_button")
 
 var current_popup_button: Button = null
 var timer
@@ -94,12 +95,13 @@ var edit_human_position = false
 @onready var human_button = find_child("human_male")
 @onready var grass_merge_sublayer_button = find_child("grass_merge_sublayer")
 @onready var walk_terrain_button = find_child("walk_terrain")
+
 var walking_terrain = false
 var editor_camera: Camera3D = null #this is set by forward_gui_input
 var walk_speed = 5 #in meters per seccond
 
 var is_initial_size_set := false
-
+var last_edit_mode = {}
 #region Initialisations
 func _ready():	
 	MTool.enable_editor_plugin()
@@ -135,7 +137,8 @@ func on_node_modified(node):
 func update_edit_mode_options():	
 	var all_mterrain = MTerrain.get_all_terrain_nodes()
 	edit_mode_button.init_edit_mode_options(all_mterrain)
-
+	
+	
 func clear_current_popup_button():
 	if current_popup_button:
 		current_popup_button.button_pressed = false			
@@ -205,6 +208,8 @@ func set_active_object(object):
 		active_object.set_npoints_visible(false)
 		
 	edit_mode_button.change_active_object(object)	
+	if object:
+		last_edit_mode[object] = current_edit_mode
 	#Automatically enter edit mode for mpath
 	if object is MPath:
 		edit_mode_button.edit_selected(object)
@@ -303,14 +308,20 @@ func _process(delta):
 		editor_camera.position.y = get_active_mterrain().get_height(editor_camera.global_position) + 1.6
 
 func on_selection_changed(obj):
-	if obj is MTerrain:
+	if obj is MTerrain:		
 		request_show()	
+		if last_edit_mode.has(obj) and last_edit_mode[obj]:
+			edit_mode_button.edit_selected(obj, last_edit_mode[obj])		
 		return
 	if obj.get_parent() is MTerrain:
-		if obj is MGrass or obj is MNavigationRegion3D:
+		if obj is MGrass or obj is MNavigationRegion3D:			
 			request_show()	
+			if last_edit_mode.has(obj) and last_edit_mode[obj]:
+				edit_mode_button.edit_selected(obj, last_edit_mode[obj])					
 			return
 	if obj is MPath or obj is MCurveMesh:
+		if last_edit_mode.has(obj) and last_edit_mode[obj]:
+			edit_mode_button.edit_selected(obj, last_edit_mode[obj])				
 		request_show()	
 		return
 	
@@ -366,7 +377,6 @@ func forward_3d_gui_input(viewport_camera, event):
 	######################## HANDLE CURVE GIZMO FINSH ########################	
 	var a: MTerrain	
 	if active_terrain is MTerrain and event is InputEventMouse:						
-
 		if ray_col.is_collided():			
 			col_dis = ray_col.get_collision_position().distance_to(viewport_camera.global_position)
 			status_bar.set_height_label(ray_col.get_collision_position().y)
@@ -435,7 +445,7 @@ func paint_mode_handle(event:InputEvent):
 					undo_redo.add_undo_method(active_object,"images_undo")
 					undo_redo.commit_action(false)
 			else:
-				if mask_decal.is_being_edited:
+				if mask_decal.is_being_edited and pin_mask_button.button_pressed:
 					mask_decal.is_being_edited = false	
 				elif active_object is MGrass:
 					active_object.save_grass_data()
@@ -446,17 +456,20 @@ func paint_mode_handle(event:InputEvent):
 		if event.button_mask == MOUSE_BUTTON_LEFT:			
 			var t = Time.get_ticks_msec()
 			var dt = t - last_draw_time			
-			last_draw_time = t		
-			if mask_decal.is_being_edited:
-				return true 
-			if draw(ray_col.get_collision_position()):
-				return true
-		if mask_decal.is_being_edited:			
-			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+			last_draw_time = t					
+			if mask_decal.is_being_edited and pin_mask_button.button_pressed:				
+				return true			
+			if not pin_mask_button.button_pressed:				
+				mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position(), true)				
+			if draw(ray_col.get_collision_position()):				
+				return true			
+		if mask_decal.is_being_edited or pin_mask_button.button_pressed:			
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and pin_mask_button.button_pressed:
 				mask_decal.is_being_edited = false				
 				mask_popup_button.clear_mask()
-			mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
-		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+			if event is InputEventMouseMotion:				
+				mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position(), not pin_mask_button.button_pressed)
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE and pin_mask_button.button_pressed:
 			mask_decal.is_being_edited = true
 			return true
 	else:
@@ -512,6 +525,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		return
 	active_object = object	
 	current_edit_mode = mode
+	last_edit_mode[object] = mode			
 	brush_popup_button.visible = true
 	mask_popup_button.visible = true
 	if object is MPath:		
@@ -676,18 +690,20 @@ func _on_image_creator_button_pressed():
 func _on_resized():				
 	if not is_node_ready():
 		_on_resized.call_deferred()
-		return
+		return	
 	if not is_initial_size_set:
 		is_initial_size_set = true
 		_on_resized.call_deferred()
 	if not has_node("VSplitContainer") or not mtools_root:		
-		return
+		return		
 	var vsplit:VSplitContainer  = $VSplitContainer
+	
+	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)	
 	var max_size = get_viewport_rect().size.y / 16 + 2
 	var min_size = get_viewport_rect().size.y / 32	
-	#vsplit.size.y = max_size
-	vsplit.position.y = -vsplit.size.y	
-	vsplit.split_offset = clamp(vsplit.split_offset, -max_size,-min_size)
+	vsplit.custom_minimum_size.y = max_size
+	#vsplit.position.y = -vsplit.size.y	
+	#vsplit.split_offset = clamp(vsplit.split_offset, -max_size,-min_size)
 	resize_children_recursive(mtools_root, clamp(mtools_root.size.y, min_size, max_size ))
 	theme.default_font_size = clamp( clamp(mtools_root.size.y, min_size, max_size) /2 , 12,32)
 	

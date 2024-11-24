@@ -95,7 +95,7 @@ static func load_glb_as_hlod(original_scene,root_name):
 			print("NO BLend file in import info")
 			continue
 		var glb_path = asset_library.import_info["__blend_files"][node.get_meta("blend_file")]			
-		var node_name := collection_parse_name(node.name)
+		var node_name := collection_parse_name(node)
 		if not asset_library.import_info[glb_path].has(node_name):			
 			print("import info does not have this node name for this glb")
 			continue
@@ -212,7 +212,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		## PROCESS SUB_COLLECTION NODE ##	
 		#################################
 		elif active_collection != "__root__": # can be sub collection			
-			var subcollection_name = collection_parse_name(node.name)						
+			var subcollection_name = collection_parse_name(node)						
 			if node.has_meta("blend_file"):				
 				var blend_file = node.get_meta("blend_file").trim_prefix("//")				
 				if asset_data.blend_file != blend_file:
@@ -401,10 +401,14 @@ static func node_parse_name(node:Node)->Dictionary:
 				"mesh": result["col"] = AssetIOData.COLLISION_TYPE.MESH							
 	return result
 
-static func collection_parse_name(name:String)->String:
-	if name.right(3).is_valid_int():  #remove the .001 suffix
-		return name.left(len(name)-4)
-	return name
+static func collection_parse_name(node)->String:	
+	var material_suffix = ""
+	if node.has_meta("active_material_set_id"):
+		material_suffix = str("_" + node.get_meta("active_material_set_id"))
+	var suffix_length = len(node.name.split("_")[-1])
+	if node.name.right(suffix_length).is_valid_int():  #remove the .001 suffix
+		return node.name.left(len(node.name)-suffix_length-1) + material_suffix
+	return node.name + material_suffix
 #endregion
 
 #region THUMBNAILS

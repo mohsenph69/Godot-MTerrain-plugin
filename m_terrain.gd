@@ -2,7 +2,7 @@
 extends EditorPlugin
 var version:String="0.16.0"
 
-var tools= null
+var tools:Control= null
 
 var current_main_screen_name =""
 
@@ -99,9 +99,9 @@ func _enter_tree():
 		tools.request_import_window.connect(show_import_window)
 		tools.request_image_creator.connect(show_image_creator_window)
 		tools.edit_mode_changed.connect(select_object)		
-		tools.undo_redo = get_undo_redo()
-		main_screen.add_child(tools)
-
+		tools.undo_redo = get_undo_redo()			
+		main_screen.add_child(tools)		
+		
 		get_tree().node_added.connect(tools.on_node_modified)
 		get_tree().node_renamed.connect(tools.on_node_modified)
 		get_tree().node_removed.connect(tools.on_node_modified)
