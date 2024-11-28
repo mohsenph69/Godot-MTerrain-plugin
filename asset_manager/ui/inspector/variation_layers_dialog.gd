@@ -20,3 +20,7 @@ func _ready():
 
 func focus_layer(i):
 	%variation_layers_container.get_child(i).grab_focus()
+
+func _input(event):
+	if event is InputEventKey and event.keycode == KEY_ESCAPE:
+		queue_free()

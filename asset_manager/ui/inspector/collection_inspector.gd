@@ -30,6 +30,7 @@ func _ready():
 			layers_label.text = "Variation Layers"
 			var layers =preload("res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn").instantiate()
 			layers.baker = baker
+			layers.masset = object
 			layers.layer_renamed.connect(baker.update_variation_layer_name)
 			add_child(layers_label)
 			add_child(layers)

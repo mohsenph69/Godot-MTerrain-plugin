@@ -349,6 +349,7 @@ func deactivate_mesh_updater():
 		timer.stop()
 	
 func update_asset_mesh():	
+	if force_lod_enabled: return # this should not be necessary, but sometime timer refuses to stop, and I don't know why
 	asset_mesh_updater.update_auto_lod()
 	asset_mesh_updated.emit()
 #endregion

@@ -2,7 +2,8 @@
 extends GridContainer
 
 signal layer_renamed
-var baker
+var baker:HLod_Baker
+var masset:MAssetMesh
 
 var layer_btn = preload("./layer_btn.gd")
 const layer_count:=16
@@ -58,6 +59,7 @@ func button_pressed(toggle:bool,bit:int):
 	if bit >= btns.size():
 		push_error("Invalid Bit")
 		return	
+	masset.hlod_layers = get_value()
 
 func rename_req(bit:int):	
 	if bit<0 or bit>=layer_names.size():
