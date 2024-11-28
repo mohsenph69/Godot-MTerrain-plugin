@@ -32,25 +32,15 @@ static func glb_get_root_node_name(path):
 static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asset_manager/example_asset_library/export/", root_node.name.to_lower(), ".glb") ):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 	var gltf_document= GLTFDocument.new()
-	var gltf_save_state = GLTFState.new()
-
-	var node = root_node.duplicate(0)
-	node.transform = Transform3D()
-	node.name = node.name.split("*")[0]
-	for child in node.get_children():
-		child.owner = node
-		if child.has_meta("collection_id"):
-			if not child.get_meta("collection_id") in asset_library.tag_get_collections(0):
-				for grandchild in child.get_children():
-					child.remove_child(grandchild)
-					grandchild.queue_free()
-
-	EditorInterface.get_edited_scene_root().add_child(node)
-
-	gltf_document.append_from_scene(node, gltf_save_state)
+	var gltf_save_state = GLTFState.new()	
+	if root_node is MeshInstance3D:
+		print(root_node)
+		for surface_id in root_node.mesh.get_surface_count():
+			print(root_node.mesh.surface_get_material(surface_id).resource_name) #resource_path.get_file().get_slice(".", 0))
+		
+	gltf_document.append_from_scene(root_node, gltf_save_state)
 	print("exporting to ", path)
-	var error = gltf_document.write_to_filesystem(gltf_save_state, path)
-	node.queue_free()	
+	var error = gltf_document.write_to_filesystem(gltf_save_state, path)	
 #endregion
 
 #region GLB Import	
@@ -140,7 +130,7 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		if gltf_state.json.scenes[0].extras.has("blend_file"):
 			asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
 		if gltf_state.json.scenes[0].extras.has("variation_groups"):
-			asset_data.variation_group = gltf_state.json.scenes[0].extras.variation_groups
+			asset_data.variation_groups = gltf_state.json.scenes[0].extras.variation_groups			
 	asset_data.glb_path = path
 	asset_data.meta_data = metadata		
 	#STEP 1: convert gltf file into nodes
@@ -157,12 +147,8 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	if not no_window:
 		glb_show_import_window(asset_data)
 	#STEP 5: Commit changes - import window will call this step when user clicks "import"
-	else:
-		auto_assign_material()
-		glb_import_commit_changes()		
-		
-static func auto_assign_material():
-	for material in asset_data.materials:
+	else:		
+		glb_import_commit_changes()			
 		
 #Parse GLB file and prepare a preview of changes to asset library
 static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):	
@@ -179,7 +165,10 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 			if not node.has_meta("material_sets"):
 				var mesh_item_name = name_data["name"] + "_0"
 				var mesh :Mesh= node.mesh.get_mesh()
-				asset_data.add_mesh_data([[mesh.surface_get_material(0).resource_name]],mesh , mesh_item_name)						
+				var material_set := []
+				for i in mesh.get_surface_count():
+					material_set.push_back(mesh.surface_get_material(i).resource_name)
+				asset_data.add_mesh_data([material_set],mesh, mesh_item_name)						
 				asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, 0)			
 				var collection_name = mesh_item_name if active_collection == "__root__" else active_collection				
 				asset_data.add_mesh_item_to_collection(collection_name, mesh_item_name, active_collection == "__root__")				
@@ -190,6 +179,9 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 					asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, set_id)			
 					var collection_name = mesh_item_name if active_collection == "__root__" else active_collection				
 					asset_data.add_mesh_item_to_collection(collection_name, mesh_item_name, active_collection == "__root__")				
+					#for group in asset_data.variation_groups:
+						#if name_data["name"] in group:
+							
 			if child_count > 0:
 				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")									
 		############################
@@ -567,14 +559,22 @@ static func get_material_table():
 static func update_material(id, path):
 	var asset_library := MAssetTable.get_singleton()	
 	var material_table = get_material_table()
+	var material = load(path)
+	if not material is Material:
+		push_error("failed adding material to material table: resource is not material")
+		return
+	if material.resource_name == "": 
+		material.resource_name = path.get_file().get_slice(".",0)
+		ResourceSaver.save(material)
 	##################
 	## New Material ##
-	##################
+	##################		
 	if id == -1:
 		id = 0		
 		while material_table.has(id):
 			id += 1
 		asset_library.import_info["__materials"][id] = {"path": path, "meshes": []}		 
+		
 		return		
 	#######################
 	## Existing Material ##

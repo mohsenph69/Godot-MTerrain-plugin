@@ -23,5 +23,16 @@ func _ready():
 			for i in len(subcollection_ids):								
 				details += str(asset_library.collection_get_name(subcollection_ids[i]), ": ", subcollection_transforms[i].origin.snappedf(0.01), "\n")
 		%collection_details.text = details
+		
+		var baker = object.owner #TODO what if it is subbaker?	
+		if baker is HLod_Baker:			
+			var layers_label = Label.new()
+			layers_label.text = "Variation Layers"
+			var layers =preload("res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn").instantiate()
+			layers.baker = baker
+			layers.layer_renamed.connect(baker.update_variation_layer_name)
+			add_child(layers_label)
+			add_child(layers)
+			layers.layer_names = baker.variation_layers if baker is HLod_Baker else []
 	else:
 		%collection_name.text = "Collection doesn't exist"								

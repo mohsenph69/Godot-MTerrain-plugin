@@ -191,6 +191,7 @@ func change_color_layer_selection(layer_id, layer_name):
 		brush_control.init_color_brushes(active_terrain, layer_id)
 		text = layer_name	
 		layer_changed.emit(layer_id)
+		
 			
 
 func add_color_layer():

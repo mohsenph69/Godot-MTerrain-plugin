@@ -38,19 +38,29 @@ func _ready():
 	init_collections_tree()	
 	init_materials_tree()	
 	init_meshes_tree()
+	init_variations_tree()
+	%variations_tab_button.visible = len(asset_data.variation_groups) >0
 	%materials_tab_button.button_group.pressed.connect(func(button):		
 		if button == %materials_tab_button:
 			%materials_hsplit.visible = true
 			%meshes_hsplit.visible = false
 			%collections_hsplit.visible = false			
+			%variations_hsplit.visible = false
 		elif button == %meshes_tab_button:
 			%materials_hsplit.visible = false
 			%meshes_hsplit.visible = true
 			%collections_hsplit.visible = false
+			%variations_hsplit.visible = false
 		elif button == %collections_tab_button:
 			%materials_hsplit.visible = false
 			%meshes_hsplit.visible = false
 			%collections_hsplit.visible = true
+			%variations_hsplit.visible = false
+		elif button == %variations_tab_button:			
+			%materials_hsplit.visible = false
+			%meshes_hsplit.visible = false
+			%collections_hsplit.visible = false	
+			%variations_hsplit.visible = true	
 	)
 
 func init_meshes_tree():
@@ -113,10 +123,25 @@ func init_collections_tree():
 	collections_tree.item_selected.connect(func():						
 		update_collection_details(true, collections_tree.get_selected().get_metadata(0))				
 	)
-	var root = collections_tree.create_item()			
+	var root = collections_tree.create_item()				
 	for key in asset_data.collections:		
 		if asset_data.collections[key].has("is_root"):
 			build_collection_tree(key, root)
+
+func init_variations_tree():	
+	var root = %variations_tree.create_item()
+	for group in asset_data.variation_groups:			
+		var group_item = root.create_child()
+		for node_name in asset_data.collections:
+			if not asset_data.collections[node_name].has("is_root"): continue
+			var fixed_name = node_name.split("_")
+			fixed_name.resize(fixed_name.size()-1)
+			fixed_name = "".join(fixed_name)				
+			if fixed_name in group:				
+				var item = group_item.create_child(0)
+				item.set_text(0, node_name)
+				
+		group_item.set_text(0, "variation group")			
 	
 func update_collection_details(is_collection:bool, item_node:Dictionary ):
 	if not item_node:

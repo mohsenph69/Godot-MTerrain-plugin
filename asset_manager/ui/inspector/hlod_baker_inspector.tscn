@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=4 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
+[ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
+[ext_resource type="Texture2D" uid="uid://boqh1mh7el3o4" path="res://addons/m_terrain/icons/eye-close.svg" id="3_esqxe"]
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
 offset_right = 323.0
@@ -17,15 +19,28 @@ text = "DEBUG Current Lod: "
 unique_name_in_owner = true
 layout_mode = 2
 text = "Bake"
+alignment = 0
 
-[node name="Join" type="Button" parent="."]
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Join" type="Button" parent="HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Joined Mesh Settings"
+alignment = 0
+
+[node name="disable_joined_mesh_button" type="TextureButton" parent="HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("2_gaehx")
+texture_pressed = ExtResource("3_esqxe")
+stretch_mode = 5
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-alignment = 1
 
 [node name="force_lod_checkbox" type="CheckBox" parent="HBoxContainer"]
 unique_name_in_owner = true
@@ -43,29 +58,8 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Show Joined"
 
-[node name="joined_mesh_thumbnail" type="TextureRect" parent="."]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-expand_mode = 5
-stretch_mode = 5
-
-[node name="disable_joined_mesh_button" type="CheckButton" parent="joined_mesh_thumbnail"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -204.0
-offset_top = -31.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "Disable joined mesh"
-alignment = 2
-
-[node name="remove_joined_mesh" type="Button" parent="."]
+[node name="variation_layers_button" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Remove"
+text = "Variation Layers"
+alignment = 0

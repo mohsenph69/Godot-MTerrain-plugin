@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://byvnng882k7vd"]
+[gd_scene load_steps=5 format=3 uid="uid://byvnng882k7vd"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/mesh_join_window.gd" id="1_xialn"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="2_4aabf"]
+[ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="3_vdih6"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_plgpf"]
 font_color = Color(0.91258, 0.835868, 0, 1)
@@ -33,19 +34,25 @@ layout_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="export_joined_mesh_toggle" type="CheckButton" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="export_joined_mesh_toggle" type="CheckButton" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 button_pressed = true
 text = "Export from scene"
 
-[node name="show_joined_mesh_glb_button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer"]
+[node name="show_joined_mesh_glb_button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
-visible = false
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "show joined mesh glb"
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("3_vdih6")
+expand_icon = true
 
 [node name="join_at_lod_hbox" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
@@ -73,6 +80,12 @@ visible = false
 layout_mode = 2
 size_flags_vertical = 3
 hide_root = true
+
+[node name="remove_joined_mesh" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Remove Joined Mesh"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2

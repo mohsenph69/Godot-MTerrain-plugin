@@ -103,6 +103,8 @@ var edit_human_position := false
 @onready var grass_merge_sublayer_button = find_child("grass_merge_sublayer")
 @onready var walk_terrain_button = find_child("walk_terrain")
 
+@onready var shortcut_panel = find_child("shortcut_panel")
+
 var walking_terrain = false
 var editor_camera: Camera3D = null #this is set by forward_gui_input
 var walk_speed = 5 #in meters per seccond
@@ -571,9 +573,14 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 			layers_popup_button.layer_changed.connect(func(id):
 				brush_popup_button.visible = id > -1
 				mask_popup_button.visible = id > -1
+				if not last_paint_settings.has(object):
+					last_paint_settings[object]={}
 				last_paint_settings[object]['layer'] = id
 			)
-			layers_popup_button.init_color_layers(object, brush_popup_button, last_paint_settings[object])
+			if last_paint_settings.has(object):
+				layers_popup_button.init_color_layers(object, brush_popup_button, last_paint_settings[object])			
+			else:
+				layers_popup_button.init_color_layers(object, brush_popup_button)			
 			#Colol layers will init there own brushes
 		mask_decal.active_terrain = object
 		if not get_active_mterrain().is_grid_created():

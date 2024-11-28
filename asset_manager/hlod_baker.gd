@@ -11,6 +11,7 @@ signal asset_mesh_updated
 @export_storage var meshes_to_join_overrides := {}
 @export_storage var force_lod_enabled := false
 @export_storage var force_lod_value: int
+@export_storage var variation_layers: PackedStringArray = ["","","","","","","","","","","","","","","",""]
 
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
@@ -351,3 +352,7 @@ func update_asset_mesh():
 	asset_mesh_updater.update_auto_lod()
 	asset_mesh_updated.emit()
 #endregion
+
+func update_variation_layer_name(i, new_name):
+	variation_layers[i] = new_name
+	notify_property_list_changed()

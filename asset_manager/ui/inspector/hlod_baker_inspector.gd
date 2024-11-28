@@ -14,7 +14,7 @@ func _ready():
 	var force_lod_value = %force_lod_value
 	%show_joined_button.visible = false
 	force_lod_checkbox.toggled.connect(func(toggle_on):
-		%show_joined_button.visible = toggle_on
+		validate_show_joined_mesh_button()			
 		force_lod_value.editable = toggle_on
 		baker.force_lod_enabled = toggle_on
 		force_lod_value.visible = toggle_on
@@ -32,30 +32,28 @@ func _ready():
 	
 	%disable_joined_mesh_button.visible = baker.has_joined_mesh_glb()	
 	%disable_joined_mesh_button.toggled.connect(baker.toggle_joined_mesh_disabled)
+	%disable_joined_mesh_button.toggled.connect(validate_show_joined_mesh_button)
 	if not baker.joined_mesh_disabled:
 		baker.joined_mesh_disabled = false
 	%disable_joined_mesh_button.button_pressed = baker.joined_mesh_disabled 		
-	
-	#var preview_scene = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector_joined_mesh_preview.tscn").instantiate()
-	#preview_scene.mesh = baker.get_joined_mesh()	
-	#if preview_scene.mesh is Mesh:
-		#add_child(preview_scene)
-		#%joined_mesh_thumbnail.texture = preview_scene.get_texture()				
-		#%joined_mesh_thumbnail.gui_input.connect(preview_scene.on_thumbnail_gui_input)
-	var remove_joined_mesh = %remove_joined_mesh
-	remove_joined_mesh.visible = baker.has_joined_mesh_glb()
-	remove_joined_mesh.pressed.connect(func():
-		if remove_joined_mesh.text == "Remove":
-			remove_joined_mesh.text = "Remove\nAre you sure?\nThis will delete the glb file for this joined mesh"
-		else:
-			baker.remove_joined_mesh()
-			remove_joined_mesh.visible = false
-	)
+		
 	%show_joined_button.pressed.connect(func():
 		baker.force_lod(baker.join_at_lod)
 		baker.notify_property_list_changed()		
 	)
+	%variation_layers_button.pressed.connect(func():
+		var dialog = preload("res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers_dialog.tscn").instantiate()
+		dialog.baker = baker
+		add_child(dialog)
+	)	
+	
+
+
+	
 func show_join_mesh_window():	
 	var window = preload("res://addons/m_terrain/asset_manager/ui/mesh_join_window.tscn").instantiate()	
 	window.baker = baker
 	add_child(window)	
+
+func validate_show_joined_mesh_button(_toggle_on = null):
+	%show_joined_button.visible = %force_lod_checkbox.button_pressed and baker.has_joined_mesh_glb() and not baker.joined_mesh_disabled
