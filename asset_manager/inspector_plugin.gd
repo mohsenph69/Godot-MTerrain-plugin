@@ -21,15 +21,8 @@ func _parse_begin(object):
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()
 		control.baker = object
 	elif object is MHlodScene:
-		control = Button.new()		
-		if not is_instance_valid(object.hlod):# and FileAccess.file_exists(object.hlod.get_baker_path()):
-			control.disabled = true			
-		
-		control.text = "Edit HLOD"				
-		control.pressed.connect(func():		
-			print(object.hlod.get_baker_path())	
-			#EditorInterface.open_scene_from_path(object.hlod.get_baker_path())
-		)		
+		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.tscn").instantiate()
+		control.mhlod_scene = object
 	elif object is MAssetMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_inspector.tscn").instantiate()
 		control.object = object		

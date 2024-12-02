@@ -2,9 +2,9 @@
 extends GridContainer
 
 signal layer_renamed
-var baker:HLod_Baker
-var masset:MAssetMesh
+signal value_changed 
 
+var baker:HLod_Baker #optional
 var layer_btn = preload("./layer_btn.gd")
 const layer_count:=16
 var is_init := false
@@ -30,19 +30,22 @@ func _ready():
 	rename_dialog.canceled.connect(_on_rename_dialog_canceled)
 	rename_dialog.confirmed.connect(_on_rename_dialog_confirmed)
 
-#func _init()-> void:
-	max_value = 0
-	for i in range(0,layer_count):
-		max_value |= 1 << i
 	init_layers()
 	if layer_names.size() != layer_count:
 		layer_names.resize(layer_count)
 	update_layer_names()
 
+func _init()-> void:
+	max_value = 0
+	for i in range(0,layer_count):
+		max_value |= 1 << i
+
+
 func init_layers()->void:	
 	for i in layer_count:
 		var b: Button = layer_btn.new()
-		b.baker = baker
+		if baker:
+			b.baker = baker
 		b.toggle_mode = true				
 		b.toggled.connect(button_pressed.bind(i))
 		b.rename_req.connect(rename_req.bind(i))
@@ -59,7 +62,7 @@ func button_pressed(toggle:bool,bit:int):
 	if bit >= btns.size():
 		push_error("Invalid Bit")
 		return	
-	masset.hlod_layers = get_value()
+	value_changed.emit(get_value())	
 
 func rename_req(bit:int):	
 	if bit<0 or bit>=layer_names.size():
@@ -70,7 +73,7 @@ func rename_req(bit:int):
 	
 func set_value(val:int)->void:
 	if val > max_value:
-		push_warning("value ",val,"is bigger than max value some bits will be ignored")
+		push_warning("value ",val,"is bigger than max value ", max_value, " some bits will be ignored")
 	for i in range(0,btns.size()):
 		var b:Button = btns[i]
 		b.button_pressed = val & (1 << i)		

@@ -5,6 +5,7 @@ signal rename_req
 var wbtn:Window = null
 var mouse_in_rename_btn:=false
 var baker
+
 func _ready():
 	custom_minimum_size = Vector2(24,24)
 	theme_type_variation = "button_layer_toggle"

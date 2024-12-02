@@ -59,7 +59,8 @@ func bake_to_hlod_resource():
 			var material_set_id = mdata.get_material_set_id()
 			var shadow_array = mesh_array.map(func(a): return 0)
 			var gi_array = mesh_array.map(func(a): return 0)			
-			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_set_id	, shadow_array, gi_array, 1)
+			var render_layers = 0			
+			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_set_id	, shadow_array, gi_array, render_layers, item.hlod_layers)
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
 			var i = 0			
@@ -79,7 +80,7 @@ func bake_to_hlod_resource():
 		material_array.fill(-1)		
 		var shadow_array = material_array.map(func(a): return 0)
 		var gi_array = material_array.map(func(a): return 0)				
-		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, 0, shadow_array, gi_array, 1 )		
+		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, 0, shadow_array, gi_array, 1, 0)		
 		if mesh_id != -1:
 			for i in range(join_at_lod, MAX_LOD):
 				print("inserting joined mesh at lod ", i)		
@@ -87,11 +88,11 @@ func bake_to_hlod_resource():
 		else:
 			push_error("Hlod baker error: cannot add joined mesh to hlod table because mesh_id is -1")
 		
-	####################
-	## BAKE SUB_BAKER ##
-	####################	
+	#######################
+	## PREBAKE SUB_BAKER ##
+	#######################
 	var bakers = get_all_sub_bakers(self, get_children())	
-	var all_hlod = []
+	var all_hlod: Array[SubHlodBakeData] = []
 	for baker_data in bakers:
 		baker_data.sub_baker.bake_to_hlod_resource()
 		if not is_instance_valid(baker_data.sub_baker.hlod_resource):
@@ -100,18 +101,22 @@ func bake_to_hlod_resource():
 		var sub_hlod_data = SubHlodBakeData.new()
 		sub_hlod_data.sub_hlod = baker_data.sub_baker.hlod_resource
 		sub_hlod_data.tr = baker_data.tr
-		all_hlod.push_back(sub_hlod_data)		
+		all_hlod.push_back(sub_hlod_data)			
 	###################
 	## BAKE SUB_HLOD ##
 	###################
 	all_hlod.append_array( get_all_sub_hlod(self, get_children()) )	
-	for hlod_data in all_hlod:
-		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod)
+	for hlod_data in all_hlod:		
+		var scene_layers := 0
+		if hlod_data.node and hlod_data.node is MHlodScene:
+			scene_layers = hlod_data.node.scene_layers
+		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod, scene_layers)
 		#hlod.lod_limit = join_at_lod
 	
 	hlod_resource.join_at_lod = join_at_lod
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
+		ResourceSaver.save(hlod_resource)
 	else:
 		if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
 			DirAccess.make_dir_absolute(bake_path.get_base_dir())

@@ -28,12 +28,13 @@ func _ready():
 		if baker is HLod_Baker:			
 			var layers_label = Label.new()
 			layers_label.text = "Variation Layers"
-			var layers =preload("res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn").instantiate()
-			layers.baker = baker
-			layers.masset = object
+			var layers =preload("res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn").instantiate()			
+			layers.baker = baker						
 			layers.layer_renamed.connect(baker.update_variation_layer_name)
+			layers.value_changed.connect(func(value): object.hlod_layers = value)
 			add_child(layers_label)
 			add_child(layers)
+			layers.set_value(object.hlod_layers)
 			layers.layer_names = baker.variation_layers if baker is HLod_Baker else []
 	else:
 		%collection_name.text = "Collection doesn't exist"								
