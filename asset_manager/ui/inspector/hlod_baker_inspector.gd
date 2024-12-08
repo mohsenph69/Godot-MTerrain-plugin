@@ -8,6 +8,17 @@ func _ready():
 
 	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return		
 	%Bake.pressed.connect(baker.bake_to_hlod_resource)		
+	%Bake.pressed.connect(func():
+		var tween:Tween = create_tween()
+		%bake_successful.visible = true
+		%bake_successful.modulate = Color(1,1,1,1)
+		tween.tween_property(%bake_successful, "modulate", Color(1,1,1,1),1.2)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(%bake_successful, "modulate", Color(1,1,1,0),2)
+		
+	)
+	
+	%bake_successful.visible=false	
 	validate_bake_button()
 	baker.renamed.connect(validate_bake_button.call_deferred)	
 	%Join.pressed.connect( show_join_mesh_window )			

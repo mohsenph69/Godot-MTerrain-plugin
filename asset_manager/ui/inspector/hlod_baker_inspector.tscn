@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=8 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
+[ext_resource type="Texture2D" uid="uid://o6bjob1w4w0w" path="res://addons/m_terrain/icons/tick_icon.svg" id="2_kaebi"]
 [ext_resource type="Texture2D" uid="uid://boqh1mh7el3o4" path="res://addons/m_terrain/icons/eye-close.svg" id="3_esqxe"]
 [ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="3_iqlmd"]
 [ext_resource type="PackedScene" uid="uid://emr0fpf2qo8g" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn" id="4_kqv64"]
@@ -29,6 +30,26 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Bake"
 alignment = 0
+
+[node name="bake_successful" type="TextureRect" parent="HBoxContainer3/Bake"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -9.0
+offset_right = -6.0
+offset_bottom = 9.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("2_kaebi")
+expand_mode = 2
+stretch_mode = 5
 
 [node name="show_hlod_button" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true
