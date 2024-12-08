@@ -26,10 +26,7 @@ var btns:Array # button bit in order
 
 @onready var rename_dialog: ConfirmationDialog = find_child("rename_dialog")
 
-func _ready():	
-	rename_dialog.canceled.connect(_on_rename_dialog_canceled)
-	rename_dialog.confirmed.connect(_on_rename_dialog_confirmed)
-
+func _ready():		
 	init_layers()
 	if layer_names.size() != layer_count:
 		layer_names.resize(layer_count)
@@ -47,8 +44,7 @@ func init_layers()->void:
 		if baker:
 			b.baker = baker
 		b.toggle_mode = true				
-		b.toggled.connect(button_pressed.bind(i))
-		b.rename_req.connect(rename_req.bind(i))
+		b.toggled.connect(button_pressed.bind(i))		
 		btns.push_back(b)
 		add_child(b)
 
@@ -62,14 +58,12 @@ func button_pressed(toggle:bool,bit:int):
 	if bit >= btns.size():
 		push_error("Invalid Bit")
 		return	
-	value_changed.emit(get_value())	
-
-func rename_req(bit:int):	
-	if bit<0 or bit>=layer_names.size():
-		return
-	current_renaming_bit = bit
-	$rename_dialog/rename_line.text = layer_names[bit]
-	$rename_dialog.visible = true
+	if Input.is_key_pressed(KEY_CTRL):		
+		value_changed.emit(int(pow(2, bit)))		
+		for i in len(btns):
+			btns[i].set_pressed_no_signal(i == bit)
+	else:
+		value_changed.emit(get_value())	
 	
 func set_value(val:int)->void:
 	if val > max_value:
@@ -85,17 +79,3 @@ func get_value()->int:
 		if b.button_pressed:
 			val |= 1 << i
 	return val
-
-
-func _input(event: InputEvent)->void:
-	if event is InputEventKey:
-		if event.keycode==KEY_1 and event.pressed:
-			set_value(652)			
-
-func _on_rename_dialog_canceled() -> void:
-	current_renaming_bit = -1
-
-func _on_rename_dialog_confirmed() -> void:
-	if current_renaming_bit < 0 || current_renaming_bit >= layer_names.size():
-		return	
-	layer_renamed.emit(current_renaming_bit, $rename_dialog/rename_line.text)	

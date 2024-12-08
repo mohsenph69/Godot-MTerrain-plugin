@@ -12,11 +12,14 @@ signal asset_mesh_updated
 @export_storage var force_lod_enabled := false
 @export_storage var force_lod_value: int
 @export_storage var variation_layers: PackedStringArray = ["","","","","","","","","","","","","","","",""]
+@export_storage var variation_layers_preview_value = 0
 
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
 var timer: Timer
+
+var can_bake =false
 
 const MAX_LOD = 10
 const UPDATE_INTERVAL = 0.5
@@ -311,12 +314,30 @@ func remove_joined_mesh():
 	AssetIO.remove_collection(id)
 #endregion
 
+func set_variation_layers_visibility(value):
+	for child in get_all_masset_mesh_nodes(self, get_children()):
+		child.visible = child.hlod_layers & value > 0 or child.hlod_layers == 0 or value == 0
+	variation_layers_preview_value = value
+	
 #region MAssetMesh Updater			
 func _enter_tree():		
 	if not is_node_ready(): 	
 		await ready
 	activate_mesh_updater()
+	validate_can_bake()
 
+func validate_can_bake():
+	var path = "res://massets/hlod/"+name+".res"	
+	if not FileAccess.file_exists(path): 
+		can_bake = true
+	else:
+		var hlod:MHlod = load(path)	
+		if FileAccess.file_exists(hlod.get_baker_path()) and hlod.get_baker_path() != scene_file_path:
+			can_bake = false		
+		can_bake = true
+
+
+	
 func _exit_tree():	
 	if is_instance_valid(timer) and timer.is_inside_tree():
 		timer.stop()
@@ -328,10 +349,12 @@ func _notification(what):
 				for grandchild in child.get_children():					
 					grandchild.owner = null		
 	
-func _ready():			
+func _ready():				
+	renamed.connect(validate_can_bake)
 	activate_mesh_updater()
 	#asset_mesh_updater.update_auto_lod()	
 	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
+	EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)
 	
 func activate_mesh_updater():
 	if not is_inside_tree():

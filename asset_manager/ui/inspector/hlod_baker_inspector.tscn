@@ -1,8 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=7 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
 [ext_resource type="Texture2D" uid="uid://boqh1mh7el3o4" path="res://addons/m_terrain/icons/eye-close.svg" id="3_esqxe"]
+[ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="3_iqlmd"]
+[ext_resource type="PackedScene" uid="uid://emr0fpf2qo8g" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn" id="4_kqv64"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_gfps4"]
+font_color = Color(0.92785, 0.495612, 0, 1)
 
 [node name="HlodBakerInspector" type="VBoxContainer"]
 offset_right = 323.0
@@ -15,11 +20,30 @@ visible = false
 layout_mode = 2
 text = "DEBUG Current Lod: "
 
-[node name="Bake" type="Button" parent="."]
+[node name="HBoxContainer3" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Bake" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Bake"
 alignment = 0
+
+[node name="show_hlod_button" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Show hlod resource in file system"
+icon = ExtResource("3_iqlmd")
+expand_icon = true
+
+[node name="bake_warning" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+label_settings = SubResource("LabelSettings_gfps4")
+autowrap_mode = 2
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -28,12 +52,14 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+tooltip_text = "Change joined mesh settings (including make new joined mesh and reimport glb)"
 text = "Joined Mesh Settings"
 alignment = 0
 
 [node name="disable_joined_mesh_button" type="TextureButton" parent="HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Enable/Disable Joined Mesh"
 toggle_mode = true
 texture_normal = ExtResource("2_gaehx")
 texture_pressed = ExtResource("3_esqxe")
@@ -45,6 +71,7 @@ layout_mode = 2
 [node name="force_lod_checkbox" type="CheckBox" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Temporarily override the LOD"
 text = "Force Lod"
 
 [node name="force_lod_value" type="SpinBox" parent="HBoxContainer"]
@@ -56,10 +83,16 @@ editable = false
 [node name="show_joined_button" type="Button" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Set forced lod to first joined mesh lod"
 text = "Show Joined"
 
 [node name="variation_layers_button" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Variation Layers"
+tooltip_text = "Click to rename layer, 
+toggle layers to change visibility"
+text = "Variation Layers Preview"
 alignment = 0
+
+[node name="Layers" parent="." instance=ExtResource("4_kqv64")]
+layout_mode = 2

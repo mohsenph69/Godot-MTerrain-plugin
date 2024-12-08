@@ -21,7 +21,7 @@ const LOD_COUNT = 8  # The number of different LODs in your project
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
 static var regex_col_match:= RegEx.create_from_string("(.*)?[_|\\s]?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
 static var asset_data:AssetIOData = null
-
+static var DEBUG_MODE = false #true
 #region GLB	Export
 static func glb_get_root_node_name(path):
 	var gltf_document = GLTFDocument.new()

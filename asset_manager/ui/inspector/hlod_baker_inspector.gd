@@ -6,8 +6,10 @@ var baker: HLod_Baker
 func _ready():	
 	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
-	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return	
-	%Bake.pressed.connect(baker.bake_to_hlod_resource)				
+	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return		
+	%Bake.pressed.connect(baker.bake_to_hlod_resource)		
+	validate_bake_button()
+	baker.renamed.connect(validate_bake_button.call_deferred)	
 	%Join.pressed.connect( show_join_mesh_window )			
 	
 	var force_lod_checkbox = %force_lod_checkbox
@@ -46,8 +48,15 @@ func _ready():
 		dialog.baker = baker
 		add_child(dialog)
 	)	
-	
-
+	var layers = find_child("Layers")
+	layers.set_value(baker.variation_layers_preview_value)
+	layers.value_changed.connect(func(value):
+		baker.set_variation_layers_visibility(value)
+	)
+	layers.layer_names = baker.variation_layers
+	%show_hlod_button.pressed.connect(func():
+		EditorInterface.get_file_system_dock().navigate_to_path("res://massets/hlod/"+baker.name+".res")
+	)
 
 	
 func show_join_mesh_window():	
@@ -55,5 +64,20 @@ func show_join_mesh_window():
 	window.baker = baker
 	add_child(window)	
 
-func validate_show_joined_mesh_button(_toggle_on = null):
+func validate_show_joined_mesh_button(toggle_on = null):	
+	%disable_joined_mesh_button.tooltip_text = "disable joined mesh" if not toggle_on else "enable joined mesh"
 	%show_joined_button.visible = %force_lod_checkbox.button_pressed and baker.has_joined_mesh_glb() and not baker.joined_mesh_disabled
+
+func bake_button_gui_input(event):
+	if event is InputEventMouse:
+		%Bake.disabled = not validate_bake_button()
+		
+func validate_bake_button():
+	%Bake.disabled = not baker.can_bake
+	if baker.can_bake:
+		%Bake.text = "Bake"
+		%Bake.tooltip_text = "Bake scene to hlod resource"
+	else:
+		%Bake.text= "Baker name must be unique!"
+		%Bake.tooltip_text = "HLod with the name " + baker.name + " is already used by another baker scene. please rename the baker scene"
+		
