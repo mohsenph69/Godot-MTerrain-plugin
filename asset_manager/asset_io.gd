@@ -87,7 +87,7 @@ static func load_glb_as_hlod(original_scene,root_name):
 		var glb_path = asset_library.import_info["__blend_files"][node.get_meta("blend_file")]			
 		var node_name := collection_parse_name(node)
 		if not asset_library.import_info[glb_path].has(node_name):			
-			print("import info does not have this node name for this glb")
+			print("import info does not have this node name for this glb: ", node_name, " <- ", glb_path)
 			continue
 		var new_node = MAssetMesh.new()	
 		new_node.collection_id = asset_library.import_info[glb_path][node_name].id
@@ -121,8 +121,10 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	
 	var root_name = gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
 	if "_hlod" in root_name and not "_joined_mesh" in root_name:
-		load_glb_as_hlod(gltf_document.generate_scene(gltf_state), root_name)
+		load_glb_as_hlod(gltf_document.generate_scene(gltf_state), root_name)		
 		return		
+	else:
+		print(root_name)
 	
 	#STEP 0: Init Asset Data
 	asset_data = AssetIOData.new()	
@@ -405,7 +407,7 @@ static func node_parse_name(node:Node)->Dictionary:
 static func collection_parse_name(node)->String:	
 	var material_suffix = ""
 	if node.has_meta("active_material_set_id"):
-		material_suffix = str("_" + node.get_meta("active_material_set_id"))
+		material_suffix = str("_", node.get_meta("active_material_set_id"))
 	var suffix_length = len(node.name.split("_")[-1])
 	if node.name.right(suffix_length).is_valid_int():  #remove the .001 suffix
 		return node.name.left(len(node.name)-suffix_length-1) + material_suffix

@@ -1,0 +1,4823 @@
+[gd_scene load_steps=2 format=3 uid="uid://dj4h3bhyggi8i"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="1_kf0og"]
+
+[node name="ModularHouse1_hlod" type="Node3D"]
+script = ExtResource("1_kf0og")
+bake_path = "res://massets/hlod/ModularHouse1_hlod.res"
+variation_layers = PackedStringArray("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+metadata/extras = true
+metadata/mesh_lods = {}
+metadata/als = {}
+
+[node name="Node3D" type="Node3D" parent="."]
+visible = false
+
+[node name="wall_straight_angle_connector_both" type="MAssetMesh" parent="Node3D"]
+collection_id = 35
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 22, 0, 5)
+
+[node name="wall_straight_angle_connector_007" type="MAssetMesh" parent="Node3D"]
+collection_id = 36
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 0, 10)
+
+[node name="wall_straight_angle_connector_006" type="MAssetMesh" parent="Node3D"]
+collection_id = 36
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 7, 0, 9)
+
+[node name="wall_straight_angle_connector_005" type="MAssetMesh" parent="Node3D"]
+collection_id = 36
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 7, 0, 11)
+
+[node name="wall_straight_angle_connector" type="MAssetMesh" parent="Node3D"]
+collection_id = 36
+transform = Transform3D(0, 0, 1, 0, 1, 0, 1, 0, 0, 24, 0, 14)
+
+[node name="wall_straight_097" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 20, 0, -4)
+
+[node name="wall_straight_096" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 19, 0, -4)
+
+[node name="wall_straight_095" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 18, 0, -4)
+
+[node name="wall_straight_094" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 17, 0, -4)
+
+[node name="wall_straight_093" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 11, 0, -4)
+
+[node name="wall_straight_092" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 10, 0, -4)
+
+[node name="wall_straight_091" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 9, 0, -4)
+
+[node name="wall_straight_090" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 16, 0, -2)
+
+[node name="wall_straight_089" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 13, 0, -2)
+
+[node name="wall_straight_088" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 15, 0, -2)
+
+[node name="wall_straight_087" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 14, 0, -2)
+
+[node name="wall_straight_086" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 13, 0, -2)
+
+[node name="wall_straight_085" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 25, 0, 1)
+
+[node name="wall_straight_084" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 3)
+
+[node name="wall_straight_083" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 4)
+
+[node name="wall_straight_082" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 5)
+
+[node name="wall_straight_081" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 0, 8)
+
+[node name="wall_straight_080" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 0, 9)
+
+[node name="wall_straight_079" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 25, 0, 12)
+
+[node name="wall_straight_078" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 25, 0, 13)
+
+[node name="wall_straight_077" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 0, 16)
+
+[node name="wall_straight_076" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 16)
+
+[node name="wall_straight_075" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 0, 17)
+
+[node name="wall_straight_074" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 17)
+
+[node name="wall_straight_073" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 0, 18)
+
+[node name="wall_straight_072" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 18)
+
+[node name="wall_straight_071" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 19)
+
+[node name="wall_straight_070" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 20)
+
+[node name="wall_straight_069" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 21)
+
+[node name="wall_straight_068" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 22)
+
+[node name="wall_straight_067" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 23)
+
+[node name="wall_straight_066" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 0, 24)
+
+[node name="wall_straight_065" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 25)
+
+[node name="wall_straight_064" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 25)
+
+[node name="wall_straight_063" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 25)
+
+[node name="wall_straight_062" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 25)
+
+[node name="wall_straight_061" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 25)
+
+[node name="wall_straight_060" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 25)
+
+[node name="wall_straight_059" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 25)
+
+[node name="wall_straight_058" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 25)
+
+[node name="wall_straight_057" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 25)
+
+[node name="wall_straight_056" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 25)
+
+[node name="wall_straight_055" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 25)
+
+[node name="wall_straight_054" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 25)
+
+[node name="wall_straight_053" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 25)
+
+[node name="wall_straight_052" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 25)
+
+[node name="wall_straight_051" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 25)
+
+[node name="wall_straight_050" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 25)
+
+[node name="wall_straight" type="MAssetMesh" parent="Node3D"]
+collection_id = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 25)
+
+[node name="wall_internal_none_947" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, -2)
+
+[node name="wall_internal_none_946" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -2)
+
+[node name="wall_internal_none_945" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, -2)
+
+[node name="wall_internal_none_944" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, -2)
+
+[node name="wall_internal_none_943" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, -2)
+
+[node name="wall_internal_none_942" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, -2)
+
+[node name="wall_internal_none_941" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -2)
+
+[node name="wall_internal_none_940" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, -2)
+
+[node name="wall_internal_none_939" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -2)
+
+[node name="wall_internal_none_938" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, -0.999999)
+
+[node name="wall_internal_none_937" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, -0.999999)
+
+[node name="wall_internal_none_936" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -0.999999)
+
+[node name="wall_internal_none_935" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, -0.999999)
+
+[node name="wall_internal_none_934" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, -0.999999)
+
+[node name="wall_internal_none_933" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, -0.999999)
+
+[node name="wall_internal_none_932" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -0.999999)
+
+[node name="wall_internal_none_931" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -0.999999)
+
+[node name="wall_internal_none_930" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, -0.999999)
+
+[node name="wall_internal_none_929" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -0.999999)
+
+[node name="wall_internal_none_928" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, -0.999999)
+
+[node name="wall_internal_none_927" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -0.999999)
+
+[node name="wall_internal_none_926" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -0.999999)
+
+[node name="wall_internal_none_925" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 0)
+
+[node name="wall_internal_none_924" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 0)
+
+[node name="wall_internal_none_923" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 0)
+
+[node name="wall_internal_none_922" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
+
+[node name="wall_internal_none_921" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 0)
+
+[node name="wall_internal_none_920" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 0)
+
+[node name="wall_internal_none_919" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 0)
+
+[node name="wall_internal_none_918" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 0)
+
+[node name="wall_internal_none_917" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 0)
+
+[node name="wall_internal_none_916" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 0)
+
+[node name="wall_internal_none_915" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 0)
+
+[node name="wall_internal_none_914" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 0)
+
+[node name="wall_internal_none_913" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 0)
+
+[node name="wall_internal_none_912" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
+
+[node name="wall_internal_none_911" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+
+[node name="wall_internal_none_910" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
+
+[node name="wall_internal_none_909" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 0)
+
+[node name="wall_internal_none_908" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+
+[node name="wall_internal_none_907" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 1)
+
+[node name="wall_internal_none_906" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 1)
+
+[node name="wall_internal_none_905" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 1)
+
+[node name="wall_internal_none_904" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 1)
+
+[node name="wall_internal_none_903" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 1)
+
+[node name="wall_internal_none_902" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 1)
+
+[node name="wall_internal_none_901" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 1)
+
+[node name="wall_internal_none_900" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 1)
+
+[node name="wall_internal_none_899" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 1)
+
+[node name="wall_internal_none_898" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 1)
+
+[node name="wall_internal_none_897" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 1)
+
+[node name="wall_internal_none_896" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 1)
+
+[node name="wall_internal_none_895" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 1)
+
+[node name="wall_internal_none_894" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 1)
+
+[node name="wall_internal_none_893" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 1)
+
+[node name="wall_internal_none_892" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 1)
+
+[node name="wall_internal_none_891" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 1)
+
+[node name="wall_internal_none_890" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 1)
+
+[node name="wall_internal_none_889" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 1)
+
+[node name="wall_internal_none_888" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 2)
+
+[node name="wall_internal_none_887" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 2)
+
+[node name="wall_internal_none_886" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 2)
+
+[node name="wall_internal_none_885" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 2)
+
+[node name="wall_internal_none_884" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 2)
+
+[node name="wall_internal_none_883" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 2)
+
+[node name="wall_internal_none_882" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 2)
+
+[node name="wall_internal_none_881" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 2)
+
+[node name="wall_internal_none_880" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 2)
+
+[node name="wall_internal_none_879" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 2)
+
+[node name="wall_internal_none_878" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 2)
+
+[node name="wall_internal_none_877" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 2)
+
+[node name="wall_internal_none_876" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 2)
+
+[node name="wall_internal_none_875" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 2)
+
+[node name="wall_internal_none_874" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 2)
+
+[node name="wall_internal_none_873" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 2)
+
+[node name="wall_internal_none_872" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 2)
+
+[node name="wall_internal_none_871" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 2)
+
+[node name="wall_internal_none_870" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 2)
+
+[node name="wall_internal_none_869" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 2)
+
+[node name="wall_internal_none_868" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 3)
+
+[node name="wall_internal_none_867" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 3)
+
+[node name="wall_internal_none_866" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 3)
+
+[node name="wall_internal_none_865" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 3)
+
+[node name="wall_internal_none_864" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 3)
+
+[node name="wall_internal_none_863" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 3)
+
+[node name="wall_internal_none_862" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 3)
+
+[node name="wall_internal_none_861" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 3)
+
+[node name="wall_internal_none_860" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 3)
+
+[node name="wall_internal_none_859" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 3)
+
+[node name="wall_internal_none_858" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 3)
+
+[node name="wall_internal_none_857" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 3)
+
+[node name="wall_internal_none_856" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 3)
+
+[node name="wall_internal_none_855" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 3)
+
+[node name="wall_internal_none_854" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 3)
+
+[node name="wall_internal_none_853" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 3)
+
+[node name="wall_internal_none_852" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 3)
+
+[node name="wall_internal_none_851" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 3)
+
+[node name="wall_internal_none_850" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 3)
+
+[node name="wall_internal_none_849" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 4)
+
+[node name="wall_internal_none_848" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 4)
+
+[node name="wall_internal_none_847" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 4)
+
+[node name="wall_internal_none_846" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 4)
+
+[node name="wall_internal_none_845" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 4)
+
+[node name="wall_internal_none_844" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 4)
+
+[node name="wall_internal_none_843" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 4)
+
+[node name="wall_internal_none_842" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 4)
+
+[node name="wall_internal_none_841" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 4)
+
+[node name="wall_internal_none_840" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 4)
+
+[node name="wall_internal_none_839" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 4)
+
+[node name="wall_internal_none_838" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 4)
+
+[node name="wall_internal_none_837" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 4)
+
+[node name="wall_internal_none_836" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 4)
+
+[node name="wall_internal_none_835" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 4)
+
+[node name="wall_internal_none_834" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 4)
+
+[node name="wall_internal_none_833" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 4)
+
+[node name="wall_internal_none_832" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 4)
+
+[node name="wall_internal_none_831" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 5)
+
+[node name="wall_internal_none_830" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 5)
+
+[node name="wall_internal_none_829" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 5)
+
+[node name="wall_internal_none_828" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 5)
+
+[node name="wall_internal_none_827" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 5)
+
+[node name="wall_internal_none_826" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 5)
+
+[node name="wall_internal_none_825" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 5)
+
+[node name="wall_internal_none_824" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 5)
+
+[node name="wall_internal_none_823" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 5)
+
+[node name="wall_internal_none_822" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 5)
+
+[node name="wall_internal_none_821" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 5)
+
+[node name="wall_internal_none_820" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 5)
+
+[node name="wall_internal_none_819" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 5)
+
+[node name="wall_internal_none_818" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 5)
+
+[node name="wall_internal_none_817" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 5)
+
+[node name="wall_internal_none_816" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 5)
+
+[node name="wall_internal_none_815" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 5)
+
+[node name="wall_internal_none_814" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 6)
+
+[node name="wall_internal_none_813" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 6)
+
+[node name="wall_internal_none_812" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 6)
+
+[node name="wall_internal_none_811" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 6)
+
+[node name="wall_internal_none_810" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 6)
+
+[node name="wall_internal_none_809" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 6)
+
+[node name="wall_internal_none_808" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 6)
+
+[node name="wall_internal_none_807" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 6)
+
+[node name="wall_internal_none_806" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 6)
+
+[node name="wall_internal_none_805" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 6)
+
+[node name="wall_internal_none_804" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 6)
+
+[node name="wall_internal_none_803" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 6)
+
+[node name="wall_internal_none_802" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 6)
+
+[node name="wall_internal_none_801" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 6)
+
+[node name="wall_internal_none_800" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 6)
+
+[node name="wall_internal_none_799" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 6)
+
+[node name="wall_internal_none_798" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 6)
+
+[node name="wall_internal_none_797" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6)
+
+[node name="wall_internal_none_796" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 7)
+
+[node name="wall_internal_none_795" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 7)
+
+[node name="wall_internal_none_794" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 7)
+
+[node name="wall_internal_none_793" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 7)
+
+[node name="wall_internal_none_792" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 7)
+
+[node name="wall_internal_none_791" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 7)
+
+[node name="wall_internal_none_790" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 7)
+
+[node name="wall_internal_none_789" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 7)
+
+[node name="wall_internal_none_788" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 7)
+
+[node name="wall_internal_none_787" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 7)
+
+[node name="wall_internal_none_786" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 7)
+
+[node name="wall_internal_none_785" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 7)
+
+[node name="wall_internal_none_784" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 7)
+
+[node name="wall_internal_none_783" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 7)
+
+[node name="wall_internal_none_782" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 7)
+
+[node name="wall_internal_none_781" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 7)
+
+[node name="wall_internal_none_780" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 7)
+
+[node name="wall_internal_none_779" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 7)
+
+[node name="wall_internal_none_778" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 8)
+
+[node name="wall_internal_none_777" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 8)
+
+[node name="wall_internal_none_776" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 8)
+
+[node name="wall_internal_none_775" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 8)
+
+[node name="wall_internal_none_774" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 8)
+
+[node name="wall_internal_none_773" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 8)
+
+[node name="wall_internal_none_772" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 8)
+
+[node name="wall_internal_none_771" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 8)
+
+[node name="wall_internal_none_770" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 8)
+
+[node name="wall_internal_none_769" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 8)
+
+[node name="wall_internal_none_768" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 8)
+
+[node name="wall_internal_none_767" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 8)
+
+[node name="wall_internal_none_766" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 8)
+
+[node name="wall_internal_none_765" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 8)
+
+[node name="wall_internal_none_764" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 8)
+
+[node name="wall_internal_none_763" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 8)
+
+[node name="wall_internal_none_762" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 8)
+
+[node name="wall_internal_none_761" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 9)
+
+[node name="wall_internal_none_760" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 9)
+
+[node name="wall_internal_none_759" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 9)
+
+[node name="wall_internal_none_758" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 9)
+
+[node name="wall_internal_none_757" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 9)
+
+[node name="wall_internal_none_756" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 9)
+
+[node name="wall_internal_none_755" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 9)
+
+[node name="wall_internal_none_754" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 9)
+
+[node name="wall_internal_none_753" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 9)
+
+[node name="wall_internal_none_752" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 9)
+
+[node name="wall_internal_none_751" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 9)
+
+[node name="wall_internal_none_750" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 9)
+
+[node name="wall_internal_none_749" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 9)
+
+[node name="wall_internal_none_748" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 9)
+
+[node name="wall_internal_none_747" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 9)
+
+[node name="wall_internal_none_746" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 9)
+
+[node name="wall_internal_none_745" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 10)
+
+[node name="wall_internal_none_744" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 10)
+
+[node name="wall_internal_none_743" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 10)
+
+[node name="wall_internal_none_742" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 10)
+
+[node name="wall_internal_none_741" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 10)
+
+[node name="wall_internal_none_740" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 10)
+
+[node name="wall_internal_none_739" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 10)
+
+[node name="wall_internal_none_738" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 10)
+
+[node name="wall_internal_none_737" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 10)
+
+[node name="wall_internal_none_736" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 10)
+
+[node name="wall_internal_none_735" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 10)
+
+[node name="wall_internal_none_734" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 10)
+
+[node name="wall_internal_none_733" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
+
+[node name="wall_internal_none_732" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 10)
+
+[node name="wall_internal_none_731" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 10)
+
+[node name="wall_internal_none_730" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 11)
+
+[node name="wall_internal_none_729" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 11)
+
+[node name="wall_internal_none_728" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 11)
+
+[node name="wall_internal_none_727" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 11)
+
+[node name="wall_internal_none_726" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 11)
+
+[node name="wall_internal_none_725" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 11)
+
+[node name="wall_internal_none_724" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 11)
+
+[node name="wall_internal_none_723" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 11)
+
+[node name="wall_internal_none_722" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 11)
+
+[node name="wall_internal_none_721" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 11)
+
+[node name="wall_internal_none_720" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 11)
+
+[node name="wall_internal_none_719" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 11)
+
+[node name="wall_internal_none_718" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 11)
+
+[node name="wall_internal_none_717" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 11)
+
+[node name="wall_internal_none_716" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 11)
+
+[node name="wall_internal_none_715" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 11)
+
+[node name="wall_internal_none_714" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 12)
+
+[node name="wall_internal_none_713" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 12)
+
+[node name="wall_internal_none_712" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 12)
+
+[node name="wall_internal_none_711" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 12)
+
+[node name="wall_internal_none_710" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 12)
+
+[node name="wall_internal_none_709" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 12)
+
+[node name="wall_internal_none_708" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 12)
+
+[node name="wall_internal_none_707" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 12)
+
+[node name="wall_internal_none_706" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 12)
+
+[node name="wall_internal_none_705" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 12)
+
+[node name="wall_internal_none_704" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 12)
+
+[node name="wall_internal_none_703" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 12)
+
+[node name="wall_internal_none_702" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 12)
+
+[node name="wall_internal_none_701" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 12)
+
+[node name="wall_internal_none_700" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 12)
+
+[node name="wall_internal_none_699" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 12)
+
+[node name="wall_internal_none_698" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 12)
+
+[node name="wall_internal_none_697" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 13)
+
+[node name="wall_internal_none_696" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 13)
+
+[node name="wall_internal_none_695" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 13)
+
+[node name="wall_internal_none_694" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 13)
+
+[node name="wall_internal_none_693" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 13)
+
+[node name="wall_internal_none_692" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 13)
+
+[node name="wall_internal_none_691" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 13)
+
+[node name="wall_internal_none_690" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 13)
+
+[node name="wall_internal_none_689" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 13)
+
+[node name="wall_internal_none_688" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 13)
+
+[node name="wall_internal_none_687" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 13)
+
+[node name="wall_internal_none_686" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 13)
+
+[node name="wall_internal_none_685" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 13)
+
+[node name="wall_internal_none_684" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 13)
+
+[node name="wall_internal_none_683" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 13)
+
+[node name="wall_internal_none_682" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 13)
+
+[node name="wall_internal_none_681" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 13)
+
+[node name="wall_internal_none_680" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 13)
+
+[node name="wall_internal_none_679" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 14)
+
+[node name="wall_internal_none_678" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 14)
+
+[node name="wall_internal_none_677" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 14)
+
+[node name="wall_internal_none_676" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 14)
+
+[node name="wall_internal_none_675" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 14)
+
+[node name="wall_internal_none_674" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 14)
+
+[node name="wall_internal_none_673" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 14)
+
+[node name="wall_internal_none_672" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 14)
+
+[node name="wall_internal_none_671" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 14)
+
+[node name="wall_internal_none_670" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 14)
+
+[node name="wall_internal_none_669" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 14)
+
+[node name="wall_internal_none_668" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 14)
+
+[node name="wall_internal_none_667" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 14)
+
+[node name="wall_internal_none_666" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 14)
+
+[node name="wall_internal_none_665" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 14)
+
+[node name="wall_internal_none_664" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 14)
+
+[node name="wall_internal_none_663" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 14)
+
+[node name="wall_internal_none_662" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 14)
+
+[node name="wall_internal_none_661" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 14)
+
+[node name="wall_internal_none_660" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 15)
+
+[node name="wall_internal_none_659" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 15)
+
+[node name="wall_internal_none_658" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 15)
+
+[node name="wall_internal_none_657" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 15)
+
+[node name="wall_internal_none_656" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 15)
+
+[node name="wall_internal_none_655" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 15)
+
+[node name="wall_internal_none_654" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 15)
+
+[node name="wall_internal_none_653" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 15)
+
+[node name="wall_internal_none_652" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 15)
+
+[node name="wall_internal_none_651" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 15)
+
+[node name="wall_internal_none_650" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 15)
+
+[node name="wall_internal_none_649" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 15)
+
+[node name="wall_internal_none_648" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 15)
+
+[node name="wall_internal_none_647" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 15)
+
+[node name="wall_internal_none_646" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 15)
+
+[node name="wall_internal_none_645" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 15)
+
+[node name="wall_internal_none_644" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 15)
+
+[node name="wall_internal_none_643" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 15)
+
+[node name="wall_internal_none_642" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 15)
+
+[node name="wall_internal_none_641" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 16)
+
+[node name="wall_internal_none_640" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 16)
+
+[node name="wall_internal_none_639" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 16)
+
+[node name="wall_internal_none_638" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 16)
+
+[node name="wall_internal_none_637" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 16)
+
+[node name="wall_internal_none_636" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 16)
+
+[node name="wall_internal_none_635" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 16)
+
+[node name="wall_internal_none_634" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 16)
+
+[node name="wall_internal_none_633" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 16)
+
+[node name="wall_internal_none_632" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 16)
+
+[node name="wall_internal_none_631" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 16)
+
+[node name="wall_internal_none_630" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 16)
+
+[node name="wall_internal_none_629" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 16)
+
+[node name="wall_internal_none_628" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 16)
+
+[node name="wall_internal_none_627" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 16)
+
+[node name="wall_internal_none_626" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 16)
+
+[node name="wall_internal_none_625" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 16)
+
+[node name="wall_internal_none_624" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 16)
+
+[node name="wall_internal_none_623" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 16)
+
+[node name="wall_internal_none_622" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 17)
+
+[node name="wall_internal_none_621" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 17)
+
+[node name="wall_internal_none_620" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 17)
+
+[node name="wall_internal_none_619" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 17)
+
+[node name="wall_internal_none_618" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 17)
+
+[node name="wall_internal_none_617" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 17)
+
+[node name="wall_internal_none_616" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 17)
+
+[node name="wall_internal_none_615" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 17)
+
+[node name="wall_internal_none_614" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 17)
+
+[node name="wall_internal_none_613" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 17)
+
+[node name="wall_internal_none_612" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 17)
+
+[node name="wall_internal_none_611" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 17)
+
+[node name="wall_internal_none_610" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 17)
+
+[node name="wall_internal_none_609" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 17)
+
+[node name="wall_internal_none_608" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 17)
+
+[node name="wall_internal_none_607" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 17)
+
+[node name="wall_internal_none_606" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 17)
+
+[node name="wall_internal_none_605" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 17)
+
+[node name="wall_internal_none_604" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 17)
+
+[node name="wall_internal_none_603" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 18)
+
+[node name="wall_internal_none_602" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 18)
+
+[node name="wall_internal_none_601" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 18)
+
+[node name="wall_internal_none_600" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 18)
+
+[node name="wall_internal_none_599" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 18)
+
+[node name="wall_internal_none_598" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 18)
+
+[node name="wall_internal_none_597" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 18)
+
+[node name="wall_internal_none_596" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 18)
+
+[node name="wall_internal_none_595" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 18)
+
+[node name="wall_internal_none_594" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 18)
+
+[node name="wall_internal_none_593" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 18)
+
+[node name="wall_internal_none_592" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 18)
+
+[node name="wall_internal_none_591" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 18)
+
+[node name="wall_internal_none_590" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 18)
+
+[node name="wall_internal_none_589" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 18)
+
+[node name="wall_internal_none_588" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 18)
+
+[node name="wall_internal_none_587" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 18)
+
+[node name="wall_internal_none_586" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 18)
+
+[node name="wall_internal_none_585" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 18)
+
+[node name="wall_internal_none_584" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 19)
+
+[node name="wall_internal_none_583" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 19)
+
+[node name="wall_internal_none_582" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 19)
+
+[node name="wall_internal_none_581" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 19)
+
+[node name="wall_internal_none_580" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 19)
+
+[node name="wall_internal_none_579" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 19)
+
+[node name="wall_internal_none_578" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 19)
+
+[node name="wall_internal_none_577" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 19)
+
+[node name="wall_internal_none_576" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 19)
+
+[node name="wall_internal_none_575" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 19)
+
+[node name="wall_internal_none_574" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 19)
+
+[node name="wall_internal_none_573" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 19)
+
+[node name="wall_internal_none_572" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 19)
+
+[node name="wall_internal_none_571" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 19)
+
+[node name="wall_internal_none_570" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 19)
+
+[node name="wall_internal_none_569" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 19)
+
+[node name="wall_internal_none_568" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 19)
+
+[node name="wall_internal_none_567" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 19)
+
+[node name="wall_internal_none_566" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 19)
+
+[node name="wall_internal_none_565" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 20)
+
+[node name="wall_internal_none_564" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -0.0166101, 20)
+
+[node name="wall_internal_none_563" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 20)
+
+[node name="wall_internal_none_562" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 20)
+
+[node name="wall_internal_none_561" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 20)
+
+[node name="wall_internal_none_560" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 20)
+
+[node name="wall_internal_none_559" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 20)
+
+[node name="wall_internal_none_558" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 20)
+
+[node name="wall_internal_none_557" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 20)
+
+[node name="wall_internal_none_556" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 20)
+
+[node name="wall_internal_none_555" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 20)
+
+[node name="wall_internal_none_554" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 20)
+
+[node name="wall_internal_none_553" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 20)
+
+[node name="wall_internal_none_552" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 20)
+
+[node name="wall_internal_none_551" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 20)
+
+[node name="wall_internal_none_550" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 20)
+
+[node name="wall_internal_none_549" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 20)
+
+[node name="wall_internal_none_548" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 20)
+
+[node name="wall_internal_none_547" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 21)
+
+[node name="wall_internal_none_546" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 21)
+
+[node name="wall_internal_none_545" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 21)
+
+[node name="wall_internal_none_544" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 21)
+
+[node name="wall_internal_none_543" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 21)
+
+[node name="wall_internal_none_542" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 21)
+
+[node name="wall_internal_none_541" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 21)
+
+[node name="wall_internal_none_540" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 21)
+
+[node name="wall_internal_none_539" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 21)
+
+[node name="wall_internal_none_538" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 21)
+
+[node name="wall_internal_none_537" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 21)
+
+[node name="wall_internal_none_536" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 21)
+
+[node name="wall_internal_none_535" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 21)
+
+[node name="wall_internal_none_534" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 21)
+
+[node name="wall_internal_none_533" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 21)
+
+[node name="wall_internal_none_532" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 21)
+
+[node name="wall_internal_none_531" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 21)
+
+[node name="wall_internal_none_530" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 21)
+
+[node name="wall_internal_none_529" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 22)
+
+[node name="wall_internal_none_528" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 22)
+
+[node name="wall_internal_none_527" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 22)
+
+[node name="wall_internal_none_526" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 22)
+
+[node name="wall_internal_none_525" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 22)
+
+[node name="wall_internal_none_524" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 22)
+
+[node name="wall_internal_none_523" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 22)
+
+[node name="wall_internal_none_522" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 22)
+
+[node name="wall_internal_none_521" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 22)
+
+[node name="wall_internal_none_520" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 22)
+
+[node name="wall_internal_none_519" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 22)
+
+[node name="wall_internal_none_518" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 22)
+
+[node name="wall_internal_none_517" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 22)
+
+[node name="wall_internal_none_516" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 22)
+
+[node name="wall_internal_none_515" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 22)
+
+[node name="wall_internal_none_514" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 22)
+
+[node name="wall_internal_none_513" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 22)
+
+[node name="wall_internal_none_512" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 22)
+
+[node name="wall_internal_none_511" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 22)
+
+[node name="wall_internal_none_510" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 23)
+
+[node name="wall_internal_none_509" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 23)
+
+[node name="wall_internal_none_508" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 23)
+
+[node name="wall_internal_none_507" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 23)
+
+[node name="wall_internal_none_506" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 23)
+
+[node name="wall_internal_none_505" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 23)
+
+[node name="wall_internal_none_504" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 23)
+
+[node name="wall_internal_none_503" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 23)
+
+[node name="wall_internal_none_502" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 23)
+
+[node name="wall_internal_none_501" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 23)
+
+[node name="wall_internal_none_500" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 23)
+
+[node name="wall_internal_none_499" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 23)
+
+[node name="wall_internal_none_498" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 23)
+
+[node name="wall_internal_none_497" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 23)
+
+[node name="wall_internal_none_496" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 23)
+
+[node name="wall_internal_none_495" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 23)
+
+[node name="wall_internal_none_494" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 23)
+
+[node name="wall_internal_none_493" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 23)
+
+[node name="wall_internal_none_492" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 23)
+
+[node name="wall_internal_none_491" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 24)
+
+[node name="wall_internal_none_490" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 24)
+
+[node name="wall_internal_none_489" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 24)
+
+[node name="wall_internal_none_488" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 24)
+
+[node name="wall_internal_none_487" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, 24)
+
+[node name="wall_internal_none_486" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 24)
+
+[node name="wall_internal_none_485" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 24)
+
+[node name="wall_internal_none_484" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 24)
+
+[node name="wall_internal_none_483" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 24)
+
+[node name="wall_internal_none_482" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 24)
+
+[node name="wall_internal_none_481" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 24)
+
+[node name="wall_internal_none_480" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 24)
+
+[node name="wall_internal_none_479" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 24)
+
+[node name="wall_internal_none_478" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 24)
+
+[node name="wall_internal_none_477" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 24)
+
+[node name="wall_internal_none_476" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 24)
+
+[node name="wall_internal_none_475" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 24)
+
+[node name="wall_internal_none" type="MAssetMesh" parent="Node3D"]
+collection_id = 29
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 24)
+
+[node name="wall_corner_inside_003" type="MAssetMesh" parent="Node3D"]
+collection_id = 34
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 17, 0, -4)
+
+[node name="wall_corner_inside" type="MAssetMesh" parent="Node3D"]
+collection_id = 34
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3, 0, 24)
+
+[node name="wall_angle_joiner_045" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 0, -3)
+
+[node name="wall_angle_joiner_044" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 0, -2)
+
+[node name="wall_angle_joiner_043" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 24, 0, -0.999999)
+
+[node name="wall_angle_joiner_042" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 5, 0, 0)
+
+[node name="wall_angle_joiner_041" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 4, 0, 1)
+
+[node name="wall_angle_joiner_040" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 24, 0, 2)
+
+[node name="wall_angle_joiner_039" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 23, 0, 3)
+
+[node name="wall_angle_joiner_038" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 0, 6)
+
+[node name="wall_angle_joiner_037" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 7)
+
+[node name="wall_angle_joiner_036" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 8)
+
+[node name="wall_angle_joiner_035" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 6, 0, 12)
+
+[node name="wall_angle_joiner_034" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 5, 0, 13)
+
+[node name="wall_angle_joiner_033" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 4, 0, 14)
+
+[node name="wall_angle_joiner_032" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 23, 0, 19)
+
+[node name="wall_angle_joiner_031" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 0, 21)
+
+[node name="wall_angle_joiner_030" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 0, 22)
+
+[node name="wall_angle_joiner_029" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 23, 0, 23)
+
+[node name="wall_angle_joiner_028" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 24, 0, 22)
+
+[node name="wall_angle_joiner_027" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 22, 0, 24)
+
+[node name="wall_angle_joiner_026" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 8, 0, -3)
+
+[node name="wall_angle_joiner_025" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 7, 0, -2)
+
+[node name="wall_angle_joiner_024" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 6, 0, -0.999999)
+
+[node name="wall_angle_joiner" type="MAssetMesh" parent="Node3D"]
+collection_id = 41
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6)
+
+[node name="wall_angle_filler_inside_023" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 21, 0, -4)
+
+[node name="wall_angle_filler_inside_022" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(-5.36442e-07, 0, 1, 0, 1, 0, 1, 0, 5.36442e-07, 25, 0, 0)
+
+[node name="wall_angle_filler_inside_021" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 25, 0, 1)
+
+[node name="wall_angle_filler_inside_020" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 3, 0, 2)
+
+[node name="wall_angle_filler_inside_019" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(-5.36442e-07, 0, 1, 0, 1, 0, 1, 0, 5.36442e-07, 24, 0, 7)
+
+[node name="wall_angle_filler_inside_018" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(-5.36442e-07, 0, 1, 0, 1, 0, 1, 0, 5.36442e-07, 25, 0, 11)
+
+[node name="wall_angle_filler_inside_017" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 25, 0, 13)
+
+[node name="wall_angle_filler_inside_016" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 3, 0, 15)
+
+[node name="wall_angle_filler_inside_015" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 24, 0, 18)
+
+[node name="wall_angle_filler_inside_014" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 25)
+
+[node name="wall_angle_filler_inside_013" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 9, 0, -4)
+
+[node name="wall_angle_filler_inside" type="MAssetMesh" parent="Node3D"]
+collection_id = 37
+transform = Transform3D(3.57628e-07, 0, -1, 0, 1, 0, -1, 0, -3.57628e-07, 3, 0, 5)
+
+[node name="wall_angle_063" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 21, 0, -3)
+
+[node name="wall_angle_062" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 0, -2)
+
+[node name="wall_angle_061" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 0, -0.999998)
+
+[node name="wall_angle_060" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 24, 0, 0)
+
+[node name="wall_angle_059" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 6, 0, 0)
+
+[node name="wall_angle_058" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 5, 0, 1)
+
+[node name="wall_angle_057" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 1)
+
+[node name="wall_angle_056" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 0, 2)
+
+[node name="wall_angle_055" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 2)
+
+[node name="wall_angle_054" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 3)
+
+[node name="wall_angle_053" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 0, 6)
+
+[node name="wall_angle_052" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 0, 7)
+
+[node name="wall_angle_051" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 6)
+
+[node name="wall_angle_050" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 7)
+
+[node name="wall_angle_049" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 8)
+
+[node name="wall_angle_048" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 24, 0, 11)
+
+[node name="wall_angle_047" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 7, 0, 12)
+
+[node name="wall_angle_046" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 6, 0, 13)
+
+[node name="wall_angle_045" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 13)
+
+[node name="wall_angle_044" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 5, 0, 14)
+
+[node name="wall_angle_043" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 0, 15)
+
+[node name="wall_angle_042" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 18)
+
+[node name="wall_angle_041" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 19)
+
+[node name="wall_angle_040" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 0, 21)
+
+[node name="wall_angle_039" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 0, 22)
+
+[node name="wall_angle_038" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 22)
+
+[node name="wall_angle_037" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 23)
+
+[node name="wall_angle_036" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 0, 24)
+
+[node name="wall_angle_035" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 9, 0, -3)
+
+[node name="wall_angle_034" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 8, 0, -2)
+
+[node name="wall_angle_033" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 7, 0, -0.999999)
+
+[node name="wall_angle" type="MAssetMesh" parent="Node3D"]
+collection_id = 38
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 5)
+
+[node name="roof_straight_107" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 20, 3, -4)
+
+[node name="roof_straight_106" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 19, 3, -4)
+
+[node name="roof_straight_105" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 18, 3, -4)
+
+[node name="roof_straight_104" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 17, 3, -4)
+
+[node name="roof_straight_103" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 11, 3, -4)
+
+[node name="roof_straight_102" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 10, 3, -4)
+
+[node name="roof_straight_101" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 9, 3, -4)
+
+[node name="roof_straight_100" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 16, 3, -2)
+
+[node name="roof_straight_099" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 13, 3, -2)
+
+[node name="roof_straight_098" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 15, 3, -2)
+
+[node name="roof_straight_097" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 14, 3, -2)
+
+[node name="roof_straight_096" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 13, 3, -2)
+
+[node name="roof_straight_095" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 25, 3, 1)
+
+[node name="roof_straight_094" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 3)
+
+[node name="roof_straight_093" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 4)
+
+[node name="roof_straight_092" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 22, 3, 5)
+
+[node name="roof_straight_091" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 5)
+
+[node name="roof_straight_090" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3, 8)
+
+[node name="roof_straight_089" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3, 9)
+
+[node name="roof_straight_088" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3, 10)
+
+[node name="roof_straight_087" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 7, 3, 9)
+
+[node name="roof_straight_086" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 7, 3, 11)
+
+[node name="roof_straight_085" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 25, 3, 12)
+
+[node name="roof_straight_084" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 25, 3, 13)
+
+[node name="roof_straight_083" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, 1, 0, 0, 24, 3, 14)
+
+[node name="roof_straight_082" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3, 16)
+
+[node name="roof_straight_081" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 16)
+
+[node name="roof_straight_080" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3, 17)
+
+[node name="roof_straight_079" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 17)
+
+[node name="roof_straight_078" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3, 18)
+
+[node name="roof_straight_077" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 18)
+
+[node name="roof_straight_076" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 19)
+
+[node name="roof_straight_075" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 20)
+
+[node name="roof_straight_074" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 21)
+
+[node name="roof_straight_073" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 22)
+
+[node name="roof_straight_072" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 23)
+
+[node name="roof_straight_071" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(0, 0, -1, 0, 1, 0, -1, 0, 0, 3, 3, 24)
+
+[node name="roof_straight_070" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3, 25)
+
+[node name="roof_straight_069" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3, 25)
+
+[node name="roof_straight_068" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3, 25)
+
+[node name="roof_straight_067" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3, 25)
+
+[node name="roof_straight_066" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3, 25)
+
+[node name="roof_straight_065" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3, 25)
+
+[node name="roof_straight_064" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3, 25)
+
+[node name="roof_straight_063" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3, 25)
+
+[node name="roof_straight_062" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3, 25)
+
+[node name="roof_straight_061" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3, 25)
+
+[node name="roof_straight_060" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3, 25)
+
+[node name="roof_straight_059" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3, 25)
+
+[node name="roof_straight_058" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, 25)
+
+[node name="roof_straight_057" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3, 25)
+
+[node name="roof_straight_056" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, 25)
+
+[node name="roof_straight_055" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, 25)
+
+[node name="roof_straight" type="MAssetMesh" parent="Node3D"]
+collection_id = 20
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3, 25)
+
+[node name="roof_middle_flat_889" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, -2)
+
+[node name="roof_middle_flat_888" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, -2)
+
+[node name="roof_middle_flat_887" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, -2)
+
+[node name="roof_middle_flat_886" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, -2)
+
+[node name="roof_middle_flat_885" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, -2)
+
+[node name="roof_middle_flat_884" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, -2)
+
+[node name="roof_middle_flat_883" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, -2)
+
+[node name="roof_middle_flat_882" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, -0.999999)
+
+[node name="roof_middle_flat_881" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, -0.999999)
+
+[node name="roof_middle_flat_880" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, -0.999999)
+
+[node name="roof_middle_flat_879" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, -0.999999)
+
+[node name="roof_middle_flat_878" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, -0.999999)
+
+[node name="roof_middle_flat_877" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, -0.999999)
+
+[node name="roof_middle_flat_876" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, -0.999999)
+
+[node name="roof_middle_flat_875" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, -0.999999)
+
+[node name="roof_middle_flat_874" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, -0.999999)
+
+[node name="roof_middle_flat_873" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 0)
+
+[node name="roof_middle_flat_872" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 0)
+
+[node name="roof_middle_flat_871" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 0)
+
+[node name="roof_middle_flat_870" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 0)
+
+[node name="roof_middle_flat_869" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 0)
+
+[node name="roof_middle_flat_868" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 0)
+
+[node name="roof_middle_flat_867" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 0)
+
+[node name="roof_middle_flat_866" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 0)
+
+[node name="roof_middle_flat_865" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 0)
+
+[node name="roof_middle_flat_864" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 0)
+
+[node name="roof_middle_flat_863" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 0)
+
+[node name="roof_middle_flat_862" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 0)
+
+[node name="roof_middle_flat_861" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 0)
+
+[node name="roof_middle_flat_860" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 0)
+
+[node name="roof_middle_flat_859" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 0)
+
+[node name="roof_middle_flat_858" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 0)
+
+[node name="roof_middle_flat_857" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3.7, 1)
+
+[node name="roof_middle_flat_856" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 1)
+
+[node name="roof_middle_flat_855" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 1)
+
+[node name="roof_middle_flat_854" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 1)
+
+[node name="roof_middle_flat_853" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 1)
+
+[node name="roof_middle_flat_852" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 1)
+
+[node name="roof_middle_flat_851" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 1)
+
+[node name="roof_middle_flat_850" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 1)
+
+[node name="roof_middle_flat_849" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 1)
+
+[node name="roof_middle_flat_848" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 1)
+
+[node name="roof_middle_flat_847" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 1)
+
+[node name="roof_middle_flat_846" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 1)
+
+[node name="roof_middle_flat_845" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 1)
+
+[node name="roof_middle_flat_844" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 1)
+
+[node name="roof_middle_flat_843" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 1)
+
+[node name="roof_middle_flat_842" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 1)
+
+[node name="roof_middle_flat_841" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 1)
+
+[node name="roof_middle_flat_840" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 1)
+
+[node name="roof_middle_flat_839" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 2)
+
+[node name="roof_middle_flat_838" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 2)
+
+[node name="roof_middle_flat_837" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 2)
+
+[node name="roof_middle_flat_836" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 2)
+
+[node name="roof_middle_flat_835" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 2)
+
+[node name="roof_middle_flat_834" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 2)
+
+[node name="roof_middle_flat_833" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 2)
+
+[node name="roof_middle_flat_832" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 2)
+
+[node name="roof_middle_flat_831" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 2)
+
+[node name="roof_middle_flat_830" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 2)
+
+[node name="roof_middle_flat_829" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 2)
+
+[node name="roof_middle_flat_828" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 2)
+
+[node name="roof_middle_flat_827" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 2)
+
+[node name="roof_middle_flat_826" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 2)
+
+[node name="roof_middle_flat_825" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 2)
+
+[node name="roof_middle_flat_824" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 2)
+
+[node name="roof_middle_flat_823" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 2)
+
+[node name="roof_middle_flat_822" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 2)
+
+[node name="roof_middle_flat_821" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 3)
+
+[node name="roof_middle_flat_820" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 3)
+
+[node name="roof_middle_flat_819" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 3)
+
+[node name="roof_middle_flat_818" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 3)
+
+[node name="roof_middle_flat_817" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 3)
+
+[node name="roof_middle_flat_816" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 3)
+
+[node name="roof_middle_flat_815" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 3)
+
+[node name="roof_middle_flat_814" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 3)
+
+[node name="roof_middle_flat_813" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 3)
+
+[node name="roof_middle_flat_812" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 3)
+
+[node name="roof_middle_flat_811" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 3)
+
+[node name="roof_middle_flat_810" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 3)
+
+[node name="roof_middle_flat_809" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 3)
+
+[node name="roof_middle_flat_808" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 3)
+
+[node name="roof_middle_flat_807" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 3)
+
+[node name="roof_middle_flat_806" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 3)
+
+[node name="roof_middle_flat_805" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 3)
+
+[node name="roof_middle_flat_804" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 3)
+
+[node name="roof_middle_flat_803" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 4)
+
+[node name="roof_middle_flat_802" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 4)
+
+[node name="roof_middle_flat_801" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 4)
+
+[node name="roof_middle_flat_800" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 4)
+
+[node name="roof_middle_flat_799" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 4)
+
+[node name="roof_middle_flat_798" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 4)
+
+[node name="roof_middle_flat_797" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 4)
+
+[node name="roof_middle_flat_796" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 4)
+
+[node name="roof_middle_flat_795" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 4)
+
+[node name="roof_middle_flat_794" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 4)
+
+[node name="roof_middle_flat_793" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 4)
+
+[node name="roof_middle_flat_792" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 4)
+
+[node name="roof_middle_flat_791" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 4)
+
+[node name="roof_middle_flat_790" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 4)
+
+[node name="roof_middle_flat_789" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 4)
+
+[node name="roof_middle_flat_788" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 4)
+
+[node name="roof_middle_flat_787" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 4)
+
+[node name="roof_middle_flat_786" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 5)
+
+[node name="roof_middle_flat_785" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 5)
+
+[node name="roof_middle_flat_784" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 5)
+
+[node name="roof_middle_flat_783" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 5)
+
+[node name="roof_middle_flat_782" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 5)
+
+[node name="roof_middle_flat_781" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 5)
+
+[node name="roof_middle_flat_780" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 5)
+
+[node name="roof_middle_flat_779" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 5)
+
+[node name="roof_middle_flat_778" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 5)
+
+[node name="roof_middle_flat_777" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 5)
+
+[node name="roof_middle_flat_776" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 5)
+
+[node name="roof_middle_flat_775" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 5)
+
+[node name="roof_middle_flat_774" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 5)
+
+[node name="roof_middle_flat_773" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 5)
+
+[node name="roof_middle_flat_772" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 5)
+
+[node name="roof_middle_flat_771" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 5)
+
+[node name="roof_middle_flat_770" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 5)
+
+[node name="roof_middle_flat_769" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 6)
+
+[node name="roof_middle_flat_768" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 6)
+
+[node name="roof_middle_flat_767" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 6)
+
+[node name="roof_middle_flat_766" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 6)
+
+[node name="roof_middle_flat_765" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 6)
+
+[node name="roof_middle_flat_764" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 6)
+
+[node name="roof_middle_flat_763" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 6)
+
+[node name="roof_middle_flat_762" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 6)
+
+[node name="roof_middle_flat_761" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 6)
+
+[node name="roof_middle_flat_760" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 6)
+
+[node name="roof_middle_flat_759" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 6)
+
+[node name="roof_middle_flat_758" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 6)
+
+[node name="roof_middle_flat_757" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 6)
+
+[node name="roof_middle_flat_756" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 6)
+
+[node name="roof_middle_flat_755" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 6)
+
+[node name="roof_middle_flat_754" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 6)
+
+[node name="roof_middle_flat_753" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 7)
+
+[node name="roof_middle_flat_752" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 7)
+
+[node name="roof_middle_flat_751" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 7)
+
+[node name="roof_middle_flat_750" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 7)
+
+[node name="roof_middle_flat_749" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 7)
+
+[node name="roof_middle_flat_748" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 7)
+
+[node name="roof_middle_flat_747" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 7)
+
+[node name="roof_middle_flat_746" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 7)
+
+[node name="roof_middle_flat_745" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 7)
+
+[node name="roof_middle_flat_744" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 7)
+
+[node name="roof_middle_flat_743" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 7)
+
+[node name="roof_middle_flat_742" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 7)
+
+[node name="roof_middle_flat_741" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 7)
+
+[node name="roof_middle_flat_740" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 7)
+
+[node name="roof_middle_flat_739" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 7)
+
+[node name="roof_middle_flat_738" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 7)
+
+[node name="roof_middle_flat_737" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 8)
+
+[node name="roof_middle_flat_736" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 8)
+
+[node name="roof_middle_flat_735" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 8)
+
+[node name="roof_middle_flat_734" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 8)
+
+[node name="roof_middle_flat_733" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 8)
+
+[node name="roof_middle_flat_732" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 8)
+
+[node name="roof_middle_flat_731" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 8)
+
+[node name="roof_middle_flat_730" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 8)
+
+[node name="roof_middle_flat_729" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 8)
+
+[node name="roof_middle_flat_728" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 8)
+
+[node name="roof_middle_flat_727" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 8)
+
+[node name="roof_middle_flat_726" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 8)
+
+[node name="roof_middle_flat_725" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 8)
+
+[node name="roof_middle_flat_724" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 8)
+
+[node name="roof_middle_flat_723" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 8)
+
+[node name="roof_middle_flat_722" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 8)
+
+[node name="roof_middle_flat_721" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 9)
+
+[node name="roof_middle_flat_720" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 9)
+
+[node name="roof_middle_flat_719" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 9)
+
+[node name="roof_middle_flat_718" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 9)
+
+[node name="roof_middle_flat_717" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 9)
+
+[node name="roof_middle_flat_716" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 9)
+
+[node name="roof_middle_flat_715" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 9)
+
+[node name="roof_middle_flat_714" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 9)
+
+[node name="roof_middle_flat_713" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 9)
+
+[node name="roof_middle_flat_712" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 9)
+
+[node name="roof_middle_flat_711" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 9)
+
+[node name="roof_middle_flat_710" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 9)
+
+[node name="roof_middle_flat_709" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 9)
+
+[node name="roof_middle_flat_708" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 9)
+
+[node name="roof_middle_flat_707" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 9)
+
+[node name="roof_middle_flat_706" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 10)
+
+[node name="roof_middle_flat_705" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 10)
+
+[node name="roof_middle_flat_704" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 10)
+
+[node name="roof_middle_flat_703" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 10)
+
+[node name="roof_middle_flat_702" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 10)
+
+[node name="roof_middle_flat_701" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 10)
+
+[node name="roof_middle_flat_700" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 10)
+
+[node name="roof_middle_flat_699" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 10)
+
+[node name="roof_middle_flat_698" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 10)
+
+[node name="roof_middle_flat_697" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 10)
+
+[node name="roof_middle_flat_696" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 10)
+
+[node name="roof_middle_flat_695" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 10)
+
+[node name="roof_middle_flat_694" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 10)
+
+[node name="roof_middle_flat_693" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 10)
+
+[node name="roof_middle_flat_692" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 10)
+
+[node name="roof_middle_flat_691" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 11)
+
+[node name="roof_middle_flat_690" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 11)
+
+[node name="roof_middle_flat_689" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 11)
+
+[node name="roof_middle_flat_688" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 11)
+
+[node name="roof_middle_flat_687" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 11)
+
+[node name="roof_middle_flat_686" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 11)
+
+[node name="roof_middle_flat_685" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 11)
+
+[node name="roof_middle_flat_684" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 11)
+
+[node name="roof_middle_flat_683" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 11)
+
+[node name="roof_middle_flat_682" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 11)
+
+[node name="roof_middle_flat_681" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 11)
+
+[node name="roof_middle_flat_680" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 11)
+
+[node name="roof_middle_flat_679" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 11)
+
+[node name="roof_middle_flat_678" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 11)
+
+[node name="roof_middle_flat_677" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 11)
+
+[node name="roof_middle_flat_676" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3.7, 12)
+
+[node name="roof_middle_flat_675" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 12)
+
+[node name="roof_middle_flat_674" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 12)
+
+[node name="roof_middle_flat_673" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 12)
+
+[node name="roof_middle_flat_672" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 12)
+
+[node name="roof_middle_flat_671" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 12)
+
+[node name="roof_middle_flat_670" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 12)
+
+[node name="roof_middle_flat_669" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 12)
+
+[node name="roof_middle_flat_668" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 12)
+
+[node name="roof_middle_flat_667" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 12)
+
+[node name="roof_middle_flat_666" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 12)
+
+[node name="roof_middle_flat_665" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 12)
+
+[node name="roof_middle_flat_664" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 12)
+
+[node name="roof_middle_flat_663" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 12)
+
+[node name="roof_middle_flat_662" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 12)
+
+[node name="roof_middle_flat_661" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 12)
+
+[node name="roof_middle_flat_660" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3.7, 13)
+
+[node name="roof_middle_flat_659" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 13)
+
+[node name="roof_middle_flat_658" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 13)
+
+[node name="roof_middle_flat_657" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 13)
+
+[node name="roof_middle_flat_656" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 13)
+
+[node name="roof_middle_flat_655" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 13)
+
+[node name="roof_middle_flat_654" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 13)
+
+[node name="roof_middle_flat_653" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 13)
+
+[node name="roof_middle_flat_652" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 13)
+
+[node name="roof_middle_flat_651" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 13)
+
+[node name="roof_middle_flat_650" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 13)
+
+[node name="roof_middle_flat_649" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 13)
+
+[node name="roof_middle_flat_648" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 13)
+
+[node name="roof_middle_flat_647" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 13)
+
+[node name="roof_middle_flat_646" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 13)
+
+[node name="roof_middle_flat_645" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 13)
+
+[node name="roof_middle_flat_644" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 13)
+
+[node name="roof_middle_flat_643" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 14)
+
+[node name="roof_middle_flat_642" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 14)
+
+[node name="roof_middle_flat_641" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 14)
+
+[node name="roof_middle_flat_640" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 14)
+
+[node name="roof_middle_flat_639" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 14)
+
+[node name="roof_middle_flat_638" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 14)
+
+[node name="roof_middle_flat_637" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 14)
+
+[node name="roof_middle_flat_636" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 14)
+
+[node name="roof_middle_flat_635" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 14)
+
+[node name="roof_middle_flat_634" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 14)
+
+[node name="roof_middle_flat_633" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 14)
+
+[node name="roof_middle_flat_632" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 14)
+
+[node name="roof_middle_flat_631" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 14)
+
+[node name="roof_middle_flat_630" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 14)
+
+[node name="roof_middle_flat_629" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 14)
+
+[node name="roof_middle_flat_628" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 14)
+
+[node name="roof_middle_flat_627" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 14)
+
+[node name="roof_middle_flat_626" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 15)
+
+[node name="roof_middle_flat_625" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 15)
+
+[node name="roof_middle_flat_624" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 15)
+
+[node name="roof_middle_flat_623" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 15)
+
+[node name="roof_middle_flat_622" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 15)
+
+[node name="roof_middle_flat_621" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 15)
+
+[node name="roof_middle_flat_620" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 15)
+
+[node name="roof_middle_flat_619" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 15)
+
+[node name="roof_middle_flat_618" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 15)
+
+[node name="roof_middle_flat_617" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 15)
+
+[node name="roof_middle_flat_616" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 15)
+
+[node name="roof_middle_flat_615" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 15)
+
+[node name="roof_middle_flat_614" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 15)
+
+[node name="roof_middle_flat_613" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 15)
+
+[node name="roof_middle_flat_612" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 15)
+
+[node name="roof_middle_flat_611" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 15)
+
+[node name="roof_middle_flat_610" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 15)
+
+[node name="roof_middle_flat_609" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 15)
+
+[node name="roof_middle_flat_608" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 16)
+
+[node name="roof_middle_flat_607" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 16)
+
+[node name="roof_middle_flat_606" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 16)
+
+[node name="roof_middle_flat_605" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 16)
+
+[node name="roof_middle_flat_604" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 16)
+
+[node name="roof_middle_flat_603" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 16)
+
+[node name="roof_middle_flat_602" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 16)
+
+[node name="roof_middle_flat_601" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 16)
+
+[node name="roof_middle_flat_600" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 16)
+
+[node name="roof_middle_flat_599" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 16)
+
+[node name="roof_middle_flat_598" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 16)
+
+[node name="roof_middle_flat_597" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 16)
+
+[node name="roof_middle_flat_596" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 16)
+
+[node name="roof_middle_flat_595" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 16)
+
+[node name="roof_middle_flat_594" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 16)
+
+[node name="roof_middle_flat_593" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 16)
+
+[node name="roof_middle_flat_592" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 16)
+
+[node name="roof_middle_flat_591" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 16)
+
+[node name="roof_middle_flat_590" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 16)
+
+[node name="roof_middle_flat_589" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 17)
+
+[node name="roof_middle_flat_588" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 17)
+
+[node name="roof_middle_flat_587" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 17)
+
+[node name="roof_middle_flat_586" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 17)
+
+[node name="roof_middle_flat_585" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 17)
+
+[node name="roof_middle_flat_584" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 17)
+
+[node name="roof_middle_flat_583" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 17)
+
+[node name="roof_middle_flat_582" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 17)
+
+[node name="roof_middle_flat_581" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 17)
+
+[node name="roof_middle_flat_580" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 17)
+
+[node name="roof_middle_flat_579" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 17)
+
+[node name="roof_middle_flat_578" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 17)
+
+[node name="roof_middle_flat_577" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 17)
+
+[node name="roof_middle_flat_576" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 17)
+
+[node name="roof_middle_flat_575" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 17)
+
+[node name="roof_middle_flat_574" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 17)
+
+[node name="roof_middle_flat_573" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 17)
+
+[node name="roof_middle_flat_572" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 17)
+
+[node name="roof_middle_flat_571" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 17)
+
+[node name="roof_middle_flat_570" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.7, 18)
+
+[node name="roof_middle_flat_569" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 18)
+
+[node name="roof_middle_flat_568" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 18)
+
+[node name="roof_middle_flat_567" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 18)
+
+[node name="roof_middle_flat_566" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 18)
+
+[node name="roof_middle_flat_565" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 18)
+
+[node name="roof_middle_flat_564" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 18)
+
+[node name="roof_middle_flat_563" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 18)
+
+[node name="roof_middle_flat_562" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 18)
+
+[node name="roof_middle_flat_561" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 18)
+
+[node name="roof_middle_flat_560" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 18)
+
+[node name="roof_middle_flat_559" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 18)
+
+[node name="roof_middle_flat_558" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 18)
+
+[node name="roof_middle_flat_557" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 18)
+
+[node name="roof_middle_flat_556" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 18)
+
+[node name="roof_middle_flat_555" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 18)
+
+[node name="roof_middle_flat_554" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 18)
+
+[node name="roof_middle_flat_553" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 18)
+
+[node name="roof_middle_flat_552" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 18)
+
+[node name="roof_middle_flat_551" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 19)
+
+[node name="roof_middle_flat_550" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 19)
+
+[node name="roof_middle_flat_549" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 19)
+
+[node name="roof_middle_flat_548" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 19)
+
+[node name="roof_middle_flat_547" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 19)
+
+[node name="roof_middle_flat_546" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 19)
+
+[node name="roof_middle_flat_545" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 19)
+
+[node name="roof_middle_flat_544" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 19)
+
+[node name="roof_middle_flat_543" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 19)
+
+[node name="roof_middle_flat_542" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 19)
+
+[node name="roof_middle_flat_541" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 19)
+
+[node name="roof_middle_flat_540" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 19)
+
+[node name="roof_middle_flat_539" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 19)
+
+[node name="roof_middle_flat_538" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 19)
+
+[node name="roof_middle_flat_537" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 19)
+
+[node name="roof_middle_flat_536" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 19)
+
+[node name="roof_middle_flat_535" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 19)
+
+[node name="roof_middle_flat_534" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 19)
+
+[node name="roof_middle_flat_532" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 20)
+
+[node name="roof_middle_flat_531" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 20)
+
+[node name="roof_middle_flat_530" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 20)
+
+[node name="roof_middle_flat_529" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 20)
+
+[node name="roof_middle_flat_528" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 20)
+
+[node name="roof_middle_flat_527" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 20)
+
+[node name="roof_middle_flat_526" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 20)
+
+[node name="roof_middle_flat_525" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 20)
+
+[node name="roof_middle_flat_524" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 20)
+
+[node name="roof_middle_flat_523" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 20)
+
+[node name="roof_middle_flat_522" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 20)
+
+[node name="roof_middle_flat_521" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 20)
+
+[node name="roof_middle_flat_520" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 20)
+
+[node name="roof_middle_flat_519" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 20)
+
+[node name="roof_middle_flat_518" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 20)
+
+[node name="roof_middle_flat_517" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 20)
+
+[node name="roof_middle_flat_516" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 20)
+
+[node name="roof_middle_flat_514" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 21)
+
+[node name="roof_middle_flat_513" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 21)
+
+[node name="roof_middle_flat_512" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 21)
+
+[node name="roof_middle_flat_511" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 21)
+
+[node name="roof_middle_flat_510" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 21)
+
+[node name="roof_middle_flat_509" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 21)
+
+[node name="roof_middle_flat_508" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 21)
+
+[node name="roof_middle_flat_507" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 21)
+
+[node name="roof_middle_flat_506" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 21)
+
+[node name="roof_middle_flat_505" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 21)
+
+[node name="roof_middle_flat_504" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 21)
+
+[node name="roof_middle_flat_503" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 21)
+
+[node name="roof_middle_flat_502" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 21)
+
+[node name="roof_middle_flat_501" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 21)
+
+[node name="roof_middle_flat_500" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 21)
+
+[node name="roof_middle_flat_499" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 21)
+
+[node name="roof_middle_flat_498" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 21)
+
+[node name="roof_middle_flat_497" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 22)
+
+[node name="roof_middle_flat_496" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 22)
+
+[node name="roof_middle_flat_495" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 22)
+
+[node name="roof_middle_flat_494" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 22)
+
+[node name="roof_middle_flat_493" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 22)
+
+[node name="roof_middle_flat_492" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 22)
+
+[node name="roof_middle_flat_491" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 22)
+
+[node name="roof_middle_flat_490" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 22)
+
+[node name="roof_middle_flat_489" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 22)
+
+[node name="roof_middle_flat_488" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 22)
+
+[node name="roof_middle_flat_487" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 22)
+
+[node name="roof_middle_flat_486" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 22)
+
+[node name="roof_middle_flat_485" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 22)
+
+[node name="roof_middle_flat_484" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 22)
+
+[node name="roof_middle_flat_483" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 22)
+
+[node name="roof_middle_flat_482" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 22)
+
+[node name="roof_middle_flat_481" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 22)
+
+[node name="roof_middle_flat_480" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 22)
+
+[node name="roof_middle_flat_479" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.7, 23)
+
+[node name="roof_middle_flat_478" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 23)
+
+[node name="roof_middle_flat_477" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 23)
+
+[node name="roof_middle_flat_476" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 23)
+
+[node name="roof_middle_flat_475" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 23)
+
+[node name="roof_middle_flat_474" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 23)
+
+[node name="roof_middle_flat_473" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 23)
+
+[node name="roof_middle_flat_472" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 23)
+
+[node name="roof_middle_flat_471" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 23)
+
+[node name="roof_middle_flat_470" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 23)
+
+[node name="roof_middle_flat_469" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 23)
+
+[node name="roof_middle_flat_468" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 23)
+
+[node name="roof_middle_flat_467" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 23)
+
+[node name="roof_middle_flat_466" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 23)
+
+[node name="roof_middle_flat_465" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 23)
+
+[node name="roof_middle_flat_464" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 23)
+
+[node name="roof_middle_flat_463" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 23)
+
+[node name="roof_middle_flat_462" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 23)
+
+[node name="roof_middle_flat_461" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.7, 24)
+
+[node name="roof_middle_flat_460" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3.7, 24)
+
+[node name="roof_middle_flat_459" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.7, 24)
+
+[node name="roof_middle_flat_458" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 3.7, 24)
+
+[node name="roof_middle_flat_457" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 3.7, 24)
+
+[node name="roof_middle_flat_456" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.7, 24)
+
+[node name="roof_middle_flat_455" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.7, 24)
+
+[node name="roof_middle_flat_454" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 3.7, 24)
+
+[node name="roof_middle_flat_453" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.7, 24)
+
+[node name="roof_middle_flat_452" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3.7, 24)
+
+[node name="roof_middle_flat_451" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 24)
+
+[node name="roof_middle_flat_450" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.7, 24)
+
+[node name="roof_middle_flat_449" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3.7, 24)
+
+[node name="roof_middle_flat_448" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.7, 24)
+
+[node name="roof_middle_flat_447" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3.7, 24)
+
+[node name="roof_middle_flat_446" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.7, 24)
+
+[node name="roof_middle_flat" type="MAssetMesh" parent="Node3D"]
+collection_id = 22
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.7, 24)
+
+[node name="roof_corner_middle_flat_057" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 22, 3.1165, -2)
+
+[node name="roof_corner_middle_flat_056" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 9, 3.1165, -3)
+
+[node name="roof_corner_middle_flat_055" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 23, 3.1165, -0.999999)
+
+[node name="roof_corner_middle_flat_054" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 17, 3.1165, -2)
+
+[node name="roof_corner_middle_flat_053" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 13, 3.1165, -0.999999)
+
+[node name="roof_corner_middle_flat_052" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 8, 3.1165, -2)
+
+[node name="roof_corner_middle_flat_051" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3.1165, 0)
+
+[node name="roof_corner_middle_flat_050" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 7, 3.1165, -1)
+
+[node name="roof_corner_middle_flat_049" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 6, 3.1165, 0)
+
+[node name="roof_corner_middle_flat_048" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3.1165, 2)
+
+[node name="roof_corner_middle_flat_047" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 5, 3.1165, 1)
+
+[node name="roof_corner_middle_flat_046" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.1165, 3)
+
+[node name="roof_corner_middle_flat_045" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.1165, 4)
+
+[node name="roof_corner_middle_flat_044" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 22, 3.1165, 6)
+
+[node name="roof_corner_middle_flat_043" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 4, 3.1165, 5)
+
+[node name="roof_corner_middle_flat_042" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 23, 3.1165, 7)
+
+[node name="roof_corner_middle_flat_041" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 5, 3.1165, 6)
+
+[node name="roof_corner_middle_flat_040" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 6, 3.1165, 7)
+
+[node name="roof_corner_middle_flat_039" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 7, 3.1165, 8)
+
+[node name="roof_corner_middle_flat_038" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 24, 3.1165, 11)
+
+[node name="roof_corner_middle_flat_037" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 8, 3.1165, 11)
+
+[node name="roof_corner_middle_flat_036" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 7, 3.1165, 12)
+
+[node name="roof_corner_middle_flat_035" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3.1165, 14)
+
+[node name="roof_corner_middle_flat_034" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 6, 3.1165, 13)
+
+[node name="roof_corner_middle_flat_033" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 5, 3.1165, 14)
+
+[node name="roof_corner_middle_flat_032" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.1165, 19)
+
+[node name="roof_corner_middle_flat_031" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 23, 3.1165, 22)
+
+[node name="roof_corner_middle_flat_030" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.1165, 23)
+
+[node name="roof_corner_middle_flat" type="MAssetMesh" parent="Node3D"]
+collection_id = 25
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.1165, 24)
+
+[node name="roof_corner_inside_003" type="MAssetMesh" parent="Node3D"]
+collection_id = 18
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 17, 3, -4)
+
+[node name="roof_corner_inside" type="MAssetMesh" parent="Node3D"]
+collection_id = 18
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3, 3, 24)
+
+[node name="roof_angle_joiner_045" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 3, -3)
+
+[node name="roof_angle_joiner_044" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 3, -2)
+
+[node name="roof_angle_joiner_043" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 24, 3, -0.999999)
+
+[node name="roof_angle_joiner_042" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 5, 3, 0)
+
+[node name="roof_angle_joiner_041" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 4, 3, 1)
+
+[node name="roof_angle_joiner_040" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 24, 3, 2)
+
+[node name="roof_angle_joiner_039" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 23, 3, 3)
+
+[node name="roof_angle_joiner_038" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 3, 6)
+
+[node name="roof_angle_joiner_037" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, 7)
+
+[node name="roof_angle_joiner_036" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, 8)
+
+[node name="roof_angle_joiner_035" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 6, 3, 12)
+
+[node name="roof_angle_joiner_034" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 5, 3, 13)
+
+[node name="roof_angle_joiner_033" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 4, 3, 14)
+
+[node name="roof_angle_joiner_032" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 23, 3, 19)
+
+[node name="roof_angle_joiner_031" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 3, 21)
+
+[node name="roof_angle_joiner_030" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-1, 0, -3.25841e-07, 0, 1, 0, 3.25841e-07, 0, -1, 24, 3, 22)
+
+[node name="roof_angle_joiner_029" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 23, 3, 23)
+
+[node name="roof_angle_joiner_028" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-1, 0, -3.25841e-07, 0, 1, 0, 3.25841e-07, 0, -1, 24, 3, 22)
+
+[node name="roof_angle_joiner_027" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(5.36442e-07, 0, 1, 0, 1, 0, -1, 0, 5.36442e-07, 22, 3, 24)
+
+[node name="roof_angle_joiner_026" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 8, 3, -3)
+
+[node name="roof_angle_joiner_025" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 7, 3, -2)
+
+[node name="roof_angle_joiner_024" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 6, 3, -0.999999)
+
+[node name="roof_angle_joiner" type="MAssetMesh" parent="Node3D"]
+collection_id = 27
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3, 6)
+
+[node name="roof_angle_filler_023" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-3.57628e-07, 0, -1, 0, 1, 0, 1, 0, -3.57628e-07, 21, 3, -4)
+
+[node name="roof_angle_filler_022" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 3, 0)
+
+[node name="roof_angle_filler_021" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-1, 0, 5.6426e-07, 0, 1, 0, -5.6426e-07, 0, -1, 25, 3, 1)
+
+[node name="roof_angle_filler_020" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3, 2)
+
+[node name="roof_angle_filler_019" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3, 7)
+
+[node name="roof_angle_filler_018" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 3, 11)
+
+[node name="roof_angle_filler_017" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-1, 0, 5.6426e-07, 0, 1, 0, -5.6426e-07, 0, -1, 25, 3, 13)
+
+[node name="roof_angle_filler_016" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3, 15)
+
+[node name="roof_angle_filler_015" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-1, 0, 5.6426e-07, 0, 1, 0, -5.6426e-07, 0, -1, 24, 3, 18)
+
+[node name="roof_angle_filler_014" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(3.57628e-07, 0, -1, 0, 1, 0, -1, 0, -3.57628e-07, 21, 3, 25)
+
+[node name="roof_angle_filler_013" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(-5.36442e-07, 0, 1, 0, 1, 0, 1, 0, 5.36442e-07, 9, 3, -4)
+
+[node name="roof_angle_filler" type="MAssetMesh" parent="Node3D"]
+collection_id = 17
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 3, 3, 5)
+
+[node name="roof_angle_063" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 21, 3, -3)
+
+[node name="roof_angle_062" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 3, -2)
+
+[node name="roof_angle_061" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 3, -0.999998)
+
+[node name="roof_angle_060" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 24, 3, 0)
+
+[node name="roof_angle_059" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 6, 3, 0)
+
+[node name="roof_angle_058" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 5, 3, 1)
+
+[node name="roof_angle_057" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3, 1)
+
+[node name="roof_angle_056" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 3, 2)
+
+[node name="roof_angle_055" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3, 2)
+
+[node name="roof_angle_054" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3, 3)
+
+[node name="roof_angle_053" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 3, 6)
+
+[node name="roof_angle_052" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 3, 7)
+
+[node name="roof_angle_051" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, 6)
+
+[node name="roof_angle_050" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, 7)
+
+[node name="roof_angle_049" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3, 8)
+
+[node name="roof_angle_048" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 24, 3, 11)
+
+[node name="roof_angle_047" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 7, 3, 12)
+
+[node name="roof_angle_046" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 6, 3, 13)
+
+[node name="roof_angle_045" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3, 13)
+
+[node name="roof_angle_044" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 5, 3, 14)
+
+[node name="roof_angle_043" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 4, 3, 15)
+
+[node name="roof_angle_042" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3, 18)
+
+[node name="roof_angle_041" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3, 19)
+
+[node name="roof_angle_040" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 22, 3, 21)
+
+[node name="roof_angle_039" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 3.25841e-07, 0, 1, 0, -3.25841e-07, 0, -1, 23, 3, 22)
+
+[node name="roof_angle_038" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 3, 22)
+visible = false
+
+[node name="roof_angle_037" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3, 23)
+
+[node name="roof_angle_036" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3, 24)
+
+[node name="roof_angle_035" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 9, 3, -3)
+
+[node name="roof_angle_034" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 8, 3, -2)
+
+[node name="roof_angle_033" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, -1, 7, 3, -0.999999)
+
+[node name="roof_angle" type="MAssetMesh" parent="Node3D"]
+collection_id = 16
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3, 5)
+
+[node name="roof_corner_middle_flat_001_02" type="MAssetMesh" parent="Node3D"]
+collection_id = 28
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, 3.1, 20)
+
+[node name="roof_corner_middle_flat_001_03" type="MAssetMesh" parent="Node3D"]
+collection_id = 28
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 22.0038, 3.14443, 20.9806)
+
+[node name="Garage2" type="MAssetMesh" parent="."]
+collection_id = 56
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -8.17957, 0, 60.2955)
+
+[node name="Garage3" type="MAssetMesh" parent="."]
+collection_id = 56
+transform = Transform3D(0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.5, -0.978786, 0, 40.5837)
+
+[node name="Garage4" type="MAssetMesh" parent="."]
+collection_id = 56
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.4219, 0, 30.2471)
+
+[node name="Garage5" type="MAssetMesh" parent="."]
+collection_id = 56
+transform = Transform3D(-0.684709, 0, 0.728817, 0, 1, 0, -0.728817, 0, -0.684709, 0.565798, 0, 86.3137)
+
+[node name="Garage6" type="MAssetMesh" parent="."]
+collection_id = 56
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.6848, 0, 29.96)
+
+[node name="Garage7" type="MAssetMesh" parent="."]
+collection_id = 56
+transform = Transform3D(-0.628172, 0, 0.778074, 0, 1, 0, -0.778074, 0, -0.628172, 19.5431, 0, 106.561)
+
+[node name="Garage8" type="MAssetMesh" parent="."]
+collection_id = 56
+transform = Transform3D(-0.997784, 0, -0.0665432, 0, 1, 0, 0.0665432, 0, -0.997784, 38.6686, 0, 113.555)
+
+[node name="Water_Tower2" type="MAssetMesh" parent="."]
+collection_id = 66
+transform = Transform3D(0.999687, 0, 0.0249974, 0, 1, 0, -0.0249974, 0, 0.999687, 51.7309, 0, 109.114)

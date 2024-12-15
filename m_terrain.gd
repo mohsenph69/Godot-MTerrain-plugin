@@ -212,14 +212,14 @@ func _handles(object):
 	
 	tsnap.visible = false
 	if tools.on_handles(object): 		
-		return true
+		return true	
 	tsnap.visible = is_instance_valid(tools.active_snap_object)
 
 func _forward_3d_gui_input(viewport_camera, event):
 	if not is_instance_valid(EditorInterface.get_edited_scene_root()): 
 		return AFTER_GUI_INPUT_PASS
 	
-	if tools.forward_3d_gui_input(viewport_camera, event):
+	if tools.forward_3d_gui_input(viewport_camera, event):		
 		return AFTER_GUI_INPUT_STOP
 	else:
 		return AFTER_GUI_INPUT_PASS

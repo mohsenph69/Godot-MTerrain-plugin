@@ -9,6 +9,18 @@ signal selection_changed
 @onready var grouping_popup:Popup = find_child("grouping_popup")
 @onready var search_collections_node:Control = find_child("search_collections")
 @onready var group_by_button:Button = find_child("group_by_button")	
+@onready var place_button:Button = find_child("place_button")	
+@onready var snap_enabled_button:BaseButton = find_child("snap_enabled_button")
+@onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
+@onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
+							
+var object_being_placed
+var active_group_list #the last one selected
+var active_group_list_item #id of the last one selected
+var position_confirmed = false
+var accumulated_position_offset = Vector2(0,0)
+var accumulated_rotation_offset = 0
+var accumulated_scale_offset = 0
 
 var asset_library := MAssetTable.get_singleton()
 var current_selection := [] #array of collection name
@@ -44,9 +56,76 @@ func _ready():
 	ungrouped.group_list.multi_selected.connect(func(id, selected):
 		process_selection(ungrouped.group_list, id, selected)
 	)
+	ungrouped.group_list.multi_selected.connect(set_active_group_list_and_id.bind(ungrouped.group_list))
 	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
 	grouping_popup.group_selected.connect(regroup)	
 
+	place_button.toggled.connect(func(toggle_on):
+		if toggle_on:
+			object_being_placed = collection_item_activated(active_group_list_item, active_group_list)
+			var viewport_camera = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()
+			object_being_placed.global_position = (viewport_camera.global_position + (viewport_camera.basis.z *10)) * Vector3(1,0,1)
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			accumulated_rotation_offset = 0
+			accumulated_position_offset = Vector2(0,0)
+		else:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			if object_being_placed:
+				object_being_placed.queue_free()
+				object_being_placed = null
+		
+	)
+		
+func _input(event:InputEvent):
+	if not object_being_placed: return
+	if event is InputEventKey:
+		if event.keycode == KEY_ESCAPE:
+			place_button.button_pressed = false			
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			place_button.button_pressed = false			
+		elif event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				position_confirmed = true				
+			else:
+				object_being_placed = add_asset_to_scene(object_being_placed.collection_id, MAssetTable.get_singleton().collection_get_name(object_being_placed.collection_id))					
+				position_confirmed = false			
+	if event is InputEventMouseMotion:			
+		if position_confirmed:
+			if rotation_enabled_button.button_pressed:
+				var rotation_scale = 0.025 if not event.alt_pressed else 0.01
+				if event.ctrl_pressed:
+					accumulated_rotation_offset += sign(event.relative.x) * rotation_scale
+					var new_rotation = snapped(object_being_placed.rotation.y+accumulated_rotation_offset, PI/6)					
+					if abs(new_rotation - object_being_placed.rotation.y) >0.1:
+						object_being_placed.rotation.y = new_rotation
+						accumulated_rotation_offset = 0						
+				else:
+					accumulated_rotation_offset = 0
+					object_being_placed.rotation.y += event.relative.x*rotation_scale
+			if scale_enabled_button.button_pressed:
+				var scale_scale = 0.005 if event.alt_pressed else 0.01
+				object_being_placed.scale *= 1 + sign(event.relative.y) * scale_scale
+		else:						
+			var viewport_camera: Camera3D = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()						
+			var offset = viewport_camera.basis.z.cross(Vector3.UP) * -event.relative.x + (viewport_camera.basis.z * Vector3(1,0,1)) * event.relative.y
+			var offset_scale = 0.25 if event.alt_pressed	else 0.5						
+			if snap_enabled_button.button_pressed or event.ctrl_pressed:
+				accumulated_position_offset += event.relative
+				var new_position = snapped(object_being_placed.position+accumulated_position_offset, 1)
+				if new_position != object_being_placed.position:
+					object_being_placed.position = new_position
+					accumulated_position_offset= Vector2(0,0)
+			else:
+				object_being_placed.position += offset * offset_scale			
+				accumulated_position_offset = Vector2(0,0)		
+
+func set_active_group_list_and_id(id, selected, group_list):
+	if not selected: return
+	print(id, group_list)
+	active_group_list_item = id
+	active_group_list = group_list
+	
 func search_items(text=""):					
 	current_search = text		
 	regroup()	
@@ -142,6 +221,7 @@ func regroup(group = current_group, sort_mode="asc"):
 				)
 				group_control.set_group(asset_library.tag_get_name(tag_id))					
 				group_control.group_list.item_activated.connect(collection_item_activated.bind(group_control.group_list))
+				group_control.group_list.multi_selected.connect(set_active_group_list_and_id.bind(group_control))
 				group_control.name = tag_name				
 			else:
 				group_control = groups.get_node(tag_name)			
@@ -172,9 +252,13 @@ func regroup(group = current_group, sort_mode="asc"):
 			ungrouped.add_item(item.name, item.thumbnail, item.id)		
 	current_group = group
 
-func collection_item_activated(id, group_list:ItemList):						
+func collection_item_activated(id, group_list:ItemList):					
+	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_text(id))		
+	return node 
+
+func add_asset_to_scene(id, asset_name):
 	var node = MAssetMesh.new()
-	node.collection_id = group_list.get_item_metadata(id)
+	node.collection_id = id
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	if len(selected_nodes) != 1:
@@ -185,8 +269,9 @@ func collection_item_activated(id, group_list:ItemList):
 			parent = parent.get_parent()			
 		selected_nodes[0].add_child(node)	
 	node.owner = EditorInterface.get_edited_scene_root()
-	node.name = group_list.get_item_text(id)	
-	
+	node.name = asset_name
+	return node 
+
 func process_selection(who:ItemList, id, selected):
 	current_selection = []
 	var all_groups = groups.get_children().map(func(a): return a.group_list)
