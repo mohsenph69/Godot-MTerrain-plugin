@@ -117,6 +117,7 @@ func bake_to_hlod_resource():
 		#hlod.lod_limit = join_at_lod
 	
 	hlod_resource.join_at_lod = join_at_lod
+	var users = MHlodScene.get_hlod_users(bake_path)
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
 		ResourceSaver.save(hlod_resource)
@@ -124,8 +125,9 @@ func bake_to_hlod_resource():
 		if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
 			DirAccess.make_dir_absolute(bake_path.get_base_dir())
 		ResourceSaver.save(hlod_resource, bake_path)
-	print(bake_path, " : ", hlod_resource)
-	MHlodScene.awake()		
+	for n in users:
+		n.hlod = hlod_resource
+	MHlodScene.awake()			
 	return
 
 #region Getters	

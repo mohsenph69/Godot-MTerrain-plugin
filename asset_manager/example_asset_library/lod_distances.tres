@@ -1,7 +1,0 @@
-[gd_resource type="Resource" script_class="Lod_Distance_Settings" load_steps=2 format=3 uid="uid://b0wjoe4wrrby7"]
-
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/lod_distance_settings.gd" id="1_0t0p0"]
-
-[resource]
-script = ExtResource("1_0t0p0")
-distances = PackedFloat32Array(10, 20, 50, 125, 300, 800, 2000, 5000)

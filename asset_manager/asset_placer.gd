@@ -13,6 +13,8 @@ signal selection_changed
 @onready var snap_enabled_button:BaseButton = find_child("snap_enabled_button")
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
+				
+var ur: EditorUndoRedoManager
 							
 var object_being_placed
 var active_group_list #the last one selected
@@ -75,7 +77,11 @@ func _ready():
 				object_being_placed = null
 		
 	)
-		
+
+func redo_asset_place(id, asset_name, transform):	
+	var node = add_asset_to_scene(id, asset_name)
+	node.transform = transform
+	
 func _input(event:InputEvent):
 	if not object_being_placed: return
 	if event is InputEventKey:
@@ -88,8 +94,13 @@ func _input(event:InputEvent):
 			if event.pressed:
 				position_confirmed = true				
 			else:
+				ur.create_action("place asset")
+				ur.add_do_method(self, "redo_asset_place", object_being_placed.collection_id, MAssetTable.get_singleton().collection_get_name(object_being_placed.collection_id), object_being_placed.transform)
+				ur.add_undo_method(object_being_placed, "queue_free")
+				ur.commit_action(false)
 				object_being_placed = add_asset_to_scene(object_being_placed.collection_id, MAssetTable.get_singleton().collection_get_name(object_being_placed.collection_id))					
 				position_confirmed = false			
+				
 	if event is InputEventMouseMotion:			
 		if position_confirmed:
 			if rotation_enabled_button.button_pressed:
@@ -287,7 +298,7 @@ func process_selection(who:ItemList, id, selected):
 #region Debug	
 #########
 # DEBUG #
-#########			
+#########		
 func init_debug_tags():
 	var groups = {"colors": [0,1,2], "sizes":[3,4,5], "building_parts": [6,7,8,9]}   #data.categories
 	var tags = ["red", "green", "blue", "small", "medium", "large", "wall", "floor", "roof", "door"]#data.tags		

@@ -141,6 +141,7 @@ func _enter_tree():
 		add_keymap()				
 		
 		asset_browser = load("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
+		asset_browser.ur = get_undo_redo()
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		
 		asset_browser_inspector_plugin = load("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
