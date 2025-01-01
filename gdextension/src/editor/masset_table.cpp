@@ -1303,7 +1303,12 @@ int MAssetTable::mesh_add(Ref<MMesh> mesh){
     last_mesh_id++;
     String path = MHlod::get_mesh_path(mesh_id);
     mesh_hashes.insert(mesh,mesh_id);
-    ResourceSaver::get_singleton()->save(mesh,path);
+    if(!DirAccess::dir_exists_absolute(MHlod::mesh_root_dir)){
+        Error err = DirAccess::make_dir_recursive_absolute(MHlod::mesh_root_dir);
+        ERR_FAIL_COND_V_MSG(err!=OK,-1,"Can't create mesh_root_dir "+String(MHlod::mesh_root_dir));
+    }
+    Error err = ResourceSaver::get_singleton()->save(mesh,path);
+    ERR_FAIL_COND_V_MSG(err!=OK,mesh_id,"Can't save "+itos(mesh_id));
     return mesh_id;
 }
 
