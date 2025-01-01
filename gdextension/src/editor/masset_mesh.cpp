@@ -153,6 +153,7 @@ void MAssetMesh::update_instance_date(){
     }
     Transform3D t; // Identity Transform
     generate_instance_data(collection_id,t);
+    compute_joined_aabb();
 }
 
 void MAssetMesh::update_lod(int lod){
@@ -209,6 +210,25 @@ void MAssetMesh::update_lod(int lod){
 
 void MAssetMesh::destroy_meshes(){
     remove_instances(false);
+}
+
+void MAssetMesh::compute_joined_aabb(){
+    joined_aabb = AABB();
+    bool is_first_set = false;
+    for(int i=0; i < instance_data.size(); i++){
+        for(int j=0; j < instance_data[i].meshes.size(); j++){
+            Ref<MMesh> __mmesh = instance_data[i].meshes[j];
+            if(__mmesh.is_valid()){
+                if(!is_first_set){
+                    joined_aabb = __mmesh->get_aabb();
+                    is_first_set = true;
+                } else {
+                    joined_aabb.merge_with(joined_aabb);
+                }
+                break;
+            }
+        }
+    }
 }
 
 void MAssetMesh::remove_instances(bool hard_remove){

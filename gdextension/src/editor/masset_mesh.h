@@ -67,6 +67,7 @@ class MAssetMesh : public Node3D {
     void update_instance_date();
     void update_lod(int lod);
     void destroy_meshes();
+    void compute_joined_aabb();
 
     void set_hlod_layers(int64_t input);
     int64_t get_hlod_layers();

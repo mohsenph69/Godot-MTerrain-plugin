@@ -81,6 +81,7 @@ class MMesh : public Resource {
 	Ref<ArrayMesh> get_mesh() const;
 
 	int get_surface_count() const;
+	AABB get_aabb() const;
 	int material_set_get_count() const;
 	PackedStringArray material_set_get(int set_id) const;
 	String material_get(int set_id,int surface_index)const;

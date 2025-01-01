@@ -15,6 +15,7 @@ void MMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_mesh"), &MMesh::get_mesh);
 
     ClassDB::bind_method(D_METHOD("get_surface_count"), &MMesh::get_surface_count);
+    ClassDB::bind_method(D_METHOD("get_aabb"), &MMesh::get_aabb);
     ClassDB::bind_method(D_METHOD("material_set_get_count"), &MMesh::material_set_get_count);
     ClassDB::bind_method(D_METHOD("material_set_get","set_id"), &MMesh::material_set_get);
     ClassDB::bind_method(D_METHOD("material_get","set_id","surface_index"), &MMesh::material_get);
@@ -289,6 +290,10 @@ int MMesh::get_surface_count() const{
     return materials_set[0].get_surface_count();
 }
 
+AABB MMesh::get_aabb() const{
+    return aabb;
+}
+
 int MMesh::material_set_get_count() const{
     return materials_set.size();
 }
@@ -397,6 +402,12 @@ void MMesh::_set_surfaces(Array _surfaces){
         Dictionary sdata = _surfaces[i];
         _surfaces_names.push_back(sdata["name"]);
         RS->mesh_add_surface(mesh,sdata);
+        ERR_CONTINUE(!sdata.has("aabb"));
+        if(i==0){
+            aabb = sdata["aabb"];
+        } else {
+            aabb.merge_with(sdata["aabb"]);
+        }
     }
     update_material_override();
     surfaces_set_names(_surfaces_names);
