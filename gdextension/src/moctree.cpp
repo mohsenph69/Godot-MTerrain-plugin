@@ -11,6 +11,7 @@
 #include "mtool.h"
 #include "octmesh/moctmesh.h"
 #include "path/mcurve.h"
+#include "hlod/mhlod_scene.h"
 #define RS RenderingServer::get_singleton()
 
 
@@ -40,6 +41,7 @@ void MOctree::_bind_methods(){
 	ClassDB::bind_method(D_METHOD("set_world_boundary","start","end"), &MOctree::set_world_boundary);
 	ClassDB::bind_method(D_METHOD("enable_as_octmesh_updater"), &MOctree::enable_as_octmesh_updater);
 	ClassDB::bind_method(D_METHOD("enable_as_curve_updater"), &MOctree::enable_as_curve_updater);
+	ClassDB::bind_method(D_METHOD("enable_as_hlod_updater"), &MOctree::enable_as_hlod_updater);
 
 	ClassDB::bind_method(D_METHOD("set_debug_draw","input"), &MOctree::set_debug_draw);
 	ClassDB::bind_method(D_METHOD("get_debug_draw"), &MOctree::get_debug_draw);
@@ -748,6 +750,12 @@ void MOctree::enable_as_curve_updater(){
 	MCurve::set_octree(this);
 }
 
+void MOctree::enable_as_hlod_updater(){
+	if(MHlodScene::set_octree(this)){
+		is_hlod_updater = true;
+	}
+}
+
 void MOctree::update_camera_position(){
 	if(camera_node!=nullptr){
 		camera_position = camera_node->get_global_position();
@@ -1196,6 +1204,10 @@ void MOctree::set_lod_setting(const PackedFloat32Array _lod_setting){
 	lod_setting = _lod_setting;
 }
 
+PackedFloat32Array MOctree::get_lod_setting() const{
+	return lod_setting;
+}
+
 void MOctree::set_custom_capacity(int input){
 	input = CLAMP(input, 0 , MAX_CAPACITY);
 	custom_capacity = input;
@@ -1278,10 +1290,16 @@ void MOctree::process_tick(){
 		if(is_valid_octmesh_updater()){
 			MOctMesh::update_tick();
 		}
+		if(is_hlod_updater){
+			MHlodScene::update_tick();
+		}
 	}
 	if(is_first_update){
 		if(is_valid_octmesh_updater()){
 			MOctMesh::insert_points();
+		}
+		if(is_hlod_updater){
+			MHlodScene::insert_points();
 		}
 		update_camera_position();
 		is_first_update = false;
@@ -1354,6 +1372,9 @@ void MOctree::send_update_signal(){
 	update_scenario();
 	if(is_valid_octmesh_updater()){
 		MOctMesh::octree_update(&update_change_info[MOctMesh::get_oct_id()]);
+	}
+	if(is_hlod_updater){
+		MHlodScene::octree_update(&update_change_info[MHlodScene::get_oct_id()]);
 	}
 	emit_signal("update_finished");
 }

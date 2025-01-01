@@ -22,7 +22,10 @@ class MMeshLod : public Resource {
     MMeshLod();
     ~MMeshLod();
     RID get_mesh_rid(int8_t lod);
+    RID get_mesh_rid_last(int8_t lod);
     Ref<Mesh> get_mesh(int8_t lod);
+    Ref<Mesh> get_mesh_last(int8_t lod);
+    Ref<Mesh> get_last_valid_mesh();
     void set_meshes(TypedArray<Mesh> input);
     TypedArray<Mesh> get_meshes();
 

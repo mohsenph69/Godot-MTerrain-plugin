@@ -11,6 +11,18 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+
+#include "util/mtrie.h"
+#include "util/mtrie_array.h"
+#include "hlod/mmaterial_table.h"
+
+#ifdef DEBUG_ENABLED
+#include "editor/mmesh_joiner.h"
+#include "editor/masset_mesh.h"
+#include "editor/masset_mesh_updater.h"
+#include "editor/masset_table.h"
+#endif
+
 #include "mterrain.h"
 #include "mresource.h"
 #include "mchunk_generator.h"
@@ -39,6 +51,9 @@
 #include "path/mcurve_mesh_override.h"
 #include "path/mcurve_terrain.h"
 
+#include "hlod/mhlod_scene.h"
+#include "hlod/mhlod_collision_setting.h"
+#include "hlod/mmesh.h"
 
 using namespace godot;
 
@@ -46,7 +61,20 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
+	ClassDB::register_class<MTrie>();
+	ClassDB::register_class<MTrieArray>();
+	ClassDB::register_class<MMaterialTable>();
 	
+	#ifdef DEBUG_ENABLED
+	ClassDB::register_class<MMeshJoiner>();
+	ClassDB::register_class<MAssetMeshUpdater>();
+	ClassDB::register_class<MAssetMesh>();
+	ClassDB::register_class<MAssetMeshData>();
+	ClassDB::register_class<MAssetTable>();
+	#endif
+
+
+
 	ClassDB::register_class<MTerrain>();
 	ClassDB::register_class<MResource>();
 	ClassDB::register_class<MChunkGenerator>();
@@ -73,6 +101,11 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MCurveMesh>();
 	ClassDB::register_class<MCurveMeshOverride>();
 	ClassDB::register_class<MCurveTerrain>();
+
+	ClassDB::register_class<MHlod>();
+	ClassDB::register_class<MHlodCollisionSetting>();
+	ClassDB::register_class<MHlodScene>();
+	ClassDB::register_class<MMesh>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {

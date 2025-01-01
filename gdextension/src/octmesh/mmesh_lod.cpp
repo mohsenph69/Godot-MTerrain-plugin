@@ -27,12 +27,45 @@ RID MMeshLod::get_mesh_rid(int8_t lod){
     return RID();
 }
 
+RID MMeshLod::get_mesh_rid_last(int8_t lod){
+    if(lod >= meshes.size()){
+        lod = meshes.size() - 1;
+    }
+    if(lod >=0){
+        Ref<Mesh> mesh = meshes[lod];
+        if(mesh.is_valid()){
+            return mesh->get_rid();
+        }
+    }
+    return RID();
+}
+
 Ref<Mesh> MMeshLod::get_mesh(int8_t lod){
     Ref<Mesh> out;
     if(meshes.size() > lod && lod >= 0){
         out = meshes[lod];
     }
     return out;
+}
+
+Ref<Mesh> MMeshLod::get_mesh_last(int8_t lod){
+    if(lod >= meshes.size()){
+        lod = meshes.size() - 1;
+    }
+    if(lod >=0){
+        return meshes[lod];
+    }
+    return Ref<Mesh>();
+}
+
+Ref<Mesh> MMeshLod::get_last_valid_mesh(){
+    for(int i=meshes.size()-1; i >=0; i--){
+        Ref<Mesh> cm = meshes[i];
+        if(cm.is_valid()){
+            return cm;
+        }
+    }
+    return nullptr;
 }
 
 void MMeshLod::set_meshes(TypedArray<Mesh> input){

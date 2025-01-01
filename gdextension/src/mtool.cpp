@@ -161,3 +161,21 @@ Ref<MCollision> MTool::ray_collision_y_zero_plane(const Vector3& ray_origin,cons
     col->collided = true;
     return col;
 }
+
+PackedInt64Array MTool::packed_32_to_64(const PackedInt32Array& p32){
+    PackedInt64Array out;
+    out.resize(p32.size());
+    for(int i=0; i < p32.size(); i++){
+        out.set(i,(int64_t)p32[i]);
+    }
+    return out;
+}
+
+PackedInt32Array MTool::packed_64_to_32(const PackedInt64Array& p64){
+    PackedInt32Array out;
+    out.resize(p64.size());
+    for(int i=0; i < p64.size(); i++){
+        out.set(i,(int32_t)p64[i]);
+    }
+    return out;
+}

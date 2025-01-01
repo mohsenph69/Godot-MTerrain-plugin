@@ -169,6 +169,7 @@ class MOctree : public Node3D {
     bool is_ready = false;
     bool is_octmesh_updater = false;
     bool is_path_updater = false;
+    bool is_hlod_updater = false;
     bool disable_octree = false;
 
     bool debug_draw = false;
@@ -189,6 +190,7 @@ class MOctree : public Node3D {
     void set_world_boundary(const Vector3& start,const Vector3& end);
     void enable_as_octmesh_updater();
     void enable_as_curve_updater();
+    void enable_as_hlod_updater();
     void update_camera_position();
     uint32_t get_capacity(int p_count);
     //Insert point and id is point index
@@ -214,6 +216,7 @@ class MOctree : public Node3D {
     PackedVector3Array get_tree_lines();
 
     void set_lod_setting(const PackedFloat32Array _lod_setting);
+    PackedFloat32Array get_lod_setting() const;
     void set_custom_capacity(int input);
 
     void set_debug_draw(bool input);
