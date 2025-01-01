@@ -39,6 +39,7 @@ var no_image = preload("res://addons/m_terrain/icons/no_images.png") #For color 
 
 @onready var add_color_brush_button = find_child("add_color_brush_button")
 
+
 func _ready():
 	var panel = get_child(0)
 	panel.visible = false
@@ -109,7 +110,7 @@ func on_height_brush_select(item):
 	height_brush_id = item.get_index()
 	var brush_props = height_brush_manager.get_height_brush_property(height_brush_id)
 	for p in brush_props:
-		create_props(p)
+		create_props(p)	
 	text = ""
 	set("theme_override_styles/normal", null)
 	icon = item.label.icon
@@ -148,7 +149,7 @@ func create_props(dic:Dictionary):
 	element.set_name(dic["name"])
 	property_element_list.append(element)	
 	if element.prop_name.to_lower() == "revers":
-		reverse_property_control = element
+		reverse_property_control = element	
 
 func clear_property_element():
 	for e in property_element_list:
@@ -171,21 +172,20 @@ func init_color_brushes(terrain: MTerrain = null, layer_group_id=0):
 							
 	add_color_brush_button.visible = true
 	color_brush_layer = active_terrain.brush_layers[layer_group_id]						
-		
+	
 	for i in color_brush_layer.layers.size():	
 		var brush = color_brush_layer.layers[i]					
 		var bname = brush.NAME
 		if bname.is_empty():
 			bname = str("layer ", i)
-		var bicon:Texture = load(brush.ICON) if FileAccess.file_exists(brush.ICON) else null						
-		
+		var bicon:Texture = load(brush.ICON) if FileAccess.file_exists(brush.ICON) else null										
 		var brush_item = preload("res://addons/m_terrain/gui/mtools_brush_item.tscn").instantiate()		
 		brush_container.add_child(brush_item)		
 		brush_item.set_color_brush(color_brush_layer, i)
 		brush_item.brush_selected.connect( brush_layer_selected.bind(brush_item.get_index(), color_brush_layer))
 		brush_item.brush_edited.connect(update_color_brush)
 		brush_item.brush_removed.connect(remove_color_brush)
-	
+		
 	color_layer_group_id = layer_group_id
 	color_brush_uniform = color_brush_layer.uniform_name
 	color_brush_name = color_brush_layer.brush_name
@@ -372,7 +372,7 @@ func process_input(event):
 #endregion
 
 
-func _on_resized():	
+func _on_resized():		
 	var vbox = get_child(0)
 	var settings = find_child("brush_settings_panel")
 	settings.custom_minimum_size.x = global_position.x-owner.global_position.x

@@ -171,7 +171,7 @@ func import_no_tile():
 	if ext=="r16":
 		img=MTool.get_r16_image(file_path,width,height,min_height,max_height,false)
 	else:
-		img = Image.load_from_file(file_path)
+		img = Image.load_from_file(ProjectSettings.globalize_path(file_path))
 	if not img:
 		perr("Can not load image")
 		return
@@ -292,7 +292,7 @@ func import_tile():
 			if ext == "r16":
 				img=MTool.get_r16_image(r_path,0,0,min_height,max_height,false)
 			else:
-				img = Image.load_from_file(r_path)
+				img = Image.load_from_file(ProjectSettings.globalize_path(r_path))
 			if not img:
 				perr("Can not load image")
 				return

@@ -50,7 +50,7 @@ func clear_mask():
 	
 
 func change_mask_size(value):
-	mask_decal.set_size(value)
+	mask_decal.set_mask_size(value)
 	
 func change_mask_rotation(value):
 	mask_decal.set_image_rotation(value)
@@ -72,7 +72,7 @@ func toggle_grass_settings(toggle_on):
 	mask_cutoff_control.visible = toggle_on
 	mterrain.set_mask_cutoff(mask_cutoff_control.slider.value)
 
-func _on_h_box_container_resized():
+func _on_h_box_container_resized():	
 	var vbox = get_child(0)
 	if not mask_container:
 		await ready

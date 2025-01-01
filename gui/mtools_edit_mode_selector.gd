@@ -2,6 +2,7 @@
 extends Button
 
 signal edit_mode_changed
+signal clear_last_edit_mode_setting
 
 var item_container
 var exit_edit_mode_button 
@@ -102,7 +103,7 @@ func init_edit_mode_options(all_mterrain):
 func change_active_object(object):	
 	#In future, make it auto-switch to the same edit mode, just for different object
 	if not object == active_object:
-		exit_edit_mode_button_pressed()
+		exit_edit_mode()
 		active_object = null
 	exit_edit_mode_button.visible = false
 	edit_selected_button.visible = true
@@ -123,6 +124,11 @@ func change_active_object(object):
 	icon = more_options_icon
 	
 func exit_edit_mode_button_pressed():	
+	clear_last_edit_mode_setting.emit(active_object)
+	exit_edit_mode()
+	
+	
+func exit_edit_mode():
 	edit_mode_changed.emit(null, &"")
 	change_active_object(active_object)
 	

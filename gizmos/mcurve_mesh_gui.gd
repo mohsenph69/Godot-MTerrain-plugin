@@ -132,7 +132,7 @@ func udpate_sockets_gizmos():
 		sockets_gizmos.push_back(marker)
 
 func is_active():
-	return active_btn.button_pressed
+	return active_btn and active_btn.button_pressed
 
 func _on_visibility_changed():
 	if active_btn and not visible:

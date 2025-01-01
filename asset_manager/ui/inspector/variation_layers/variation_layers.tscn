@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://emr0fpf2qo8g"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/layers.gd" id="1_wefvq"]
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_wjh67"]
+
+[node name="Layers" type="GridContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+theme = ExtResource("1_wjh67")
+columns = 8
+script = ExtResource("1_wefvq")
+layer_names = PackedStringArray("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
+
+[node name="rename_dialog" type="ConfirmationDialog" parent="."]
+title = "Rename"
+initial_position = 4
+
+[node name="rename_line" type="LineEdit" parent="rename_dialog"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 192.0
+offset_bottom = 49.0

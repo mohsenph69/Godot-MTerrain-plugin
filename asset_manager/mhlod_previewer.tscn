@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://byq2krnjsg1oc"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/m_hlod_previewer.gd" id="1_p66ot"]
+
+[node name="MHlodScene" type="MHlodScene"]
+script = ExtResource("1_p66ot")

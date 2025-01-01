@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=10 format=3 uid="uid://b3bd1lceed8ec"]
+[gd_resource type="Theme" load_steps=16 format=3 uid="uid://b3bd1lceed8ec"]
 
 [ext_resource type="StyleBox" uid="uid://b1hcaoigsih7c" path="res://addons/m_terrain/gui/styles/popup_panel_stylebox.tres" id="1_pvcuc"]
 [ext_resource type="StyleBox" uid="uid://b6h5l26dxm8gu" path="res://addons/m_terrain/gui/styles/button_stylebox.tres" id="1_set7o"]
@@ -11,8 +11,50 @@
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2e40r"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_88rtl"]
+bg_color = Color(0.3888, 0.45432, 0.54, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yijcc"]
+bg_color = Color(0.350593, 0.581245, 0.90019, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_udniv"]
+bg_color = Color(0.297664, 0.538732, 0.869828, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n7abs"]
+bg_color = Color(0.484538, 0.675489, 0.941847, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e6elt"]
+bg_color = Color(0.116351, 0.296554, 0.537413, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_15jfn"]
+bg_color = Color(0.350593, 0.581245, 0.90019, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
 [resource]
-default_font_size = 17
+default_font_size = 16
 Button/styles/hover = null
 Button/styles/normal = ExtResource("1_set7o")
 Button/styles/pressed = ExtResource("1_set7o")
@@ -33,3 +75,10 @@ button_icon_only/base_type = &"Button"
 button_icon_only/styles/hover = ExtResource("7_b6jf6")
 button_icon_only/styles/normal = ExtResource("7_wkvrx")
 button_icon_only/styles/pressed = SubResource("StyleBoxEmpty_2e40r")
+button_layer_toggle/base_type = &"Button"
+button_layer_toggle/styles/disabled = SubResource("StyleBoxFlat_88rtl")
+button_layer_toggle/styles/focus = SubResource("StyleBoxFlat_yijcc")
+button_layer_toggle/styles/hover = SubResource("StyleBoxFlat_udniv")
+button_layer_toggle/styles/hover_pressed = SubResource("StyleBoxFlat_n7abs")
+button_layer_toggle/styles/normal = SubResource("StyleBoxFlat_e6elt")
+button_layer_toggle/styles/pressed = SubResource("StyleBoxFlat_15jfn")

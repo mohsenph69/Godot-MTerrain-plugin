@@ -1,0 +1,163 @@
+[gd_scene load_steps=20 format=3 uid="uid://d4b8pa0u65dud"]
+
+[ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
+[ext_resource type="PackedScene" uid="uid://5wjjba4i6uji" path="res://addons/m_terrain/asset_manager/ui/group_control.tscn" id="3_4shpx"]
+[ext_resource type="PackedScene" uid="uid://bq3mcnrp6nw4k" path="res://addons/m_terrain/asset_manager/ui/filter_by_tags_control.tscn" id="3_dfwqm"]
+[ext_resource type="Texture2D" uid="uid://chlti18m8qfsx" path="res://addons/m_terrain/icons/filter_icon.svg" id="3_thf0h"]
+[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="4_c73sy"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="4_he502"]
+[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="5_14byr"]
+[ext_resource type="Texture2D" uid="uid://8qcyrpxdy2po" path="res://addons/m_terrain/icons/sort_icon.svg" id="5_vcl6i"]
+[ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="6_rsi1g"]
+[ext_resource type="PackedScene" uid="uid://dwqtl6yv318k2" path="res://addons/m_terrain/asset_manager/ui/sort_popup.tscn" id="7_uoy1f"]
+[ext_resource type="PackedScene" uid="uid://cysovcswko088" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.tscn" id="9_40ifn"]
+[ext_resource type="Texture2D" uid="uid://c1x4hadtg1807" path="res://addons/m_terrain/icons/snap_grid_disabled_icon.svg" id="11_1ttxp"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/settings_button.gd" id="12_ec46f"]
+[ext_resource type="Texture2D" uid="uid://cjpbohf3ons87" path="res://addons/m_terrain/icons/snap_grid_icon.svg" id="12_odvm5"]
+[ext_resource type="Texture2D" uid="uid://bpu07pul55tyv" path="res://addons/m_terrain/icons/rotate_disabled_icon.svg" id="13_jbm51"]
+[ext_resource type="Texture2D" uid="uid://8bsyqbwgdlor" path="res://addons/m_terrain/icons/rotate_icon.svg" id="14_kwxpb"]
+[ext_resource type="Texture2D" uid="uid://es81s75t7i2n" path="res://addons/m_terrain/icons/scale_disabled_icon.svg" id="15_krpno"]
+[ext_resource type="Texture2D" uid="uid://c5yiqj08mgihl" path="res://addons/m_terrain/icons/scale_icon.svg" id="16_sjn2r"]
+
+[node name="AssetPlacer" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_nhl8i")
+script = ExtResource("2_b0v3a")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="filter_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("3_thf0h")
+expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="filter_popup" parent="VBoxContainer/HBoxContainer/filter_button" instance=ExtResource("3_dfwqm")]
+initial_position = 4
+visible = false
+
+[node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("5_vcl6i")
+expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="sort_popup" parent="VBoxContainer/HBoxContainer/sort_by_button" instance=ExtResource("7_uoy1f")]
+initial_position = 4
+visible = false
+
+[node name="group_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("6_rsi1g")
+expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_40ifn")]
+initial_position = 4
+visible = false
+
+[node name="search_collections" parent="VBoxContainer/HBoxContainer" instance=ExtResource("5_14byr")]
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+
+[node name="place_button" type="CheckButton" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "Place"
+expand_icon = true
+
+[node name="snap_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("11_1ttxp")
+texture_pressed = ExtResource("12_odvm5")
+ignore_texture_size = true
+
+[node name="rotation_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("13_jbm51")
+texture_pressed = ExtResource("14_kwxpb")
+ignore_texture_size = true
+
+[node name="scale_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("15_krpno")
+texture_pressed = ExtResource("16_sjn2r")
+ignore_texture_size = true
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="settings_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("4_c73sy")
+expand_icon = true
+script = ExtResource("12_ec46f")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+text = "debug:"
+
+[node name="clear_assets" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Remove All"
+
+[node name="remove_asset" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Remove selected"
+
+[node name="generate_thumbnails_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Generate Thumbnails"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PanelContainer" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="groups" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/PanelContainer"]
+layout_mode = 2
+
+[node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
+layout_mode = 2
+size_flags_vertical = 3

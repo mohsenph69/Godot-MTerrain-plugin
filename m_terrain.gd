@@ -2,7 +2,7 @@
 extends EditorPlugin
 var version:String="0.16.0"
 
-var tools= null
+var tools:Control= null
 
 var current_main_screen_name =""
 
@@ -14,12 +14,22 @@ var current_window_info=null
 
 var gizmo_moctmesh
 var gizmo_mpath
+var gizmo_masset_mesh
 
 var inspector_mpath
 
 var timer = Timer.new()
 var needs_restart = false
 	
+#var MLOD_Mesh_Importer
+var asset_browser
+var asset_browser_inspector_plugin
+var loaded_scenes = []
+
+var gltf_extras_importer
+
+var asset_table
+
 func check_restart():
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
 		if needs_restart:
@@ -62,9 +72,19 @@ func remove_keymap():
 		InputMap.erase_action(action.name)
 #endregion
 
+func init_asset_table():
+	var path = MAssetTable.get_asset_table_path()
+	if ResourceLoader.exists(path):
+		asset_table = ResourceLoader.load(path)
+	if not asset_table:
+		asset_table = MAssetTable.new()
+	asset_table.initialize_mesh_hashes()
+	MAssetTable.set_singleton(asset_table)
+
 #region init and de-init
 func _enter_tree():		
 	if Engine.is_editor_hint():	
+		init_asset_table()
 		timer.one_shot = true
 		timer.timeout.connect(check_restart)
 		add_child(timer)
@@ -79,9 +99,9 @@ func _enter_tree():
 		tools.request_import_window.connect(show_import_window)
 		tools.request_image_creator.connect(show_image_creator_window)
 		tools.edit_mode_changed.connect(select_object)		
-		tools.undo_redo = get_undo_redo()
-		main_screen.add_child(tools)
-
+		tools.undo_redo = get_undo_redo()			
+		main_screen.add_child(tools)		
+		
 		get_tree().node_added.connect(tools.on_node_modified)
 		get_tree().node_renamed.connect(tools.on_node_modified)
 		get_tree().node_removed.connect(tools.on_node_modified)
@@ -96,7 +116,7 @@ func _enter_tree():
 		main_screen.add_child(tools.human_male)
 		tools.human_male.visible = false
 		
-		get_editor_interface().get_selection().selection_changed.connect(selection_changed)
+		EditorInterface.get_selection().selection_changed.connect(selection_changed)
 		
 		tsnap = load("res://addons/m_terrain/gui/tsnap.tscn").instantiate()
 		tsnap.pressed.connect(tsnap_pressed)
@@ -104,6 +124,8 @@ func _enter_tree():
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)				
 				
 		###### GIZMO
+		gizmo_masset_mesh = load("res://addons/m_terrain/gizmos/masset_mesh_gizmo.gd").new()
+		add_node_3d_gizmo_plugin(gizmo_masset_mesh)
 		gizmo_moctmesh = load("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
 		gizmo_mpath = load("res://addons/m_terrain/gizmos/mpath_gizmo.gd").new()
 		add_node_3d_gizmo_plugin(gizmo_moctmesh)
@@ -116,14 +138,23 @@ func _enter_tree():
 		inspector_mpath.gizmo = gizmo_mpath
 		add_inspector_plugin(inspector_mpath)
 				
-		add_keymap()		
+		add_keymap()				
 		
+		asset_browser = load("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
+		asset_browser.ur = get_undo_redo()
+		add_control_to_bottom_panel(asset_browser, "Assets")
+		
+		asset_browser_inspector_plugin = load("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
+		add_inspector_plugin(asset_browser_inspector_plugin)
+		gltf_extras_importer = GLTFExtras.new()
+		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)		
+	
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
-	EditorInterface.set_main_screen_editor("3D")
+	EditorInterface.set_main_screen_editor("3D")	
 	
 func _exit_tree():	
-	if Engine.is_editor_hint():
+	if Engine.is_editor_hint():				
 		timer.queue_free()
 		remove_keymap()	
 		remove_tool_menu_item("MTerrain import/export")
@@ -139,11 +170,18 @@ func _exit_tree():
 		tools.queue_free()
 		
 		###### GIZMO
+		remove_node_3d_gizmo_plugin(gizmo_masset_mesh)
 		remove_node_3d_gizmo_plugin(gizmo_moctmesh)
 		remove_node_3d_gizmo_plugin(gizmo_mpath)
-		
+				
+				
 		### Inspector
-		remove_inspector_plugin(inspector_mpath)
+		remove_inspector_plugin(inspector_mpath)						
+		remove_control_from_bottom_panel(asset_browser)		
+		
+		remove_inspector_plugin(asset_browser_inspector_plugin)
+		MAssetTable.set_singleton(null)
+		GLTFDocument.unregister_gltf_document_extension(gltf_extras_importer)		
 #endregion
 
 func _on_main_screen_changed(screen_name):
@@ -159,13 +197,13 @@ func selection_changed():
 	if not tools or not is_instance_valid(EditorInterface.get_edited_scene_root()): return
 	
 	var selection = get_editor_interface().get_selection().get_selected_nodes()
-
-	if selection.size() != 1 or not current_main_screen_name == "3D":
+	
+	if selection.size() != 1 or not current_main_screen_name == "3D":		
 		tools.request_hide()
+		#exit edit mode
 		return
 
 	tools.on_selection_changed(selection[0])
-	
 
 func _handles(object):
 	if not Engine.is_editor_hint(): return false
@@ -175,14 +213,14 @@ func _handles(object):
 	
 	tsnap.visible = false
 	if tools.on_handles(object): 		
-		return true
+		return true	
 	tsnap.visible = is_instance_valid(tools.active_snap_object)
 
 func _forward_3d_gui_input(viewport_camera, event):
 	if not is_instance_valid(EditorInterface.get_edited_scene_root()): 
 		return AFTER_GUI_INPUT_PASS
 	
-	if tools.forward_3d_gui_input(viewport_camera, event):
+	if tools.forward_3d_gui_input(viewport_camera, event):		
 		return AFTER_GUI_INPUT_STOP
 	else:
 		return AFTER_GUI_INPUT_PASS

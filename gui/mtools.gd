@@ -26,6 +26,13 @@ extends Control
 #
 ###############################################################
 
+#TODO:
+# - paint on multiple mgrass at the same time
+# - floating brush panel
+# - remember last brush
+# - inspector plugin for editing brushes
+
+
 # fix icon-only button margins
 # fix brush bool-property button 
 # added ctrl mouse wheel to increase brush size
@@ -76,6 +83,7 @@ var undo_redo: EditorUndoRedoManager
 	brush_popup_button, 	
 	mask_popup_button,
 ]
+@onready var pin_mask_button = mask_popup_button.find_child("pin_mask_button")
 
 var current_popup_button: Button = null
 var timer
@@ -86,20 +94,29 @@ var active_object = null
 
 
 
-var brush_manager:MBrushManager = MBrushManager.new()
+var brush_manager := MBrushManager.new()
 var brush_decal # set by m_terrain.gd on enter_tree()
 var mask_decal # set by m_terrain.gd on enter_tree()
 var human_male # set by m_terrain.gd on enter_tree()
-var edit_human_position = false
+var edit_human_position := false
 @onready var human_button = find_child("human_male")
 @onready var grass_merge_sublayer_button = find_child("grass_merge_sublayer")
 @onready var walk_terrain_button = find_child("walk_terrain")
+
+@onready var shortcut_panel = find_child("shortcut_panel")
+
 var walking_terrain = false
 var editor_camera: Camera3D = null #this is set by forward_gui_input
 var walk_speed = 5 #in meters per seccond
 
+var is_initial_size_set := false
+var last_edit_mode := {}
+var last_paint_settings := {}
+
 #region Initialisations
 func _ready():	
+	MTool.enable_editor_plugin()
+	#if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	timer = Timer.new()
 	timer.timeout.connect(func(): current_popup_button.button_pressed = false)
 	add_child(timer)
@@ -107,13 +124,16 @@ func _ready():
 	for button in popup_buttons:
 		init_popup_button_signals(button)	
 
+	edit_mode_button.clear_last_edit_mode_setting.connect(clear_last_edit_mode)
 	edit_mode_button.edit_mode_changed.connect(set_edit_mode)		
-
+	
+	
 	theme_changed.connect(update_theme)
 	visibility_changed.connect(_on_resized)
 	
-	MTool.enable_editor_plugin()
-
+func clear_last_edit_mode(active_object):
+	last_edit_mode[active_object]=null			
+	
 func set_brush_decal(new_brush_decal):
 	brush_decal = new_brush_decal
 	brush_decal.visible = false
@@ -131,7 +151,8 @@ func on_node_modified(node):
 func update_edit_mode_options():	
 	var all_mterrain = MTerrain.get_all_terrain_nodes()
 	edit_mode_button.init_edit_mode_options(all_mterrain)
-
+	
+	
 func clear_current_popup_button():
 	if current_popup_button:
 		current_popup_button.button_pressed = false			
@@ -201,6 +222,8 @@ func set_active_object(object):
 		active_object.set_npoints_visible(false)
 		
 	edit_mode_button.change_active_object(object)	
+	if object:
+		last_edit_mode[object] = current_edit_mode
 	#Automatically enter edit mode for mpath
 	if object is MPath:
 		edit_mode_button.edit_selected(object)
@@ -299,14 +322,20 @@ func _process(delta):
 		editor_camera.position.y = get_active_mterrain().get_height(editor_camera.global_position) + 1.6
 
 func on_selection_changed(obj):
-	if obj is MTerrain:
+	if obj is MTerrain:		
 		request_show()	
+		if last_edit_mode.has(obj) and last_edit_mode[obj]:
+			edit_mode_button.edit_selected(obj, last_edit_mode[obj])		
 		return
 	if obj.get_parent() is MTerrain:
-		if obj is MGrass or obj is MNavigationRegion3D:
+		if obj is MGrass or obj is MNavigationRegion3D:			
 			request_show()	
+			if last_edit_mode.has(obj) and last_edit_mode[obj]:
+				edit_mode_button.edit_selected(obj, last_edit_mode[obj])					
 			return
 	if obj is MPath or obj is MCurveMesh:
+		if last_edit_mode.has(obj) and last_edit_mode[obj]:
+			edit_mode_button.edit_selected(obj, last_edit_mode[obj])				
 		request_show()	
 		return
 	
@@ -362,7 +391,6 @@ func forward_3d_gui_input(viewport_camera, event):
 	######################## HANDLE CURVE GIZMO FINSH ########################	
 	var a: MTerrain	
 	if active_terrain is MTerrain and event is InputEventMouse:						
-
 		if ray_col.is_collided():			
 			col_dis = ray_col.get_collision_position().distance_to(viewport_camera.global_position)
 			status_bar.set_height_label(ray_col.get_collision_position().y)
@@ -431,7 +459,7 @@ func paint_mode_handle(event:InputEvent):
 					undo_redo.add_undo_method(active_object,"images_undo")
 					undo_redo.commit_action(false)
 			else:
-				if mask_decal.is_being_edited:
+				if mask_decal.is_being_edited and pin_mask_button.button_pressed:
 					mask_decal.is_being_edited = false	
 				elif active_object is MGrass:
 					active_object.save_grass_data()
@@ -442,17 +470,20 @@ func paint_mode_handle(event:InputEvent):
 		if event.button_mask == MOUSE_BUTTON_LEFT:			
 			var t = Time.get_ticks_msec()
 			var dt = t - last_draw_time			
-			last_draw_time = t		
-			if mask_decal.is_being_edited:
-				return true 
-			if draw(ray_col.get_collision_position()):
-				return true
-		if mask_decal.is_being_edited:			
-			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+			last_draw_time = t					
+			if mask_decal.is_being_edited and pin_mask_button.button_pressed:				
+				return true			
+			if not pin_mask_button.button_pressed:				
+				mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position(), true)				
+			if draw(ray_col.get_collision_position()):				
+				return true			
+		if mask_decal.is_being_edited or pin_mask_button.button_pressed:			
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and pin_mask_button.button_pressed:
 				mask_decal.is_being_edited = false				
 				mask_popup_button.clear_mask()
-			mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position())
-		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+			if event is InputEventMouseMotion:				
+				mask_decal.set_absolute_terrain_pos(ray_col.get_collision_position(), not pin_mask_button.button_pressed)
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE and pin_mask_button.button_pressed:
 			mask_decal.is_being_edited = true
 			return true
 	else:
@@ -477,7 +508,7 @@ func request_show():
 	_on_resized()
 	update_edit_mode_options()
 
-func deactivate_editing():	
+func deactivate_editing():		
 	if is_instance_valid(edit_mode_button):
 		edit_mode_button.text = ""
 		edit_mode_button.theme_type_variation = "button_icon_only"
@@ -498,8 +529,7 @@ func deactivate_editing():
 	
 func set_edit_mode(object = active_object, mode=current_edit_mode):	
 	if object == active_object and current_edit_mode == mode:	
-		return
-	
+		return	
 	if object==null or mode ==&"": 
 		deactivate_editing()
 		return	
@@ -508,6 +538,7 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		return
 	active_object = object	
 	current_edit_mode = mode
+	last_edit_mode[object] = mode			
 	brush_popup_button.visible = true
 	mask_popup_button.visible = true
 	if object is MPath:		
@@ -542,8 +573,14 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 			layers_popup_button.layer_changed.connect(func(id):
 				brush_popup_button.visible = id > -1
 				mask_popup_button.visible = id > -1
+				if not last_paint_settings.has(object):
+					last_paint_settings[object]={}
+				last_paint_settings[object]['layer'] = id
 			)
-			layers_popup_button.init_color_layers(object, brush_popup_button)
+			if last_paint_settings.has(object):
+				layers_popup_button.init_color_layers(object, brush_popup_button, last_paint_settings[object])			
+			else:
+				layers_popup_button.init_color_layers(object, brush_popup_button)			
 			#Colol layers will init there own brushes
 		mask_decal.active_terrain = object
 		if not get_active_mterrain().is_grid_created():
@@ -577,8 +614,6 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 		if not get_active_mterrain().is_grid_created():
 			get_active_mterrain().create_grid()
 	
-	
-
 func draw(brush_position):		
 	if active_object is MGrass:
 		active_object.draw_grass(brush_position,brush_decal.radius,brush_popup_button.is_grass_add)
@@ -597,7 +632,6 @@ func draw(brush_position):
 			push_warning("trying to 'draw' on mterrain, but not in sculpt or paint mode")
 	else:
 		print("draw mterrain fail: active object is ", active_object.name)	
-
 
 func remove_image(active_terrain, dname):
 	var is_grid_created = active_terrain.is_grid_created()
@@ -650,8 +684,6 @@ func remove_image(active_terrain, dname):
 	set_edit_mode(null,null)
 	#todo: dont' exit edit mode, just change layer selection to 0 or -1
 
-
-
 #region responding to signals
 func _on_human_male_toggled(button_pressed):	
 	edit_human_position = true
@@ -674,17 +706,23 @@ func _on_image_creator_button_pressed():
 #endregion	
 
 #region theme: sizes and colors etc
-func _on_resized():			
-	if not has_node("VSplitContainer") or not mtools_root:
-		call_deferred( "_on_resized" )	
-		return
-	var vsplit  = $VSplitContainer
+func _on_resized():				
+	if not is_node_ready():
+		_on_resized.call_deferred()
+		return	
+	if not is_initial_size_set:
+		is_initial_size_set = true
+		_on_resized.call_deferred()
+	if not has_node("VSplitContainer") or not mtools_root:		
+		return		
+	var vsplit:VSplitContainer  = $VSplitContainer
+	
+	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)	
 	var max_size = get_viewport_rect().size.y / 16 + 2
-	var min_size = get_viewport_rect().size.y / 32
-	vsplit.size.y = max_size
-	vsplit.position.y = -vsplit.size.y
-	#print(vsplit.split_offset, " and minsize: ", min_size, " and max: ", max_size)
-	vsplit.split_offset = clamp(vsplit.split_offset, -max_size,-min_size)
+	var min_size = get_viewport_rect().size.y / 32	
+	vsplit.custom_minimum_size.y = max_size
+	#vsplit.position.y = -vsplit.size.y	
+	#vsplit.split_offset = clamp(vsplit.split_offset, -max_size,-min_size)
 	resize_children_recursive(mtools_root, clamp(mtools_root.size.y, min_size, max_size ))
 	theme.default_font_size = clamp( clamp(mtools_root.size.y, min_size, max_size) /2 , 12,32)
 	

@@ -1,0 +1,119 @@
+[gd_scene load_steps=8 format=3 uid="uid://boyvdfyc4qv16"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
+[ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
+[ext_resource type="Texture2D" uid="uid://o6bjob1w4w0w" path="res://addons/m_terrain/icons/tick_icon.svg" id="2_kaebi"]
+[ext_resource type="Texture2D" uid="uid://boqh1mh7el3o4" path="res://addons/m_terrain/icons/eye-close.svg" id="3_esqxe"]
+[ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="3_iqlmd"]
+[ext_resource type="PackedScene" uid="uid://emr0fpf2qo8g" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn" id="4_kqv64"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_gfps4"]
+font_color = Color(0.92785, 0.495612, 0, 1)
+
+[node name="HlodBakerInspector" type="VBoxContainer"]
+offset_right = 323.0
+offset_bottom = 171.0
+script = ExtResource("1_2wg81")
+
+[node name="debug_lod" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "DEBUG Current Lod: "
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Bake" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Bake"
+alignment = 0
+
+[node name="bake_successful" type="TextureRect" parent="HBoxContainer3/Bake"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -9.0
+offset_right = -6.0
+offset_bottom = 9.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("2_kaebi")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="show_hlod_button" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Show hlod resource in file system"
+icon = ExtResource("3_iqlmd")
+expand_icon = true
+
+[node name="bake_warning" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+label_settings = SubResource("LabelSettings_gfps4")
+autowrap_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Join" type="Button" parent="HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Change joined mesh settings (including make new joined mesh and reimport glb)"
+text = "Joined Mesh Settings"
+alignment = 0
+
+[node name="disable_joined_mesh_button" type="TextureButton" parent="HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Enable/Disable Joined Mesh"
+toggle_mode = true
+texture_normal = ExtResource("2_gaehx")
+texture_pressed = ExtResource("3_esqxe")
+stretch_mode = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="force_lod_checkbox" type="CheckBox" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Temporarily override the LOD"
+text = "Force Lod"
+
+[node name="force_lod_value" type="SpinBox" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10.0
+editable = false
+
+[node name="show_joined_button" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Set forced lod to first joined mesh lod"
+text = "Show Joined"
+
+[node name="variation_layers_button" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Click to rename layer, 
+toggle layers to change visibility"
+text = "Variation Layers Preview"
+alignment = 0
+
+[node name="Layers" parent="." instance=ExtResource("4_kqv64")]
+layout_mode = 2

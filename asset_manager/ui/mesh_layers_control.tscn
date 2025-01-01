@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3 uid="uid://b3lmufgjiuw8l"]
+
+[sub_resource type="GDScript" id="GDScript_ngcd0"]
+script/source = "@tool
+extends GridContainer
+
+@export var count = 10
+
+func _ready():	
+	var color = Color.CORNFLOWER_BLUE
+	var pressed_style = StyleBoxFlat.new()
+	pressed_style.bg_color = color.darkened(0.3)
+	pressed_style.set_corner_radius_all(8)
+	#pressed_style.border_width_bottom=1
+	var hover_style = StyleBoxFlat.new()
+	hover_style.set_corner_radius_all(8)
+	hover_style.bg_color = color.darkened(0.1)
+	hover_style.border_width_bottom=1
+	hover_style.border_width_top=1
+	hover_style.border_width_left=1
+	hover_style.border_width_right=1
+	var hover_pressed_style = hover_style.duplicate()
+	hover_pressed_style.set_corner_radius_all(8)
+	hover_style.bg_color = color.darkened(0.35)
+	var normal_style = StyleBoxFlat.new()
+	normal_style.set_corner_radius_all(8)
+	normal_style.bg_color = color.darkened(0.6)
+	var empty = PlaceholderTexture2D.new()
+	for i in count:
+		var button = CheckBox.new()
+		button.toggle_mode = true
+		button.custom_minimum_size = Vector2(22,22)
+		button.add_theme_icon_override(\"checked\", empty)
+		button.add_theme_constant_override(\"h_separation\", -4)
+		button.add_theme_icon_override(\"unchecked\", empty)			
+		button.add_theme_stylebox_override(\"pressed\", pressed_style)
+		button.add_theme_stylebox_override(\"hover\", hover_style)
+		button.add_theme_stylebox_override(\"hover_pressed\", hover_pressed_style)
+		button.add_theme_stylebox_override(\"normal\", normal_style)
+		button.add_theme_color_override(\"font_pressed_color\", Color.WHITE)
+		button.add_theme_color_override(\"font_hover_pressed_color\", Color.WHITE)
+
+		button.text = \"\" #str(i)		
+		
+		button.toggled.connect(func(toggle_on):			
+			button.release_focus.call_deferred()
+		)
+		add_child(button)
+"
+
+[node name="layers" type="GridContainer"]
+columns = 5
+script = SubResource("GDScript_ngcd0")

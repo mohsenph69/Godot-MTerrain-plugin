@@ -33,6 +33,7 @@ func _ready():
 		max_width = min(max_width, owner.mtools_root.get_child(0).size.x)		
 		panel.custom_minimum_size.x = max_width
 		panel.size.x = max_width
+		#panel.set_deferred("size", Vector2(max_width, panel.size.y))
 	)
 	
 	merge_height_layers_button.pressed.connect(merge_all_heightmap_layers)
@@ -140,7 +141,7 @@ func rename_heightmap_layer(name_button, new_name):
 #endregion
 
 #region Color Layers
-func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_control):
+func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_control, last_settings:={}):
 	if not mterrain or not brush_button:
 		push_error("init color layers failed: no mterrain or no brush button" )
 		return
@@ -157,6 +158,11 @@ func init_color_layers(mterrain:MTerrain = active_terrain, brush_button = brush_
 			active_terrain.brush_layers.erase(active_terrain.brush_layers[i])
 			active_terrain.brush_layers_groups_num -= 1
 	if valid_count > 0:
+		if last_settings.has("layer"):
+			var layer_id = last_settings.layer
+			if layers_container.get_child_count() >layer_id:
+				layers_container.get_child(layer_id).select_layer()				
+				return
 		layers_container.get_child(0).select_layer()
 	else:
 		text = "(click to add a color layer)"
@@ -185,6 +191,7 @@ func change_color_layer_selection(layer_id, layer_name):
 		brush_control.init_color_brushes(active_terrain, layer_id)
 		text = layer_name	
 		layer_changed.emit(layer_id)
+		
 			
 
 func add_color_layer():

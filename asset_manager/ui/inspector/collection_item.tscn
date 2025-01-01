@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://cwgmolxwrtaxf"]
+
+[node name="collection" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="id" type="Label" parent="."]
+layout_mode = 2
+
+[node name="name" type="LineEdit" parent="."]
+layout_mode = 2
+text = "collection name"
+expand_to_text_length = true
+
+[node name="remove" type="Button" parent="."]
+layout_mode = 2
+text = "x"
+
+[node name="meshes" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 2

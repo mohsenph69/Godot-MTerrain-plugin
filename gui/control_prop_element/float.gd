@@ -15,7 +15,7 @@ func set_min(input):
 	max=input
 
 
-func set_name(input:String):
+func update_name(input:String):
 	prop_name = input
 	$label.text = input
 
