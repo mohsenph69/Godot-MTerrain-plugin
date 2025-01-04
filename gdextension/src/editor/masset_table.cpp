@@ -7,7 +7,10 @@
 #include <godot_cpp/classes/dir_access.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
-const char* MAssetTable::asset_table_path = "res://massets/asset_table.res";
+const char* MAssetTable::asset_table_path = "res://massets_editor/asset_table.res";
+const char* MAssetTable::asset_editor_root_dir = "res://massets_editor/";
+const char* MAssetTable::editor_baker_scenes_dir = "res://massets_editor/baker_scenes/";
+const char* MAssetTable::asset_thumbnails_dir = "res://massets_editor/thumbnails/";
 MAssetTable* MAssetTable::asset_table_singelton = nullptr;
 
 void MAssetTable::_bind_methods(){
@@ -16,6 +19,9 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_singleton"), &MAssetTable::get_singleton);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("save"), &MAssetTable::save);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_table_path"), &MAssetTable::get_asset_table_path);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_editor_root_dir"), &MAssetTable::get_asset_editor_root_dir);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_editor_baker_scenes_dir"), &MAssetTable::get_editor_baker_scenes_dir);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_thumbnails_dir"), &MAssetTable::get_asset_thumbnails_dir);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("reset","hard"), &MAssetTable::reset);
 
     ClassDB::bind_method(D_METHOD("has_mesh_item","mesh_id"), &MAssetTable::has_mesh_item);
@@ -104,6 +110,7 @@ void MAssetTable::_bind_methods(){
 }
 
 void MAssetTable::set_singleton(Ref<MAssetTable> input){
+    make_assets_dir();
     asset_table_singelton = input.ptr();
 }
 
@@ -113,13 +120,31 @@ Ref<MAssetTable> MAssetTable::get_singleton(){
 
 void MAssetTable::make_assets_dir(){
     if(!DirAccess::dir_exists_absolute(String(MHlod::asset_root_dir))){
-        Error err = DirAccess::make_dir_absolute(String(MHlod::asset_root_dir));
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::asset_root_dir));
+        if(err!=OK){
+            WARN_PRINT("Can not create folder");
+        }
+    }
+    if(!DirAccess::dir_exists_absolute(String(MAssetTable::asset_editor_root_dir))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::asset_editor_root_dir));
+        if(err!=OK){
+            WARN_PRINT("Can not create folder");
+        }
+    }
+    if(!DirAccess::dir_exists_absolute(String(MAssetTable::editor_baker_scenes_dir))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::editor_baker_scenes_dir));
+        if(err!=OK){
+            WARN_PRINT("Can not create folder");
+        }
+    }
+    if(!DirAccess::dir_exists_absolute(String(MAssetTable::asset_thumbnails_dir))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::asset_thumbnails_dir));
         if(err!=OK){
             WARN_PRINT("Can not create folder");
         }
     }
     if(!DirAccess::dir_exists_absolute(String(MHlod::mesh_root_dir))){
-        Error err = DirAccess::make_dir_absolute(String(MHlod::mesh_root_dir));
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::mesh_root_dir));
         if(err!=OK){
             WARN_PRINT("Can not create folder");
         }
@@ -135,6 +160,18 @@ void MAssetTable::save(){
 
 String MAssetTable::get_asset_table_path(){
     return String(asset_table_path);
+}
+
+String MAssetTable::get_asset_editor_root_dir(){
+    return asset_editor_root_dir;
+}
+
+String MAssetTable::get_editor_baker_scenes_dir(){
+    return editor_baker_scenes_dir;
+}
+
+String MAssetTable::get_asset_thumbnails_dir(){
+    return asset_thumbnails_dir;
 }
 
 MAssetTable::Tag::Tag(){

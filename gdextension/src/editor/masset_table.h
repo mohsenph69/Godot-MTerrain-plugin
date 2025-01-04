@@ -150,7 +150,9 @@ class MAssetTable : public Resource {
     void _increase_collection_buffer_size(int q);
     int _get_free_collection_index();
     static const char* asset_table_path;
-    static const char* asset_table_data_path;
+    static const char* asset_editor_root_dir;
+    static const char* editor_baker_scenes_dir;
+    static const char* asset_thumbnails_dir;
     static MAssetTable* asset_table_singelton;
 
     public:
@@ -159,6 +161,9 @@ class MAssetTable : public Resource {
     static void make_assets_dir();
     static void save();
     static String get_asset_table_path();
+    static String get_asset_editor_root_dir();
+    static String get_editor_baker_scenes_dir();
+    static String get_asset_thumbnails_dir();
     bool has_mesh_item(int id) const;
     bool has_collection(int id) const;
     void remove_mesh_item(int id);
