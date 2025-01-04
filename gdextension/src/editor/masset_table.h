@@ -153,6 +153,7 @@ class MAssetTable : public Resource {
     static const char* asset_editor_root_dir;
     static const char* editor_baker_scenes_dir;
     static const char* asset_thumbnails_dir;
+    static const char* hlod_res_dir;
     static MAssetTable* asset_table_singelton;
 
     public:
@@ -164,6 +165,7 @@ class MAssetTable : public Resource {
     static String get_asset_editor_root_dir();
     static String get_editor_baker_scenes_dir();
     static String get_asset_thumbnails_dir();
+    static String get_hlod_res_dir();
     bool has_mesh_item(int id) const;
     bool has_collection(int id) const;
     void remove_mesh_item(int id);

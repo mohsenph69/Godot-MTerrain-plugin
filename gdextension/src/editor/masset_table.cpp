@@ -11,6 +11,7 @@ const char* MAssetTable::asset_table_path = "res://massets_editor/asset_table.re
 const char* MAssetTable::asset_editor_root_dir = "res://massets_editor/";
 const char* MAssetTable::editor_baker_scenes_dir = "res://massets_editor/baker_scenes/";
 const char* MAssetTable::asset_thumbnails_dir = "res://massets_editor/thumbnails/";
+const char* MAssetTable::hlod_res_dir = "res://massets/hlod/";
 MAssetTable* MAssetTable::asset_table_singelton = nullptr;
 
 void MAssetTable::_bind_methods(){
@@ -22,6 +23,7 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_editor_root_dir"), &MAssetTable::get_asset_editor_root_dir);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_editor_baker_scenes_dir"), &MAssetTable::get_editor_baker_scenes_dir);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_thumbnails_dir"), &MAssetTable::get_asset_thumbnails_dir);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_hlod_res_dir"), &MAssetTable::get_hlod_res_dir);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("reset","hard"), &MAssetTable::reset);
 
     ClassDB::bind_method(D_METHOD("has_mesh_item","mesh_id"), &MAssetTable::has_mesh_item);
@@ -172,6 +174,10 @@ String MAssetTable::get_editor_baker_scenes_dir(){
 
 String MAssetTable::get_asset_thumbnails_dir(){
     return asset_thumbnails_dir;
+}
+
+String MAssetTable::get_hlod_res_dir(){
+    return hlod_res_dir;
 }
 
 MAssetTable::Tag::Tag(){
