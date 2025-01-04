@@ -142,6 +142,7 @@ func _enter_tree():
 		
 		asset_browser = load("res://addons/m_terrain/asset_manager/Asset_Placer.tscn").instantiate()
 		asset_browser.ur = get_undo_redo()
+		#scene_closed.connect(Callable(asset_browser,"scene_closed"))
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		
 		asset_browser_inspector_plugin = load("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
@@ -210,7 +211,8 @@ func _handles(object):
 	if not current_main_screen_name == "3D":
 		tools.request_hide()
 		return false
-	
+	if asset_browser.need_editor_input:
+		return true
 	tsnap.visible = false
 	if tools.on_handles(object): 		
 		return true	
@@ -219,6 +221,8 @@ func _handles(object):
 func _forward_3d_gui_input(viewport_camera, event):
 	if not is_instance_valid(EditorInterface.get_edited_scene_root()): 
 		return AFTER_GUI_INPUT_PASS
+	if asset_browser.need_editor_input:
+		return asset_browser._forward_3d_gui_input(viewport_camera,event)
 	
 	if tools.forward_3d_gui_input(viewport_camera, event):		
 		return AFTER_GUI_INPUT_STOP

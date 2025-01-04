@@ -336,7 +336,7 @@ AABB MAssetMesh::get_joined_aabb(){
 }
 
 Ref<TriangleMesh> MAssetMesh::get_joined_triangle_mesh(){
-    if(instance_count == 0){
+    if(instance_data.size() == 0){
         return nullptr;
     }
     if(joined_triangle_mesh.is_null()){

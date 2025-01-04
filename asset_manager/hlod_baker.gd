@@ -356,7 +356,8 @@ func _ready():
 	activate_mesh_updater()
 	#asset_mesh_updater.update_auto_lod()	
 	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
-	EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)
 	
 func activate_mesh_updater():
 	if not is_inside_tree():

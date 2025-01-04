@@ -28,6 +28,7 @@ protected:
 public:
     MTool();
     ~MTool();
+    static void print_edmsg(const String& msg);
     static Ref<Image> get_r16_image(const String& file_path, const uint64_t width, const uint64_t height,double min_height, double max_height,const bool is_half);
     static void write_r16(const String& file_path,const PackedByteArray& data,double min_height,double max_height);
     static PackedByteArray normalize_rf_data(const PackedByteArray& data,double min_height,double max_height); 

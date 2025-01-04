@@ -13,16 +13,27 @@ signal selection_changed
 @onready var snap_enabled_button:BaseButton = find_child("snap_enabled_button")
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
+
+@onready var x_btn:Button = $VBoxContainer/HBoxContainer/x_btn
+@onready var y_btn:Button = $VBoxContainer/HBoxContainer/y_btn
+@onready var z_btn:Button = $VBoxContainer/HBoxContainer/z_btn
+
+var position_snap:=1.0
+var rotation_snap:=PI/6
+var scale_snap:=0.25
+const rotation_speed:=0.05
+const scale_speed:=0.2
 				
+var need_editor_input:=false
 var ur: EditorUndoRedoManager
 							
 var object_being_placed
 var active_group_list #the last one selected
 var active_group_list_item #id of the last one selected
-var position_confirmed = false
-var accumulated_position_offset = Vector2(0,0)
+enum PLACEMENT_STATE {NONE,MOVING,ROTATING,SCALING} ; var placement_state:=PLACEMENT_STATE.NONE
+#var position_confirmed = false
 var accumulated_rotation_offset = 0
-var accumulated_scale_offset = 0
+var accumulated_scale_offset = 1
 
 var asset_library := MAssetTable.get_singleton()
 var current_selection := [] #array of collection name
@@ -35,9 +46,13 @@ var queued_thumbnails = {}
 
 var last_regroup = null
 
+var last_added_neighbor = null
+var last_added_masset = null
+var current_placement_dir:Vector3
+
 func _ready():		
 	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
-
+	update_reposition_button_text()
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 
 		regroup()
@@ -64,76 +79,115 @@ func _ready():
 
 	place_button.toggled.connect(func(toggle_on):
 		if toggle_on:
-			object_being_placed = collection_item_activated(active_group_list_item, active_group_list)
+			object_being_placed = collection_item_activated(active_group_list_item, active_group_list,false)
 			var viewport_camera = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()
-			object_being_placed.global_position = (viewport_camera.global_position + (viewport_camera.basis.z *10)) * Vector3(1,0,1)
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			var mcol:MCollision= MTool.ray_collision_y_zero_plane(viewport_camera.global_position,-viewport_camera.global_basis.z)
+			if mcol.is_collided():
+				object_being_placed.global_position = mcol.get_collision_position()
+			else:
+				place_button.button_pressed = false
+				MTool.print_edmsg("No collission to y-zero plane, rotate the camera towrard the ground")
+			#Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			accumulated_rotation_offset = 0
-			accumulated_position_offset = Vector2(0,0)
+			accumulated_scale_offset = 1
+			need_editor_input = true
+			placement_state = PLACEMENT_STATE.MOVING
 		else:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 			if object_being_placed:
 				object_being_placed.queue_free()
 				object_being_placed = null
-		
 	)
 
-func redo_asset_place(id, asset_name, transform):	
-	var node = add_asset_to_scene(id, asset_name)
-	node.transform = transform
-	
-func _input(event:InputEvent):
-	if not object_being_placed: return
+func done_placement(add_asset:=true):
+	placement_state = PLACEMENT_STATE.NONE
+	if add_asset and object_being_placed!=null:
+		ur.create_action("Asset Placement",0,EditorInterface.get_edited_scene_root())
+		ur.add_do_reference(object_being_placed)
+		ur.add_undo_reference(object_being_placed)
+		ur.add_do_method(self,"do_asset_placement",object_being_placed,object_being_placed.get_parent())
+		ur.add_undo_method(self,"undo_asset_placement",object_being_placed)
+		ur.commit_action(false)
+		object_being_placed = null #place_button.button_pressed=false can not remove then node anymore
+	need_editor_input = false
+	place_button.button_pressed=false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func undo_asset_placement(node:Node3D):
+	node.get_parent().remove_child(node)
+	node.owner = null
+	node.visible = false
+
+func do_asset_placement(node:Node3D,parent:Node):
+	parent.add_child(node)
+	node.owner = EditorInterface.get_edited_scene_root()
+	node.visible = true
+
+func advance_placement_state():
+	match placement_state:
+		PLACEMENT_STATE.MOVING:
+			if rotation_enabled_button.button_pressed:
+				placement_state = PLACEMENT_STATE.ROTATING
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			elif scale_enabled_button.button_pressed:
+				placement_state = PLACEMENT_STATE.SCALING
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			else:
+				done_placement()
+		PLACEMENT_STATE.ROTATING:
+			if scale_enabled_button.button_pressed:
+				placement_state = PLACEMENT_STATE.SCALING
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			else:
+				done_placement()
+		PLACEMENT_STATE.SCALING:
+			done_placement()
+
+func _forward_3d_gui_input(viewport_camera, event):
+	if placement_state==PLACEMENT_STATE.NONE:
+		done_placement()
+		return
 	if event is InputEventKey:
 		if event.keycode == KEY_ESCAPE:
 			place_button.button_pressed = false			
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
-			place_button.button_pressed = false			
+			done_placement(false)
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				position_confirmed = true				
-			else:
-				ur.create_action("place asset")
-				ur.add_do_method(self, "redo_asset_place", object_being_placed.collection_id, MAssetTable.get_singleton().collection_get_name(object_being_placed.collection_id), object_being_placed.transform)
-				ur.add_undo_method(object_being_placed, "queue_free")
-				ur.commit_action(false)
-				object_being_placed = add_asset_to_scene(object_being_placed.collection_id, MAssetTable.get_singleton().collection_get_name(object_being_placed.collection_id))					
-				position_confirmed = false			
-				
+				advance_placement_state()
+				return EditorPlugin.AFTER_GUI_INPUT_STOP
 	if event is InputEventMouseMotion:			
-		if position_confirmed:
-			if rotation_enabled_button.button_pressed:
-				var rotation_scale = 0.025 if not event.alt_pressed else 0.01
-				if event.ctrl_pressed:
-					accumulated_rotation_offset += sign(event.relative.x) * rotation_scale
-					var new_rotation = snapped(object_being_placed.rotation.y+accumulated_rotation_offset, PI/6)					
-					if abs(new_rotation - object_being_placed.rotation.y) >0.1:
-						object_being_placed.rotation.y = new_rotation
-						accumulated_rotation_offset = 0						
-				else:
-					accumulated_rotation_offset = 0
-					object_being_placed.rotation.y += event.relative.x*rotation_scale
-			if scale_enabled_button.button_pressed:
-				var scale_scale = 0.005 if event.alt_pressed else 0.01
-				object_being_placed.scale *= 1 + sign(event.relative.y) * scale_scale
-		else:						
-			var viewport_camera: Camera3D = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()						
-			var offset = viewport_camera.basis.z.cross(Vector3.UP) * -event.relative.x + (viewport_camera.basis.z * Vector3(1,0,1)) * event.relative.y
-			var offset_scale = 0.25 if event.alt_pressed	else 0.5						
-			if snap_enabled_button.button_pressed or event.ctrl_pressed:
-				accumulated_position_offset += event.relative
-				var new_position = snapped(object_being_placed.position+accumulated_position_offset, 1)
-				if new_position != object_being_placed.position:
-					object_being_placed.position = new_position
-					accumulated_position_offset= Vector2(0,0)
+		if placement_state==PLACEMENT_STATE.ROTATING:
+			accumulated_rotation_offset += sign(event.relative.x) * rotation_speed
+			if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
+				var new_rotation = snapped(accumulated_rotation_offset, rotation_snap)
+				object_being_placed.rotation.y=new_rotation
 			else:
-				object_being_placed.position += offset * offset_scale			
-				accumulated_position_offset = Vector2(0,0)		
+				object_being_placed.rotation.y = accumulated_rotation_offset
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		elif placement_state==PLACEMENT_STATE.SCALING:
+			accumulated_scale_offset += sign(event.relative.y) * scale_speed
+			var fs = accumulated_scale_offset
+			if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
+				fs = snapped(fs,scale_snap)
+			if fs < 0.01:
+				fs = 0.01
+			object_being_placed.scale = Vector3(fs,fs,fs)
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		elif placement_state==PLACEMENT_STATE.MOVING:
+			#var viewport_camera: Camera3D = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()						
+			var mcol = MTool.ray_collision_y_zero_plane(viewport_camera.global_position,viewport_camera.project_ray_normal(event.position))
+			if mcol.is_collided():
+				if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
+					object_being_placed.global_position = snapped(mcol.get_collision_position(),Vector3(position_snap,position_snap,position_snap))
+				else:
+					object_being_placed.global_position = mcol.get_collision_position()
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+	return EditorPlugin.AFTER_GUI_INPUT_PASS
 
 func set_active_group_list_and_id(id, selected, group_list):
 	if not selected: return
-	print(id, group_list)
+	#print(id, group_list)
 	active_group_list_item = id
 	active_group_list = group_list
 	
@@ -263,25 +317,125 @@ func regroup(group = current_group, sort_mode="asc"):
 			ungrouped.add_item(item.name, item.thumbnail, item.id)		
 	current_group = group
 
-func collection_item_activated(id, group_list:ItemList):					
-	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_text(id))		
+func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
+	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_text(id),create_ur)		
 	return node 
 
-func add_asset_to_scene(id, asset_name):
+func add_asset_to_scene(id, asset_name,create_ur:=true):
 	var node = MAssetMesh.new()
 	node.collection_id = id
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
+	var main_selected_node = null
+	var parent:Node = null
 	if len(selected_nodes) != 1:
-		scene_root.add_child(node)		
+		parent = scene_root
 	else:
-		var parent = selected_nodes[0]
+		parent = selected_nodes[0]
+		main_selected_node = selected_nodes[0]
 		while parent is MAssetMesh and parent != scene_root:
 			parent = parent.get_parent()			
-		selected_nodes[0].add_child(node)	
+	parent.add_child(node)
 	node.owner = EditorInterface.get_edited_scene_root()
 	node.name = asset_name
-	return node 
+	node.global_transform = get_added_node_transform(main_selected_node,current_placement_dir)
+	if create_ur:
+		ur.create_action("Add Asset",0,EditorInterface.get_edited_scene_root())
+		ur.add_do_reference(node)
+		ur.add_undo_reference(node)
+		ur.add_do_method(self,"do_asset_add",node,parent,last_added_neighbor)
+		ur.add_undo_method(self,"undo_asset_add",node,last_added_masset,last_added_neighbor)
+		ur.commit_action(false)
+	last_added_neighbor = main_selected_node
+	last_added_masset = node
+	single_select_node(node)
+	#do_add_asset(id,asset_name,parent,EditorInterface.get_edited_scene_root(),main_selected_node,node.transform)
+	return node
+
+func do_asset_add(node:Node3D,parent:Node,_last_added_neighbor):
+	parent.add_child(node)
+	node.owner = EditorInterface.get_edited_scene_root()
+	node.visible = true
+	last_added_masset = node
+	last_added_neighbor = _last_added_neighbor
+	single_select_node(node)
+
+func undo_asset_add(node:MAssetMesh,_last_added_masset,_last_added_neighbor):
+	node.get_parent().remove_child(node)
+	node.visible = false
+	last_added_masset = _last_added_masset
+	last_added_neighbor = _last_added_neighbor
+	if is_instance_valid(last_added_masset):
+		single_select_node(last_added_masset)
+
+func single_select_node(node:Node):
+	EditorInterface.get_selection().call_deferred("clear")
+	EditorInterface.get_selection().call_deferred("add_node",node)
+
+# dir component can be 1,-1,0
+func get_added_node_transform(neighbor:Node,dir:Vector3) -> Transform3D:
+	if neighbor == null or not neighbor is Node3D:
+		return Transform3D()
+	if not neighbor is MAssetMesh:
+		return Transform3D(Basis(),neighbor.global_transform.origin)
+	var aabb:AABB= neighbor.get_joined_aabb()
+	var origin = neighbor.global_transform * (dir * aabb.size)
+	return Transform3D(neighbor.global_basis,origin)
+
+func reposition_origin():
+	if last_added_masset==null or last_added_neighbor==null: return
+	current_placement_dir = Vector3(0,0,0)
+	last_added_masset.global_transform = get_added_node_transform(last_added_neighbor,current_placement_dir)
+	update_reposition_button_text()
+
+func reposition_input_toggle(input:float)->float:
+	input += 1
+	if input > 1:
+		return -1
+	return input
+
+func reposition_x():
+	if last_added_masset==null or last_added_neighbor==null: return
+	var old_dir = current_placement_dir
+	current_placement_dir.x = reposition_input_toggle(current_placement_dir.x)
+	var old_transform:Transform3D = last_added_masset.global_transform
+	last_added_masset.global_transform = get_added_node_transform(last_added_neighbor,current_placement_dir)
+	update_reposition_button_text()
+	undo_redo_reposition(last_added_masset,old_transform,old_dir)
+
+func reposition_y():
+	if last_added_masset==null or last_added_neighbor==null: return
+	var old_dir = current_placement_dir
+	current_placement_dir.y = reposition_input_toggle(current_placement_dir.y)
+	var old_transform:Transform3D = last_added_masset.global_transform
+	last_added_masset.global_transform = get_added_node_transform(last_added_neighbor,current_placement_dir)
+	update_reposition_button_text()
+	undo_redo_reposition(last_added_masset,old_transform,old_dir)
+
+func reposition_z():
+	if last_added_masset==null or last_added_neighbor==null: return
+	var old_dir = current_placement_dir
+	current_placement_dir.z = reposition_input_toggle(current_placement_dir.z)
+	var old_transform:Transform3D = last_added_masset.global_transform
+	last_added_masset.global_transform = get_added_node_transform(last_added_neighbor,current_placement_dir)
+	update_reposition_button_text()
+	undo_redo_reposition(last_added_masset,old_transform,old_dir)
+
+func update_reposition_button_text():
+	x_btn.text = "x("+str(current_placement_dir.x)+")"
+	y_btn.text = "y("+str(current_placement_dir.y)+")"
+	z_btn.text = "z("+str(current_placement_dir.z)+")"
+
+# should be called after moving
+func undo_redo_reposition(node:Node3D,old_transform:Transform3D,old_dir:Vector3):
+	ur.create_action("Transform")
+	ur.add_do_method(node,"set","global_transform",node.global_transform)
+	ur.add_do_method(self,"set","current_placement_dir",current_placement_dir)
+	ur.add_do_method(self,"update_reposition_button_text")
+	ur.add_undo_method(node,"set","global_transform",old_transform)
+	ur.add_undo_method(self,"set","current_placement_dir",old_dir)
+	ur.add_undo_method(self,"update_reposition_button_text")
+	ur.commit_action(false)
 
 func process_selection(who:ItemList, id, selected):
 	current_selection = []

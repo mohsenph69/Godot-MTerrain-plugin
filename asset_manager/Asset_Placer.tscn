@@ -109,6 +109,25 @@ texture_normal = ExtResource("15_krpno")
 texture_pressed = ExtResource("16_sjn2r")
 ignore_texture_size = true
 
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="o_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "O"
+
+[node name="x_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "x(0)"
+
+[node name="y_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "y(0)"
+
+[node name="z_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "z(0)"
+
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -161,3 +180,8 @@ layout_mode = 2
 [node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
 layout_mode = 2
 size_flags_vertical = 3
+
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/o_btn" to="." method="reposition_origin"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/x_btn" to="." method="reposition_x"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/y_btn" to="." method="reposition_y"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/z_btn" to="." method="reposition_z"]

@@ -12,6 +12,7 @@ Node3D* MTool::cached_editor_camera=nullptr;
 bool MTool::editor_plugin_active = false;
 
 void MTool::_bind_methods() {
+   ClassDB::bind_static_method("MTool", D_METHOD("print_edmsg","msg"), &MTool::print_edmsg);
    ClassDB::bind_static_method("MTool", D_METHOD("get_r16_image","file_path","width","height","min_height","max_height","is_half"), &MTool::get_r16_image);
    ClassDB::bind_static_method("MTool", D_METHOD("write_r16","file_path","data","min_height","max_height"), &MTool::write_r16);
    ClassDB::bind_static_method("MTool", D_METHOD("normalize_rf_data","data","min_height","max_height"), &MTool::normalize_rf_data);
@@ -29,6 +30,9 @@ MTool::~MTool()
 {
 }
 
+void MTool::print_edmsg(const String& msg){
+    ERR_FAIL_EDMSG(msg);
+}
 
 Ref<Image> MTool::get_r16_image(const String& file_path, const uint64_t width, const uint64_t height,double min_height, double max_height,const bool is_half) {
     Ref<Image> img;
@@ -153,7 +157,6 @@ bool MTool::is_editor_plugin_active(){
 Ref<MCollision> MTool::ray_collision_y_zero_plane(const Vector3& ray_origin,const Vector3& ray){
     Ref<MCollision> col;
     col.instantiate();
-    UtilityFunctions::print("ray ",ray);
     if(ray.y > -0.001){
         return col;
     }
