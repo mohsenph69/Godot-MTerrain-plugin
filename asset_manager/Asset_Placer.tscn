@@ -132,6 +132,18 @@ text = "z(0)"
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="make_baker_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+text = "Make Baker"
+expand_icon = true
+
+[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(17.64, 0)
+layout_mode = 2
+
 [node name="settings_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2

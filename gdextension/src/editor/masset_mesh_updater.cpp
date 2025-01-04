@@ -192,7 +192,6 @@ int MAssetMeshUpdater::get_current_lod(){
 
 void MAssetMeshUpdater::set_joined_mesh_collection_id(int input){
     joined_mesh_collection_id = input;
-    UtilityFunctions::print("Setting Join mesh Collection ",input);
     update_join_mesh();
 }
 

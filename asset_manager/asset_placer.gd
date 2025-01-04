@@ -4,6 +4,8 @@ extends PanelContainer
 
 signal selection_changed
 
+const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_baker.gd")
+
 @onready var groups = find_child("groups")
 @onready var ungrouped = find_child("other")
 @onready var grouping_popup:Popup = find_child("grouping_popup")
@@ -13,6 +15,8 @@ signal selection_changed
 @onready var snap_enabled_button:BaseButton = find_child("snap_enabled_button")
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
+
+@onready var make_baker_btn:Button = $VBoxContainer/HBoxContainer/make_baker_btn
 
 @onready var x_btn:Button = $VBoxContainer/HBoxContainer/x_btn
 @onready var y_btn:Button = $VBoxContainer/HBoxContainer/y_btn
@@ -97,13 +101,27 @@ func _ready():
 				object_being_placed.queue_free()
 				object_being_placed = null
 	)
+	
+	make_baker_btn.button_down.connect(func():
+		var selection = EditorInterface.get_selection().get_selected_nodes()
+		if selection.size() != 1:MTool.print_edmsg("Select only one Node3d to be baker")
+		else:
+			var sel_node = selection[0]
+			if sel_node.get_class()!="Node3D": MTool.print_edmsg("Selected node must be Node3D type")
+			elif sel_node.get_script()!=null: MTool.print_edmsg("Selected node already has a Gdscript please select a node with no script!!!")
+			else:
+				sel_node.set_script(hlod_baker_script)
+				sel_node._ready()
+				sel_node._enter_tree()
+			
+		)
 
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
 	if add_asset and object_being_placed!=null:
 		ur.create_action("Asset Placement",0,EditorInterface.get_edited_scene_root())
 		ur.add_do_reference(object_being_placed)
-		ur.add_undo_reference(object_being_placed)
+		#ur.add_undo_reference(object_being_placed)
 		ur.add_do_method(self,"do_asset_placement",object_being_placed,object_being_placed.get_parent())
 		ur.add_undo_method(self,"undo_asset_placement",object_being_placed)
 		ur.commit_action(false)
@@ -342,7 +360,7 @@ func add_asset_to_scene(id, asset_name,create_ur:=true):
 	if create_ur:
 		ur.create_action("Add Asset",0,EditorInterface.get_edited_scene_root())
 		ur.add_do_reference(node)
-		ur.add_undo_reference(node)
+		#ur.add_undo_reference(node)
 		ur.add_do_method(self,"do_asset_add",node,parent,last_added_neighbor)
 		ur.add_undo_method(self,"undo_asset_add",node,last_added_masset,last_added_neighbor)
 		ur.commit_action(false)
