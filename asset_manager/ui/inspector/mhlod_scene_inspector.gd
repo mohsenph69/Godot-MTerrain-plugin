@@ -17,7 +17,7 @@ func _ready():
 	set_variation_layer_names()
 	
 func set_variation_layer_names():
-	var path = mhlod_scene.mhlod.get_baker_path()
+	var path = mhlod_scene.hlod.get_baker_path()
 	if not FileAccess.file_exists(path): return
 	var baker_scene:PackedScene = load(path)
 	var state = baker_scene.get_state()

@@ -80,7 +80,7 @@ class MHlodScene : public Node3D {
         Proc();
         ~Proc();
         void change_transform(const Transform3D& new_transform);
-        void init(Vector<Proc>& sub_procs_arr,int& sub_proc_index,const Transform3D& _transform,uint16_t _scene_layers=0);
+        void init(Vector<Proc>& sub_procs_arr,int& sub_proc_index,const Transform3D& _transform,uint16_t _scene_layers);
         void deinit();
         // difference between init deinit and enable and disable is that the latter one will not remove sub_proc_ptr
         // or in another word enable and disable will only turn off and not remove the the sturcture of procs and subprocs

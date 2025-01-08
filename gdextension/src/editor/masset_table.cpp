@@ -1167,7 +1167,6 @@ Dictionary MAssetTable::group_get_collections_with_tags(const String& gname) con
 }
 
 void MAssetTable::set_data(const Dictionary& data){
-    UtilityFunctions::print("Set data ----------- ");
     ERR_FAIL_COND(!data.has("mesh_items"));
     ERR_FAIL_COND(!data.has("collections"));
     ERR_FAIL_COND(!data.has("collections_tags"));

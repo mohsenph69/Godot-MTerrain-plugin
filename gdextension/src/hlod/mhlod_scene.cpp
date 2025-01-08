@@ -86,14 +86,10 @@ void MHlodScene::Proc::init(Vector<Proc>& sub_procs_arr,int& sub_proc_index,cons
     sub_proc_index += sub_procs_size;
     for(int i=0; i < sub_procs_size; i++){
         sub_proc_ptr[i].hlod = hlod->sub_hlods[i];
-        sub_proc_ptr[i].hlod = hlod->sub_hlods_scene_layers[i];
-        sub_proc_ptr[i].init(sub_procs_arr,sub_proc_index,transform*hlod->sub_hlods_transforms[i]);
+        sub_proc_ptr[i].scene_layers = hlod->sub_hlods_scene_layers[i];
+        sub_proc_ptr[i].init(sub_procs_arr,sub_proc_index,transform*hlod->sub_hlods_transforms[i],hlod->sub_hlods_scene_layers[i]);
     }
     is_init = true;
-    // For now we ignore sub_hlod! later we will add them!
-    if(hlod->sub_hlods.size()==0){
-        return;
-    }
 }
 
 void MHlodScene::Proc::deinit(){
@@ -235,17 +231,18 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
     case MHlod::Type::MESH:
         {
             RID instance = c_info.get_rid();
-            ERR_FAIL_COND(!instance.is_valid());
-            CreationInfo apply_creation_info;
-            if(immediate){
-                RS->free_rid(instance);
-                item->remove_user();
-            } else{
-                ApplyInfo ainfo(MHlod::Type::MESH,true);
-                ainfo.set_instance(instance);
-                apply_info.push_back(ainfo);
+            if(instance.is_valid()){
+                CreationInfo apply_creation_info;
+                if(immediate){
+                    RS->free_rid(instance);
+                    item->remove_user();
+                } else{
+                    ApplyInfo ainfo(MHlod::Type::MESH,true);
+                    ainfo.set_instance(instance);
+                    apply_info.push_back(ainfo);
+                }
+                items_creation_info.erase(item->transform_index);
             }
-            items_creation_info.erase(item->transform_index);
         }
         break;
     default:
@@ -254,13 +251,18 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
 }
 
 _FORCE_INLINE_ void MHlodScene::Proc::update_item_transform(MHlod::Item* item){
+    if(!items_creation_info.has(item->transform_index)){
+        return;
+    }
+    CreationInfo c_info = items_creation_info[item->transform_index];
     switch (item->type)
     {
     case MHlod::Type::MESH:
         {
-            CreationInfo c_info = items_creation_info[item->transform_index];
             RID instance = c_info.get_rid();
-            RS->instance_set_transform(instance,transform * hlod->transforms[item->transform_index]);
+            if(instance.is_valid()){
+                RS->instance_set_transform(instance,transform * hlod->transforms[item->transform_index]);
+            }
         }
         break;
     default:
@@ -341,7 +343,6 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
         MHlod::Item* item = hlod->item_list.ptrw() + (*lod_table)[i];
         if(item->item_layers!=0){
             bool lres = (item->item_layers & scene_layers)!=0;
-            UtilityFunctions::print(item->item_layers," & ",scene_layers," -> ",lres);
         }
         if(item->item_layers==0 || (item->item_layers & scene_layers)!=0){ // Layers filter
             add_item(item,(*lod_table)[i],immediate);
@@ -355,7 +356,7 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
         lod = c_lod;
         return;
     }
-    const VSet<int32_t>* last_lod_table = hlod->lods.ptr() + lod;    
+    const VSet<int32_t>* last_lod_table = hlod->lods.ptr() + lod;
     for(int i=0; i < (*last_lod_table).size(); i++){
         MHlod::Item* last_item = hlod->item_list.ptrw() + (*last_lod_table)[i];
         if(last_item->item_layers==0 || (last_item->item_layers & scene_layers)!=0){ // Layers filter
@@ -591,9 +592,12 @@ void MHlodScene::init_proc(){
     sub_procs.clear();
     int sub_hlod_count = proc.hlod->get_sub_hlod_size_rec();
     sub_procs.resize(sub_hlod_count);
-    UtilityFunctions::print("Sub hlod count ",sub_hlod_count);
     int sub_proc_index = 0;
-    proc.init(sub_procs,sub_proc_index,get_global_transform(),scene_layers);
+    if(is_inside_tree()){
+        proc.init(sub_procs,sub_proc_index,get_global_transform(),scene_layers);
+    } else {
+        proc.init(sub_procs,sub_proc_index,Transform3D(),scene_layers);
+    }
 }
 
 void MHlodScene::init_proc_no_lock(){
@@ -604,9 +608,8 @@ void MHlodScene::init_proc_no_lock(){
     sub_procs.clear();
     int sub_hlod_count = proc.hlod->get_sub_hlod_size_rec();
     sub_procs.resize(sub_hlod_count);
-    UtilityFunctions::print("Sub hlod count ",sub_hlod_count);
     int sub_proc_index = 0;
-    proc.init(sub_procs,sub_proc_index,get_global_transform());
+    proc.init(sub_procs,sub_proc_index,get_global_transform(),scene_layers);
 }
 
 void MHlodScene::deinit_proc(){
@@ -635,7 +638,7 @@ void MHlodScene::set_hlod(Ref<MHlod> input){
         deinit_proc();
     }
     proc.hlod = input;
-    if(proc.hlod.is_valid()){
+    if(proc.hlod.is_valid() && !is_sleep){
         init_proc();
     }
 }
@@ -672,7 +675,7 @@ void MHlodScene::_notification(int p_what){
         _update_visibility();
         break;
     case NOTIFICATION_READY:
-        proc.hlod->start_test();
+        //proc.hlod->start_test();
         break;
     case NOTIFICATION_ENTER_TREE:
         _update_visibility();
