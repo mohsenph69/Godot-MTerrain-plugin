@@ -53,7 +53,7 @@ void MMeshJoiner::MeshData::append_vertices_to(PackedVector3Array& _input) const
 void MMeshJoiner::MeshData::append_normals_to(PackedVector3Array& _input) const{
     if(normals.size() > 0){
         for(Vector3 n : normals){
-            n = transform.basis.xform(n);
+            n = normal_transform.xform(n);
             n.normalize();
             _input.push_back(n);
         }
@@ -206,6 +206,7 @@ bool MMeshJoiner::insert_mesh_data(Array meshes,Array transforms,Array materials
                 mdata.uv = mesh_arr[Mesh::ARRAY_TEX_UV];
                 mdata.uv2 = mesh_arr[Mesh::ARRAY_TEX_UV2];
                 mdata.transform = trasform;
+                mdata.normal_transform = trasform.basis.inverse().transposed();
                 vcount = mdata.vertices.size();
                 if(vcount == 0){
                     WARN_PRINT("Vertex count is zero skiping this mesh surface");
@@ -259,6 +260,7 @@ bool MMeshJoiner::insert_mmesh_data(Array meshes,Array transforms,PackedInt32Arr
                 mdata.uv = mesh_arr[Mesh::ARRAY_TEX_UV];
                 mdata.uv2 = mesh_arr[Mesh::ARRAY_TEX_UV2];
                 mdata.transform = trasform;
+                mdata.normal_transform = trasform.basis.inverse().transposed();
                 vcount = mdata.vertices.size();
                 if(vcount == 0){
                     WARN_PRINT("Vertex count is zero skiping this mesh surface");

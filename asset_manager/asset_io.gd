@@ -33,10 +33,10 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 	var asset_library:MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()	
-	if root_node is MeshInstance3D:
-		print(root_node)
-		for surface_id in root_node.mesh.get_surface_count():
-			print(root_node.mesh.surface_get_material(surface_id).resource_name) #resource_path.get_file().get_slice(".", 0))
+	#if root_node is MeshInstance3D:
+		#print(root_node)
+		#for surface_id in root_node.mesh.get_surface_count():
+			#print(root_node.mesh.surface_get_material(surface_id).resource_name) #resource_path.get_file().get_slice(".", 0))
 		
 	gltf_document.append_from_scene(root_node, gltf_save_state)
 	print("exporting to ", path)
@@ -154,7 +154,7 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		glb_import_commit_changes()			
 		
 #Parse GLB file and prepare a preview of changes to asset library
-static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):	
+static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	for node in scene:
 		if not node:
@@ -231,6 +231,21 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		
 static func glb_import_commit_changes():
 	var asset_library = MAssetTable.get_singleton()
+	###########################################
+	## glb_id unique ID assigned to each glb ##
+	###########################################
+	var glb_id:int;
+	if asset_library.import_info.has(asset_data.glb_path) and asset_library.import_info[asset_data.glb_path].has("__id"):
+		glb_id = asset_library.import_info[asset_data.glb_path]["__id"]
+	else: ## assign new glb id
+		var used_ids:PackedInt32Array
+		for k in asset_library.import_info:
+			if k.begins_with("__"): continue
+			if asset_library.import_info[k].has("__id"): used_ids.push_back(asset_library.import_info[k]["__id"])
+		for i in range(1000_000_000):
+			if used_ids.find(i) == -1:
+				glb_id = i 
+				break
 	#################
 	## Save Meshes ##
 	#################
@@ -283,11 +298,13 @@ static func glb_import_commit_changes():
 	########################
 	var collection_names = asset_data.collections.keys()
 	for collection_name in collection_names:
-		import_collection(collection_name)
+		import_collection(collection_name,glb_id)
 	########################
 	## Adding Import Info ##
 	########################
+			
 	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()	
+	asset_library.import_info[asset_data.glb_path]["__id"] = glb_id
 	if not "__blend_files" in asset_library.import_info:
 		asset_library.import_info["__blend_files"] = {}
 	asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path	
@@ -307,7 +324,7 @@ static func fill_mesh_lod_gaps(mesh_array):
 			last_mesh = mesh_array[i]	
 	return result		
 
-static func import_collection(glb_node_name:String):		
+static func import_collection(glb_node_name:String,glb_id:int):		
 	if glb_node_name and not asset_data.collections.has(glb_node_name) or asset_data.collections[glb_node_name]["ignore"] or asset_data.collections[glb_node_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 		return
 	asset_data.collections[glb_node_name]["ignore"] = true # this means this collection has been handled
@@ -333,6 +350,7 @@ static func import_collection(glb_node_name:String):
 	else:
 		push_error("Invalid collection!!!")
 		return
+	asset_library.collection_set_glb_id(collection_id,glb_id)
 	if not asset_library.has_collection(collection_id):
 		push_error("import collection error: ", collection_id, " does not exist")
 					
@@ -367,7 +385,7 @@ static func import_collection(glb_node_name:String):
 		else: 			
 			var sub_collection_id = asset_data.get_collection_id(sub_collection_name)			
 			if sub_collection_id == -1:
-				import_collection(sub_collection_name)			
+				import_collection(sub_collection_name,glb_id)			
 			#get sub_collection_id after import_collection for subcollection
 			sub_collection_id = asset_data.get_collection_id(sub_collection_name)
 			if not asset_library.has_collection(sub_collection_id):
@@ -433,71 +451,33 @@ static func generate_material_thumbnail(material_id):
 		return		
 	var material = load(path)
 	EditorInterface.get_resource_previewer().queue_edited_resource_preview(material, AssetIO, "material_thumbnail_generated", material_id)						
-
-static func generate_collection_thumbnails(collection_ids):	
-	for id in collection_ids:
-		generate_collection_thumbnail(id)	
-
-static func generate_collection_thumbnail(collection_id):	
-	if not MAssetTable.get_singleton().has_collection(collection_id):
-		push_error("trying to generate thumbnail for collection that does not exist:", collection_id)
-		return
-	#Check if glb has changed since last thumbnail generation					
-	var glb_path = get_glb_path_from_collection_id(collection_id)	
-	var thumbnail_path = get_thumbnail_path(collection_id)	
-	if thumbnail_path and glb_path and FileAccess.file_exists(thumbnail_path) and FileAccess.file_exists(glb_path) and FileAccess.get_modified_time(glb_path) < FileAccess.get_modified_time( thumbnail_path):				
-		return
-	var data = {"meshes":[], "transforms":[]}
-	combine_collection_meshes_and_transforms_recursive(collection_id, data, Transform3D.IDENTITY)													
-	var mesh_joiner := MMeshJoiner.new()					
-	mesh_joiner.insert_mesh_data(data.meshes, data.transforms, data.transforms.map(func(a):return -1))
-	var mesh = mesh_joiner.join_meshes()			
-	EditorInterface.get_resource_previewer().queue_edited_resource_preview(mesh, AssetIO, "collection_thumbnail_generated", collection_id)							
 	
-static func get_glb_path_from_collection_id(collection_id):
-	var import_info = MAssetTable.get_singleton().import_info
-	for glb_path in import_info.keys():
-		if glb_path.begins_with("__"): continue
-		for node_name in import_info[glb_path].keys():
-			if node_name.begins_with("__"): continue
-			if import_info[glb_path][node_name].has("id") and import_info[glb_path][node_name].id == collection_id:
-				return glb_path
-				
-static func combine_collection_meshes_and_transforms_recursive(collection_id, data, combined_transform):
-	var asset_library = MAssetTable.get_singleton()
-	var subcollection_ids = asset_library.collection_get_sub_collections(collection_id)
-	var subcollection_transforms = asset_library.collection_get_sub_collections_transforms(collection_id)
-	if len(subcollection_ids) > 0:
-		for i in len(subcollection_ids):
-			combine_collection_meshes_and_transforms_recursive(subcollection_ids[i], data, combined_transform * subcollection_transforms[i])
-	var mesh_items = asset_library.collection_get_mesh_items_info(collection_id)	
-	for item in mesh_items:
-		var i = 0
-		while i < len(item.mesh):			
-			if item.mesh[i] == -1: 
-				i += 1
-				continue
-			var mesh_path = MHlod.get_mesh_path(item.mesh[i])													
-			var mmesh:MMesh = load(mesh_path)						
-			if mmesh.get_surface_count() > 0:		
-				data.meshes.push_back(mmesh.get_mesh())
-				data.transforms.push_back(combined_transform * item.transform)
-				break	
-			i+= 1
+	
+static func get_glb_path_from_collection_id(collection_id)->String:
+	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
+	var import_info:Dictionary = MAssetTable.get_singleton().import_info
+	for k in import_info:
+		if k.begins_with("__"): continue
+		if import_info[k]["__id"] == glb_id: return k
+	return ""
+
+static func get_collection_import_time(collection_id:int)->float:
+	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
+	var import_info:Dictionary = MAssetTable.get_singleton().import_info
+	for k in import_info:
+		if k.begins_with("__"): continue
+		if import_info[k]["__id"] == glb_id: return import_info[k]["__import_time"]
+	return -1
 
 static func material_thumbnail_generated(path, preview, thumbnail_preview, material_id):	
 	var thumbnail_path = AssetIO.get_thumbnail_path(material_id, false)
 	save_thumbnail(preview, thumbnail_path)						
-			
-static func collection_thumbnail_generated(path, preview, thumbnail_preview, collection_id):	
-	var thumbnail_path = AssetIO.get_thumbnail_path(collection_id)
-	save_thumbnail(preview, thumbnail_path)						
 
 static func get_thumbnail_path(id: int, is_collection:bool=true):
 	if is_collection:
-		return "res://massets/thumbnails/" + str(id) + ".dat"
+		return MAssetTable.get_asset_thumbnails_dir() + str(id) + ".dat"
 	else:
-		return "res://massets/thumbnails/material_" + str(id) + ".dat"
+		return MAssetTable.get_asset_thumbnails_dir() + "material_" + str(id) + ".dat"
 
 static func save_thumbnail(preview:ImageTexture, thumbnail_path:String):			
 	var data = preview.get_image().save_png_to_buffer() if preview else Image.create_empty(64,64,false, Image.FORMAT_R8).save_png_to_buffer()
@@ -650,8 +630,7 @@ static func import_settings(path):
 			if not asset_library.has_collection(id): continue
 			for tag in data.collections[glb_path][node_name].tags:
 				asset_library.collection_add_tag(id, tag)
-	#
-	
+
 static func export_settings(path):
 	var asset_library = MAssetTable.get_singleton()	
 	var result = {}

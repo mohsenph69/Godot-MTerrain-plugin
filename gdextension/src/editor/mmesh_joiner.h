@@ -34,6 +34,7 @@ class MMeshJoiner : public RefCounted {
         PackedVector2Array uv2;
         PackedInt32Array indices;
         Transform3D transform;
+        Basis normal_transform;
         void append_uv_to(PackedVector2Array& _input) const;
         void append_uv2_to(PackedVector2Array& _input) const;
         void append_colors_to(PackedColorArray& _input) const;

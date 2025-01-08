@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/world3d.hpp>
 #include "masset_table.h"
 #include "../hlod/mhlod.h"
+#include "mmesh_joiner.h"
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -59,6 +60,16 @@ Ref<MMesh> MAssetMesh::InstanceData::get_last_valid_mesh() const {
     return Ref<MMesh>();
 }
 
+Ref<MMesh> MAssetMesh::InstanceData::get_first_valid_mesh() const{
+    for(int i=0;i<meshes.size();i++){
+        Ref<MMesh> m = meshes[i];
+        if(m.is_valid()){
+            return m;
+        }
+    }
+    return Ref<MMesh>();
+}
+
 RID MAssetMesh::InstanceData::get_mesh_rid_last(int lod) const{
     if(lod < 0 || meshes.size()==0){
         return RID();
@@ -97,6 +108,9 @@ void MAssetMesh::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("get_joined_aabb"), &MAssetMesh::get_joined_aabb);
     ClassDB::bind_method(D_METHOD("get_joined_triangle_mesh"), &MAssetMesh::get_joined_triangle_mesh);
+
+    ClassDB::bind_method(D_METHOD("get_merged_mesh","lowest_lod"), &MAssetMesh::get_merged_mesh);
+    ClassDB::bind_static_method("MAssetMesh",D_METHOD("get_collection_merged_mesh","collection_id","lowest_lod"),&MAssetMesh::get_collection_merged_mesh);
 }
 
 MAssetMesh::MAssetMesh(){
@@ -262,6 +276,11 @@ int64_t MAssetMesh::get_hlod_layers(){
     return hlod_layers;
 }
 
+void MAssetMesh::set_collection_id_no_lod_update(int input){
+    collection_id = input;
+    update_instance_date();
+}
+
 void MAssetMesh::set_collection_id(int input){
     collection_id = input;
     update_instance_date();
@@ -387,4 +406,42 @@ void MAssetMesh::generate_joined_triangle_mesh(){
 
     joined_aabb = arr_mesh->get_aabb();
     joined_triangle_mesh = arr_mesh->generate_triangle_mesh();
+}
+
+
+Ref<ArrayMesh> MAssetMesh::get_merged_mesh(bool lowest_lod){
+    if(instance_data.size()==0){
+        return nullptr;
+    }
+    Ref<MMeshJoiner> mesh_joiner;
+    mesh_joiner.instantiate();
+    Array _mmeshes;
+    Array _transforms;
+    PackedInt32Array _material_set_ids;
+    for(const InstanceData& data : instance_data){
+        Ref<MMesh> c_mmesh;
+        if(lowest_lod){
+            c_mmesh = data.get_first_valid_mesh();
+        } else {
+            c_mmesh = data.get_last_valid_mesh();
+        }
+        if(c_mmesh.is_valid()){
+            _mmeshes.push_back(c_mmesh);
+            _transforms.push_back(data.local_transform);
+            _material_set_ids.push_back(data.material_set_id);
+        }
+    }
+    if(_mmeshes.is_empty()){
+        return nullptr;
+    }
+    mesh_joiner->insert_mmesh_data(_mmeshes,_transforms,_material_set_ids);
+    return mesh_joiner->join_meshes();
+}
+
+Ref<ArrayMesh> MAssetMesh::get_collection_merged_mesh(int collection_id,bool lowest_lod){
+    MAssetMesh* _ma = memnew(MAssetMesh);
+    _ma->set_collection_id_no_lod_update(collection_id);
+    Ref<ArrayMesh> _arr_mesh = _ma->get_merged_mesh(lowest_lod);
+    memdelete(_ma);
+    return _arr_mesh;
 }

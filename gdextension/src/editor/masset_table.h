@@ -8,6 +8,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
+#include <godot_cpp/classes/texture2d.hpp>
 
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 
@@ -122,12 +123,18 @@ class MAssetTable : public Resource {
     Vector<Socket> sockets;
 
     struct Collection {
+        double thumbnail_creation_time = -1.0;
+        Ref<Texture2D> cached_thumbnail;
         Vector<Pair<ItemType,int>> items;
         Vector<Transform3D> transforms;
         PackedInt32Array sub_collections;
         Vector<Transform3D> sub_collections_transforms;
+        int32_t glb_id = -1;
+
         //Vector<int32_t> variation; // [12,13,343,65,36]
         int sockets_id = 6;
+        void set_glb_id(int32_t input);
+        int32_t get_glb_id() const;
         void clear();
         void set_save_data(const PackedByteArray& data);
         PackedByteArray get_save_data() const;
@@ -165,6 +172,8 @@ class MAssetTable : public Resource {
     static String get_asset_editor_root_dir();
     static String get_editor_baker_scenes_dir();
     static String get_asset_thumbnails_dir();
+    static String get_asset_thumbnails_path(int collection_id);
+    static String get_material_thumbnails_path(int material_id);
     static String get_hlod_res_dir();
     bool has_mesh_item(int id) const;
     bool has_collection(int id) const;
@@ -201,6 +210,11 @@ class MAssetTable : public Resource {
     Dictionary mesh_item_get_info(int mesh_id);
     PackedInt32Array mesh_item_get_list() const;
     int collection_create(String _name);
+    void collection_set_glb_id(int collection_id,int32_t glb_id);
+    int32_t collection_get_glb_id(int collection_id) const;
+    void collection_set_cache_thumbnail(int collection_id,Ref<Texture2D> tex,double creation_time);
+    double collection_get_thumbnail_creation_time(int collection_id) const;
+    Ref<Texture2D> collection_get_cache_thumbnail(int collection_id) const;
     bool collection_rename(int collection_id,const String& new_name);
     void collection_add_item(int collection_id,ItemType type, int item_id,const Transform3D& transform);
     void collection_clear(int collection_id);

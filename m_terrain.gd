@@ -78,8 +78,8 @@ func init_asset_table():
 		asset_table = ResourceLoader.load(path)
 	if not asset_table:
 		asset_table = MAssetTable.new()
-	asset_table.initialize_mesh_hashes()
 	MAssetTable.set_singleton(asset_table)
+	asset_table.initialize_mesh_hashes()
 
 #region init and de-init
 func _enter_tree():		

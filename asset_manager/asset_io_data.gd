@@ -444,6 +444,7 @@ func get_glb_import_info():
 	for key in materials:				
 		result["__materials"][key] = {"path":materials[key].material, "meshes":materials[key].meshes}
 	result["__metadata"] = meta_data
+	result["__import_time"] = (Time.get_unix_time_from_system())
 	return result
 		
 #Add original mesh and collection data to asset_data

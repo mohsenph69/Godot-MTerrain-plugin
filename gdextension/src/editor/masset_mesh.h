@@ -47,6 +47,7 @@ class MAssetMesh : public Node3D {
         PackedInt64Array mesh_ids;
         Transform3D local_transform; // local transform compare to the main node
         Ref<MMesh> get_last_valid_mesh() const;
+        Ref<MMesh> get_first_valid_mesh() const;
         RID get_mesh_rid_last(int lod) const;
         Ref<MMesh> get_mesh_last(int lod) const;
     };
@@ -72,6 +73,7 @@ class MAssetMesh : public Node3D {
     void set_hlod_layers(int64_t input);
     int64_t get_hlod_layers();
     
+    void set_collection_id_no_lod_update(int input);
     void set_collection_id(int input);
     int get_collection_id();  
 
@@ -84,5 +86,8 @@ class MAssetMesh : public Node3D {
     AABB get_joined_aabb();
     Ref<TriangleMesh> get_joined_triangle_mesh();
     void generate_joined_triangle_mesh();
+
+    Ref<ArrayMesh> get_merged_mesh(bool lowest_lod);
+    static Ref<ArrayMesh> get_collection_merged_mesh(int collection_id,bool lowest_lod);
 };
 #endif

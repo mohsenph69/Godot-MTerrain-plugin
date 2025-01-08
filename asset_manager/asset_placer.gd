@@ -46,8 +46,6 @@ var current_filter_mode_all := false
 var current_filter_tags := []
 var current_group := "None" #group name
 
-var queued_thumbnails = {}
-
 var last_regroup = null
 
 var last_added_neighbor = null
@@ -265,23 +263,19 @@ func regroup(group = current_group, sort_mode="asc"):
 	if not debounce_regroup(): 
 		return
 	var filtered_collections = get_filtered_collections(current_search, [0])
-	AssetIO.generate_collection_thumbnails(filtered_collections)	
 	if group == "None":		
 		ungrouped.group_list.clear()	
 		var sorted_items = []				
 		for collection_id in filtered_collections:
 			var collection_name = asset_library.collection_get_name(collection_id)
-			var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))			
-			if not thumbnail:
-				regroup.call_deferred()
-			sorted_items.push_back({"name":collection_name, "thumbnail":thumbnail, "id":collection_id})			
+			sorted_items.push_back({"name":collection_name, "id":collection_id})			
 			collection_id += 1
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)
 		elif sort_mode == "desc":
 			sorted_items.sort_custom(func(a,b): return a.name > b.name)
 		for item in sorted_items:
-			ungrouped.add_item(item.name, item.thumbnail, item.id)							
+			ungrouped.add_item(item.name, item.id)							
 		ungrouped.group_button.visible = false	
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
@@ -310,29 +304,24 @@ func regroup(group = current_group, sort_mode="asc"):
 				group_control = groups.get_node(tag_name)			
 				group_control.group_list.clear()
 			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
-				var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
-				if not thumbnail:
-					regroup.call_deferred()
-				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "thumbnail":thumbnail, "id":collection_id})
-				#group_control.add_item(asset_library.collection_get_name(collection_id), thumbnail, collection_id)							
+				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
 			if sort_mode == "asc":
 				sorted_items.sort_custom(func(a,b): return a.name < b.name)
 			elif sort_mode == "desc":
 				sorted_items.sort_custom(func(a,b): return a.name > b.name)
 			for item in sorted_items:
-				group_control.add_item(item.name, item.thumbnail, item.id)		
+				group_control.add_item(item.name, item.id)		
 		ungrouped.group_list.clear()
 		var sorted_items = []
 		for id in filtered_collections:
 			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):
-				var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id))				
-				sorted_items.push_back({"name": asset_library.collection_get_name(id), "thumbnail":thumbnail, "id":id})				
+				sorted_items.push_back({"name": asset_library.collection_get_name(id), "id":id})				
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)
 		elif sort_mode == "desc":
 			sorted_items.sort_custom(func(a,b): return a.name > b.name)
 		for item in sorted_items:			
-			ungrouped.add_item(item.name, item.thumbnail, item.id)		
+			ungrouped.add_item(item.name, item.id)		
 	current_group = group
 
 func collection_item_activated(id, group_list:ItemList,create_ur:=true):					

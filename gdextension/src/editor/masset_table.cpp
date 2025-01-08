@@ -23,6 +23,8 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_editor_root_dir"), &MAssetTable::get_asset_editor_root_dir);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_editor_baker_scenes_dir"), &MAssetTable::get_editor_baker_scenes_dir);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_thumbnails_dir"), &MAssetTable::get_asset_thumbnails_dir);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_asset_thumbnails_path","collection_id"), &MAssetTable::get_asset_thumbnails_path);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_material_thumbnails_path","material_id"), &MAssetTable::get_material_thumbnails_path);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_hlod_res_dir"), &MAssetTable::get_hlod_res_dir);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("reset","hard"), &MAssetTable::reset);
 
@@ -50,6 +52,11 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("mesh_item_get_info","mesh_id"), &MAssetTable::mesh_item_get_info);
     ClassDB::bind_method(D_METHOD("mesh_item_get_list"), &MAssetTable::mesh_item_get_list);
     ClassDB::bind_method(D_METHOD("collection_create","name"), &MAssetTable::collection_create);
+    ClassDB::bind_method(D_METHOD("collection_set_glb_id","collection_id","glb_id"), &MAssetTable::collection_set_glb_id);
+    ClassDB::bind_method(D_METHOD("collection_get_glb_id","collection_id"), &MAssetTable::collection_get_glb_id);
+    ClassDB::bind_method(D_METHOD("collection_set_cache_thumbnail","collection_id","tex","creation_time"), &MAssetTable::collection_set_cache_thumbnail);
+    ClassDB::bind_method(D_METHOD("collection_get_cache_thumbnail","collection_id"), &MAssetTable::collection_get_cache_thumbnail);
+    ClassDB::bind_method(D_METHOD("collection_get_thumbnail_creation_time","collection_id"), &MAssetTable::collection_get_thumbnail_creation_time);
     ClassDB::bind_method(D_METHOD("collection_add_item","collection_id","item_type","item_id","transform"), &MAssetTable::collection_add_item);
     ClassDB::bind_method(D_METHOD("collection_clear","collection_id"), &MAssetTable::collection_clear);
     ClassDB::bind_method(D_METHOD("collection_remove","collection_id"), &MAssetTable::collection_remove);
@@ -174,6 +181,14 @@ String MAssetTable::get_editor_baker_scenes_dir(){
 
 String MAssetTable::get_asset_thumbnails_dir(){
     return asset_thumbnails_dir;
+}
+
+String MAssetTable::get_asset_thumbnails_path(int collection_id){
+    return String(asset_thumbnails_dir) + itos(collection_id) + String(".dat");
+}
+
+String MAssetTable::get_material_thumbnails_path(int material_id){
+    return String(asset_thumbnails_dir) + "material_" + itos(material_id) + String(".dat");
 }
 
 String MAssetTable::get_hlod_res_dir(){
@@ -360,6 +375,14 @@ bool MAssetTable::MeshItem::operator==(const MeshItem& other) const{
     return path == other.path;
 }
 
+void MAssetTable::Collection::set_glb_id(int32_t input){
+    glb_id = input;
+}
+
+int32_t MAssetTable::Collection::get_glb_id() const{
+    return glb_id;
+}
+
 void MAssetTable::Collection::clear(){
     items.clear();
     transforms.clear();
@@ -371,6 +394,7 @@ void MAssetTable::Collection::clear(){
     data structure:
     4byte (uint32_t) -> item_count
     4byte (uint32_t) -> sub_collection_count
+    4byte (uint32_t) -> glb_id_byte_size
     sizeof(Pair<ItemType,int>) * items.size()
     sizeof(Transform3D) * transforms.size()
     Total size = 8 + i_size + t_size
@@ -380,9 +404,10 @@ void MAssetTable::Collection::set_save_data(const PackedByteArray& data){
         clear();
         return;
     }
-    ERR_FAIL_COND(data.size() < 5);
+    ERR_FAIL_COND(data.size() < 12);
     uint32_t item_count = data.decode_u32(0);
     uint32_t sub_collections_count = data.decode_u32(4);
+    glb_id = data.decode_s32(8);
     ERR_FAIL_COND(item_count < 0 || sub_collections_count < 0);
     int i_size = sizeof(Pair<ItemType,int>) * item_count;
     int t_size = sizeof(Transform3D) * item_count;
@@ -390,14 +415,14 @@ void MAssetTable::Collection::set_save_data(const PackedByteArray& data){
     int c_size = sizeof(int) * sub_collections_count;
     int ct_size = sizeof(Transform3D) * sub_collections_count;
 
-    ERR_FAIL_COND(data.size() != 8 + i_size + t_size + c_size + ct_size);
+    ERR_FAIL_COND(data.size() != 12 + i_size + t_size + c_size + ct_size);
     items.resize(item_count);
     transforms.resize(item_count);
 
     sub_collections.resize(sub_collections_count);
     sub_collections_transforms.resize(sub_collections_count);
 
-    int header = 8;
+    int header = 12;
     memcpy(items.ptrw(),data.ptr()+header,i_size);
     header += i_size;
     memcpy(transforms.ptrw(),data.ptr()+header,t_size);
@@ -420,10 +445,11 @@ PackedByteArray MAssetTable::Collection::get_save_data() const {
     int c_size = sizeof(int) * sub_collections.size();
     int ct_size = sizeof(Transform3D) * sub_collections_transforms.size();
 
-    data.resize(8 + i_size + t_size + c_size + ct_size);
+    data.resize(12 + i_size + t_size + c_size + ct_size);
     data.encode_u32(0,items.size());
     data.encode_u32(4,sub_collections.size());
-    int header = 8;
+    data.encode_s32(8,glb_id);
+    int header = 12;
     memcpy(data.ptrw()+header,items.ptr(),i_size);
     header += i_size;
     memcpy(data.ptrw()+header,transforms.ptr(),t_size);
@@ -792,6 +818,32 @@ int MAssetTable::collection_create(String name){
     ERR_FAIL_COND_V(index==-1,-1);
     collections_names->set_element(index,name);
     return index;
+}
+
+void MAssetTable::collection_set_glb_id(int collection_id,int32_t glb_id){
+    ERR_FAIL_COND(!has_collection(collection_id));
+    collections.ptrw()[collection_id].set_glb_id(glb_id);
+}
+
+int32_t MAssetTable::collection_get_glb_id(int collection_id) const{
+    ERR_FAIL_COND_V(!has_collection(collection_id),-1);
+    return collections[collection_id].get_glb_id();
+}
+
+void MAssetTable::collection_set_cache_thumbnail(int collection_id,Ref<Texture2D> tex,double creation_time){
+    ERR_FAIL_COND(!has_collection(collection_id));
+    collections.ptrw()[collection_id].cached_thumbnail = tex;
+    collections.ptrw()[collection_id].thumbnail_creation_time = creation_time;
+}
+
+double MAssetTable::collection_get_thumbnail_creation_time(int collection_id) const {
+    ERR_FAIL_COND_V(!has_collection(collection_id),-1.0);
+    return collections[collection_id].thumbnail_creation_time;
+}
+
+Ref<Texture2D> MAssetTable::collection_get_cache_thumbnail(int collection_id) const {
+    ERR_FAIL_COND_V(!has_collection(collection_id),nullptr);
+    return collections[collection_id].cached_thumbnail;
 }
 
 bool MAssetTable::collection_rename(int collection_id,const String& new_name){
