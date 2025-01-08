@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=21 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -19,6 +19,7 @@
 [ext_resource type="Texture2D" uid="uid://8bsyqbwgdlor" path="res://addons/m_terrain/icons/rotate_icon.svg" id="14_kwxpb"]
 [ext_resource type="Texture2D" uid="uid://es81s75t7i2n" path="res://addons/m_terrain/icons/scale_disabled_icon.svg" id="15_krpno"]
 [ext_resource type="Texture2D" uid="uid://c5yiqj08mgihl" path="res://addons/m_terrain/icons/scale_icon.svg" id="16_sjn2r"]
+[ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="17_xg855"]
 
 [node name="AssetPlacer" type="PanelContainer"]
 anchors_preset = 15
@@ -128,6 +129,18 @@ text = "y(0)"
 layout_mode = 2
 text = "z(0)"
 
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="replace_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+tooltip_text = "Replace Assets"
+theme_type_variation = &"button_icon_only"
+theme_override_font_sizes/font_size = 18
+icon = ExtResource("17_xg855")
+expand_icon = true
+
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -197,3 +210,4 @@ size_flags_vertical = 3
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/x_btn" to="." method="reposition_x"]
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/y_btn" to="." method="reposition_y"]
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/z_btn" to="." method="reposition_z"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/replace_btn" to="." method="replace_assets"]

@@ -402,9 +402,12 @@ func get_added_node_transform(neighbor:Node,dir:Vector3) -> Transform3D:
 
 func reposition_origin():
 	if last_added_masset==null or last_added_neighbor==null: return
+	var old_dir = current_placement_dir
+	var old_transform:Transform3D = last_added_masset.global_transform
 	current_placement_dir = Vector3(0,0,0)
 	last_added_masset.global_transform = get_added_node_transform(last_added_neighbor,current_placement_dir)
 	update_reposition_button_text()
+	undo_redo_reposition(last_added_masset,old_transform,old_dir)
 
 func reposition_input_toggle(input:float)->float:
 	input += 1
@@ -443,6 +446,34 @@ func update_reposition_button_text():
 	x_btn.text = "x("+str(current_placement_dir.x)+")"
 	y_btn.text = "y("+str(current_placement_dir.y)+")"
 	z_btn.text = "z("+str(current_placement_dir.z)+")"
+
+func _replace_asset(new_ids:PackedInt64Array,masset_node:Array) -> void:
+	if new_ids.size() != masset_node.size():
+		printerr("mismatch new_asset old asset count")
+		return
+	for i in range(new_ids.size()):
+		masset_node[i].collection_id = new_ids[i]
+
+func replace_assets() -> void:
+	if active_group_list_item==null or active_group_list==null or not active_group_list is ItemList or active_group_list_item < 0:
+		return
+	var sel_collection_id = active_group_list.get_item_metadata(active_group_list_item)
+	var masset_arr:Array
+	var masset_ids:PackedInt64Array
+	for n in EditorInterface.get_selection().get_selected_nodes():
+		if n is MAssetMesh and n.collection_id != sel_collection_id:
+			masset_arr.push_back(n)
+			masset_ids.push_back(n.collection_id)
+	if masset_arr.size() == 0:
+		return
+	var new_ids:PackedInt64Array
+	new_ids.resize(masset_ids.size())
+	new_ids.fill(sel_collection_id)
+	ur.create_action("replace asset",0,EditorInterface.get_edited_scene_root())
+	ur.add_do_method(self,"_replace_asset",new_ids,masset_arr)
+	ur.add_undo_method(self,"_replace_asset",masset_ids,masset_arr)
+	ur.commit_action()
+
 
 # should be called after moving
 func undo_redo_reposition(node:Node3D,old_transform:Transform3D,old_dir:Vector3):
