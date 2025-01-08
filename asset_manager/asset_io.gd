@@ -124,7 +124,8 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		load_glb_as_hlod(gltf_document.generate_scene(gltf_state), root_name)		
 		return		
 	else:
-		print(root_name)
+		pass
+		#print(root_name)
 	
 	#STEP 0: Init Asset Data
 	asset_data = AssetIOData.new()	
@@ -166,10 +167,13 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		if name_data["lod"] >=0: ## Then definitly is a mesh					
 			if not node.has_meta("material_sets"):
 				var mesh_item_name = name_data["name"] + "_0"
-				var mesh :Mesh= node.mesh.get_mesh()
+				var mesh:Mesh = null
+				if node is ImporterMeshInstance3D:
+					mesh = node.mesh.get_mesh()
 				var material_set := []
-				for i in mesh.get_surface_count():
-					material_set.push_back(mesh.surface_get_material(i).resource_name)
+				if mesh!=null:
+					for i in mesh.get_surface_count():
+						material_set.push_back(mesh.surface_get_material(i).resource_name)
 				asset_data.add_mesh_data([material_set],mesh, mesh_item_name)						
 				asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, 0)			
 				var collection_name = mesh_item_name if active_collection == "__root__" else active_collection				

@@ -18,6 +18,42 @@ var collections:Dictionary
 var variation_groups: Array #array of array of glb node names
 var meta_data:Dictionary
 
+func import_state_str(_state:int) -> String:
+		if _state==0:return "NOT_HANDLE"
+		elif _state==1:return "NO_CHANGE"
+		elif _state==2:return "New"
+		elif _state==3:return "CHANGE"
+		elif _state==4:return "Remove"
+		return "Unkonw " + str(_state)
+
+func print_pretty_dic(dic:Dictionary,dic_name:String,tab_count:int=0):
+	var root_tab:=""
+	for i in range(tab_count):
+		root_tab += "    "
+	var tabs = root_tab + "    "
+	print(root_tab,dic_name,":{")
+	for k in dic:
+		var val = dic[k]
+		if typeof(val) == TYPE_DICTIONARY:
+			print_pretty_dic(val,str(k),tab_count+1)
+		else:
+			if k == "state":
+				val = import_state_str(val)
+			elif k == "mesh_state":
+				val = val.map(func(a): return import_state_str(a))
+			print(tabs,k,": ",val)
+	print(root_tab,"}")
+
+func print_data():
+	print("\n---------- Asset data ------------")
+	print_pretty_dic(mesh_data,"Mesh Data")
+	print_pretty_dic(materials,"Materials")
+	print_pretty_dic(mesh_items,"Mesh Items")
+	print_pretty_dic(collections,"Collections")
+	print_pretty_dic(meta_data,"Meta Data")
+	print("Variation Groups ",variation_groups)
+	print("\n")
+
 func clear():
 	collections.clear()	
 	mesh_items.clear()	
@@ -99,6 +135,8 @@ func add_mesh_item(name:String,lod:int,node:Node, set_id:int)->void:
 	mesh_items[name].material_set_id = set_id
 	
 func add_mesh_data(sets, mesh:Mesh, mesh_item_name):						
+	if mesh==null:
+		return
 	if not mesh_data.has(mesh): 
 		mesh_data[mesh] = get_empty_mesh_data()	
 		mesh_data[mesh].name = mesh.resource_name
