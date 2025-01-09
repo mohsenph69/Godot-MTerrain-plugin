@@ -55,6 +55,7 @@ class MAssetMesh : public Node3D {
     uint16_t hlod_layers = 0;
     int collection_id = -1;
     int current_lod = -1;
+    int lod_cutoff = -1;
     Vector<InstanceData> instance_data;
     Ref<TriangleMesh> joined_triangle_mesh; // chached for editor selection
     AABB joined_aabb; // if above is cached the this is also is calculated
@@ -71,7 +72,10 @@ class MAssetMesh : public Node3D {
     void compute_joined_aabb();
 
     void set_hlod_layers(int64_t input);
-    int64_t get_hlod_layers();
+    int64_t get_hlod_layers() const;
+
+    void set_lod_cutoff(int input);
+    int get_lod_cutoff();
     
     void set_collection_id_no_lod_update(int input);
     void set_collection_id(int input);

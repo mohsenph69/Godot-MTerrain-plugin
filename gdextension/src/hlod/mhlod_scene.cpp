@@ -467,6 +467,18 @@ void MHlodScene::insert_points(){
     octree->insert_points(points_pos,points_ids,oct_id);
 }
 
+void MHlodScene::first_octree_update(const Vector<MOctree::PointUpdate>* update_info){
+    for(int i=0; i < update_info->size(); i++){
+        MOctree::PointUpdate p = update_info->get(i);
+        if(!octpoints_to_proc.has(p.id)){
+            continue;
+        }
+        Proc* _proc = octpoints_to_proc.get(p.id);
+        _proc->update_lod(p.lod,true);
+    }
+    octree->point_process_finished(oct_id);
+}
+
 void MHlodScene::octree_update(const Vector<MOctree::PointUpdate>* update_info){
     if(update_info->size() > 0) {
         is_updating = true;

@@ -94,6 +94,10 @@ void MAssetMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("update_instance_date"), &MAssetMesh::update_instance_date);
     ClassDB::bind_method(D_METHOD("update_lod","lod"), &MAssetMesh::update_lod);
 
+    ClassDB::bind_method(D_METHOD("set_lod_cutoff","input"), &MAssetMesh::set_lod_cutoff);
+    ClassDB::bind_method(D_METHOD("get_lod_cutoff"), &MAssetMesh::get_lod_cutoff);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"lod_cutoff"),"set_lod_cutoff","get_lod_cutoff");
+
     ClassDB::bind_method(D_METHOD("set_hlod_layers","input"), &MAssetMesh::set_hlod_layers);
     ClassDB::bind_method(D_METHOD("get_hlod_layers"), &MAssetMesh::get_hlod_layers);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"hlod_layers"),"set_hlod_layers","get_hlod_layers");
@@ -172,6 +176,10 @@ void MAssetMesh::update_instance_date(){
 
 void MAssetMesh::update_lod(int lod){
     current_lod = lod;
+    if(lod_cutoff>=0 && lod <= lod_cutoff){
+        remove_instances(false);
+        return;
+    }
     bool is_visible = is_visible_in_tree() && is_inside_tree();
     for(InstanceData& data : instance_data){
         ERR_CONTINUE(data.meshes.size()==0);
@@ -272,8 +280,17 @@ void MAssetMesh::set_hlod_layers(int64_t input){
     hlod_layers = input;
 }
 
-int64_t MAssetMesh::get_hlod_layers(){
+int64_t MAssetMesh::get_hlod_layers() const {
     return hlod_layers;
+}
+
+void MAssetMesh::set_lod_cutoff(int input){
+    lod_cutoff = input;
+    update_lod(current_lod);
+}
+
+int MAssetMesh::get_lod_cutoff(){
+    return lod_cutoff;
 }
 
 void MAssetMesh::set_collection_id_no_lod_update(int input){

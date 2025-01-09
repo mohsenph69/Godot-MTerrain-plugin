@@ -127,6 +127,7 @@ class MHlodScene : public Node3D {
     static void remove_proc(int32_t octpoint_id);
     static void move_proc(int32_t octpoint_id,const Vector3& old_pos,const Vector3& new_pos);
     static void insert_points();
+    static void first_octree_update(const Vector<MOctree::PointUpdate>* update_info);
     static void octree_update(const Vector<MOctree::PointUpdate>* update_info);
     static void octree_thread_update(void* input);
     static void update_tick();

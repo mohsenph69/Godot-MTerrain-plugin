@@ -230,7 +230,8 @@ class MOctree : public Node3D {
     void process_tick();
     void point_process_finished(int oct_id);
     void check_point_process_finished();
-    void send_update_signal();
+    inline void send_first_update_signal();
+    inline void send_update_signal();
     Vector<PointUpdate> get_point_update(uint16_t oct_id);
     Array get_point_update_dictionary_array(int oct_id);
 

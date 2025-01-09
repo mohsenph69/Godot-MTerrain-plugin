@@ -67,8 +67,9 @@ func bake_to_hlod_resource():
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
 			var i = 0			
-			var max = join_at_lod if join_at_lod >= 0 else MAX_LOD		
-			while i < max:				
+			var max = join_at_lod if join_at_lod >= 0 else MAX_LOD
+			if item.lod_cutoff >= 0: max = min(max,item.lod_cutoff)
+			while i < max:
 				if mesh_array[min(i, len(mesh_array)-1) ] != -1:
 					hlod_resource.insert_item_in_lod_table(mesh_id, i)
 				i += 1

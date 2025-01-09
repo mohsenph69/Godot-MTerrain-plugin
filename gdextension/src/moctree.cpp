@@ -1307,7 +1307,7 @@ void MOctree::process_tick(){
 		is_updating = false;
 		is_point_process_wait = true;
 		waiting_oct_ids = oct_ids;
-		send_update_signal();
+		send_first_update_signal();
 		check_point_process_finished();
 	}
 }
@@ -1366,6 +1366,17 @@ void MOctree::check_point_process_finished(){
 		tid = WorkerThreadPool::get_singleton()->add_native_task(&MOctree::thread_update,(void*)this,true);
 		is_updating = true;
 	}
+}
+
+void MOctree::send_first_update_signal(){
+	update_scenario();
+	if(is_valid_octmesh_updater()){
+		MOctMesh::octree_update(&update_change_info[MOctMesh::get_oct_id()]);
+	}
+	if(is_hlod_updater){
+		MHlodScene::first_octree_update(&update_change_info[MHlodScene::get_oct_id()]);
+	}
+	emit_signal("update_finished");
 }
 
 void MOctree::send_update_signal(){
