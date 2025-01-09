@@ -65,13 +65,14 @@ class MMesh : public Resource {
 	PackedByteArray surfaces_names;
 	Vector<MaterialSet> materials_set;
 
-	PackedStringArray surfaces_get_names() const;
+	
 	void surfaces_set_names(const PackedStringArray& _surfaces_names);
 
 	public:
 	MMesh();
 	~MMesh();
 
+	PackedStringArray surfaces_get_names() const;
 	void surface_set_name(int surface_index);
 	String surface_get_name() const;
 	Array surface_get_arrays(int surface_index) const;

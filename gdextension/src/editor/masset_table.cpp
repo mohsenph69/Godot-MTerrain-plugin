@@ -1408,7 +1408,9 @@ int MAssetTable::mesh_add(Ref<MMesh> mesh){
 
 void MAssetTable::mesh_remove(int id){
     String path = MHlod::get_mesh_path(id);
-    ERR_FAIL_COND(!ResourceLoader::get_singleton()->exists(path));
+    if(!ResourceLoader::get_singleton()->exists(path)){
+        return;
+    }
     Ref<MMesh> mmesh = ResourceLoader::get_singleton()->load(path);
     ERR_FAIL_COND(mmesh.is_null());
     mesh_hashes.erase(mmesh);

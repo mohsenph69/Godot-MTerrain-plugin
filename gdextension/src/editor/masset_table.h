@@ -36,6 +36,8 @@ class MAssetTable : public Resource {
             ERR_FAIL_COND_V(input_mesh.is_null(),0);
             int suf_count = input_mesh->get_surface_count();
             Array suf_info;
+            suf_info.push_back(input_mesh->material_set_get_count());
+            suf_info.push_back(input_mesh->surfaces_get_names());
             for(int i=0; i < suf_count; i++){
                 suf_info.push_back(input_mesh->surface_get_arrays(i));
             }
@@ -52,12 +54,16 @@ class MAssetTable : public Resource {
             Array lsuf_info;
             Array rsuf_info;
             {
+                lsuf_info.push_back(p_lhs->material_set_get_count());
+                lsuf_info.push_back(p_lhs->surfaces_get_names());
                 int suf_count = p_lhs->get_surface_count();
                 for(int i=0; i < suf_count; i++){
                     lsuf_info.push_back(p_lhs->surface_get_arrays(i));
                 }
             }
             {
+                rsuf_info.push_back(p_rhs->material_set_get_count());
+                rsuf_info.push_back(p_rhs->surfaces_get_names());
                 int suf_count = p_rhs->get_surface_count();
                 for(int i=0; i < suf_count; i++){
                     rsuf_info.push_back(p_rhs->surface_get_arrays(i));

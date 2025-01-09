@@ -140,7 +140,9 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	var scene_root = gltf_document.generate_scene(gltf_state)	
 	var scene = scene_root.get_children() if not scene_root is ImporterMeshInstance3D else [scene_root]
 	#STEP 2: convert gltf scene into AssetData format	
-	generate_asset_data_from_glb(scene)	
+	generate_asset_data_from_glb(scene)
+	asset_data.finalize_glb_parse()
+	asset_data.fill_mesh_lod_gaps()
 	#STEP 3: add data from last import for comparisons
 	if asset_library.import_info.has(path):
 		asset_data.add_glb_import_info(asset_library.import_info[path])
@@ -226,8 +228,8 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 					else:
 						print("error with subcollection from different blend file. Here is the list of blend files in import_info:\n", asset_library.import_info["__blend_files"].keys())
 			asset_data.add_sub_collection(active_collection,subcollection_name,node.transform)	
-	if active_collection == "__root__":
-		asset_data.finalize_glb_parse()
+	#if active_collection == "__root__":
+		#asset_data.finalize_glb_parse()
 		
 static func glb_import_commit_changes():
 	var asset_library = MAssetTable.get_singleton()
@@ -249,7 +251,7 @@ static func glb_import_commit_changes():
 	#################
 	## Save Meshes ##
 	#################
-	var saved_successful = asset_data.save_unsaved_meshes() 
+	var saved_successful = asset_data.save_unsaved_meshes()
 	if not saved_successful == OK:
 		push_error("GLB import cannot import meshes: mesh could not be saved to file \n", str(asset_data.glb_path))
 		return					
@@ -269,7 +271,7 @@ static func glb_import_commit_changes():
 			asset_library.mesh_item_remove(mesh_item_info["id"])
 			continue
 		### Other State	
-		var mesh_id_array = fill_mesh_lod_gaps(mesh_item_info["meshes"])										
+		var mesh_id_array = mesh_item_info["meshes"]
 		#var material_set_id = int(mesh_item_name.split("_")[-1])			
 		if mesh_item_info["state"] == AssetIOData.IMPORT_STATE.NEW:			
 			var mid = asset_library.mesh_item_add(mesh_id_array, mesh_item_info.material_set_id)
@@ -312,17 +314,7 @@ static func glb_import_commit_changes():
 	asset_library.import_info[asset_data.glb_path]["__variation_groups"] = asset_data.variation_groups
 	
 	asset_library.finish_import.emit(asset_data.glb_path)
-	asset_library.save()	
-	
-static func fill_mesh_lod_gaps(mesh_array):		
-	var result = mesh_array.duplicate()
-	var last_mesh = null
-	for i in len(mesh_array):						
-		if mesh_array[i] == -1 and last_mesh != null and i != len(mesh_array)-1:						
-			result[i] = last_mesh
-		else:			
-			last_mesh = mesh_array[i]	
-	return result		
+	asset_library.save()
 
 static func import_collection(glb_node_name:String,glb_id:int):		
 	if glb_node_name and not asset_data.collections.has(glb_node_name) or asset_data.collections[glb_node_name]["ignore"] or asset_data.collections[glb_node_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:

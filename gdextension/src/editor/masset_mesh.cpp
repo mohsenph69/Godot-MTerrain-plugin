@@ -184,7 +184,7 @@ void MAssetMesh::update_lod(int lod){
     for(InstanceData& data : instance_data){
         ERR_CONTINUE(data.meshes.size()==0);
         RID mesh_rid = data.get_mesh_rid_last(lod);
-        Ref<MMesh> mmesh = data.get_last_valid_mesh();
+        Ref<MMesh> mmesh = data.get_mesh_last(lod);
         if(mesh_rid == data.mesh_rid){
             continue;
         }

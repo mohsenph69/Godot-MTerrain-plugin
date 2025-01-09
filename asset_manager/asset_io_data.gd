@@ -17,6 +17,7 @@ var mesh_items:Dictionary
 var collections:Dictionary
 var variation_groups: Array #array of array of glb node names
 var meta_data:Dictionary
+var mesh_ids:Dictionary # Key Mesh resource, value Mesh int ID
 
 func import_state_str(_state:int) -> String:
 		if _state==0:return "NOT_HANDLE"
@@ -59,6 +60,7 @@ func clear():
 	mesh_items.clear()	
 	materials.clear()
 	mesh_data.clear()
+	mesh_ids.clear()
 	glb_path = ""
 
 func get_empty_mesh_data()->Dictionary:
@@ -193,6 +195,7 @@ func finalize_glb_parse():
 		# fill meshes with mesh_id	
 		var mesh_nodes = mesh_items[mesh_item_name]["mesh_nodes"]
 		var meshes:=[]
+		var last_valid_mesh # can be integer or Mesh resource if it is new
 		for mesh_node in mesh_nodes:			
 			if mesh_node == null or not mesh_node is ImporterMeshInstance3D or mesh_node.mesh == null:
 				meshes.push_back(-1)
@@ -415,11 +418,25 @@ func save_unsaved_meshes()->int:
 		var mesh_id = asset_library.mesh_add(mmesh)		
 		result[mesh_id] = mesh_data[mesh]		
 		## Replace mesh with mesh id inside mesh_items dictionary		
-		for mesh_item_name in mesh_data[mesh].mesh_item_users:			
-			var index = mesh_items[mesh_item_name]["meshes"].find(mesh)
-			mesh_items[mesh_item_name]["meshes"][index] = mesh_id
+		for mesh_item_name in mesh_data[mesh].mesh_item_users:
+			for j in range(mesh_items[mesh_item_name]["meshes"].size()):
+				if mesh_items[mesh_item_name]["meshes"][j] is Mesh and mesh_items[mesh_item_name]["meshes"][j] == mesh:
+					print("woo replace")
+					mesh_items[mesh_item_name]["meshes"][j] = mesh_id
 	mesh_data = result
 	return OK
+
+func fill_mesh_lod_gaps():
+	for k in mesh_items:
+		var mesh_arr = mesh_items[k]["meshes"]
+		var last_valid_mesh # can be integer or Mesh resource if it is new
+		for i in range(mesh_arr.size()-1):
+			var current_mesh = mesh_arr[i]
+			if (current_mesh is Mesh and current_mesh != null) or (current_mesh is int and current_mesh>0):
+				last_valid_mesh = current_mesh
+			elif (last_valid_mesh is Mesh and last_valid_mesh != null) or (last_valid_mesh is int and last_valid_mesh>0):
+				mesh_arr[i] = last_valid_mesh
+		mesh_items[k]["meshes"] = mesh_arr
 
 # will return the information which is need to save with glb_path in import_info in AssetTable
 func get_glb_import_info():
