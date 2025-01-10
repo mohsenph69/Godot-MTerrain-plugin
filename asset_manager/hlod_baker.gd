@@ -87,7 +87,6 @@ func bake_to_hlod_resource():
 		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, 0, shadow_array, gi_array, 1, 0)		
 		if mesh_id != -1:
 			for i in range(join_at_lod, MAX_LOD):
-				print("inserting joined mesh at lod ", i)		
 				hlod_resource.insert_item_in_lod_table(mesh_id, i)		
 		else:
 			push_error("Hlod baker error: cannot add joined mesh to hlod table because mesh_id is -1")
@@ -228,7 +227,7 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 		if not is_instance_valid(data.node):
 			push_error("trying to join mesh with mhlod_scenes, but node is invalid: ")
 			continue
-		var mesh_transforms = mhlod_node.get_last_lod_data()
+		var mesh_transforms = mhlod_node.get_last_lod_mesh_ids_transforms()
 		for mesh_transform in mesh_transforms:			
 			var mmesh:MMesh = load(MHlod.get_mesh_path(mesh_transform[0]))
 			if mmesh:
