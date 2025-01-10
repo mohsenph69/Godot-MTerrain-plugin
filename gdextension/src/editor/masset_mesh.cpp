@@ -176,7 +176,7 @@ void MAssetMesh::update_instance_date(){
 
 void MAssetMesh::update_lod(int lod){
     current_lod = lod;
-    if(lod_cutoff>=0 && lod <= lod_cutoff){
+    if(lod_cutoff>=0 && lod >= lod_cutoff){
         remove_instances(false);
         return;
     }

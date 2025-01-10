@@ -39,10 +39,10 @@ func force_lod(lod:int):
 	force_lod_value = lod		
 	if lod == -1:
 		asset_mesh_updater.update_auto_lod()
-		activate_mesh_updater()		
+		force_lod_enabled = false
 	else:		
 		asset_mesh_updater.update_force_lod(lod)
-		deactivate_mesh_updater()
+		force_lod_enabled = true
 		
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
@@ -384,7 +384,9 @@ func deactivate_mesh_updater():
 		timer.stop()
 	
 func update_asset_mesh():	
-	if force_lod_enabled: return # this should not be necessary, but sometime timer refuses to stop, and I don't know why
+	if force_lod_enabled:
+		asset_mesh_updater.update_force_lod(force_lod_value)
+		return # this should not be necessary, but sometime timer refuses to stop, and I don't know why
 	asset_mesh_updater.update_auto_lod()
 	asset_mesh_updated.emit()
 #endregion

@@ -421,7 +421,6 @@ func save_unsaved_meshes()->int:
 		for mesh_item_name in mesh_data[mesh].mesh_item_users:
 			for j in range(mesh_items[mesh_item_name]["meshes"].size()):
 				if mesh_items[mesh_item_name]["meshes"][j] is Mesh and mesh_items[mesh_item_name]["meshes"][j] == mesh:
-					print("woo replace")
 					mesh_items[mesh_item_name]["meshes"][j] = mesh_id
 	mesh_data = result
 	return OK
