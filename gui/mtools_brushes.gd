@@ -147,6 +147,7 @@ func create_props(dic:Dictionary):
 	element.prop_changed.connect(prop_change)
 	element.set_value(dic["default_value"])
 	element.set_name(dic["name"])
+	element.update_name(dic["name"])
 	property_element_list.append(element)	
 	if element.prop_name.to_lower() == "revers":
 		reverse_property_control = element	

@@ -6,7 +6,11 @@ signal prop_changed
 var prop_name:String
 var value:int
 
-@onready var item_list = find_child("ItemList")
+@onready var item_list:ItemList= find_child("ItemList")
+
+func _ready() -> void:
+	item_list.item_selected.connect(_on_values_item_selected)
+
 func set_options(input:String):
 	if not item_list:
 		await ready
