@@ -586,7 +586,15 @@ static func remove_material(id):
 			DirAccess.remove_absolute( thumbnail_path )
 	asset_library.import_info["__materials"] = materials
 
+static func remove_ununused_meshes():
+	var root = MHlod.get_mesh_root_dir()
+	for path in DirAccess.get_files_at( root ):
+		var mesh_id = int(path)
+		if len(MAssetTable.get_singleton().mesh_get_mesh_items_users(mesh_id)) == 0:
+			DirAccess.remove_absolute(root.path_join(path))
+
 static func remove_mesh(mesh_id):	
+	return
 	var asset_library =MAssetTable.get_singleton()	
 	if len(asset_library.mesh_get_mesh_items_users(mesh_id)) > 1:
 		return
