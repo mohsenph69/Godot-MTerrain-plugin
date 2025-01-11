@@ -71,16 +71,25 @@ class MOctree : public Node3D {
         int32_t id;
     };
 
+
     struct PointMoveReq
     {
-        int32_t p_id;
-        uint16_t oct_id;
+        union
+        {
+            struct{
+                int32_t p_id;
+                uint16_t oct_id;
+            };
+            uint64_t __hash;
+        };
         Vector3 old_pos;
         Vector3 new_pos;
         PointMoveReq();
         PointMoveReq(int32_t _p_id,uint16_t _oct_id,Vector3 _old_pos,Vector3 _new_pos);
-        _FORCE_INLINE_ uint64_t hash() const;
-        bool operator<(const PointMoveReq& other) const;
+        PointMoveReq(int32_t _p_id,uint16_t _oct_id);
+        _FORCE_INLINE_ bool operator<(const PointMoveReq& other) const{
+            return __hash < other.__hash;
+        }
     };
 
     private:

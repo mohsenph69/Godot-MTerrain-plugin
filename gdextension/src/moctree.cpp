@@ -58,15 +58,11 @@ p_id(_p_id),oct_id(_oct_id),old_pos(_old_pos),new_pos(_new_pos)
 
 }
 
-uint64_t MOctree::PointMoveReq::hash() const{
-	uint64_t uid = (uint64_t)((uint32_t)p_id) << 16;
-	return uid | (uint64_t)oct_id;
-}
+MOctree::PointMoveReq::PointMoveReq(int32_t _p_id,uint16_t _oct_id):
+p_id(_p_id),oct_id(_oct_id)
+{
 
-bool MOctree::PointMoveReq::operator<(const PointMoveReq& other) const{
-	return hash() < other.hash();
 }
-
 
 MOctree::Octant::Octant(){
 }
@@ -704,6 +700,12 @@ bool MOctree::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
 	if(disable_octree){
 		return true;
 	}
+	{
+		std::lock_guard<std::mutex> lock2(move_req_mutex);
+		//PointMoveReq rm_mv_req(id,oct_id,Vector3(),Vector3());
+		PointMoveReq rm_mv_req(id,oct_id);
+		moves_req_cache.erase(rm_mv_req);
+	}
 	Octant* res = root.remove_point(id,pos,oct_id);
 	if(unlikely(!res)){
 		WARN_PRINT("Can not find point with ID "+itos(id)+" OCT_ID "+itos(oct_id)+" to remove!");
@@ -973,8 +975,8 @@ void MOctree::move_point(const PointMoveReq& mp,int8_t updated_lod,uint8_t updat
 	poct = root.find_octant_by_point(mp.p_id,mp.oct_id,mp.old_pos,point_index);
 	if(poct==nullptr){
 		poct = root.find_octant_by_point_classic(mp.p_id,mp.oct_id,point_index);
-		if(poct!=nullptr){
-			WARN_PRINT("Used Classic method to find octant of move point! Maybe you not provide the excat oct_tree position for move");
+		if(poct!=nullptr && mp.p_id==1238){
+			WARN_PRINT("Used Classic method to find octant of move point! Maybe you not provide the excat oct_tree position for move, also make sure to send make move request after inserting points.");
 		}
 	}
 	ERR_FAIL_COND_MSG(poct==nullptr,"can not find octant of moved point!");
