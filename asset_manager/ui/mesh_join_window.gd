@@ -53,7 +53,7 @@ func _ready():
 		#if import_info[joined_mesh_glb_path].has("__metadata"):
 			#if import_info[joined_mesh_glb_path]["__metadata"].has
 		
-	%JoinLod.value = baker.join_at_lod
+	%JoinLod.value = baker.asset_mesh_updater.get_join_at_lod()
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1	
 						
 	%export_joined_mesh_toggle.button_pressed = not baker.has_joined_mesh_glb() 
@@ -121,8 +121,7 @@ func build_tree(parent_node, parent_item:TreeItem):
 		for child in parent_node.get_children():
 			build_tree(child, item)
 
-func commit():			
-	baker.join_at_lod = %JoinLod.value	
+func commit():				
 	if %export_joined_mesh_toggle.button_pressed:				
 		baker.make_joined_mesh(nodes_to_join, %JoinLod.value)
 		for node in original_nodes_to_join:
