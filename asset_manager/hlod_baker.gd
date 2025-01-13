@@ -3,7 +3,7 @@ class_name HLod_Baker extends Node3D
 
 signal asset_mesh_updated
 
-@export_storage var join_at_lod: int = -1
+#@export_storage var join_at_lod: int = -1
 @export_storage var joined_mesh_collection_id := -1
 @export_storage var joined_mesh_disabled := false
 @export_storage var hlod_resource: MHlod
@@ -13,6 +13,7 @@ signal asset_mesh_updated
 @export_storage var force_lod_value: int
 @export_storage var variation_layers: PackedStringArray = ["","","","","","","","","","","","","","","",""]
 @export_storage var variation_layers_preview_value = 0
+@export_storage var joined_mesh_modified_time: int = -1
 
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
@@ -266,7 +267,7 @@ func has_joined_mesh_glb()->bool:
 
 func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
 	var mmesh_array = a.get_mesh_lod()
-	var lod_to_use = min(join_at_lod, len(mmesh_array)-1)	
+	var lod_to_use = min(asset_mesh_updater.get_join_at_lod(), len(mmesh_array)-1)	
 	#print("lod to use for join: ",lod_to_use, " join at lod: ", join_at_lod, " mesh items: ", len(mesh_lod.meshes)-1)
 	while lod_to_use >-1 and mmesh_array[lod_to_use] == null:
 		lod_to_use -= 1

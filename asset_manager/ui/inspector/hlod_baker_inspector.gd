@@ -7,6 +7,8 @@ func _ready():
 	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return		
+		
+	
 	%Bake.pressed.connect(baker.bake_to_hlod_resource)		
 	%Bake.pressed.connect(func():
 		var tween:Tween = create_tween()
@@ -35,8 +37,7 @@ func _ready():
 			baker.force_lod(force_lod_value.value)		
 		else:
 			baker.force_lod(-1)
-	)
-	
+	)		
 	force_lod_value.value = baker.force_lod_value if baker.force_lod_value else 0
 	force_lod_checkbox.button_pressed = baker.force_lod_enabled		
 	force_lod_value.visible = force_lod_checkbox.button_pressed
@@ -51,7 +52,7 @@ func _ready():
 	%disable_joined_mesh_button.button_pressed = baker.joined_mesh_disabled 		
 		
 	%show_joined_button.pressed.connect(func():
-		baker.force_lod(baker.join_at_lod)
+		baker.force_lod(baker.asset_mesh_updater.get_join_at_lod())
 		baker.notify_property_list_changed()		
 	)
 	%variation_layers_button.pressed.connect(func():

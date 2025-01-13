@@ -1,21 +1,6 @@
 @tool
 class_name AssetIO extends Object
 
-####### TODO - Change state propagate to collection
-
-############################################
-# AssetIO contains:
-# - static functions for importing/exporting glb files
-# - static functions for instantiating collections
-# - static functions for updating MAssetTable from nodes
-
-# AssetTable Import Info is structured as follows: {
-#	gbl_path.glb: {
-#		object_name: collection_id
-#	}
-
-# QUESTION: If I have a fence with 100 fence posts, is it better to have 1 mesh with 8000 verticies or 100 instances of a single mesh with 80vertices?
-
 const LOD_COUNT = 8  # The number of different LODs in your project
 
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
@@ -44,50 +29,76 @@ static func glb_export(root_node:Node3D, path = str("res://addons/m_terrain/asse
 #endregion
 
 #region GLB Import	
-static func load_glb_as_hlod(original_scene,root_name):		
+static func glb_load_hlod_commit_changes(scene, baker_path):		
+	var asset_library:MAssetTable = MAssetTable.get_singleton()		
+	
+	for node in scene.get_children():		
+		if node.has_meta("export_path"):			
+			var path = node.get_meta("export_path")		
+			glb_export(node, path)	
+			node.queue_free()			
+			glb_load(path, {}, true)
+			node.name = node.name + "_0"														
+			scene.joined_mesh_collection_id = asset_library.import_info[path][node.name].id
+			asset_library.collection_add_tag(scene.joined_mesh_collection_id, 0)						
+	
+	for node in scene.find_children("*"):
+		if node.has_meta("ignore") and node.get_meta("ignore") == true: 
+			node.get_parent().remove_child(node)
+			node.queue_free()
+	
+	var packed_scene = PackedScene.new()	
+	packed_scene.pack(scene)	
+	print("baker path: ", baker_path)
+	if FileAccess.file_exists(baker_path):
+		packed_scene.take_over_path(baker_path)							
+		ResourceSaver.save(packed_scene, baker_path)	
+		if baker_path in EditorInterface.get_open_scenes():
+			EditorInterface.reload_scene_from_path(baker_path)
+	else:
+		ResourceSaver.save(packed_scene, baker_path)	
+
+static func glb_parse_hlod_scene(original_scene:Node, root_name):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()	
 	var scene = original_scene.get_child(0)			
+	original_scene.remove_child(scene)
+	original_scene.queue_free()
 	scene.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
+	scene.name = root_name
 	var nodes = scene.find_children("*", "Node3D", true, false)	
-	var baker_path := str("res://addons/m_terrain/asset_manager/reference/" + root_name + "_baker.tscn" )
+	var joined_mesh_node = null	
+	var baker_path := str(MAssetTable.get_editor_baker_scenes_dir().path_join(root_name + "_baker.tscn" ))
+	scene.set_meta("baker_path", baker_path)
 	nodes.reverse()	
 	for node in nodes:		
 		if node is ImporterMeshInstance3D:						
-			var parent_node = Node3D.new()
+			if joined_mesh_node == null:
+				joined_mesh_node = Node3D.new()
+				scene.add_child(joined_mesh_node)
+				var path = baker_path.get_basename() + "_joined_mesh.glb"			
+				joined_mesh_node.set_meta("export_path", path)
+				var name_data = node_parse_name(node)			
+				joined_mesh_node.name = name_data.name + "_joined_mesh" if not "_joined_mesh" in name_data.name else name_data.name
+			node.reparent(joined_mesh_node)																	
 			var mesh_node = MeshInstance3D.new()
-			parent_node.add_child(mesh_node)
-			var name_data = node_parse_name(node)			
-			scene.join_at_lod = name_data.lod
-			parent_node.name = name_data.name + "_joined_mesh" if not "_joined_mesh" in name_data.name else name_data.name
-			mesh_node.owner = parent_node
+			joined_mesh_node.add_child(mesh_node)									
+			mesh_node.owner = joined_mesh_node
 			mesh_node.name = node.name
 			mesh_node.transform = node.transform
 			mesh_node.mesh = node.mesh.get_mesh()
 			node.get_parent().remove_child(node)
-			node.queue_free()
-			var path = baker_path.get_basename() + "_joined_mesh.glb"			
-			glb_export(parent_node, path)			
-			parent_node.queue_free()			
-			glb_load(path, {}, true)					
-			if not path in asset_library.import_info:
-				print("joined mesh reimport: no joined mesh path in import info", path)
-				continue
-			if not name_data.name in asset_library.import_info[path]:
-				print("joined mesh reimport: no node name in import info", name_data.name)				
-				continue			
-			scene.joined_mesh_collection_id = asset_library.import_info[path][name_data.name].id
-			asset_library.collection_add_tag(scene.joined_mesh_collection_id, 0)						
+			node.queue_free()						
 			continue					
 		if not node.has_meta("blend_file"):			
-			print("NO BLend file in node")
+			node.set_meta("import_error", "has no blend file metadata")			
 			continue
 		if not asset_library.import_info["__blend_files"].has(node.get_meta("blend_file")):			
-			print("NO BLend file in import info")
+			node.set_meta("import_error", "has no blend file metadata")			
 			continue
 		var glb_path = asset_library.import_info["__blend_files"][node.get_meta("blend_file")]			
 		var node_name := collection_parse_name(node)
 		if not asset_library.import_info[glb_path].has(node_name):			
-			print("import info does not have this node name for this glb: ", node_name, " <- ", glb_path)
+			node.set_meta("import_error", str("import info does not have this node name for this glb: ", node_name, " <- ", glb_path))
 			continue
 		var new_node = MAssetMesh.new()	
 		new_node.collection_id = asset_library.import_info[glb_path][node_name].id
@@ -101,16 +112,18 @@ static func load_glb_as_hlod(original_scene,root_name):
 		else:						
 			new_node.queue_free()
 		node.queue_free()	
-	var packed_scene = PackedScene.new()	
-	packed_scene.pack(scene)
-	original_scene.queue_free()		
-	if FileAccess.file_exists(baker_path):
-		packed_scene.take_over_path(baker_path)
-		ResourceSaver.save(packed_scene, baker_path)			
-	else:
-		ResourceSaver.save(packed_scene, baker_path)
-	original_scene.queue_free()	
-
+	return scene
+	
+static func glb_show_import_scene_window(scene):
+	var popup = Window.new()
+	popup.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
+	popup.wrap_controls = true
+	EditorInterface.get_editor_main_screen().add_child(popup)
+	var panel = preload("res://addons/m_terrain/asset_manager/ui/import_window_hlod_scene.tscn").instantiate()
+	panel.scene = scene	
+	popup.add_child(panel)
+	popup.popup_centered(Vector2i(800,600))	
+	
 static func glb_load(path, metadata={},no_window:bool=false):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	var gltf_document = GLTFDocument.new()
@@ -121,11 +134,9 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	
 	var root_name = gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
 	if "_hlod" in root_name and not "_joined_mesh" in root_name:
-		load_glb_as_hlod(gltf_document.generate_scene(gltf_state), root_name)		
+		var scene = glb_parse_hlod_scene(gltf_document.generate_scene(gltf_state), root_name)
+		glb_show_import_scene_window(scene)
 		return		
-	else:
-		pass
-		#print(root_name)
 	
 	#STEP 0: Init Asset Data
 	asset_data = AssetIOData.new()	
@@ -586,7 +597,15 @@ static func remove_material(id):
 			DirAccess.remove_absolute( thumbnail_path )
 	asset_library.import_info["__materials"] = materials
 
+static func remove_ununused_meshes():
+	var root = MHlod.get_mesh_root_dir()
+	for path in DirAccess.get_files_at( root ):
+		var mesh_id = int(path)
+		if len(MAssetTable.get_singleton().mesh_get_mesh_items_users(mesh_id)) == 0:
+			DirAccess.remove_absolute(root.path_join(path))
+
 static func remove_mesh(mesh_id):	
+	return
 	var asset_library =MAssetTable.get_singleton()	
 	if len(asset_library.mesh_get_mesh_items_users(mesh_id)) > 1:
 		return
