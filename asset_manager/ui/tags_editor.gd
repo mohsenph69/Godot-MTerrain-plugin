@@ -33,9 +33,14 @@ func search_tags(new_text):
 			item.visible = new_text.to_lower() in tag_text or new_text == ""				
 	
 func get_selected_tags():
-	var result = {}
-	for item in tag_list.get_root().get_children().filter(func(item): return item.is_selected(0) or item.is_selected(1)):
-		result[item.get_text(1)] = item.get_metadata(0)
+	var result = {}	
+	if group_by_button.button_pressed:		
+		for group in tag_list.get_root().get_children():
+			for item in group.get_children().filter(func(item): return item.is_selected(0) or item.is_selected(1)):			
+				result[item.get_text(1)] = item.get_metadata(0)
+	else:
+		for item in tag_list.get_root().get_children().filter(func(item): return item.is_selected(0) or item.is_selected(1)):			
+			result[item.get_text(1)] = item.get_metadata(0)
 	return result
 
 func set_editable(toggle_on):
@@ -90,11 +95,13 @@ func add_tag():
 			asset_library.tag_set_name(tag_id, tag_name)
 			add_tag_item(tag_id, tag_name)	
 			break
-	asset_library.save()					
+	asset_library.save()
+	set_options()	
 	
 	
 func remove_tags():			
-	for tag_id in get_selected_tags().values():					
+	for tag_id in get_selected_tags().values():		
+		print(tag_id)			
 		asset_library.tag_set_name(tag_id, "")		
 	asset_library.save()					
 	set_options()
@@ -126,17 +133,24 @@ func set_options(tag_data = asset_library.tag_get_names()): #{tag_name: tag_id}
 			add_tag_item(tag_data[tag], tag)	
 	else:
 		tag_list.hide_folding = false		
+		var all_tags: Dictionary = asset_library.tag_get_names()		
 		for group in asset_library.group_get_list():
 			var group_item := tag_list.get_root().create_child()
 			group_item.set_text(0, group)
 			group_item.set_selectable(0, false)			
 			group_item.set_expand_right(0, true)
+			
 			for tag_id in asset_library.group_get_tags(group):			
 				add_tag_item(tag_id, asset_library.tag_get_name(tag_id), group_item)	
-			
-			
-func add_tag_item(tag_id, tag, root := tag_list.get_root()):
-	
+				all_tags.erase(all_tags.find_key(tag_id))
+		var group_item := tag_list.get_root().create_child()
+		group_item.set_text(0, "(no group)")
+		group_item.set_selectable(0, false)			
+		group_item.set_expand_right(0, true)
+		for tag_name in all_tags:
+			add_tag_item(all_tags[tag_name], tag_name, group_item)	
+					
+func add_tag_item(tag_id, tag, root := tag_list.get_root()):	
 	var item = root.create_child()	
 	item.set_metadata(0, tag_id)		
 	item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)

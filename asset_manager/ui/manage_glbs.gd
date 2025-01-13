@@ -3,10 +3,12 @@ extends Control
 
 @onready var glb_tree:Tree = find_child("glb_tree")
 @onready var glb_details:Tree = find_child("glb_details")
+@onready var show_materials_toggle:CheckButton = find_child("show_materials_toggle")
 
 var asset_library = MAssetTable.get_singleton()
 var button_texture: Texture2D
 var empty_click_debounce_time := 0
+
 func _ready():
 	visibility_changed.connect(init_tree)
 	glb_tree.set_column_expand(1, false)
@@ -23,29 +25,11 @@ func _ready():
 			#dialog.close_requested.connect(dialog.queue_free)
 		empty_click_debounce_time = Time.get_ticks_msec()	
 	)
+	show_materials_toggle.toggled.connect(func(toggle_on):		
+		update_details()
+	)
 	glb_tree.item_selected.connect(func():
-		var glb_path = glb_tree.get_selected().get_text(0)				
-		glb_details.clear()
-		var root = glb_details.create_item()
-		if glb_path == "(orphans)":			
-			for id in AssetIO.get_orphaned_collections():				
-				var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id))
-				var item = root.create_child() 
-				if asset_library.has_collection(id):
-					item.set_text(0, asset_library.collection_get_name(id))
-					item.set_icon(0, texture)
-					item.set_metadata(0, id)					
-					item.add_button(1, button_texture)
-		else:
-			for collection_name in asset_library.import_info[glb_path].keys():
-				if "__" in collection_name: continue			
-				var collection_id = asset_library.import_info[glb_path][collection_name].id
-				var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
-				var item = root.create_child() 
-				item.set_text(0, collection_name)
-				item.set_icon(0, texture)
-				item.set_metadata(0, collection_id)									
-				item.add_button(1, button_texture)
+		update_details()		
 	)
 	glb_tree.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):
 		var glb_path = item.get_text(0)
@@ -76,6 +60,41 @@ func _ready():
 	if not asset_library.finish_import.is_connected(on_finish_import):
 		asset_library.finish_import.connect(on_finish_import)
 
+func update_details():
+	var glb_path = glb_tree.get_selected().get_text(0)				
+	glb_details.clear()
+	var root := glb_details.create_item()
+	if show_materials_toggle.button_pressed:
+		if asset_library.import_info.has(glb_path) and asset_library.import_info[glb_path].has("__materials"):				
+			for material_name in asset_library.import_info[glb_path]["__materials"]:								
+				var material_id = asset_library.import_info[glb_path]["__materials"][material_name].path					
+				var item = root.create_child() 					
+				var path = asset_library.import_info["__materials"][material_id].path if material_id != -1 else "(none)"
+				item.set_text(0, "MATERIAL: " + material_name + " -> " + path)
+				#item.set_icon(0, texture)
+				item.set_metadata(0, material_id)					
+				#item.add_button(2, button_texture)
+	
+	if glb_path == "(orphans)":			
+		for id in AssetIO.get_orphaned_collections():				
+			var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id))
+			var item = root.create_child() 
+			if asset_library.has_collection(id):
+				item.set_text(0, asset_library.collection_get_name(id))
+				item.set_icon(0, texture)
+				item.set_metadata(0, id)					
+				item.add_button(1, button_texture)
+	else:
+		for collection_name in asset_library.import_info[glb_path].keys():
+			if "__" in collection_name: continue			
+			var collection_id = asset_library.import_info[glb_path][collection_name].id
+			var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
+			var item = root.create_child() 
+			item.set_text(0, collection_name)
+			item.set_icon(0, texture)
+			item.set_metadata(0, collection_id)									
+			item.add_button(1, button_texture)
+	
 func on_finish_import(path):	
 	init_tree()
 	
