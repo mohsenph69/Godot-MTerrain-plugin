@@ -8,7 +8,9 @@
                 "${workspaceFolder}/godot-cpp/gdextension/",
                 "${workspaceFolder}/src/"
             ],
-            "defines": [],
+            "defines": [
+                "DEBUG_ENABLED"
+            ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
             "cppStandard": "c++14",

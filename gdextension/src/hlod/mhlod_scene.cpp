@@ -18,10 +18,13 @@ void MHlodScene::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("_update_visibility"), &MHlodScene::_update_visibility);
     ClassDB::bind_method(D_METHOD("get_last_lod_mesh_ids_transforms"), &MHlodScene::get_last_lod_mesh_ids_transforms);
+    ClassDB::bind_method(D_METHOD("get_triangle_meshes"), &MHlodScene::get_triangle_meshes);
 
     ClassDB::bind_static_method("MHlodScene",D_METHOD("sleep"), &MHlodScene::sleep);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("awake"), &MHlodScene::awake);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("get_hlod_users","hlod_path"), &MHlodScene::get_hlod_users);
+
+    ClassDB::bind_method(D_METHOD("check_transform_change"), &MHlodScene::check_transform_change);
 }
 
 
@@ -50,16 +53,25 @@ RID MHlodScene::ApplyInfo::get_instance() const{
     return out;
 }
 
-MHlodScene::Proc::Proc(){
+MHlodScene::Proc::Proc(MHlodScene* _scene,Ref<MHlod> _hlod,int32_t _proc_id,int32_t _scene_layers,const Transform3D& _transform):
+hlod(_hlod),scene(_scene),proc_id(_proc_id),scene_layers(scene_layers),transform(_transform)
+{
 
 }
 
 MHlodScene::Proc::~Proc(){
-    deinit();
-    MHlodScene::remove_proc(oct_point_id);
+    disable();
+}
+
+void MHlodScene::Proc::init_sub_proc(int32_t _sub_proc_index,uint64_t _sub_proc_size,int32_t _proc_id){
+    sub_proc_index = _sub_proc_index;
+    sub_procs_size = _sub_proc_size;
+    proc_id = _proc_id;
 }
 
 void MHlodScene::Proc::change_transform(const Transform3D& new_transform){
+    return;
+    is_transform_changed = true;
     if(MHlodScene::octree!=nullptr && oct_point_id!=-1 && is_octree_inserted){
         MOctree::PointMoveReq mv_req(oct_point_id,MHlodScene::oct_id,transform.origin,new_transform.origin);
         MHlodScene::octree->add_move_req(mv_req);
@@ -67,61 +79,25 @@ void MHlodScene::Proc::change_transform(const Transform3D& new_transform){
     transform = new_transform;
     update_all_transform();
     for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].change_transform(new_transform*hlod->sub_hlods_transforms[i]);
+        get_subprocs_ptrw()[i].change_transform(new_transform*hlod->sub_hlods_transforms[i]);
     }
 }
 
-void MHlodScene::Proc::init(Vector<Proc>& sub_procs_arr,int& sub_proc_index,const Transform3D& _transform,uint16_t _scene_layers){
-    if(is_init){
-        return;
-    }
-    ERR_FAIL_COND(hlod.is_null());
-    ERR_FAIL_COND(sub_proc_index+hlod->sub_hlods.size()>sub_procs_arr.size());
-    scene_layers = _scene_layers;
-    sub_proc_ptr = sub_procs_arr.ptrw() + sub_proc_index;
-    sub_procs_size = hlod->sub_hlods.size();
-    transform = _transform;
-    oct_point_id = MHlodScene::add_proc(this,oct_point_id);
-    // sub procs
-    sub_proc_index += sub_procs_size;
-    for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].hlod = hlod->sub_hlods[i];
-        sub_proc_ptr[i].scene_layers = hlod->sub_hlods_scene_layers[i];
-        sub_proc_ptr[i].init(sub_procs_arr,sub_proc_index,transform*hlod->sub_hlods_transforms[i],hlod->sub_hlods_scene_layers[i]);
-    }
-    is_init = true;
-}
-
-void MHlodScene::Proc::deinit(){
-    if(!is_init){
-        return;
-    }
-    for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].deinit();
-    }
-    remove_all_items(true); // this must come first
-    is_init = false;
-    sub_procs_size = 0;
-    sub_proc_ptr = nullptr;
-    MHlodScene::remove_proc(oct_point_id);
-    items_creation_info.clear();
-}
-
-void MHlodScene::Proc::enable(){
-    ERR_FAIL_COND(!is_init);
+void MHlodScene::Proc::enable(const bool recursive){
     if(is_enable){
         return;
     }
     is_enable = true;
     is_sub_proc_enable = true;
     oct_point_id = MHlodScene::add_proc(this,oct_point_id);
-    for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].enable();
+    if(recursive){
+        for(int i=0; i < sub_procs_size; i++){
+            get_subprocs_ptrw()[i].enable();
+        }
     }
 }
 
-void MHlodScene::Proc::disable(){
-    ERR_FAIL_COND(!is_init);
+void MHlodScene::Proc::disable(const bool recursive){
     if(!is_enable){
         return;
     }
@@ -129,8 +105,10 @@ void MHlodScene::Proc::disable(){
     is_sub_proc_enable = false;
     remove_all_items(false);
     MHlodScene::remove_proc(oct_point_id);
-    for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].disable();
+    if(recursive){
+        for(int i=0; i < sub_procs_size; i++){
+            get_subprocs_ptrw()[i].disable();
+        }
     }
 }
 
@@ -140,7 +118,7 @@ void MHlodScene::Proc::enable_sub_proc(){
     }
     is_sub_proc_enable = true;
     for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].enable();
+        get_subprocs_ptrw()[i].enable();
     }
 }
 
@@ -150,7 +128,7 @@ void MHlodScene::Proc::disable_sub_proc(){
     }
     is_sub_proc_enable = false;
     for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].disable();
+        get_subprocs_ptrw()[i].disable();
     }
 }
 
@@ -290,7 +268,7 @@ void MHlodScene::Proc::reload_meshes(const bool recursive){
     // Applying for sub proc
     if(recursive){
         for(int i=0; i < sub_procs_size; i++){
-            sub_proc_ptr[i].reload_meshes();
+            get_subprocs_ptrw()[i].reload_meshes();
         }
     }
 }
@@ -303,15 +281,20 @@ void MHlodScene::Proc::remove_all_items(const bool immediate,const bool recursiv
         return; // Nothing to remove
     }
     VSet<int32_t> lod_table = hlod->lods[lod];
+    for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
+        remove_item(hlod->item_list.ptrw() + it->value.item_id,it->value.item_id,immediate);
+    }
+    /*
     for(int i=0; i < lod_table.size(); i++){
         ERR_FAIL_INDEX(lod_table[i],hlod->item_list.size());
         MHlod::Item* item = hlod->item_list.ptrw() + lod_table[i];
         remove_item(item,lod_table[i],immediate);
     }
+    */
     //sub procs
     if(recursive){
         for(int i=0; i < sub_procs_size; i++){
-            sub_proc_ptr[i].remove_all_items(immediate);
+            get_subprocs_ptrw()[i].remove_all_items(immediate);
         }
     }
 }
@@ -320,7 +303,7 @@ void MHlodScene::Proc::remove_all_items(const bool immediate,const bool recursiv
 void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
     ERR_FAIL_COND(oct_point_id==-1);
     ERR_FAIL_COND(octree==nullptr);
-    if(hlod.is_null()){
+    if(!is_enable || hlod.is_null()){
         lod = c_lod;
         return;
     }
@@ -332,7 +315,8 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
         }
     }
     if(c_lod<0 || c_lod >= hlod->lods.size() || hlod->lods[c_lod].size() == 0){
-        remove_all_items();
+        //UtilityFunctions::print(c_lod, " RM all item!");
+        remove_all_items(immediate);
         lod = c_lod;
         return; // we don't consider this dirty as there is nothing to be appllied later
     }
@@ -376,15 +360,51 @@ void MHlodScene::Proc::set_visibility(bool visibility){
         }
     }
     for(int i=0; i < sub_procs_size; i++){
-        sub_proc_ptr[i].set_visibility(visibility);
+        get_subprocs_ptrw()[i].set_visibility(visibility);
     }
 }
+
+#ifdef DEBUG_ENABLED
+void MHlodScene::Proc::_get_editor_tri_mesh_info(PackedVector3Array& vertices,PackedInt32Array& indices,const Transform3D& local_transform) const{
+    if(hlod.is_valid()){
+        for(HashMap<int32_t,CreationInfo>::ConstIterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
+            if(it->value.type == MHlod::Type::MESH){
+                Ref<MMesh> _m = hlod->item_list[it->value.item_id].mesh.mesh;
+                if(_m.is_valid()){
+                    Transform3D t = local_transform * hlod->transforms[hlod->item_list[it->value.item_id].transform_index];
+                    int s_count = _m->get_surface_count();
+                    for(int s=0; s < s_count; s++){
+                        PackedVector3Array _mv;
+                        PackedInt32Array _mi;
+                        {
+                            Array sinfo = _m->surface_get_arrays(s);
+                            _mv = sinfo[Mesh::ARRAY_VERTEX];
+                            _mi = sinfo[Mesh::ARRAY_INDEX];
+                            for(const Vector3& v : _mv){
+                                vertices.push_back(t.xform(v));
+                            }
+                            int32_t offset = indices.size();
+                            for(const int32_t index : _mi){
+                                indices.push_back(index+offset);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // Sub procs
+    for(int i=0; i < sub_procs_size; i++){
+    }
+}
+#endif
 
 /////////////////////////////////////////////////////
 /// Static --> Proc Manager
 /////////////////////////////////////////////////////
 bool MHlodScene::is_sleep = false;
-HashSet<MHlodScene*> MHlodScene::all_hlod_scenes;
+Vector<MHlodScene::Proc*> MHlodScene::all_tmp_procs;
+VSet<MHlodScene*> MHlodScene::all_hlod_scenes;
 HashMap<int32_t,MHlodScene::Proc*> MHlodScene::octpoints_to_proc;
 MOctree* MHlodScene::octree = nullptr;
 WorkerThreadPool::TaskID MHlodScene::thread_task_id;
@@ -466,8 +486,11 @@ void MHlodScene::insert_points(){
     }
     octree->insert_points(points_pos,points_ids,oct_id);
 }
-
-void MHlodScene::first_octree_update(const Vector<MOctree::PointUpdate>* update_info){
+#include <godot_cpp/classes/time.hpp>
+void MHlodScene::first_octree_update(Vector<MOctree::PointUpdate>* update_info){
+    // more close to root proc has smaller ID!
+    // if not sorted some proc can create items and diable later in same update which is a waste
+    update_info->sort();
     for(int i=0; i < update_info->size(); i++){
         MOctree::PointUpdate p = update_info->get(i);
         if(!octpoints_to_proc.has(p.id)){
@@ -479,7 +502,7 @@ void MHlodScene::first_octree_update(const Vector<MOctree::PointUpdate>* update_
     octree->point_process_finished(oct_id);
 }
 
-void MHlodScene::octree_update(const Vector<MOctree::PointUpdate>* update_info){
+void MHlodScene::octree_update(Vector<MOctree::PointUpdate>* update_info){
     if(update_info->size() > 0) {
         is_updating = true;
         thread_task_id = WorkerThreadPool::get_singleton()->add_native_task(&MHlodScene::octree_thread_update,(void*)update_info,true);
@@ -490,8 +513,14 @@ void MHlodScene::octree_update(const Vector<MOctree::PointUpdate>* update_info){
 
 void MHlodScene::octree_thread_update(void* input){
     std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
+    for(int i=0; i < all_hlod_scenes.size() ;++i){
+        all_hlod_scenes[i]->procs_update_state.fill_false(); // set it to false and if then updated we set it back to true
+    }
     apply_remove_item_users();
-    const Vector<MOctree::PointUpdate>* update_info = (const Vector<MOctree::PointUpdate>*)input;
+    Vector<MOctree::PointUpdate>* update_info = (Vector<MOctree::PointUpdate>*)input;
+    // more close to root proc has smaller ID!
+    // if not sorted some proc can create items and diable later in same update which is a waste
+    update_info->sort();
     for(int i=0; i < update_info->size(); i++){
         MOctree::PointUpdate p = update_info->get(i);
         if(!octpoints_to_proc.has(p.id)){
@@ -500,6 +529,12 @@ void MHlodScene::octree_thread_update(void* input){
         Proc* _proc = octpoints_to_proc.get(p.id);
         _proc->update_lod(p.lod);
     }
+    // Updating triangle collission mesh for editor
+    #ifdef DEBUG_ENABLED
+    //for(HashSet<MHlodScene*>::Iterator it=all_hlod_scenes.begin();it!=all_hlod_scenes.end();++it){
+    //    (*it)->_update_editor_tri_mesh();
+    //}
+    #endif
 }
 
 void MHlodScene::update_tick(){
@@ -550,8 +585,8 @@ void MHlodScene::sleep(){
         return;
     }
     is_sleep = true;
-    for(HashSet<MHlodScene*>::Iterator it=all_hlod_scenes.begin();it!=all_hlod_scenes.end();++it){
-        (*it)->deinit_proc_no_lock();
+    for(int i=0; i < all_hlod_scenes.size() ;++i){
+        all_hlod_scenes[i]->deinit_proc<false>();
     }
 }
 
@@ -561,17 +596,17 @@ void MHlodScene::awake(){
         return;
     }
     is_sleep = false;
-    for(HashSet<MHlodScene*>::Iterator it=all_hlod_scenes.begin();it!=all_hlod_scenes.end();++it){
-        (*it)->init_proc_no_lock();
+    for(int i=0; i < all_hlod_scenes.size() ;++i){
+        all_hlod_scenes[i]->init_proc<false>();
     }
 }
 
 Array MHlodScene::get_hlod_users(const String& hlod_path){
     std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
     Array out;
-    for(HashSet<MHlodScene*>::Iterator it=all_hlod_scenes.begin();it!=all_hlod_scenes.end();++it){
-        if( (*it)->proc.hlod.is_valid() && (*it)->proc.hlod->get_path() == hlod_path ){
-            out.push_back((*it));
+    for(int i=0; i < all_hlod_scenes.size() ;++i){
+        if( all_hlod_scenes[i]->get_root_proc()->hlod.is_valid() && all_hlod_scenes[i]->get_root_proc()->hlod->get_path() == hlod_path ){
+            out.push_back(all_hlod_scenes[i]);
         }
     }
     return out;
@@ -589,82 +624,37 @@ MHlodScene::MHlodScene(){
 
 MHlodScene::~MHlodScene(){
     all_hlod_scenes.erase(this);
-    deinit_proc();
-}
-
-void MHlodScene::init_proc(){
-    if(is_init_proc() || proc.hlod.is_null()){
-        return;
-    }
-    std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
-    if(is_sleep){
-        return;
-    }
-    sub_procs.clear();
-    sub_procs.clear();
-    int sub_hlod_count = proc.hlod->get_sub_hlod_size_rec();
-    sub_procs.resize(sub_hlod_count);
-    int sub_proc_index = 0;
-    if(is_inside_tree()){
-        proc.init(sub_procs,sub_proc_index,get_global_transform(),scene_layers);
-    } else {
-        proc.init(sub_procs,sub_proc_index,Transform3D(),scene_layers);
-    }
-}
-
-void MHlodScene::init_proc_no_lock(){
-    if(is_init_proc() || proc.hlod.is_null()){
-        return;
-    }
-    sub_procs.clear();
-    sub_procs.clear();
-    int sub_hlod_count = proc.hlod->get_sub_hlod_size_rec();
-    sub_procs.resize(sub_hlod_count);
-    int sub_proc_index = 0;
-    proc.init(sub_procs,sub_proc_index,get_global_transform(),scene_layers);
-}
-
-void MHlodScene::deinit_proc(){
-    if(!is_init_proc()){
-        return;
-    }
-    std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
-    flush();
-    proc.deinit();
-}
-
-void MHlodScene::deinit_proc_no_lock(){
-    if(!is_init_proc()){
-        return;
-    }
-    flush();
-    proc.deinit();
-}
-
-bool MHlodScene::is_init_proc(){
-    return proc.is_init;
+    deinit_proc<true>();
 }
 
 void MHlodScene::set_hlod(Ref<MHlod> input){
-    if(proc.hlod.is_valid()){
-        deinit_proc();
+    if(is_init_procs()){
+        deinit_proc<true>();
     }
-    proc.hlod = input;
-    if(proc.hlod.is_valid() && !is_sleep){
-        init_proc();
+    if(input.is_null()){
+        procs.clear();
+        return;
+    }
+    procs.resize(1);
+    procs.ptrw()[0].hlod = input;
+    if(get_root_proc()->hlod.is_valid() && !is_sleep && is_inside_tree()){
+        init_proc<true>();
     }
 }
 
 Ref<MHlod> MHlodScene::get_hlod(){
-    return proc.hlod;
+    if(procs.size()==0){
+        return Ref<MHlod>();
+    }
+    return get_root_proc()->hlod;
 }
 
 void MHlodScene::set_scene_layers(int64_t input){
     scene_layers = input;
-    if(is_init_proc()){
+    if(is_init_procs()){
         std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
-        proc.scene_layers = scene_layers;
-        proc.reload_meshes(false);
+        get_root_proc()->scene_layers = scene_layers;
+        get_root_proc()->reload_meshes(false);
     }
 }
 
@@ -677,9 +667,9 @@ void MHlodScene::_notification(int p_what){
     {
     case NOTIFICATION_TRANSFORM_CHANGED:
         {
-            if(proc.is_init){
+            if(is_init){
                 std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
-                proc.change_transform(get_global_transform());
+                get_root_proc()->change_transform(get_global_transform());
             }
         }
         break;
@@ -687,14 +677,11 @@ void MHlodScene::_notification(int p_what){
         _update_visibility();
         break;
     case NOTIFICATION_READY:
-        //proc.hlod->start_test();
+        //get_root_proc()->hlod->start_test();
         break;
     case NOTIFICATION_ENTER_TREE:
         _update_visibility();
-        if(is_inside_tree() && proc.hlod.is_valid()){
-            std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
-            init_proc();
-        }
+        init_proc<true>();
         break;
     case NOTIFICATION_EXIT_TREE:
         call_deferred("_update_visibility");
@@ -705,16 +692,48 @@ void MHlodScene::_notification(int p_what){
 }
 
 void MHlodScene::_update_visibility(){
+    if(!is_init){
+        return;
+    }
     bool v = is_visible_in_tree() && is_inside_tree();
-    proc.set_visibility(v);
+    get_root_proc()->set_visibility(v);
+}
+
+#ifdef DEBUG_ENABLED
+void MHlodScene::_update_editor_tri_mesh(){ // will be called in update thread
+    PackedVector3Array vertices;
+    PackedInt32Array indices;
+    Transform3D t;
+    get_root_proc()->_get_editor_tri_mesh_info(vertices,indices,t);
+    if(vertices.size()==0){
+        return;
+    }
+    Array joined_mesh_info;
+    joined_mesh_info.resize(Mesh::ARRAY_MAX);
+    joined_mesh_info[Mesh::ARRAY_VERTEX] = vertices;
+    joined_mesh_info[Mesh::ARRAY_INDEX] = indices;
+    Ref<ArrayMesh> arr_mesh;
+    arr_mesh.instantiate();
+    arr_mesh->add_surface_from_arrays(godot::Mesh::PrimitiveType::PRIMITIVE_TRIANGLES,joined_mesh_info);
+    editor_tri_mesh = arr_mesh->generate_triangle_mesh();
+}
+#endif
+
+Array MHlodScene::get_triangle_meshes(){
+    #ifdef DEBUG_ENABLED
+    Array out;
+    return out;
+    #else
+    return Array();
+    #endif
 }
 
 
 Array MHlodScene::get_last_lod_mesh_ids_transforms(){
     Array out;
-    ERR_FAIL_COND_V(!proc.is_init,out);
-    for(int i=-1; i < sub_procs.size(); i++){
-        const Proc* current_proc = i == -1 ? &proc : (sub_procs.ptr() + i);
+    ERR_FAIL_COND_V(!is_init,out);
+    for(int i=0; i < procs.size(); i++){
+        const Proc* current_proc = procs.ptr();
         ERR_CONTINUE(current_proc->hlod.is_null());
         int last_lod = current_proc->hlod->get_last_lod_with_mesh();
         Transform3D current_global_transform = current_proc->transform;

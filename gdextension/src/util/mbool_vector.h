@@ -4,6 +4,8 @@
 
 #include <godot_cpp/templates/vector.hpp>
 
+#include <godot_cpp/variant/utility_functions.hpp>
+
 using namespace godot;
 
 class MBoolVector{
@@ -56,7 +58,35 @@ class MBoolVector{
     }
 
     _FORCE_INLINE_ void fill_true(){
-        memset(_data.ptrw(),255,_data.size());
+        memset(_data.ptrw(),0xFF,_data.size());
+    }
+
+    _FORCE_INLINE_ bool has_any_true() const {
+        int64_t s = _data.size() - 1;
+        for(int64_t i=0; i < s; ++i){
+            if(_data[i]!=0){
+                return true;
+            }
+        }
+        // remaining
+        uint8_t val = _data[s];
+        uint8_t r = _size%8;
+        uint8_t mask = (r == 0) ? 0 : (0xFF << (8 - r));
+        return (mask & val) != 0;
+    }
+
+    _FORCE_INLINE_ bool has_any_false() const {
+        int64_t s = _data.size() - 1;
+        for(int64_t i=0; i < s; ++i){
+            if(_data[i]!=0xFF){
+                return true;
+            }
+        }
+        // remaining
+        uint8_t val = _data[s];
+        uint8_t r = _size%8;
+        uint8_t mask = (r == 0) ? 0 : (0xFF << (8 - r));
+        return (mask & val) != mask;
     }
 
     _FORCE_INLINE_ bool operator[](const int64_t index) const{

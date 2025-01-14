@@ -69,6 +69,9 @@ class MOctree : public Node3D {
         int8_t lod;
         int8_t last_lod;
         int32_t id;
+        _FORCE_INLINE_ bool operator<(const PointUpdate& other) const{
+            return id < other.id;
+        }
     };
 
 
