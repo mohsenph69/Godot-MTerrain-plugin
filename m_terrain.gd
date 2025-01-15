@@ -188,6 +188,7 @@ func _exit_tree():
 func _on_main_screen_changed(screen_name):
 	current_main_screen_name = screen_name	
 	selection_changed()	
+	asset_browser.on_main_screen_changed()
 
 #select_object is called when tools changes edit mode
 func select_object(object, mode):	

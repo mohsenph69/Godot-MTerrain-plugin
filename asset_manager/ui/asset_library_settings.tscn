@@ -36,6 +36,7 @@ theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
 [node name="manage_groups" type="PanelContainer" parent="tab_container"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_s06u1")
@@ -126,6 +127,7 @@ expand_icon = true
 script = ExtResource("8_u04fb")
 
 [node name="grouping_popup" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_l487g")]
+size = Vector2i(119, 107)
 visible = false
 
 [node name="search" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer" instance=ExtResource("8_wny8y")]
@@ -159,7 +161,6 @@ horizontal_alignment = 1
 layout_mode = 2
 
 [node name="manage_glbs" type="MarginContainer" parent="tab_container"]
-visible = false
 layout_mode = 2
 script = ExtResource("7_vfheg")
 
@@ -210,8 +211,11 @@ size_flags_stretch_ratio = 0.3
 [node name="collection_search" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2/HBoxContainer2" instance=ExtResource("8_wny8y")]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-size_flags_horizontal = 3
 align_right = true
+
+[node name="show_materials_toggle" type="CheckButton" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2/HBoxContainer2"]
+layout_mode = 2
+text = "Show Materials"
 
 [node name="glb_details" type="Tree" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2"]
 layout_mode = 2

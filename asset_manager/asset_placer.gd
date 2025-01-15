@@ -22,6 +22,8 @@ const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_bake
 @onready var y_btn:Button = $VBoxContainer/HBoxContainer/y_btn
 @onready var z_btn:Button = $VBoxContainer/HBoxContainer/z_btn
 
+@onready var settings_button:Button = find_child("settings_button")
+
 var position_snap:=1.0
 var rotation_snap:=PI/6
 var scale_snap:=0.25
@@ -486,6 +488,9 @@ func process_selection(who:ItemList, id, selected):
 			for item in	group.get_selected_items():
 				current_selection.push_back( group.get_item_text(item) )
 	selection_changed.emit()
+	
+func on_main_screen_changed():
+	settings_button.button_pressed = false
 	
 #region Debug	
 #########
