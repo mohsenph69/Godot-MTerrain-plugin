@@ -16,7 +16,7 @@ class MAssetMeshData : public RefCounted {
     public:
     int8_t material_set_id = -1;
     TypedArray<MMesh> mesh_lod;
-    PackedInt64Array mesh_ids;
+    PackedInt32Array mesh_ids;
     Transform3D transform;
     Transform3D global_transform;
 
@@ -24,7 +24,7 @@ class MAssetMeshData : public RefCounted {
     Transform3D get_transform();
     Transform3D get_global_transform();
     TypedArray<MMesh> get_mesh_lod();
-    PackedInt64Array get_mesh_ids();
+    PackedInt32Array get_mesh_ids();
     Ref<MMesh> get_last_valid_mesh() const;
 };
 
@@ -44,7 +44,7 @@ class MAssetMesh : public Node3D {
         RID instance_rid;
         TypedArray<MMesh> meshes;
         Ref<MMesh> current_mmesh;
-        PackedInt64Array mesh_ids;
+        PackedInt32Array mesh_ids;
         Transform3D local_transform; // local transform compare to the main node
         Ref<MMesh> get_last_valid_mesh() const;
         Ref<MMesh> get_first_valid_mesh() const;

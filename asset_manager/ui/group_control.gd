@@ -30,7 +30,7 @@ func add_item(item_name, item):
 	var i = group_list.add_item(item_name)
 	group_list.set_item_metadata(i, item)
 	var asset_library:MAssetTable = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
-	group_list.set_item_tooltip(i, str(item_name,": ", asset_library.collection_get_mesh_items_info(item) ))
+	group_list.set_item_tooltip(i, str(item_name))
 	set_icon(i) # should be called last
 
 func get_item_collection_id(item_index:int)->int:

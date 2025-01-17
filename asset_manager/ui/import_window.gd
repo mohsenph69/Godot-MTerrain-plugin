@@ -155,14 +155,14 @@ func update_collection_details(is_collection:bool, item_node:Dictionary ):
 		var root : TreeItem = tree.create_item()
 		var meshes := root.create_child()
 		meshes.set_text(0, "Meshes")
-		for mesh_item_name in item_node.mesh_items:
-			var mesh_item = meshes.create_child()
-			var mesh_array = asset_data.mesh_items[mesh_item_name].meshes.duplicate()
-			mesh_array = Array(mesh_array).map(func(a): return a if a is int else "Mesh" )
-			var text = str(mesh_item_name, ": ",mesh_array, " set ", asset_data.mesh_items[mesh_item_name].material_set_id  ) #item_node.mesh_items[mesh_item_name].origin)
-			##for mesh_id in asset_data.meshes[mesh_item_name].meshes:
-				
-			mesh_item.set_text(0, text)
+		#for collection in item_node.mesh_items:
+			#var mesh_item = meshes.create_child()
+			#var mesh_array = asset_data.mesh_items[mesh_item_name].meshes.duplicate()
+			#mesh_array = Array(mesh_array).map(func(a): return a if a is int else "Mesh" )
+			#var text = str(mesh_item_name, ": ",mesh_array, " set ", asset_data.mesh_items[mesh_item_name].material_set_id  ) #item_node.mesh_items[mesh_item_name].origin)
+			###for mesh_id in asset_data.meshes[mesh_item_name].meshes:
+				#
+			#mesh_item.set_text(0, text)
 		var collisions = root.create_child()
 		collisions.set_text(0, "Collisions")		
 		for collision_item_data in item_node.collision_items:			
@@ -172,11 +172,11 @@ func update_collection_details(is_collection:bool, item_node:Dictionary ):
 			collision_item.set_text(0, text)				
 		var sub_collections = root.create_child()
 		sub_collections.set_text(0, "Sub Collections")
-		for sub_collection_name in item_node.sub_collections:
-			for sub_collection_transform in item_node.sub_collections[sub_collection_name]:
-				var sub_collection_item = sub_collections.create_child()			
-				var text = str(sub_collection_name,": ",snapped(sub_collection_transform.origin, Vector3(0.1, 0.1,0.1) ) )
-				sub_collection_item.set_text(0, text)
+		#for sub_collection_name in item_node.sub_collections:
+			#for sub_collection_transform in item_node.sub_collections[sub_collection_name]:
+				#var sub_collection_item = sub_collections.create_child()			
+				#var text = str(sub_collection_name,": ",snapped(sub_collection_transform.origin, Vector3(0.1, 0.1,0.1) ) )
+				#sub_collection_item.set_text(0, text)
 		#build_tree(item_name,root)
 	else:
 		tree = %material_details_tree

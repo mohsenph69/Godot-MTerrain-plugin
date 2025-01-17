@@ -36,7 +36,7 @@ TypedArray<MMesh> MAssetMeshData::get_mesh_lod(){
     return mesh_lod;
 }
 
-PackedInt64Array MAssetMeshData::get_mesh_ids(){
+PackedInt32Array MAssetMeshData::get_mesh_ids(){
     return mesh_ids;
 }
 
@@ -134,25 +134,13 @@ void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& tra
     /////////////////////
     ///// Mesh Item ////
     ////////////////////
-    Vector<Pair<int,Transform3D>> mesh_items = asset_table->collection_get_mesh_items_id_transform(collection_id);
-    for(const Pair<int,Transform3D>& item : mesh_items){
+    int mesh_id = asset_table->collection_get_mesh_id(collection_id);
+    if(mesh_id!=-1){
         InstanceData idata;
-        idata.local_transform = transform * item.second;
-        PackedInt64Array mesh_ids = asset_table->mesh_item_get_mesh(item.first);
-        //ERR_CONTINUE(mesh_material.size()==0);
-        // Setting lods
-        TypedArray<MMesh> meshes;
-        for(int m : mesh_ids){
-            if(m<0){
-                meshes.push_back(Ref<MMesh>());
-                continue;
-            }
-            Ref<MMesh> mesh = ResourceLoader::get_singleton()->load(MHlod::get_mesh_path(m));
-            meshes.push_back(mesh);
-        }
-        idata.material_set_id = asset_table->mesh_item_get_material(item.first);
-        idata.meshes = meshes;
-        idata.mesh_ids = mesh_ids;
+        idata.local_transform = transform;
+        idata.material_set_id;
+        idata.meshes = MAssetTable::mesh_item_meshes(mesh_id);
+        idata.mesh_ids = MAssetTable::mesh_item_ids(mesh_id);
         instance_data.push_back(idata);
     }
     /////////////////////
@@ -162,6 +150,7 @@ void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& tra
     for(const Pair<int,Transform3D>& collection : sub_collections){
         generate_instance_data(collection.first,transform * collection.second);
     }
+    UtilityFunctions::print(get_name(), " i size ",instance_data.size());
 }
 
 void MAssetMesh::update_instance_date(){
@@ -451,7 +440,9 @@ Ref<ArrayMesh> MAssetMesh::get_merged_mesh(bool lowest_lod){
     if(_mmeshes.is_empty()){
         return nullptr;
     }
+    UtilityFunctions::print("AAAA");
     mesh_joiner->insert_mmesh_data(_mmeshes,_transforms,_material_set_ids);
+    UtilityFunctions::print("BBBB");
     return mesh_joiner->join_meshes();
 }
 

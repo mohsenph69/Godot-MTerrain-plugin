@@ -97,6 +97,8 @@ class MMesh : public Resource {
 	void add_user(int material_set_id);
 	void remove_user(int material_set_id);
 
+	bool is_same_mesh(Ref<MMesh> other);
+
 	// First element in array is material set
 	void _set_surfaces(Array _surfaces);
 	Array _get_surfaces() const;

@@ -90,10 +90,10 @@ void MAssetMeshUpdater::update_join_mesh(){
     }
     Ref<MAssetTable> at = MAssetTable::get_singleton();
     ERR_FAIL_COND(!at->has_collection(joined_mesh_collection_id));
-    PackedInt32Array mesh_item_list = at->collection_get_mesh_items_ids(joined_mesh_collection_id);
+    PackedInt32Array mesh_item_list;
     ERR_FAIL_COND_MSG(mesh_item_list.size()!=1,"Joined Mesh Collection "+itos(joined_mesh_collection_id)+" should have one mesh item, but has "+itos(mesh_item_list.size()));
     int mid = mesh_item_list[0];
-    PackedInt64Array meshe_ids = at->mesh_item_get_mesh(mid);
+    PackedInt64Array meshe_ids;
     if(meshe_ids.size()==0){
         return;
     }

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cwgmolxwrtaxf"]
+[gd_scene format=3 uid="uid://c7sarfan15ac3"]
 
 [node name="collection" type="HBoxContainer"]
 anchors_preset = 15
@@ -9,6 +9,7 @@ grow_vertical = 2
 
 [node name="id" type="Label" parent="."]
 layout_mode = 2
+text = "-1"
 
 [node name="name" type="LineEdit" parent="."]
 layout_mode = 2

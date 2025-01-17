@@ -23,6 +23,8 @@ void MMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("add_material_set"), &MMesh::add_material_set);
     ClassDB::bind_method(D_METHOD("clear_material_set","set_id"), &MMesh::clear_material_set);
 
+    ClassDB::bind_method(D_METHOD("is_same_mesh","other"), &MMesh::is_same_mesh);
+
     ClassDB::bind_method(D_METHOD("_set_surfaces","surfaces"), &MMesh::_set_surfaces);
     ClassDB::bind_method(D_METHOD("_get_surfaces"), &MMesh::_get_surfaces);
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"_surfaces",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_surfaces","_get_surfaces");
@@ -373,6 +375,31 @@ void MMesh::add_user(int material_set_id){
 void MMesh::remove_user(int material_set_id){
     ERR_FAIL_INDEX(material_set_id,materials_set.size());
     materials_set.ptrw()[material_set_id].remove_user();
+}
+
+bool MMesh::is_same_mesh(Ref<MMesh> other){
+    if(other.is_null()){
+        return false;
+    }
+    if(get_surface_count()!=other->get_surface_count()){
+        return false;
+    }
+    if(material_set_get_count()!=other->material_set_get_count()){
+        return false;
+    }
+    if(surfaces_get_names()!=other->surfaces_get_names()){
+        return false;
+    }
+    for(int s=0; s < get_surface_count(); s++){
+        Array my_info = surface_get_arrays(s);
+        Array other_info = other->surface_get_arrays(s);
+        for(int i=0; i < Mesh::ARRAY_MAX; i++){
+            if(my_info[i]!=other_info[i]){
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void MMesh::_set_surfaces(Array _surfaces){

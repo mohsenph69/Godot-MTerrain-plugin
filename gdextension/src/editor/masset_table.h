@@ -1,6 +1,8 @@
 #ifndef __MASSETTABLE__
 #define __MASSETTABLE__
 
+
+#define MAX_MESH_LOD 10
 #define MAX_MATERIAL_SET_ID 126
 
 #include <godot_cpp/classes/resource.hpp>
@@ -13,7 +15,6 @@
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 
 #include "../hlod/mhlod.h"
-#include "../util/mtrie_array.h"
 
 using namespace godot;
 
@@ -30,51 +31,7 @@ class MAssetTable : public Resource {
     enum ItemType {NONE,MESH,COLLISION};
 
     private:
-    struct MeshHasher
-    {
-        static _FORCE_INLINE_ uint32_t hash(Ref<MMesh> input_mesh){
-            ERR_FAIL_COND_V(input_mesh.is_null(),0);
-            int suf_count = input_mesh->get_surface_count();
-            Array suf_info;
-            suf_info.push_back(input_mesh->material_set_get_count());
-            suf_info.push_back(input_mesh->surfaces_get_names());
-            for(int i=0; i < suf_count; i++){
-                suf_info.push_back(input_mesh->surface_get_arrays(i));
-            }
-            uint32_t hash = hash_one_uint64(suf_info.hash());
-            return hash;
-        }
-    };
-    struct MeshHasherComparator
-    {
-        static bool compare(const Ref<MMesh> &p_lhs, const Ref<MMesh> &p_rhs) {
-            if(p_lhs.is_null() || p_rhs.is_null()){
-                return false;
-            }
-            Array lsuf_info;
-            Array rsuf_info;
-            {
-                lsuf_info.push_back(p_lhs->material_set_get_count());
-                lsuf_info.push_back(p_lhs->surfaces_get_names());
-                int suf_count = p_lhs->get_surface_count();
-                for(int i=0; i < suf_count; i++){
-                    lsuf_info.push_back(p_lhs->surface_get_arrays(i));
-                }
-            }
-            {
-                rsuf_info.push_back(p_rhs->material_set_get_count());
-                rsuf_info.push_back(p_rhs->surfaces_get_names());
-                int suf_count = p_rhs->get_surface_count();
-                for(int i=0; i < suf_count; i++){
-                    rsuf_info.push_back(p_rhs->surface_get_arrays(i));
-                }
-            }
-            return lsuf_info == rsuf_info;
-        }
-    };
-
     int64_t last_mesh_id = 1; // should not exist and increase by each adding (0 is invalid mesh ID)
-    HashMap<Ref<MMesh>,int64_t,MAssetTable::MeshHasher,MAssetTable::MeshHasherComparator> mesh_hashes;
     Dictionary import_info;
 
     struct Tag
@@ -96,28 +53,6 @@ class MAssetTable : public Resource {
         Tag operator~() const;
     };
 
-    struct MeshItem {
-        // path is a int64_t (path hash) with a int64_t (path index) which the file name is like hash_index.res
-        // in case of index = 0; file_name is hash.res
-        int8_t material_set_id = -1;
-        PackedInt64Array path; // Contain array of mesh path follow by array of material_path
-        // Shadow setting follow by gi_mode setting
-        bool insert_data(const PackedInt64Array& mesh,int _material_set_id);                                          
-        int get_lod_count() const;
-        bool has_mesh(int64_t mesh_id) const;
-        bool has_material(int32_t m) const;
-        int64_t hash();
-        void clear();
-        Dictionary get_creation_data() const;
-        void set_save_data(const PackedByteArray& data);
-        PackedByteArray get_save_data() const;
-        bool operator==(const MeshItem& other) const;
-    };
-
-    Vector<MeshItem> mesh_items;
-    Vector<int64_t> mesh_items_hashes;
-    Vector<int32_t> free_mesh_items;
-
     struct Socket
     {
         String name;
@@ -128,14 +63,21 @@ class MAssetTable : public Resource {
     
     Vector<Socket> sockets;
 
+    struct CollisionShape
+    {
+        /* data */
+    };
+    
+
     struct Collection {
+        int32_t mesh_id=-1;
+        int32_t glb_id = -1;
         double thumbnail_creation_time = -1.0;
         Ref<Texture2D> cached_thumbnail;
-        Vector<Pair<ItemType,int>> items;
-        Vector<Transform3D> transforms;
+        Vector<CollisionShape> collision_shapes;
+        Vector<Transform3D> collision_shapes_transforms;
         PackedInt32Array sub_collections;
         Vector<Transform3D> sub_collections_transforms;
-        int32_t glb_id = -1;
 
         //Vector<int32_t> variation; // [12,13,343,65,36]
         int sockets_id = 6;
@@ -147,19 +89,18 @@ class MAssetTable : public Resource {
     };
 
     Vector<Collection> collections;
-    Ref<MTrieArray> collections_names;
+    PackedStringArray collections_names;
     Vector<Tag> collections_tags;
     Vector<int> free_collections;
 
 
 
-    Ref<MTrieArray> tag_names;
-    Ref<MTrieArray> group_names;
+    PackedStringArray tag_names;
+    PackedStringArray group_names;
     Vector<Tag> groups;
 
     private:
-    void _increase_mesh_item_buffer_size(int q);
-    int _get_free_mesh_item_index();
+    static int32_t last_free_mesh_id; // should be updated before each import
     void _increase_collection_buffer_size(int q);
     int _get_free_collection_index();
     static const char* asset_table_path;
@@ -181,9 +122,7 @@ class MAssetTable : public Resource {
     static String get_asset_thumbnails_path(int collection_id);
     static String get_material_thumbnails_path(int material_id);
     static String get_hlod_res_dir();
-    bool has_mesh_item(int id) const;
     bool has_collection(int id) const;
-    void remove_mesh_item(int id);
     void remove_collection(int id);
 
     MAssetTable();
@@ -204,32 +143,29 @@ class MAssetTable : public Resource {
 
     PackedInt32Array tag_get_tagless_collections() const;
     PackedInt32Array tag_names_begin_with(const String& prefix);
-    int mesh_item_add(const PackedInt64Array& mesh,int material_set_id);
-    void mesh_item_update(int mesh_id,const PackedInt64Array& mesh,int material_set_id);
-    void mesh_item_remove(int mesh_id);
-    int mesh_item_find_by_info(const PackedInt64Array& mesh,int material) const;
-    PackedInt32Array mesh_item_find_collections(int mesh_id) const;
-    PackedInt32Array mesh_item_find_collections_with_tag(int mesh_id,int tag_id) const;
-    PackedInt64Array mesh_item_get_mesh(int mesh_id) const;
-    int mesh_item_get_material(int mesh_id) const;
 
-    Dictionary mesh_item_get_info(int mesh_id);
-    PackedInt32Array mesh_item_get_list() const;
+    static void update_last_free_mesh_id();
+    static int mesh_item_get_max_lod();
+    static int32_t get_last_free_mesh_id_and_increase();
+    static int32_t mesh_item_get_first_lod(int mesh_id);
+    static int32_t mesh_item_get_stop_lod(int mesh_id);
+    static PackedInt32Array mesh_item_ids_no_replace(int mesh_id);
+    static TypedArray<MMesh> mesh_item_meshes_no_replace(int mesh_id);
+    static PackedInt32Array mesh_item_ids(int mesh_id);
+    static TypedArray<MMesh> mesh_item_meshes(int mesh_id);
+    static bool mesh_item_is_valid(int mesh_id);
+
     int collection_create(String _name);
     void collection_set_glb_id(int collection_id,int32_t glb_id);
     int32_t collection_get_glb_id(int collection_id) const;
     void collection_set_cache_thumbnail(int collection_id,Ref<Texture2D> tex,double creation_time);
     double collection_get_thumbnail_creation_time(int collection_id) const;
     Ref<Texture2D> collection_get_cache_thumbnail(int collection_id) const;
-    bool collection_rename(int collection_id,const String& new_name);
-    void collection_add_item(int collection_id,ItemType type, int item_id,const Transform3D& transform);
+    void collection_set_mesh_id(int collection_id,int32_t mesh_id);
+    int32_t collection_get_mesh_id(int collection_id);
     void collection_clear(int collection_id);
     void collection_remove(int collection_id);
-    void collection_remove_item(int collection_id,ItemType type, int item_id);
-    void collection_remove_all_items(int collection_id);
     PackedInt32Array collection_get_list() const;
-    Transform3D collection_get_item_transform(int collection_id,ItemType type, int item_id) const;
-    void collection_update_item_transform(int collection_id,ItemType type, int item_id,const Transform3D& transform);
     void collection_add_tag(int collection_id,int tag);
     bool collection_add_sub_collection(int collection_id,int sub_collection_id,const Transform3D& transform);
     void collection_remove_sub_collection(int collection_id,int sub_collection_id);
@@ -244,9 +180,6 @@ class MAssetTable : public Resource {
     PackedInt32Array collection_get_tags(int collection_id) const;
     PackedInt32Array collection_names_begin_with(const String& prefix) const;
     Vector<Pair<int,Transform3D>> collection_get_sub_collection_id_transform(int collection_id);
-    Vector<Pair<int,Transform3D>> collection_get_mesh_items_id_transform(int collection_id);
-    Array collection_get_mesh_items_info(int collection_id) const;
-    PackedInt32Array collection_get_mesh_items_ids(int collection_id) const;
 
     bool group_exist(const String& gname) const;
     bool group_create(const String& name);
@@ -261,6 +194,7 @@ class MAssetTable : public Resource {
     PackedInt32Array groups_get_collections_all(const String& gname) const;
     Dictionary group_get_collections_with_tags(const String& gname) const;
 
+    void clear_table();
     void set_data(const Dictionary& data);
     Dictionary get_data();
     void _notification(int32_t what);
@@ -269,15 +203,6 @@ class MAssetTable : public Resource {
 
     void set_import_info(const Dictionary& input);
     Dictionary get_import_info();
-
-    int mesh_get_id(Ref<MMesh> mesh);
-    String mesh_get_path(Ref<MMesh> mesh);
-    PackedInt32Array mesh_get_mesh_items_users(int64_t mesh_id) const;
-    bool mesh_exist(Ref<MMesh> mesh);
-    bool mesh_update(Ref<MMesh> old_mesh,Ref<MMesh> new_mesh);
-    void initialize_mesh_hashes();
-    int mesh_add(Ref<MMesh> mesh);
-    void mesh_remove(int mesh_id);
 
     // Only for debug
     static void reset(bool hard);

@@ -28,7 +28,7 @@ var loaded_scenes = []
 
 var gltf_extras_importer
 
-var asset_table
+var asset_table:MAssetTable
 
 func check_restart():
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
@@ -79,7 +79,6 @@ func init_asset_table():
 	if not asset_table:
 		asset_table = MAssetTable.new()
 	MAssetTable.set_singleton(asset_table)
-	asset_table.initialize_mesh_hashes()
 
 #region init and de-init
 func _enter_tree():		

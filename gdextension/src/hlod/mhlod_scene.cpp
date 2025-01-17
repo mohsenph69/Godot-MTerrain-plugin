@@ -70,7 +70,6 @@ void MHlodScene::Proc::init_sub_proc(int32_t _sub_proc_index,uint64_t _sub_proc_
 }
 
 void MHlodScene::Proc::change_transform(const Transform3D& new_transform){
-    return;
     is_transform_changed = true;
     if(MHlodScene::octree!=nullptr && oct_point_id!=-1 && is_octree_inserted){
         MOctree::PointMoveReq mv_req(oct_point_id,MHlodScene::oct_id,transform.origin,new_transform.origin);

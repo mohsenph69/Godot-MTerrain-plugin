@@ -10,39 +10,12 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_oevxw")
 
-[node name="tags_label" type="Label" parent="."]
-custom_minimum_size = Vector2(100, 20)
+[node name="clear_btn" type="Button" parent="."]
 layout_mode = 2
-text = "tags: {  }"
+text = "Clear"
+
+[node name="collections_label" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(100, 120)
+layout_mode = 2
+bbcode_enabled = true
 autowrap_mode = 1
-
-[node name="groups_label" type="Label" parent="."]
-custom_minimum_size = Vector2(100, 20)
-layout_mode = 2
-text = "groups: []"
-autowrap_mode = 1
-
-[node name="mesh_items_label" type="Label" parent="."]
-custom_minimum_size = Vector2(100, 20)
-layout_mode = 2
-text = "mesh_items: 
-0| { \"mesh\": [\"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\"], \"material\": [-1, -1, -1, -1, -1, -1, -1, -1] }
-"
-autowrap_mode = 1
-
-[node name="meshes_container" type="VBoxContainer" parent="."]
-layout_mode = 2
-
-[node name="collections_label" type="Label" parent="."]
-custom_minimum_size = Vector2(100, 20)
-layout_mode = 2
-text = "collections: 
-0| wall | [{ \"mesh\": [\"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\"], \"material\": [-1, -1, -1, -1, -1, -1, -1, -1], \"id\": 0, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, -0.098415), O: (0, 1.010224, 0)] }]
-tags: []
-1| wall_mesh | [{ \"mesh\": [\"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\", \"1458971374\"], \"material\": [-1, -1, -1, -1, -1, -1, -1, -1], \"id\": 0, \"transform\": [X: (1, 0, 0), Y: (0, 1, 0), Z: (0, 0, 1), O: (0, 0, 0)] }]
-tags: [0]
-"
-autowrap_mode = 1
-
-[node name="collections_container" type="VBoxContainer" parent="."]
-layout_mode = 2

@@ -12,8 +12,6 @@
 #include <godot_cpp/godot.hpp>
 
 
-#include "util/mtrie.h"
-#include "util/mtrie_array.h"
 #include "hlod/mmaterial_table.h"
 
 #ifdef DEBUG_ENABLED
@@ -61,8 +59,6 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
-	ClassDB::register_class<MTrie>();
-	ClassDB::register_class<MTrieArray>();
 	ClassDB::register_class<MMaterialTable>();
 	
 	#ifdef DEBUG_ENABLED
