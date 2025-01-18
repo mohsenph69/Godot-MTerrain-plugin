@@ -407,7 +407,6 @@ void MAssetTable::remove_collection(int id){
     collections.ptrw()[id].clear();
     collections_tags.ptrw()[id].clear();
     collections_names.set(id,"");
-    UtilityFunctions::print("Removing collection clearing id ",id, " name afer clear ",collections_names[id]);
     free_collections.push_back(id);
     for(int i=0; i < collections.size(); i++){
         if(collections[i].sub_collections.has(id)){

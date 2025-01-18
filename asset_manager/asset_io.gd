@@ -201,7 +201,8 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 					mesh.surface_set_name(i,surface_names[i])
 				var mmesh:=MMesh.new()
 				mmesh.create_from_mesh(mesh)
-				asset_data.add_mesh_data(material_set,mesh, mesh_item_name)
+				mmesh.material_set_resize(material_set.size())
+				asset_data.add_mesh_data(material_set,mmesh, mesh_item_name)
 				asset_data.update_collection_mesh(mesh_item_name,name_data["lod"],mmesh)
 				# if we are not on root then we add ourself as sub collection to whatever active_collection is
 				if not active_collection == "__root__":

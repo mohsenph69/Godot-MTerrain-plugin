@@ -4,6 +4,7 @@ extends VBoxContainer
 var object: MAssetMesh
 
 func _ready():
+	return
 	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	var asset_library: MAssetTable = MAssetTable.get_singleton()
 	if not object: return	

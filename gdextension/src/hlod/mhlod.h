@@ -84,7 +84,7 @@ class MHlod : public Resource{
     int get_join_at_lod();
     int get_sub_hlod_size_rec();
     void add_sub_hlod(const Transform3D& transform,Ref<MHlod> hlod,uint16_t scene_layers);
-    int add_mesh_item(const Transform3D& transform,const PackedInt64Array& mesh,int material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers);
+    int add_mesh_item(const Transform3D& transform,const PackedInt64Array& mesh,const PackedInt32Array& material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers);
     Dictionary get_mesh_item(int item_id);
     int add_collision_item(const Transform3D& transform,const PackedStringArray& shape_path);
     PackedInt32Array get_mesh_items_ids() const;

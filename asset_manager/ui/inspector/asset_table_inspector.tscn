@@ -14,6 +14,10 @@ script = ExtResource("1_oevxw")
 layout_mode = 2
 text = "Clear"
 
+[node name="reload_btn" type="Button" parent="."]
+layout_mode = 2
+text = "Reload"
+
 [node name="collections_label" type="RichTextLabel" parent="."]
 custom_minimum_size = Vector2(100, 120)
 layout_mode = 2

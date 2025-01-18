@@ -279,7 +279,7 @@ void MHlod::add_sub_hlod(const Transform3D& transform,Ref<MHlod> hlod,uint16_t s
     sub_hlods_scene_layers.push_back(scene_layers);
 }
 
-int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt64Array& mesh,int material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers){
+int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt64Array& mesh,const PackedInt32Array& material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers){
     int lod_count = mesh.size();
     ERR_FAIL_COND_V(lod_count==0,-1);
     ERR_FAIL_COND_V(shadow_settings.size()!=lod_count,-1);
@@ -290,7 +290,6 @@ int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt64Array& me
     transforms.push_back(transform);
     /// Lasts for checking duplicate
     int64_t last_mesh;
-    int64_t last_material;
     uint8_t last_shadow_setting;
     uint8_t last_gi_mode_setting;
     /////////////////////////////////
@@ -319,7 +318,7 @@ int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt64Array& me
         _item.mesh.shadow_setting = (GeometryInstance3D::ShadowCastingSetting)shadow_settings[i];
         _item.mesh.gi_mode = (GeometryInstance3D::GIMode)gi_modes[i];
         */
-        _item.mesh.set_data(mesh[i],material,shadow_settings[i],gi_modes[i],render_layers);
+        _item.mesh.set_data(mesh[i],material[i],shadow_settings[i],gi_modes[i],render_layers);
         item_list.push_back(_item);
     }
     return item_index;

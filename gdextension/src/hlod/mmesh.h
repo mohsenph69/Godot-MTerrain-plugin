@@ -88,6 +88,7 @@ class MMesh : public Resource {
 	String material_get(int set_id,int surface_index)const;
 	void surface_set_material(int set_id,int surface_index,const String& path);
 	int add_material_set();
+	void material_set_resize(int size);
 	void clear_material_set(int set_id);
 	bool has_material_override();
 	void update_material_override();
@@ -106,6 +107,7 @@ class MMesh : public Resource {
 	bool _set(const StringName &p_name, const Variant &p_value);
 	bool _get(const StringName &p_name, Variant& r_ret) const;
 	void _get_property_list(List<PropertyInfo> *p_list) const;
+	String _to_string();
 
 	void debug_test();
 };

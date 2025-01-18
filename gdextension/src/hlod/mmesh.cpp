@@ -21,6 +21,7 @@ void MMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("material_get","set_id","surface_index"), &MMesh::material_get);
     ClassDB::bind_method(D_METHOD("surface_set_material","set_id","surface_index","material_path"), &MMesh::surface_set_material);
     ClassDB::bind_method(D_METHOD("add_material_set"), &MMesh::add_material_set);
+    ClassDB::bind_method(D_METHOD("material_set_resize","size"), &MMesh::material_set_resize);
     ClassDB::bind_method(D_METHOD("clear_material_set","set_id"), &MMesh::clear_material_set);
 
     ClassDB::bind_method(D_METHOD("is_same_mesh","other"), &MMesh::is_same_mesh);
@@ -328,6 +329,19 @@ int MMesh::add_material_set(){
     return materials_set.size() - 1;
 }
 
+void MMesh::material_set_resize(int size){
+    ERR_FAIL_COND(size < 1);
+    if(size < materials_set.size()){
+        materials_set.resize(size);
+    } else {
+        while (size != materials_set.size())
+        {
+            add_material_set();
+        }
+        
+    }
+}
+
 void MMesh::clear_material_set(int set_id){
     ERR_FAIL_INDEX(set_id,materials_set.size());
     materials_set.ptrw()[set_id].clear();
@@ -521,6 +535,9 @@ void MMesh::_get_property_list(List<PropertyInfo> *p_list) const{
 }
 
 
+String MMesh::_to_string(){
+    return String("<MMesh-,") + itos(get_instance_id()) + String(">") ;
+}
 
 void MMesh::debug_test() {
     Ref<Material> mat;

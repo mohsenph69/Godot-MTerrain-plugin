@@ -13,15 +13,25 @@
 
 
 void MAssetMeshData::_bind_methods(){
-    ClassDB::bind_method(D_METHOD("get_material_set_id"), &MAssetMeshData::get_material_set_id);
+    ClassDB::bind_method(D_METHOD("get_material_set_id"), &MAssetMeshData::get_material_set_ids);
     ClassDB::bind_method(D_METHOD("get_transform"), &MAssetMeshData::get_transform);
     ClassDB::bind_method(D_METHOD("get_global_transform"), &MAssetMeshData::get_global_transform);
     ClassDB::bind_method(D_METHOD("get_mesh_lod"), &MAssetMeshData::get_mesh_lod);
     ClassDB::bind_method(D_METHOD("get_mesh_ids"), &MAssetMeshData::get_mesh_ids);
 }
 
-int MAssetMeshData::get_material_set_id(){
-    return material_set_id;
+PackedInt32Array MAssetMeshData::get_material_set_ids(){
+    // should be material_set_id just in case a mesh does not have the set we use 0 set_id for that
+    PackedInt32Array out;
+    for(int i=0; i < mesh_lod.size(); i++){
+        int set_id = 0;
+        Ref<MMesh> mm = mesh_lod[i];
+        if(mm.is_valid() && material_set_id < mm->material_set_get_count()){
+            set_id = material_set_id;
+        }
+        out.push_back(set_id);
+    }
+    return out;
 }
 
 Transform3D MAssetMeshData::get_transform(){
@@ -50,6 +60,35 @@ Ref<MMesh> MAssetMeshData::get_last_valid_mesh() const{
     return Ref<MMesh>();
 }
 
+void MAssetMesh::InstanceData::update_material(int set_id,int8_t _active_mesh_index){
+    // No use of User in MMesh direct Material load
+    material_set_id = set_id;
+    materials.clear();
+    active_mesh_index = _active_mesh_index;
+    if(active_mesh_index < 0 || !instance_rid.is_valid()){
+        return;
+    }
+    Ref<MMesh> active_mesh = meshes[active_mesh_index];
+    if(active_mesh.is_null() || active_mesh->material_set_get_count()==1){
+        return;
+    }
+    int new_set_id = 0;
+    if(set_id < active_mesh->material_set_get_count()){
+        new_set_id = set_id;
+    }
+    PackedStringArray material_sets_path = active_mesh->material_set_get(new_set_id);
+    for(int s=0; s < material_sets_path.size(); s++){
+        if(material_sets_path[s].is_empty()){
+            continue;
+        }
+        Ref<Material> smat = ResourceLoader::get_singleton()->load(material_sets_path[s]);
+        materials.push_back(smat);
+        if(smat.is_valid()){
+            RS->instance_set_surface_override_material(instance_rid,s,smat->get_rid());
+        }
+    }
+}
+
 Ref<MMesh> MAssetMesh::InstanceData::get_last_valid_mesh() const {
     for(int i=meshes.size()-1;i>=0;i--){
         Ref<MMesh> m = meshes[i];
@@ -68,6 +107,14 @@ Ref<MMesh> MAssetMesh::InstanceData::get_first_valid_mesh() const{
         }
     }
     return Ref<MMesh>();
+}
+
+int8_t MAssetMesh::InstanceData::get_mesh_index_last(int lod) const{
+    if(lod < 0 || meshes.size()==0){
+        return -1;
+    }
+    lod = lod >= meshes.size() ? meshes.size() - 1 : lod;
+    return lod;
 }
 
 RID MAssetMesh::InstanceData::get_mesh_rid_last(int lod) const{
@@ -106,6 +153,15 @@ void MAssetMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_collection_id","input"), &MAssetMesh::set_collection_id);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"collection_id"),"set_collection_id","get_collection_id");
 
+    ClassDB::bind_method(D_METHOD("get_collections_material_set"), &MAssetMesh::get_collections_material_set);
+    ClassDB::bind_method(D_METHOD("set_collections_material_set","input"), &MAssetMesh::set_collections_material_set);
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"_collections_material_set",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_collections_material_set","get_collections_material_set");
+
+    ClassDB::bind_method(D_METHOD("get_collection_material_set","collection_id"), &MAssetMesh::get_collection_material_set);
+    ClassDB::bind_method(D_METHOD("set_collection_material_set","collection_id","set_id"), &MAssetMesh::set_collection_material_set);
+
+    ClassDB::bind_method(D_METHOD("get_collection_ids"), &MAssetMesh::get_collection_ids);
+
     ClassDB::bind_method(D_METHOD("_update_visibility"), &MAssetMesh::_update_visibility);
 
     ClassDB::bind_method(D_METHOD("get_mesh_data"), &MAssetMesh::get_mesh_data);
@@ -137,8 +193,8 @@ void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& tra
     int mesh_id = asset_table->collection_get_mesh_id(collection_id);
     if(mesh_id!=-1){
         InstanceData idata;
+        idata.collection_id = collection_id;
         idata.local_transform = transform;
-        idata.material_set_id;
         idata.meshes = MAssetTable::mesh_item_meshes(mesh_id);
         idata.mesh_ids = MAssetTable::mesh_item_ids(mesh_id);
         instance_data.push_back(idata);
@@ -150,7 +206,6 @@ void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& tra
     for(const Pair<int,Transform3D>& collection : sub_collections){
         generate_instance_data(collection.first,transform * collection.second);
     }
-    UtilityFunctions::print(get_name(), " i size ",instance_data.size());
 }
 
 void MAssetMesh::update_instance_date(){
@@ -161,6 +216,7 @@ void MAssetMesh::update_instance_date(){
     Transform3D t; // Identity Transform
     generate_instance_data(collection_id,t);
     compute_joined_aabb();
+    update_material_sets_from_data();
 }
 
 void MAssetMesh::update_lod(int lod){
@@ -189,6 +245,7 @@ void MAssetMesh::update_lod(int lod){
                 WARN_PRINT("current_mmesh is not valid for removing user");
             }
             data.current_mmesh = Ref<MMesh>();
+            data.update_material(data.material_set_id,-1);
             continue;
         }
         if(mesh_rid.is_valid() && !data.mesh_rid.is_valid()){ // create
@@ -215,6 +272,7 @@ void MAssetMesh::update_lod(int lod){
             data.material_set_user_added = true;
         }
         data.current_mmesh = mmesh;
+        data.update_material(data.material_set_id,data.get_mesh_index_last(lod));
         /// Later we add material here
     }
 }
@@ -247,7 +305,7 @@ void MAssetMesh::remove_instances(bool hard_remove){
         if(data.instance_rid.is_valid()){
             if(data.current_mmesh.is_valid()){
                 if(data.material_set_user_added){
-                    data.current_mmesh->remove_user(data.material_set_id);
+                    data.update_material(data.material_set_id,-1);
                 }
             } else {
                 WARN_PRINT("ata.current_mmesh is not valid for removing user");
@@ -298,6 +356,55 @@ int MAssetMesh::get_collection_id(){
     return collection_id;
 }
 
+PackedInt32Array MAssetMesh::get_collection_ids() const {
+    PackedInt32Array out;
+    for(const InstanceData& idata : instance_data){
+        if(idata.meshes.size()>0){
+            out.push_back(idata.collection_id);
+        }
+    }
+    return out;
+}
+
+int MAssetMesh::get_collection_material_set(int collection_id) const{
+    if(collections_material_set.has(collection_id)){
+        return collections_material_set[collection_id];
+    }
+    return 0;
+}
+
+void MAssetMesh::set_collection_material_set(int collection_id, int material_set){
+    if(material_set==0){
+        collections_material_set.erase(collection_id); // back to default
+    } else {
+        collections_material_set[collection_id] = material_set;
+    }
+    for(InstanceData& idata : instance_data){
+        if(idata.collection_id == collection_id){
+            idata.update_material(material_set,idata.active_mesh_index);
+            // don't put break here we can have multiple collection with same ID
+        }
+    }
+}
+
+void MAssetMesh::update_material_sets_from_data(){
+    for(InstanceData& idata : instance_data){
+        if(collections_material_set.has(idata.collection_id)){
+            idata.update_material(collections_material_set[idata.collection_id],idata.active_mesh_index);
+        }
+    }
+    notify_property_list_changed();
+}
+
+void MAssetMesh::set_collections_material_set(Dictionary data){
+    collections_material_set = data;
+    update_material_sets_from_data();
+}
+
+Dictionary MAssetMesh::get_collections_material_set() const {
+    return collections_material_set;
+}
+
 void MAssetMesh::_update_position(){
     Transform3D gtransform = get_global_transform();
     for(InstanceData& data : instance_data){
@@ -332,6 +439,52 @@ void MAssetMesh::_notification(int32_t what){
         break;
     }
 }
+
+void MAssetMesh::_get_property_list(List<PropertyInfo> *p_list) const{
+    for(const InstanceData& idata : instance_data){
+        if(idata.meshes.size()==0){
+            continue;
+        }
+        String prop_name;
+        if(idata.collection_id == collection_id){
+            prop_name = "material_set";
+        } else {
+            prop_name = String("Sub_Collections_material_set/") + itos(idata.collection_id);
+        }
+        p_list->push_back(PropertyInfo(Variant::INT,prop_name,PROPERTY_HINT_RANGE,"0,128"));
+    }
+}
+
+bool MAssetMesh::_get(const StringName &p_name, Variant &r_ret) const{
+    int _u_collection_id = -1;
+    if(p_name==String("material_set")){
+        _u_collection_id = collection_id;
+    }
+    else if(p_name.begins_with("Sub_Collections_material_set/")){
+        _u_collection_id = p_name.replace("Sub_Collections_material_set/","").to_int();
+    }
+    if(_u_collection_id!=-1){
+        r_ret = get_collection_material_set(_u_collection_id);
+        return r_ret;
+    }
+    return false;
+}
+
+bool MAssetMesh::_set(const StringName &p_name, const Variant &p_value){
+    int _u_collection_id = -1;
+    if(p_name==String("material_set")){
+        _u_collection_id = collection_id;
+    }
+    if(p_name.begins_with("Sub_Collections_material_set/")){
+        _u_collection_id = p_name.replace("Sub_Collections_material_set/","").to_int();
+    }
+    if(_u_collection_id!=-1){
+        set_collection_material_set(_u_collection_id,p_value);
+        return true;
+    }
+    return false;
+}
+
 
 TypedArray<MAssetMeshData> MAssetMesh::get_mesh_data(){
     if(instance_data.is_empty()){
@@ -440,9 +593,7 @@ Ref<ArrayMesh> MAssetMesh::get_merged_mesh(bool lowest_lod){
     if(_mmeshes.is_empty()){
         return nullptr;
     }
-    UtilityFunctions::print("AAAA");
     mesh_joiner->insert_mmesh_data(_mmeshes,_transforms,_material_set_ids);
-    UtilityFunctions::print("BBBB");
     return mesh_joiner->join_meshes();
 }
 

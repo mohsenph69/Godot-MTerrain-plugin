@@ -190,7 +190,12 @@ class MHlodScene : public Node3D {
 
     template<bool UseLock>
     void init_proc(){
-        ERR_FAIL_COND(!is_inside_tree());
+        if(procs.size()==0){
+            procs.resize(1);
+        }
+        if(!is_inside_tree()){
+            return;
+        }
         ERR_FAIL_COND(get_root_proc()==nullptr);
         if(is_init_procs() || get_root_proc()->hlod.is_null()){
             return;

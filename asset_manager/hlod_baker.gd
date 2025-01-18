@@ -58,7 +58,7 @@ func bake_to_hlod_resource():
 	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())		
 	var baker_inverse_transform = global_transform.inverse()
 	for item:MAssetMesh in all_masset_mesh_nodes:		
-		for mdata in item.get_mesh_data():							
+		for mdata:MAssetMeshData in item.get_mesh_data():
 			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
 			var material_set_id = mdata.get_material_set_id()
 			var shadow_array = mesh_array.map(func(a): return 0)
@@ -85,7 +85,7 @@ func bake_to_hlod_resource():
 		material_array.fill(-1)		
 		var shadow_array = material_array.map(func(a): return 0)
 		var gi_array = material_array.map(func(a): return 0)				
-		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, 0, shadow_array, gi_array, 1, 0)		
+		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, [0], shadow_array, gi_array, 1, 0)		
 		if mesh_id != -1:
 			for i in range(join_at_lod, MAX_LOD):
 				hlod_resource.insert_item_in_lod_table(mesh_id, i)		
@@ -129,7 +129,7 @@ func bake_to_hlod_resource():
 	for n in users:
 		n.hlod = hlod_resource
 	MHlodScene.awake()			
-	return
+	EditorInterface.get_resource_filesystem().scan()
 
 #region Getters	
 func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
@@ -221,7 +221,7 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	for node:MAssetMesh in get_all_masset_mesh_nodes(self, nodes_to_join):					
 		for mesh_item:MAssetMeshData in node.get_mesh_data():			
 			mesh_array.push_back(get_correct_mesh_lod_for_joining(mesh_item))
-			material_set_id_array.push_back( mesh_item.get_material_set_id() )			
+			#material_set_id_array.push_back( mesh_item.get_material_set_id() )
 			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
 	for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
 		var mhlod_node: MHlodScene = data.node

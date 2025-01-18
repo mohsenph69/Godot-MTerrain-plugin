@@ -15,6 +15,7 @@ func _ready():
 		$clear_btn.button_down.connect(clear_asset_table)
 	else:
 		$clear_btn.visible = false
+	$reload_btn.button_down.connect(reload_asset_table)
 	asset_library = MAssetTable.get_singleton()
 	update_all()
 	AssetIO.obj_to_call_on_table_update.push_back(self)
@@ -90,7 +91,6 @@ func update_collections():
 	
 
 func asset_table_update():
-	print("Called update .....")
 	update_all()
 
 func clear_asset_table():
@@ -98,3 +98,7 @@ func clear_asset_table():
 	DirAccess.make_dir_absolute(MHlod.get_mesh_root_dir())
 	asset_library.clear_table()
 	update_all()
+
+func reload_asset_table():
+	var asset_table = load(MAssetTable.get_asset_table_path())
+	MAssetTable.set_singleton(asset_table)
