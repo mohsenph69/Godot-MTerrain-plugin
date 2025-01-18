@@ -377,6 +377,7 @@ func add_glb_import_info(info:Dictionary)->void:
 		for key in info["__materials"]:
 			if key in materials:
 				materials[key].original_material = info["__materials"][key].path
+				materials[key].material = info["__materials"][key].path
 	
 func add_metadata_to_data(old:Dictionary, new:Dictionary):
 	var result = old.duplicate()

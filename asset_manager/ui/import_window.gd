@@ -202,7 +202,8 @@ func init_materials_tree():
 		material_tree_node.set_text(0, text)										
 		if asset_data.materials[material_name].material is int:								
 			var material_id = str(asset_data.materials[material_name].material)
-			material_tree_node.set_text(1, material_id)								
+			material_tree_node.set_text(1, material_id)
+			update_material_icon(material_tree_node,int(material_id),1)
 		else:
 			invalid_materials.push_back(material_name)
 			%materials_tab_button.text = "Materials (!)"
@@ -262,10 +263,10 @@ func validate_can_import():
 	if len(invalid_materials) == 0:
 		import_button.disabled = false
 	
-func update_material_icon(item:TreeItem, id):
+func update_material_icon(item:TreeItem, id,col:int=0):
 	var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id, false))
 	if thumbnail:				
-		item.set_icon(0, thumbnail)
+		item.set_icon(col, thumbnail)
 	else:		
 		await get_tree().create_timer(0.5).timeout.connect(update_material_icon.bind(item, id))
 					
