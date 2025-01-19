@@ -39,6 +39,16 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_meshes","mesh_id"), &MAssetTable::mesh_item_meshes);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_is_valid","mesh_id"), &MAssetTable::mesh_item_is_valid);
 
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_last_free_mesh_join_id"), &MAssetTable::get_last_free_mesh_join_id);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_get_first_lod","mesh_id"), &MAssetTable::mesh_join_get_first_lod);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_get_stop_lod","mesh_id"), &MAssetTable::mesh_join_get_stop_lod);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_ids_no_replace","mesh_id"), &MAssetTable::mesh_join_ids_no_replace);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_meshes_no_replace","mesh_id"), &MAssetTable::mesh_join_meshes_no_replace);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_ids","mesh_id"), &MAssetTable::mesh_join_ids);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_meshes","mesh_id"), &MAssetTable::mesh_join_meshes);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_is_valid","mesh_id"), &MAssetTable::mesh_join_is_valid);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_start_lod","mesh_id"), &MAssetTable::mesh_join_start_lod);
+
     ClassDB::bind_method(D_METHOD("has_collection","collection_id"), &MAssetTable::has_collection);
     ClassDB::bind_method(D_METHOD("remove_collection","collection_id"), &MAssetTable::remove_collection);
     ClassDB::bind_method(D_METHOD("tag_add","name"), &MAssetTable::tag_add);
@@ -695,6 +705,118 @@ bool MAssetTable::mesh_item_is_valid(int mesh_id){
         }
     }
     return false;
+}
+
+int32_t MAssetTable::mesh_join_get_first_lod(int mesh_id){
+    return mesh_id - (mesh_id % MAX_MESH_LOD);
+}
+
+int32_t MAssetTable::get_last_free_mesh_join_id(){
+    int32_t smallest_id = -10;
+    Ref<DirAccess> dir = DirAccess::open(MHlod::mesh_root_dir);
+    PackedStringArray files = dir->get_files();
+    for(const String& file : files){
+        int32_t id = file.get_basename().to_int();
+        if(smallest_id > id){
+            smallest_id = id;
+        }
+    }
+    smallest_id -= MAX_MESH_LOD;
+    return mesh_join_get_first_lod(smallest_id);
+}
+
+int32_t MAssetTable::mesh_join_get_stop_lod(int mesh_id){
+    ERR_FAIL_COND_V(mesh_id > 0,-1);
+    for(int i=0; i < MAX_MESH_LOD; i++){
+        int mesh_lod_id = mesh_id - i;
+        String stop_path = MHlod::get_mesh_path(mesh_lod_id).get_basename() + String(".stop");
+        if(FileAccess::file_exists(stop_path)){
+            return i;
+        }
+    }
+    return -1;
+}
+
+PackedInt32Array MAssetTable::mesh_join_ids_no_replace(int mesh_id){
+    PackedInt32Array out;
+    ERR_FAIL_COND_V(mesh_id > 0,out);
+    for(int i=0; i < MAX_MESH_LOD; i++){
+        int mesh_lod_id = mesh_id - i;
+        String path = MHlod::get_mesh_path(mesh_lod_id);
+        if(FileAccess::file_exists(path)){
+            out.push_back(mesh_lod_id);
+        } else {
+            out.push_back(-1);
+        }
+    }
+    return out;
+}
+
+TypedArray<MMesh> MAssetTable::mesh_join_meshes_no_replace(int mesh_id){
+    mesh_id = mesh_join_get_first_lod(mesh_id);
+    PackedInt32Array ids = mesh_join_ids_no_replace(mesh_id);
+    TypedArray<MMesh> out;
+    for(int32_t id : ids){
+        if(id!=-1){
+            out.push_back(ResourceLoader::get_singleton()->load(MHlod::get_mesh_path(id)));
+        } else{
+            out.push_back(Ref<MMesh>());
+        }
+    }
+    return out;
+}
+
+PackedInt32Array MAssetTable::mesh_join_ids(int mesh_id){
+    mesh_id = mesh_join_get_first_lod(mesh_id);
+    PackedInt32Array out;
+    int last_valid_id = -1;
+    for(int i=0; i < MAX_MESH_LOD; i++){
+        int lod_id = mesh_id - i;
+        String path = MHlod::get_mesh_path(lod_id);
+        String stop_path = path.get_basename() + String(".stop");
+        if(FileAccess::file_exists(stop_path)){
+            break;
+        }
+        if(FileAccess::file_exists(path)){
+            last_valid_id = lod_id;
+        }
+        out.push_back(last_valid_id);
+    }
+    return out;
+}
+
+TypedArray<MMesh> MAssetTable::mesh_join_meshes(int mesh_id){
+    PackedInt32Array ids = mesh_join_ids(mesh_id);
+    TypedArray<MMesh> out;
+    for(int32_t id : ids){
+        if(id!=-1){
+            String path = MHlod::get_mesh_path(id);
+            out.push_back(ResourceLoader::get_singleton()->load(path));
+        } else {
+            out.push_back(Ref<MMesh>());
+        }
+    }
+    return out;
+}
+
+bool MAssetTable::mesh_join_is_valid(int mesh_id){
+    PackedInt32Array ids = mesh_join_ids(mesh_id);
+    for(int32_t id : ids){
+        if(id!=-1){
+            return true;
+        }
+    }
+    return false;
+}
+
+int32_t MAssetTable::mesh_join_start_lod(int mesh_id){
+    PackedInt32Array ids = mesh_join_ids(mesh_id);
+    for(int i=0; i < ids.size(); i++){
+        if(ids[i] != -1){
+            return i;
+        }
+    }
+    return -1;
 }
 
 int MAssetTable::collection_create(String name){

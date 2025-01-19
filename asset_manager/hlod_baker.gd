@@ -205,23 +205,20 @@ func get_joined_mesh_id_array():
 
 #region JOINED MESH				
 func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):	
-	#var root_node = Node3D.new()
-	#root_node.name = "root_node"
 	var mesh_instance = MeshInstance3D.new()
-	#root_node.add_child(mesh_instance)			
 	mesh_instance.name = name.to_lower() + "_joined_mesh_lod_" + str(join_at_lod)	
 	###################
 	## JOIN THE MESH ##
 	###################
-	var mesh_joiner := MMeshJoiner.new()				
+	var mesh_joiner := MMeshJoiner.new()
 	var baker_inverse_transform = global_transform.inverse()	
 	var mesh_array := []	
 	var material_set_id_array:  PackedInt32Array = []
 	var transforms := []
 	for node:MAssetMesh in get_all_masset_mesh_nodes(self, nodes_to_join):					
-		for mesh_item:MAssetMeshData in node.get_mesh_data():			
-			mesh_array.push_back(get_correct_mesh_lod_for_joining(mesh_item))
-			#material_set_id_array.push_back( mesh_item.get_material_set_id() )
+		for mesh_item:MAssetMeshData in node.get_mesh_data():
+			mesh_array.push_back(mesh_item.get_last_valid_mesh())
+			material_set_id_array.push_back(mesh_item.get_material_set_id()[mesh_item.get_last_valid_lod()])
 			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
 	for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
 		var mhlod_node: MHlodScene = data.node
@@ -235,7 +232,7 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 				mesh_array.push_back( mmesh )
 				transforms.push_back(baker_inverse_transform * mesh_transform[1])
 				material_set_id_array.push_back( mesh_transform[2] )
-		
+	print("Mesh to join ",mesh_array)
 	mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
 	mesh_instance.mesh = mesh_joiner.join_meshes()						
 	ResourceSaver.save(mesh_instance.mesh, "res://joined_mesh_test.res")
@@ -249,10 +246,6 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	
 	for surface_id in mesh_instance.mesh.get_surface_count():
 		pass
-	#################################
-	## IMPORT GLB WE JUST EXPORTED ##
-	#################################	
-	update_joined_mesh_from_glb()
 	
 func get_joined_mesh_glb_path()->String:	
 	if FileAccess.file_exists(scene_file_path):
@@ -264,37 +257,6 @@ func get_joined_mesh_glb_path()->String:
 func has_joined_mesh_glb()->bool:
 	var path = get_joined_mesh_glb_path()	
 	return path != "" and FileAccess.file_exists(path)
-
-func get_correct_mesh_lod_for_joining(a:MAssetMeshData):
-	var mmesh_array = a.get_mesh_lod()
-	var lod_to_use = min(asset_mesh_updater.get_join_at_lod(), len(mmesh_array)-1)	
-	#print("lod to use for join: ",lod_to_use, " join at lod: ", join_at_lod, " mesh items: ", len(mesh_lod.meshes)-1)
-	while lod_to_use >-1 and mmesh_array[lod_to_use] == null:
-		lod_to_use -= 1
-	if lod_to_use == -1: return null
-	var mesh = mmesh_array[lod_to_use]
-	return null if mesh.get_surface_count() == 0 else mmesh_array[lod_to_use]		
-	
-func update_joined_mesh_from_glb():
-	var glb_path = get_joined_mesh_glb_path()
-	#print(asset_mesh_updater.get_join_at_lod())
-	if not FileAccess.file_exists(glb_path):		
-		push_error("trying to update joined mesh from glb, but glb does not exist at ", glb_path)	
-		return
-	AssetIO.glb_load(glb_path,{}, true)		
-	if not asset_library.import_info.has(glb_path):
-		push_error("joined mesh glb loaded, but import info does not have glb path ", glb_path)
-		return
-	var import_info = {}
-	for key in asset_library.import_info[glb_path].keys():
-		if key.begins_with("__"): continue
-		import_info[key] = asset_library.import_info[glb_path][key]				
-	if len(import_info.keys()) != 1:
-		push_error("trying to update join mesh from glb but after import it doesn't have correct collection count")		
-	joined_mesh_collection_id = asset_library.import_info[glb_path].values()[0].id
-	print(joined_mesh_collection_id)
-	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id			
-	asset_library.collection_add_tag(joined_mesh_collection_id, 0) #add "hidden" tag	
 
 func toggle_joined_mesh_disabled(toggle_on):
 	joined_mesh_disabled = toggle_on

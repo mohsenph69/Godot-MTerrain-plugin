@@ -155,6 +155,16 @@ class MAssetTable : public Resource {
     static TypedArray<MMesh> mesh_item_meshes(int mesh_id);
     static bool mesh_item_is_valid(int mesh_id);
 
+    static int32_t get_last_free_mesh_join_id();
+    static int32_t mesh_join_get_first_lod(int mesh_id);
+    static int32_t mesh_join_get_stop_lod(int mesh_id);
+    static PackedInt32Array mesh_join_ids_no_replace(int mesh_id);
+    static TypedArray<MMesh> mesh_join_meshes_no_replace(int mesh_id);
+    static PackedInt32Array mesh_join_ids(int mesh_id);
+    static TypedArray<MMesh> mesh_join_meshes(int mesh_id);
+    static bool mesh_join_is_valid(int mesh_id);
+    static int32_t mesh_join_start_lod(int mesh_id);
+
     int collection_create(String _name);
     void collection_set_glb_id(int collection_id,int32_t glb_id);
     int32_t collection_get_glb_id(int collection_id) const;

@@ -74,17 +74,17 @@ func get_empty_material()->Dictionary:
 		"meshes": [] #array of meshes that use this material...should be converted to ids later
 	}.duplicate()
 
-func get_empty_mesh_item()->Dictionary:
-	return {
-		"mesh_nodes":[],
-		"meshes":[],
-		"original_meshes":[],		
-		"id":-1,
-		"material_set_id": -1,
-		"ignore":false,
-		"state":IMPORT_STATE.NOT_HANDLE,
-		"mesh_state":[]
-	}.duplicate()
+#func get_empty_mesh_item()->Dictionary:
+	#return {
+		#"mesh_nodes":[],
+		#"meshes":[],
+		#"original_meshes":[],		
+		#"id":-1,
+		#"material_set_id": -1,
+		#"ignore":false,
+		#"state":IMPORT_STATE.NOT_HANDLE,
+		#"mesh_state":[]
+	#}.duplicate()
 		
 func get_empty_collection()->Dictionary:
 	return {

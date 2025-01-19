@@ -18,6 +18,9 @@ void MAssetMeshData::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_global_transform"), &MAssetMeshData::get_global_transform);
     ClassDB::bind_method(D_METHOD("get_mesh_lod"), &MAssetMeshData::get_mesh_lod);
     ClassDB::bind_method(D_METHOD("get_mesh_ids"), &MAssetMeshData::get_mesh_ids);
+
+    ClassDB::bind_method(D_METHOD("get_last_valid_lod"), &MAssetMeshData::get_last_valid_lod);
+    ClassDB::bind_method(D_METHOD("get_last_valid_mesh"), &MAssetMeshData::get_last_valid_mesh);
 }
 
 PackedInt32Array MAssetMeshData::get_material_set_ids(){
@@ -48,6 +51,16 @@ TypedArray<MMesh> MAssetMeshData::get_mesh_lod(){
 
 PackedInt32Array MAssetMeshData::get_mesh_ids(){
     return mesh_ids;
+}
+
+int8_t MAssetMeshData::get_last_valid_lod() const{
+    for(int i=mesh_lod.size()-1;i>=0;i--){
+        Ref<MMesh> m = mesh_lod[i];
+        if(m.is_valid()){
+            return i;
+        }
+    }
+    return -1;
 }
 
 Ref<MMesh> MAssetMeshData::get_last_valid_mesh() const{
