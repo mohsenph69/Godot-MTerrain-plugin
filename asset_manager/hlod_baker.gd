@@ -274,14 +274,15 @@ func _enter_tree():
 	validate_can_bake()
 
 func validate_can_bake():
-	var path = "res://massets/hlod/"+name+".res"	
+	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	
 	if not FileAccess.file_exists(path): 
 		can_bake = true
 	else:
 		var hlod:MHlod = load(path)	
 		if FileAccess.file_exists(hlod.get_baker_path()) and hlod.get_baker_path() != scene_file_path:
-			can_bake = false		
-		can_bake = true
+			can_bake = false
+		else:		
+			can_bake = true
 
 
 	

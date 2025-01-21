@@ -47,7 +47,7 @@ func _ready():
 	
 	validate_bake_button()
 	baker.renamed.connect(validate_bake_button.call_deferred)	
-	%Join.pressed.connect( show_join_mesh_window )			
+	%create_join_mesh_button.pressed.connect( show_join_mesh_window )			
 	
 	var force_lod_checkbox = %force_lod_checkbox
 	var force_lod_value = %force_lod_value
@@ -69,8 +69,15 @@ func _ready():
 	force_lod_value.value_changed.connect(baker.force_lod)
 	
 	%disable_joined_mesh_button.visible = baker.has_joined_mesh_glb()	
-	%disable_joined_mesh_button.toggled.connect(baker.toggle_joined_mesh_disabled)
-	%disable_joined_mesh_button.toggled.connect(validate_show_joined_mesh_button)
+	%disable_joined_mesh_button.toggled.connect(func(toggle):
+		baker.toggle_joined_mesh_disabled(toggle)
+		validate_show_joined_mesh_button(toggle)
+		if toggle:
+			%disable_joined_mesh_button.icon = preload("res://addons/m_terrain/icons/eye-close.svg")
+		else:
+			%disable_joined_mesh_button.icon = preload("res://addons/m_terrain/icons/eye.svg")
+			
+	)
 	if not baker.joined_mesh_disabled:
 		baker.joined_mesh_disabled = false
 	%disable_joined_mesh_button.button_pressed = baker.joined_mesh_disabled 		
@@ -120,9 +127,9 @@ func bake_button_gui_input(event):
 func validate_bake_button():
 	%Bake.disabled = not baker.can_bake
 	if baker.can_bake:
-		%Bake.text = "Bake"
+		%hlod_bake_warning.text = ""
 		%Bake.tooltip_text = "Bake scene to hlod resource"
 	else:
-		%Bake.text= "Baker name must be unique!"
+		#%hlod_bake_warning.text= "Baker name must be unique!"		
 		%Bake.tooltip_text = "HLod with the name " + baker.name + " is already used by another baker scene. please rename the baker scene"
 		

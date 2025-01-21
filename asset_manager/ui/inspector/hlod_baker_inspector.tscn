@@ -1,11 +1,13 @@
-[gd_scene load_steps=8 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=10 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
 [ext_resource type="Texture2D" uid="uid://o6bjob1w4w0w" path="res://addons/m_terrain/icons/tick_icon.svg" id="2_kaebi"]
-[ext_resource type="Texture2D" uid="uid://boqh1mh7el3o4" path="res://addons/m_terrain/icons/eye-close.svg" id="3_esqxe"]
 [ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="3_iqlmd"]
 [ext_resource type="PackedScene" uid="uid://emr0fpf2qo8g" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn" id="4_kqv64"]
+[ext_resource type="Texture2D" uid="uid://ryifoq2od5r2" path="res://addons/m_terrain/icons/open.svg" id="4_m333m"]
+[ext_resource type="Texture2D" uid="uid://dj86rx42xt6wc" path="res://addons/m_terrain/icons/save_icon.svg" id="5_nmnhy"]
+[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="7_622l2"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_gfps4"]
 font_color = Color(0.92785, 0.495612, 0, 1)
@@ -24,11 +26,19 @@ text = "DEBUG Current Lod: "
 [node name="HBoxContainer3" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="Bake" type="Button" parent="HBoxContainer3"]
+[node name="Label" type="Label" parent="HBoxContainer3"]
+layout_mode = 2
+text = "Hlod"
+
+[node name="hlod_bake_warning" type="Label" parent="HBoxContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Bake Hlod"
+
+[node name="Bake" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("5_nmnhy")
 alignment = 0
 
 [node name="bake_successful" type="TextureRect" parent="HBoxContainer3/Bake"]
@@ -62,11 +72,46 @@ expand_icon = true
 [node name="HBoxContainer4" type="HBoxContainer" parent="."]
 layout_mode = 2
 
+[node name="Label" type="Label" parent="HBoxContainer4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Baker"
+
+[node name="import_baker_button" type="Button" parent="HBoxContainer4"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+tooltip_text = "(Re)Import baker from glb"
+icon = ExtResource("4_m333m")
+alignment = 0
+expand_icon = true
+
+[node name="import_baker_successful" type="TextureRect" parent="HBoxContainer4/import_baker_button"]
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -9.0
+offset_right = -6.0
+offset_bottom = 9.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("2_kaebi")
+expand_mode = 2
+stretch_mode = 5
+
 [node name="export_baker_button" type="Button" parent="HBoxContainer4"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Export Baker"
+size_flags_horizontal = 0
+tooltip_text = "Export baker to glb"
+icon = ExtResource("5_nmnhy")
 alignment = 0
 
 [node name="export_baker_successful" type="TextureRect" parent="HBoxContainer4/export_baker_button"]
@@ -100,11 +145,65 @@ expand_icon = true
 [node name="HBoxContainer5" type="HBoxContainer" parent="."]
 layout_mode = 2
 
+[node name="Label2" type="Label" parent="HBoxContainer5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Joined Mesh"
+
+[node name="disable_joined_mesh_button" type="Button" parent="HBoxContainer5"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Enable/Disable Joined Mesh"
+toggle_mode = true
+icon = ExtResource("2_gaehx")
+expand_icon = true
+
+[node name="create_join_mesh_button" type="Button" parent="HBoxContainer5"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Create joined mesh from scene"
+icon = ExtResource("7_622l2")
+alignment = 0
+expand_icon = true
+
+[node name="import_join_mesh_button" type="Button" parent="HBoxContainer5"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+tooltip_text = "(Re)Import joined mesh from glb"
+icon = ExtResource("4_m333m")
+alignment = 0
+expand_icon = true
+
+[node name="import_join_mesh_successful" type="TextureRect" parent="HBoxContainer5/import_join_mesh_button"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -9.0
+offset_right = -6.0
+offset_bottom = 9.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("2_kaebi")
+expand_mode = 2
+stretch_mode = 5
+
 [node name="export_join_mesh_button" type="Button" parent="HBoxContainer5"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Export Joined Mesh"
+size_flags_horizontal = 0
+tooltip_text = "Export joined mesh to glb"
+icon = ExtResource("5_nmnhy")
 alignment = 0
 
 [node name="export_join_mesh_successful" type="TextureRect" parent="HBoxContainer5/export_join_mesh_button"]
@@ -145,23 +244,6 @@ autowrap_mode = 2
 [node name="HBoxContainer2" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="Join" type="Button" parent="HBoxContainer2"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-tooltip_text = "Change joined mesh settings (including make new joined mesh and reimport glb)"
-text = "Joined Mesh Settings"
-alignment = 0
-
-[node name="disable_joined_mesh_button" type="TextureButton" parent="HBoxContainer2"]
-unique_name_in_owner = true
-layout_mode = 2
-tooltip_text = "Enable/Disable Joined Mesh"
-toggle_mode = true
-texture_normal = ExtResource("2_gaehx")
-texture_pressed = ExtResource("3_esqxe")
-stretch_mode = 5
-
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 
@@ -189,7 +271,10 @@ layout_mode = 2
 tooltip_text = "Click to rename layer, 
 toggle layers to change visibility"
 text = "Variation Layers Preview"
+icon = ExtResource("7_622l2")
 alignment = 0
+icon_alignment = 2
+expand_icon = true
 
 [node name="Layers" parent="." instance=ExtResource("4_kqv64")]
 layout_mode = 2
