@@ -66,8 +66,11 @@ func _ready():
 		baker.set_variation_layers_visibility(value)
 	)
 	layers.layer_names = baker.variation_layers
+	var hlod_path = MAssetTable.get_hlod_res_dir().path_join(baker.name+".res")
+	%show_hlod_button.disabled = not FileAccess.file_exists(hlod_path)
+		
 	%show_hlod_button.pressed.connect(func():
-		EditorInterface.get_file_system_dock().navigate_to_path("res://massets/hlod/"+baker.name+".res")
+		EditorInterface.get_file_system_dock().navigate_to_path(hlod_path)
 	)
 
 	

@@ -224,6 +224,8 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 				material_set_id_array.push_back( mesh_transform[2] )
 	mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
 	var joined_mesh = mesh_joiner.join_meshes()						
+	if joined_mesh_id == -1:
+		joined_mesh_id = MAssetTable.get_last_free_mesh_join_id()
 	AssetIOBaker.save_joined_mesh(joined_mesh_id, [joined_mesh], [join_at_lod])
 	
 func get_joined_mesh_glb_path()->String:	
@@ -251,7 +253,7 @@ func toggle_joined_mesh_disabled(toggle_on):
 func remove_joined_mesh():
 	if MAssetTable.mesh_join_get_stop_lod(joined_mesh_id) == 0: return	
 	asset_mesh_updater.join_mesh_id = -1
-	for id in MAssetTable.mesh_join_ids_no_replace(joined_mesh_id):			
+	for id in MAssetTable.mesh_join_ids_no_replace(joined_mesh_id):					
 		if id == -1: continue			
 		var path = MHlod.get_mesh_path(id)
 		if FileAccess.file_exists(path):
@@ -296,10 +298,8 @@ func _notification(what):
 	
 func _ready():				
 	renamed.connect(validate_can_bake)
-	activate_mesh_updater()
-	
-	if joined_mesh_id == -1:
-		joined_mesh_id = MAssetTable.get_last_free_mesh_join_id()
+	activate_mesh_updater()		
+		
 	asset_mesh_updater.join_mesh_id = joined_mesh_id #TODO: check if fixed
 	if Engine.is_editor_hint() and not EditorInterface.get_resource_filesystem().filesystem_changed.is_connected(validate_can_bake):
 		EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)

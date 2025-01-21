@@ -13,21 +13,11 @@ static func baker_export_to_glb(baker_node:HLod_Baker, path:= ""):
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()		
 	#TO DO : add joined mesh meshes to root node
-	var joined_mesh_node
-	if MAssetTable.mesh_join_get_stop_lod(baker_node.joined_mesh_id) > 0:
-		joined_mesh_node = Node3D.new()
+	var joined_mesh_node	
+	if MAssetTable.mesh_join_get_stop_lod(baker_node.joined_mesh_id) == -1:
+		print("export joined mesh too")		
+		joined_mesh_node = explode_join_mesh_nodes(baker_node)
 		baker_node.add_child(joined_mesh_node)
-		joined_mesh_node.owner = baker_node		
-		var meshes = MAssetTable.mesh_join_meshes_no_replace(baker_node.joined_mesh_id)
-		var lods = MAssetTable.mesh_join_ids_no_replace(baker_node.joined_mesh_id)
-		for i in len(meshes):
-			var mmesh:MMesh = meshes[i]
-			var lod = lods[i]
-			var mesh_node = MeshInstance3D.new()
-			mesh_node.mesh = mmesh.get_mesh()
-			joined_mesh_node.add_child(mesh_node)		
-			mesh_node.owner = baker_node
-			mesh_node.name = baker_node.name + "_joined_mesh_lod" + str(lod)			
 	if not baker_node.has_meta("baker_path"):
 		baker_node.set_meta("baker_path", baker_node.scene_file_path)
 	if not baker_node.has_meta("joined_mesh_id"):
@@ -108,6 +98,8 @@ static func baker_import_commit_changes(baker_node:Node3D):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()	
 		
 	if baker_node.has_node(baker_node.name + "_joined_mesh"):
+		if baker_node.joined_mesh_id == -1:
+			baker_node.joined_mesh_id = MAssetTable.get_last_free_mesh_join_id()			
 		var node = baker_node.get_node(baker_node.name + "_joined_mesh")
 	
 		var meshes =[]
@@ -144,3 +136,34 @@ static func save_joined_mesh(joined_mesh_id:int, joined_meshes:Array, joined_mes
 		if FileAccess.file_exists(mesh_path):
 			joined_meshes[i].take_over_path(mesh_path)
 		ResourceSaver.save(joined_meshes[i], mesh_path)
+
+static func explode_join_mesh_nodes(baker_node):
+	var joined_mesh_node = Node3D.new()	
+	baker_node.add_child(joined_mesh_node)
+	joined_mesh_node.owner = baker_node		
+	joined_mesh_node.name = baker_node.name + "_joined_mesh"
+	var meshes = MAssetTable.mesh_join_meshes_no_replace(baker_node.joined_mesh_id)		
+	var lods = MAssetTable.mesh_join_ids_no_replace(baker_node.joined_mesh_id)
+	for i in len(meshes):
+		if meshes[i] == null: continue
+		var mmesh:MMesh = meshes[i]
+		var lod = lods[i] - baker_node.joined_mesh_id
+		var mesh_node = MeshInstance3D.new()
+		mesh_node.mesh = mmesh.get_mesh()
+		joined_mesh_node.add_child(mesh_node)		
+		mesh_node.owner = baker_node
+		mesh_node.name = baker_node.name + "_joined_mesh_lod_" + str(abs(lod))			
+	return joined_mesh_node
+	
+static func export_join_mesh_only(baker_node:Node3D):	 	
+	var joined_mesh_node = explode_join_mesh_nodes(baker_node)
+	var gltf_document= GLTFDocument.new()
+	var gltf_save_state = GLTFState.new()					
+	var path = baker_node.scene_file_path.get_base_dir().path_join(joined_mesh_node.name+".glb")
+	gltf_document.append_from_scene(joined_mesh_node, gltf_save_state)		
+	gltf_document.write_to_filesystem(gltf_save_state, path)
+	if joined_mesh_node:
+		joined_mesh_node.queue_free()	
+
+static func import_join_mesh_only():
+	pass

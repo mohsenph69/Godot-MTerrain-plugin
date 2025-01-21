@@ -384,3 +384,32 @@ func add_metadata_to_data(old:Dictionary, new:Dictionary):
 	for key in new:
 		result[key] = new[key]
 	return result
+
+
+func get_changed_hlods():
+	var hlod_to_rebake: Array[MHlod] = []
+	for hlod_path in DirAccess.get_files_at( MAssetTable.get_hlod_res_dir() ):
+		var hlod = load(hlod_path)
+		var used_ids = hlod.get_used_mesh_ids()
+		for collection in collections:
+			if collections[collection].mesh_id != -1 and used_ids.has(collections[collection].mesh_id):
+				hlod_to_rebake.push_back(hlod)
+	if len(hlod_to_rebake) == 0: return
+	MHlodScene.sleep()
+	for hlod in hlod_to_rebake:
+		rebake_hlod(hlod)
+	MHlodScene.awake()
+		
+
+static func rebake_hlod(hlod:MHlod):
+	var baker: HLod_Baker= load(hlod.baker_path).instantiate()
+	EditorInterface.get_base_control().add_child(baker)
+	baker.bake_to_hlod_resource()
+	baker.queue_free()
+	
+	
+static func rebake_hlods_for_meshes(mesh_ids):
+	var mhlod = MHlod.new()
+	var used_ids = mhlod.get_used_mesh_ids()
+	for mesh_id in mesh_ids:
+		used_ids.has(mesh_id)
