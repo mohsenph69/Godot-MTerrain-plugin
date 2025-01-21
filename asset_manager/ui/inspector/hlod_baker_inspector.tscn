@@ -28,7 +28,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Bake"
+text = "Bake Hlod"
 alignment = 0
 
 [node name="bake_successful" type="TextureRect" parent="HBoxContainer3/Bake"]
@@ -52,6 +52,82 @@ expand_mode = 2
 stretch_mode = 5
 
 [node name="show_hlod_button" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Show hlod resource in file system"
+icon = ExtResource("3_iqlmd")
+expand_icon = true
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="export_baker_button" type="Button" parent="HBoxContainer4"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Export Baker"
+alignment = 0
+
+[node name="export_baker_successful" type="TextureRect" parent="HBoxContainer4/export_baker_button"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -9.0
+offset_right = -6.0
+offset_bottom = 9.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("2_kaebi")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="show_baker_glb_button" type="Button" parent="HBoxContainer4"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Show hlod resource in file system"
+icon = ExtResource("3_iqlmd")
+expand_icon = true
+
+[node name="HBoxContainer5" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="export_join_mesh_button" type="Button" parent="HBoxContainer5"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Export Joined Mesh"
+alignment = 0
+
+[node name="export_join_mesh_successful" type="TextureRect" parent="HBoxContainer5/export_join_mesh_button"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -9.0
+offset_right = -6.0
+offset_bottom = 9.0
+grow_horizontal = 0
+grow_vertical = 2
+texture = ExtResource("2_kaebi")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="show_join_mesh_glb_button" type="Button" parent="HBoxContainer5"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2

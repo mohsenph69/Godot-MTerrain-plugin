@@ -6,10 +6,8 @@ class_name AssetIOBaker extends Object
 # - re-import hlod scene with joined mesh
 # - save joined meseh to .res from baker scene
 	
-static func baker_export_to_glb(baker_node:HLod_Baker, path:= ""):
-	if path == "":
-		push_error("Trying to export glb to empty path")
-		return	
+static func baker_export_to_glb(baker_node:HLod_Baker):
+	var path = baker_node.scene_file_path.get_base_dir().path_join(baker_node.name + ".glb")		
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()		
 	#TO DO : add joined mesh meshes to root node

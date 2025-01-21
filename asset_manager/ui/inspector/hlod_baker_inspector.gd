@@ -18,9 +18,33 @@ func _ready():
 		tween.set_ease(Tween.EASE_OUT)
 		tween.chain().tween_property(%bake_successful, "modulate", Color(1,1,1,0),2)
 		
-	)
+	)	
+	%bake_successful.visible=false		
 	
-	%bake_successful.visible=false	
+	%export_baker_button.pressed.connect(AssetIOBaker.baker_export_to_glb.bind(baker))		
+	%export_baker_button.pressed.connect(func():
+		var tween:Tween = create_tween()
+		%export_baker_successful.visible = true
+		%export_baker_successful.modulate = Color(1,1,1,1)
+		tween.tween_property(%export_baker_successful, "modulate", Color(1,1,1,1),1.2)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(%export_baker_successful, "modulate", Color(1,1,1,0),2)
+		
+	)	
+	%export_baker_successful.visible=false	
+	
+	%export_join_mesh_button.pressed.connect(AssetIOBaker.export_join_mesh_only.bind(baker))		
+	%export_join_mesh_button.pressed.connect(func():
+		var tween:Tween = create_tween()
+		%export_join_mesh_successful.visible = true
+		%export_join_mesh_successful.modulate = Color(1,1,1,1)
+		tween.tween_property(%export_join_mesh_successful, "modulate", Color(1,1,1,1),1.2)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(%export_join_mesh_successful, "modulate", Color(1,1,1,0),2)
+		
+	)	
+	%export_join_mesh_successful.visible=false	
+	
 	validate_bake_button()
 	baker.renamed.connect(validate_bake_button.call_deferred)	
 	%Join.pressed.connect( show_join_mesh_window )			
@@ -71,6 +95,12 @@ func _ready():
 		
 	%show_hlod_button.pressed.connect(func():
 		EditorInterface.get_file_system_dock().navigate_to_path(hlod_path)
+	)
+	%show_baker_glb_button.pressed.connect(func():
+		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+".glb"))
+	)
+	%show_join_mesh_glb_button.pressed.connect(func():
+		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+"_joined_mesh.glb"))
 	)
 
 	
