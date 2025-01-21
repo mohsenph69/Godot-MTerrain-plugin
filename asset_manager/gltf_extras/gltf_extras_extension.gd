@@ -64,8 +64,10 @@ func _export_preflight(state: GLTFState, root: Node):
 	replace_mmesh_lod_with_meshes(root, root)		
 	
 func replace_mmesh_lod_with_meshes(scene_root, root):		
+	return
 	for child in root.get_children():		
 		if child is MAssetMesh:											
+			child.get_mes
 			var mesh_nodes_meshes = []
 			for i in len(child.meshes.meshes):			
 				if child.meshes.meshes[i] in mesh_nodes_meshes: continue

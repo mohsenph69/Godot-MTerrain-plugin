@@ -14,7 +14,7 @@ extends PanelContainer
 @onready var import_button:Button = find_child("import_button")
 @onready var node_container = find_child("node_container")
 
-var scene: Node #baker node
+var baker_node: Node #baker node
 var asset_library = MAssetTable.get_singleton()
 var material_table_items = {}
 
@@ -23,20 +23,20 @@ var invalid_materials := []
 func _ready():
 	#if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	if get_parent() is Window:
-		get_parent().close_requested.connect(get_parent().queue_free)
+		get_parent().close_requested.connect(cancel_import)
 	cancel_button.pressed.connect(func():
 		if get_parent() is Window:
-			get_parent().queue_free()
+			cancel_import()
 	)
-	if not is_instance_valid(scene):
+	if not is_instance_valid(baker_node):
 		return
-	var baker_path = scene.get_meta("baker_path") if scene.has_meta("baker_path") else ""
+	var baker_path = baker_node.get_meta("baker_path")
 	import_button.pressed.connect(func():						
-		AssetIO.glb_load_hlod_commit_changes(scene, baker_path)		
+		AssetIOBaker.baker_import_commit_changes(baker_node)		
 		if get_parent() is Window:
 			get_parent().queue_free()
 	)
-	get_window().title = "Importing scene: " + scene.name
+	get_window().title = "Importing scene: " + baker_node.name
 	
 	var hlod_tree: Tree = %hlod_tree	
 	hlod_tree.item_edited.connect(func():				
@@ -51,8 +51,9 @@ func _ready():
 	var original_scene = null
 	if FileAccess.file_exists(baker_path):
 		original_scene = load(baker_path).instantiate()
-	init_hlod_tree(root, scene, original_scene)	
-	original_scene.queue_free()
+	init_hlod_tree(root, baker_node, original_scene)	
+	if is_instance_valid(original_scene):
+		original_scene.queue_free()
 	root.set_cell_mode(0, TreeItem.CELL_MODE_STRING)	
 	
 func init_hlod_tree(tree_root, node:Node3D, original_node:Node3D):
@@ -80,6 +81,7 @@ func init_hlod_tree(tree_root, node:Node3D, original_node:Node3D):
 		text =  original_node.name + " (REMOVED)"
 	tree_node.set_text(0, text)								
 	for child in node.get_children():		
+		if not child is Node3D: continue
 		var name_data = AssetIO.node_parse_name(child)
 		if name_data.lod != -1: continue
 		var original_child = original_node.find_child(child.name) if original_node else null		
@@ -93,3 +95,7 @@ func validate_can_import():
 	import_button.disabled = true
 	if len(invalid_materials) == 0:
 		import_button.disabled = false
+
+func cancel_import():
+	baker_node.queue_free()
+	get_parent().queue_free()			

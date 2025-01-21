@@ -3,8 +3,7 @@ class_name HLod_Baker extends Node3D
 
 signal asset_mesh_updated
 
-#@export_storage var join_at_lod: int = -1
-@export_storage var joined_mesh_collection_id := -1
+@export_storage var joined_mesh_id := -1
 @export_storage var joined_mesh_disabled := false
 @export_storage var hlod_resource: MHlod
 @export_storage var bake_path = "res://massets/hlod/": get = get_bake_path
@@ -189,24 +188,15 @@ func get_bake_path():
 	if not bake_path.ends_with(".res"):
 		bake_path = bake_path + name + ".res"
 	return bake_path
-	
+		
+#region JOINED MESH				
 func get_joined_mesh():
 	var join_at_lod = asset_mesh_updater.get_join_at_lod()
 	if join_at_lod == -1: return null
 	var mesh_lod = asset_mesh_updater.get_mesh_lod() 
 	return mesh_lod.meshes[join_at_lod]
-	
-func get_joined_mesh_id_array():		
-	if not asset_library.has_collection(asset_mesh_updater.joined_mesh_collection_id): return null
-	var mesh_items = asset_library.collection_get_mesh_items_info(asset_mesh_updater.joined_mesh_collection_id)
-	if len(mesh_items) != 1: return null
-	return mesh_items[0].mesh	
-#endregion
 
-#region JOINED MESH				
-func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):	
-	var mesh_instance = MeshInstance3D.new()
-	mesh_instance.name = name.to_lower() + "_joined_mesh_lod_" + str(join_at_lod)	
+func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):			
 	###################
 	## JOIN THE MESH ##
 	###################
@@ -232,20 +222,9 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 				mesh_array.push_back( mmesh )
 				transforms.push_back(baker_inverse_transform * mesh_transform[1])
 				material_set_id_array.push_back( mesh_transform[2] )
-	print("Mesh to join ",mesh_array)
 	mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
-	mesh_instance.mesh = mesh_joiner.join_meshes()						
-	ResourceSaver.save(mesh_instance.mesh, "res://joined_mesh_test.res")
-	#print(mesh_instance.mesh.get_surface_count())
-	mesh_instance.mesh.resource_name = mesh_instance.name			
-	var glb_path = get_joined_mesh_glb_path()					
-	#AssetIO.glb_export(root_node, glb_path)		
-	AssetIO.glb_export(mesh_instance, glb_path)		
-	mesh_instance.queue_free()
-	#root_node.queue_free()
-	
-	for surface_id in mesh_instance.mesh.get_surface_count():
-		pass
+	var joined_mesh = mesh_joiner.join_meshes()						
+	AssetIOBaker.save_joined_mesh(joined_mesh_id, [joined_mesh], [join_at_lod])
 	
 func get_joined_mesh_glb_path()->String:	
 	if FileAccess.file_exists(scene_file_path):
@@ -261,22 +240,23 @@ func has_joined_mesh_glb()->bool:
 func toggle_joined_mesh_disabled(toggle_on):
 	joined_mesh_disabled = toggle_on
 	if toggle_on:		
-		asset_mesh_updater.joined_mesh_collection_id = -1		
+		asset_mesh_updater.join_mesh_id = -1		
 	else:
-		asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
+		asset_mesh_updater.join_mesh_id = joined_mesh_id #TODO: check if fixed
 	if force_lod_enabled:
 		force_lod(force_lod_value)
 	else:
 		force_lod(-1)
 
 func remove_joined_mesh():
-	var path = get_joined_mesh_glb_path()
-	var id = joined_mesh_collection_id
-	joined_mesh_collection_id = -1
-	asset_mesh_updater.joined_mesh_collection_id = -1	
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)		
-	AssetIO.remove_collection(id)
+	if MAssetTable.mesh_join_get_stop_lod(joined_mesh_id) == 0: return	
+	asset_mesh_updater.join_mesh_id = -1
+	for id in MAssetTable.mesh_join_ids_no_replace(joined_mesh_id):			
+		if id == -1: continue			
+		var path = MHlod.get_mesh_path(id)
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)						
+	ResourceSaver.save(Resource.new(), MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id, ".stop")))
 #endregion
 
 func set_variation_layers_visibility(value):
@@ -317,11 +297,10 @@ func _notification(what):
 func _ready():				
 	renamed.connect(validate_can_bake)
 	activate_mesh_updater()
-	#asset_mesh_updater.update_auto_lod()	
-	if joined_mesh_collection_id!=-1 and not MAssetTable.get_singleton().has_collection(joined_mesh_collection_id):
-		joined_mesh_collection_id = -1
-		push_warning(name," Join Mesh Has been removed!")
-	asset_mesh_updater.joined_mesh_collection_id = joined_mesh_collection_id
+	
+	if joined_mesh_id == -1:
+		joined_mesh_id = MAssetTable.get_last_free_mesh_join_id()
+	asset_mesh_updater.join_mesh_id = joined_mesh_id #TODO: check if fixed
 	if Engine.is_editor_hint() and not EditorInterface.get_resource_filesystem().filesystem_changed.is_connected(validate_can_bake):
 		EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)
 	
