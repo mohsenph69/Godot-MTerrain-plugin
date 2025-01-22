@@ -181,3 +181,12 @@ static func import_join_mesh_only(baker_node:Node3D):
 				var mmesh = MMesh.new()
 				mmesh.create_from_mesh(joined_mesh_node.mesh.get_mesh())
 				save_joined_mesh(baker_node.joined_mesh_id, [mmesh], [name_data.lod])
+
+static func import_join_mesh_auto(path, joined_mesh_nodes, joined_mesh_id):		
+	for joined_mesh_node in joined_mesh_nodes:
+		var name_data = AssetIO.node_parse_name(joined_mesh_node)		
+		if name_data.lod != -1:			
+			if joined_mesh_node is ImporterMeshInstance3D:
+				var mmesh = MMesh.new()
+				mmesh.create_from_mesh(joined_mesh_node.mesh.get_mesh())
+				save_joined_mesh(joined_mesh_id, [mmesh], [name_data.lod])

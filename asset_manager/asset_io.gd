@@ -31,9 +31,10 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		original_root.queue_free()
 		AssetIOBaker.baker_import_from_glb(path, baker_node)		
 	else:
-		glb_load_assets(gltf_state, gltf_document, path, metadata,no_window)
+		var scene_root = gltf_document.generate_scene(gltf_state)	
+		glb_load_assets(gltf_state, scene_root, path, metadata,no_window)
 			
-static func glb_load_assets(gltf_state, gltf_document, path, metadata={},no_window:bool=false):	
+static func glb_load_assets(gltf_state, scene_root, path, metadata={},no_window:bool=false):	
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	#STEP 0: Init Asset Data
 	asset_data = AssetIOData.new()	
@@ -45,7 +46,7 @@ static func glb_load_assets(gltf_state, gltf_document, path, metadata={},no_wind
 	asset_data.glb_path = path
 	asset_data.meta_data = metadata		
 	#STEP 1: convert gltf file into nodes
-	var scene_root = gltf_document.generate_scene(gltf_state)	
+	
 	var scene = scene_root.get_children() if not scene_root is ImporterMeshInstance3D else [scene_root]
 	#STEP 2: convert gltf scene into AssetData format	
 	generate_asset_data_from_glb(scene)
@@ -99,12 +100,18 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				if not active_collection == "__root__":
 					asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)
 			else:
-				for set_id in len(node.get_meta("material_sets")):
-					var mesh_item_name = name_data["name"] + str("_", set_id)
-					asset_data.add_mesh_data(node.get_meta("material_sets"), node.mesh.get_mesh(), mesh_item_name)
-					asset_data.add_mesh_item(mesh_item_name,name_data["lod"],node, set_id)
+				var mmesh = MMesh.new()
+				mmesh.create_from_mesh( node.mesh.get_mesh() )
+				var material_sets = node.get_meta("material_sets")				
+				mmesh.material_set_resize(len(material_sets))
+				for set_id in len(material_sets):
+					var mesh_item_name = name_data["name"] + str("_", set_id)									
+					asset_data.add_mesh_data(material_sets, mmesh, mesh_item_name)
+					asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
 					var collection_name = mesh_item_name if active_collection == "__root__" else active_collection
-					asset_data.add_mesh_item_to_collection(collection_name, mesh_item_name, active_collection == "__root__")
+					if not active_collection == "__root__":
+						asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)
+					#asset_data.add_mesh_item_to_collection(collection_name, mesh_item_name, active_collection == "__root__")
 					#for group in asset_data.variation_groups:
 						#if name_data["name"] in group:
 							
@@ -206,7 +213,6 @@ static func glb_import_commit_changes():
 	asset_library.save()
 	EditorInterface.get_resource_filesystem().scan()
 	notify_asset_table_update()
-
 
 static func notify_asset_table_update():
 	for obj in obj_to_call_on_table_update:

@@ -67,15 +67,15 @@ func _ready():
 		EditorInterface.get_file_system_dock().navigate_to_path(path)		
 	)
 	var remove_joined_mesh = %remove_joined_mesh
-	remove_joined_mesh.visible = false #baker.has_joined_mesh_glb()
+	remove_joined_mesh.visible = baker.has_joined_mesh_glb()
 	remove_joined_mesh.pressed.connect(func():
 		var dialog := ConfirmationDialog.new()
 		dialog.dialog_text = "Are you sure you want to delete the joined mesh .glb file?"
 		dialog.confirmed.connect(func():		
 			baker.remove_joined_mesh()
 			remove_joined_mesh.visible = false
-			%export_joined_mesh_toggle.button_pressed = true
-			%export_joined_mesh_toggle.disabled = true
+			#%export_joined_mesh_toggle.button_pressed = true
+			#%export_joined_mesh_toggle.disabled = true
 		)
 		add_child(dialog)
 		dialog.popup_centered()

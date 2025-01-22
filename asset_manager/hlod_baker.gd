@@ -47,17 +47,16 @@ func force_lod(lod:int):
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
 	hlod_resource = MHlod.new()
-	hlod_resource.set_baker_path(scene_file_path)		
-
-	var join_at_lod = asset_mesh_updater.get_join_at_lod()
-	
+	hlod_resource.set_baker_path(scene_file_path)				
+	var join_at_lod = MAssetTable.mesh_join_start_lod(joined_mesh_id)	
 	#################
 	## BAKE MESHES ##
 	#################
-	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())		
-	var baker_inverse_transform = global_transform.inverse()
-	for item:MAssetMesh in all_masset_mesh_nodes:		
-		for mdata:MAssetMeshData in item.get_mesh_data():
+	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())				
+	var baker_inverse_transform = global_transform.inverse()		
+	for item:MAssetMesh in all_masset_mesh_nodes:				
+		if item.collection_id == -1: continue							
+		for mdata:MAssetMeshData in item.get_mesh_data():						
 			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
 			var material_set_id = mdata.get_material_set_id()
 			var shadow_array = mesh_array.map(func(a): return 0)
@@ -68,7 +67,7 @@ func bake_to_hlod_resource():
 				push_error("failed to add mesh item to HLod during baking")
 			var i = 0			
 			var max = join_at_lod if join_at_lod >= 0 else MAX_LOD
-			if item.lod_cutoff >= 0: max = min(max,item.lod_cutoff)
+			if item.lod_cutoff >= 0: max = min(max,item.lod_cutoff)			
 			while i < max:
 				if mesh_array[min(i, len(mesh_array)-1) ] != -1:
 					hlod_resource.insert_item_in_lod_table(mesh_id, i)
@@ -77,20 +76,22 @@ func bake_to_hlod_resource():
 	######################
 	## BAKE JOINED_MESH ##
 	######################
-	var joined_mesh_array = asset_mesh_updater.get_joined_mesh_ids()	
+	var joined_mesh_array = MAssetTable.mesh_join_meshes(joined_mesh_id) 
+		
 	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
 		material_array.resize(len(joined_mesh_array))
 		material_array.fill(-1)		
 		var shadow_array = material_array.map(func(a): return 0)
-		var gi_array = material_array.map(func(a): return 0)				
-		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, [0], shadow_array, gi_array, 1, 0)		
+		var gi_array = material_array.map(func(a): return 0)		
+		# MAKE SURE ALL ARRAYS ARE THE SAME LENGTH!				
+		var mesh_id = hlod_resource.add_mesh_item(Transform3D(), joined_mesh_array, material_array, shadow_array, gi_array, 1, 0)		
 		if mesh_id != -1:
 			for i in range(join_at_lod, MAX_LOD):
-				hlod_resource.insert_item_in_lod_table(mesh_id, i)		
+				hlod_resource.insert_item_in_lod_table(mesh_id, i)						
 		else:
 			push_error("Hlod baker error: cannot add joined mesh to hlod table because mesh_id is -1")
-		
+	
 	#######################
 	## PREBAKE SUB_BAKER ##
 	#######################
@@ -114,9 +115,8 @@ func bake_to_hlod_resource():
 		if hlod_data.node and hlod_data.node is MHlodScene:
 			scene_layers = hlod_data.node.scene_layers
 		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod, scene_layers)
-		#hlod.lod_limit = join_at_lod
-	
-	hlod_resource.join_at_lod = join_at_lod
+		#hlod.lod_limit = join_at_lod	
+	hlod_resource.join_at_lod = join_at_lod	
 	var users = MHlodScene.get_hlod_users(bake_path)
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
@@ -128,7 +128,7 @@ func bake_to_hlod_resource():
 	for n in users:
 		n.hlod = hlod_resource
 	MHlodScene.awake()			
-	EditorInterface.get_resource_filesystem().scan()
+	#EditorInterface.get_resource_filesystem().scan()
 
 #region Getters	
 func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
@@ -261,6 +261,10 @@ func remove_joined_mesh():
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)						
 	ResourceSaver.save(Resource.new(), MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id, ".stop")))
+	var glb_path = get_joined_mesh_glb_path()
+	if FileAccess.file_exists(glb_path):
+		DirAccess.remove_absolute(glb_path)						
+	EditorInterface.get_resource_filesystem().scan()
 #endregion
 
 func set_variation_layers_visibility(value):
@@ -301,8 +305,7 @@ func _notification(what):
 	
 func _ready():				
 	renamed.connect(validate_can_bake)
-	activate_mesh_updater()		
-		
+	activate_mesh_updater()				
 	asset_mesh_updater.join_mesh_id = joined_mesh_id #TODO: check if fixed
 	if Engine.is_editor_hint() and not EditorInterface.get_resource_filesystem().filesystem_changed.is_connected(validate_can_bake):
 		EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)
