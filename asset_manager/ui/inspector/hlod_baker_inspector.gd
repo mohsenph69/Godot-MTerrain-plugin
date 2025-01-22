@@ -33,6 +33,16 @@ func _ready():
 	)	
 	%export_baker_successful.visible=false	
 	
+	%import_join_mesh_button.pressed.connect(AssetIOBaker.import_join_mesh_only.bind(baker))
+	%import_join_mesh_button.pressed.connect(func():
+		var tween:Tween = create_tween()
+		%import_join_mesh_successful.visible = true
+		%import_join_mesh_successful.modulate = Color(1,1,1,1)
+		tween.tween_property(%import_join_mesh_successful, "modulate", Color(1,1,1,1),1.2)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(%import_join_mesh_successful, "modulate", Color(1,1,1,0),2)		
+	)	
+	
 	%export_join_mesh_button.pressed.connect(AssetIOBaker.export_join_mesh_only.bind(baker))		
 	%export_join_mesh_button.pressed.connect(func():
 		var tween:Tween = create_tween()
@@ -106,6 +116,7 @@ func _ready():
 	%show_baker_glb_button.pressed.connect(func():
 		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+".glb"))
 	)
+	%show_join_mesh_glb_button.disabled = not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+"_joined_mesh.glb"))
 	%show_join_mesh_glb_button.pressed.connect(func():
 		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+"_joined_mesh.glb"))
 	)

@@ -57,6 +57,13 @@ func _import_post(state: GLTFState, root: Node) -> Error:
 				if not extras.is_empty():
 					for meta in extras:
 						node.set_meta(meta, extras[meta])					
+	# THIS CODE IS FOR AUTO REIMPORTING Joined meshes... but i
+	#if "_joined_mesh" in root.name:		
+		#var baker_path = state.base_path.path_join(root.name.split("_joined_mesh")[0]+".tscn" )		
+		#var baker = load(baker_path).instantiate()
+		#EditorInterface.get_base_control().add_child(baker)
+		#AssetIOBaker.import_join_mesh_only(baker)
+		#baker.queue_free()
 	return OK
 
 func _export_preflight(state: GLTFState, root: Node):			

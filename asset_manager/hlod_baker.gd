@@ -224,9 +224,11 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 				material_set_id_array.push_back( mesh_transform[2] )
 	mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
 	var joined_mesh = mesh_joiner.join_meshes()						
+	var mmesh = MMesh.new()
+	mmesh.create_from_mesh(joined_mesh)
 	if joined_mesh_id == -1:
 		joined_mesh_id = MAssetTable.get_last_free_mesh_join_id()
-	AssetIOBaker.save_joined_mesh(joined_mesh_id, [joined_mesh], [join_at_lod])
+	AssetIOBaker.save_joined_mesh(joined_mesh_id, [mmesh], [join_at_lod])
 	
 func get_joined_mesh_glb_path()->String:	
 	if FileAccess.file_exists(scene_file_path):

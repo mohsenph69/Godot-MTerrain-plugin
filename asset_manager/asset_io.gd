@@ -1,7 +1,7 @@
 @tool
 class_name AssetIO extends Object
 
-const LOD_COUNT = 8  # The number of different LODs in your project
+static var LOD_COUNT = 10  # The number of different LODs in your project
 
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
 static var regex_col_match:= RegEx.create_from_string("(.*)?[_|\\s]?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")

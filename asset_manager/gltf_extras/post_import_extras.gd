@@ -11,7 +11,7 @@ func _post_import(scene: Node) -> Object:
 		return scene
 	
 	var new_root = scene.get_child(0) 
-	update_children_recursive(new_root, new_root)
+	update_children_recursive(new_root, new_root)	
 	return new_root
 
 func update_children_recursive(new_owner, current_node):

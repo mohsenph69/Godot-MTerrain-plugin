@@ -142,6 +142,8 @@ static func explode_join_mesh_nodes(baker_node):
 	joined_mesh_node.name = baker_node.name + "_joined_mesh"
 	var meshes = MAssetTable.mesh_join_meshes_no_replace(baker_node.joined_mesh_id)		
 	var lods = MAssetTable.mesh_join_ids_no_replace(baker_node.joined_mesh_id)
+	print(lods)
+	print(meshes)
 	for i in len(meshes):
 		if meshes[i] == null: continue
 		var mmesh:MMesh = meshes[i]
@@ -163,5 +165,19 @@ static func export_join_mesh_only(baker_node:Node3D):
 	if joined_mesh_node:
 		joined_mesh_node.queue_free()	
 
-static func import_join_mesh_only():
-	pass
+static func import_join_mesh_only(baker_node:Node3D):
+	var gltf_document= GLTFDocument.new()
+	var gltf_state = GLTFState.new()
+	var path = baker_node.scene_file_path.get_basename() + "_joined_mesh.glb"
+	gltf_document.append_from_file(path, gltf_state)		
+	var scene = gltf_document.generate_scene(gltf_state)				
+	var joined_mesh_nodes = scene.find_children("*_joined_mesh*")
+	#print(joined_mesh_nodes)
+	for joined_mesh_node in joined_mesh_nodes:
+		var name_data = AssetIO.node_parse_name(joined_mesh_node)		
+
+		if name_data.lod != -1:			
+			if joined_mesh_node is ImporterMeshInstance3D:
+				var mmesh = MMesh.new()
+				mmesh.create_from_mesh(joined_mesh_node.mesh.get_mesh())
+				save_joined_mesh(baker_node.joined_mesh_id, [mmesh], [name_data.lod])
