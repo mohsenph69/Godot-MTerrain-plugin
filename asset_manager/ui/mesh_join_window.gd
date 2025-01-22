@@ -14,6 +14,8 @@ func _ready():
 	commit_button.pressed.connect(commit)
 	cancel_button.pressed.connect(queue_free)
 	close_requested.connect(queue_free)
+	 
+	%warning_label.visible = FileAccess.file_exists(baker.scene_file_path.get_basename() + "_joined_mesh.glb")
 	
 	var node_tree:Tree = find_child("node_tree")
 	var root = node_tree.create_item()
@@ -83,8 +85,7 @@ func set_update_mode(toggle_on):
 	#%remove_joined_mesh.visible = not toggle_on
 	%node_tree.visible = toggle_on
 	%join_at_lod_hbox.visible = toggle_on
-	%show_joined_mesh_glb_button.visible = not toggle_on
-	#%warning_label.visible = toggle_on and baker.has_joined_mesh_glb()
+	%show_joined_mesh_glb_button.visible = not toggle_on	
 	if toggle_on:
 		%export_joined_mesh_toggle.text = "Export from scene"
 		commit_button.text = "Make Joined Mesh"
