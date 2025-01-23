@@ -113,7 +113,6 @@ func _ready():
 				sel_node.set_script(hlod_baker_script)
 				sel_node._ready()
 				sel_node._enter_tree()
-			
 		)
 
 func done_placement(add_asset:=true):
@@ -332,7 +331,10 @@ func collection_item_activated(id, group_list:ItemList,create_ur:=true):
 
 func add_asset_to_scene(id, asset_name,create_ur:=true):
 	var node = MAssetMesh.new()
-	node.collection_id = id
+	node.collection_id = id		
+	var blend_file = AssetIO.get_asset_blend_file(node.collection_id) 
+	if blend_file:
+		node.set_meta("blend_file", blend_file)
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	var main_selected_node = null

@@ -4,6 +4,19 @@ class_name GLTFExtras extends GLTFDocumentExtension
 const import_meshes = false
 
 func _import_post(state: GLTFState, root: Node) -> Error:				
+	#THIS CODE IS FOR AUTO REIMPORTING Joined meshes... but i		
+	if "_joined_mesh" in root.name:					
+		var baker_path = state.base_path.path_join(root.name.split("_joined_mesh")[0]+".tscn" )		
+		var baker:PackedScene = load(baker_path)
+		var scene_state:SceneState = baker.get_state()
+		var joined_mesh_id
+		for i in scene_state.get_node_property_count(0):
+			var prop_name = scene_state.get_node_property_name(0,i)
+			if prop_name == "joined_mesh_id":
+				joined_mesh_id = scene_state.get_node_property_value(0,i)						
+		var joined_mesh_nodes = root.find_children("*_joined_mesh*")				
+		AssetIOBaker.import_join_mesh_auto(state.base_path.path_join(root.name + ".glb"), joined_mesh_nodes, joined_mesh_id)		
+		return OK
 	# Add metadata to materials
 	var materials_json : Array = state.json.get("materials", [])
 	var materials : Array[Material] = state.get_materials()		
@@ -56,16 +69,21 @@ func _import_post(state: GLTFState, root: Node) -> Error:
 			else:
 				if not extras.is_empty():
 					for meta in extras:
-						node.set_meta(meta, extras[meta])					
+						node.set_meta(meta, extras[meta])						
+	var glb_path = state.base_path.path_join(state.filename + ".glb")
+	if MAssetTable.get_singleton().import_info.has(glb_path):
+		AssetIO.glb_load_assets(state, root.duplicate(), glb_path, {}, true )	
 	return OK
-
+	
 func _export_preflight(state: GLTFState, root: Node):			
 	root.owner = null
 	replace_mmesh_lod_with_meshes(root, root)		
 	
 func replace_mmesh_lod_with_meshes(scene_root, root):		
+	return
 	for child in root.get_children():		
 		if child is MAssetMesh:											
+			child.get_mes
 			var mesh_nodes_meshes = []
 			for i in len(child.meshes.meshes):			
 				if child.meshes.meshes[i] in mesh_nodes_meshes: continue

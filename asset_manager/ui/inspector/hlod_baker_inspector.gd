@@ -18,12 +18,46 @@ func _ready():
 		tween.set_ease(Tween.EASE_OUT)
 		tween.chain().tween_property(%bake_successful, "modulate", Color(1,1,1,0),2)
 		
-	)
+	)	
+	%bake_successful.visible=false		
 	
-	%bake_successful.visible=false	
+	%export_baker_button.pressed.connect(AssetIOBaker.baker_export_to_glb.bind(baker))		
+	%export_baker_button.pressed.connect(func():
+		var tween:Tween = create_tween()
+		%export_baker_successful.visible = true
+		%export_baker_successful.modulate = Color(1,1,1,1)
+		tween.tween_property(%export_baker_successful, "modulate", Color(1,1,1,1),1.2)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(%export_baker_successful, "modulate", Color(1,1,1,0),2)
+		
+	)	
+	%export_baker_successful.visible=false	
+	
+	%import_join_mesh_button.pressed.connect(AssetIOBaker.import_join_mesh_only.bind(baker))
+	%import_join_mesh_button.pressed.connect(func():
+		var tween:Tween = create_tween()
+		%import_join_mesh_successful.visible = true
+		%import_join_mesh_successful.modulate = Color(1,1,1,1)
+		tween.tween_property(%import_join_mesh_successful, "modulate", Color(1,1,1,1),1.2)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(%import_join_mesh_successful, "modulate", Color(1,1,1,0),2)		
+	)	
+	
+	%export_join_mesh_button.pressed.connect(AssetIOBaker.export_join_mesh_only.bind(baker))		
+	%export_join_mesh_button.pressed.connect(func():
+		var tween:Tween = create_tween()
+		%export_join_mesh_successful.visible = true
+		%export_join_mesh_successful.modulate = Color(1,1,1,1)
+		tween.tween_property(%export_join_mesh_successful, "modulate", Color(1,1,1,1),1.2)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.chain().tween_property(%export_join_mesh_successful, "modulate", Color(1,1,1,0),2)
+		
+	)	
+	%export_join_mesh_successful.visible=false	
+	
 	validate_bake_button()
 	baker.renamed.connect(validate_bake_button.call_deferred)	
-	%Join.pressed.connect( show_join_mesh_window )			
+	%create_join_mesh_button.pressed.connect( show_join_mesh_window )			
 	
 	var force_lod_checkbox = %force_lod_checkbox
 	var force_lod_value = %force_lod_value
@@ -45,8 +79,15 @@ func _ready():
 	force_lod_value.value_changed.connect(baker.force_lod)
 	
 	%disable_joined_mesh_button.visible = baker.has_joined_mesh_glb()	
-	%disable_joined_mesh_button.toggled.connect(baker.toggle_joined_mesh_disabled)
-	%disable_joined_mesh_button.toggled.connect(validate_show_joined_mesh_button)
+	%disable_joined_mesh_button.toggled.connect(func(toggle):
+		baker.toggle_joined_mesh_disabled(toggle)
+		validate_show_joined_mesh_button(toggle)
+		if toggle:
+			%disable_joined_mesh_button.icon = preload("res://addons/m_terrain/icons/eye-close.svg")
+		else:
+			%disable_joined_mesh_button.icon = preload("res://addons/m_terrain/icons/eye.svg")
+			
+	)
 	if not baker.joined_mesh_disabled:
 		baker.joined_mesh_disabled = false
 	%disable_joined_mesh_button.button_pressed = baker.joined_mesh_disabled 		
@@ -66,8 +107,18 @@ func _ready():
 		baker.set_variation_layers_visibility(value)
 	)
 	layers.layer_names = baker.variation_layers
+	var hlod_path = MAssetTable.get_hlod_res_dir().path_join(baker.name+".res")
+	%show_hlod_button.disabled = not FileAccess.file_exists(hlod_path)
+		
 	%show_hlod_button.pressed.connect(func():
-		EditorInterface.get_file_system_dock().navigate_to_path("res://massets/hlod/"+baker.name+".res")
+		EditorInterface.get_file_system_dock().navigate_to_path(hlod_path)
+	)
+	%show_baker_glb_button.pressed.connect(func():
+		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+".glb"))
+	)
+	%show_join_mesh_glb_button.disabled = not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+"_joined_mesh.glb"))
+	%show_join_mesh_glb_button.pressed.connect(func():
+		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+"_joined_mesh.glb"))
 	)
 
 	
@@ -87,9 +138,9 @@ func bake_button_gui_input(event):
 func validate_bake_button():
 	%Bake.disabled = not baker.can_bake
 	if baker.can_bake:
-		%Bake.text = "Bake"
+		%hlod_bake_warning.text = ""
 		%Bake.tooltip_text = "Bake scene to hlod resource"
 	else:
-		%Bake.text= "Baker name must be unique!"
+		#%hlod_bake_warning.text= "Baker name must be unique!"		
 		%Bake.tooltip_text = "HLod with the name " + baker.name + " is already used by another baker scene. please rename the baker scene"
 		

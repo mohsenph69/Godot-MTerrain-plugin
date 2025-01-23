@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://byq2krnjsg1oc"]
+[gd_scene load_steps=3 format=3 uid="uid://byq2krnjsg1oc"]
 
+[ext_resource type="MHlod" uid="uid://cwtsur2lrjhbn" path="res://massets/hlod/Test_Baker.res" id="1_8anhi"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/m_hlod_previewer.gd" id="1_p66ot"]
 
 [node name="MHlodScene" type="MHlodScene"]
+hlod = ExtResource("1_8anhi")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
 script = ExtResource("1_p66ot")
