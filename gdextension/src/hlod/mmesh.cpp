@@ -10,6 +10,9 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 
 void MMesh::_bind_methods(){
+    ClassDB::bind_method(D_METHOD("surface_set_name","sidx","name"), &MMesh::surface_set_name);
+    ClassDB::bind_method(D_METHOD("surface_get_name","sidx"), &MMesh::surface_get_name);
+
     ClassDB::bind_method(D_METHOD("create_from_mesh","mesh"), &MMesh::create_from_mesh);
     ClassDB::bind_method(D_METHOD("get_mesh_rid"), &MMesh::get_mesh_rid);
     ClassDB::bind_method(D_METHOD("get_mesh"), &MMesh::get_mesh);
@@ -221,12 +224,15 @@ MMesh::~MMesh(){
     }
 }
 
-void MMesh::surface_set_name(int surface_index){
-
+void MMesh::surface_set_name(int surface_index,const String& new_name){
+    PackedStringArray _snames = surfaces_get_names();
+    _snames.set(surface_index,new_name);
+    surfaces_set_names(_snames);
 }
 
-String MMesh::surface_get_name() const{
-    return "";
+String MMesh::surface_get_name(int surface_index) const{
+    PackedStringArray _snames = surfaces_get_names();
+    return _snames[surface_index];
 }
 
 Array MMesh::surface_get_arrays(int surface_index) const{

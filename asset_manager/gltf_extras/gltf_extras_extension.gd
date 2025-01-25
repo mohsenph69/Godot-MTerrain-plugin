@@ -4,10 +4,11 @@ class_name GLTFExtras extends GLTFDocumentExtension
 const import_meshes = false
 
 func _import_post(state: GLTFState, root: Node) -> Error:				
-	return OK
 	#THIS CODE IS FOR AUTO REIMPORTING Joined meshes... but i		
 	if "_joined_mesh" in root.name:					
-		var baker_path = state.base_path.path_join(root.name.split("_joined_mesh")[0]+".tscn" )		
+		var baker_path = state.base_path.path_join(root.name.split("_joined_mesh")[0]+".tscn" )
+		if not ResourceLoader.exists(baker_path):
+			return OK
 		var baker:PackedScene = load(baker_path)
 		var scene_state:SceneState = baker.get_state()
 		var joined_mesh_id

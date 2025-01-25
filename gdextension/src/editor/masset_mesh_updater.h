@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/templates/vset.hpp>
 #include "../hlod/mmesh.h"
 
 using namespace godot;
@@ -13,8 +14,11 @@ class MAssetMeshUpdater : public RefCounted {
 
     protected:
     static void _bind_methods();
+    public:
+    static void refresh_all_masset_updater();
 
     private:
+    static VSet<MAssetMeshUpdater*> asset_mesh_updater_list;
     Node3D* root_node = nullptr;
     int current_lod = -1;
     // For join mesh always the transform is at the same position of baker

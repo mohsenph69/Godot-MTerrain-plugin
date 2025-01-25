@@ -16,6 +16,8 @@
 
 #include "masset_mesh.h"
 
+VSet<MAssetMeshUpdater*> MAssetMeshUpdater::asset_mesh_updater_list;
+
 void MAssetMeshUpdater::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("update_auto_lod"), &MAssetMeshUpdater::update_auto_lod);
@@ -33,13 +35,22 @@ void MAssetMeshUpdater::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_joined_mesh_ids"), &MAssetMeshUpdater::get_joined_mesh_ids);
     ClassDB::bind_method(D_METHOD("get_mesh_lod"), &MAssetMeshUpdater::get_mesh_lod);
     ClassDB::bind_method(D_METHOD("get_join_at_lod"), &MAssetMeshUpdater::get_join_at_lod);
+
+    ClassDB::bind_static_method("MAssetMeshUpdater",D_METHOD("refresh_all_masset_updater"), &MAssetMeshUpdater::refresh_all_masset_updater);
+}
+
+void MAssetMeshUpdater::refresh_all_masset_updater(){
+    for(int i=0; i < asset_mesh_updater_list.size(); i++){
+        asset_mesh_updater_list[i]->update_join_mesh();
+    }
 }
 
 MAssetMeshUpdater::MAssetMeshUpdater(){
-
+    asset_mesh_updater_list.insert(this);
 }
 
 MAssetMeshUpdater::~MAssetMeshUpdater(){
+    asset_mesh_updater_list.erase(this);
     remove_join_mesh();
 }
 
@@ -81,6 +92,8 @@ void MAssetMeshUpdater::_update_lod(int lod){
 }
 
 void MAssetMeshUpdater::update_join_mesh(){
+    joined_mesh.clear();
+    join_at = -1;
     if(join_mesh_id==-1){
         return;
     }
@@ -106,7 +119,6 @@ void MAssetMeshUpdater::add_join_mesh(int lod){
     if(last_mesh.is_null()){
         RS->instance_set_base(join_mesh_instance,RID());
     } else {
-        
         RS->instance_set_base(join_mesh_instance,last_mesh->get_mesh_rid());
     }
 }

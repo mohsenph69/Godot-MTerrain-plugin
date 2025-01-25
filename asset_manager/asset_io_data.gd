@@ -356,7 +356,6 @@ func get_glb_import_info():
 #Add original mesh and collection data to asset_data
 func add_glb_import_info(info:Dictionary)->void:
 	var asset_library := MAssetTable.get_singleton()
-	print(info.keys())
 	for collection_glb_name in info:
 		if collection_glb_name.begins_with("__"): continue
 		if not collections.has(collection_glb_name):

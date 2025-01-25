@@ -223,12 +223,19 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 				transforms.push_back(baker_inverse_transform * mesh_transform[1])
 				material_set_id_array.push_back( mesh_transform[2] )
 	mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
-	var joined_mesh = mesh_joiner.join_meshes()						
+	var joined_mesh:ArrayMesh= mesh_joiner.join_meshes()
+	# Setting surface names as ID of material
+	for s in range(joined_mesh.get_surface_count()):
+		var mat = joined_mesh.surface_get_material(s)
+		var id = AssetIO.get_material_id(mat)
+		joined_mesh.surface_set_name(s,str(id))
 	var mmesh = MMesh.new()
 	mmesh.create_from_mesh(joined_mesh)
 	if joined_mesh_id == -1:
-		joined_mesh_id = MAssetTable.get_last_free_mesh_join_id()
+		joined_mesh_id=MAssetTable.get_last_free_mesh_join_id()
 	AssetIOBaker.save_joined_mesh(joined_mesh_id, [mmesh], [join_at_lod])
+	asset_mesh_updater.join_mesh_id = joined_mesh_id # should call after saving
+	MAssetMeshUpdater.refresh_all_masset_updater()
 	
 func get_joined_mesh_glb_path()->String:	
 	if FileAccess.file_exists(scene_file_path):
@@ -306,10 +313,14 @@ func _notification(what):
 func _ready():				
 	renamed.connect(validate_can_bake)
 	activate_mesh_updater()				
-	asset_mesh_updater.join_mesh_id = joined_mesh_id #TODO: check if fixed
+	set_join_mesh_id(joined_mesh_id)
 	if Engine.is_editor_hint() and not EditorInterface.get_resource_filesystem().filesystem_changed.is_connected(validate_can_bake):
 		EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)
-	
+
+func set_join_mesh_id(input:int):
+	joined_mesh_id = input
+	asset_mesh_updater.join_mesh_id = input
+
 func activate_mesh_updater():
 	if not is_inside_tree():
 		return
@@ -330,7 +341,7 @@ func deactivate_mesh_updater():
 	if is_instance_valid(timer):
 		timer.stop()
 	
-func update_asset_mesh():	
+func update_asset_mesh():
 	if force_lod_enabled:
 		asset_mesh_updater.update_force_lod(force_lod_value)
 		return # this should not be necessary, but sometime timer refuses to stop, and I don't know why

@@ -316,7 +316,7 @@ static func blender_end_number_remove(input:String)->String:
 	var res = blender_end_number_regex.search(input)
 	if not res:
 		return input
-	return res.strings[2]
+	return res.strings[1]
 
 static func get_material_sets_from_surface_names(surface_names:PackedStringArray)->Array:
 	var surfaces_sets_count:PackedInt32Array
@@ -457,6 +457,30 @@ static func get_material_table():
 	if not asset_library.import_info.has("__materials"):
 		asset_library.import_info["__materials"] = {}
 	return asset_library.import_info["__materials"]
+
+static func get_material_id(mat:Material)->int:
+	if not mat: return -1
+	var path = mat.resource_path
+	if path.is_empty(): return -1
+	var at = MAssetTable.get_singleton()
+	if not at: return -1
+	var materials = at.import_info["__materials"]
+	for id in materials:
+		if materials[id]["path"] == path:
+			return id
+	return -1
+
+static func get_material(id:int)->Material:
+	var at = MAssetTable.get_singleton()
+	if not at: return null
+	var materials = at.import_info["__materials"]
+	if materials.has(id):
+		var path = materials[id]["path"]
+		if ResourceLoader.exists(path):
+			var mat = load(path)
+			if mat is Material:
+				return mat
+	return null
 
 static func update_material(id, path):
 	var asset_library := MAssetTable.get_singleton()	

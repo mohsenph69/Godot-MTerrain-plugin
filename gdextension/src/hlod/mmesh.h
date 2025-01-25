@@ -73,8 +73,8 @@ class MMesh : public Resource {
 	~MMesh();
 
 	PackedStringArray surfaces_get_names() const;
-	void surface_set_name(int surface_index);
-	String surface_get_name() const;
+	void surface_set_name(int surface_index,const String& new_name);
+	String surface_get_name(int surface_index) const;
 	Array surface_get_arrays(int surface_index) const;
 
 	RID get_mesh_rid();
