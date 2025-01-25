@@ -22,7 +22,7 @@ struct MHLodItemMesh {
     uint8_t gi_mode;
     int8_t material_id;
     int32_t render_layers;
-    int64_t mesh_id;
+    int32_t mesh_id;
     Ref<MMesh> mesh;
     //Vector<Material> surface_material;
 

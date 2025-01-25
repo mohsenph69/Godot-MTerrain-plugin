@@ -64,7 +64,9 @@ class MHlod : public Resource{
     static const char* physics_settings_dir;
     static Ref<MMaterialTable> material_table; // this is problematic specially in windows should be changed later
     int join_at_lod = -1;
+    #ifdef DEBUG_ENABLED
     String baker_path;
+    #endif
     AABB aabb;
     Vector<Item> item_list;
     Vector<Transform3D> transforms;
@@ -94,12 +96,15 @@ class MHlod : public Resource{
     Array get_lod_table();
     void clear();
 
-    void set_baker_path(const String& input);
-    String get_baker_path();
 
     /// Physics
     int add_shape_sphere(const Transform3D& _transform,float radius);
 
+    void set_baker_path(const String& input);
+    String get_baker_path();
+    #ifdef DEBUG_ENABLED
+    Dictionary get_used_mesh_ids() const;
+    #endif
 
 
     void start_test(){

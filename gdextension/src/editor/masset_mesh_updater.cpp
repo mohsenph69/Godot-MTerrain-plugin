@@ -23,9 +23,9 @@ void MAssetMeshUpdater::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("get_current_lod"), &MAssetMeshUpdater::get_current_lod);
 
-    ClassDB::bind_method(D_METHOD("set_joined_mesh_collection_id","input"), &MAssetMeshUpdater::set_joined_mesh_collection_id);
-    ClassDB::bind_method(D_METHOD("get_joined_mesh_collection_id"), &MAssetMeshUpdater::get_joined_mesh_collection_id);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"joined_mesh_collection_id"),"set_joined_mesh_collection_id","get_joined_mesh_collection_id");
+    ClassDB::bind_method(D_METHOD("set_join_mesh_id","input"), &MAssetMeshUpdater::set_join_mesh_id);
+    ClassDB::bind_method(D_METHOD("get_join_mesh_id"), &MAssetMeshUpdater::get_join_mesh_id);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"join_mesh_id"),"set_join_mesh_id","get_join_mesh_id");
 
     ClassDB::bind_method(D_METHOD("set_root_node","input"), &MAssetMeshUpdater::set_root_node);
     ClassDB::bind_method(D_METHOD("get_root_node"), &MAssetMeshUpdater::get_root_node);
@@ -81,40 +81,17 @@ void MAssetMeshUpdater::_update_lod(int lod){
 }
 
 void MAssetMeshUpdater::update_join_mesh(){
-    ERR_FAIL_COND(MAssetTable::get_singleton().is_null());
-    join_at = -1;
-    joined_mesh_ids.clear();
-    joined_mesh.clear();
-    if(joined_mesh_collection_id<0){
+    if(join_mesh_id==-1){
         return;
     }
-    Ref<MAssetTable> at = MAssetTable::get_singleton();
-    ERR_FAIL_COND(!at->has_collection(joined_mesh_collection_id));
-    PackedInt32Array mesh_item_list;
-    ERR_FAIL_COND_MSG(mesh_item_list.size()!=1,"Joined Mesh Collection "+itos(joined_mesh_collection_id)+" should have one mesh item, but has "+itos(mesh_item_list.size()));
-    int mid = mesh_item_list[0];
-    PackedInt64Array meshe_ids;
-    if(meshe_ids.size()==0){
+    if(!MAssetTable::mesh_join_is_valid(join_mesh_id)){
+        join_at == -1;
+        ERR_FAIL_MSG("Join mesh Id "+itos(join_mesh_id)+" is not valid ");
         return;
     }
-    TypedArray<MMesh> meshes;
-    int first_valid_mesh = -1;
-    for(int64_t m : meshe_ids){
-        if(m < 0){
-            meshes.push_back(Ref<MMesh>());
-            joined_mesh_ids.push_back(-1);
-            continue;
-        }
-        Ref<MMesh> mesh = ResourceLoader::get_singleton()->load(MHlod::get_mesh_path(m));
-        meshes.push_back(mesh);
-        joined_mesh_ids.push_back(m);
-        if(mesh.is_valid() && first_valid_mesh == -1){
-            first_valid_mesh = meshes.size() - 1;
-        }
-    }
-    ERR_FAIL_COND_MSG(!first_valid_mesh==-1,"No valid mesh in join mesh");
-    join_at = first_valid_mesh;
-    joined_mesh = meshes;
+    joined_mesh_ids = MAssetTable::mesh_join_ids(join_mesh_id);
+    join_at = MAssetTable::mesh_join_start_lod(join_mesh_id);
+    joined_mesh = MAssetTable::mesh_join_meshes(join_mesh_id);
 }
 
 void MAssetMeshUpdater::add_join_mesh(int lod){
@@ -174,7 +151,7 @@ void MAssetMeshUpdater::update_force_lod(int lod){
     _update_lod(lod);
 }
 
-PackedInt64Array MAssetMeshUpdater::get_joined_mesh_ids(){
+PackedInt32Array MAssetMeshUpdater::get_joined_mesh_ids(){
     return joined_mesh_ids;
 }
 
@@ -191,13 +168,17 @@ int MAssetMeshUpdater::get_current_lod(){
     return current_lod;
 }
 
-void MAssetMeshUpdater::set_joined_mesh_collection_id(int input){
-    joined_mesh_collection_id = input;
+void MAssetMeshUpdater::set_join_mesh_id(int input){
+    if(input == join_mesh_id){
+        return;
+    }
+    ERR_FAIL_COND(input!=-1&&input>-10);
+    join_mesh_id = input;
     update_join_mesh();
 }
 
-int MAssetMeshUpdater::get_joined_mesh_collection_id(){
-    return joined_mesh_collection_id;
+int MAssetMeshUpdater::get_join_mesh_id(){
+    return join_mesh_id;
 }
 
 

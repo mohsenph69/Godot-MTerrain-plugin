@@ -18,10 +18,10 @@ class MAssetMeshUpdater : public RefCounted {
     Node3D* root_node = nullptr;
     int current_lod = -1;
     // For join mesh always the transform is at the same position of baker
-    int joined_mesh_collection_id = -1;
+    int join_mesh_id = -1;
     int join_at = -1;
     TypedArray<MMesh> joined_mesh;
-    PackedInt64Array joined_mesh_ids;
+    PackedInt32Array joined_mesh_ids;
     RID join_mesh_instance;
 
     private:
@@ -35,14 +35,14 @@ class MAssetMeshUpdater : public RefCounted {
     void update_auto_lod();
     void update_force_lod(int lod);
 
-    PackedInt64Array get_joined_mesh_ids();
+    PackedInt32Array get_joined_mesh_ids();
     TypedArray<MMesh> get_mesh_lod();
     int get_join_at_lod();
 
     int get_current_lod();
 
-    void set_joined_mesh_collection_id(int input);
-    int get_joined_mesh_collection_id();
+    void set_join_mesh_id(int input);
+    int get_join_mesh_id();
 
     void set_root_node(Node3D* input);
     Node3D* get_root_node() const;

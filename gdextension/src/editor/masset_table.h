@@ -67,7 +67,6 @@ class MAssetTable : public Resource {
     {
         /* data */
     };
-    
 
     struct Collection {
         int32_t mesh_id=-1;
@@ -87,7 +86,23 @@ class MAssetTable : public Resource {
         void set_save_data(const PackedByteArray& data);
         PackedByteArray get_save_data() const;
     };
+    public:
+    struct CollectionIdentifier {
+        String name;
+        int32_t glb_id = -1;
+        CollectionIdentifier()=default;
+        inline CollectionIdentifier(int glb_id,const String& name):glb_id(glb_id),name(name){}
 
+        inline bool is_null() const{
+            return glb_id == -1 || name.is_empty();
+        }
+        
+        _FORCE_INLINE_ bool operator==(const CollectionIdentifier& other){
+            return glb_id==other.glb_id && name==other.name;
+        }
+    };
+
+    private:
     Vector<Collection> collections;
     PackedStringArray collections_names;
     Vector<Tag> collections_tags;
@@ -99,7 +114,6 @@ class MAssetTable : public Resource {
     PackedStringArray group_names;
     Vector<Tag> groups;
 
-    private:
     static int32_t last_free_mesh_id; // should be updated before each import
     void _increase_collection_buffer_size(int q);
     int _get_free_collection_index();
@@ -165,9 +179,13 @@ class MAssetTable : public Resource {
     static bool mesh_join_is_valid(int mesh_id);
     static int32_t mesh_join_start_lod(int mesh_id);
 
+    CollectionIdentifier collection_get_identifier(int collection_id) const;
+    int32_t collection_get_id_by_identifier(const CollectionIdentifier& identifier) const;
+
     int collection_create(String _name);
     void collection_set_glb_id(int collection_id,int32_t glb_id);
     int32_t collection_get_glb_id(int collection_id) const;
+    int32_t collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const;
     void collection_set_cache_thumbnail(int collection_id,Ref<Texture2D> tex,double creation_time);
     double collection_get_thumbnail_creation_time(int collection_id) const;
     Ref<Texture2D> collection_get_cache_thumbnail(int collection_id) const;
@@ -184,7 +202,6 @@ class MAssetTable : public Resource {
     Array collection_get_sub_collections_transforms(int collection_id) const;
     Array collection_get_sub_collections_transform(int collection_id,int sub_collection_id) const;
     void collection_remove_tag(int collection_id,int tag);
-    void collection_update_name(int collection_id,String name);
     String collection_get_name(int collection_id) const;
     int collection_get_id(const String& name) const;
     PackedInt32Array collection_get_tags(int collection_id) const;

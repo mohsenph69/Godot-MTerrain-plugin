@@ -14,6 +14,7 @@ var blend_file: String
 var mesh_data: Dictionary # key is mesh_name, value is array of material sets, each set is an array of material names references the materials dictionary
 var materials:Dictionary #Key is import material name
 var collections:Dictionary
+var forgotten_collections_import_info:Dictionary
 var variation_groups: Array #array of array of glb node names
 var meta_data:Dictionary
 
@@ -25,7 +26,7 @@ func import_state_str(_state:int) -> String:
 		elif _state==4:return "Remove"
 		return "Unkonw " + str(_state)
 
-func print_pretty_dic(dic:Dictionary,dic_name:String,tab_count:int=0):
+func print_pretty_dic(dic:Dictionary,dic_name:String="Dictionary",tab_count:int=0):
 	var root_tab:=""
 	for i in range(tab_count):
 		root_tab += "    "
@@ -340,6 +341,11 @@ func get_glb_import_info():
 			collision_item.mesh = null
 			result[key].collision_items.push_back(collision_item)					
 		result[key]["id"] = collections[key]["id"]	
+	for key in forgotten_collections_import_info:
+		if result.has(key):
+			printerr("Result has key ",key)
+			continue
+		result[key] =  forgotten_collections_import_info[key]
 	result["__materials"] = {}
 	for key in materials:				
 		result["__materials"][key] = {"path":materials[key].material, "meshes":materials[key].meshes}
@@ -350,11 +356,17 @@ func get_glb_import_info():
 #Add original mesh and collection data to asset_data
 func add_glb_import_info(info:Dictionary)->void:
 	var asset_library := MAssetTable.get_singleton()
+	print(info.keys())
 	for collection_glb_name in info:
 		if collection_glb_name.begins_with("__"): continue
 		if not collections.has(collection_glb_name):
-			collections[collection_glb_name] = get_empty_collection()
+			if info[collection_glb_name]["id"] == -1:
+				forgotten_collections_import_info[collection_glb_name] = info[collection_glb_name]
+				continue # A forgotten glb name
+			else:
+				collections[collection_glb_name] = get_empty_collection()
 		var collection_id = info[collection_glb_name]["id"]
+		#print("add id  ",collection_glb_name,info[collection_glb_name])
 		#if collection_id < 0: # Can be a long removed collection we should keep mesh_id
 			#pass
 		var mesh_id = info[collection_glb_name]["mesh_id"]

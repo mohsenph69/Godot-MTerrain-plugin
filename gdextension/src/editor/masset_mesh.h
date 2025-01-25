@@ -3,10 +3,14 @@
 
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/triangle_mesh.hpp>
-
+#include <godot_cpp/templates/vset.hpp>
+#include "masset_table.h"
 #include "../hlod/mmesh.h"
 
+// collection_id -2 means the collection is corrupted
+
 using namespace godot;
+
 
 class MAssetMeshData : public RefCounted {
     GDCLASS(MAssetMeshData,RefCounted);
@@ -36,6 +40,7 @@ class MAssetMesh : public Node3D {
     static void _bind_methods();
 
     private:
+    static VSet<MAssetMesh*> asset_mesh_node_list;
     int instance_count = 0;
     struct InstanceData
     {
@@ -62,6 +67,9 @@ class MAssetMesh : public Node3D {
     int collection_id = -1;
     int current_lod = -1;
     int lod_cutoff = -1;
+    int32_t glb_id = -1;
+    MAssetTable::CollectionIdentifier collection_identifier;
+    String collection_name;
     Vector<InstanceData> instance_data;
     Ref<TriangleMesh> joined_triangle_mesh; // chached for editor selection
     AABB joined_aabb; // if above is cached the this is also is calculated
@@ -70,6 +78,7 @@ class MAssetMesh : public Node3D {
     private:
     void remove_instances(bool hard_remove);
     public:
+    static void refresh_all_masset_nodes();
     MAssetMesh();
     ~MAssetMesh();
     void generate_instance_data(int collection_id,const Transform3D& transform); // at root level transform will be unity, this will append meshes to instance_data
@@ -87,6 +96,12 @@ class MAssetMesh : public Node3D {
     void set_collection_id_no_lod_update(int input);
     void set_collection_id(int input);
     int get_collection_id();
+    void set_collection_identifier(const Array& info);
+    Array get_collection_identifier();
+    void set_glb_id(int32_t glb_id);
+    int32_t get_glb_id();
+    void set_collection_name(const String& input);
+    String get_collection_name();
     PackedInt32Array get_collection_ids() const;
     int get_collection_material_set(int collection_id) const;
     void set_collection_material_set(int collection_id, int material_set);

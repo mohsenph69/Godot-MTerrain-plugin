@@ -3,7 +3,6 @@
 #include <godot_cpp/classes/mesh.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/world3d.hpp>
-#include "masset_table.h"
 #include "../hlod/mhlod.h"
 #include "mmesh_joiner.h"
 #include <godot_cpp/classes/rendering_server.hpp>
@@ -150,6 +149,8 @@ Ref<MMesh> MAssetMesh::InstanceData::get_mesh_last(int lod) const{
     return meshes[lod];
 }
 
+VSet<MAssetMesh*> MAssetMesh::asset_mesh_node_list;
+
 void MAssetMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("update_instance_date"), &MAssetMesh::update_instance_date);
     ClassDB::bind_method(D_METHOD("update_lod","lod"), &MAssetMesh::update_lod);
@@ -162,9 +163,22 @@ void MAssetMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_hlod_layers"), &MAssetMesh::get_hlod_layers);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"hlod_layers"),"set_hlod_layers","get_hlod_layers");
 
+    ClassDB::bind_method(D_METHOD("get_collection_name"), &MAssetMesh::get_collection_name);
+    ClassDB::bind_method(D_METHOD("set_collection_name","input"), &MAssetMesh::set_collection_name);
+
+    ClassDB::bind_method(D_METHOD("get_glb_id"), &MAssetMesh::get_glb_id);
+    ClassDB::bind_method(D_METHOD("set_glb_id","input"), &MAssetMesh::set_glb_id);
+    
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"_glb_id"),"set_glb_id","get_glb_id");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING,"_collection_name"),"set_collection_name","get_collection_name");
+
     ClassDB::bind_method(D_METHOD("get_collection_id"), &MAssetMesh::get_collection_id);
     ClassDB::bind_method(D_METHOD("set_collection_id","input"), &MAssetMesh::set_collection_id);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"collection_id"),"set_collection_id","get_collection_id");
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collection_id",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),"set_collection_id","get_collection_id");
+
+    ClassDB::bind_method(D_METHOD("_get_collection_identifier"), &MAssetMesh::get_collection_identifier);
+    ClassDB::bind_method(D_METHOD("_set_collection_identifier","input"), &MAssetMesh::set_collection_identifier);
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"_collection_identifier",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_collection_identifier","_get_collection_identifier");
 
     ClassDB::bind_method(D_METHOD("get_collections_material_set"), &MAssetMesh::get_collections_material_set);
     ClassDB::bind_method(D_METHOD("set_collections_material_set","input"), &MAssetMesh::set_collections_material_set);
@@ -184,17 +198,25 @@ void MAssetMesh::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("get_merged_mesh","lowest_lod"), &MAssetMesh::get_merged_mesh);
     ClassDB::bind_static_method("MAssetMesh",D_METHOD("get_collection_merged_mesh","collection_id","lowest_lod"),&MAssetMesh::get_collection_merged_mesh);
+    ClassDB::bind_static_method("MAssetMesh",D_METHOD("refresh_all_masset_nodes"),&MAssetMesh::refresh_all_masset_nodes);
+}
+
+void MAssetMesh::refresh_all_masset_nodes(){
+    for(int i=0; i < asset_mesh_node_list.size(); i++){
+        asset_mesh_node_list[i]->update_instance_date();
+    }
 }
 
 MAssetMesh::MAssetMesh(){
     set_notify_transform(true);
     connect("tree_exited",Callable(this,"_update_visibility"));
     connect("tree_entered",Callable(this,"_update_visibility"));
-    
+    asset_mesh_node_list.insert(this);
 }
 
 MAssetMesh::~MAssetMesh(){
     remove_instances(true);
+    asset_mesh_node_list.erase(this);
 }
 
 void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& transform){
@@ -222,8 +244,17 @@ void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& tra
 }
 
 void MAssetMesh::update_instance_date(){
+    if(collection_identifier.is_null()){ // NULL STATE
+        collection_id == -1;
+        return;
+    }
+    Ref<MAssetTable> at = MAssetTable::get_singleton();
+    ERR_FAIL_COND(at.is_null());
     remove_instances(true);
-    if(collection_id==-1){
+    collection_id = at->collection_get_id_by_identifier(collection_identifier);
+    if(collection_id < 0){ // invalid state
+        collection_id = -2;
+        UtilityFunctions::print("Invalid state ",collection_id);
         return;
     }
     Transform3D t; // Identity Transform
@@ -354,19 +385,75 @@ int MAssetMesh::get_lod_cutoff(){
 }
 
 void MAssetMesh::set_collection_id_no_lod_update(int input){
+    Ref<MAssetTable> at = MAssetTable::get_singleton();
+    ERR_FAIL_COND(at.is_null());
     collection_id = input;
+    if(collection_id>=0){
+        collection_identifier = at->collection_get_identifier(collection_id);
+    }
     update_instance_date();
 }
 
 void MAssetMesh::set_collection_id(int input){
+    if(input<0 || collection_id==-2){ // Invalid mode
+        return;
+    }
     collection_id = input;
-    update_instance_date();
-    update_lod(current_lod);
-    update_gizmos();
+    Ref<MAssetTable> at = MAssetTable::get_singleton();
+    ERR_FAIL_COND(at.is_null());
+    if(collection_id>=0){
+        collection_identifier = at->collection_get_identifier(collection_id);
+    }
+    if(is_inside_tree()){
+        update_instance_date();
+        update_lod(current_lod);
+        update_gizmos();
+    }
 }
 
 int MAssetMesh::get_collection_id(){
     return collection_id;
+}
+
+void MAssetMesh::set_collection_identifier(const Array& info){
+    ERR_FAIL_COND(info.size()!=2);
+    collection_identifier.glb_id = info[0];
+    collection_identifier.name = info[1];
+    if(is_inside_tree()){
+        update_instance_date();
+        update_lod(current_lod);
+        update_gizmos();
+    }
+}
+
+Array MAssetMesh::get_collection_identifier(){
+    Array out;
+    out.resize(2);
+    out[0] = collection_identifier.glb_id;
+    out[1] = collection_identifier.name;
+    return out;
+}
+
+void MAssetMesh::set_glb_id(int32_t _glb_id){
+    if(is_inside_tree()){
+        return;
+    }
+    glb_id = _glb_id;
+}
+
+int32_t MAssetMesh::get_glb_id(){
+    return glb_id;
+}
+
+void MAssetMesh::set_collection_name(const String& input){
+    if(is_inside_tree()){
+        return;
+    }
+    collection_name = input;
+}
+
+String MAssetMesh::get_collection_name(){
+    return collection_name;
 }
 
 PackedInt32Array MAssetMesh::get_collection_ids() const {
@@ -446,7 +533,7 @@ void MAssetMesh::_notification(int32_t what){
         _update_visibility();
         break;
     case NOTIFICATION_READY:
-        //update_instance_date();
+        update_instance_date();
         break;
     default:
         break;
@@ -582,8 +669,10 @@ void MAssetMesh::generate_joined_triangle_mesh(){
 
 
 Ref<ArrayMesh> MAssetMesh::get_merged_mesh(bool lowest_lod){
-    if(instance_data.size()==0){
-        return nullptr;
+    bool was_data_size_zero = instance_data.size()==0;
+    if(was_data_size_zero){
+        update_instance_date();
+        ERR_FAIL_COND_V(instance_data.size()==0,nullptr);
     }
     Ref<MMeshJoiner> mesh_joiner;
     mesh_joiner.instantiate();
@@ -607,6 +696,9 @@ Ref<ArrayMesh> MAssetMesh::get_merged_mesh(bool lowest_lod){
         return nullptr;
     }
     mesh_joiner->insert_mmesh_data(_mmeshes,_transforms,_material_set_ids);
+    if(was_data_size_zero){
+        remove_instances(true);
+    }
     return mesh_joiner->join_meshes();
 }
 

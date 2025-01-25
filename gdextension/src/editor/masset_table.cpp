@@ -81,7 +81,6 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("collection_get_sub_collections_transforms","collection_id"), &MAssetTable::collection_get_sub_collections_transforms);
     ClassDB::bind_method(D_METHOD("collection_get_sub_collections_transform","collection_id","sub_collection_id"), &MAssetTable::collection_get_sub_collections_transform);
     ClassDB::bind_method(D_METHOD("collection_remove_tag","collection_id","tag"), &MAssetTable::collection_remove_tag);
-    ClassDB::bind_method(D_METHOD("collection_update_name","collection_id","new_name"), &MAssetTable::collection_update_name);
     ClassDB::bind_method(D_METHOD("collection_get_name","collection_id"), &MAssetTable::collection_get_name);
     ClassDB::bind_method(D_METHOD("collection_get_id","collection_name"), &MAssetTable::collection_get_id);
     ClassDB::bind_method(D_METHOD("collection_get_tags","collection_id"), &MAssetTable::collection_get_tags);
@@ -290,8 +289,6 @@ MAssetTable::Tag MAssetTable::Tag::operator~() const{
     return result;
 }
 
-
-
 void MAssetTable::Collection::set_glb_id(int32_t input){
     glb_id = input;
 }
@@ -306,6 +303,7 @@ void MAssetTable::Collection::clear(){
     sub_collections.clear();
     sub_collections_transforms.clear();
     mesh_id = -1;
+    glb_id = -1;
 }
 
 /*
@@ -819,21 +817,28 @@ int32_t MAssetTable::mesh_join_start_lod(int mesh_id){
     return -1;
 }
 
-int MAssetTable::collection_create(String name){
-    ERR_FAIL_COND_V(name.length()==0,-1);
-    if(collections_names.has(name)){
-        int lcount = 2;
-        while (true)
-        {
-            String uname = name + itos(lcount);
-            if(!collections_names.has(uname)){
-                name = uname;
-                break;
-            }
-            ERR_FAIL_COND_V_MSG(lcount > 10000,-1,"Can not find a unique name please try another name");
-            lcount++;
+MAssetTable::CollectionIdentifier MAssetTable::collection_get_identifier(int collection_id) const{
+    if(!has_collection(collection_id)){
+        return CollectionIdentifier();
+    }
+    return CollectionIdentifier(collections[collection_id].glb_id,collections_names[collection_id]);
+}
+
+int32_t MAssetTable::collection_get_id_by_identifier(const CollectionIdentifier& identifier) const{
+    if(identifier.is_null()){
+        return -1;
+    }
+    for(int id=0; id < collections.size(); id++){
+        CollectionIdentifier ii = CollectionIdentifier(collections[id].glb_id,collections_names[id]);
+        if(ii==identifier){
+            return id;
         }
     }
+    return -1;
+}
+
+int MAssetTable::collection_create(String name){
+    ERR_FAIL_COND_V(name.length()==0,-1);
     int index = _get_free_collection_index();
     ERR_FAIL_COND_V(index==-1,-1);
     collections_names.set(index,name);
@@ -848,6 +853,15 @@ void MAssetTable::collection_set_glb_id(int collection_id,int32_t glb_id){
 int32_t MAssetTable::collection_get_glb_id(int collection_id) const{
     ERR_FAIL_COND_V(!has_collection(collection_id),-1);
     return collections[collection_id].get_glb_id();
+}
+
+int32_t MAssetTable::collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const{
+    for(int i=0; i < collections.size(); i++){
+        if(collections[i].glb_id==glb_id&&collections_names[i]==collection_name){
+            return i;
+        }
+    }
+    return -1;
 }
 
 void MAssetTable::collection_set_cache_thumbnail(int collection_id,Ref<Texture2D> tex,double creation_time){
@@ -969,27 +983,6 @@ void MAssetTable::collection_remove_tag(int collection_id,int tag){
     ERR_FAIL_COND(!has_collection(collection_id));
     ERR_FAIL_COND(tag > M_MAX_TAG);
     collections_tags.ptrw()[collection_id].remove_tag(tag);
-}
-
-void MAssetTable::collection_update_name(int collection_id,String name){
-    ERR_FAIL_COND(!has_collection(collection_id));
-    ERR_FAIL_COND(name.length()==0);
-    int fid = collections_names.find(name);
-    if(fid != collection_id || collections_names.find(name,collection_id+1)!=-1){ // Exclude itself
-        int lcount = 2;
-        while (true)
-        {
-            String uname = name + itos(lcount);
-            fid = collections_names.find(uname);
-            if( fid==collection_id || !collections_names.find(name,collection_id+1)!=-1){
-                name = uname;
-                break;
-            }
-            ERR_FAIL_COND_MSG(lcount > 10000,"Can not find a unique name please try another name");
-            lcount++;
-        }
-    }
-    collections_names.set(collection_id,name);
 }
 
 String MAssetTable::collection_get_name(int collection_id) const{

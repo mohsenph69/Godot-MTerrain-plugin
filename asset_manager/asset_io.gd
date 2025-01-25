@@ -213,6 +213,7 @@ static func glb_import_commit_changes():
 	asset_library.save()
 	EditorInterface.get_resource_filesystem().scan()
 	notify_asset_table_update()
+	MAssetMesh.refresh_all_masset_nodes()
 
 static func notify_asset_table_update():
 	for obj in obj_to_call_on_table_update:

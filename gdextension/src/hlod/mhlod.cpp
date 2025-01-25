@@ -1,6 +1,9 @@
 #include "mhlod.h"
 
 #include <godot_cpp/classes/resource_loader.hpp>
+#ifdef DEBUG_ENABLED
+#include "../editor/masset_table.h"
+#endif
 
 const char* MHlod::asset_root_dir = "res://massets/";
 const char* MHlod::mesh_root_dir = "res://massets/meshes/";
@@ -28,15 +31,19 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("insert_item_in_lod_table","item_id","lod"), &MHlod::insert_item_in_lod_table);
     ClassDB::bind_method(D_METHOD("get_lod_table"), &MHlod::get_lod_table);
 
-    ClassDB::bind_method(D_METHOD("set_baker_path","input"), &MHlod::set_baker_path);
-    ClassDB::bind_method(D_METHOD("get_baker_path"), &MHlod::get_baker_path);
-    ADD_PROPERTY(PropertyInfo(Variant::STRING,"baker_path"),"set_baker_path","get_baker_path");
-
     ClassDB::bind_method(D_METHOD("add_shape_sphere","transform","radius"), &MHlod::add_shape_sphere);
 
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MHlod::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MHlod::_get_data);
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"_data",PROPERTY_HINT_NONE,""),"_set_data","_get_data");
+
+
+    ClassDB::bind_method(D_METHOD("set_baker_path","input"), &MHlod::set_baker_path);
+    ClassDB::bind_method(D_METHOD("get_baker_path"), &MHlod::get_baker_path);
+    ADD_PROPERTY(PropertyInfo(Variant::STRING,"baker_path"),"set_baker_path","get_baker_path");
+    #ifdef DEBUG_ENABLED
+    ClassDB::bind_method(D_METHOD("get_used_mesh_ids"), &MHlod::get_used_mesh_ids);
+    #endif
 
     ClassDB::bind_method(D_METHOD("start_test"), &MHlod::start_test);
 }
@@ -444,14 +451,6 @@ void MHlod::clear(){
     sub_hlods_transforms.clear();
 }
 
-void MHlod::set_baker_path(const String& input){
-    baker_path = input;
-}
-
-String MHlod::get_baker_path(){
-    return baker_path;
-}
-
 int MHlod::add_shape_sphere(const Transform3D& _transform,float radius){
     MHLodItemCollision mcol;
     mcol.param.type = MHLodItemCollision::Param::Type::SHPERE;
@@ -463,6 +462,33 @@ int MHlod::add_shape_sphere(const Transform3D& _transform,float radius){
     item_list.push_back(_item);
     return item_list.size() - 1;
 }
+
+void MHlod::set_baker_path(const String& input){
+    #ifdef DEBUG_ENABLED
+    baker_path = input;
+    #endif
+}
+
+String MHlod::get_baker_path(){
+    #ifdef DEBUG_ENABLED
+    return baker_path;
+    #else
+    return String("");
+    #endif
+}
+#ifdef DEBUG_ENABLED
+Dictionary MHlod::get_used_mesh_ids() const{
+    Dictionary out;
+    for(const Item& item : item_list){
+        if(item.type == Type::MESH){
+            int32_t mesh_id = item.mesh.mesh_id;
+            mesh_id = mesh_id < 0 ? MAssetTable::mesh_join_get_first_lod(mesh_id) : MAssetTable::mesh_item_get_first_lod(mesh_id);
+            out[mesh_id] = true;
+        }
+    }
+    return out;
+}
+#endif
 
 void MHlod::_set_data(const Dictionary& data){
     ERR_FAIL_COND(!data.has("items"));

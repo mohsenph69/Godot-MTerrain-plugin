@@ -57,6 +57,9 @@ func _process(delta: float) -> void:
 	var current_item_collection_id:int= get_item_collection_id(item_index)
 	# gen
 	var _cmesh = MAssetMesh.get_collection_merged_mesh(current_item_collection_id,true)
+	if not _cmesh:
+		printerr("Mesh with collection id of %d is null " % current_item_collection_id)
+		return
 	var _rp = EditorInterface.get_resource_previewer()
 	var _input:PackedInt32Array = [item_index,current_item_collection_id]
 	#ResourceSaver.save(_cmesh,MAssetTable.get_asset_thumbnails_dir()+str(current_item_collection_id)+".res")

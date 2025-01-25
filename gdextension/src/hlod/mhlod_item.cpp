@@ -70,22 +70,22 @@ void MHLodItemMesh::set_data(int64_t _mesh,int8_t _material,uint8_t _shadow_sett
 }
 
 void MHLodItemMesh::set_data(const PackedByteArray& d){
-    ERR_FAIL_COND(d.size()!=19);
+    ERR_FAIL_COND(d.size()!=14);
     shadow_setting = d[0];
     gi_mode = d[1];
-    material_id = d.decode_s32(3);
-    render_layers = d.decode_s32(7);
-    mesh_id = d.decode_s64(11);
+    material_id = d.decode_s32(2);
+    render_layers = d.decode_s32(6);
+    mesh_id = d.decode_s32(10);
 }
 
 PackedByteArray MHLodItemMesh::get_data() const{
     PackedByteArray d;
-    d.resize(19);
+    d.resize(14);
     d[0] = shadow_setting;
     d[1] = gi_mode;
-    d.encode_s32(3,material_id);
-    d.encode_s32(7,render_layers);
-    d.encode_s64(11,mesh_id);
+    d.encode_s32(2,material_id);
+    d.encode_s32(6,render_layers);
+    d.encode_s32(10,mesh_id);
     return d;
 }
 
