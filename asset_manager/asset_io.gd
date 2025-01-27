@@ -11,6 +11,8 @@ static var DEBUG_MODE = true #true
 
 static var obj_to_call_on_table_update:Array
 
+
+
 #region GLB Import	
 static func glb_load(path, metadata={},no_window:bool=false):
 	MAssetTable.update_last_free_mesh_id() # Important to get currect new free mesh id	
@@ -498,3 +500,20 @@ static func get_asset_blend_file(collection_id):
 					if import_info["__blend_files"][blend_file] == glb_path:						
 						return blend_file
 				
+					
+static func get_valid_thumbnail(collection_id:int)->Texture2D:
+	if collection_id == -1: return null
+	var tex = MAssetTable.get_singleton().collection_get_cache_thumbnail(collection_id)
+	var creation_time = MAssetTable.get_singleton().collection_get_thumbnail_creation_time(collection_id)
+	if tex==null or creation_time < 0:
+		var thumbnail_path = MAssetTable.get_asset_thumbnails_path(collection_id)
+		if not FileAccess.file_exists(thumbnail_path): return null
+		tex = AssetIO.get_thumbnail(thumbnail_path)
+		if tex==null: return null
+		creation_time = FileAccess.get_modified_time(thumbnail_path)
+		# updating cache
+		MAssetTable.get_singleton().collection_set_cache_thumbnail(collection_id,tex,creation_time)
+	creation_time += 1.5
+	if AssetIO.get_collection_import_time(collection_id) > creation_time:
+		return null
+	return tex

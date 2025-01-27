@@ -35,7 +35,7 @@ static func get_material(id:int)->Material:
 				return material
 	return null
 
-static func update_material(id, path):	
+static func update_material(id, path):		
 	var material_table = get_material_table()
 	var material = load(path)
 	if not material is Material:
@@ -51,7 +51,7 @@ static func update_material(id, path):
 		id = 0		
 		while material_table.has(id):
 			id += 1
-		material_table[id] = {"path": path, "meshes": []}		 				
+		material_table[id] = {"path": path, "meshes": {}}		 				
 		return		
 	#######################
 	## Existing Material ##
@@ -60,15 +60,13 @@ static func update_material(id, path):
 	material_table[id].path = path
 			
 	## 2. Update all mmesh resources that use this material
-	for mesh_id in material_table[id].keys():
-		var mesh_path = MHlod.get_mesh_path(mesh_id)
-		if not FileAccess.file_exists(mesh_path): continue
-		var mmesh:MMesh = load(mesh_path)
-		for set_id in mmesh.material_set_get_count():
-			var material_names = mmesh.material_set_get(set_id)
-			for i in len(material_names):
-				if material_names[i] == path:
-					mmesh.surface_set_material(set_id, i, path)
+	for mesh_path in material_table[id].meshes:						
+		if not FileAccess.file_exists(mesh_path): 			
+			continue		
+		var mmesh:MMesh = load(mesh_path)					
+		for set_id in material_table[id].meshes[mesh_path]:
+			for surface_id in len(material_table[id].meshes[mesh_path][set_id]):		
+				mmesh.surface_set_material(set_id, surface_id, path)			
 		ResourceSaver.save(mmesh)		
 	update_material_table(material_table)	
 	

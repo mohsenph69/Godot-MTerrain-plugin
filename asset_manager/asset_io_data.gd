@@ -142,12 +142,12 @@ func add_sub_collection(node_name:String,sub_collection_node_name:String,sub_col
 	
 func add_mesh_data(sets, mesh:MMesh, mesh_item_name):						
 	if mesh==null:
-		return
+		return	
 	if not mesh_data.has(mesh): 
 		mesh_data[mesh] = get_empty_mesh_data()	
-		mesh_data[mesh].name = mesh.resource_name
+		mesh_data[mesh].name = mesh.resource_name		
 		for set_id in len(sets):
-			var material_names = sets[set_id]
+			var material_names = sets[set_id]			
 			for material_name in material_names:
 				if not materials.has(material_name):
 					materials[material_name] = get_empty_material()
@@ -285,7 +285,8 @@ func save_meshes()->int:
 			if not meshes[i]:
 				if FileAccess.file_exists(mesh_path): DirAccess.remove_absolute(mesh_path)
 			else:
-				set_correct_material(meshes[i])
+				meshes[i].take_over_path(mesh_path)
+				set_correct_material(meshes[i], mesh_path)
 				ResourceSaver.save(meshes[i],mesh_path)
 				meshes[i].take_over_path(mesh_path)
 		# Adding stop lod if exist
@@ -295,20 +296,18 @@ func save_meshes()->int:
 			f.close()
 	return OK
 
-func set_correct_material(mmesh:MMesh):
+func set_correct_material(mmesh:MMesh, mesh_path):
 	if not mmesh: return
 	if not mesh_data.has(mmesh):
 		printerr("mesh data does not exist")
 		return
-	var material_sets_names = mesh_data[mmesh]["material_sets"]
-	print(material_sets_names)
-	return
+	var material_sets_names = mesh_data[mmesh]["material_sets"]		
 	if material_sets_names.size()==0:
 		return
 	var import_info :=MAssetTable.get_singleton().import_info
 	var first_material_set_names = material_sets_names[0]
 	var set_count = mmesh.material_set_get_count()
-	for set_num in range(set_count):
+	for set_num in set_count:
 		var current_material_name
 		# if does not exist using first set of material always
 		if material_sets_names.size() > set_num:
@@ -323,15 +322,15 @@ func set_correct_material(mmesh:MMesh):
 			var original_material_id = materials[material_name].original_material if materials[material_name].has("original_material") else -1
 			if material_id == -1:
 				continue
-			var material_path = import_info["__materials"][material_id]["path"]
-			print(set_num, )
+			var material_path = import_info["__materials"][material_id]["path"]			
 			mmesh.surface_set_material(set_num,surface_index,material_path)
-			# Remove this mmesh from old material mmesh list
-			print(materials[material_name].original_material)
-			if original_material_id != -1 and import_info['__materials'][original_material_id].meshes.has(mmesh.resource_path):
-				import_info['__materials'][original_material_id].meshes.erase(mmesh.resource_path)
-			# Add this mmesh to new material mmesh list
-			import_info['__materials'][material_id].meshes.push_back(mmesh.resource_path)
+			# Remove this mmesh from old material mmesh list			
+			if original_material_id and original_material_id != -1 and import_info['__materials'][original_material_id].meshes.has(mesh_path):
+				import_info['__materials'][original_material_id].meshes.erase(mesh_path)
+			# Add this mmesh to new material mmesh list								
+			import_info['__materials'][material_id].meshes[mesh_path] = {}
+			for set_id in mmesh.material_set_get_count():
+				import_info['__materials'][material_id].meshes[mesh_path][set_id] = mmesh.material_set_get(set_id) 
 
 # will return the information which is need to save with glb_path in import_info in AssetTable
 func get_glb_import_info():

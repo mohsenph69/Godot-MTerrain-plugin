@@ -13,6 +13,9 @@ var material_table_items = {}
 
 var invalid_materials := []
 
+var item_thmbnail_queue:Array
+var generating_thumbnail:=false ## stop generating when there is a gen process
+
 func _ready():
 	#if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
@@ -191,19 +194,16 @@ func init_materials_tree():
 	var materials_tree: Tree = %materials_tree	
 	materials_tree.set_column_expand(1, false)	
 	materials_tree.set_column_custom_minimum_width(1, 64)		
-	
-	var root := materials_tree.create_item()	
-	var material_table = AssetIOMaterials.get_material_table()	
-	AssetIO.generate_material_thumbnails(material_table.keys())
-	
+	var material_table = AssetIOMaterials.get_material_table()
+	var root := materials_tree.create_item()		
 	for material_name in asset_data.materials.keys():
 		var material_tree_node = root.create_child()
 		var text = str(material_name) if material_name != "" else "???" 
 		material_tree_node.set_text(0, text)										
 		if asset_data.materials[material_name].material is int:								
-			var material_id = str(asset_data.materials[material_name].material)
-			material_tree_node.set_text(1, material_id)
-			update_material_icon(material_tree_node,int(material_id),1)
+			var material_id = asset_data.materials[material_name].material
+			material_tree_node.set_text(1, str(material_id))			
+			ThumbnailManager.thumbnail_queue.push_back({"resource": AssetIOMaterials.get_material(material_id), "caller":material_tree_node, "callback": update_material_icon, "column": 1})			
 		else:
 			invalid_materials.push_back(material_name)
 			%materials_tab_button.text = "Materials (!)"
@@ -223,9 +223,8 @@ func init_materials_tree():
 		var material_path = material_table[id].path
 		item.set_text(0,material_path.get_file())
 		item.set_metadata(0, id)
-		item.set_tooltip_text(0, material_path)
-		update_material_icon(item, id)
-		#item.set_icon(1, EditorResourcePreview)
+		item.set_tooltip_text(0, material_path)				
+		ThumbnailManager.thumbnail_queue.push_back({"resource": AssetIOMaterials.get_material(id), "caller":item, "callback": update_material_icon, "column": 0})					
 	materials_tree.item_selected.connect(func():
 		material_details_tree.visible = true
 		var id = materials_tree.get_selected().get_text(1)
@@ -263,12 +262,9 @@ func validate_can_import():
 	if len(invalid_materials) == 0:
 		import_button.disabled = false
 	
-func update_material_icon(item:TreeItem, id,col:int=0):
-	var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id, false))
-	if thumbnail:				
-		item.set_icon(col, thumbnail)
-	else:		
-		await get_tree().create_timer(0.5).timeout.connect(update_material_icon.bind(item, id))
+func update_material_icon(data):		
+	data.caller.set_icon(data.column, data.texture)
+	
 					
 func build_collection_tree(node_name:String, root:TreeItem):	
 	var item := root.create_child()		
@@ -278,7 +274,10 @@ func build_collection_tree(node_name:String, root:TreeItem):
 	item.set_editable(0, true)	
 	item.set_checked(0, not node.ignore)			
 	
-	item.set_text(1, node_name)		
+	item.set_text(1, node_name)					
+	var lod = 0	
+	set_thumbnail(item, node_name, asset_data.collections[node_name].meshes[lod].get_mesh(), asset_data.collections[node_name].id)		
+	
 	item.set_metadata(0, node)		
 	
 	
@@ -287,3 +286,15 @@ func build_collection_tree(node_name:String, root:TreeItem):
 	if node.has("collections"):		
 		for key in node.collections:			
 			build_collection_tree(key, item)
+
+## Set icon with no dely if thumbnail is valid
+func set_thumbnail(item:TreeItem, node_name, mesh:ArrayMesh, id)->void:
+	var tex:Texture2D	
+	tex = AssetIO.get_valid_thumbnail(id)
+	if tex != null:
+		item.set_icon(1, tex)
+	else:				
+		ThumbnailManager.thumbnail_queue.push_back({"resource": mesh, "caller": item, "callback": update_thumbnail})			
+	
+func update_thumbnail(data):					
+	data.caller.set_icon(1, data.texture)

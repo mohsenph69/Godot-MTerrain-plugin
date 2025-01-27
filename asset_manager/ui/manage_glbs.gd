@@ -118,6 +118,10 @@ func init_tree():
 		var item = root.create_child()
 		item.set_text(0, glb_path)				
 		item.add_button(1, button_texture)
+	for hlod_path in DirAccess.get_files_at(MAssetTable.get_hlod_res_dir()):
+		var item = root.create_child()
+		item.set_text(0, hlod_path + " (hlod)")				
+		item.add_button(1, button_texture)
 	if len(AssetIO.get_orphaned_collections())>0:
 		var item = root.create_child()
 		item.set_text(0, "(orphans)")				
