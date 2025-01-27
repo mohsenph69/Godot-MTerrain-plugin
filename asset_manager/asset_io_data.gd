@@ -65,7 +65,6 @@ func get_empty_mesh_data()->Dictionary:
 		"original_material_sets": null,		
 		"mesh_id": null,
 		"name": null,
-		"mesh_item_users": []
 	}.duplicate()
 
 func get_empty_material()->Dictionary:
@@ -145,7 +144,7 @@ func add_mesh_data(sets, mesh:MMesh, mesh_item_name):
 		return	
 	if not mesh_data.has(mesh): 
 		mesh_data[mesh] = get_empty_mesh_data()	
-		mesh_data[mesh].name = mesh_item_name
+		mesh_data[mesh].name = mesh_item_name 
 		for set_id in len(sets):
 			var material_names = sets[set_id]			
 			for material_name in material_names:
@@ -153,7 +152,6 @@ func add_mesh_data(sets, mesh:MMesh, mesh_item_name):
 					materials[material_name] = get_empty_material()
 				materials[material_name].meshes.push_back(mesh)
 			mesh_data[mesh].material_sets.push_back(material_names)
-	mesh_data[mesh].mesh_item_users.push_back(mesh_item_name)
 
 func add_collision_to_collection(collection_name, collision_type:COLLISION_TYPE, transform, mesh:Mesh=null):
 	if not collections.has(collection_name):
