@@ -187,7 +187,7 @@ static func import_join_mesh_only(baker_node:Node3D):
 					var sname:String = smesh.surface_get_name(s)
 					sname = AssetIO.blender_end_number_remove(sname)
 					var sid = sname.to_int()
-					var mat = AssetIO.get_material(sid)
+					var mat = AssetIOMaterials.get_material(sid)
 					if mat:
 						smesh.surface_set_material(s,mat)
 				var mmesh = MMesh.new()
@@ -206,7 +206,7 @@ static func import_join_mesh_auto(path, joined_mesh_nodes, joined_mesh_id):
 					var sname:String = smesh.surface_get_name(s)
 					sname = AssetIO.blender_end_number_remove(sname)
 					var sid = sname.to_int()
-					var mat = AssetIO.get_material(sid)
+					var mat = AssetIOMaterials.get_material(sid)
 					if mat:
 						smesh.surface_set_material(s,mat)
 				var mmesh = MMesh.new()

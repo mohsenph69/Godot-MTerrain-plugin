@@ -276,7 +276,7 @@ func regroup(group = current_group, sort_mode="asc"):
 		elif sort_mode == "desc":
 			sorted_items.sort_custom(func(a,b): return a.name > b.name)
 		for item in sorted_items:
-			ungrouped.add_item(item.name, item.id)							
+			ungrouped.add_item(item.name, item.id)										
 		ungrouped.group_button.visible = false	
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true

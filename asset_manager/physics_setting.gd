@@ -40,8 +40,8 @@ func empty_clicked(_click_position,_mouse_button_index):
 	
 func add_materials_to_table(paths):
 	for path in paths:
-		if not path in AssetIO.get_material_table().values().map(func(a):return a.path):
-			AssetIO.update_material(-1, path)
+		if not path in AssetIOMaterials.get_material_table().values().map(func(a):return a.path):
+			AssetIOMaterials.update_material(-1, path)
 	update_materials_list()
 	
 func show_add_material_popup():
@@ -62,7 +62,7 @@ func show_replace_material_popup():
 	
 func replace_material(new_path):
 	var original_id = materials_list.get_selected().get_metadata(0)	
-	AssetIO.update_material(original_id,new_path)		
+	AssetIOMaterials.update_material(original_id,new_path)		
 	update_materials_list()
 	
 func update_materials_list(filter = null):	
@@ -70,7 +70,7 @@ func update_materials_list(filter = null):
 	var root = materials_list.get_root()
 	if not root:
 		root = materials_list.create_item()		
-	var material_table = AssetIO.get_material_table()
+	var material_table = AssetIOMaterials.get_material_table()
 	AssetIO.generate_material_thumbnails(material_table.keys())
 	var null_item := root.create_child()
 	null_item.set_text(0, "-1")
@@ -126,7 +126,7 @@ func get_setting_list()->Dictionary: #key -> asset_name, value asset
 	return out
 	
 func show_material_in_file_system_dock() -> void:	
-	var material_table = AssetIO.get_material_table()
+	var material_table = AssetIOMaterials.get_material_table()
 	var sname = materials_list.get_selected().get_text(2)
 	if FileAccess.file_exists(sname):
 		file_system_dock.navigate_to_path(sname)

@@ -6,7 +6,6 @@ static var LOD_COUNT = 10  # The number of different LODs in your project
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
 static var regex_col_match:= RegEx.create_from_string("(.*)?[_|\\s]?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
 static var blender_end_number_regex = RegEx.create_from_string("(.*)(\\.\\d+)")
-static var material_regex = RegEx.create_from_string("(.*)[_ ]set[_ ]?(\\d+)$")
 static var asset_data:AssetIOData = null
 static var DEBUG_MODE = true #true
 
@@ -384,11 +383,17 @@ static func get_thumbnail(path):
 	return ImageTexture.create_from_image(image)		
 #endregion
 
-static func remove_collection(collection_id):
-	# S
+static func remove_collection(collection_id):	
 	var asset_library = MAssetTable.get_singleton()
-	get_glb_path_from_collection_id(collection_id)
-	
+	var glb_path = get_glb_path_from_collection_id(collection_id)
+	if not asset_library.import_info.has(glb_path): 
+		push_error("trying to remove a collection whose glb path does not exist")
+		return
+	for glb_node_name in asset_library.import_info[glb_path]:
+		if asset_library.import_info[glb_path][glb_node_name].id == collection_id:
+			asset_library.import_info[glb_path][glb_node_name]["ignore"] = true
+			glb_load(glb_path, {}, true)
+			return
 	
 static func get_orphaned_collections():
 	var asset_library := MAssetTable.get_singleton()
@@ -402,7 +407,6 @@ static func get_orphaned_collections():
 				if asset_library.import_info[glb][node_name].id in result:
 					result.erase(asset_library.import_info[glb][node_name].id)
 	return result
-
 
 static func remove_ununused_meshes():
 	var root = MHlod.get_mesh_root_dir()

@@ -1,5 +1,7 @@
 class_name AssetIOMaterials extends Object
 
+static var material_regex = RegEx.create_from_string("(.*)[_ ]set[_ ]?(\\d+)$")
+
 static func get_material_table():
 	var asset_library := MAssetTable.get_singleton()	
 	if not asset_library: return null
@@ -93,7 +95,7 @@ static func get_material_sets_from_surface_names(surface_names:PackedStringArray
 		if surface_names[s].is_empty():
 			surface_names[s] = "Unnamed"
 		else:
-			surface_names[s] = blender_end_number_remove(surface_names[s])
+			surface_names[s] = AssetIO.blender_end_number_remove(surface_names[s])
 		var reg_res = material_regex.search(surface_names[s])
 		if reg_res:
 			surface_names[s] = reg_res.strings[1]

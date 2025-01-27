@@ -27,7 +27,8 @@ func set_group(group_name):
 	group_button.text = group_name
 
 func add_item(item_name, item):
-	var i = group_list.add_item(item_name)
+	var i = group_list.add_item("")#item_name)
+	group_list.set_item_tooltip(i, item_name)
 	group_list.set_item_metadata(i, item)
 	var asset_library:MAssetTable = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 	group_list.set_item_tooltip(i, str(item_name))

@@ -193,7 +193,7 @@ func init_materials_tree():
 	materials_tree.set_column_custom_minimum_width(1, 64)		
 	
 	var root := materials_tree.create_item()	
-	var material_table = AssetIO.get_material_table()	
+	var material_table = AssetIOMaterials.get_material_table()	
 	AssetIO.generate_material_thumbnails(material_table.keys())
 	
 	for material_name in asset_data.materials.keys():
