@@ -72,7 +72,7 @@ func get_empty_material()->Dictionary:
 	return {
 		"material": null,
 		"original_material": null,		
-		"meshes": [] #array of meshes that use this material...should be converted to ids later
+		"meshes": [] #array of MMesh that use this material...should be converted to ids later
 	}.duplicate()
 
 #func get_empty_mesh_item()->Dictionary:
@@ -303,7 +303,7 @@ func set_correct_material(mmesh:MMesh):
 	var material_sets_names = mesh_data[mmesh]["material_sets"]
 	if material_sets_names.size()==0:
 		return
-	var asset_lib:=MAssetTable.get_singleton()
+	var import_info :=MAssetTable.get_singleton().import_info
 	var first_material_set_names = material_sets_names[0]
 	var set_count = mmesh.material_set_get_count()
 	for set_num in range(set_count):
@@ -317,11 +317,17 @@ func set_correct_material(mmesh:MMesh):
 			var material_name = current_material_name[surface_index]
 			if not materials.has(material_name):
 				continue
-			var mat_id = materials[material_name]["material"]
-			if mat_id == -1:
+			var material_id = materials[material_name]["material"]
+			var original_material_id = materials[material_name].original_material if materials[material_name].has("original_material") else -1
+			if material_id == -1:
 				continue
-			var mat_path = asset_lib.import_info["__materials"][mat_id]["path"]
-			mmesh.surface_set_material(set_num,surface_index,mat_path)
+			var material_path = import_info["__materials"][material_id]["path"]
+			mmesh.surface_set_material(set_num,surface_index,material_path)
+			# Remove this mmesh from old material mmesh list
+			if original_material_id != -1 and import_info['__materials'][original_material_id].meshes.has(mmesh.resource_path):
+				import_info['__materials'][original_material_id].meshes.erase(mmesh.resource_path)
+			# Add this mmesh to new material mmesh list
+			import_info['__materials'][material_id].meshes.push_back(mmesh.resource_path)
 
 # will return the information which is need to save with glb_path in import_info in AssetTable
 func get_glb_import_info():
@@ -329,6 +335,8 @@ func get_glb_import_info():
 	for key in collections:
 		result[key] = {"mesh_id":-1,"sub_collections":{},"collision_items":[], "id":-1}
 		result[key]["mesh_id"] = collections[key]["mesh_id"]
+		if collections[key]["ignore"]: 
+			result[key]["ignore"] = true
 		if collections[key]["state"] == IMPORT_STATE.REMOVE:
 			# keep this here as we want to keep mesh_id even when remove
 			# id also must remain -1
