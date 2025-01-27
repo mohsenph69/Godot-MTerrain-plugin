@@ -73,8 +73,8 @@ func _import_post(state: GLTFState, root: Node) -> Error:
 					for meta in extras:
 						node.set_meta(meta, extras[meta])						
 	var glb_path = state.base_path.path_join(state.filename + ".glb")
-	if MAssetTable.get_singleton().import_info.has(glb_path):
-		AssetIO.glb_load_assets(state, root.duplicate(), glb_path, {}, true )	
+	#if MAssetTable.get_singleton().import_info.has(glb_path):
+		#AssetIO.glb_load_assets(state, root.duplicate(), glb_path, {}, true )	
 	return OK
 	
 func _export_preflight(state: GLTFState, root: Node):			

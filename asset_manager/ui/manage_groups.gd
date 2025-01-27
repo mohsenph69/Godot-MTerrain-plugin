@@ -30,7 +30,7 @@ func _ready():
 			current_item.set_editable(0, true)			
 			selected_groups = group_list.get_root().get_children().filter(func(item): return item.is_selected(0)).map(func(item): return item.get_text(0))			
 			remove_selected_groups_button.disabled = false			
-			#tag_list.set_tags_from_data(asset_library.group_get_tags(current_item.get_text(0)))							
+			tag_list.set_tags_from_data(asset_library.group_get_tags(current_item.get_text(0)))							
 		else:
 			current_item.set_editable(0, false)
 			if current_item.get_text(0) in selected_groups:

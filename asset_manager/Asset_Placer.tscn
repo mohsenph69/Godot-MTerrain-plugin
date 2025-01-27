@@ -83,10 +83,16 @@ theme_type_variation = &"button_icon_only"
 [node name="place_button" type="CheckButton" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
+disabled = true
 text = "Place"
 expand_icon = true
 
-[node name="snap_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+[node name="place_options_hbox" type="HBoxContainer" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="snap_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
@@ -94,7 +100,7 @@ texture_normal = ExtResource("11_1ttxp")
 texture_pressed = ExtResource("12_odvm5")
 ignore_texture_size = true
 
-[node name="rotation_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+[node name="rotation_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
@@ -102,7 +108,7 @@ texture_normal = ExtResource("13_jbm51")
 texture_pressed = ExtResource("14_kwxpb")
 ignore_texture_size = true
 
-[node name="scale_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer"]
+[node name="scale_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
@@ -110,29 +116,29 @@ texture_normal = ExtResource("15_krpno")
 texture_pressed = ExtResource("16_sjn2r")
 ignore_texture_size = true
 
-[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 
-[node name="o_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="o_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "O"
 
-[node name="x_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="x_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "x(0)"
 
-[node name="y_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="y_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "y(0)"
 
-[node name="z_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="z_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "z(0)"
 
-[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 
-[node name="replace_btn" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="replace_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 tooltip_text = "Replace Assets"
@@ -206,8 +212,8 @@ layout_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/o_btn" to="." method="reposition_origin"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/x_btn" to="." method="reposition_x"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/y_btn" to="." method="reposition_y"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/z_btn" to="." method="reposition_z"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/replace_btn" to="." method="replace_assets"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/o_btn" to="." method="reposition_origin"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/x_btn" to="." method="reposition_x"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/y_btn" to="." method="reposition_y"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/z_btn" to="." method="reposition_z"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/replace_btn" to="." method="replace_assets"]

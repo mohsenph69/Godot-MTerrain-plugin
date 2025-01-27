@@ -78,13 +78,12 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				mmesh.create_from_mesh( node.mesh.get_mesh() )
 				var material_sets = node.get_meta("material_sets")				
 				mmesh.material_set_resize(len(material_sets))
-				for set_id in len(material_sets):
-					var mesh_item_name = name_data["name"] + str("_", set_id)									
-					asset_data.add_mesh_data(material_sets, mmesh, mesh_item_name)
-					asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
-					var collection_name = mesh_item_name if active_collection == "__root__" else active_collection
-					if not active_collection == "__root__":
-						asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)
+				var mesh_item_name = name_data["name"]							
+				asset_data.add_mesh_data(material_sets, mmesh, mesh_item_name)
+				asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
+				var collection_name = mesh_item_name if active_collection == "__root__" else active_collection
+				if not active_collection == "__root__":
+					asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)
 			#MAKE MATERIAL SET NAMING CONVENTION
 			else: 
 				var mesh_item_name = name_data["name"]
@@ -221,7 +220,7 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 		return
 	if glb_node_name and not asset_data.collections.has(glb_node_name) or asset_data.collections[glb_node_name]["ignore"] or asset_data.collections[glb_node_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
 		return
-	asset_data.collections[glb_node_name]["ignore"] = true # this means this collection has been handled
+	#asset_data.collections[glb_node_name]["ignore"] = true # this means this collection has been handled
 	var asset_library := MAssetTable.get_singleton()
 	var collection_info: Dictionary = asset_data.collections[glb_node_name]	
 	if collection_info["state"] == AssetIOData.IMPORT_STATE.REMOVE:
@@ -394,7 +393,27 @@ static func remove_collection(collection_id):
 			asset_library.import_info[glb_path][glb_node_name]["ignore"] = true
 			glb_load(glb_path, {}, true)
 			return
-	
+
+static func remove_glb(glb_path):
+	var asset_library := MAssetTable.get_singleton()
+	if asset_library.import_info.has(glb_path):
+		for collection_name in asset_library.import_info[glb_path]:
+			if collection_name.begins_with("__"): continue			
+			if asset_library.import_info[glb_path][collection_name].mesh_id != -1:
+				for mesh_id in asset_library.mesh_item_ids_no_replace(asset_library.import_info[glb_path][collection_name].mesh_id):
+					if mesh_id == -1: continue
+					print("deleting mesh_id ", mesh_id)
+					var mesh_path = MHlod.get_mesh_path(mesh_id)
+					if FileAccess.file_exists( mesh_path ):
+						print("deleting mesh at path ", mesh_path)
+						DirAccess.remove_absolute( mesh_path )
+					else:
+						print("no mesh at path ", mesh_path)
+
+				asset_library.import_info[glb_path][collection_name].mesh_id
+			asset_library.collection_remove(asset_library.import_info[glb_path][collection_name].id)			
+		asset_library.import_info.erase(glb_path)		
+		asset_library.finish_import.emit(glb_path)
 static func get_orphaned_collections():
 	var asset_library := MAssetTable.get_singleton()
 	var ids = asset_library.collection_get_list()			
@@ -473,6 +492,7 @@ static func get_asset_blend_file(collection_id):
 	for glb_path in import_info.keys():
 		if glb_path.begins_with("__"): continue
 		for glb_node_name in import_info[glb_path]:
+			if glb_node_name.begins_with("__"): continue
 			if import_info[glb_path][glb_node_name].has("collection_id") and import_info[glb_path][glb_node_name]["collection_id"] == collection_id:
 				for blend_file in import_info["__blend_files"]:
 					if import_info["__blend_files"][blend_file] == glb_path:						

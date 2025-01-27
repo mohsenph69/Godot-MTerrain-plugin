@@ -16,11 +16,11 @@ const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_bake
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
 
-@onready var make_baker_btn:Button = $VBoxContainer/HBoxContainer/make_baker_btn
+@onready var make_baker_btn:Button = find_child("make_baker_btn")
 
-@onready var x_btn:Button = $VBoxContainer/HBoxContainer/x_btn
-@onready var y_btn:Button = $VBoxContainer/HBoxContainer/y_btn
-@onready var z_btn:Button = $VBoxContainer/HBoxContainer/z_btn
+@onready var x_btn:Button = find_child("x_btn")
+@onready var y_btn:Button = find_child("y_btn")
+@onready var z_btn:Button = find_child("z_btn")
 
 @onready var settings_button:Button = find_child("settings_button")
 
@@ -79,10 +79,10 @@ func _ready():
 	)
 	ungrouped.group_list.multi_selected.connect(set_active_group_list_and_id.bind(ungrouped.group_list))
 	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
-	grouping_popup.group_selected.connect(regroup)	
-
-	place_button.toggled.connect(func(toggle_on):
-		if toggle_on:
+	grouping_popup.group_selected.connect(regroup)		
+	place_button.toggled.connect(func(toggle_on):		
+		%place_options_hbox.visible = toggle_on
+		if toggle_on:			
 			object_being_placed = collection_item_activated(active_group_list_item, active_group_list,false)
 			var viewport_camera = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()
 			var mcol:MCollision= MTool.ray_collision_y_zero_plane(viewport_camera.global_position,-viewport_camera.global_basis.z)
@@ -114,9 +114,6 @@ func _ready():
 				sel_node._ready()
 				sel_node._enter_tree()
 		)
-
-func _process(delta):
-	pass
 
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
@@ -209,6 +206,7 @@ func set_active_group_list_and_id(id, selected, group_list):
 	if not selected: return
 	#print(id, group_list)
 	active_group_list_item = id
+	place_button.disabled = false
 	active_group_list = group_list
 	
 func search_items(text=""):					

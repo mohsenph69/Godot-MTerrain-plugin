@@ -301,6 +301,8 @@ func set_correct_material(mmesh:MMesh):
 		printerr("mesh data does not exist")
 		return
 	var material_sets_names = mesh_data[mmesh]["material_sets"]
+	print(material_sets_names)
+	return
 	if material_sets_names.size()==0:
 		return
 	var import_info :=MAssetTable.get_singleton().import_info
@@ -322,8 +324,10 @@ func set_correct_material(mmesh:MMesh):
 			if material_id == -1:
 				continue
 			var material_path = import_info["__materials"][material_id]["path"]
+			print(set_num, )
 			mmesh.surface_set_material(set_num,surface_index,material_path)
 			# Remove this mmesh from old material mmesh list
+			print(materials[material_name].original_material)
 			if original_material_id != -1 and import_info['__materials'][original_material_id].meshes.has(mmesh.resource_path):
 				import_info['__materials'][original_material_id].meshes.erase(mmesh.resource_path)
 			# Add this mmesh to new material mmesh list

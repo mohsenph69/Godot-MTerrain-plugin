@@ -36,6 +36,7 @@ theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
 [node name="manage_groups" type="PanelContainer" parent="tab_container"]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_s06u1")
@@ -160,33 +161,28 @@ horizontal_alignment = 1
 layout_mode = 2
 
 [node name="manage_glbs" type="MarginContainer" parent="tab_container"]
-visible = false
 layout_mode = 2
 script = ExtResource("7_vfheg")
 
-[node name="HSplitContainer" type="HSplitContainer" parent="tab_container/manage_glbs"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_glbs/HSplitContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_glbs"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="tab_container/manage_glbs/VBoxContainer"]
 layout_mode = 2
 
-[node name="glb_search" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer/HBoxContainer" instance=ExtResource("8_wny8y")]
+[node name="glb_search" parent="tab_container/manage_glbs/VBoxContainer/HBoxContainer" instance=ExtResource("8_wny8y")]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 size_flags_horizontal = 3
 align_right = null
 
-[node name="MarginContainer" type="MarginContainer" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer/HBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="tab_container/manage_glbs/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 0.3
 
-[node name="glb_tree" type="Tree" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer"]
+[node name="glb_tree" type="Tree" parent="tab_container/manage_glbs/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -194,6 +190,11 @@ columns = 2
 hide_root = true
 select_mode = 1
 script = ExtResource("8_283tb")
+
+[node name="HSplitContainer" type="HSplitContainer" parent="tab_container/manage_glbs"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="tab_container/manage_glbs/HSplitContainer"]
 layout_mode = 2
@@ -218,6 +219,7 @@ layout_mode = 2
 text = "Show Materials"
 
 [node name="glb_details" type="Tree" parent="tab_container/manage_glbs/HSplitContainer/VBoxContainer2"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
