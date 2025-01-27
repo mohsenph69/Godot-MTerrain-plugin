@@ -81,6 +81,7 @@ func init_meshes_tree():
 		#	update_collection_details(true, mesh_tree.get_selected().get_metadata(0))
 	)	
 	var root = mesh_tree.create_item()	
+	print(asset_data.mesh_data)
 	for mesh_id in asset_data.mesh_data:
 		var mesh_name = asset_data.mesh_data[mesh_id].name
 		var mesh_tree_node = root.create_child()		

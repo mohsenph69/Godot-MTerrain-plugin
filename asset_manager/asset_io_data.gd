@@ -145,7 +145,7 @@ func add_mesh_data(sets, mesh:MMesh, mesh_item_name):
 		return	
 	if not mesh_data.has(mesh): 
 		mesh_data[mesh] = get_empty_mesh_data()	
-		mesh_data[mesh].name = mesh.resource_name		
+		mesh_data[mesh].name = mesh_item_name
 		for set_id in len(sets):
 			var material_names = sets[set_id]			
 			for material_name in material_names:
@@ -286,6 +286,7 @@ func save_meshes()->int:
 				if FileAccess.file_exists(mesh_path): DirAccess.remove_absolute(mesh_path)
 			else:
 				meshes[i].take_over_path(mesh_path)
+				meshes[i].resource_name = key
 				set_correct_material(meshes[i], mesh_path)
 				ResourceSaver.save(meshes[i],mesh_path)
 				meshes[i].take_over_path(mesh_path)

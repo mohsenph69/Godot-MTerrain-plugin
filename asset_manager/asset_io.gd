@@ -81,7 +81,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				var material_sets = node.get_meta("material_sets")				
 				mmesh.material_set_resize(len(material_sets))
 				var mesh_item_name = name_data["name"]							
-				asset_data.add_mesh_data(material_sets, mmesh, mesh_item_name)
+				asset_data.add_mesh_data(material_sets, mmesh, node.name)
 				asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
 				var collection_name = mesh_item_name if active_collection == "__root__" else active_collection
 				if not active_collection == "__root__":
