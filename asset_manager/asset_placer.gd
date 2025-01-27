@@ -1,4 +1,4 @@
-#class_name Asset_Placer
+#class_name Asset_Placer 
 @tool
 extends PanelContainer
 
@@ -54,7 +54,7 @@ var last_added_neighbor = null
 var last_added_masset = null
 var current_placement_dir:Vector3
 
-func _ready():		
+func _ready():				
 	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	update_reposition_button_text()
 	asset_library.tag_set_name(1, "hidden")
@@ -114,6 +114,9 @@ func _ready():
 				sel_node._ready()
 				sel_node._enter_tree()
 		)
+
+func _process(delta):
+	pass
 
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE

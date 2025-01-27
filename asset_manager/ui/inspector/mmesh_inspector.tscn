@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://rb1pu2ggav8p"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.gd" id="1_4jook"]
+
+[node name="MmeshInspector" type="PanelContainer"]
+script = ExtResource("1_4jook")
+
+[node name="mmesh_thumbnail" type="TextureRect" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 2
+expand_mode = 2
+stretch_mode = 5
