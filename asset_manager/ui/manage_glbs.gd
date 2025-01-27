@@ -82,7 +82,7 @@ func update_details():
 	
 	if glb_path == "(orphans)":			
 		for id in AssetIO.get_orphaned_collections():				
-			var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id))
+			var texture = asset_library.collection_get_cache_thumbnail(id)
 			var item = root.create_child() 
 			if asset_library.has_collection(id):
 				item.set_text(0, asset_library.collection_get_name(id))
@@ -94,7 +94,7 @@ func update_details():
 			if "__" in collection_name: continue			
 			if asset_library.import_info[glb_path][collection_name].has("ignore"): continue
 			var collection_id = asset_library.import_info[glb_path][collection_name].id
-			var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
+			var texture = asset_library.collection_get_cache_thumbnail(collection_id)
 			var item = root.create_child() 
 			item.set_text(0, collection_name)
 			item.set_icon(0, texture)

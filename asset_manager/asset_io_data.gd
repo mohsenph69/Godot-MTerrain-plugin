@@ -61,8 +61,8 @@ func clear():
 
 func get_empty_mesh_data()->Dictionary:
 	return {
-		"material_sets": [],
-		"original_material_sets": null,		
+		"material_sets": [],		
+		"original_material_sets": null,				
 		"mesh_id": null,
 		"name": null,
 	}.duplicate()
@@ -305,7 +305,7 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 		return
 	var import_info :=MAssetTable.get_singleton().import_info
 	var first_material_set_names = material_sets_names[0]
-	var set_count = mmesh.material_set_get_count()
+	var set_count = mmesh.material_set_get_count()	
 	for set_num in set_count:
 		var current_material_name
 		# if does not exist using first set of material always
@@ -313,6 +313,8 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 			current_material_name = material_sets_names[set_num]
 		else:
 			current_material_name = first_material_set_names
+		if len(mmesh.material_set_get(0)) != current_material_name.size():
+			print("mmesh slot count issue: ", mmesh.material_set_get(0), " is not equal to ", current_material_name.size())
 		for surface_index in current_material_name.size():
 			var material_name = current_material_name[surface_index]
 			if not materials.has(material_name):

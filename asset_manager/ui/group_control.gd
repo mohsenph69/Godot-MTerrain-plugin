@@ -33,7 +33,7 @@ func get_item_collection_id(item_index:int)->int:
 ## Set icon with no dely if thumbnail is valid
 func set_icon(item_index:int)->void:
 	var current_item_collection_id:int= get_item_collection_id(item_index)
-	var tex:Texture2D= AssetIO.get_valid_thumbnail(current_item_collection_id)
+	var tex:Texture2D= ThumbnailManager.get_valid_thumbnail(current_item_collection_id)
 	if tex != null:
 		group_list.set_item_icon(item_index,tex)
 		return
@@ -42,10 +42,11 @@ func set_icon(item_index:int)->void:
 		ThumbnailManager.thumbnail_queue.push_back({"resource": _cmesh, "caller": item_index, "callback": update_thumbnail, "collection_id": current_item_collection_id})	
 		
 func update_thumbnail(data):
-	var thumbnail_path = AssetIO.get_thumbnail_path(data.collection_id)
+	var asset_library = MAssetTable.get_singleton()
+	var thumbnail_path = asset_library.get_asset_thumbnails_path(data.collection_id)
 	### Updating Cache
-	MAssetTable.get_singleton().collection_set_cache_thumbnail(data.collection_id,data.texture,Time.get_unix_time_from_system())	
-	AssetIO.save_thumbnail(data.texture, thumbnail_path)
+	asset_library.collection_set_cache_thumbnail(data.collection_id,data.texture,Time.get_unix_time_from_system())	
+	ThumbnailManager.save_thumbnail(data.texture, thumbnail_path)
 	## This function excute with delay we should check if item collection id is not changed	
 	if get_item_collection_id(data.caller) == data.collection_id:	
 		group_list.set_item_icon(data.caller,data.texture)

@@ -78,7 +78,7 @@ static func remove_material(id):
 			#TODO: prevent user from trying to delete material that's still in use
 			return
 		material_table.erase(id)
-		var thumbnail_path = AssetIO.get_thumbnail_path(id, false)
+		var thumbnail_path = MAssetTable.get_asset_thumbnails_dir().path_join(str("material_", id, ".dat"))
 		if FileAccess.file_exists(thumbnail_path):
 			DirAccess.remove_absolute( thumbnail_path )
 			

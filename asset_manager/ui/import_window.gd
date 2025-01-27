@@ -290,7 +290,7 @@ func build_collection_tree(node_name:String, root:TreeItem):
 ## Set icon with no dely if thumbnail is valid
 func set_thumbnail(item:TreeItem, node_name, mesh:ArrayMesh, id)->void:
 	var tex:Texture2D	
-	tex = AssetIO.get_valid_thumbnail(id)
+	tex = ThumbnailManager.get_valid_thumbnail(id)
 	if tex != null:
 		item.set_icon(1, tex)
 	else:				

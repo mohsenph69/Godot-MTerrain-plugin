@@ -76,10 +76,11 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		if name_data["lod"] >=0: ## Then definitly is a mesh					
 			#MAKE MATERIAL SET FROM META
 			if node.has_meta("material_sets"):
+				var mesh: ArrayMesh = node.mesh.get_mesh()												
 				var mmesh = MMesh.new()
-				mmesh.create_from_mesh( node.mesh.get_mesh() )
+				mmesh.create_from_mesh( mesh )
 				var material_sets = node.get_meta("material_sets")				
-				mmesh.material_set_resize(len(material_sets))
+				mmesh.material_set_resize(len(material_sets[0]))
 				var mesh_item_name = name_data["name"]							
 				asset_data.add_mesh_data(material_sets, mmesh, node.name)
 				asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
@@ -100,10 +101,10 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 					printerr(node.name," mesh is null")
 					continue
 				var surface_names:PackedStringArray
-				for i in range(mesh.get_surface_count()):
+				for i in mesh.get_surface_count():
 					surface_names.push_back(mesh.surface_get_name(i))
 				var material_set:= AssetIOMaterials.get_material_sets_from_surface_names(surface_names) # surface name also be modified
-				for i in range(mesh.get_surface_count()):
+				for i in mesh.get_surface_count():
 					mesh.surface_set_name(i,surface_names[i])
 				var mmesh:=MMesh.new()
 				mmesh.create_from_mesh(mesh)
@@ -176,10 +177,6 @@ static func glb_import_commit_changes():
 	if not saved_successful == OK:
 		push_error("GLB import cannot import meshes: mesh could not be saved to file \n", str(asset_data.glb_path))
 		return
-	######################
-	## Commit Mesh Item ##
-	######################
-	# mesh_item must be processed before collection, because collection depeneds on mesh item
 	#######################
 	## Commit collisions ##
 	#######################
@@ -324,22 +321,6 @@ static func collection_parse_name(node)->String:
 	return node.name + material_suffix
 #endregion
 
-#region THUMBNAILS
-static func generate_material_thumbnails(material_ids):	
-	for id in material_ids:
-		generate_material_thumbnail(id)
-
-static func generate_material_thumbnail(material_id):			
-	if not AssetIOMaterials.get_material_table().has(material_id):
-		push_error("trying to generate thumbnail for material id that does not exist:", material_id)
-		return null
-	var path = AssetIOMaterials.get_material_table()[material_id].path
-	var thumbnail_path = get_thumbnail_path(material_id, false)	
-	if FileAccess.file_exists(thumbnail_path) and FileAccess.file_exists(path) and FileAccess.get_modified_time(path) < FileAccess.get_modified_time( thumbnail_path ):							
-		return		
-	var material = load(path)
-	EditorInterface.get_resource_previewer().queue_edited_resource_preview(material, AssetIO, "material_thumbnail_generated", material_id)						
-	
 static func get_glb_path_from_collection_id(collection_id)->String:
 	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
 	var import_info:Dictionary = MAssetTable.get_singleton().import_info
@@ -347,42 +328,6 @@ static func get_glb_path_from_collection_id(collection_id)->String:
 		if k.begins_with("__"): continue
 		if import_info[k]["__id"] == glb_id: return k
 	return ""
-
-static func get_collection_import_time(collection_id:int)->float:
-	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
-	var import_info:Dictionary = MAssetTable.get_singleton().import_info
-	for k in import_info:
-		if k.begins_with("__"): continue
-		if import_info[k]["__id"] == glb_id: return import_info[k]["__import_time"]
-	return -1
-
-static func material_thumbnail_generated(path, preview, thumbnail_preview, material_id):	
-	var thumbnail_path = AssetIO.get_thumbnail_path(material_id, false)
-	save_thumbnail(preview, thumbnail_path)						
-
-static func get_thumbnail_path(id: int, is_collection:bool=true):
-	if is_collection:
-		return MAssetTable.get_asset_thumbnails_dir() + str(id) + ".dat"
-	else:
-		return MAssetTable.get_asset_thumbnails_dir() + "material_" + str(id) + ".dat"
-
-static func save_thumbnail(preview:ImageTexture, thumbnail_path:String):			
-	var data = preview.get_image().save_png_to_buffer() if preview else Image.create_empty(64,64,false, Image.FORMAT_R8).save_png_to_buffer()
-	var file = FileAccess.open(thumbnail_path, FileAccess.WRITE)
-	if not DirAccess.dir_exists_absolute( thumbnail_path.get_base_dir() ):
-		DirAccess.make_dir_recursive_absolute( thumbnail_path.get_base_dir() )
-	file.store_var(data)
-	file.close()
-	
-static func get_thumbnail(path):	
-	if not FileAccess.file_exists(path):
-		return null	
-	var file = FileAccess.open(path, FileAccess.READ)		
-	var image:= Image.new()
-	image.load_png_from_buffer(file.get_var())
-	file.close()		
-	return ImageTexture.create_from_image(image)		
-#endregion
 
 static func remove_collection(collection_id):	
 	var asset_library = MAssetTable.get_singleton()
@@ -416,6 +361,7 @@ static func remove_glb(glb_path):
 			asset_library.collection_remove(asset_library.import_info[glb_path][collection_name].id)			
 		asset_library.import_info.erase(glb_path)		
 		asset_library.finish_import.emit(glb_path)
+		
 static func get_orphaned_collections():
 	var asset_library := MAssetTable.get_singleton()
 	var ids = asset_library.collection_get_list()			
@@ -501,19 +447,3 @@ static func get_asset_blend_file(collection_id):
 						return blend_file
 				
 					
-static func get_valid_thumbnail(collection_id:int)->Texture2D:
-	if collection_id == -1: return null
-	var tex = MAssetTable.get_singleton().collection_get_cache_thumbnail(collection_id)
-	var creation_time = MAssetTable.get_singleton().collection_get_thumbnail_creation_time(collection_id)
-	if tex==null or creation_time < 0:
-		var thumbnail_path = MAssetTable.get_asset_thumbnails_path(collection_id)
-		if not FileAccess.file_exists(thumbnail_path): return null
-		tex = AssetIO.get_thumbnail(thumbnail_path)
-		if tex==null: return null
-		creation_time = FileAccess.get_modified_time(thumbnail_path)
-		# updating cache
-		MAssetTable.get_singleton().collection_set_cache_thumbnail(collection_id,tex,creation_time)
-	creation_time += 1.5
-	if AssetIO.get_collection_import_time(collection_id) > creation_time:
-		return null
-	return tex

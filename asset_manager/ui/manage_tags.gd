@@ -54,7 +54,7 @@ func regroup(group = grouping):
 			var collection_name = asset_library.collection_get_name(collection_id)
 			var item = root.create_child()
 			item.set_text(0, collection_name)
-			var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
+			var thumbnail = asset_library.collection_get_cache_thumbnail(collection_id)
 			item.set_icon(0, thumbnail)
 			item.set_metadata(0, collection_id)
 			items[collection_id] = item		
@@ -74,7 +74,7 @@ func regroup(group = grouping):
 				var collection_name = asset_library.collection_get_name(collection_id)
 				var item = tag_item.create_child()
 				item.set_text(0, collection_name)
-				var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
+				var thumbnail = asset_library.collection_get_cache_thumbnail(collection_id)
 				item.set_icon(0, thumbnail)
 				item.set_metadata(0, collection_id)
 				items[collection_id] = item	
@@ -84,7 +84,7 @@ func regroup(group = grouping):
 			for collection_id in remaining_collections:
 				var item = tag_item.create_child()
 				item.set_text(0, asset_library.collection_get_name(collection_id))
-				var thumbnail = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
+				var thumbnail = asset_library.collection_get_cache_thumbnail(collection_id)
 				item.set_icon(0, thumbnail)
 				item.set_metadata(0, collection_id)
 				items[collection_id] = item	
