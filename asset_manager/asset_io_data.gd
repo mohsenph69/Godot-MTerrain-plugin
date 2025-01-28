@@ -221,7 +221,7 @@ func generate_import_tags():
 			for m in collections[key]["meshes"]:
 				if m: collections[key]["mesh_states"].push_back(IMPORT_STATE.NEW)
 				else: collections[key]["mesh_states"].push_back(IMPORT_STATE.NO_CHANGE)
-		elif collections[key]["meshes"].size()==0 and collections[key]["sub_collections"].size()==0:
+		elif collections[key]["meshes"].size()==0 and collections[key]["sub_collections"].size()==0:			
 			collections[key]["state"] = IMPORT_STATE.REMOVE
 			for m in collections[key]["meshes"]:
 				if m: collections[key]["mesh_states"].push_back(IMPORT_STATE.REMOVE)
@@ -393,7 +393,7 @@ func add_glb_import_info(info:Dictionary)->void:
 		collections[collection_glb_name]["original_collision_items"] = collections[collection_glb_name].collision_items
 		collections[collection_glb_name]["id"] = collection_id
 		collections[collection_glb_name]["original_meshes"] = original_meshes
-		if collection_id >= 0 :
+		if collection_id >= 0 and asset_library.has_collection(collection_id):
 			collections[collection_glb_name]["original_tags"] = asset_library.collection_get_tags(collection_id)
 	add_metadata_to_data(info["__metadata"], meta_data)
 	if "__materials" in info:

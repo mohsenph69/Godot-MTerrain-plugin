@@ -2,6 +2,14 @@ class_name AssetIOMaterials extends Object
 
 #static var material_regex = RegEx.create_from_string("(.*)[_ ]set[_ ]?(\\d+)$")
 
+
+#func _init():
+#	import_info = get_material_table()
+
+#func _notification(what: int) -> void:
+#	if what == NOTIFICATION_PREDELETE:
+#		update_material_table(null)
+	
 static func get_material_table():
 	var asset_library := MAssetTable.get_singleton()	
 	if not asset_library: return null

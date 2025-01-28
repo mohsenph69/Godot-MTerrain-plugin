@@ -268,15 +268,24 @@ func update_material_icon(data):
 					
 func build_collection_tree(node_name:String, root:TreeItem):	
 	var item := root.create_child()		
-	var node = asset_data.collections[node_name] if asset_data.collections.has(node_name) else {}
-	
+	var node = asset_data.collections[node_name] if asset_data.collections.has(node_name) else {}	
 	item.set_cell_mode(0,TreeItem.CELL_MODE_CHECK)		
-	item.set_editable(0, true)	
-	item.set_checked(0, not node.ignore)			
 	
-	item.set_text(1, node_name)					
-	var lod = 0	
-	set_thumbnail(item, node_name, asset_data.collections[node_name].meshes[lod].get_mesh(), asset_data.collections[node_name].id)		
+	if asset_data.collections[node_name].state == AssetIOData.IMPORT_STATE.REMOVE:
+		item.set_editable(0, false)	
+		item.set_checked(0, false)	
+		item.set_text(1, node_name)						
+		if asset_library.has_collection(asset_data.collections[node_name].id):
+			var icon #= asset_library.collection_get_cache_thumbnail(asset_data.collections[node_name].id)		
+			if icon:
+				item.set_icon(1, icon)	
+	else:
+		item.set_editable(0, true)	
+		item.set_checked(0, not node.ignore)			
+	
+		item.set_text(1, node_name)						
+		var lod = 0	
+		set_thumbnail(item, node_name, asset_data.collections[node_name].meshes[lod].get_mesh(), asset_data.collections[node_name].id)		
 	
 	item.set_metadata(0, node)		
 	
@@ -287,14 +296,13 @@ func build_collection_tree(node_name:String, root:TreeItem):
 		for key in node.collections:			
 			build_collection_tree(key, item)
 
-## Set icon with no dely if thumbnail is valid
-func set_thumbnail(item:TreeItem, node_name, mesh:ArrayMesh, id)->void:
-	var tex:Texture2D	
-	tex = ThumbnailManager.get_valid_thumbnail(id)
-	if tex != null:
+## Set icon with no delay if thumbnail is valid
+func set_thumbnail(item:TreeItem, node_name, mesh:ArrayMesh, id)->void:	
+	var tex:Texture2D = ThumbnailManager.get_valid_thumbnail(id)
+	if tex != null:		
 		item.set_icon(1, tex)
-	else:				
+	else:					
 		ThumbnailManager.thumbnail_queue.push_back({"resource": mesh, "caller": item, "callback": update_thumbnail})			
 	
-func update_thumbnail(data):					
+func update_thumbnail(data):		
 	data.caller.set_icon(1, data.texture)

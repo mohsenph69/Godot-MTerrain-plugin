@@ -43,7 +43,7 @@ static func glb_load_assets(gltf_state, scene_root, path, metadata={},no_window:
 		if gltf_state.json.scenes[0].extras.has("blend_file"):
 			asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
 		if gltf_state.json.scenes[0].extras.has("variation_groups"):
-			asset_data.variation_groups = gltf_state.json.scenes[0].extras.variation_groups			
+			asset_data.variation_groups = gltf_state.json.scenes[0].extras.variation_groups						
 	asset_data.glb_path = path
 	asset_data.meta_data = metadata		
 	#STEP 1: convert gltf file into nodes
@@ -56,7 +56,7 @@ static func glb_load_assets(gltf_state, scene_root, path, metadata={},no_window:
 	if asset_library.import_info.has(path):
 		asset_data.add_glb_import_info(asset_library.import_info[path])
 	asset_data.generate_import_tags()
-	scene_root.queue_free() ## Really important otherwise memory leaks
+	scene_root.queue_free() ## Really important otherwise memory leaks	
 	#STEP 4: Allow user to change import settings
 	if not no_window:
 		glb_show_import_window(asset_data)
@@ -337,9 +337,10 @@ static func remove_collection(collection_id):
 		return
 	for glb_node_name in asset_library.import_info[glb_path]:
 		if asset_library.import_info[glb_path][glb_node_name].id == collection_id:
-			asset_library.import_info[glb_path][glb_node_name]["ignore"] = true
-			glb_load(glb_path, {}, true)
-			return
+			asset_library.remove_collection(collection_id)
+			asset_library.import_info[glb_path][glb_node_name].id = -1					
+			break
+	asset_library.save()
 
 static func remove_glb(glb_path):
 	var asset_library := MAssetTable.get_singleton()
@@ -348,18 +349,12 @@ static func remove_glb(glb_path):
 			if collection_name.begins_with("__"): continue			
 			if asset_library.import_info[glb_path][collection_name].mesh_id != -1:
 				for mesh_id in asset_library.mesh_item_ids_no_replace(asset_library.import_info[glb_path][collection_name].mesh_id):
-					if mesh_id == -1: continue
-					print("deleting mesh_id ", mesh_id)
+					if mesh_id == -1: continue					
 					var mesh_path = MHlod.get_mesh_path(mesh_id)
-					if FileAccess.file_exists( mesh_path ):
-						print("deleting mesh at path ", mesh_path)
-						DirAccess.remove_absolute( mesh_path )
-					else:
-						print("no mesh at path ", mesh_path)
-
-				asset_library.import_info[glb_path][collection_name].mesh_id
+					if FileAccess.file_exists( mesh_path ):						
+						DirAccess.remove_absolute( mesh_path )									
 			asset_library.collection_remove(asset_library.import_info[glb_path][collection_name].id)			
-		asset_library.import_info.erase(glb_path)		
+			asset_library.import_info[glb_path][collection_name].id = -1				
 		asset_library.finish_import.emit(glb_path)
 		
 static func get_orphaned_collections():

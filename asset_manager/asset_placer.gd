@@ -261,6 +261,7 @@ func debounce_regroup():
 	return true
 	
 func regroup(group = current_group, sort_mode="asc"):	
+	
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
@@ -268,7 +269,7 @@ func regroup(group = current_group, sort_mode="asc"):
 		current_group = group
 	if not debounce_regroup(): 
 		return
-	var filtered_collections = get_filtered_collections(current_search, [0])
+	var filtered_collections = get_filtered_collections(current_search, [0])	
 	if group == "None":		
 		ungrouped.group_list.clear()	
 		var sorted_items = []				
@@ -281,8 +282,8 @@ func regroup(group = current_group, sort_mode="asc"):
 		elif sort_mode == "desc":
 			sorted_items.sort_custom(func(a,b): return a.name > b.name)
 		for item in sorted_items:
-			ungrouped.add_item(item.name, item.id)										
-		ungrouped.group_button.visible = false	
+			ungrouped.add_item(item.name, item.id)												
+		ungrouped.group_button.visible = false			
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
 		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
@@ -317,7 +318,7 @@ func regroup(group = current_group, sort_mode="asc"):
 				sorted_items.sort_custom(func(a,b): return a.name > b.name)
 			for item in sorted_items:
 				group_control.add_item(item.name, item.id)		
-		ungrouped.group_list.clear()
+		ungrouped.group_list.clear()		
 		var sorted_items = []
 		for id in filtered_collections:
 			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):

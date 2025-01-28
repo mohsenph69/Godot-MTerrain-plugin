@@ -1,15 +1,17 @@
 class_name ThumbnailManager extends Node
 
-static var thumbnail_queue := [] # {resource, caller, callback}
+static var thumbnail_queue := [] # {resource, caller, callback, ...}
 static var generating_thumbnail := false
+
 func _process(delta):
 	if len(thumbnail_queue)==0: return
 	if generating_thumbnail:
 		return
 	var data = thumbnail_queue.pop_back()			
-	var _rp = EditorInterface.get_resource_previewer()		
-	generating_thumbnail = true
-	_rp.queue_edited_resource_preview(data.resource,self,"handle_generate_thumbnail",data)
+	if is_instance_valid(data.resource):
+		var _rp = EditorInterface.get_resource_previewer()			
+		generating_thumbnail = true	
+		_rp.queue_edited_resource_preview(data.resource,self,"handle_generate_thumbnail",data)
 	
 func handle_generate_thumbnail(path, preview, thumbnail_preview,data):				
 	data["texture"] = preview	
@@ -18,7 +20,9 @@ func handle_generate_thumbnail(path, preview, thumbnail_preview,data):
 	
 static func get_valid_thumbnail(collection_id:int)->Texture2D:
 	if collection_id == -1: return null
-	var tex = MAssetTable.get_singleton().collection_get_cache_thumbnail(collection_id)
+	var asset_library = MAssetTable.get_singleton()
+	if not asset_library.has_collection(collection_id): return null
+	var tex = asset_library.collection_get_cache_thumbnail(collection_id)
 	var creation_time = MAssetTable.get_singleton().collection_get_thumbnail_creation_time(collection_id)
 	if tex==null or creation_time < 0:
 		var thumbnail_path = MAssetTable.get_asset_thumbnails_path(collection_id)

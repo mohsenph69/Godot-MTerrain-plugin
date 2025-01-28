@@ -20,7 +20,7 @@ func set_group(group_name):
 	group_button.text = group_name
 
 func add_item(item_name, item):
-	var i = group_list.add_item("")#item_name)
+	var i = group_list.add_item(item_name)	
 	group_list.set_item_tooltip(i, item_name)
 	group_list.set_item_metadata(i, item)
 	var asset_library:MAssetTable = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
@@ -36,20 +36,24 @@ func set_icon(item_index:int)->void:
 	var tex:Texture2D= ThumbnailManager.get_valid_thumbnail(current_item_collection_id)
 	if tex != null:
 		group_list.set_item_icon(item_index,tex)
+		group_list.set_item_text(item_index, "")
 		return
 	var _cmesh = MAssetMesh.get_collection_merged_mesh(current_item_collection_id,true)
 	if _cmesh:		
 		ThumbnailManager.thumbnail_queue.push_back({"resource": _cmesh, "caller": item_index, "callback": update_thumbnail, "collection_id": current_item_collection_id})	
 		
 func update_thumbnail(data):
+	if not data.texture is Texture2D:
+		push_warning("thumbnail error: ", group_button.name, " item ", data.caller)
 	var asset_library = MAssetTable.get_singleton()
 	var thumbnail_path = asset_library.get_asset_thumbnails_path(data.collection_id)
 	### Updating Cache
 	asset_library.collection_set_cache_thumbnail(data.collection_id,data.texture,Time.get_unix_time_from_system())	
 	ThumbnailManager.save_thumbnail(data.texture, thumbnail_path)
 	## This function excute with delay we should check if item collection id is not changed	
-	if get_item_collection_id(data.caller) == data.collection_id:	
+	if get_item_collection_id(data.caller) == data.collection_id:			
 		group_list.set_item_icon(data.caller,data.texture)
+		group_list.set_item_text(data.caller, "")
 	
 	
 	

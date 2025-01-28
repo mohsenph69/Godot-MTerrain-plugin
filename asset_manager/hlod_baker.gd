@@ -195,6 +195,8 @@ func get_joined_mesh():
 	if join_at_lod == -1: return null
 	var mesh_lod = asset_mesh_updater.get_mesh_lod() 
 	return mesh_lod.meshes[join_at_lod]
+	var material_table = AssetIOMaterials.new()
+	
 
 func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):			
 	###################
