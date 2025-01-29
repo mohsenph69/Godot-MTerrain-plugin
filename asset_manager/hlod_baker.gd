@@ -195,6 +195,8 @@ func get_joined_mesh():
 	if join_at_lod == -1: return null
 	var mesh_lod = asset_mesh_updater.get_mesh_lod() 
 	return mesh_lod.meshes[join_at_lod]
+	var material_table = AssetIOMaterials.new()
+	
 
 func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):			
 	###################
@@ -227,7 +229,7 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	# Setting surface names as ID of material
 	for s in range(joined_mesh.get_surface_count()):
 		var mat = joined_mesh.surface_get_material(s)
-		var id = AssetIO.get_material_id(mat)
+		var id = AssetIOMaterials.get_material_id(mat)
 		joined_mesh.surface_set_name(s,str(id))
 	var mmesh = MMesh.new()
 	mmesh.create_from_mesh(joined_mesh)

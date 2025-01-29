@@ -33,7 +33,10 @@ func select_button_pressed():
 	while current_item:
 		result.push_back(current_item.get_text(1))
 		current_item = list.get_next_selected(current_item)
-	resources_selected.emit(result)
+	if select_multiple:
+		resources_selected.emit(result)
+	else:
+		resources_selected.emit(result[0])
 	queue_free()
 
 func filter_tree(text):

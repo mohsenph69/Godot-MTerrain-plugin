@@ -1,4 +1,4 @@
-#class_name Asset_Placer
+#class_name Asset_Placer 
 @tool
 extends PanelContainer
 
@@ -16,11 +16,11 @@ const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_bake
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
 
-@onready var make_baker_btn:Button = $VBoxContainer/HBoxContainer/make_baker_btn
+@onready var make_baker_btn:Button = find_child("make_baker_btn")
 
-@onready var x_btn:Button = $VBoxContainer/HBoxContainer/x_btn
-@onready var y_btn:Button = $VBoxContainer/HBoxContainer/y_btn
-@onready var z_btn:Button = $VBoxContainer/HBoxContainer/z_btn
+@onready var x_btn:Button = find_child("x_btn")
+@onready var y_btn:Button = find_child("y_btn")
+@onready var z_btn:Button = find_child("z_btn")
 
 @onready var settings_button:Button = find_child("settings_button")
 
@@ -54,7 +54,11 @@ var last_added_neighbor = null
 var last_added_masset = null
 var current_placement_dir:Vector3
 
+static var thumbnail_manager 
+
 func _ready():		
+	thumbnail_manager = ThumbnailManager.new()
+	add_child(thumbnail_manager)
 	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	update_reposition_button_text()
 	asset_library.tag_set_name(1, "hidden")
@@ -79,10 +83,10 @@ func _ready():
 	)
 	ungrouped.group_list.multi_selected.connect(set_active_group_list_and_id.bind(ungrouped.group_list))
 	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
-	grouping_popup.group_selected.connect(regroup)	
-
-	place_button.toggled.connect(func(toggle_on):
-		if toggle_on:
+	grouping_popup.group_selected.connect(regroup)		
+	place_button.toggled.connect(func(toggle_on):		
+		%place_options_hbox.visible = toggle_on
+		if toggle_on:			
 			object_being_placed = collection_item_activated(active_group_list_item, active_group_list,false)
 			var viewport_camera = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()
 			var mcol:MCollision= MTool.ray_collision_y_zero_plane(viewport_camera.global_position,-viewport_camera.global_basis.z)
@@ -206,6 +210,7 @@ func set_active_group_list_and_id(id, selected, group_list):
 	if not selected: return
 	#print(id, group_list)
 	active_group_list_item = id
+	place_button.disabled = false
 	active_group_list = group_list
 	
 func search_items(text=""):					
@@ -256,6 +261,7 @@ func debounce_regroup():
 	return true
 	
 func regroup(group = current_group, sort_mode="asc"):	
+	
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
@@ -263,7 +269,7 @@ func regroup(group = current_group, sort_mode="asc"):
 		current_group = group
 	if not debounce_regroup(): 
 		return
-	var filtered_collections = get_filtered_collections(current_search, [0])
+	var filtered_collections = get_filtered_collections(current_search, [0])	
 	if group == "None":		
 		ungrouped.group_list.clear()	
 		var sorted_items = []				
@@ -276,8 +282,8 @@ func regroup(group = current_group, sort_mode="asc"):
 		elif sort_mode == "desc":
 			sorted_items.sort_custom(func(a,b): return a.name > b.name)
 		for item in sorted_items:
-			ungrouped.add_item(item.name, item.id)							
-		ungrouped.group_button.visible = false	
+			ungrouped.add_item(item.name, item.id)												
+		ungrouped.group_button.visible = false			
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
 		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
@@ -312,7 +318,7 @@ func regroup(group = current_group, sort_mode="asc"):
 				sorted_items.sort_custom(func(a,b): return a.name > b.name)
 			for item in sorted_items:
 				group_control.add_item(item.name, item.id)		
-		ungrouped.group_list.clear()
+		ungrouped.group_list.clear()		
 		var sorted_items = []
 		for id in filtered_collections:
 			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):

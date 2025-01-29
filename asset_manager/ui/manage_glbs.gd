@@ -9,6 +9,8 @@ var asset_library = MAssetTable.get_singleton()
 var button_texture: Texture2D
 var empty_click_debounce_time := 0
 
+var glb_path
+
 func _ready():
 	visibility_changed.connect(init_tree)
 	glb_tree.set_column_expand(1, false)
@@ -25,23 +27,26 @@ func _ready():
 			#dialog.close_requested.connect(dialog.queue_free)
 		empty_click_debounce_time = Time.get_ticks_msec()	
 	)
-	show_materials_toggle.toggled.connect(func(toggle_on):		
-		update_details()
-	)
-	glb_tree.item_selected.connect(func():
-		update_details()		
+	#show_materials_toggle.toggled.connect(func(toggle_on):		
+		#update_details()
+	#)
+	#glb_tree.item_selected.connect(update_details)
+	glb_tree.item_activated.connect(func():		
+		AssetIO.glb_load(glb_tree.get_selected().get_text(0))
 	)
 	glb_tree.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):
-		var glb_path = item.get_text(0)
+		glb_path = item.get_text(0)
 		if glb_path == "(orphans)":			
+			# THIS SHOULD NEVER HAPPEN
 			for collection_id in AssetIO.get_orphaned_collections():												
 				AssetIO.remove_collection(collection_id)				
 		else:
-			for collection in asset_library.import_info[glb_path].keys():
-				if "__" in collection: continue
-				var collection_id = asset_library.import_info[glb_path][collection].id
-				AssetIO.remove_collection(collection_id)
-			asset_library.import_info.erase(glb_path)		
+			AssetIO.remove_glb(glb_path)
+			#for collection in asset_library.import_info[glb_path].keys():
+				#if "__" in collection: continue
+				#var collection_id = asset_library.import_info[glb_path][collection].id
+				#AssetIO.remove_collection(collection_id)
+			#asset_library.import_info.erase(glb_path)		
 		init_tree()
 	)
 	glb_details.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):		
@@ -77,7 +82,7 @@ func update_details():
 	
 	if glb_path == "(orphans)":			
 		for id in AssetIO.get_orphaned_collections():				
-			var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(id))
+			var texture = asset_library.collection_get_cache_thumbnail(id)
 			var item = root.create_child() 
 			if asset_library.has_collection(id):
 				item.set_text(0, asset_library.collection_get_name(id))
@@ -87,8 +92,9 @@ func update_details():
 	else:
 		for collection_name in asset_library.import_info[glb_path].keys():
 			if "__" in collection_name: continue			
+			if asset_library.import_info[glb_path][collection_name].has("ignore"): continue
 			var collection_id = asset_library.import_info[glb_path][collection_name].id
-			var texture = AssetIO.get_thumbnail(AssetIO.get_thumbnail_path(collection_id))
+			var texture = asset_library.collection_get_cache_thumbnail(collection_id)
 			var item = root.create_child() 
 			item.set_text(0, collection_name)
 			item.set_icon(0, texture)
@@ -112,10 +118,13 @@ func init_tree():
 		var item = root.create_child()
 		item.set_text(0, glb_path)				
 		item.add_button(1, button_texture)
+	for hlod_path in DirAccess.get_files_at(MAssetTable.get_hlod_res_dir()):
+		var item = root.create_child()
+		item.set_text(0, hlod_path + " (hlod)")				
+		item.add_button(1, button_texture)
 	if len(AssetIO.get_orphaned_collections())>0:
 		var item = root.create_child()
 		item.set_text(0, "(orphans)")				
 		item.add_button(1, button_texture)
-		
-		
+
 	

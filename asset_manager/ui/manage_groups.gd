@@ -25,6 +25,7 @@ func _ready():
 		
 	)
 	group_list.multi_selected.connect(func(current_item:TreeItem, column, selected:bool):
+		print('selected_group ')		
 		if selected:
 			current_item.set_editable(0, true)			
 			selected_groups = group_list.get_root().get_children().filter(func(item): return item.is_selected(0)).map(func(item): return item.get_text(0))			

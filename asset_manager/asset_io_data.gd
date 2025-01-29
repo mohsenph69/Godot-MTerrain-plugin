@@ -61,18 +61,17 @@ func clear():
 
 func get_empty_mesh_data()->Dictionary:
 	return {
-		"material_sets": [],
-		"original_material_sets": null,		
+		"material_sets": [],		
+		"original_material_sets": null,				
 		"mesh_id": null,
 		"name": null,
-		"mesh_item_users": []
 	}.duplicate()
 
 func get_empty_material()->Dictionary:
 	return {
 		"material": null,
 		"original_material": null,		
-		"meshes": [] #array of meshes that use this material...should be converted to ids later
+		"meshes": [] #array of MMesh that use this material...should be converted to ids later
 	}.duplicate()
 
 #func get_empty_mesh_item()->Dictionary:
@@ -142,18 +141,17 @@ func add_sub_collection(node_name:String,sub_collection_node_name:String,sub_col
 	
 func add_mesh_data(sets, mesh:MMesh, mesh_item_name):						
 	if mesh==null:
-		return
+		return	
 	if not mesh_data.has(mesh): 
 		mesh_data[mesh] = get_empty_mesh_data()	
-		mesh_data[mesh].name = mesh.resource_name
+		mesh_data[mesh].name = mesh_item_name 
 		for set_id in len(sets):
-			var material_names = sets[set_id]
+			var material_names = sets[set_id]			
 			for material_name in material_names:
 				if not materials.has(material_name):
 					materials[material_name] = get_empty_material()
 				materials[material_name].meshes.push_back(mesh)
 			mesh_data[mesh].material_sets.push_back(material_names)
-	mesh_data[mesh].mesh_item_users.push_back(mesh_item_name)
 
 func add_collision_to_collection(collection_name, collision_type:COLLISION_TYPE, transform, mesh:Mesh=null):
 	if not collections.has(collection_name):
@@ -223,7 +221,7 @@ func generate_import_tags():
 			for m in collections[key]["meshes"]:
 				if m: collections[key]["mesh_states"].push_back(IMPORT_STATE.NEW)
 				else: collections[key]["mesh_states"].push_back(IMPORT_STATE.NO_CHANGE)
-		elif collections[key]["meshes"].size()==0 and collections[key]["sub_collections"].size()==0:
+		elif collections[key]["meshes"].size()==0 and collections[key]["sub_collections"].size()==0:			
 			collections[key]["state"] = IMPORT_STATE.REMOVE
 			for m in collections[key]["meshes"]:
 				if m: collections[key]["mesh_states"].push_back(IMPORT_STATE.REMOVE)
@@ -285,7 +283,9 @@ func save_meshes()->int:
 			if not meshes[i]:
 				if FileAccess.file_exists(mesh_path): DirAccess.remove_absolute(mesh_path)
 			else:
-				set_correct_material(meshes[i])
+				meshes[i].take_over_path(mesh_path)
+				meshes[i].resource_name = key
+				set_correct_material(meshes[i], mesh_path)
 				ResourceSaver.save(meshes[i],mesh_path)
 				meshes[i].take_over_path(mesh_path)
 		# Adding stop lod if exist
@@ -295,33 +295,43 @@ func save_meshes()->int:
 			f.close()
 	return OK
 
-func set_correct_material(mmesh:MMesh):
+func set_correct_material(mmesh:MMesh, mesh_path):
 	if not mmesh: return
 	if not mesh_data.has(mmesh):
 		printerr("mesh data does not exist")
 		return
-	var material_sets_names = mesh_data[mmesh]["material_sets"]
+	var material_sets_names = mesh_data[mmesh]["material_sets"]		
 	if material_sets_names.size()==0:
 		return
-	var asset_lib:=MAssetTable.get_singleton()
+	var import_info :=MAssetTable.get_singleton().import_info
 	var first_material_set_names = material_sets_names[0]
-	var set_count = mmesh.material_set_get_count()
-	for set_num in range(set_count):
+	var set_count = mmesh.material_set_get_count()	
+	for set_num in set_count:
 		var current_material_name
 		# if does not exist using first set of material always
 		if material_sets_names.size() > set_num:
 			current_material_name = material_sets_names[set_num]
 		else:
 			current_material_name = first_material_set_names
+		if len(mmesh.material_set_get(0)) != current_material_name.size():
+			print("mmesh slot count issue: ", mmesh.material_set_get(0), " is not equal to ", current_material_name.size())
 		for surface_index in current_material_name.size():
 			var material_name = current_material_name[surface_index]
 			if not materials.has(material_name):
 				continue
-			var mat_id = materials[material_name]["material"]
-			if mat_id == -1:
+			var material_id = materials[material_name]["material"]
+			var original_material_id = materials[material_name].original_material if materials[material_name].has("original_material") else -1
+			if material_id == -1:
 				continue
-			var mat_path = asset_lib.import_info["__materials"][mat_id]["path"]
-			mmesh.surface_set_material(set_num,surface_index,mat_path)
+			var material_path = import_info["__materials"][material_id]["path"]			
+			mmesh.surface_set_material(set_num,surface_index,material_path)
+			# Remove this mmesh from old material mmesh list			
+			if original_material_id and original_material_id != -1 and import_info['__materials'][original_material_id].meshes.has(mesh_path):
+				import_info['__materials'][original_material_id].meshes.erase(mesh_path)
+			# Add this mmesh to new material mmesh list								
+			import_info['__materials'][material_id].meshes[mesh_path] = {}
+			for set_id in mmesh.material_set_get_count():
+				import_info['__materials'][material_id].meshes[mesh_path][set_id] = mmesh.material_set_get(set_id) 
 
 # will return the information which is need to save with glb_path in import_info in AssetTable
 func get_glb_import_info():
@@ -329,6 +339,8 @@ func get_glb_import_info():
 	for key in collections:
 		result[key] = {"mesh_id":-1,"sub_collections":{},"collision_items":[], "id":-1}
 		result[key]["mesh_id"] = collections[key]["mesh_id"]
+		if collections[key]["ignore"]: 
+			result[key]["ignore"] = true
 		if collections[key]["state"] == IMPORT_STATE.REMOVE:
 			# keep this here as we want to keep mesh_id even when remove
 			# id also must remain -1
@@ -381,7 +393,7 @@ func add_glb_import_info(info:Dictionary)->void:
 		collections[collection_glb_name]["original_collision_items"] = collections[collection_glb_name].collision_items
 		collections[collection_glb_name]["id"] = collection_id
 		collections[collection_glb_name]["original_meshes"] = original_meshes
-		if collection_id >= 0 :
+		if collection_id >= 0 and asset_library.has_collection(collection_id):
 			collections[collection_glb_name]["original_tags"] = asset_library.collection_get_tags(collection_id)
 	add_metadata_to_data(info["__metadata"], meta_data)
 	if "__materials" in info:

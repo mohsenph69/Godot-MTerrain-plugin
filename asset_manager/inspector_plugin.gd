@@ -10,6 +10,7 @@ func _can_handle(object):
 	if object is HLod_Baker: return true
 	if object is MHlodScene: return true
 	if object is MAssetMesh: return true	
+	if object is MMesh: return true		
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
 	if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is HLod_Baker: return true
 	
@@ -30,6 +31,9 @@ func _parse_begin(object):
 	elif object is MAssetMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/collection_inspector.tscn").instantiate()
 		control.object = object		
+	elif object is MMesh:		
+		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
+		control.mmesh = object		
 	margin.add_child(control)
 	add_custom_control(margin)			
 		
