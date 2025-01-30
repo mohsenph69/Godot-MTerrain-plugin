@@ -4,9 +4,6 @@ class_name AssetIOData extends RefCounted
 enum IMPORT_STATE {
 	NOT_HANDLE,NO_CHANGE, NEW, CHANGE, REMOVE,
 }
-enum COLLISION_TYPE {
-	BOX,SPHERE,CYLINDER, CAPSULE, CONVEX, MESH
-}
 
 var glb_path:String
 var blend_file: String
@@ -63,6 +60,7 @@ func get_empty_mesh_data()->Dictionary:
 	return {
 		"material_sets": [],		
 		"original_material_sets": null,				
+		"transform":Transform3D(),
 		"mesh_id": null,
 		"name": null,
 	}.duplicate()
@@ -92,14 +90,15 @@ func get_empty_collection()->Dictionary:
 		"meshes":[],
 		"original_meshes":[],
 		"mesh_states":[],
-		"collision_items":[],
-		"original_collision_items":[],
+		"is_master":false,
+		"base_transform":Transform3D(),
+		"collisions":[], # only simple shapes
 		"sub_collections":{},
 		"original_sub_collections":{},
 		"stop_lod":-1,
 		"original_stop_lod":-1,
 		"tags": [],
-		"original_tags": [],		
+		"original_tags": [],
 		"id":-1,
 		"is_root":true,
 		"ignore":false,
@@ -108,12 +107,8 @@ func get_empty_collection()->Dictionary:
 
 func get_empty_collision_item()->Dictionary:
 	return {
-		"type":null, # box / sphere / cylinder / capsule / concave / mesh
-		"transform":[],
-		"mesh": null, #only exists if mesh type
-		"id":-1,
-		"ignore":false,
-		"state":IMPORT_STATE.NOT_HANDLE,
+		"type":MAssetTable.CollisionType.UNDEF, # box / sphere / cylinder / capsule / concave / mesh
+		"transform":Transform3D(),
 	}.duplicate()
 
 # collection[name]["collision_items"] = [ ]
@@ -133,39 +128,44 @@ func update_collection_mesh(node_name:String,lod:int,mesh:MMesh)->void:
 	if collections[node_name]["meshes"].size() > collections[node_name]["stop_lod"]:
 		collections[node_name]["stop_lod"] = -1
 
+func add_master_collection(node_name:String,transform:Transform3D):
+	if not collections.has(node_name):
+		collections[node_name] = get_empty_collection()
+	collections[node_name]["base_transform"] = transform
+
 func add_sub_collection(node_name:String,sub_collection_node_name:String,sub_collection_transform:Transform3D):
 	if not collections.has(node_name):
 		collections[node_name] = get_empty_collection()
 	collections[node_name]["sub_collections"][sub_collection_node_name] = sub_collection_transform
+	collections[node_name]["is_master"] = true
 
 	
-func add_mesh_data(sets, mesh:MMesh, mesh_item_name):						
+func add_mesh_data(sets, mesh:MMesh, mesh_node:Node):						
 	if mesh==null:
-		return	
-	if not mesh_data.has(mesh): 
-		mesh_data[mesh] = get_empty_mesh_data()	
-		mesh_data[mesh].name = mesh_item_name 
-		for set_id in len(sets):
-			var material_names = sets[set_id]			
-			for material_name in material_names:
-				if not materials.has(material_name):
-					materials[material_name] = get_empty_material()
-				materials[material_name].meshes.push_back(mesh)
-			mesh_data[mesh].material_sets.push_back(material_names)
+		return
+	if mesh_data.has(mesh):
+		printerr("Adding duplicate mesh into mesh data ",mesh_node.name)
+		return
+	mesh_data[mesh] = get_empty_mesh_data()	
+	mesh_data[mesh].name = mesh_node.name 
+	mesh_data[mesh].transform = mesh_node.transform
+	for set_id in len(sets):
+		var material_names = sets[set_id]			
+		for material_name in material_names:
+			if not materials.has(material_name):
+				materials[material_name] = get_empty_material()
+			materials[material_name].meshes.push_back(mesh)
+		mesh_data[mesh].material_sets.push_back(material_names)
 
-func add_collision_to_collection(collection_name, collision_type:COLLISION_TYPE, transform, mesh:Mesh=null):
+func add_collision_to_collection(collection_name, collision_type:MAssetTable.CollisionType,col_transform):
 	if not collections.has(collection_name):
 		collections[collection_name] = get_empty_collection()
 	var item = get_empty_collision_item()
 	item.type = collision_type
-	item.transform = transform
-	if is_instance_valid(mesh):
-		if collision_type == COLLISION_TYPE.CONVEX:
-			item.mesh = mesh.create_convex_shape() #array of points
-		else:
-			item.mesh = mesh
-	collections[collection_name]["collision_items"].push_back(item)
-	
+	item.transform = col_transform
+	# item.obj_transform = obj_transform # this will be determine in finilize function
+	collections[collection_name]["collisions"].push_back(item)
+
 func get_collection_id(collection_name:String)->int:	
 	if collections.has(collection_name):
 		return collections[collection_name]["id"]
@@ -176,17 +176,19 @@ func update_collection_id(collection_name:String,id:int):
 		collections[collection_name]["id"] = id
 
 func finalize_glb_parse():
-	return
-	var asset_library = MAssetTable.get_singleton()		
-	for key in collections:
-		var current_collection = collections[key]
-		var max_material_set = 1
-		var meshes:Array = current_collection["meshes"]
-		for i in meshes:
-			var __m:MMesh = meshes[i]
-			if not __m: continue
-			max_material_set = max(max_material_set,__m.material_set_get_count())
-		print("max_material_set ",max_material_set)
+	var asset_library = MAssetTable.get_singleton()
+	# remove empty master or collissions
+	for k in collections:
+		if collections[k]["meshes"].is_empty() and collections[k]["sub_collections"].is_empty():
+			if not collections[k]["collisions"].is_empty():
+				printerr("Collission with name \"%s\" has no matching mesh name or master collection name, so it get removed" % k)
+			collections.erase(k)
+	# setting the base transform
+	for k in collections:
+		if collections[k]["is_master"] : continue
+		for m in collections[k].meshes:
+			if m: collections[k]["base_transform"] = mesh_data[m].transform
+
 
 func check_for_infinite_recursion_in_collections(name, checked_collections = []):
 	var asset_library = MAssetTable.get_singleton()
@@ -206,12 +208,6 @@ func check_for_infinite_recursion_in_collections(name, checked_collections = [])
 			if check_for_infinite_recursion_in_collections(sub_collection_name, checked_collections.duplicate()):
 				push_error("infinite recursion in subcollections: ", checked_collections)
 				return
-
-func add_original_collisions(collection_name:String,transform:Transform3D)->void:
-	if not collections.has(collection_name):
-		collections[collection_name] = get_empty_collection()
-	collections[collection_name]["original_collision_items"] = transform
-
 
 # After add_original stuff generating import tags base on the difference between these new and original
 func generate_import_tags():	
@@ -337,7 +333,7 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 func get_glb_import_info():
 	var result:Dictionary = {}
 	for key in collections:
-		result[key] = {"mesh_id":-1,"sub_collections":{},"collision_items":[], "id":-1}
+		result[key] = {"mesh_id":-1,"sub_collections":{}, "id":-1}
 		result[key]["mesh_id"] = collections[key]["mesh_id"]
 		if collections[key]["ignore"]: 
 			result[key]["ignore"] = true
@@ -348,10 +344,6 @@ func get_glb_import_info():
 		for collection_name in collections[key]["sub_collections"]:
 			if not collections.has(collection_name): continue
 			result[key]["sub_collections"][collection_name] = get_collection_id(collection_name)
-		for original_collision_item in collections[key].collision_items:
-			var collision_item = original_collision_item.duplicate()
-			collision_item.mesh = null
-			result[key].collision_items.push_back(collision_item)					
 		result[key]["id"] = collections[key]["id"]	
 	for key in forgotten_collections_import_info:
 		if result.has(key):
@@ -390,7 +382,6 @@ func add_glb_import_info(info:Dictionary)->void:
 		for sub_collection_name in original_sub_collections:
 			var t = asset_library.collection_get_sub_collections_transform(collection_id,original_sub_collections[sub_collection_name])
 			collections[collection_glb_name]["original_sub_collections"][sub_collection_name] = t
-		collections[collection_glb_name]["original_collision_items"] = collections[collection_glb_name].collision_items
 		collections[collection_glb_name]["id"] = collection_id
 		collections[collection_glb_name]["original_meshes"] = original_meshes
 		if collection_id >= 0 and asset_library.has_collection(collection_id):
@@ -410,6 +401,7 @@ func add_metadata_to_data(old:Dictionary, new:Dictionary):
 
 
 func get_changed_hlods():
+	if not DirAccess.dir_exists_absolute(MAssetTable.get_hlod_res_dir()): return
 	var hlod_to_rebake: Array[MHlod] = []
 	for hlod_path in DirAccess.get_files_at( MAssetTable.get_hlod_res_dir() ):
 		var hlod = load(hlod_path)

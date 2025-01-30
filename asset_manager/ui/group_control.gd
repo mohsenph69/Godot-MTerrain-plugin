@@ -48,13 +48,8 @@ func update_thumbnail(data):
 	var asset_library = MAssetTable.get_singleton()
 	var thumbnail_path = asset_library.get_asset_thumbnails_path(data.collection_id)
 	### Updating Cache
-	asset_library.collection_set_cache_thumbnail(data.collection_id,data.texture,Time.get_unix_time_from_system())	
 	ThumbnailManager.save_thumbnail(data.texture, thumbnail_path)
 	## This function excute with delay we should check if item collection id is not changed	
 	if get_item_collection_id(data.caller) == data.collection_id:			
 		group_list.set_item_icon(data.caller,data.texture)
 		group_list.set_item_text(data.caller, "")
-	
-	
-	
-	

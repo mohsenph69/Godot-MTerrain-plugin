@@ -132,7 +132,7 @@ void MHlodScene::Proc::disable_sub_proc(){
 }
 
 void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool immediate){
-    item->add_user(); // must be called here, this will load if it is not loaded
+    RID item_rid = item->get_rid_and_add_user(); // must be called here, this will load if it is not loaded
     // Item transform will be our transform * item_transform
     bool item_exist = false;
     CreationInfo ci;
@@ -148,8 +148,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
     {
     case MHlod::Type::MESH:
         {
-            RID mesh_rid = item->mesh.get_mesh();
-            if(mesh_rid.is_valid()){
+            if(item_rid.is_valid()){
                 RID instance;
                 if(!item_exist){
                     instance = RS->instance_create();
@@ -166,12 +165,12 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
                         apply_info.push_back(ainfo);
                         RS->instance_set_visible(instance,false);
                     }
-                    RS->instance_set_base(instance,mesh_rid);
+                    RS->instance_set_base(instance,item_rid);
                 } else {
                     // changing one instance mesh should not result in flickering
                     // if this happen later we should consider a change here
                     instance = ci.get_rid();
-                    RS->instance_set_base(instance,mesh_rid);
+                    RS->instance_set_base(instance,item_rid);
                     ERR_FAIL_COND(ci.item_id==-1);
                     hlod->item_list.ptrw()[ci.item_id].remove_user();
                 }
@@ -190,9 +189,35 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
             }
         }
         break;
+    case MHlod::Type::LIGHT:
+        if(item_rid.is_valid()){
+            RID instance = RS->instance_create();
+            RS->instance_set_scenario(instance,octree->get_scenario());
+            RS->instance_set_transform(instance,transform * hlod->transforms[item->transform_index]);
+            ci.set_rid(instance);
+            RS->instance_set_base(instance,item_rid);
+        } else {
+            // Basically this should not happen
+            remove_item(item,item_id);
+            ERR_FAIL_MSG("Item empty light");
+        }
+    case MHlod::Type::COLLISION:
+        if(item_rid.is_valid()){
+            MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(item->collision.get_body_id());
+            GlobalItemID gitem_id(oct_point_id,item->transform_index);
+            PhysicsServer3D::get_singleton()->body_add_shape(body_info.rid,item_rid);
+            PhysicsServer3D::get_singleton()->body_set_shape_transform(body_info.rid,body_info.shapes.size(),transform * hlod->transforms[item->transform_index]);
+            body_info.shapes.push_back(gitem_id.id); // should be at end
+        } else {
+            // Basically this should not happen
+            remove_item(item,item_id);
+            ERR_FAIL_MSG("Item empty Shape");
+        }
+        break;
     default:
         break;
     }
+    // Setting Creation info
     ci.type = item->type;
     ci.item_id = item_id;
     items_creation_info.insert(item->transform_index,ci);
@@ -218,13 +243,24 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
                     ainfo.set_instance(instance);
                     apply_info.push_back(ainfo);
                 }
-                items_creation_info.erase(item->transform_index);
             }
+        }
+        break;
+    case MHlod::Type::COLLISION:
+        {
+            GlobalItemID gitem_id(oct_point_id,item->transform_index);
+            MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(item->collision.get_body_id());
+            int shape_index_in_body = body_info.shapes.find(gitem_id.id);
+            ERR_FAIL_COND(shape_index_in_body==-1);
+            PhysicsServer3D::get_singleton()->body_remove_shape(body_info.rid,shape_index_in_body);
+            body_info.shapes.remove_at(shape_index_in_body);
+            item->remove_user();
         }
         break;
     default:
         break;
     }
+    items_creation_info.erase(item->transform_index);
 }
 
 _FORCE_INLINE_ void MHlodScene::Proc::update_item_transform(MHlod::Item* item){
@@ -314,7 +350,6 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
         }
     }
     if(c_lod<0 || c_lod >= hlod->lods.size() || hlod->lods[c_lod].size() == 0){
-        //UtilityFunctions::print(c_lod, " RM all item!");
         remove_all_items(immediate);
         lod = c_lod;
         return; // we don't consider this dirty as there is nothing to be appllied later
@@ -676,7 +711,7 @@ void MHlodScene::_notification(int p_what){
         _update_visibility();
         break;
     case NOTIFICATION_READY:
-        //get_root_proc()->hlod->start_test();
+        MHlod::physic_space = get_world_3d()->get_space().get_id();
         break;
     case NOTIFICATION_ENTER_TREE:
         _update_visibility();

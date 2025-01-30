@@ -40,7 +40,7 @@ func update_collections():
 		cl.append_text("[b]Collections[/b]\n")
 		cl.pop() #/bold
 		
-		cl.push_table(4)
+		cl.push_table(5)
 		
 		cl.push_cell()
 		cl.set_cell_row_background_color(Color.DARK_SLATE_GRAY,Color.BURLYWOOD)
@@ -66,6 +66,12 @@ func update_collections():
 		cl.append_text("sub\ncollections")
 		cl.pop() #end cel
 		
+		cl.push_cell()
+		cl.set_cell_row_background_color(Color.DARK_SLATE_GRAY,Color.BURLYWOOD)
+		cl.set_cell_border_color(Color.SEA_GREEN)
+		cl.append_text("collisions")
+		cl.pop() #end cel
+		
 		for cid in collections:
 			cl.push_cell()
 			cl.set_cell_row_background_color(Color.DARK_BLUE,Color.DARK_BLUE)
@@ -80,12 +86,17 @@ func update_collections():
 			
 			cl.push_cell()
 			cl.set_cell_border_color(Color.SEA_GREEN)
-			cl.append_text(str(asset_library.collection_get_mesh_id(cid)))
+			cl.append_text(str(asset_library.collection_get_item_id(cid)))
 			cl.pop() #end cel
 			
 			cl.push_cell()
 			cl.set_cell_border_color(Color.SEA_GREEN)
 			cl.append_text(str(asset_library.collection_get_sub_collections(cid).size()))
+			cl.pop() #end cel
+			
+			cl.push_cell()
+			cl.set_cell_border_color(Color.SEA_GREEN)
+			cl.append_text(str(asset_library.collection_get_collision_count(cid)))
 			cl.pop() #end cel
 	cl.pop() # end table
 	

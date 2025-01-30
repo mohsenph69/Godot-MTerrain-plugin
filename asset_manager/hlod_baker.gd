@@ -47,7 +47,7 @@ func force_lod(lod:int):
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
 	hlod_resource = MHlod.new()
-	hlod_resource.set_baker_path(scene_file_path)				
+	hlod_resource.set_baker_path(scene_file_path)
 	var join_at_lod = MAssetTable.mesh_join_start_lod(joined_mesh_id)	
 	#################
 	## BAKE MESHES ##
@@ -72,7 +72,19 @@ func bake_to_hlod_resource():
 				if mesh_array[min(i, len(mesh_array)-1) ] != -1:
 					hlod_resource.insert_item_in_lod_table(mesh_id, i)
 				i += 1
-							
+			## Mesh Collssion
+			for cindex in mdata.get_collision_count():
+				var type:MAssetTable.CollisionType= mdata.get_collision_type(cindex)
+				var t:Transform3D = baker_inverse_transform * mdata.get_collision_transform(cindex)
+				var params:Vector3 = mdata.get_collision_params(cindex)
+				var iid:int = -1
+				match type:
+					MAssetTable.CollisionType.SHPERE: iid = hlod_resource.shape_add_sphere(t,params[0],-1)
+					MAssetTable.CollisionType.CYLINDER: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],-1)
+					MAssetTable.CollisionType.CAPSULE: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],-1)
+					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,-1)
+				if iid==-1: printerr("Error inserting shape")
+				else: hlod_resource.insert_item_in_lod_table(iid,0)
 	######################
 	## BAKE JOINED_MESH ##
 	######################

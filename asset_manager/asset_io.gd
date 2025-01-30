@@ -4,7 +4,7 @@ class_name AssetIO extends Object
 static var LOD_COUNT = 10  # The number of different LODs in your project
 
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
-static var regex_col_match:= RegEx.create_from_string("(.*)?[_|\\s]?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
+static var regex_col_match:= RegEx.create_from_string("((.*)[_|\\s])?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
 static var blender_end_number_regex = RegEx.create_from_string("(.*)(\\.\\d+)")
 static var asset_data:AssetIOData = null
 static var DEBUG_MODE = true #true
@@ -51,7 +51,7 @@ static func glb_load_assets(gltf_state, scene_root, path, metadata={},no_window:
 	var scene = scene_root.get_children() if not scene_root is ImporterMeshInstance3D else [scene_root]
 	#STEP 2: convert gltf scene into AssetData format	
 	generate_asset_data_from_glb(scene)
-	asset_data.finalize_glb_parse()
+	asset_data.finalize_glb_parse() ## should not go after add_glb_import_info
 	#STEP 3: add data from last import for comparisons
 	if asset_library.import_info.has(path):
 		asset_data.add_glb_import_info(asset_library.import_info[path])
@@ -68,7 +68,7 @@ static func glb_load_assets(gltf_state, scene_root, path, metadata={},no_window:
 static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	for node in scene:
-		var name_data := node_parse_name(node)		
+		var name_data := node_parse_name(node)
 		var child_count:int = node.get_child_count()
 		#######################
 		## PROCESS MESH NODE ##
@@ -82,7 +82,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				var material_sets = node.get_meta("material_sets")				
 				mmesh.material_set_resize(len(material_sets[0]))
 				var mesh_item_name = name_data["name"]							
-				asset_data.add_mesh_data(material_sets, mmesh, node.name)
+				asset_data.add_mesh_data(material_sets, mmesh, node)
 				asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
 				var collection_name = mesh_item_name if active_collection == "__root__" else active_collection
 				if not active_collection == "__root__":
@@ -109,7 +109,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				var mmesh:=MMesh.new()
 				mmesh.create_from_mesh(mesh)
 				mmesh.material_set_resize(material_set.size())
-				asset_data.add_mesh_data(material_set,mmesh, node.name)
+				asset_data.add_mesh_data(material_set,mmesh, node)
 				asset_data.update_collection_mesh(mesh_item_name,name_data["lod"],mmesh)
 				# if we are not on root then we add ourself as sub collection to whatever active_collection is
 				if not active_collection == "__root__":
@@ -119,12 +119,16 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		############################
 		## PROCESS COLLISION NODE ##
 		############################
-		elif name_data["col"] != null:
-			var collection_name = name_data.name if active_collection=="__root__" else active_collection
-			if node is ImporterMeshInstance3D:
-				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform, node.mesh.get_mesh())
-			else:				
-				asset_data.add_collision_to_collection(collection_name, name_data["col"], node.transform)				
+		elif name_data["col"] != MAssetTable.CollisionType.UNDEF:
+			var collection_name:String
+			if name_data.name.is_empty() and active_collection!="__root__":
+				collection_name = active_collection
+			elif not name_data.name.is_empty():
+				collection_name = name_data.name
+			else:
+				print("GLB name %s Found collision with empty name, this is only allowed in collections with sub_collections"%node.name)
+				continue
+			asset_data.add_collision_to_collection(collection_name,name_data["col"],node.transform)
 			if child_count > 0:
 				push_error(node.name + " is detected as a collission due to using _col in its name! ignoring its children!")
 		#############################
@@ -132,6 +136,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		#############################
 		elif child_count > 0:
 			if active_collection=="__root__":
+				asset_data.add_master_collection(node.name,node.transform)
 				generate_asset_data_from_glb(node.get_children(),node.name)
 				if node.has_meta("tags"):										
 					if asset_data.collections.has(node.name):
@@ -193,7 +198,6 @@ static func glb_import_commit_changes():
 	########################
 	## Adding Import Info ##
 	########################
-			
 	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()	
 	asset_library.import_info[asset_data.glb_path]["__id"] = glb_id
 	if not "__blend_files" in asset_library.import_info:
@@ -217,7 +221,7 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 	if func_depth > 1000:
 		printerr("It seems you have a nested collection which does not end well!")
 		return
-	if glb_node_name and not asset_data.collections.has(glb_node_name) or asset_data.collections[glb_node_name]["ignore"] or asset_data.collections[glb_node_name]["state"] == AssetIOData.IMPORT_STATE.NO_CHANGE:
+	if glb_node_name and not asset_data.collections.has(glb_node_name) or asset_data.collections[glb_node_name]["ignore"]:
 		return
 	#asset_data.collections[glb_node_name]["ignore"] = true # this means this collection has been handled
 	var asset_library := MAssetTable.get_singleton()
@@ -230,21 +234,29 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 		return
 	var collection_id := -1
 	if collection_info["state"] == AssetIOData.IMPORT_STATE.NEW:
-		collection_id = asset_library.collection_create(glb_node_name)
+		collection_id = asset_library.collection_create(glb_node_name,collection_info["mesh_id"],MAssetTable.MESH,glb_id)
 		asset_data.update_collection_id(glb_node_name, collection_id)
-	elif collection_info["id"] != -1 and collection_info["state"] == AssetIOData.IMPORT_STATE.CHANGE:
+	# should also handle even if no change for adjusting collissions
+	elif collection_info["id"] != -1:
 		collection_id = collection_info["id"]
 		if not asset_library.has_collection(collection_id):
 			push_error("import collection error: trying to change existing collection, but ", collection_id, " does not exist")
-		asset_library.collection_clear(collection_id)
+		asset_library.collection_clear_sub_and_col(collection_id)
+		if asset_library.collection_get_name(collection_id) != glb_node_name:
+			printerr("Mismatch glb_node name in update")
+		if asset_library.collection_get_item_id(collection_id) != collection_info["mesh_id"]:
+			printerr("Mismatch mesh id in update")
+		if asset_library.collection_get_glb_id(collection_id) != glb_id:
+			printerr("Mismatch glb id in update")
 	else:
 		push_error("Invalid collection!!!")
 		return
 	if not asset_library.has_collection(collection_id):
 		push_error("import collection error: ", collection_id, " does not exist")
-	asset_library.collection_set_glb_id(collection_id,glb_id)
-	asset_library.collection_set_mesh_id(collection_id,collection_info["mesh_id"])
-	#Adding Sub Collection to Collection
+	## Collissions
+	for c in collection_info["collisions"]:
+		asset_library.collection_add_collision(collection_id,c["type"],c["transform"],collection_info["base_transform"])
+	## sub collections
 	var sub_collections:Dictionary = collection_info["sub_collections"]
 	for sub_collection_name in sub_collections:
 		#If sub_collection in different glb...				
@@ -283,7 +295,7 @@ static func glb_show_import_window(asset_data:AssetIOData):
 	popup.popup_centered(Vector2i(800,600))	
 	
 static func node_parse_name(node:Node)->Dictionary:
-	var result = {"name":"","lod":-1,"col":null}
+	var result = {"name":"","lod":-1,"col":MAssetTable.CollisionType.UNDEF,"has_convex":false}
 	var lod:int = -1	
 	var search_result = regex_mesh_match.search(node.name)
 	if search_result:		
@@ -295,14 +307,13 @@ static func node_parse_name(node:Node)->Dictionary:
 	else:
 		search_result = regex_col_match.search(node.name)		
 		if search_result:			
-			result["name"] = search_result.strings[1]
-			match(search_result.strings[-1]):
-				"box": result["col"] = AssetIOData.COLLISION_TYPE.BOX
-				"sphere": result["col"] = AssetIOData.COLLISION_TYPE.SPHERE
-				"cylinder": result["col"] = AssetIOData.COLLISION_TYPE.CYLINDER
-				"capsule": result["col"] = AssetIOData.COLLISION_TYPE.CAPSULE
-				"convex": result["col"] = AssetIOData.COLLISION_TYPE.CONVEX
-				"mesh": result["col"] = AssetIOData.COLLISION_TYPE.MESH							
+			result["name"] = search_result.strings[2]
+			match(search_result.strings[4]):
+				"box": result["col"] = MAssetTable.CollisionType.BOX
+				"sphere": result["col"] = MAssetTable.CollisionType.SHPERE
+				"cylinder": result["col"] = MAssetTable.CollisionType.CYLINDER
+				"capsule": result["col"] = MAssetTable.CollisionType.CAPSULE
+				"convex": result["has_convex"] = true
 	return result
 
 static func blender_end_number_remove(input:String)->String:
@@ -369,13 +380,6 @@ static func get_orphaned_collections():
 				if asset_library.import_info[glb][node_name].id in result:
 					result.erase(asset_library.import_info[glb][node_name].id)
 	return result
-
-static func remove_ununused_meshes():
-	var root = MHlod.get_mesh_root_dir()
-	for path in DirAccess.get_files_at( root ):
-		var mesh_id = int(path)
-		if len(MAssetTable.get_singleton().mesh_get_mesh_items_users(mesh_id)) == 0:
-			DirAccess.remove_absolute(root.path_join(path))
 				
 static func import_settings(path):
 	var asset_library = MAssetTable.get_singleton()

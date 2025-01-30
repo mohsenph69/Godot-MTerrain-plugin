@@ -29,6 +29,18 @@ class MHlodScene : public Node3D {
     static void _bind_methods();
 
     private:
+    union GlobalItemID
+    {
+        struct
+        {
+            int32_t oct_point_id;
+            int32_t transform_index;
+        };
+        int64_t id;
+        _FORCE_INLINE_ GlobalItemID(int32_t oct_point_id,int32_t transform_index):oct_point_id(oct_point_id),transform_index(transform_index){};
+        _FORCE_INLINE_ GlobalItemID(int64_t id):id(id){};
+    };
+    
     struct CreationInfo
     {
         // There is another 4 byte space here!!!
@@ -41,6 +53,7 @@ class MHlodScene : public Node3D {
         };
         _FORCE_INLINE_ void set_rid(const RID input);
         _FORCE_INLINE_ RID get_rid() const;
+        CreationInfo()=default;
     };
 
     struct ApplyInfo

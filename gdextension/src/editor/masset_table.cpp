@@ -6,7 +6,7 @@
 #include <godot_cpp/classes/resource_saver.hpp>
 #include <godot_cpp/classes/dir_access.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-int32_t MAssetTable::last_free_mesh_id = -1;
+int32_t MAssetTable::last_free_item_id = -1;
 const char* MAssetTable::asset_table_path = "res://massets_editor/asset_table.res";
 const char* MAssetTable::asset_editor_root_dir = "res://massets_editor/";
 const char* MAssetTable::editor_baker_scenes_dir = "res://massets_editor/baker_scenes/";
@@ -31,26 +31,25 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_static_method("MAssetTable",D_METHOD("update_last_free_mesh_id"), &MAssetTable::update_last_free_mesh_id);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_get_max_lod"), &MAssetTable::mesh_item_get_max_lod);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_last_free_mesh_id_and_increase"), &MAssetTable::get_last_free_mesh_id_and_increase);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_get_first_lod","mesh_id"), &MAssetTable::mesh_item_get_first_lod);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_get_stop_lod","mesh_id"), &MAssetTable::mesh_item_get_stop_lod);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_ids_no_replace","mesh_id"), &MAssetTable::mesh_item_ids_no_replace);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_meshes_no_replace","mesh_id"), &MAssetTable::mesh_item_meshes_no_replace);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_ids","mesh_id"), &MAssetTable::mesh_item_ids);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_meshes","mesh_id"), &MAssetTable::mesh_item_meshes);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_is_valid","mesh_id"), &MAssetTable::mesh_item_is_valid);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_get_first_lod","item_id"), &MAssetTable::mesh_item_get_first_lod);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_get_stop_lod","item_id"), &MAssetTable::mesh_item_get_stop_lod);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_ids_no_replace","item_id"), &MAssetTable::mesh_item_ids_no_replace);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_meshes_no_replace","item_id"), &MAssetTable::mesh_item_meshes_no_replace);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_ids","item_id"), &MAssetTable::mesh_item_ids);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_meshes","item_id"), &MAssetTable::mesh_item_meshes);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_item_is_valid","item_id"), &MAssetTable::mesh_item_is_valid);
 
     ClassDB::bind_static_method("MAssetTable",D_METHOD("get_last_free_mesh_join_id"), &MAssetTable::get_last_free_mesh_join_id);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_get_first_lod","mesh_id"), &MAssetTable::mesh_join_get_first_lod);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_get_stop_lod","mesh_id"), &MAssetTable::mesh_join_get_stop_lod);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_ids_no_replace","mesh_id"), &MAssetTable::mesh_join_ids_no_replace);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_meshes_no_replace","mesh_id"), &MAssetTable::mesh_join_meshes_no_replace);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_ids","mesh_id"), &MAssetTable::mesh_join_ids);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_meshes","mesh_id"), &MAssetTable::mesh_join_meshes);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_is_valid","mesh_id"), &MAssetTable::mesh_join_is_valid);
-    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_start_lod","mesh_id"), &MAssetTable::mesh_join_start_lod);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_get_first_lod","item_id"), &MAssetTable::mesh_join_get_first_lod);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_get_stop_lod","item_id"), &MAssetTable::mesh_join_get_stop_lod);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_ids_no_replace","item_id"), &MAssetTable::mesh_join_ids_no_replace);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_meshes_no_replace","item_id"), &MAssetTable::mesh_join_meshes_no_replace);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_ids","item_id"), &MAssetTable::mesh_join_ids);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_meshes","item_id"), &MAssetTable::mesh_join_meshes);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_is_valid","item_id"), &MAssetTable::mesh_join_is_valid);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_start_lod","item_id"), &MAssetTable::mesh_join_start_lod);
 
     ClassDB::bind_method(D_METHOD("has_collection","collection_id"), &MAssetTable::has_collection);
-    ClassDB::bind_method(D_METHOD("remove_collection","collection_id"), &MAssetTable::remove_collection);
     ClassDB::bind_method(D_METHOD("tag_add","name"), &MAssetTable::tag_add);
     ClassDB::bind_method(D_METHOD("tag_set_name","tag_id","name"), &MAssetTable::tag_set_name);
     ClassDB::bind_method(D_METHOD("tag_get_name","tag_id"), &MAssetTable::tag_get_name);
@@ -62,24 +61,17 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("tags_get_collections_all","tags"), &MAssetTable::tags_get_collections_all);
     ClassDB::bind_method(D_METHOD("tag_get_tagless_collections"), &MAssetTable::tag_get_tagless_collections);
     ClassDB::bind_method(D_METHOD("tag_names_begin_with","prefix"), &MAssetTable::tag_names_begin_with);
-    ClassDB::bind_method(D_METHOD("collection_create","name"), &MAssetTable::collection_create);
-    ClassDB::bind_method(D_METHOD("collection_set_glb_id","collection_id","glb_id"), &MAssetTable::collection_set_glb_id);
+    ClassDB::bind_method(D_METHOD("collection_create","name","item_id","type","glb_id"), &MAssetTable::collection_create);
     ClassDB::bind_method(D_METHOD("collection_get_glb_id","collection_id"), &MAssetTable::collection_get_glb_id);
-    ClassDB::bind_method(D_METHOD("collection_set_cache_thumbnail","collection_id","tex","creation_time"), &MAssetTable::collection_set_cache_thumbnail);
-    ClassDB::bind_method(D_METHOD("collection_get_cache_thumbnail","collection_id"), &MAssetTable::collection_get_cache_thumbnail);
-    ClassDB::bind_method(D_METHOD("collection_get_thumbnail_creation_time","collection_id"), &MAssetTable::collection_get_thumbnail_creation_time);
-    ClassDB::bind_method(D_METHOD("collection_set_mesh_id","collection_id","mesh_id"), &MAssetTable::collection_set_mesh_id);
-    ClassDB::bind_method(D_METHOD("collection_get_mesh_id","collection_id"), &MAssetTable::collection_get_mesh_id);
-    ClassDB::bind_method(D_METHOD("collection_clear","collection_id"), &MAssetTable::collection_clear);
+    ClassDB::bind_method(D_METHOD("collection_get_item_id","collection_id"), &MAssetTable::collection_get_item_id);
+    ClassDB::bind_method(D_METHOD("collection_clear_sub_and_col","collection_id"), &MAssetTable::collection_clear_sub_and_col);
     ClassDB::bind_method(D_METHOD("collection_remove","collection_id"), &MAssetTable::collection_remove);
     ClassDB::bind_method(D_METHOD("collection_get_list"), &MAssetTable::collection_get_list);
     ClassDB::bind_method(D_METHOD("collection_add_tag","collection_id","tag"), &MAssetTable::collection_add_tag);
     ClassDB::bind_method(D_METHOD("collection_add_sub_collection","collection_id","sub_collection_id"), &MAssetTable::collection_add_sub_collection);
-    ClassDB::bind_method(D_METHOD("collection_remove_sub_collection","collection_id","sub_collection_id"), &MAssetTable::collection_remove_sub_collection);
-    ClassDB::bind_method(D_METHOD("collection_remove_all_sub_collection","collection_id"), &MAssetTable::collection_remove_all_sub_collection);
+    ClassDB::bind_method(D_METHOD("collection_add_collision","collection_id","col_type","col_transform","base_transform"), &MAssetTable::collection_add_collision);
     ClassDB::bind_method(D_METHOD("collection_get_sub_collections","collection_id"), &MAssetTable::collection_get_sub_collections);
-    ClassDB::bind_method(D_METHOD("collection_get_sub_collections_transforms","collection_id"), &MAssetTable::collection_get_sub_collections_transforms);
-    ClassDB::bind_method(D_METHOD("collection_get_sub_collections_transform","collection_id","sub_collection_id"), &MAssetTable::collection_get_sub_collections_transform);
+    ClassDB::bind_method(D_METHOD("collection_get_collision_count","collection_id"), &MAssetTable::collection_get_collision_count);
     ClassDB::bind_method(D_METHOD("collection_remove_tag","collection_id","tag"), &MAssetTable::collection_remove_tag);
     ClassDB::bind_method(D_METHOD("collection_get_name","collection_id"), &MAssetTable::collection_get_name);
     ClassDB::bind_method(D_METHOD("collection_get_id","collection_name"), &MAssetTable::collection_get_id);
@@ -104,6 +96,15 @@ void MAssetTable::_bind_methods(){
     BIND_ENUM_CONSTANT(NONE);
     BIND_ENUM_CONSTANT(MESH);
     BIND_ENUM_CONSTANT(COLLISION);
+    BIND_ENUM_CONSTANT(PACKEDSCENE);
+    BIND_ENUM_CONSTANT(DECAL);
+    BIND_ENUM_CONSTANT(HLOD);
+
+    BIND_ENUM_CONSTANT(UNDEF);
+    BIND_ENUM_CONSTANT(SHPERE);
+    BIND_ENUM_CONSTANT(CYLINDER);
+    BIND_ENUM_CONSTANT(CAPSULE);
+    BIND_ENUM_CONSTANT(BOX);
 
     ClassDB::bind_method(D_METHOD("get_data"), &MAssetTable::get_data);
     ClassDB::bind_method(D_METHOD("set_data","data"), &MAssetTable::set_data);
@@ -127,8 +128,8 @@ Ref<MAssetTable> MAssetTable::get_singleton(){
 }
 
 void MAssetTable::make_assets_dir(){
-    if(!DirAccess::dir_exists_absolute(String(MHlod::asset_root_dir))){
-        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::asset_root_dir));
+    if(!DirAccess::dir_exists_absolute(String(MHlod::get_asset_root_dir()))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_asset_root_dir()));
         if(err!=OK){
             WARN_PRINT("Can not create folder");
         }
@@ -151,8 +152,8 @@ void MAssetTable::make_assets_dir(){
             WARN_PRINT("Can not create folder");
         }
     }
-    if(!DirAccess::dir_exists_absolute(String(MHlod::mesh_root_dir))){
-        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::mesh_root_dir));
+    if(!DirAccess::dir_exists_absolute(String(MHlod::get_mesh_root_dir()))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_mesh_root_dir()));
         if(err!=OK){
             WARN_PRINT("Can not create folder");
         }
@@ -289,96 +290,6 @@ MAssetTable::Tag MAssetTable::Tag::operator~() const{
     return result;
 }
 
-void MAssetTable::Collection::set_glb_id(int32_t input){
-    glb_id = input;
-}
-
-int32_t MAssetTable::Collection::get_glb_id() const{
-    return glb_id;
-}
-
-void MAssetTable::Collection::clear(){
-    collision_shapes.clear();
-    collision_shapes_transforms.clear();
-    sub_collections.clear();
-    sub_collections_transforms.clear();
-    mesh_id = -1;
-    glb_id = -1;
-}
-
-/*
-    data structure:
-    4byte (int32_t)  -> mesh_id
-    4byte (int32_t) -> glb_id_byte_size
-    4byte (uint32_t) -> collision_shapes count
-    4byte (uint32_t) -> sub_collection_count
-    sizeof(Pair<ItemType,int>) * items.size()
-    sizeof(Transform3D) * transforms.size()
-    Total size = 8 + i_size + t_size
-*/
-void MAssetTable::Collection::set_save_data(const PackedByteArray& data){
-    if(data.size()==0){
-        clear();
-        return;
-    }
-    ERR_FAIL_COND(data.size() < 16);
-    mesh_id = data.decode_s32(0);
-    glb_id = data.decode_s32(4);
-    uint32_t  collision_shapes_count = data.decode_u32(8);
-    uint32_t sub_collections_count = data.decode_u32(12);
-    ERR_FAIL_COND(collision_shapes_count < 0 || sub_collections_count < 0);
-    int i_size = sizeof(Pair<ItemType,int>) * collision_shapes_count;
-    int t_size = sizeof(Transform3D) * collision_shapes_count;
-
-    int c_size = sizeof(int) * sub_collections_count;
-    int ct_size = sizeof(Transform3D) * sub_collections_count;
-
-    ERR_FAIL_COND(data.size() != 16 + i_size + t_size + c_size + ct_size);
-    collision_shapes.resize(collision_shapes_count);
-    collision_shapes_transforms.resize(collision_shapes_count);
-
-    sub_collections.resize(sub_collections_count);
-    sub_collections_transforms.resize(sub_collections_count);
-
-    int header = 16;
-    memcpy(collision_shapes.ptrw(),data.ptr()+header,i_size);
-    header += i_size;
-    memcpy(collision_shapes_transforms.ptrw(),data.ptr()+header,t_size);
-    header += t_size;
-    memcpy(sub_collections.ptrw(),data.ptr()+header,c_size);
-    header += c_size;
-    memcpy(sub_collections_transforms.ptrw(),data.ptr()+header,ct_size);
-}
-
-PackedByteArray MAssetTable::Collection::get_save_data() const {
-    PackedByteArray data;
-    ERR_FAIL_COND_V(collision_shapes.size()!=collision_shapes_transforms.size(),data);
-    ERR_FAIL_COND_V(sub_collections.size()!=sub_collections_transforms.size(),data);
-    if(mesh_id==-1 && collision_shapes.size()==0 && sub_collections.size() == 0){
-        return data;
-    }
-    int i_size = sizeof(CollisionShape) * collision_shapes.size();
-    int t_size = sizeof(Transform3D) * collision_shapes_transforms.size();
-
-    int c_size = sizeof(int) * sub_collections.size();
-    int ct_size = sizeof(Transform3D) * sub_collections_transforms.size();
-
-    data.resize(16 + i_size + t_size + c_size + ct_size);
-    data.encode_s32(0,mesh_id);
-    data.encode_s32(4,glb_id);
-    data.encode_u32(8,collision_shapes.size());
-    data.encode_u32(12,sub_collections.size());
-    int header = 16;
-    memcpy(data.ptrw()+header,collision_shapes.ptr(),i_size);
-    header += i_size;
-    memcpy(data.ptrw()+header,collision_shapes_transforms.ptr(),t_size);
-    header += t_size;
-    memcpy(data.ptrw()+header,sub_collections.ptr(),c_size);
-    header += c_size;
-    memcpy(data.ptrw()+header,sub_collections_transforms.ptr(),ct_size);
-    return data;
-}
-
 void MAssetTable::_increase_collection_buffer_size(int q){
     if(q<=0){
         return;
@@ -408,20 +319,6 @@ int MAssetTable::_get_free_collection_index(){
 
 bool MAssetTable::has_collection(int id) const{
     return id >= 0 && id < collections.size() && !free_collections.has(id);
-}
-
-void MAssetTable::remove_collection(int id){
-    ERR_FAIL_COND(!has_collection(id));
-    collections.ptrw()[id].clear();
-    collections_tags.ptrw()[id].clear();
-    collections_names.set(id,"");
-    free_collections.push_back(id);
-    for(int i=0; i < collections.size(); i++){
-        if(collections[i].sub_collections.has(id)){
-            collections.ptrw()[i].sub_collections.remove_at(i);
-            collections.ptrw()[i].sub_collections_transforms.remove_at(i);
-        }
-    }
 }
 
 MAssetTable::MAssetTable(){
@@ -587,8 +484,8 @@ void MAssetTable::update_last_free_mesh_id(){
             biggest_id = id;
         }
     }
-    last_free_mesh_id = biggest_id + MAX_MESH_LOD;
-    last_free_mesh_id = last_free_mesh_id - (last_free_mesh_id%MAX_MESH_LOD);
+    last_free_item_id = biggest_id + MAX_MESH_LOD;
+    last_free_item_id = last_free_item_id - (last_free_item_id%MAX_MESH_LOD);
 }
 
 int MAssetTable::mesh_item_get_max_lod(){
@@ -596,20 +493,20 @@ int MAssetTable::mesh_item_get_max_lod(){
 }
 
 int32_t MAssetTable::get_last_free_mesh_id_and_increase(){
-    ERR_FAIL_COND_V_MSG(last_free_mesh_id<0,-1,"Please call update_last_free_mesh_id before each import");
-    ERR_FAIL_COND_V(last_free_mesh_id%MAX_MESH_LOD!=0,-1);
-    int id = last_free_mesh_id;
-    last_free_mesh_id += MAX_MESH_LOD;
+    ERR_FAIL_COND_V_MSG(last_free_item_id<0,-1,"Please call update_last_free_item_id before each import");
+    ERR_FAIL_COND_V(last_free_item_id%MAX_MESH_LOD!=0,-1);
+    int id = last_free_item_id;
+    last_free_item_id += MAX_MESH_LOD;
     return id;
 }
 
-int32_t MAssetTable::mesh_item_get_first_lod(int mesh_id){
-    ERR_FAIL_COND_V(mesh_id<0,-1);
-    return mesh_id - mesh_id%MAX_MESH_LOD;
+int32_t MAssetTable::mesh_item_get_first_lod(int item_id){
+    ERR_FAIL_COND_V(item_id<0,-1);
+    return item_id - item_id%MAX_MESH_LOD;
 }
 
-int32_t MAssetTable::mesh_item_get_stop_lod(int mesh_id){
-    int32_t _first_id = mesh_item_get_first_lod(mesh_id);
+int32_t MAssetTable::mesh_item_get_stop_lod(int item_id){
+    int32_t _first_id = mesh_item_get_first_lod(item_id);
     String stop_ext = ".stop";
     for(int i=0; i < MAX_MESH_LOD; i++){
         int32_t mi = i + _first_id;
@@ -622,8 +519,8 @@ int32_t MAssetTable::mesh_item_get_stop_lod(int mesh_id){
     return -1;
 }
 
-PackedInt32Array MAssetTable::mesh_item_ids_no_replace(int mesh_id){
-    int32_t _first_id = mesh_item_get_first_lod(mesh_id);
+PackedInt32Array MAssetTable::mesh_item_ids_no_replace(int item_id){
+    int32_t _first_id = mesh_item_get_first_lod(item_id);
     PackedInt32Array out_lods;
     String stop_ext = ".stop";
     for(int i=0; i < MAX_MESH_LOD; i++){
@@ -642,8 +539,8 @@ PackedInt32Array MAssetTable::mesh_item_ids_no_replace(int mesh_id){
     return out_lods;
 }
 
-TypedArray<MMesh> MAssetTable::mesh_item_meshes_no_replace(int mesh_id){
-    PackedInt32Array ids = mesh_item_ids_no_replace(mesh_id);
+TypedArray<MMesh> MAssetTable::mesh_item_meshes_no_replace(int item_id){
+    PackedInt32Array ids = mesh_item_ids_no_replace(item_id);
     Array out;
     for(int32_t id : ids){
         if(id<0){
@@ -655,8 +552,8 @@ TypedArray<MMesh> MAssetTable::mesh_item_meshes_no_replace(int mesh_id){
     return out;
 }
 
-PackedInt32Array MAssetTable::mesh_item_ids(int mesh_id){
-    int32_t _first_id = mesh_item_get_first_lod(mesh_id);
+PackedInt32Array MAssetTable::mesh_item_ids(int item_id){
+    int32_t _first_id = mesh_item_get_first_lod(item_id);
     int32_t last_valid_mesh = -1;
     PackedInt32Array out_lods;
     String stop_ext = ".stop";
@@ -677,41 +574,41 @@ PackedInt32Array MAssetTable::mesh_item_ids(int mesh_id){
     return out_lods;
 }
 
-TypedArray<MMesh> MAssetTable::mesh_item_meshes(int mesh_id){
+TypedArray<MMesh> MAssetTable::mesh_item_meshes(int item_id){
     Array out;
-    PackedInt32Array mesh_ids = mesh_item_ids(mesh_id);
-    for(int i=0; i < mesh_ids.size(); i++){
-        if(mesh_ids[i]<0){
-            if(i == mesh_ids.size()-1){
+    PackedInt32Array item_ids = mesh_item_ids(item_id);
+    for(int i=0; i < item_ids.size(); i++){
+        if(item_ids[i]<0){
+            if(i == item_ids.size()-1){
                 return out;
             } else {
                 out.push_back(Ref<MMesh>());
                 continue;
             }
         }
-        Ref<MMesh> _m = ResourceLoader::get_singleton()->load(MHlod::get_mesh_path(mesh_ids[i]));
+        Ref<MMesh> _m = ResourceLoader::get_singleton()->load(MHlod::get_mesh_path(item_ids[i]));
         out.push_back(_m);
     }
     return out;
 }
 
-bool MAssetTable::mesh_item_is_valid(int mesh_id){
-    PackedInt32Array mesh_ids = mesh_item_ids(mesh_id);
-    for(int i=0; i < mesh_ids.size(); i++){
-        if(mesh_ids[i]>=0){
+bool MAssetTable::mesh_item_is_valid(int item_id){
+    PackedInt32Array item_ids = mesh_item_ids(item_id);
+    for(int i=0; i < item_ids.size(); i++){
+        if(item_ids[i]>=0){
             return true;
         }
     }
     return false;
 }
 
-int32_t MAssetTable::mesh_join_get_first_lod(int mesh_id){
-    return mesh_id - (mesh_id % MAX_MESH_LOD);
+int32_t MAssetTable::mesh_join_get_first_lod(int item_id){
+    return item_id - (item_id % MAX_MESH_LOD);
 }
 
 int32_t MAssetTable::get_last_free_mesh_join_id(){
     int32_t smallest_id = -10;
-    Ref<DirAccess> dir = DirAccess::open(MHlod::mesh_root_dir);
+    Ref<DirAccess> dir = DirAccess::open(MHlod::get_mesh_root_dir());
     PackedStringArray files = dir->get_files();
     for(const String& file : files){
         int32_t id = file.get_basename().to_int();
@@ -723,10 +620,10 @@ int32_t MAssetTable::get_last_free_mesh_join_id(){
     return mesh_join_get_first_lod(smallest_id);
 }
 
-int32_t MAssetTable::mesh_join_get_stop_lod(int mesh_id){
-    ERR_FAIL_COND_V(mesh_id > 0,-1);
+int32_t MAssetTable::mesh_join_get_stop_lod(int item_id){
+    ERR_FAIL_COND_V(item_id > 0,-1);
     for(int i=0; i < MAX_MESH_LOD; i++){
-        int mesh_lod_id = mesh_id - i;
+        int mesh_lod_id = item_id - i;
         String stop_path = MHlod::get_mesh_path(mesh_lod_id).get_basename() + String(".stop");
         if(FileAccess::file_exists(stop_path)){
             return i;
@@ -735,11 +632,11 @@ int32_t MAssetTable::mesh_join_get_stop_lod(int mesh_id){
     return -1;
 }
 
-PackedInt32Array MAssetTable::mesh_join_ids_no_replace(int mesh_id){
+PackedInt32Array MAssetTable::mesh_join_ids_no_replace(int item_id){
     PackedInt32Array out;
-    ERR_FAIL_COND_V(mesh_id > 0,out);
+    ERR_FAIL_COND_V(item_id > 0,out);
     for(int i=0; i < MAX_MESH_LOD; i++){
-        int mesh_lod_id = mesh_id - i;
+        int mesh_lod_id = item_id - i;
         String path = MHlod::get_mesh_path(mesh_lod_id);
         if(FileAccess::file_exists(path)){
             out.push_back(mesh_lod_id);
@@ -750,9 +647,9 @@ PackedInt32Array MAssetTable::mesh_join_ids_no_replace(int mesh_id){
     return out;
 }
 
-TypedArray<MMesh> MAssetTable::mesh_join_meshes_no_replace(int mesh_id){
-    mesh_id = mesh_join_get_first_lod(mesh_id);
-    PackedInt32Array ids = mesh_join_ids_no_replace(mesh_id);
+TypedArray<MMesh> MAssetTable::mesh_join_meshes_no_replace(int item_id){
+    item_id = mesh_join_get_first_lod(item_id);
+    PackedInt32Array ids = mesh_join_ids_no_replace(item_id);
     TypedArray<MMesh> out;
     for(int32_t id : ids){
         if(id!=-1){
@@ -764,12 +661,15 @@ TypedArray<MMesh> MAssetTable::mesh_join_meshes_no_replace(int mesh_id){
     return out;
 }
 
-PackedInt32Array MAssetTable::mesh_join_ids(int mesh_id){
-    mesh_id = mesh_join_get_first_lod(mesh_id);
+PackedInt32Array MAssetTable::mesh_join_ids(int item_id){
+    if(item_id==-1){
+        return PackedInt32Array();
+    }
+    item_id = mesh_join_get_first_lod(item_id);
     PackedInt32Array out;
     int last_valid_id = -1;
     for(int i=0; i < MAX_MESH_LOD; i++){
-        int lod_id = mesh_id - i;
+        int lod_id = item_id - i;
         String path = MHlod::get_mesh_path(lod_id);
         String stop_path = path.get_basename() + String(".stop");
         if(FileAccess::file_exists(stop_path)){
@@ -783,8 +683,8 @@ PackedInt32Array MAssetTable::mesh_join_ids(int mesh_id){
     return out;
 }
 
-TypedArray<MMesh> MAssetTable::mesh_join_meshes(int mesh_id){
-    PackedInt32Array ids = mesh_join_ids(mesh_id);
+TypedArray<MMesh> MAssetTable::mesh_join_meshes(int item_id){
+    PackedInt32Array ids = mesh_join_ids(item_id);
     TypedArray<MMesh> out;
     for(int32_t id : ids){
         if(id!=-1){
@@ -797,8 +697,8 @@ TypedArray<MMesh> MAssetTable::mesh_join_meshes(int mesh_id){
     return out;
 }
 
-bool MAssetTable::mesh_join_is_valid(int mesh_id){
-    PackedInt32Array ids = mesh_join_ids(mesh_id);
+bool MAssetTable::mesh_join_is_valid(int item_id){
+    PackedInt32Array ids = mesh_join_ids(item_id);
     for(int32_t id : ids){
         if(id!=-1){
             return true;
@@ -807,8 +707,8 @@ bool MAssetTable::mesh_join_is_valid(int mesh_id){
     return false;
 }
 
-int32_t MAssetTable::mesh_join_start_lod(int mesh_id){
-    PackedInt32Array ids = mesh_join_ids(mesh_id);
+int32_t MAssetTable::mesh_join_start_lod(int item_id){
+    PackedInt32Array ids = mesh_join_ids(item_id);
     for(int i=0; i < ids.size(); i++){
         if(ids[i] != -1){
             return i;
@@ -837,22 +737,27 @@ int32_t MAssetTable::collection_get_id_by_identifier(const CollectionIdentifier&
     return -1;
 }
 
-int MAssetTable::collection_create(String name){
-    ERR_FAIL_COND_V(name.length()==0,-1);
-    int index = _get_free_collection_index();
-    ERR_FAIL_COND_V(index==-1,-1);
-    collections_names.set(index,name);
-    return index;
+MAssetTable::CollisionData MAssetTable::collection_get_collision_data(int collection_id) const{
+    if(collisions_data.has(collection_id)){
+        return collisions_data[collection_id];
+    }
+    return CollisionData();
 }
 
-void MAssetTable::collection_set_glb_id(int collection_id,int32_t glb_id){
-    ERR_FAIL_COND(!has_collection(collection_id));
-    collections.ptrw()[collection_id].set_glb_id(glb_id);
+int MAssetTable::collection_create(const String& _name,int32_t item_id,MAssetTable::ItemType type,int32_t glb_id){
+    ERR_FAIL_COND_V(_name.length()==0,-1);
+    int index = _get_free_collection_index();
+    ERR_FAIL_COND_V(index==-1,-1);
+    collections_names.set(index,_name);
+    collections.ptrw()[index].type = type;
+    collections.ptrw()[index].glb_id = glb_id;
+    collections.ptrw()[index].item_id = item_id;
+    return index;
 }
 
 int32_t MAssetTable::collection_get_glb_id(int collection_id) const{
     ERR_FAIL_COND_V(!has_collection(collection_id),-1);
-    return collections[collection_id].get_glb_id();
+    return collections[collection_id].glb_id;
 }
 
 int32_t MAssetTable::collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const{
@@ -864,43 +769,39 @@ int32_t MAssetTable::collection_find_with_glb_id_collection_name(int32_t glb_id,
     return -1;
 }
 
-void MAssetTable::collection_set_cache_thumbnail(int collection_id,Ref<Texture2D> tex,double creation_time){
-    ERR_FAIL_COND(!has_collection(collection_id));
-    collections.ptrw()[collection_id].cached_thumbnail = tex;
-    collections.ptrw()[collection_id].thumbnail_creation_time = creation_time;
-}
-
-double MAssetTable::collection_get_thumbnail_creation_time(int collection_id) const {
-    ERR_FAIL_COND_V(!has_collection(collection_id),-1.0);
-    return collections[collection_id].thumbnail_creation_time;
-}
-
-Ref<Texture2D> MAssetTable::collection_get_cache_thumbnail(int collection_id) const {
-    ERR_FAIL_COND_V(!has_collection(collection_id),nullptr);
-    return collections[collection_id].cached_thumbnail;
-}
-
-void MAssetTable::collection_set_mesh_id(int collection_id,int32_t mesh_id){
-    ERR_FAIL_COND(!has_collection(collection_id));
-    collections.ptrw()[collection_id].mesh_id = mesh_id;
-}
-
-int32_t MAssetTable::collection_get_mesh_id(int collection_id){
+int32_t MAssetTable::collection_get_item_id(int collection_id){
     ERR_FAIL_COND_V(!has_collection(collection_id),-1);
-    return collections[collection_id].mesh_id;
+    return collections[collection_id].item_id;
 }
 
-void MAssetTable::collection_clear(int collection_id){
-    ERR_FAIL_COND(!has_collection(collection_id));
-    collections.ptrw()[collection_id].clear();
+void MAssetTable::collection_clear_sub_and_col(int id){
+    ERR_FAIL_COND(!has_collection(id));
+    sub_collections.erase(id);
+    collisions_data.erase(id);
 }
 
-void MAssetTable::collection_remove(int collection_id){
-    ERR_FAIL_COND(!has_collection(collection_id));
-    free_collections.push_back(collection_id);
-    collections.ptrw()[collection_id].clear();
-    collections_names.set(collection_id,"");
-    collections_tags.ptrw()[collection_id].clear();
+void MAssetTable::collection_remove(int id){
+    ERR_FAIL_COND(!has_collection(id));
+    collection_clear_sub_and_col(id);
+    collections.ptrw()[id].glb_id = -1;
+    collections.ptrw()[id].item_id = -1;
+    collections_names.set(id,"");
+    collections_tags.ptrw()[id].clear();
+    free_collections.push_back(id);
+    {
+        using PaireType = decltype(sub_collections)::Pair;
+        PaireType* pair_arr = sub_collections.get_array();
+        for(int i=0; i < sub_collections.size(); i++){
+            PackedInt32Array& _sub_ids = pair_arr[i].value.sub_collections;
+            Vector<Transform3D>& _sub_t = pair_arr[i].value.sub_collections_transforms;
+            int find_index = _sub_ids.find(id);
+            while (find_index !=-1){
+                _sub_ids.remove_at(find_index);
+                _sub_t.remove_at(find_index);
+                find_index = _sub_ids.find(id);
+            }
+        }
+    }
 }
 
 PackedInt32Array MAssetTable::collection_get_list() const{
@@ -925,58 +826,72 @@ bool MAssetTable::collection_add_sub_collection(int collection_id,int sub_collec
     ERR_FAIL_COND_V(!has_collection(sub_collection_id),false);
     // Checking for recursive collection
     PackedInt32Array proc_collections;
-    proc_collections.append_array(collections[collection_id].sub_collections);
+    if(sub_collections.has(collection_id)){
+        proc_collections.append_array(sub_collections[collection_id].sub_collections);
+    }
     while (proc_collections.size()!=0)
     {
         int cur_collection = proc_collections[proc_collections.size() - 1];
         proc_collections.remove_at(proc_collections.size() - 1);
         ERR_FAIL_COND_V_MSG(cur_collection==collection_id,false,"Recursive Collection");
-        proc_collections.append_array(collections[cur_collection].sub_collections);
+        proc_collections.append_array(sub_collections[cur_collection].sub_collections);
     }
     // So we are cool to continue
-    collections.ptrw()[collection_id].sub_collections.push_back(sub_collection_id);
-    collections.ptrw()[collection_id].sub_collections_transforms.push_back(transform);
+    if(!sub_collections.has(collection_id)){
+        sub_collections.insert(collection_id,SubCollectionData());
+    }
+    int index = sub_collections.find(collection_id);
+    sub_collections.get_array()[index].value.sub_collections.push_back(sub_collection_id);
+    sub_collections.get_array()[index].value.sub_collections_transforms.push_back(transform);
     return true;
 }
 
-void MAssetTable::collection_remove_sub_collection(int collection_id,int sub_collection_id){
+void MAssetTable::collection_add_collision(int collection_id,CollisionType col_type,const Transform3D& col_transform,const Transform3D& base_transform){
     ERR_FAIL_COND(!has_collection(collection_id));
-    ERR_FAIL_COND(!has_collection(sub_collection_id));
-    int index = collections[collection_id].sub_collections.find(sub_collection_id);
-    ERR_FAIL_COND_MSG(index<0,"Can't find sub_collection id");
-    collections.ptrw()[collection_id].sub_collections.remove_at(index);
-    collections.ptrw()[collection_id].sub_collections_transforms.remove_at(index);
-}
-
-void MAssetTable::collection_remove_all_sub_collection(int collection_id){
-    ERR_FAIL_COND(!has_collection(collection_id));
-    collections.ptrw()[collection_id].sub_collections.clear();
-    collections.ptrw()[collection_id].sub_collections_transforms.clear();
+    Vector3 size = col_transform.get_basis().get_scale();
+    Transform3D t = base_transform.inverse() * col_transform;
+    t.orthonormalize();
+    // Shape
+    CollisionShape shape;
+    shape.type = col_type;
+    shape.param_1 = size.x;
+    shape.param_2 = size.y;
+    shape.param_3 = size.z;
+    if(col_type==CollisionType::SHPERE){
+        shape.param_1 = MAX(shape.param_1,shape.param_2);
+        shape.param_1 = MAX(shape.param_1,shape.param_3);
+    } else if(col_type==CollisionType::CAPSULE || col_type==CollisionType::CYLINDER){
+        shape.param_1 = MAX(shape.param_1,shape.param_2);
+    } else if(col_type==CollisionType::BOX){
+        shape.param_1 *= 2.0f;
+        shape.param_2 *= 2.0f;
+        shape.param_3 *= 2.0f;
+    }
+    int index;
+    if(!collisions_data.has(collection_id)){
+        index = collisions_data.insert(collection_id,CollisionData());
+    } else {
+        collisions_data.find(collection_id);
+    }
+    CollisionData& col_data = collisions_data.get_array()[index].value;
+    col_data.collision_shapes.push_back(shape);
+    col_data.collision_shapes_transforms.push_back(t);
 }
 
 PackedInt32Array MAssetTable::collection_get_sub_collections(int collection_id) const{
     ERR_FAIL_COND_V(!has_collection(collection_id),PackedInt32Array());
-    return collections[collection_id].sub_collections;
+    if(!sub_collections.has(collection_id)){
+        return PackedInt32Array();
+    }
+    return sub_collections[collection_id].sub_collections;
 }
 
-Array MAssetTable::collection_get_sub_collections_transforms(int collection_id) const{
-    ERR_FAIL_COND_V(!has_collection(collection_id),Array());
-    Array out;
-    for(int i=0; i < collections.ptr()[collection_id].sub_collections_transforms.size(); i++){
-        out.push_back(collections.ptr()[collection_id].sub_collections_transforms[i]);
+int MAssetTable::collection_get_collision_count(int collection_id) const{
+    int cindex = collisions_data.find(collection_id);
+    if(cindex==-1){
+        return 0;
     }
-    return out;
-}
-
-Array MAssetTable::collection_get_sub_collections_transform(int collection_id,int sub_collection_id) const{
-    ERR_FAIL_COND_V(!has_collection(collection_id),Array());
-    Array result;
-    for(int i=0; i < collections[collection_id].sub_collections.size(); i++){
-        if(sub_collection_id == collections[collection_id].sub_collections[i]){
-            result.push_back(collections[collection_id].sub_collections_transforms[i]);
-        }
-    }
-    return result;
+    return collisions_data.getv(cindex).collision_shapes.size();
 }
 
 void MAssetTable::collection_remove_tag(int collection_id,int tag){
@@ -1016,15 +931,17 @@ PackedInt32Array MAssetTable::collection_names_begin_with(const String& prefix) 
     return out;
 }
 
-Vector<Pair<int,Transform3D>> MAssetTable::collection_get_sub_collection_id_transform(int collection_id){
+Vector<Pair<int,Transform3D>> MAssetTable::collection_get_sub_collection_id_transform(int collection_id) const{
     Vector<Pair<int,Transform3D>> out;
+    int cindex = sub_collections.find(collection_id);
+    if(cindex==-1){
+        return out;
+    }
     ERR_FAIL_COND_V(!has_collection(collection_id),out);
-    const Collection& c_collection = collections.ptr()[collection_id];
-    const int32_t* id_ptr = c_collection.sub_collections.ptr();
-    const Transform3D* transform_ptr = c_collection.sub_collections_transforms.ptr();
-    int size = c_collection.sub_collections.size();
-    for(int i=0; i < size; i++) {
-        out.push_back({id_ptr[i],transform_ptr[i]});
+    const PackedInt32Array& _ids = sub_collections.get_array()[cindex].value.sub_collections;
+    const Vector<Transform3D>& _ts = sub_collections.get_array()[cindex].value.sub_collections_transforms;
+    for(int i=0; i < _ids.size(); i++) {
+        out.push_back({_ids[i],_ts[i]});
     }
     return out;
 }
@@ -1154,6 +1071,119 @@ Dictionary MAssetTable::group_get_collections_with_tags(const String& gname) con
     return out;
 }
 
+/*
+    data structure:
+    4byte (int32_t)  -> item_type -> 0
+    4byte (int32_t)  -> item_id -> 4
+    4byte (int32_t) -> glb_id -> 8
+    4byte (uint32_t) -> sub_collection_count -> 12
+    4byte (uint32_t) -> collision_shapes count -> 16
+    subs
+    cols
+    Total size = 20 + i_size + t_size
+*/
+#define COLLECTION_DATA_HEADER_SIZE 20
+void MAssetTable::set_collection_data(int collection_id,const PackedByteArray& data) {
+    ERR_FAIL_INDEX(collection_id,collections.size());
+    //collection_clear(collection_id); // don't add this
+    if(data.size()==0){
+        return;
+    }
+    ERR_FAIL_COND(data.size() < COLLECTION_DATA_HEADER_SIZE);
+    Collection& cl = collections.ptrw()[collection_id];
+    cl.type = (ItemType)data.decode_s32(0);
+    cl.item_id = data.decode_s32(4);
+    cl.glb_id = data.decode_s32(8);
+    int32_t sub_count = data.decode_s32(12);
+    int32_t col_count = data.decode_s32(16);
+    ERR_FAIL_COND(sub_count<0||col_count<0);
+    int sub_id_total_size = sub_count * (sizeof(int32_t));
+    int sub_t_total_size = sub_count * (sizeof(Transform3D));
+    int col_s_total_size = col_count * (sizeof(CollisionShape));
+    int col_t_total_size = col_count * (sizeof(Transform3D));
+    ERR_FAIL_COND(data.size()!=COLLECTION_DATA_HEADER_SIZE+sub_id_total_size+sub_t_total_size+col_s_total_size+col_t_total_size);
+    int head = COLLECTION_DATA_HEADER_SIZE;
+    if(sub_count!=0){
+        sub_collections.insert(collection_id,SubCollectionData());
+        int c = sub_collections.find(collection_id);
+        SubCollectionData& sd = sub_collections.getv(c);
+        sd.sub_collections.resize(sub_count);
+        sd.sub_collections_transforms.resize(sub_count);
+        memcpy(sd.sub_collections.ptrw(),data.ptr()+head,sub_id_total_size);
+        head += sub_id_total_size;
+        memcpy(sd.sub_collections_transforms.ptrw(),data.ptr()+head,sub_t_total_size);
+        head += sub_t_total_size;
+    }
+    if(col_count!=0){
+        collisions_data.insert(collection_id,CollisionData());
+        int c = collisions_data.find(collection_id);
+        CollisionData& cd = collisions_data.getv(c);
+        cd.collision_shapes.resize(col_count);
+        cd.collision_shapes_transforms.resize(col_count);
+        memcpy(cd.collision_shapes.ptrw(),data.ptr()+head,col_s_total_size);
+        head += col_s_total_size;
+        memcpy(cd.collision_shapes_transforms.ptrw(),data.ptr()+head,col_t_total_size);
+        head += col_t_total_size;
+    }
+    //Done
+}
+
+PackedByteArray MAssetTable::get_collection_data(int collection_id) const {
+    PackedByteArray data;
+    if(!has_collection(collection_id)){
+        return data;
+    }
+    data.resize(COLLECTION_DATA_HEADER_SIZE);
+    const Collection& cl = collections[collection_id];
+    data.encode_s32(0,(int32_t)cl.type);
+    data.encode_s32(4,(int32_t)cl.item_id);
+    data.encode_s32(8,cl.glb_id);
+    int sub_count=0;
+    const PackedInt32Array* sub_cl;
+    const Vector<Transform3D>* sub_t;
+    {
+        int c = sub_collections.find(collection_id);
+        if(c!=-1){
+            sub_cl = &sub_collections.get_array()[c].value.sub_collections;
+            sub_t = &sub_collections.get_array()[c].value.sub_collections_transforms;
+            sub_count = sub_cl->size();
+        }
+    }
+    int col_count=0;
+    const Vector<CollisionShape>* col_shapes;
+    const Vector<Transform3D>* col_t;
+    {
+        int c = collisions_data.find(collection_id);
+        if(c!=-1){
+            col_shapes = &collisions_data.get_array()[c].value.collision_shapes;
+            col_t = &collisions_data.get_array()[c].value.collision_shapes_transforms;
+            col_count = col_shapes->size();
+        }
+    }
+    data.encode_s32(12,sub_count);
+    data.encode_s32(16,col_count);
+    
+    int sub_id_total_size = sub_count * (sizeof(int32_t));
+    int sub_t_total_size = sub_count * (sizeof(Transform3D));
+    int col_s_total_size = col_count * (sizeof(CollisionShape));
+    int col_t_total_size = col_count * (sizeof(Transform3D));
+    data.resize(COLLECTION_DATA_HEADER_SIZE+sub_id_total_size+sub_t_total_size+col_s_total_size+col_t_total_size);
+    int head = COLLECTION_DATA_HEADER_SIZE;
+    if(sub_count!=0){
+        memcpy(data.ptrw()+head,sub_cl->ptr(),sub_id_total_size);
+        head += sub_id_total_size;
+        memcpy(data.ptrw()+head,sub_t->ptr(),sub_t_total_size);
+        head += sub_t_total_size;
+    }
+    if(col_count!=0){
+        memcpy(data.ptrw()+head,col_shapes->ptr(),col_s_total_size);
+        head += col_s_total_size;
+        memcpy(data.ptrw()+head,col_t->ptr(),col_t_total_size);
+        head += col_t_total_size;
+    }
+    return data;
+}
+
 void MAssetTable::clear_table(){
     collections.clear();
     free_collections.clear();
@@ -1175,10 +1205,12 @@ void MAssetTable::set_data(const Dictionary& data){
     free_collections = MTool::packed_byte_array_to_vector<int32_t>(data["free_collections"]);
     {
         Array s_collections = data["collections"];
+        collections.resize(s_collections.size());
         for(int i=0; i < s_collections.size();i++){
-            Collection c;
-            c.set_save_data(s_collections[i]);
-            collections.push_back(c);
+            if(free_collections.has(i)){
+                continue;
+            }
+            set_collection_data(i,s_collections[i]);
         }
     }
 
@@ -1195,7 +1227,7 @@ Dictionary MAssetTable::get_data(){
     {
         Array s_collections;
         for(int i=0; i < collections.size(); i++){
-            PackedByteArray __d = collections[i].get_save_data();
+            PackedByteArray __d = get_collection_data(i);
             s_collections.push_back(__d);
         }
         data["collections"] = s_collections;
@@ -1243,19 +1275,5 @@ void MAssetTable::reset(bool hard){
 
 
 void MAssetTable::debug_test(){
-    int combo_id = collection_get_id("combo");
-    if(combo_id==-1){
-        return;
-    }
-    UtilityFunctions::print("Combo id is ",combo_id);
-    PackedByteArray data = collections[combo_id].get_save_data();
-    UtilityFunctions::print("Combo data size ",data.size());
-    Collection dummy_collection;
-    dummy_collection.set_save_data(data);
-    UtilityFunctions::print("dummy_collection size ",dummy_collection.sub_collections.size());
-    return;
-    UtilityFunctions::print("dummy_collectionA ",dummy_collection.sub_collections[0]);
-    UtilityFunctions::print("dummy_collectionB ",dummy_collection.sub_collections[1]);
-    UtilityFunctions::print("dummy_collectionA ",dummy_collection.sub_collections_transforms[0]);
-    UtilityFunctions::print("dummy_collectionB ",dummy_collection.sub_collections_transforms[1]);
+
 }

@@ -5,19 +5,12 @@
 #include "../editor/masset_table.h"
 #endif
 
-const char* MHlod::asset_root_dir = "res://massets/";
-const char* MHlod::mesh_root_dir = "res://massets/meshes/";
-const char* MHlod::material_table_path = "res://massets/material_table.res";
-const char* MHlod::physics_settings_dir = "res://massets/collision_setting/";
-
-Ref<MMaterialTable> MHlod::material_table;
 
 void MHlod::_bind_methods(){
 
-    ClassDB::bind_static_method("MHlod",D_METHOD("get_material_from_table","material_id"), &MHlod::get_material_from_table);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_mesh_root_dir"), &MHlod::get_mesh_root_dir);
-    ClassDB::bind_static_method("MHlod",D_METHOD("get_material_table_path"), &MHlod::get_material_table_path);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_physics_settings_dir"), &MHlod::get_physics_settings_dir);
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_physic_setting_path","id"), &MHlod::get_physic_setting_path);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_mesh_path","mesh_id"), &MHlod::get_mesh_path);
 
     ClassDB::bind_method(D_METHOD("set_join_at_lod","input"), &MHlod::set_join_at_lod);
@@ -31,7 +24,12 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("insert_item_in_lod_table","item_id","lod"), &MHlod::insert_item_in_lod_table);
     ClassDB::bind_method(D_METHOD("get_lod_table"), &MHlod::get_lod_table);
 
-    ClassDB::bind_method(D_METHOD("add_shape_sphere","transform","radius"), &MHlod::add_shape_sphere);
+    ClassDB::bind_method(D_METHOD("shape_add_sphere","transform","radius","body_id"), &MHlod::shape_add_sphere);
+    ClassDB::bind_method(D_METHOD("shape_add_box","transform","size","body_id"), &MHlod::shape_add_box);
+    ClassDB::bind_method(D_METHOD("shape_add_capsule","transform","radius","height","body_id"), &MHlod::shape_add_capsule);
+    ClassDB::bind_method(D_METHOD("shape_add_cylinder","transform","radius","height","body_id"), &MHlod::shape_add_cylinder);
+
+    ClassDB::bind_method(D_METHOD("light_add","light_node","transform"), &MHlod::light_add);
 
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MHlod::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MHlod::_get_data);
@@ -46,39 +44,29 @@ void MHlod::_bind_methods(){
     #endif
 
     ClassDB::bind_method(D_METHOD("start_test"), &MHlod::start_test);
+    ClassDB::bind_method(D_METHOD("set_v1","input"), &MHlod::set_v1);
+    ClassDB::bind_method(D_METHOD("get_v1"), &MHlod::get_v1);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"v1"),"set_v1","get_v1");
 }
 
-
-Ref<Material> MHlod::get_material_from_table(int material_id){
-    if(material_table.is_null()){
-        String p = String(material_table_path);
-        if(ResourceLoader::get_singleton()->exists(p)){
-            material_table = ResourceLoader::get_singleton()->load(p);
-        }
-        if(material_table.is_null()){
-            return nullptr;
-        }
-    }
-    if(!material_table->paths.has(material_id)){
-        return nullptr;
-    }
-    return ResourceLoader::get_singleton()->load(material_table->paths[material_id]);
+String MHlod::get_asset_root_dir(){
+    return String(M_ASSET_ROOT_DIR);
 }
 
 String MHlod::get_mesh_root_dir(){
-    return String(mesh_root_dir);
-}
-
-String MHlod::get_material_table_path(){
-    return String(material_table_path);
+    return String(M_MESH_ROOT_DIR);
 }
 
 String MHlod::get_physics_settings_dir(){
-    return String(physics_settings_dir);
+    return String(M_PHYSICS_SETTINGS_DIR);
+}
+
+String MHlod::get_physic_setting_path(int id){
+    return M_GET_PHYSIC_SETTING_PATH(id);
 }
 
 String MHlod::get_mesh_path(int64_t mesh_id){
-    return String(mesh_root_dir) + itos(mesh_id) + String(".res");
+    return M_GET_MESH_PATH(mesh_id);
 }
 
 void MHlod::Item::create(){
@@ -89,6 +77,9 @@ void MHlod::Item::create(){
         break;
     case Type::COLLISION:
         new (&collision) MHLodItemCollision();
+        break;
+    case Type::LIGHT:
+        new (&light) MHLodItemLight();
         break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
@@ -110,6 +101,9 @@ void MHlod::Item::copy(const Item& other){
     case Type::COLLISION:
         collision = other.collision;
         break;
+    case Type::LIGHT:
+        light = other.light;
+        break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
         break;
@@ -128,6 +122,8 @@ void MHlod::Item::clear(){
     case Type::COLLISION:
         collision.~MHLodItemCollision();
         break;
+    case Type::LIGHT:
+        light.~MHLodItemLight();
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
         break;
@@ -157,49 +153,6 @@ MHlod::Item& MHlod::Item::operator=(const Item& other){
     return *this;
 }
 
-void MHlod::Item::load(){
-    switch (type)
-    {
-    case Type::MESH:
-        mesh.load();
-        break;
-    case Type::COLLISION:
-        break;
-    default:
-        ERR_FAIL_MSG("Undefine Item Type!"); 
-        break;
-    }
-}
-
-void MHlod::Item::unload(){
-    switch (type)
-    {
-    case Type::MESH:
-        mesh.unload();
-        break;
-    case Type::COLLISION:
-        break;
-    default:
-        ERR_FAIL_MSG("Undefine Item Type!"); 
-        break;
-    }
-}
-
-void MHlod::Item::add_user(){
-    if(user_count==0){
-        load();
-    }
-    user_count++;
-}
-
-void MHlod::Item::remove_user(){
-    ERR_FAIL_COND(user_count==0);
-    user_count--;
-    if(user_count==0){
-        unload();
-    }
-}
-
 void MHlod::Item::set_data(const Dictionary& d){
     ERR_FAIL_COND(!d.has("type"));
     type = (MHlod::Type)((int)d["type"]);
@@ -213,8 +166,12 @@ void MHlod::Item::set_data(const Dictionary& d){
         mesh.set_data(d["data"]);
         break;
     case Type::COLLISION:
-        //new (&collision) MHLodItemCollision();
-        //collision.set_data(d);
+        new (&collision) MHLodItemCollision();
+        collision.set_data(d["data"]);
+        break;
+    case Type::LIGHT:
+        new (&light) MHLodItemLight();
+        light.set_data(d["data"]);
         break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
@@ -230,7 +187,10 @@ Dictionary MHlod::Item::get_data() const{
         data = mesh.get_data();
         break;
     case Type::COLLISION:
-        //item_data = collision.get_data();
+        data = collision.get_data();
+        break;
+    case Type::LIGHT:
+        data = light.get_data();
         break;
     default:
         ERR_FAIL_V_MSG(Dictionary(),"Undefine Item Type!"); 
@@ -378,11 +338,6 @@ Dictionary MHlod::get_mesh_item(int item_id){
     return out;
 }
 
-int MHlod::add_collision_item(const Transform3D& transform,const PackedStringArray& shape_path){
-
-    return 0;
-}
-
 PackedInt32Array MHlod::get_mesh_items_ids() const{
     PackedInt32Array out;
     int last_transform_index = -1;
@@ -451,15 +406,103 @@ void MHlod::clear(){
     sub_hlods_transforms.clear();
 }
 
-int MHlod::add_shape_sphere(const Transform3D& _transform,float radius){
-    MHLodItemCollision mcol;
-    mcol.param.type = MHLodItemCollision::Param::Type::SHPERE;
-    mcol.param.param_1 = radius;
+int MHlod::shape_add_sphere(const Transform3D& _transform,float radius,int body_id){
+    MHLodItemCollision mcol(MHLodItemCollision::Type::SHPERE);
+    mcol.set_param(radius);
+    mcol.set_body_id(body_id);
     Item _item(MHlod::Type::COLLISION);
     _item.collision = mcol;
     transforms.push_back(_transform);
     _item.transform_index = transforms.size() - 1;
     item_list.push_back(_item);
+    return item_list.size() - 1;
+}
+int MHlod::shape_add_box(const Transform3D& _transform,const Vector3& size,int body_id){
+    MHLodItemCollision mcol(MHLodItemCollision::Type::BOX);
+    mcol.set_param(size.x/2,size.y/2,size.z/2);
+    mcol.set_body_id(body_id);
+    Item _item(MHlod::Type::COLLISION);
+    _item.collision = mcol;
+    transforms.push_back(_transform);
+    _item.transform_index = transforms.size() - 1;
+    item_list.push_back(_item);
+    return item_list.size() - 1;
+}
+
+int MHlod::shape_add_capsule(const Transform3D& _transform,float radius,float height,int body_id){
+    MHLodItemCollision mcol(MHLodItemCollision::Type::CAPSULE);
+    mcol.set_param(radius,height);
+    mcol.set_body_id(body_id);
+    Item _item(MHlod::Type::COLLISION);
+    _item.collision = mcol;
+    transforms.push_back(_transform);
+    _item.transform_index = transforms.size() - 1;
+    item_list.push_back(_item);
+    return item_list.size() - 1;
+}
+
+int MHlod::shape_add_cylinder(const Transform3D& _transform,float radius,float height,int body_id){
+    MHLodItemCollision mcol(MHLodItemCollision::Type::CYLINDER);
+    mcol.set_param(radius,height);
+    mcol.set_body_id(body_id);
+    Item _item(MHlod::Type::COLLISION);
+    _item.collision = mcol;
+    transforms.push_back(_transform);
+    _item.transform_index = transforms.size() - 1;
+    item_list.push_back(_item);
+    return item_list.size() - 1;
+}
+
+int MHlod::light_add(Object* light_node,const Transform3D transform){
+    String cn = light_node->get_class();
+    ERR_FAIL_COND_V(cn!=String("OmniLight3D")&&cn!=String("SpotLight3D"),-1);
+    MHLodItemLight light_item;
+    // booleans
+    light_item.distance_fade_enabled = (int)light_node->get("distance_fade_enabled");
+    light_item.shadow_enabled = (int)light_node->get("shadow_enabled");
+    light_item.shadow_reverse_cull_face = (int)light_node->get("shadow_reverse_cull_face");
+    light_item.negetive = (int)light_node->get("light_negative");
+    // color
+    Color col = light_node->get("light_color");
+    light_item.red = col.r;
+    light_item.green = col.g;
+    light_item.blue = col.b;
+    // param
+    light_item.energy = light_node->get("light_energy");
+    light_item.light_indirect_energy = light_node->get("light_indirect_energy");
+    light_item.light_volumetric_fog_energy = light_node->get("light_volumetric_fog_energy");
+    light_item.size = light_node->get("light_size");
+    light_item.specular = light_node->get("light_specular");
+    // shadow param
+    light_item.shadow_bias = light_node->get("shadow_bias");
+    light_item.shadow_normal_bias = light_node->get("shadow_normal_bias");
+    light_item.shadow_opacity = light_node->get("shadow_opacity");
+    light_item.shadow_blur = light_node->get("shadow_blur");
+    // distance fade
+    light_item.distance_fade_begin = light_node->get("distance_fade_begin");
+    light_item.distance_fade_shadow = light_node->get("distance_fade_shadow");
+    light_item.distance_fade_length = light_node->get("distance_fade_length");
+    // cull mask
+    light_item.cull_mask = ((int64_t)light_node->get("light_cull_mask"));
+    if(cn==String("OmniLight3D")){
+        light_item.type = MHLodItemLight::Type::OMNI;
+        light_item.range = light_node->get("omni_range");
+        light_item.attenuation = light_node->get("omni_attenuation");
+        UtilityFunctions::print("Adding shadow mode ",(int)light_node->get("omni_shadow_mode"));
+        light_item.shadow_mode = (int)light_node->get("omni_shadow_mode");
+        UtilityFunctions::print("Adding shadow mode Result ",light_item.shadow_mode);
+    } else if(cn!=String("SpotLight3D")) {
+        light_item.type = MHLodItemLight::Type::SPOT;
+        light_item.range = light_node->get("spot_range");
+        light_item.attenuation = light_node->get("spot_attenuation");
+        light_item.spot_angle = light_node->get("spot_angle");
+        light_item.spot_attenuation = light_node->get("spot_angle_attenuation");
+    }
+    Item item(MHlod::Type::LIGHT);
+    item.light = light_item;
+    item.transform_index = transforms.size();
+    transforms.push_back(transform);
+    item_list.push_back(item);
     return item_list.size() - 1;
 }
 

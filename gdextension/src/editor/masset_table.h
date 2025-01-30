@@ -28,10 +28,12 @@ class MAssetTable : public Resource {
     protected:
     static void _bind_methods();
     public:
-    enum ItemType {NONE,MESH,COLLISION};
+    enum ItemType : uint8_t {NONE=0,MESH,COLLISION,PACKEDSCENE,DECAL,HLOD};
+    // Enum numbers should match CollisionType in mhold_item.h
+    enum CollisionType : uint8_t {UNDEF=0,SHPERE=1,CYLINDER=2,CAPSULE=3,BOX=4};
 
     private:
-    int64_t last_mesh_id = 1; // should not exist and increase by each adding (0 is invalid mesh ID)
+    int64_t last_item_id = 1; // should not exist and increase by each adding (0 is invalid mesh ID)
     Dictionary import_info;
 
     struct Tag
@@ -65,28 +67,28 @@ class MAssetTable : public Resource {
 
     struct CollisionShape
     {
-        /* data */
+        CollisionType type = CollisionType::UNDEF;
+        float param_1;
+        float param_2;
+        float param_3;
+    };
+
+    struct SubCollectionData{
+        PackedInt32Array sub_collections;
+        Vector<Transform3D> sub_collections_transforms;
+    };
+    public:
+    struct CollisionData{
+        Vector<CollisionShape> collision_shapes;
+        Vector<Transform3D> collision_shapes_transforms;
     };
 
     struct Collection {
-        int32_t mesh_id=-1;
+        ItemType type = NONE;
+        int32_t item_id=-1;
         int32_t glb_id = -1;
-        double thumbnail_creation_time = -1.0;
-        Ref<Texture2D> cached_thumbnail;
-        Vector<CollisionShape> collision_shapes;
-        Vector<Transform3D> collision_shapes_transforms;
-        PackedInt32Array sub_collections;
-        Vector<Transform3D> sub_collections_transforms;
-
-        //Vector<int32_t> variation; // [12,13,343,65,36]
-        int sockets_id = 6;
-        void set_glb_id(int32_t input);
-        int32_t get_glb_id() const;
-        void clear();
-        void set_save_data(const PackedByteArray& data);
-        PackedByteArray get_save_data() const;
     };
-    public:
+    
     struct CollectionIdentifier {
         String name;
         int32_t glb_id = -1;
@@ -104,6 +106,8 @@ class MAssetTable : public Resource {
 
     private:
     Vector<Collection> collections;
+    VMap<int32_t,SubCollectionData> sub_collections;
+    VMap<int32_t,CollisionData> collisions_data;
     PackedStringArray collections_names;
     Vector<Tag> collections_tags;
     Vector<int> free_collections;
@@ -114,7 +118,7 @@ class MAssetTable : public Resource {
     PackedStringArray group_names;
     Vector<Tag> groups;
 
-    static int32_t last_free_mesh_id; // should be updated before each import
+    static int32_t last_free_item_id; // should be updated before each import
     void _increase_collection_buffer_size(int q);
     int _get_free_collection_index();
     static const char* asset_table_path;
@@ -137,7 +141,6 @@ class MAssetTable : public Resource {
     static String get_material_thumbnails_path(int material_id);
     static String get_hlod_res_dir();
     bool has_collection(int id) const;
-    void remove_collection(int id);
 
     MAssetTable();
     ~MAssetTable();
@@ -161,52 +164,49 @@ class MAssetTable : public Resource {
     static void update_last_free_mesh_id();
     static int mesh_item_get_max_lod();
     static int32_t get_last_free_mesh_id_and_increase();
-    static int32_t mesh_item_get_first_lod(int mesh_id);
-    static int32_t mesh_item_get_stop_lod(int mesh_id);
-    static PackedInt32Array mesh_item_ids_no_replace(int mesh_id);
-    static TypedArray<MMesh> mesh_item_meshes_no_replace(int mesh_id);
-    static PackedInt32Array mesh_item_ids(int mesh_id);
-    static TypedArray<MMesh> mesh_item_meshes(int mesh_id);
-    static bool mesh_item_is_valid(int mesh_id);
+    static int32_t mesh_item_get_first_lod(int item_id);
+    static int32_t mesh_item_get_stop_lod(int item_id);
+    static PackedInt32Array mesh_item_ids_no_replace(int item_id);
+    static TypedArray<MMesh> mesh_item_meshes_no_replace(int item_id);
+    static PackedInt32Array mesh_item_ids(int item_id);
+    static TypedArray<MMesh> mesh_item_meshes(int item_id);
+    static bool mesh_item_is_valid(int item_id);
 
     static int32_t get_last_free_mesh_join_id();
-    static int32_t mesh_join_get_first_lod(int mesh_id);
-    static int32_t mesh_join_get_stop_lod(int mesh_id);
-    static PackedInt32Array mesh_join_ids_no_replace(int mesh_id);
-    static TypedArray<MMesh> mesh_join_meshes_no_replace(int mesh_id);
-    static PackedInt32Array mesh_join_ids(int mesh_id);
-    static TypedArray<MMesh> mesh_join_meshes(int mesh_id);
-    static bool mesh_join_is_valid(int mesh_id);
-    static int32_t mesh_join_start_lod(int mesh_id);
+    static int32_t mesh_join_get_first_lod(int item_id);
+    static int32_t mesh_join_get_stop_lod(int item_id);
+    static PackedInt32Array mesh_join_ids_no_replace(int item_id);
+    static TypedArray<MMesh> mesh_join_meshes_no_replace(int item_id);
+    static PackedInt32Array mesh_join_ids(int item_id);
+    static TypedArray<MMesh> mesh_join_meshes(int item_id);
+    static bool mesh_join_is_valid(int item_id);
+    static int32_t mesh_join_start_lod(int item_id);
 
     CollectionIdentifier collection_get_identifier(int collection_id) const;
     int32_t collection_get_id_by_identifier(const CollectionIdentifier& identifier) const;
 
-    int collection_create(String _name);
-    void collection_set_glb_id(int collection_id,int32_t glb_id);
+    CollisionData collection_get_collision_data(int collection_id) const;
+
+    PackedInt32Array collections_get_hlod();
+    PackedInt32Array collections_get_packedScene();
+    int collection_create(const String& _name,int32_t item_id,ItemType type,int32_t glb_id);
     int32_t collection_get_glb_id(int collection_id) const;
     int32_t collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const;
-    void collection_set_cache_thumbnail(int collection_id,Ref<Texture2D> tex,double creation_time);
-    double collection_get_thumbnail_creation_time(int collection_id) const;
-    Ref<Texture2D> collection_get_cache_thumbnail(int collection_id) const;
-    void collection_set_mesh_id(int collection_id,int32_t mesh_id);
-    int32_t collection_get_mesh_id(int collection_id);
-    void collection_clear(int collection_id);
-    void collection_remove(int collection_id);
+    int32_t collection_get_item_id(int collection_id);
+    void collection_clear_sub_and_col(int id);
+    void collection_remove(int id);
     PackedInt32Array collection_get_list() const;
     void collection_add_tag(int collection_id,int tag);
     bool collection_add_sub_collection(int collection_id,int sub_collection_id,const Transform3D& transform);
-    void collection_remove_sub_collection(int collection_id,int sub_collection_id);
-    void collection_remove_all_sub_collection(int collection_id);
+    void collection_add_collision(int collection_id,CollisionType col_type,const Transform3D& col_transform,const Transform3D& obj_transform);
     PackedInt32Array collection_get_sub_collections(int collection_id) const;
-    Array collection_get_sub_collections_transforms(int collection_id) const;
-    Array collection_get_sub_collections_transform(int collection_id,int sub_collection_id) const;
+    int collection_get_collision_count(int collection_id) const;
     void collection_remove_tag(int collection_id,int tag);
     String collection_get_name(int collection_id) const;
     int collection_get_id(const String& name) const;
     PackedInt32Array collection_get_tags(int collection_id) const;
     PackedInt32Array collection_names_begin_with(const String& prefix) const;
-    Vector<Pair<int,Transform3D>> collection_get_sub_collection_id_transform(int collection_id);
+    Vector<Pair<int,Transform3D>> collection_get_sub_collection_id_transform(int collection_id) const;
 
     bool group_exist(const String& gname) const;
     bool group_create(const String& name);
@@ -222,6 +222,8 @@ class MAssetTable : public Resource {
     Dictionary group_get_collections_with_tags(const String& gname) const;
 
     void clear_table();
+    void set_collection_data(int collection_id,const PackedByteArray& data);
+    PackedByteArray get_collection_data(int collection_id) const;
     void set_data(const Dictionary& data);
     Dictionary get_data();
     void _notification(int32_t what);
@@ -237,4 +239,5 @@ class MAssetTable : public Resource {
     void debug_test();
 };
 VARIANT_ENUM_CAST(MAssetTable::ItemType);
+VARIANT_ENUM_CAST(MAssetTable::CollisionType);
 #endif

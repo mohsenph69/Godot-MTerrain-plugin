@@ -16,13 +16,18 @@ void MAssetMeshData::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_transform"), &MAssetMeshData::get_transform);
     ClassDB::bind_method(D_METHOD("get_global_transform"), &MAssetMeshData::get_global_transform);
     ClassDB::bind_method(D_METHOD("get_mesh_lod"), &MAssetMeshData::get_mesh_lod);
-    ClassDB::bind_method(D_METHOD("get_mesh_ids"), &MAssetMeshData::get_mesh_ids);
+    ClassDB::bind_method(D_METHOD("get_item_ids"), &MAssetMeshData::get_item_ids);
 
     ClassDB::bind_method(D_METHOD("get_last_valid_lod"), &MAssetMeshData::get_last_valid_lod);
     ClassDB::bind_method(D_METHOD("get_last_valid_mesh"), &MAssetMeshData::get_last_valid_mesh);
+
+    ClassDB::bind_method(D_METHOD("get_collision_count"), &MAssetMeshData::get_collision_count);
+    ClassDB::bind_method(D_METHOD("get_collision_type","index"), &MAssetMeshData::get_collision_type);
+    ClassDB::bind_method(D_METHOD("get_collision_params","index"), &MAssetMeshData::get_collision_params);
+    ClassDB::bind_method(D_METHOD("get_collision_transform","index"), &MAssetMeshData::get_collision_transform);
 }
 
-PackedInt32Array MAssetMeshData::get_material_set_ids(){
+PackedInt32Array MAssetMeshData::get_material_set_ids() const{
     // should be material_set_id just in case a mesh does not have the set we use 0 set_id for that
     PackedInt32Array out;
     for(int i=0; i < mesh_lod.size(); i++){
@@ -36,20 +41,20 @@ PackedInt32Array MAssetMeshData::get_material_set_ids(){
     return out;
 }
 
-Transform3D MAssetMeshData::get_transform(){
+Transform3D MAssetMeshData::get_transform() const{
     return transform;
 }
 
-Transform3D MAssetMeshData::get_global_transform(){
+Transform3D MAssetMeshData::get_global_transform() const{
     return global_transform;
 }
 
-TypedArray<MMesh> MAssetMeshData::get_mesh_lod(){
+TypedArray<MMesh> MAssetMeshData::get_mesh_lod() const{
     return mesh_lod;
 }
 
-PackedInt32Array MAssetMeshData::get_mesh_ids(){
-    return mesh_ids;
+PackedInt32Array MAssetMeshData::get_item_ids() const{
+    return item_ids;
 }
 
 int8_t MAssetMeshData::get_last_valid_lod() const{
@@ -70,6 +75,29 @@ Ref<MMesh> MAssetMeshData::get_last_valid_mesh() const{
         }
     }
     return Ref<MMesh>();
+}
+
+int MAssetMeshData::get_collision_count() const{
+    return collision_data.collision_shapes.size();
+}
+
+MAssetTable::CollisionType MAssetMeshData::get_collision_type(int index) const{
+    ERR_FAIL_INDEX_V(index,get_collision_count(),MAssetTable::CollisionType::UNDEF);
+    return collision_data.collision_shapes[index].type;
+}
+
+Vector3 MAssetMeshData::get_collision_params(int index) const{
+    ERR_FAIL_INDEX_V(index,get_collision_count(),Vector3());
+    Vector3 params;
+    params.x = collision_data.collision_shapes[index].param_1;
+    params.y = collision_data.collision_shapes[index].param_2;
+    params.z = collision_data.collision_shapes[index].param_3;
+    return params;
+}
+
+Transform3D MAssetMeshData::get_collision_transform(int index) const{
+    ERR_FAIL_INDEX_V(index,get_collision_count(),Transform3D());
+    return global_transform * collision_data.collision_shapes_transforms[index];
 }
 
 void MAssetMesh::InstanceData::update_material(int set_id,int8_t _active_mesh_index){
@@ -225,13 +253,18 @@ void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& tra
     /////////////////////
     ///// Mesh Item ////
     ////////////////////
-    int mesh_id = asset_table->collection_get_mesh_id(collection_id);
-    if(mesh_id!=-1){
+    int item_id = asset_table->collection_get_item_id(collection_id);
+    if(item_id!=-1){
         InstanceData idata;
         idata.collection_id = collection_id;
         idata.local_transform = transform;
-        idata.meshes = MAssetTable::mesh_item_meshes(mesh_id);
-        idata.mesh_ids = MAssetTable::mesh_item_ids(mesh_id);
+        idata.meshes = MAssetTable::mesh_item_meshes(item_id);
+        idata.item_ids = MAssetTable::mesh_item_ids(item_id);
+        idata.collission_data = asset_table->collection_get_collision_data(collection_id);
+        for(int k=0; k < idata.collission_data.collision_shapes.size();k++){
+            Transform3D t = transform * idata.collission_data.collision_shapes_transforms[k];
+            idata.collission_data.collision_shapes_transforms.set(k,t);
+        }
         instance_data.push_back(idata);
     }
     /////////////////////
@@ -599,7 +632,8 @@ TypedArray<MAssetMeshData> MAssetMesh::get_mesh_data(){
             _m->transform = data.local_transform;
             _m->global_transform = get_global_transform() * data.local_transform;
             _m->mesh_lod = data.meshes;
-            _m->mesh_ids = data.mesh_ids;
+            _m->item_ids = data.item_ids;
+            _m->collision_data = data.collission_data;
             out.push_back(_m);
         }
     }

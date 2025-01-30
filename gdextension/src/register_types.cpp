@@ -12,7 +12,6 @@
 #include <godot_cpp/godot.hpp>
 
 
-#include "hlod/mmaterial_table.h"
 
 #ifdef DEBUG_ENABLED
 #include "editor/mmesh_joiner.h"
@@ -59,7 +58,6 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
-	ClassDB::register_class<MMaterialTable>();
 	
 	#ifdef DEBUG_ENABLED
 	ClassDB::register_class<MMeshJoiner>();

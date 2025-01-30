@@ -4,8 +4,8 @@
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/triangle_mesh.hpp>
 #include <godot_cpp/templates/vset.hpp>
-#include "masset_table.h"
 #include "../hlod/mmesh.h"
+#include "masset_table.h"
 
 // collection_id -2 means the collection is corrupted
 
@@ -20,17 +20,22 @@ class MAssetMeshData : public RefCounted {
     public:
     int8_t material_set_id = -1;
     TypedArray<MMesh> mesh_lod;
-    PackedInt32Array mesh_ids;
+    PackedInt32Array item_ids;
     Transform3D transform;
     Transform3D global_transform;
+    MAssetTable::CollisionData collision_data;
 
-    PackedInt32Array get_material_set_ids();
-    Transform3D get_transform();
-    Transform3D get_global_transform();
-    TypedArray<MMesh> get_mesh_lod();
-    PackedInt32Array get_mesh_ids();
+    PackedInt32Array get_material_set_ids() const;
+    Transform3D get_transform() const;
+    Transform3D get_global_transform() const;
+    TypedArray<MMesh> get_mesh_lod() const;
+    PackedInt32Array get_item_ids() const;
     int8_t get_last_valid_lod() const;
     Ref<MMesh> get_last_valid_mesh() const;
+    int get_collision_count() const;
+    MAssetTable::CollisionType get_collision_type(int index) const;
+    Vector3 get_collision_params(int index) const;
+    Transform3D get_collision_transform(int index) const;
 };
 
 class MAssetMesh : public Node3D {
@@ -53,8 +58,9 @@ class MAssetMesh : public Node3D {
         TypedArray<MMesh> meshes;
         Ref<MMesh> current_mmesh;
         Vector<Ref<Material>> materials; // no user add and remove
-        PackedInt32Array mesh_ids;
+        PackedInt32Array item_ids;
         Transform3D local_transform; // local transform compare to the main node
+        MAssetTable::CollisionData collission_data;
         void update_material(int set_id,int8_t _active_mesh_index);
         Ref<MMesh> get_last_valid_mesh() const;
         Ref<MMesh> get_first_valid_mesh() const;

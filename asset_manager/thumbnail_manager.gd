@@ -22,8 +22,8 @@ static func get_valid_thumbnail(collection_id:int)->Texture2D:
 	if collection_id == -1: return null
 	var asset_library = MAssetTable.get_singleton()
 	if not asset_library.has_collection(collection_id): return null
-	var tex = asset_library.collection_get_cache_thumbnail(collection_id)
-	var creation_time = MAssetTable.get_singleton().collection_get_thumbnail_creation_time(collection_id)
+	var tex=null
+	var creation_time = -1
 	if tex==null or creation_time < 0:
 		var thumbnail_path = MAssetTable.get_asset_thumbnails_path(collection_id)
 		if not FileAccess.file_exists(thumbnail_path): return null
@@ -34,8 +34,6 @@ static func get_valid_thumbnail(collection_id:int)->Texture2D:
 		tex = ImageTexture.create_from_image(image)	
 		if tex==null: return null
 		creation_time = FileAccess.get_modified_time(thumbnail_path)
-		# updating cache
-		MAssetTable.get_singleton().collection_set_cache_thumbnail(collection_id,tex,creation_time)
 	creation_time += 1.5
 	if get_collection_import_time(collection_id) > creation_time:
 		return null

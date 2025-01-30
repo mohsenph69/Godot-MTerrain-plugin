@@ -168,11 +168,11 @@ func update_collection_details(is_collection:bool, item_node:Dictionary ):
 			#mesh_item.set_text(0, text)
 		var collisions = root.create_child()
 		collisions.set_text(0, "Collisions")		
-		for collision_item_data in item_node.collision_items:			
-			var collision_item = collisions.create_child()
-			var text =  str(AssetIOData.COLLISION_TYPE.keys()[collision_item_data.type]).to_pascal_case()
-			text += str(": ", snapped(collision_item_data.transform.origin, Vector3(0.1, 0.1,0.1) ))
-			collision_item.set_text(0, text)				
+		#for c in item_node.collisions:			
+			#var collision_item = collisions.create_child()
+			#var text =  str(MAssetTable.CollisionType.keys()[collision_item_data.type]).to_pascal_case()
+			#text += str(": ", snapped(collision_item_data.transform.origin, Vector3(0.1, 0.1,0.1) ))
+			#collision_item.set_text(0, text)
 		var sub_collections = root.create_child()
 		sub_collections.set_text(0, "Sub Collections")
 		#for sub_collection_name in item_node.sub_collections:
