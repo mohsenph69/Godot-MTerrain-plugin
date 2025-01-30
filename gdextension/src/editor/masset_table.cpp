@@ -861,7 +861,8 @@ void MAssetTable::collection_add_collision(int collection_id,CollisionType col_t
         shape.param_1 = MAX(shape.param_1,shape.param_2);
         shape.param_1 = MAX(shape.param_1,shape.param_3);
     } else if(col_type==CollisionType::CAPSULE || col_type==CollisionType::CYLINDER){
-        shape.param_1 = MAX(shape.param_1,shape.param_2);
+        shape.param_1 = MAX(shape.param_1,shape.param_3);
+        shape.param_2 *= 2.0;
     } else if(col_type==CollisionType::BOX){
         shape.param_1 *= 2.0f;
         shape.param_2 *= 2.0f;

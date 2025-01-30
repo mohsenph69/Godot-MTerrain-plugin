@@ -68,7 +68,7 @@ class MAssetMesh : public Node3D {
         RID get_mesh_rid_last(int lod) const;
         Ref<MMesh> get_mesh_last(int lod) const;
     };
-
+    bool disable_collision = false;
     uint16_t hlod_layers = 0;
     int collection_id = -1;
     int current_lod = -1;
@@ -92,6 +92,10 @@ class MAssetMesh : public Node3D {
     void update_lod(int lod);
     void destroy_meshes();
     void compute_joined_aabb();
+    bool has_collsion() const;
+
+    void set_disable_collision(bool input);
+    bool get_disable_collision() const;
 
     void set_hlod_layers(int64_t input);
     int64_t get_hlod_layers() const;

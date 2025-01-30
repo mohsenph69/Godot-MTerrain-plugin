@@ -72,7 +72,7 @@ func bake_to_hlod_resource():
 				if mesh_array[min(i, len(mesh_array)-1) ] != -1:
 					hlod_resource.insert_item_in_lod_table(mesh_id, i)
 				i += 1
-			## Mesh Collssion
+			## Mesh With Collssion
 			for cindex in mdata.get_collision_count():
 				var type:MAssetTable.CollisionType= mdata.get_collision_type(cindex)
 				var t:Transform3D = baker_inverse_transform * mdata.get_collision_transform(cindex)
@@ -85,6 +85,20 @@ func bake_to_hlod_resource():
 					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,-1)
 				if iid==-1: printerr("Error inserting shape")
 				else: hlod_resource.insert_item_in_lod_table(iid,0)
+	################################
+	## BAKE CollisionShape3D Node ##
+	################################
+	for n in get_all_collision_shape_nodes(self):
+		var shape:Shape3D= n.shape
+		var t = baker_inverse_transform * n.global_transform
+		var item_id:int = -1
+		if shape is BoxShape3D: item_id = hlod_resource.shape_add_box(t,shape.size,-1)
+		elif shape is SphereShape3D: item_id = hlod_resource.shape_add_sphere(t,shape.radius,-1)
+		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,-1)
+		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,-1)
+		else: continue
+		for i in range(0,2):
+			hlod_resource.insert_item_in_lod_table(item_id,i)
 	######################
 	## BAKE JOINED_MESH ##
 	######################
@@ -142,7 +156,22 @@ func bake_to_hlod_resource():
 	MHlodScene.awake()			
 	#EditorInterface.get_resource_filesystem().scan()
 
-#region Getters	
+#region Getters
+func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
+	var stack:Array
+	stack.append_array(baker_node.get_children())
+	var result:Array
+	var baker_invers_transform = baker_node.global_transform.inverse()
+	while stack.size()!=0:
+		var current_node = stack[-1]
+		stack.remove_at(stack.size() -1)
+		if (current_node is HLod_Baker and current_node != baker_node):
+			continue
+		if current_node is CollisionShape3D and not current_node.disabled:	
+			result.push_back(current_node)
+		stack.append_array(current_node.get_children())		
+	return result
+
 func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
 	var stack:Array
 	stack.append_array(search_nodes)

@@ -182,6 +182,11 @@ VSet<MAssetMesh*> MAssetMesh::asset_mesh_node_list;
 void MAssetMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("update_instance_date"), &MAssetMesh::update_instance_date);
     ClassDB::bind_method(D_METHOD("update_lod","lod"), &MAssetMesh::update_lod);
+    ClassDB::bind_method(D_METHOD("has_collsion"), &MAssetMesh::has_collsion);
+
+    ClassDB::bind_method(D_METHOD("set_disable_collision","input"), &MAssetMesh::set_disable_collision);
+    ClassDB::bind_method(D_METHOD("get_disable_collision"), &MAssetMesh::get_disable_collision);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"disable_collision"),"set_disable_collision","get_disable_collision");
 
     ClassDB::bind_method(D_METHOD("set_lod_cutoff","input"), &MAssetMesh::set_lod_cutoff);
     ClassDB::bind_method(D_METHOD("get_lod_cutoff"), &MAssetMesh::get_lod_cutoff);
@@ -294,6 +299,7 @@ void MAssetMesh::update_instance_date(){
     generate_instance_data(collection_id,t);
     compute_joined_aabb();
     update_material_sets_from_data();
+    notify_property_list_changed();
 }
 
 void MAssetMesh::update_lod(int lod){
@@ -375,6 +381,23 @@ void MAssetMesh::compute_joined_aabb(){
             }
         }
     }
+}
+
+bool MAssetMesh::has_collsion() const{
+    for(const InstanceData& data : instance_data){
+        if(data.collission_data.collision_shapes.size()!=0){
+            return true;
+        }
+    }
+    return false;
+}
+
+void MAssetMesh::set_disable_collision(bool input){
+    disable_collision = input;
+}
+
+bool MAssetMesh::get_disable_collision() const{
+    return disable_collision;
 }
 
 void MAssetMesh::remove_instances(bool hard_remove){
@@ -633,7 +656,9 @@ TypedArray<MAssetMeshData> MAssetMesh::get_mesh_data(){
             _m->global_transform = get_global_transform() * data.local_transform;
             _m->mesh_lod = data.meshes;
             _m->item_ids = data.item_ids;
-            _m->collision_data = data.collission_data;
+            if(!disable_collision){
+                _m->collision_data = data.collission_data;
+            }
             out.push_back(_m);
         }
     }

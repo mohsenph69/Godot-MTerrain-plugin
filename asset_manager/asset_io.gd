@@ -230,7 +230,7 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 		if collection_info["id"] == -1:
 			push_error("Invalid collection to remove")
 			return
-		asset_library.remove_collection(collection_info["id"])
+		asset_library.collection_remove(collection_info["id"])
 		return
 	var collection_id := -1
 	if collection_info["state"] == AssetIOData.IMPORT_STATE.NEW:
