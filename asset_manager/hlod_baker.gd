@@ -109,11 +109,12 @@ func bake_to_hlod_resource():
 		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else 1
 		for i in range(0, max):
 			hlod_resource.insert_item_in_lod_table(iid,i)
+			
 	######################
 	## BAKE JOINED_MESH ##
 	######################
 	var joined_mesh_array = MAssetTable.mesh_join_meshes(joined_mesh_id) 
-		
+	MHlod
 	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
 		material_array.resize(len(joined_mesh_array))

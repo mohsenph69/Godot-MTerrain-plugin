@@ -10,7 +10,8 @@ const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_bake
 @onready var ungrouped = find_child("other")
 @onready var grouping_popup:Popup = find_child("grouping_popup")
 @onready var search_collections_node:Control = find_child("search_collections")
-@onready var group_by_button:Button = find_child("group_by_button")	
+@onready var group_by_button:Button = find_child("group_by_button")		
+
 @onready var place_button:Button = find_child("place_button")	
 @onready var snap_enabled_button:BaseButton = find_child("snap_enabled_button")
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
@@ -48,6 +49,7 @@ var current_selection := [] #array of collection name
 var current_search := ""
 var current_filter_mode_all := false
 var current_filter_tags := []
+var current_filter_types := 0
 var current_group := "None" #group name
 
 var last_regroup = null
@@ -123,6 +125,10 @@ func _ready():
 		ResourceSaver.save(packed, dir.path_join(file))		
 		EditorInterface.open_scene_from_path(dir.path_join(file))
 		#EditorInterface.get_edited_scene_root().name = "baker" +str(i) 
+	)
+	find_child("asset_type_tree").asset_type_filter_changed.connect(func(selected_types):
+		current_filter_types = selected_types
+		regroup()
 	)
 
 func done_placement(add_asset:=true):
@@ -236,21 +242,22 @@ func _drop_data(at_position, data):
 ####################
 func get_filtered_collections(text="", tags_to_excluded=[]):		
 	var result = []
+	result = Array(asset_library.collections_get_by_type(current_filter_types))	
 	var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
-	var searched_collections = asset_library.collection_names_begin_with(text) if not text in [null, ""]  else asset_library.collection_get_list()		
+	var collection_to_include = null
 	if current_filter_tags and len(current_filter_tags)>0:
 		if current_filter_mode_all:		
-			result = Array(asset_library.tags_get_collections_all(current_filter_tags))
+			collection_to_include = asset_library.tags_get_collections_all(current_filter_tags)
 		else:		
-			result = Array(asset_library.tags_get_collections_any(current_filter_tags))	
-	else:
-		result = Array(searched_collections)		
-	for id in result.duplicate():				
-		if not id in searched_collections:			
-			result.erase(id)		
-		if id in collections_to_exclude:
-			result.erase(id)			
-	return result
+			collection_to_include = asset_library.tags_get_collections_any(current_filter_tags)
+	
+	return result.filter(func(a): 		
+		if a in collections_to_exclude: return false
+		if collection_to_include and not a in collection_to_include: return false
+		if not text.is_empty():
+			if not text.to_lower() in asset_library.collection_get_name(a).to_lower(): return false
+		return true		
+	)			
 	
 func debounce_regroup():
 	if not is_inside_tree():  return false
@@ -342,11 +349,21 @@ func collection_item_activated(id, group_list:ItemList,create_ur:=true):
 	return node 
 
 func add_asset_to_scene(id, asset_name,create_ur:=true):
-	var node = MAssetMesh.new()
-	node.collection_id = id		
-	var blend_file = AssetIO.get_asset_blend_file(node.collection_id) 
-	if blend_file:
-		node.set_meta("blend_file", blend_file)
+	var node
+	if id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
+		node = MAssetMesh.new()
+		node.collection_id = id		
+		var blend_file = AssetIO.get_asset_blend_file(node.collection_id) 
+		if blend_file:
+			node.set_meta("blend_file", blend_file)
+	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
+		node = MHlodScene.new()		
+		node.hlod = load(MHlod.get_hlod_path( asset_library.collection_get_item_id(id) ))
+	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
+		node = load(MHlod.get_decal_path( asset_library.collection_get_item_id(id) ))		
+	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+		node = load(MHlod.get_packed_scene_path( asset_library.collection_get_item_id(id) ))
+		
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	var main_selected_node = null
