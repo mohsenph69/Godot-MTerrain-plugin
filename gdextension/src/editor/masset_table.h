@@ -28,7 +28,7 @@ class MAssetTable : public Resource {
     protected:
     static void _bind_methods();
     public:
-    enum ItemType : uint8_t {NONE=0,MESH,COLLISION,PACKEDSCENE,DECAL,HLOD};
+    enum ItemType : uint8_t {NONE=0,MESH=2,COLLISION=4,PACKEDSCENE=8,DECAL=16,HLOD=32};
     // Enum numbers should match CollisionType in mhold_item.h
     enum CollisionType : uint8_t {UNDEF=0,SHPERE=1,CYLINDER=2,CAPSULE=3,BOX=4};
 
@@ -182,20 +182,25 @@ class MAssetTable : public Resource {
     static bool mesh_join_is_valid(int item_id);
     static int32_t mesh_join_start_lod(int item_id);
 
+    static int32_t get_last_id_in_dir(const String dir_path);
+    static int32_t get_last_free_decal_id();
+    static int32_t get_last_free_packed_scene_id();
+    static int32_t get_last_free_hlod_id(int32_t last_hlod_id=-1,const String& baker_scene_path="");
+
     CollectionIdentifier collection_get_identifier(int collection_id) const;
     int32_t collection_get_id_by_identifier(const CollectionIdentifier& identifier) const;
 
     CollisionData collection_get_collision_data(int collection_id) const;
 
-    PackedInt32Array collections_get_hlod();
-    PackedInt32Array collections_get_packedScene();
     int collection_create(const String& _name,int32_t item_id,ItemType type,int32_t glb_id);
     int32_t collection_get_glb_id(int collection_id) const;
+    int32_t collection_find_with_item_type_item_id(ItemType type, int32_t item_id) const;
     int32_t collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const;
     int32_t collection_get_item_id(int collection_id);
     void collection_clear_sub_and_col(int id);
     void collection_remove(int id);
     PackedInt32Array collection_get_list() const;
+    PackedInt32Array collections_get_by_type(int item_types) const;
     void collection_add_tag(int collection_id,int tag);
     bool collection_add_sub_collection(int collection_id,int sub_collection_id,const Transform3D& transform);
     void collection_add_collision(int collection_id,CollisionType col_type,const Transform3D& col_transform,const Transform3D& obj_transform);

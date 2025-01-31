@@ -30,6 +30,18 @@
 #define M_GET_PHYSIC_SETTING_PATH(id) String(M_PHYSICS_SETTINGS_DIR) + itos(id) + String(".res")
 #define M_SHAPE_PARAM_ROUND(num) std::round(num * 100.0f) / 100.0f
 
+#define M_COLLISION_ROOT_DIR "res://massets/collissions/"
+#define M_GET_COLLISION_PATH(id) String(M_COLLISION_ROOT_DIR) + itos(id) + String(".res")
+
+#define M_PACKEDSCENE_ROOT_DIR "res://massets/packed_scenes/"
+#define M_GET_PACKEDSCENE_PATH(id) String(M_PACKEDSCENE_ROOT_DIR) + itos(id) + String(".tscn")
+
+#define M_DECAL_ROOT_DIR "res://massets/decals/"
+#define M_GET_DECAL_PATH(id) String(M_DECAL_ROOT_DIR) + itos(id) + String(".res")
+
+#define M_HLOD_ROOT_DIR "res://massets/hlod/"
+#define M_GET_HLODL_PATH(id) String(M_HLOD_ROOT_DIR) + itos(id) + String(".res")
+
 #define RL ResourceLoader::get_singleton()
 using namespace godot;
 
@@ -368,7 +380,7 @@ struct MHLodItemLight { // No more memebr or increase item size
     }
 
     _FORCE_INLINE_ void set_data(const PackedByteArray& d){
-        ERR_FAIL_COND(d.size()==sizeof(MHLodItemLight));
+        ERR_FAIL_COND(d.size()!=sizeof(MHLodItemLight));
         memcpy(this,d.ptr(),sizeof(MHLodItemLight));
     }
 

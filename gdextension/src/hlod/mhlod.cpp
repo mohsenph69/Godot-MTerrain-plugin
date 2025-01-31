@@ -13,6 +13,21 @@ void MHlod::_bind_methods(){
     ClassDB::bind_static_method("MHlod",D_METHOD("get_physic_setting_path","id"), &MHlod::get_physic_setting_path);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_mesh_path","mesh_id"), &MHlod::get_mesh_path);
 
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir"), &MHlod::get_packed_scene_root_dir);
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir","id"), &MHlod::get_packed_scene_path);
+
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_decal_root_dir"), &MHlod::get_decal_root_dir);
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_decal_path","id"), &MHlod::get_decal_path);
+
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir"), &MHlod::get_packed_scene_root_dir);
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir","id"), &MHlod::get_packed_scene_path);
+
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_collision_root_dir"), &MHlod::get_collision_root_dir);
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_collsion_path","id"), &MHlod::get_collsion_path);
+
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_hlod_root_dir"), &MHlod::get_hlod_root_dir);
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_hlod_path","id"), &MHlod::get_hlod_path);
+
     ClassDB::bind_method(D_METHOD("set_join_at_lod","input"), &MHlod::set_join_at_lod);
     ClassDB::bind_method(D_METHOD("get_join_at_lod"), &MHlod::get_join_at_lod);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"join_at_lod",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_join_at_lod","get_join_at_lod");
@@ -67,6 +82,38 @@ String MHlod::get_physic_setting_path(int id){
 
 String MHlod::get_mesh_path(int64_t mesh_id){
     return M_GET_MESH_PATH(mesh_id);
+}
+
+String MHlod::get_packed_scene_root_dir(){
+    return M_PACKEDSCENE_ROOT_DIR;
+}
+
+String MHlod::get_packed_scene_path(int id){
+    return M_GET_PACKEDSCENE_PATH(id);
+}
+
+String MHlod::get_decal_root_dir(){
+    return M_DECAL_ROOT_DIR;
+}
+
+String MHlod::get_decal_path(int id){
+    return M_GET_DECAL_PATH(id);
+}
+
+String MHlod::get_collision_root_dir(){
+    return M_COLLISION_ROOT_DIR;
+}
+
+String MHlod::get_collsion_path(int id){
+    return M_GET_COLLISION_PATH(id);
+}
+
+String MHlod::get_hlod_root_dir(){
+    return M_HLOD_ROOT_DIR;
+}
+
+String MHlod::get_hlod_path(int id){
+    return M_GET_HLODL_PATH(id);
 }
 
 void MHlod::Item::create(){
@@ -488,10 +535,8 @@ int MHlod::light_add(Object* light_node,const Transform3D transform){
         light_item.type = MHLodItemLight::Type::OMNI;
         light_item.range = light_node->get("omni_range");
         light_item.attenuation = light_node->get("omni_attenuation");
-        UtilityFunctions::print("Adding shadow mode ",(int)light_node->get("omni_shadow_mode"));
         light_item.shadow_mode = (int)light_node->get("omni_shadow_mode");
-        UtilityFunctions::print("Adding shadow mode Result ",light_item.shadow_mode);
-    } else if(cn!=String("SpotLight3D")) {
+    } else if(cn==String("SpotLight3D")) {
         light_item.type = MHLodItemLight::Type::SPOT;
         light_item.range = light_node->get("spot_range");
         light_item.attenuation = light_node->get("spot_attenuation");

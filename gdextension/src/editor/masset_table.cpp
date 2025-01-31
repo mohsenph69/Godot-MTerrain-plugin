@@ -49,6 +49,10 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_is_valid","item_id"), &MAssetTable::mesh_join_is_valid);
     ClassDB::bind_static_method("MAssetTable",D_METHOD("mesh_join_start_lod","item_id"), &MAssetTable::mesh_join_start_lod);
 
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_last_free_decal_id"), &MAssetTable::get_last_free_decal_id);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_last_free_packed_scene_id"), &MAssetTable::get_last_free_packed_scene_id);
+    ClassDB::bind_static_method("MAssetTable",D_METHOD("get_last_free_hlod_id","last_hlod_id","baker_scene_path"), &MAssetTable::get_last_free_hlod_id);
+
     ClassDB::bind_method(D_METHOD("has_collection","collection_id"), &MAssetTable::has_collection);
     ClassDB::bind_method(D_METHOD("tag_add","name"), &MAssetTable::tag_add);
     ClassDB::bind_method(D_METHOD("tag_set_name","tag_id","name"), &MAssetTable::tag_set_name);
@@ -67,6 +71,7 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("collection_clear_sub_and_col","collection_id"), &MAssetTable::collection_clear_sub_and_col);
     ClassDB::bind_method(D_METHOD("collection_remove","collection_id"), &MAssetTable::collection_remove);
     ClassDB::bind_method(D_METHOD("collection_get_list"), &MAssetTable::collection_get_list);
+    ClassDB::bind_method(D_METHOD("collections_get_by_type","item_types"), &MAssetTable::collections_get_by_type);
     ClassDB::bind_method(D_METHOD("collection_add_tag","collection_id","tag"), &MAssetTable::collection_add_tag);
     ClassDB::bind_method(D_METHOD("collection_add_sub_collection","collection_id","sub_collection_id"), &MAssetTable::collection_add_sub_collection);
     ClassDB::bind_method(D_METHOD("collection_add_collision","collection_id","col_type","col_transform","base_transform"), &MAssetTable::collection_add_collision);
@@ -717,6 +722,45 @@ int32_t MAssetTable::mesh_join_start_lod(int item_id){
     return -1;
 }
 
+int32_t MAssetTable::get_last_id_in_dir(const String dir_path){
+    Ref<DirAccess> dir = DirAccess::open(dir_path);
+    PackedStringArray files = dir->get_files();
+    int32_t biggest_id = 0;
+    for (const String& file_name : files){
+        int32_t val = file_name.get_basename().to_int();
+        if(val > biggest_id){
+            biggest_id = val;
+        }
+    }
+    biggest_id++;
+    return biggest_id;
+}
+
+int32_t MAssetTable::get_last_free_decal_id(){
+    return get_last_id_in_dir(MHlod::get_decal_root_dir());
+}
+
+int32_t MAssetTable::get_last_free_packed_scene_id(){
+    return get_last_id_in_dir(MHlod::get_packed_scene_root_dir());
+}
+
+int32_t MAssetTable::get_last_free_hlod_id(int32_t last_hlod_id,const String& baker_scene_path){
+    if(last_hlod_id==-1){ // is a new hlod
+        return get_last_id_in_dir(MHlod::get_hlod_root_dir());
+    }
+    String last_hlod_path = MHlod::get_hlod_path(last_hlod_id);
+    if(!FileAccess::file_exists(last_hlod_path)){ // if does not exist safe to save there
+        return last_hlod_id;
+    }
+    // if exist we should check if we are the saver
+    Ref<MHlod> hres = ResourceLoader::get_singleton()->load(last_hlod_path);
+    if(hres.is_null() || hres->get_baker_path()!=baker_scene_path){ // if hres->get_baker_path()!=baker_scene_path then this is not ours to modify
+        return get_last_id_in_dir(MHlod::get_hlod_root_dir());
+    }
+    return last_hlod_id;
+}
+
+
 MAssetTable::CollectionIdentifier MAssetTable::collection_get_identifier(int collection_id) const{
     if(!has_collection(collection_id)){
         return CollectionIdentifier();
@@ -746,7 +790,13 @@ MAssetTable::CollisionData MAssetTable::collection_get_collision_data(int collec
 
 int MAssetTable::collection_create(const String& _name,int32_t item_id,MAssetTable::ItemType type,int32_t glb_id){
     ERR_FAIL_COND_V(_name.length()==0,-1);
-    int index = _get_free_collection_index();
+    int index = -1;
+    if(type != ItemType::MESH){ // for mesh bellow should not happen, it has a seperated system of importing
+        index = collection_find_with_item_type_item_id(type,item_id);
+    }
+    if(index==-1){
+        index = _get_free_collection_index();
+    }
     ERR_FAIL_COND_V(index==-1,-1);
     collections_names.set(index,_name);
     collections.ptrw()[index].type = type;
@@ -758,6 +808,15 @@ int MAssetTable::collection_create(const String& _name,int32_t item_id,MAssetTab
 int32_t MAssetTable::collection_get_glb_id(int collection_id) const{
     ERR_FAIL_COND_V(!has_collection(collection_id),-1);
     return collections[collection_id].glb_id;
+}
+
+int32_t MAssetTable::collection_find_with_item_type_item_id(ItemType type, int32_t item_id) const {
+    for(int i=0; i < collections.size(); i++){
+        if(collections[i].type == type && collections[i].item_id == item_id && has_collection(i)){
+            return i;
+        }
+    }
+    return -1;
 }
 
 int32_t MAssetTable::collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const{
@@ -811,6 +870,17 @@ PackedInt32Array MAssetTable::collection_get_list() const{
             continue;
         }
         out.push_back(i);
+    }
+    return out;
+}
+
+PackedInt32Array MAssetTable::collections_get_by_type(int item_types) const{
+    PackedInt32Array out;
+    UtilityFunctions::print("item_types ",item_types);
+    for(int i=0; i < collections.size(); i++){
+        if((collections[i].type & item_types) != 0){
+            out.push_back(i);
+        }
     }
     return out;
 }

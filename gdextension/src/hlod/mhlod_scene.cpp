@@ -246,6 +246,15 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
             }
         }
         break;
+    case MHlod::Type::LIGHT:
+        {
+            RID instance = c_info.get_rid();
+            if(instance.is_valid()){
+                RS->free_rid(instance);
+                item->remove_user();
+            }
+        }
+        break;
     case MHlod::Type::COLLISION:
         {
             GlobalItemID gitem_id(oct_point_id,item->transform_index);
@@ -389,8 +398,14 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
 void MHlodScene::Proc::set_visibility(bool visibility){
     is_visible = visibility;
     for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
-        if(it->value.type == MHlod::Type::MESH){
+        switch (it->value.type)
+        {
+        case MHlod::Type::MESH:
+        case MHlod::Type::LIGHT:
             RS->instance_set_visible(it->value.get_rid(),visibility);
+            break;
+        default:
+            break;
         }
     }
     for(int i=0; i < sub_procs_size; i++){

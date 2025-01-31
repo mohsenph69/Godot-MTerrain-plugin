@@ -6,13 +6,14 @@ signal asset_mesh_updated
 @export_storage var joined_mesh_id := -1
 @export_storage var joined_mesh_disabled := false
 @export_storage var hlod_resource: MHlod
-@export_storage var bake_path = "res://massets/hlod/": get = get_bake_path
+@export_storage var hlod_id: int = -1
 @export_storage var meshes_to_join_overrides := {}
 @export_storage var force_lod_enabled := false
 @export_storage var force_lod_value: int
 @export_storage var variation_layers: PackedStringArray = ["","","","","","","","","","","","","","","",""]
 @export_storage var variation_layers_preview_value = 0
 @export_storage var joined_mesh_modified_time: int = -1
+
 
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
@@ -97,8 +98,15 @@ func bake_to_hlod_resource():
 		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,-1)
 		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,-1)
 		else: continue
-		for i in range(0,2):
+		for i in range(0,1):
 			hlod_resource.insert_item_in_lod_table(item_id,i)
+	##################
+	## BAKE Lights ##
+	##################
+	for l in get_all_lights_nodes(self):
+		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform)
+		for i in range(0,2):
+			hlod_resource.insert_item_in_lod_table(iid,i)
 	######################
 	## BAKE JOINED_MESH ##
 	######################
@@ -142,18 +150,24 @@ func bake_to_hlod_resource():
 			scene_layers = hlod_data.node.scene_layers
 		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod, scene_layers)
 		#hlod.lod_limit = join_at_lod	
-	hlod_resource.join_at_lod = join_at_lod	
+	hlod_resource.join_at_lod = join_at_lod
+	hlod_id = MAssetTable.get_last_free_hlod_id(hlod_id,scene_file_path)
+	var bake_path := MHlod.get_hlod_path(hlod_id)
 	var users = MHlodScene.get_hlod_users(bake_path)
+	var save_err
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
-		ResourceSaver.save(hlod_resource)
+		save_err = ResourceSaver.save(hlod_resource)
 	else:
 		if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
 			DirAccess.make_dir_absolute(bake_path.get_base_dir())
-		ResourceSaver.save(hlod_resource, bake_path)
+		save_err = ResourceSaver.save(hlod_resource, bake_path)
 	for n in users:
 		n.hlod = hlod_resource
-	MHlodScene.awake()			
+	if save_err == OK:
+		MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
+		MAssetTable.save()
+	MHlodScene.awake()
 	#EditorInterface.get_resource_filesystem().scan()
 
 #region Getters
@@ -168,6 +182,21 @@ func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
 		if (current_node is HLod_Baker and current_node != baker_node):
 			continue
 		if current_node is CollisionShape3D and not current_node.disabled:	
+			result.push_back(current_node)
+		stack.append_array(current_node.get_children())		
+	return result
+
+func get_all_lights_nodes(baker_node:Node3D)->Array:
+	var stack:Array
+	stack.append_array(baker_node.get_children())
+	var result:Array
+	var baker_invers_transform = baker_node.global_transform.inverse()
+	while stack.size()!=0:
+		var current_node = stack[-1]
+		stack.remove_at(stack.size() -1)
+		if (current_node is HLod_Baker and current_node != baker_node):
+			continue
+		if current_node is OmniLight3D or current_node is SpotLight3D:	
 			result.push_back(current_node)
 		stack.append_array(current_node.get_children())		
 	return result
@@ -225,11 +254,6 @@ func get_all_sub_bakers(baker_node:Node3D,search_nodes:Array)->Array:
 		stack.append_array(current_node.get_children())	
 	return result
 
-func get_bake_path():
-	if not bake_path.ends_with(".res"):
-		bake_path = bake_path + name + ".res"
-	return bake_path
-		
 #region JOINED MESH				
 func get_joined_mesh():
 	var join_at_lod = asset_mesh_updater.get_join_at_lod()

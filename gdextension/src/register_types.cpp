@@ -49,6 +49,7 @@
 #include "path/mcurve_terrain.h"
 
 #include "hlod/mhlod_scene.h"
+#include "hlod/mhlod_node3d.h"
 #include "hlod/mhlod_collision_setting.h"
 #include "hlod/mmesh.h"
 
@@ -99,6 +100,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MHlod>();
 	ClassDB::register_class<MHlodCollisionSetting>();
 	ClassDB::register_class<MHlodScene>();
+	ClassDB::register_class<MHlodNode3D>();
 	ClassDB::register_class<MMesh>();
 }
 

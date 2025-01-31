@@ -100,6 +100,14 @@ class MHlod : public Resource{
     static String get_physics_settings_dir();
     static String get_physic_setting_path(int id);
     static String get_mesh_path(int64_t mesh_id);
+    static String get_packed_scene_root_dir();
+    static String get_packed_scene_path(int id);
+    static String get_decal_root_dir();
+    static String get_decal_path(int id);
+    static String get_collision_root_dir();
+    static String get_collsion_path(int id);
+    static String get_hlod_root_dir();
+    static String get_hlod_path(int id);
     static _FORCE_INLINE_ MHlod::PhysicBodyInfo& get_physic_body(int id);
 
     void set_join_at_lod(int input);

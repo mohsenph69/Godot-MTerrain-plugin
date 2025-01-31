@@ -71,18 +71,6 @@ func get_empty_material()->Dictionary:
 		"original_material": null,		
 		"meshes": [] #array of MMesh that use this material...should be converted to ids later
 	}.duplicate()
-
-#func get_empty_mesh_item()->Dictionary:
-	#return {
-		#"mesh_nodes":[],
-		#"meshes":[],
-		#"original_meshes":[],		
-		#"id":-1,
-		#"material_set_id": -1,
-		#"ignore":false,
-		#"state":IMPORT_STATE.NOT_HANDLE,
-		#"mesh_state":[]
-	#}.duplicate()
 		
 func get_empty_collection()->Dictionary:
 	return {
@@ -92,6 +80,8 @@ func get_empty_collection()->Dictionary:
 		"mesh_states":[],
 		"is_master":false,
 		"base_transform":Transform3D(),
+		"convex":false,
+		"concav":null,
 		"collisions":[], # only simple shapes
 		"sub_collections":{},
 		"original_sub_collections":{},
@@ -107,7 +97,7 @@ func get_empty_collection()->Dictionary:
 
 func get_empty_collision_item()->Dictionary:
 	return {
-		"type":MAssetTable.CollisionType.UNDEF, # box / sphere / cylinder / capsule / concave / mesh
+		"type":MAssetTable.CollisionType.UNDEF, # box / sphere / cylinder / capsule
 		"transform":Transform3D(),
 	}.duplicate()
 
