@@ -16,7 +16,9 @@ const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_bake
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
 
-@onready var make_baker_btn:Button = find_child("make_baker_btn")
+@onready var add_asset_button:Button = find_child("add_asset_button")
+@onready var add_baker_button:Button = find_child("add_baker_button")
+@onready var add_decal_button:Button = find_child("add_decal_button")
 
 @onready var x_btn:Button = find_child("x_btn")
 @onready var y_btn:Button = find_child("y_btn")
@@ -85,7 +87,7 @@ func _ready():
 	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
 	grouping_popup.group_selected.connect(regroup)		
 	place_button.toggled.connect(func(toggle_on):		
-		%place_options_hbox.visible = toggle_on
+		#%place_options_hbox.visible = toggle_on
 		if toggle_on:			
 			object_being_placed = collection_item_activated(active_group_list_item, active_group_list,false)
 			var viewport_camera = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()
@@ -105,19 +107,23 @@ func _ready():
 				object_being_placed.queue_free()
 				object_being_placed = null
 	)
-	
-	make_baker_btn.button_down.connect(func():
-		var selection = EditorInterface.get_selection().get_selected_nodes()
-		if selection.size() != 1:MTool.print_edmsg("Select only one Node3d to be baker")
-		else:
-			var sel_node = selection[0]
-			if sel_node.get_class()!="Node3D": MTool.print_edmsg("Selected node must be Node3D type")
-			elif sel_node.get_script()!=null: MTool.print_edmsg("Selected node already has a Gdscript please select a node with no script!!!")
-			else:
-				sel_node.set_script(hlod_baker_script)
-				sel_node._ready()
-				sel_node._enter_tree()
-		)
+			
+	add_baker_button.pressed.connect(func():		
+		var dir = MAssetTable.get_editor_baker_scenes_dir()
+		var existing_files = DirAccess.get_files_at(dir)		
+		var file = "baker.tscn" 
+		var i = 0		
+		while file in existing_files:			
+			i+= 1
+			file = "baker" +str(i) +".tscn"
+		var node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
+		node.name = file.trim_suffix(".tscn")
+		var packed = PackedScene.new()
+		packed.pack(node)
+		ResourceSaver.save(packed, dir.path_join(file))		
+		EditorInterface.open_scene_from_path(dir.path_join(file))
+		#EditorInterface.get_edited_scene_root().name = "baker" +str(i) 
+	)
 
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
@@ -332,7 +338,7 @@ func regroup(group = current_group, sort_mode="asc"):
 	current_group = group
 
 func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
-	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_text(id),create_ur)		
+	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_tooltip(id),create_ur)		
 	return node 
 
 func add_asset_to_scene(id, asset_name,create_ur:=true):

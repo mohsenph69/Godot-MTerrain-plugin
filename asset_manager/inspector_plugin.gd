@@ -3,11 +3,10 @@ extends EditorInspectorPlugin
 
 var asset_library: MAssetTable = MAssetTable.get_singleton()# load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
 
-func _can_handle(object):		
-	if object.has_meta("collection_id") and object.get_meta("collection_id") != -1: return true
-	if object.has_meta("mesh_id") and object.get_meta("mesh_id") != -1: return true
+func _can_handle(object):				
 	if object is MAssetTable:return true
 	if object is HLod_Baker: return true
+	if EditorInterface.get_edited_scene_root() is HLod_Baker: return true
 	if object is MHlodScene: return true
 	if object is MAssetMesh: return true	
 	if object is MMesh: return true		
@@ -34,6 +33,27 @@ func _parse_begin(object):
 	elif object is MMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
 		control.mmesh = object		
+	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
+		if object.get_class() == "Node3D":
+			control = Button.new()
+			control.text = "Convert to Sub Baker"
+			control.pressed.connect(func():
+				object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
+				object._ready()				
+			)			
+		elif object is OmniLight3D or object is SpotLight3D or object is MHlodNode3D or object is CollisionShape3D:
+			control = HBoxContainer.new()
+			var label = Label.new()
+			label.text = "Cutoff at Lod "
+			control.add_child(label)
+			var spinbox = SpinBox.new()
+			control.add_child(spinbox)
+			spinbox.step = 1
+			spinbox.max_value = 10
+			spinbox.value_changed.connect(func(new_value):
+				object.set_meta("lod_cutoff", new_value)
+			)
+		
 	margin.add_child(control)
 	add_custom_control(margin)			
 		

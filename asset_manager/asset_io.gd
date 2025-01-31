@@ -33,22 +33,30 @@ static func glb_load(path, metadata={},no_window:bool=false):
 		AssetIOBaker.baker_import_from_glb(path, baker_node)		
 	else:
 		var scene_root = gltf_document.generate_scene(gltf_state)	
-		glb_load_assets(gltf_state, scene_root, path, metadata,no_window)
+		if gltf_state.json.scenes[0].has("extras"):
+			if gltf_state.json.scenes[0].extras.has("blend_file"):
+				scene_root.set_meta("blend_file", gltf_state.json.scenes[0].extras.blend_file)	
+			if gltf_state.json.scenes[0].extras.has("variation_groups"):
+				scene_root.set_meta("variation_groups", gltf_state.json.scenes[0].extras.variation_groups)
+		glb_load_assets(scene_root, path, metadata,no_window)
 			
-static func glb_load_assets(gltf_state, scene_root, path, metadata={},no_window:bool=false):	
+static func glb_load_assets(scene_root, path, metadata={},no_window:bool=false):	
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
-	#STEP 0: Init Asset Data
-	asset_data = AssetIOData.new()	
-	if gltf_state.json.scenes[0].has("extras"):
-		if gltf_state.json.scenes[0].extras.has("blend_file"):
-			asset_data.blend_file = gltf_state.json.scenes[0].extras.blend_file	
-		if gltf_state.json.scenes[0].extras.has("variation_groups"):
-			asset_data.variation_groups = gltf_state.json.scenes[0].extras.variation_groups						
-	asset_data.glb_path = path
-	asset_data.meta_data = metadata		
-	#STEP 1: convert gltf file into nodes
 	
-	var scene = scene_root.get_children() if not scene_root is ImporterMeshInstance3D else [scene_root]
+	#STEP 1: Init Asset Data
+	asset_data = AssetIOData.new()						
+	asset_data.glb_path = path
+	asset_data.meta_data = metadata	
+	
+	var scene: Array # children of the glb root node
+	if scene_root:		
+		scene = scene_root.get_children() if not scene_root is ImporterMeshInstance3D else [scene_root]		
+		if scene_root.has_meta("blend_file"):
+			asset_data.blend_file = scene_root.get_meta("blend_file")
+		if scene_root.has_meta("variation_groups"):
+			asset_data.variation_groups = scene_root.get_meta("variation_groups")
+	else:
+		scene = []
 	#STEP 2: convert gltf scene into AssetData format	
 	generate_asset_data_from_glb(scene)
 	asset_data.finalize_glb_parse() ## should not go after add_glb_import_info
@@ -56,7 +64,8 @@ static func glb_load_assets(gltf_state, scene_root, path, metadata={},no_window:
 	if asset_library.import_info.has(path):
 		asset_data.add_glb_import_info(asset_library.import_info[path])
 	asset_data.generate_import_tags()
-	scene_root.queue_free() ## Really important otherwise memory leaks	
+	if scene_root:
+		scene_root.queue_free() ## Really important otherwise memory leaks	
 	#STEP 4: Allow user to change import settings
 	if not no_window:
 		glb_show_import_window(asset_data)
@@ -206,6 +215,10 @@ static func glb_import_commit_changes():
 	
 	asset_library.import_info[asset_data.glb_path]["__variation_groups"] = asset_data.variation_groups
 	
+	#check if this glb was previously removed and erase "removed tag" if reimport has collections
+	if len(asset_data.collections) > 0 and asset_library.import_info.has(asset_data.glb_path) and asset_library.import_info[asset_data.glb_path].has("__removed"): 
+		asset_library.import_info[asset_data.glb_path].erase("__removed")
+	
 	asset_library.finish_import.emit(asset_data.glb_path)
 	asset_library.save()
 	EditorInterface.get_resource_filesystem().scan()
@@ -324,8 +337,8 @@ static func blender_end_number_remove(input:String)->String:
 
 static func collection_parse_name(node)->String:	
 	var material_suffix = ""
-	if node.has_meta("active_material_set_id"):
-		material_suffix = str("_", node.get_meta("active_material_set_id"))
+	#if node.has_meta("active_material_set_id"):
+	#	material_suffix = str("_", node.get_meta("active_material_set_id"))
 	var suffix_length = len(node.name.split("_")[-1])
 	if node.name.right(suffix_length).is_valid_int():  #remove the .001 suffix
 		return node.name.left(len(node.name)-suffix_length-1) + material_suffix
@@ -353,21 +366,6 @@ static func remove_collection(collection_id):
 			break
 	asset_library.save()
 
-static func remove_glb(glb_path):
-	var asset_library := MAssetTable.get_singleton()
-	if asset_library.import_info.has(glb_path):
-		for collection_name in asset_library.import_info[glb_path]:
-			if collection_name.begins_with("__"): continue			
-			if asset_library.import_info[glb_path][collection_name].mesh_id != -1:
-				for mesh_id in asset_library.mesh_item_ids_no_replace(asset_library.import_info[glb_path][collection_name].mesh_id):
-					if mesh_id == -1: continue					
-					var mesh_path = MHlod.get_mesh_path(mesh_id)
-					if FileAccess.file_exists( mesh_path ):						
-						DirAccess.remove_absolute( mesh_path )									
-			asset_library.collection_remove(asset_library.import_info[glb_path][collection_name].id)			
-			asset_library.import_info[glb_path][collection_name].id = -1				
-		asset_library.finish_import.emit(glb_path)
-		
 static func get_orphaned_collections():
 	var asset_library := MAssetTable.get_singleton()
 	var ids = asset_library.collection_get_list()			

@@ -6,7 +6,8 @@ extends Control
 @onready var show_materials_toggle:CheckButton = find_child("show_materials_toggle")
 
 var asset_library = MAssetTable.get_singleton()
-var button_texture: Texture2D
+var close_button_texture: Texture2D
+var search_button_texture: Texture2D
 var empty_click_debounce_time := 0
 
 var glb_path
@@ -34,19 +35,18 @@ func _ready():
 	glb_tree.item_activated.connect(func():		
 		AssetIO.glb_load(glb_tree.get_selected().get_text(0))
 	)
-	glb_tree.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):
+	glb_tree.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):		
 		glb_path = item.get_text(0)
 		if glb_path == "(orphans)":			
 			# THIS SHOULD NEVER HAPPEN
 			for collection_id in AssetIO.get_orphaned_collections():												
 				AssetIO.remove_collection(collection_id)				
 		else:
-			AssetIO.remove_glb(glb_path)
-			#for collection in asset_library.import_info[glb_path].keys():
-				#if "__" in collection: continue
-				#var collection_id = asset_library.import_info[glb_path][collection].id
-				#AssetIO.remove_collection(collection_id)
-			#asset_library.import_info.erase(glb_path)		
+			if id == 0:
+				EditorInterface.get_file_system_dock().navigate_to_path(glb_path)
+			elif id == 1:
+				AssetIO.glb_load_assets(null, glb_path,{}, true)
+				asset_library.import_info[glb_path]['__removed'] = true			
 		init_tree()
 	)
 	glb_details.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):		
@@ -78,7 +78,7 @@ func update_details():
 				item.set_text(0, "MATERIAL: " + material_name + " -> " + path)
 				#item.set_icon(0, texture)
 				item.set_metadata(0, material_id)					
-				#item.add_button(2, button_texture)
+				#item.add_button(2, close_button_texture)
 	
 	if glb_path == "(orphans)":			
 		for id in AssetIO.get_orphaned_collections():				
@@ -88,7 +88,7 @@ func update_details():
 				item.set_text(0, asset_library.collection_get_name(id))
 				item.set_icon(0, texture)
 				item.set_metadata(0, id)					
-				item.add_button(1, button_texture)
+				item.add_button(1, close_button_texture)
 	else:
 		for collection_name in asset_library.import_info[glb_path].keys():
 			if "__" in collection_name: continue			
@@ -99,7 +99,7 @@ func update_details():
 			item.set_text(0, collection_name)
 			item.set_icon(0, texture)
 			item.set_metadata(0, collection_id)									
-			item.add_button(1, button_texture)
+			item.add_button(1, close_button_texture)
 	
 func on_finish_import(path):	
 	init_tree()
@@ -108,24 +108,31 @@ func init_tree():
 	glb_tree.clear()
 	glb_details.clear()
 	var root := glb_tree.create_item()
-	if not button_texture:
-		button_texture = load("res://addons/m_terrain/icons/icon_close.svg")
-		var image := button_texture.get_image()
+	if not close_button_texture:
+		close_button_texture = load("res://addons/m_terrain/icons/icon_close.svg")
+		var image := close_button_texture.get_image()
 		image.resize(32,32)
-		button_texture = ImageTexture.create_from_image(image)						
-	for glb_path in asset_library.import_info.keys():
+		close_button_texture = ImageTexture.create_from_image(image)						
+	if not search_button_texture:
+		search_button_texture = load("res://addons/m_terrain/icons/search_icon.svg")
+		var image := search_button_texture.get_image()
+		image.resize(32,32)
+		search_button_texture = ImageTexture.create_from_image(image)						
+	for glb_path in asset_library.import_info.keys():		
 		if glb_path.begins_with("__"): continue
+		if asset_library.import_info[glb_path].has("__removed"): continue
 		var item = root.create_child()
-		item.set_text(0, glb_path)				
-		item.add_button(1, button_texture)
+		item.set_text(0, glb_path)						
+		item.add_button(1, search_button_texture,0)
+		item.add_button(1, close_button_texture,1)
 	if DirAccess.dir_exists_absolute(MAssetTable.get_hlod_res_dir()):
 		for hlod_path in DirAccess.get_files_at(MAssetTable.get_hlod_res_dir()):
 			var item = root.create_child()
 			item.set_text(0, hlod_path + " (hlod)")				
-			item.add_button(1, button_texture)
+			item.add_button(1, close_button_texture)
 	if len(AssetIO.get_orphaned_collections())>0:
 		var item = root.create_child()
 		item.set_text(0, "(orphans)")				
-		item.add_button(1, button_texture)
+		item.add_button(1, close_button_texture)
 
 	

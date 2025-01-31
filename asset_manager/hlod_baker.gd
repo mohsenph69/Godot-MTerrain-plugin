@@ -98,6 +98,7 @@ func bake_to_hlod_resource():
 		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,-1)
 		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,-1)
 		else: continue
+		var max = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else 1
 		for i in range(0,1):
 			hlod_resource.insert_item_in_lod_table(item_id,i)
 	##################
@@ -105,7 +106,8 @@ func bake_to_hlod_resource():
 	##################
 	for l in get_all_lights_nodes(self):
 		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform)
-		for i in range(0,2):
+		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else 1
+		for i in range(0, max):
 			hlod_resource.insert_item_in_lod_table(iid,i)
 	######################
 	## BAKE JOINED_MESH ##
@@ -354,6 +356,15 @@ func _enter_tree():
 	validate_can_bake()
 
 func validate_can_bake():
+	if EditorInterface.get_edited_scene_root() == self:
+		if not scene_file_path.get_file() == name+".tscn":
+			if FileAccess.file_exists(scene_file_path.get_base_dir().path_join(name+".tscn")):
+				name = scene_file_path.get_file().trim_suffix(".tscn")
+			else:
+				var new_path = scene_file_path.get_base_dir().path_join(name+".tscn")
+				DirAccess.rename_absolute(scene_file_path, new_path)
+				scene_file_path = new_path
+				
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	
 	if not FileAccess.file_exists(path): 
 		can_bake = true
