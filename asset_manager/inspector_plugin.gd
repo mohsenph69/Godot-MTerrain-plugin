@@ -7,6 +7,7 @@ func _can_handle(object):
 	if object is MAssetTable:return true
 	if object is HLod_Baker: return true
 	if EditorInterface.get_edited_scene_root() is HLod_Baker: return true
+	if object is MHlodNode3D: return true	
 	if object is MHlodScene: return true
 	if object is MAssetMesh: return true	
 	if object is MMesh: return true		
@@ -33,6 +34,11 @@ func _parse_begin(object):
 	elif object is MMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
 		control.mmesh = object		
+	elif object is MHlodNode3D:		
+		print("AA")
+		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()
+		control.mhlod_node = object
+		
 	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
 		if object.get_class() == "Node3D":
 			control = Button.new()
@@ -41,7 +47,7 @@ func _parse_begin(object):
 				object.set_script(preload("res://addons/m_terrain/asset_manager/hlod_baker.gd"))
 				object._ready()				
 			)			
-		elif object is OmniLight3D or object is SpotLight3D or object is MHlodNode3D or object is CollisionShape3D:
+		elif object is OmniLight3D or object is SpotLight3D or object is CollisionShape3D:
 			control = HBoxContainer.new()
 			var label = Label.new()
 			label.text = "Cutoff at Lod "
@@ -53,7 +59,7 @@ func _parse_begin(object):
 			spinbox.value_changed.connect(func(new_value):
 				object.set_meta("lod_cutoff", new_value)
 			)
-		
+	
 	margin.add_child(control)
 	add_custom_control(margin)			
 		
