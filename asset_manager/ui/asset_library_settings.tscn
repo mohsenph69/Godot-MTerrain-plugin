@@ -103,6 +103,7 @@ custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
 [node name="manage_tags" type="HSplitContainer" parent="tab_container"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 split_offset = 65

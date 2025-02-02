@@ -1,9 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://cx62jqylamm04"]
+[gd_scene load_steps=2 format=3 uid="uid://cx62jqylamm04"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/collection_inspector.gd" id="1_vx466"]
-
-[sub_resource type="LabelSettings" id="LabelSettings_ascgn"]
-font_size = 24
 
 [node name="Control" type="VBoxContainer"]
 anchors_preset = 15
@@ -12,25 +9,3 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_vx466")
-
-[node name="Debug" type="VBoxContainer" parent="."]
-visible = false
-layout_mode = 2
-
-[node name="collection_name" type="Label" parent="Debug"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Collection"
-label_settings = SubResource("LabelSettings_ascgn")
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="collection_details" type="Label" parent="Debug"]
-unique_name_in_owner = true
-layout_mode = 2
-autowrap_mode = 2
-
-[node name="mesh_details" type="Label" parent="Debug"]
-unique_name_in_owner = true
-layout_mode = 2
-autowrap_mode = 2

@@ -10,13 +10,16 @@ const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_bake
 @onready var ungrouped = find_child("other")
 @onready var grouping_popup:Popup = find_child("grouping_popup")
 @onready var search_collections_node:Control = find_child("search_collections")
-@onready var group_by_button:Button = find_child("group_by_button")	
+@onready var group_by_button:Button = find_child("group_by_button")		
+
 @onready var place_button:Button = find_child("place_button")	
 @onready var snap_enabled_button:BaseButton = find_child("snap_enabled_button")
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
 
-@onready var make_baker_btn:Button = find_child("make_baker_btn")
+@onready var add_asset_button:Button = find_child("add_asset_button")
+@onready var add_baker_button:Button = find_child("add_baker_button")
+@onready var add_decal_button:Button = find_child("add_decal_button")
 
 @onready var x_btn:Button = find_child("x_btn")
 @onready var y_btn:Button = find_child("y_btn")
@@ -46,6 +49,7 @@ var current_selection := [] #array of collection name
 var current_search := ""
 var current_filter_mode_all := false
 var current_filter_tags := []
+var current_filter_types := 0
 var current_group := "None" #group name
 
 var last_regroup = null
@@ -85,7 +89,7 @@ func _ready():
 	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
 	grouping_popup.group_selected.connect(regroup)		
 	place_button.toggled.connect(func(toggle_on):		
-		%place_options_hbox.visible = toggle_on
+		#%place_options_hbox.visible = toggle_on
 		if toggle_on:			
 			object_being_placed = collection_item_activated(active_group_list_item, active_group_list,false)
 			var viewport_camera = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()
@@ -105,19 +109,27 @@ func _ready():
 				object_being_placed.queue_free()
 				object_being_placed = null
 	)
-	
-	make_baker_btn.button_down.connect(func():
-		var selection = EditorInterface.get_selection().get_selected_nodes()
-		if selection.size() != 1:MTool.print_edmsg("Select only one Node3d to be baker")
-		else:
-			var sel_node = selection[0]
-			if sel_node.get_class()!="Node3D": MTool.print_edmsg("Selected node must be Node3D type")
-			elif sel_node.get_script()!=null: MTool.print_edmsg("Selected node already has a Gdscript please select a node with no script!!!")
-			else:
-				sel_node.set_script(hlod_baker_script)
-				sel_node._ready()
-				sel_node._enter_tree()
-		)
+			
+	add_baker_button.pressed.connect(func():		
+		var dir = MAssetTable.get_editor_baker_scenes_dir()
+		var existing_files = DirAccess.get_files_at(dir)		
+		var file = "baker.tscn" 
+		var i = 0		
+		while file in existing_files:			
+			i+= 1
+			file = "baker" +str(i) +".tscn"
+		var node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
+		node.name = file.trim_suffix(".tscn")
+		var packed = PackedScene.new()
+		packed.pack(node)
+		ResourceSaver.save(packed, dir.path_join(file))		
+		EditorInterface.open_scene_from_path(dir.path_join(file))
+		#EditorInterface.get_edited_scene_root().name = "baker" +str(i) 
+	)
+	find_child("asset_type_tree").asset_type_filter_changed.connect(func(selected_types):
+		current_filter_types = selected_types
+		regroup()
+	)
 
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
@@ -230,20 +242,18 @@ func _drop_data(at_position, data):
 ####################
 func get_filtered_collections(text="", tags_to_excluded=[]):		
 	var result = []
-	var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
-	var searched_collections = asset_library.collection_names_begin_with(text) if not text in [null, ""]  else asset_library.collection_get_list()		
+	result = asset_library.collections_get_by_type(current_filter_types)
+	#var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
+	var collection_to_include = null
 	if current_filter_tags and len(current_filter_tags)>0:
-		if current_filter_mode_all:		
-			result = Array(asset_library.tags_get_collections_all(current_filter_tags))
+		if current_filter_mode_all:					
+			result = asset_library.tags_get_collections_all(result, current_filter_tags, tags_to_excluded)
 		else:		
-			result = Array(asset_library.tags_get_collections_any(current_filter_tags))	
-	else:
-		result = Array(searched_collections)		
-	for id in result.duplicate():				
-		if not id in searched_collections:			
-			result.erase(id)		
-		if id in collections_to_exclude:
-			result.erase(id)			
+			result = asset_library.tags_get_collections_any(result, current_filter_tags, tags_to_excluded)
+	
+	if not text.is_empty():
+		for i in range(len(result)-1, -1):									
+			if not text.to_lower() in asset_library.collection_get_name(result[i]).to_lower(): return result.remove_at(i)				
 	return result
 	
 func debounce_regroup():
@@ -261,7 +271,6 @@ func debounce_regroup():
 	return true
 	
 func regroup(group = current_group, sort_mode="asc"):	
-	
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
@@ -287,14 +296,13 @@ func regroup(group = current_group, sort_mode="asc"):
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
 		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
-		for tag_id in asset_library.group_get_tags(group):
-			if current_filter_tags and len(current_filter_tags) >0:
-				if not tag_id in current_filter_tags: 
-					continue							
+		var processed_collection: PackedInt32Array = []
+		for tag_id in asset_library.group_get_tags(group) :			
 			var tag_name = asset_library.tag_get_name(tag_id)
 			if tag_name == "": continue
 			var group_control
 			var sorted_items = []
+			# Make the tag button if it doesn't exist yet
 			if not groups.has_node(tag_name):				
 				group_control = group_control_scene.instantiate()								
 				groups.add_child(group_control)							
@@ -310,19 +318,21 @@ func regroup(group = current_group, sort_mode="asc"):
 			else:
 				group_control = groups.get_node(tag_name)			
 				group_control.group_list.clear()
-			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
+						
+			for collection_id in asset_library.tags_get_collections_any(filtered_collections, [tag_id],[]):
 				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
+				processed_collection.push_back(collection_id)
 			if sort_mode == "asc":
 				sorted_items.sort_custom(func(a,b): return a.name < b.name)
 			elif sort_mode == "desc":
 				sorted_items.sort_custom(func(a,b): return a.name > b.name)
 			for item in sorted_items:
 				group_control.add_item(item.name, item.id)		
+		# Now add leftovers to "Ungrouped" tag
 		ungrouped.group_list.clear()		
 		var sorted_items = []
-		for id in filtered_collections:
-			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):
-				sorted_items.push_back({"name": asset_library.collection_get_name(id), "id":id})				
+		for collection_id in asset_library.tags_get_collections_any(filtered_collections, current_filter_tags, processed_collection ):
+			sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)
 		elif sort_mode == "desc":
@@ -332,15 +342,26 @@ func regroup(group = current_group, sort_mode="asc"):
 	current_group = group
 
 func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
-	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_text(id),create_ur)		
+	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_tooltip(id),create_ur)		
 	return node 
 
 func add_asset_to_scene(id, asset_name,create_ur:=true):
-	var node = MAssetMesh.new()
-	node.collection_id = id		
-	var blend_file = AssetIO.get_asset_blend_file(node.collection_id) 
-	if blend_file:
-		node.set_meta("blend_file", blend_file)
+	var node
+	if id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
+		node = MAssetMesh.new()
+		node.collection_id = id		
+		var blend_file = AssetIO.get_asset_blend_file(node.collection_id) 
+		if blend_file:
+			node.set_meta("blend_file", blend_file)
+	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
+		node = MHlodScene.new()		
+		node.hlod = load(MHlod.get_hlod_path( asset_library.collection_get_item_id(id) ))
+		node.set_meta("collection_id", id)
+	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
+		node = load(MHlod.get_decal_path( asset_library.collection_get_item_id(id) ))		
+	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+		node = load(MHlod.get_packed_scene_path( asset_library.collection_get_item_id(id) ))
+		
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	var main_selected_node = null
@@ -526,3 +547,9 @@ func init_debug_tags():
 			asset_library.group_add_tag(group, tag_id)			
 	asset_library.save()	
 #endregion
+
+func open_settings_window(tab, data):
+	if tab == "tag":
+		settings_button.button_pressed = true
+		settings_button.settings.select_tab("manage_tags")
+		settings_button.settings.manage_tags_control.select_collection(data)		

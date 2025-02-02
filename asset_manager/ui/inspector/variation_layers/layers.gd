@@ -63,19 +63,19 @@ func button_pressed(toggle:bool,bit:int):
 		for i in len(btns):
 			btns[i].set_pressed_no_signal(i == bit)
 	else:
-		value_changed.emit(get_value())	
+		value_changed.emit(get_value())		
 	
 func set_value(val:int)->void:
 	if val > max_value:
 		push_warning("value ",val,"is bigger than max value ", max_value, " some bits will be ignored")
 	for i in range(0,btns.size()):
 		var b:Button = btns[i]
-		b.button_pressed = val & (1 << i)		
+		b.button_pressed = val & (1 << i)			
 
 func get_value()->int:
 	var val:int = 0
 	for i in range(0,btns.size()):
 		var b:Button = btns[i]
 		if b.button_pressed:
-			val |= 1 << i
+			val |= 1 << i	
 	return val

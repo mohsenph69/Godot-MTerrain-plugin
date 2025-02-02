@@ -64,7 +64,7 @@ static func baker_parse_glb(baker_node:Node3D):
 			node.set_meta("import_error", "has no blend file metadata")			
 			continue
 		var glb_path = asset_library.import_info["__blend_files"][node.get_meta("blend_file")]			
-		var node_name := AssetIO.collection_parse_name(node)
+		var node_name := AssetIO.collection_parse_name(node)		
 		if not asset_library.import_info[glb_path].has(node_name):			
 			node.set_meta("import_error", str("import info does not have this node name for this glb: ", node_name, " <- ", glb_path))
 			continue

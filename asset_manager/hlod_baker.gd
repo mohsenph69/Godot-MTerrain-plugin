@@ -47,6 +47,7 @@ func force_lod(lod:int):
 		
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
+	var aabb: AABB	
 	hlod_resource = MHlod.new()
 	hlod_resource.set_baker_path(scene_file_path)
 	var join_at_lod = MAssetTable.mesh_join_start_lod(joined_mesh_id)	
@@ -55,7 +56,13 @@ func bake_to_hlod_resource():
 	#################
 	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())				
 	var baker_inverse_transform = global_transform.inverse()		
+	var first_item = true
 	for item:MAssetMesh in all_masset_mesh_nodes:				
+		if first_item:
+			first_item = false
+			aabb = item.get_joined_aabb()
+		else:
+			aabb.merge( item.get_joined_aabb() )			
 		if item.collection_id == -1: continue							
 		for mdata:MAssetMeshData in item.get_mesh_data():						
 			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
@@ -98,6 +105,7 @@ func bake_to_hlod_resource():
 		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,-1)
 		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,-1)
 		else: continue
+		var max = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else 1
 		for i in range(0,1):
 			hlod_resource.insert_item_in_lod_table(item_id,i)
 	##################
@@ -105,13 +113,15 @@ func bake_to_hlod_resource():
 	##################
 	for l in get_all_lights_nodes(self):
 		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform)
-		for i in range(0,2):
+		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else 1
+		for i in range(0, max):
 			hlod_resource.insert_item_in_lod_table(iid,i)
+			
 	######################
 	## BAKE JOINED_MESH ##
 	######################
 	var joined_mesh_array = MAssetTable.mesh_join_meshes(joined_mesh_id) 
-		
+	MHlod
 	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
 		material_array.resize(len(joined_mesh_array))
@@ -167,8 +177,17 @@ func bake_to_hlod_resource():
 	if save_err == OK:
 		MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
 		MAssetTable.save()
+	make_hlod_thumbnail(aabb)
 	MHlodScene.awake()
 	#EditorInterface.get_resource_filesystem().scan()
+
+func make_hlod_thumbnail(aabb:AABB):
+	aabb.grow(5)
+	var cam = Camera3D.new()
+	#cam.look_at_from_position()
+	#aabb.get_center()
+	asset_mesh_updater.update_force_lod(0)
+		
 
 #region Getters
 func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
@@ -354,6 +373,15 @@ func _enter_tree():
 	validate_can_bake()
 
 func validate_can_bake():
+	if EditorInterface.get_edited_scene_root() == self:
+		if not scene_file_path.get_file() == name+".tscn":
+			if FileAccess.file_exists(scene_file_path.get_base_dir().path_join(name+".tscn")):
+				name = scene_file_path.get_file().trim_suffix(".tscn")
+			else:
+				var new_path = scene_file_path.get_base_dir().path_join(name+".tscn")
+				DirAccess.rename_absolute(scene_file_path, new_path)
+				scene_file_path = new_path
+				
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	
 	if not FileAccess.file_exists(path): 
 		can_bake = true
