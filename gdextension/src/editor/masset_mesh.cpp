@@ -731,7 +731,9 @@ Ref<ArrayMesh> MAssetMesh::get_merged_mesh(bool lowest_lod){
     bool was_data_size_zero = instance_data.size()==0;
     if(was_data_size_zero){
         update_instance_date();
-        ERR_FAIL_COND_V(instance_data.size()==0,nullptr);
+        if(instance_data.size()==0){
+            return nullptr;
+        }
     }
     Ref<MMeshJoiner> mesh_joiner;
     mesh_joiner.instantiate();

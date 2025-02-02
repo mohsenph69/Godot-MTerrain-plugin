@@ -151,15 +151,9 @@ class MAssetTable : public Resource {
     Dictionary tag_get_names() const;
     int tag_get_id(const String& tag_name);
     PackedInt32Array tag_get_collections(int tag_id) const;
-    PackedInt32Array tag_get_collections_in_collections(const PackedInt32Array& search_collections,int tag_id) const;
-    PackedInt32Array tags_get_collections_any(const PackedInt32Array& tags) const;
-    PackedInt32Array tags_get_collections_all(const PackedInt32Array& tags) const;
-
-    PackedInt32Array tags_get_collections_in_collections_any(const PackedInt32Array& search_collections,const PackedInt32Array& tags) const;
-    PackedInt32Array tags_get_collections_in_collections_all(const PackedInt32Array& search_collections,const PackedInt32Array& tags) const;
-
+    PackedInt32Array tags_get_collections_any(const PackedInt32Array& search_collections,const PackedInt32Array& tags,const PackedInt32Array& exclude_tags) const;
+    PackedInt32Array tags_get_collections_all(const PackedInt32Array& search_collections,const PackedInt32Array& tags,const PackedInt32Array& exclude_tags) const;
     PackedInt32Array tag_get_tagless_collections() const;
-    PackedInt32Array tag_names_begin_with(const String& prefix);
 
     static void update_last_free_mesh_id();
     static int mesh_item_get_max_lod();
@@ -210,7 +204,6 @@ class MAssetTable : public Resource {
     String collection_get_name(int collection_id) const;
     int collection_get_id(const String& name) const;
     PackedInt32Array collection_get_tags(int collection_id) const;
-    PackedInt32Array collection_names_begin_with(const String& prefix) const;
     Vector<Pair<int,Transform3D>> collection_get_sub_collection_id_transform(int collection_id) const;
 
     bool group_exist(const String& gname) const;

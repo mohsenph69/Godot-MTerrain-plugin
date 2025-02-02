@@ -30,12 +30,23 @@ class MHlod : public Resource{
         Vector<int64_t> shapes;
         _FORCE_INLINE_ PhysicBodyInfo(RID body_rid):rid(body_rid){}
     };
-    
-    enum Type : uint8_t {NONE,MESH,COLLISION,LIGHT};
+    struct ItemResource {
+        RID rid;
+        PackedScene* packed_scene = nullptr;
+        _FORCE_INLINE_ ItemResource(const RID p_rid){
+            rid = p_rid;
+        }
+        _FORCE_INLINE_ ItemResource(PackedScene* p_packed_scene){
+            packed_scene = p_packed_scene;
+        }
+    };
+    static inline const char* type_string = "NONE,MESH,COLLISION,LIGHT,PACKED_SCENE,DECAL";
+    enum Type : uint8_t {NONE,MESH,COLLISION,LIGHT,PACKED_SCENE,DECAL};
     struct Item
     {
         friend MHlod;
         Type type = NONE; // 0
+        bool is_bound = false;
         int8_t lod = -1; // 1
         uint16_t item_layers = 0;
         int32_t transform_index = -1; // Same as unique id for each Item with different LOD
@@ -44,6 +55,7 @@ class MHlod : public Resource{
             MHLodItemMesh mesh;
             MHLodItemCollision collision;
             MHLodItemLight light;
+            MHLodItemPackedScene packed_scene;
         };
         void create();
         void copy(const Item& other);
@@ -55,7 +67,7 @@ class MHlod : public Resource{
         Item(const Item& other);
         Item& operator=(const Item& other);
         
-        _FORCE_INLINE_ RID get_rid_and_add_user();
+        _FORCE_INLINE_ ItemResource get_res_and_add_user();
         _FORCE_INLINE_ void remove_user();
 
         void set_data(const Dictionary& d);
@@ -64,7 +76,7 @@ class MHlod : public Resource{
     private:
     // -1 is default static body any invalid id use default body
     // -2 is invalid static body
-    static inline HashMap<int,PhysicBodyInfo> physic_bodies;
+    static inline HashMap<int16_t,PhysicBodyInfo> physic_bodies;
 
 
     /* Item List structure
@@ -108,8 +120,9 @@ class MHlod : public Resource{
     static String get_collsion_path(int id);
     static String get_hlod_root_dir();
     static String get_hlod_path(int id);
-    static _FORCE_INLINE_ MHlod::PhysicBodyInfo& get_physic_body(int id);
+    static _FORCE_INLINE_ MHlod::PhysicBodyInfo& get_physic_body(int16_t id);
 
+    MHlod::Type get_item_type(int32_t item_id) const;
     void set_join_at_lod(int input);
     int get_join_at_lod();
     int get_sub_hlod_size_rec();
@@ -125,12 +138,15 @@ class MHlod : public Resource{
 
 
     /// Physics
-    int shape_add_sphere(const Transform3D& _transform,float radius,int body_id=-1);
-    int shape_add_box(const Transform3D& _transform,const Vector3& size,int body_id=-1);
-    int shape_add_capsule(const Transform3D& _transform,float radius,float height,int body_id=-1);
-    int shape_add_cylinder(const Transform3D& _transform,float radius,float height,int body_id=-1);
+    int shape_add_sphere(const Transform3D& _transform,float radius,uint16_t layers,int body_id=-1);
+    int shape_add_box(const Transform3D& _transform,const Vector3& size,uint16_t layers,int body_id=-1);
+    int shape_add_capsule(const Transform3D& _transform,float radius,float height,uint16_t layers,int body_id=-1);
+    int shape_add_cylinder(const Transform3D& _transform,float radius,float height,uint16_t layers,int body_id=-1);
 
-    int light_add(Object* light_node,const Transform3D transform);
+    int packed_scene_add(const Transform3D& _transform,int32_t id,int32_t arg0,int32_t arg1,int32_t arg2,uint16_t layers);
+    void packed_scene_set_bind_items(int32_t packed_scene_item_id,int32_t bind0,int32_t bind1);
+
+    int light_add(Object* light_node,const Transform3D transform,uint16_t layers);
 
     void set_baker_path(const String& input);
     String get_baker_path();
@@ -140,6 +156,7 @@ class MHlod : public Resource{
 
 
     void start_test(){
+        if(false){
         MHLodItemLight l = item_list[61].light;
         UtilityFunctions::print("energy ",l.energy);
         UtilityFunctions::print("light_indirect_energy ",l.light_indirect_energy);
@@ -150,8 +167,9 @@ class MHlod : public Resource{
         UtilityFunctions::print("range ",l.range);
         UtilityFunctions::print("attenuation ",l.attenuation);
         UtilityFunctions::print("shadow_mode ",l.shadow_mode);
-
-        return;
+        }
+        
+        UtilityFunctions::print("size of MHLodItemPackedScene ",sizeof(MHLodItemPackedScene));
         UtilityFunctions::print("size of light ",sizeof(MHLodItemLight));
         UtilityFunctions::print("so of MHLodItemMesh  ",sizeof(MHLodItemMesh));
         UtilityFunctions::print("so of MHLodItemCollision  ",sizeof(MHLodItemCollision));
@@ -163,19 +181,22 @@ class MHlod : public Resource{
 };
 
 
-_FORCE_INLINE_ RID MHlod::Item::get_rid_and_add_user(){
+_FORCE_INLINE_ MHlod::ItemResource MHlod::Item::get_res_and_add_user(){
     user_count++;
     if(user_count==1){
         switch (type)
         {
         case Type::MESH:
-            return mesh.load();
+            return ItemResource(mesh.load());
             break;
         case Type::COLLISION:
-            return collision.load();
+            return ItemResource(collision.load());
             break;
         case Type::LIGHT:
-            return light.load();
+            return ItemResource(light.load());
+            break;
+        case Type::PACKED_SCENE:
+            return ItemResource(packed_scene.load());
             break;
         default:
             ERR_FAIL_V_MSG(RID(),"Undefine Item Type!");
@@ -185,13 +206,16 @@ _FORCE_INLINE_ RID MHlod::Item::get_rid_and_add_user(){
         switch (type)
         {
         case Type::MESH:
-            return mesh.get_mesh();
+            return ItemResource(mesh.get_mesh());
             break;
         case Type::COLLISION:
-            return collision.get_shape();
+            return ItemResource(collision.get_shape());
             break;
         case Type::LIGHT:
-            return light.get_light();
+            return ItemResource(light.get_light());
+        case Type::PACKED_SCENE:
+            return ItemResource(packed_scene.get_packed_scene());
+            break;
         default:
             ERR_FAIL_V_MSG(RID(),"Undefine Item Type!");
             break;
@@ -222,7 +246,7 @@ _FORCE_INLINE_ void MHlod::Item::remove_user(){
     }
 }
 
-_FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int id){
+_FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
     if(physic_bodies.has(id)){
         return *physic_bodies.getptr(id);
     }
@@ -242,7 +266,7 @@ _FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int id){
         physic_bodies.insert(id,p);
         return *physic_bodies.getptr(id);
     }
-    String spath = M_GET_MESH_PATH(id);
+    String spath = M_GET_PHYSIC_SETTING_PATH(id);
     Ref<MHlodCollisionSetting> setting = RL->load(spath);
     ERR_FAIL_COND_V_MSG(setting.is_null(),*physic_bodies.getptr(-1),"Physic Setting does not load: "+spath);
     RID r = PhysicsServer3D::get_singleton()->body_create();
@@ -263,4 +287,5 @@ _FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int id){
     physic_bodies.insert(id,r);
     return *physic_bodies.getptr(id);
 }
+VARIANT_ENUM_CAST(MHlod::Type);
 #endif

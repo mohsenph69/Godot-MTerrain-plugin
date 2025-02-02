@@ -3,6 +3,9 @@
 #include <godot_cpp/templates/hash_set.hpp>
 #include <godot_cpp/classes/world3d.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
+
+#include "mhlod_node3d.h"
+
 #define RS RenderingServer::get_singleton()
 
 
@@ -24,19 +27,6 @@ void MHlodScene::_bind_methods(){
     ClassDB::bind_static_method("MHlodScene",D_METHOD("awake"), &MHlodScene::awake);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("get_hlod_users","hlod_path"), &MHlodScene::get_hlod_users);
 
-    ClassDB::bind_method(D_METHOD("check_transform_change"), &MHlodScene::check_transform_change);
-}
-
-
-void MHlodScene::CreationInfo::set_rid(const RID input){
-    rid = input.get_id();
-}
-
-RID MHlodScene::CreationInfo::get_rid() const{
-    /// As there is no way to set a RID value by integer we do this
-    RID out;
-    memcpy(&out,&rid,sizeof(RID));
-    return out;
 }
 
 MHlodScene::ApplyInfo::ApplyInfo(MHlod::Type _type,bool _remove): type(_type) , remove(_remove)
@@ -96,17 +86,17 @@ void MHlodScene::Proc::enable(const bool recursive){
     }
 }
 
-void MHlodScene::Proc::disable(const bool recursive){
+void MHlodScene::Proc::disable(const bool recursive,const bool immediate,const bool is_destruction){
     if(!is_enable){
         return;
     }
     is_enable = false;
     is_sub_proc_enable = false;
-    remove_all_items(false);
+    remove_all_items(immediate,is_destruction);
     MHlodScene::remove_proc(oct_point_id);
     if(recursive){
         for(int i=0; i < sub_procs_size; i++){
-            get_subprocs_ptrw()[i].disable();
+            get_subprocs_ptrw()[i].disable(recursive,immediate,is_destruction);
         }
     }
 }
@@ -132,7 +122,8 @@ void MHlodScene::Proc::disable_sub_proc(){
 }
 
 void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool immediate){
-    RID item_rid = item->get_rid_and_add_user(); // must be called here, this will load if it is not loaded
+    MHlod::ItemResource item_res = item->get_res_and_add_user(); // must be called here, this will load if it is not loaded
+    GlobalItemID gitem_id(oct_point_id,item->transform_index);
     // Item transform will be our transform * item_transform
     bool item_exist = false;
     CreationInfo ci;
@@ -141,6 +132,12 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
         item_exist = true;
         if(ci.item_id==item_id){
             // nothing to do already exist
+            // only norify packed scene about new update!
+            if(item->type==MHlod::Type::PACKED_SCENE){
+                if(ci.root_node!=nullptr){
+                    ci.root_node->call_deferred("_notify_update_lod",lod);
+                }
+            }
             return;
         }
     }
@@ -148,16 +145,16 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
     {
     case MHlod::Type::MESH:
         {
-            if(item_rid.is_valid()){
+            if(item_res.rid.is_valid()){
                 RID instance;
                 if(!item_exist){
                     instance = RS->instance_create();
                     RS->instance_set_scenario(instance,octree->get_scenario());
-                    RS->instance_set_transform(instance,transform * hlod->transforms[item->transform_index]);
+                    RS->instance_set_transform(instance,get_item_transform(item));
                     // in this case we need to insert this inside creation info as it changed
                     ci.set_rid(instance);
                     // Generating apply info
-                    if(!is_visible){
+                    if(!is_visible || (item->is_bound && bind_item_get_disable(gitem_id))){
                         RS->instance_set_visible(instance,false);
                     } else if(!immediate){
                         ApplyInfo ainfo(MHlod::Type::MESH,false);
@@ -165,12 +162,12 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
                         apply_info.push_back(ainfo);
                         RS->instance_set_visible(instance,false);
                     }
-                    RS->instance_set_base(instance,item_rid);
+                    RS->instance_set_base(instance,item_res.rid);
                 } else {
                     // changing one instance mesh should not result in flickering
                     // if this happen later we should consider a change here
                     instance = ci.get_rid();
-                    RS->instance_set_base(instance,item_rid);
+                    RS->instance_set_base(instance,item_res.rid);
                     ERR_FAIL_COND(ci.item_id==-1);
                     hlod->item_list.ptrw()[ci.item_id].remove_user();
                 }
@@ -190,28 +187,62 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
         }
         break;
     case MHlod::Type::LIGHT:
-        if(item_rid.is_valid()){
+        if(item_res.rid.is_valid()){
             RID instance = RS->instance_create();
             RS->instance_set_scenario(instance,octree->get_scenario());
-            RS->instance_set_transform(instance,transform * hlod->transforms[item->transform_index]);
+            RS->instance_set_transform(instance,get_item_transform(item));
             ci.set_rid(instance);
-            RS->instance_set_base(instance,item_rid);
+            RS->instance_set_base(instance,item_res.rid);
+            if(!is_visible || (item->is_bound && bind_item_get_disable(gitem_id))){
+                RS->instance_set_visible(instance,false);
+            }
         } else {
             // Basically this should not happen
             remove_item(item,item_id);
             ERR_FAIL_MSG("Item empty light");
         }
+        break;
     case MHlod::Type::COLLISION:
-        if(item_rid.is_valid()){
-            MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(item->collision.get_body_id());
-            GlobalItemID gitem_id(oct_point_id,item->transform_index);
-            PhysicsServer3D::get_singleton()->body_add_shape(body_info.rid,item_rid);
-            PhysicsServer3D::get_singleton()->body_set_shape_transform(body_info.rid,body_info.shapes.size(),transform * hlod->transforms[item->transform_index]);
+        if(item_res.rid.is_valid()){
+            ci.body_id = item->collision.get_body_id();
+            MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(ci.body_id);
+            PhysicsServer3D::get_singleton()->body_add_shape(body_info.rid,item_res.rid);
+            PhysicsServer3D::get_singleton()->body_set_shape_transform(body_info.rid,body_info.shapes.size(),get_item_transform(item));
+            if(item->is_bound && bind_item_get_disable(gitem_id)){
+                PhysicsServer3D::get_singleton()->body_set_shape_disabled(body_info.rid,body_info.shapes.size(),true);
+            }
             body_info.shapes.push_back(gitem_id.id); // should be at end
         } else {
             // Basically this should not happen
             remove_item(item,item_id);
             ERR_FAIL_MSG("Item empty Shape");
+        }
+        break;
+    case MHlod::Type::PACKED_SCENE:
+        if(item_res.packed_scene!=nullptr){
+            Node* node = item_res.packed_scene->instantiate();
+            ERR_FAIL_COND(node==nullptr);
+            MHlodNode3D* hlod_node = Object::cast_to<MHlodNode3D>(node);
+            if(hlod_node==nullptr){
+                WARN_PRINT(node->get_name()+String(" Can not cast to MHlodNode3D"));
+                node->queue_free();
+                return;
+            }
+            // Setting Packed Scene Variables
+            hlod_node->global_id = GlobalItemID(oct_point_id,item->transform_index);
+            hlod_node->permanent_id = PermanentItemID(proc_id,item_id);
+            hlod_node->proc = this;
+            hlod_node->set_transform(hlod->transforms[item->transform_index]); // PackeScene transform is different from above
+            for(int i=0;i<M_PACKED_SCENE_ARG_COUNT;i++){hlod_node->args[i] = item->packed_scene.args[i];}
+            for(int i=0;i<M_PACKED_SCENE_BIND_COUNT;i++){hlod_node->bind_items[i] = get_item_global_id(item->packed_scene.bind_items[i]);}
+            // Done
+            scene->call_deferred("add_child",hlod_node);
+            ci.root_node = hlod_node;
+            ci.root_node->call_deferred("_notify_update_lod",lod);
+        } else {
+            // Basically this should not happen
+            remove_item(item,item_id);
+            ERR_FAIL_MSG("Item empty Packed Scene");
         }
         break;
     default:
@@ -221,11 +252,26 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
     ci.type = item->type;
     ci.item_id = item_id;
     items_creation_info.insert(item->transform_index,ci);
+    if(item->is_bound){
+        std::lock_guard<std::mutex> plock(packed_scene_mutex);
+        GlobalItemID igid(oct_point_id,item->transform_index);
+        bound_items_creation_info.insert(igid.id,ci);
+    }
 }
 
-void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const bool immediate){
+void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const bool immediate,const bool is_destruction){
     if(!items_creation_info.has(item->transform_index)){
         return;
+    }
+    GlobalItemID gitem_id(oct_point_id,item->transform_index);
+    if(item->is_bound){
+        std::lock_guard<std::mutex> plock(packed_scene_mutex);
+        bound_items_creation_info.erase(gitem_id.id);
+    }
+    if(item->is_bound){
+        std::lock_guard<std::mutex> plock(packed_scene_mutex);
+        GlobalItemID igid(oct_point_id,item->transform_index);
+        bound_items_creation_info.erase(igid.id);
     }
     CreationInfo c_info = items_creation_info[item->transform_index];
     switch (item->type)
@@ -257,7 +303,6 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
         break;
     case MHlod::Type::COLLISION:
         {
-            GlobalItemID gitem_id(oct_point_id,item->transform_index);
             MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(item->collision.get_body_id());
             int shape_index_in_body = body_info.shapes.find(gitem_id.id);
             ERR_FAIL_COND(shape_index_in_body==-1);
@@ -266,24 +311,48 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
             item->remove_user();
         }
         break;
+    case MHlod::Type::PACKED_SCENE:
+        {
+            std::lock_guard<std::mutex> lock(packed_scene_mutex);
+            if(removed_packed_scenes.has(c_info.root_node)){
+                removed_packed_scenes.erase(c_info.root_node);
+            } else if(c_info.root_node!=nullptr){
+                if(is_destruction){
+                    c_info.root_node->proc = nullptr;
+                }
+                c_info.root_node->call_deferred("queue_free");
+            }
+        }
+        break;
     default:
         break;
     }
     items_creation_info.erase(item->transform_index);
 }
-
-_FORCE_INLINE_ void MHlodScene::Proc::update_item_transform(MHlod::Item* item){
-    if(!items_creation_info.has(item->transform_index)){
+// Must be protect with packed_scene_mutex if Item is_bound = true
+void MHlodScene::Proc::update_item_transform(const int32_t transform_index,const Transform3D& new_transform){
+    if(!items_creation_info.has(transform_index)){
         return;
     }
-    CreationInfo c_info = items_creation_info[item->transform_index];
-    switch (item->type)
+    CreationInfo c_info = items_creation_info[transform_index];
+    switch (c_info.type)
     {
     case MHlod::Type::MESH:
+    case MHlod::Type::LIGHT:
         {
             RID instance = c_info.get_rid();
             if(instance.is_valid()){
-                RS->instance_set_transform(instance,transform * hlod->transforms[item->transform_index]);
+                RS->instance_set_transform(instance,new_transform);
+            }
+        }
+        break;
+    case MHlod::Type::COLLISION:
+        {
+            GlobalItemID gid(oct_point_id,transform_index);
+            MHlod::PhysicBodyInfo& b = MHlod::get_physic_body(c_info.body_id);
+            int findex = b.shapes.find(gid.id);
+            if(findex!=-1){
+                PhysicsServer3D::get_singleton()->body_set_shape_transform(b.rid,findex,new_transform);
             }
         }
         break;
@@ -294,18 +363,24 @@ _FORCE_INLINE_ void MHlodScene::Proc::update_item_transform(MHlod::Item* item){
 
 void MHlodScene::Proc::update_all_transform(){
     if(lod<0 || lod >= hlod->lods.size() || hlod->lods[lod].size() == 0){
-        return; // Nothing to remove
+        return;
     }
     VSet<int32_t> lod_table = hlod->lods[lod];
     for(int i=0; i < lod_table.size(); i++){
         ERR_FAIL_INDEX(lod_table[i],hlod->item_list.size());
         MHlod::Item* item = hlod->item_list.ptrw() + lod_table[i];
-        update_item_transform(item);
+        Transform3D t = get_item_transform(item);
+        if(item->is_bound){
+            std::lock_guard<std::mutex> plock(packed_scene_mutex);
+            update_item_transform(item->transform_index,t);
+        } else {
+            update_item_transform(item->transform_index,t);
+        }
     }
 }
 
 void MHlodScene::Proc::reload_meshes(const bool recursive){
-    remove_all_items(true,false);
+    remove_all_items(true);
     int8_t __cur_lod = lod;
     lod = -1; // because update_lod function should know we don't have any mesh from before
     update_lod(__cur_lod, true);
@@ -317,7 +392,7 @@ void MHlodScene::Proc::reload_meshes(const bool recursive){
     }
 }
 
-void MHlodScene::Proc::remove_all_items(const bool immediate,const bool recursive){
+void MHlodScene::Proc::remove_all_items(const bool immediate,const bool is_destruction){
     if(hlod.is_null()){
         return;
     }
@@ -326,20 +401,7 @@ void MHlodScene::Proc::remove_all_items(const bool immediate,const bool recursiv
     }
     VSet<int32_t> lod_table = hlod->lods[lod];
     for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
-        remove_item(hlod->item_list.ptrw() + it->value.item_id,it->value.item_id,immediate);
-    }
-    /*
-    for(int i=0; i < lod_table.size(); i++){
-        ERR_FAIL_INDEX(lod_table[i],hlod->item_list.size());
-        MHlod::Item* item = hlod->item_list.ptrw() + lod_table[i];
-        remove_item(item,lod_table[i],immediate);
-    }
-    */
-    //sub procs
-    if(recursive){
-        for(int i=0; i < sub_procs_size; i++){
-            get_subprocs_ptrw()[i].remove_all_items(immediate);
-        }
+        remove_item(hlod->item_list.ptrw() + it->value.item_id,it->value.item_id,immediate,is_destruction);
     }
 }
 
@@ -347,8 +409,9 @@ void MHlodScene::Proc::remove_all_items(const bool immediate,const bool recursiv
 void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
     ERR_FAIL_COND(oct_point_id==-1);
     ERR_FAIL_COND(octree==nullptr);
+    int8_t last_lod = lod;
+    lod = c_lod;
     if(!is_enable || hlod.is_null()){
-        lod = c_lod;
         return;
     }
     if(hlod->join_at_lod!=-1){
@@ -360,7 +423,6 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
     }
     if(c_lod<0 || c_lod >= hlod->lods.size() || hlod->lods[c_lod].size() == 0){
         remove_all_items(immediate);
-        lod = c_lod;
         return; // we don't consider this dirty as there is nothing to be appllied later
     }
     const VSet<int32_t>* lod_table = hlod->lods.ptr() + c_lod;
@@ -378,12 +440,11 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
     }
     // Checking the last lod table
     // and remove items if needed
-    if(lod<0 || lod >= hlod->lods.size() || hlod->lods[c_lod].size() == 0){
+    if(last_lod<0 || last_lod >= hlod->lods.size() || hlod->lods[c_lod].size() == 0){
         // nothing to do just update lod and go out
-        lod = c_lod;
         return;
     }
-    const VSet<int32_t>* last_lod_table = hlod->lods.ptr() + lod;
+    const VSet<int32_t>* last_lod_table = hlod->lods.ptr() + last_lod;
     for(int i=0; i < (*last_lod_table).size(); i++){
         MHlod::Item* last_item = hlod->item_list.ptrw() + (*last_lod_table)[i];
         if(last_item->item_layers==0 || (last_item->item_layers & scene_layers)!=0){ // Layers filter
@@ -392,7 +453,6 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
             }
         }
     }
-    lod = c_lod;
 }
 
 void MHlodScene::Proc::set_visibility(bool visibility){
@@ -458,13 +518,17 @@ HashMap<int32_t,MHlodScene::Proc*> MHlodScene::octpoints_to_proc;
 MOctree* MHlodScene::octree = nullptr;
 WorkerThreadPool::TaskID MHlodScene::thread_task_id;
 std::mutex MHlodScene::update_mutex;
+std::mutex MHlodScene::packed_scene_mutex;
 bool MHlodScene::is_updating = false;
 bool MHlodScene::is_octree_inserted = false;
 uint16_t MHlodScene::oct_id;
 int32_t MHlodScene::last_oct_point_id = -1;
 Vector<MHlodScene::ApplyInfo> MHlodScene::apply_info;
 Vector<MHlod::Item*> MHlodScene::removing_users;
-
+VSet<MHlodNode3D*> MHlodScene::removed_packed_scenes;
+HashMap<int64_t,MHlodScene::CreationInfo> MHlodScene::bound_items_creation_info;
+HashMap<int64_t,Transform3D> MHlodScene::bound_items_modified_transforms;
+HashSet<int64_t> MHlodScene::bound_items_disabled;
 
 bool MHlodScene::is_my_octree(MOctree* input){
     return input == octree;

@@ -13,20 +13,19 @@ void MHlod::_bind_methods(){
     ClassDB::bind_static_method("MHlod",D_METHOD("get_physic_setting_path","id"), &MHlod::get_physic_setting_path);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_mesh_path","mesh_id"), &MHlod::get_mesh_path);
 
-    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir"), &MHlod::get_packed_scene_root_dir);
-    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir","id"), &MHlod::get_packed_scene_path);
-
     ClassDB::bind_static_method("MHlod",D_METHOD("get_decal_root_dir"), &MHlod::get_decal_root_dir);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_decal_path","id"), &MHlod::get_decal_path);
 
     ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir"), &MHlod::get_packed_scene_root_dir);
-    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_root_dir","id"), &MHlod::get_packed_scene_path);
+    ClassDB::bind_static_method("MHlod",D_METHOD("get_packed_scene_path","id"), &MHlod::get_packed_scene_path);
 
     ClassDB::bind_static_method("MHlod",D_METHOD("get_collision_root_dir"), &MHlod::get_collision_root_dir);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_collsion_path","id"), &MHlod::get_collsion_path);
 
     ClassDB::bind_static_method("MHlod",D_METHOD("get_hlod_root_dir"), &MHlod::get_hlod_root_dir);
     ClassDB::bind_static_method("MHlod",D_METHOD("get_hlod_path","id"), &MHlod::get_hlod_path);
+
+    ClassDB::bind_method(D_METHOD("get_item_type","item_id"), &MHlod::get_item_type);
 
     ClassDB::bind_method(D_METHOD("set_join_at_lod","input"), &MHlod::set_join_at_lod);
     ClassDB::bind_method(D_METHOD("get_join_at_lod"), &MHlod::get_join_at_lod);
@@ -39,12 +38,15 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("insert_item_in_lod_table","item_id","lod"), &MHlod::insert_item_in_lod_table);
     ClassDB::bind_method(D_METHOD("get_lod_table"), &MHlod::get_lod_table);
 
-    ClassDB::bind_method(D_METHOD("shape_add_sphere","transform","radius","body_id"), &MHlod::shape_add_sphere);
-    ClassDB::bind_method(D_METHOD("shape_add_box","transform","size","body_id"), &MHlod::shape_add_box);
-    ClassDB::bind_method(D_METHOD("shape_add_capsule","transform","radius","height","body_id"), &MHlod::shape_add_capsule);
-    ClassDB::bind_method(D_METHOD("shape_add_cylinder","transform","radius","height","body_id"), &MHlod::shape_add_cylinder);
+    ClassDB::bind_method(D_METHOD("shape_add_sphere","transform","radius","layers","body_id"), &MHlod::shape_add_sphere);
+    ClassDB::bind_method(D_METHOD("shape_add_box","transform","size","layers","body_id"), &MHlod::shape_add_box);
+    ClassDB::bind_method(D_METHOD("shape_add_capsule","transform","radius","height","layers","body_id"), &MHlod::shape_add_capsule);
+    ClassDB::bind_method(D_METHOD("shape_add_cylinder","transform","radius","height","layers","body_id"), &MHlod::shape_add_cylinder);
 
-    ClassDB::bind_method(D_METHOD("light_add","light_node","transform"), &MHlod::light_add);
+    ClassDB::bind_method(D_METHOD("packed_scene_add","transform","id","arg0","arg0","arg2","layers"), &MHlod::packed_scene_add);
+    ClassDB::bind_method(D_METHOD("packed_scene_set_bind_items","packed_scene_item_id","bind0","bind1"), &MHlod::packed_scene_set_bind_items);
+
+    ClassDB::bind_method(D_METHOD("light_add","light_node","transform","layers"), &MHlod::light_add);
 
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MHlod::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MHlod::_get_data);
@@ -62,6 +64,13 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_v1","input"), &MHlod::set_v1);
     ClassDB::bind_method(D_METHOD("get_v1"), &MHlod::get_v1);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"v1"),"set_v1","get_v1");
+
+    BIND_ENUM_CONSTANT(NONE);
+    BIND_ENUM_CONSTANT(MESH);
+    BIND_ENUM_CONSTANT(COLLISION);
+    BIND_ENUM_CONSTANT(LIGHT);
+    BIND_ENUM_CONSTANT(PACKED_SCENE);
+    BIND_ENUM_CONSTANT(DECAL);
 }
 
 String MHlod::get_asset_root_dir(){
@@ -125,6 +134,9 @@ void MHlod::Item::create(){
     case Type::COLLISION:
         new (&collision) MHLodItemCollision();
         break;
+    case Type::PACKED_SCENE:
+        new (&packed_scene) MHLodItemPackedScene();
+        break;
     case Type::LIGHT:
         new (&light) MHLodItemLight();
         break;
@@ -148,6 +160,9 @@ void MHlod::Item::copy(const Item& other){
     case Type::COLLISION:
         collision = other.collision;
         break;
+    case Type::PACKED_SCENE:
+        packed_scene = other.packed_scene;
+        break;
     case Type::LIGHT:
         light = other.light;
         break;
@@ -168,6 +183,9 @@ void MHlod::Item::clear(){
         break;
     case Type::COLLISION:
         collision.~MHLodItemCollision();
+        break;
+    case Type::PACKED_SCENE:
+        packed_scene.~MHLodItemPackedScene();
         break;
     case Type::LIGHT:
         light.~MHLodItemLight();
@@ -203,6 +221,7 @@ MHlod::Item& MHlod::Item::operator=(const Item& other){
 void MHlod::Item::set_data(const Dictionary& d){
     ERR_FAIL_COND(!d.has("type"));
     type = (MHlod::Type)((int)d["type"]);
+    is_bound = d["is_bound"];
     transform_index = (int)d["t_index"];
     lod = (int)d["lod"];
     item_layers = d.has("item_layers") ? (int64_t)d["item_layers"] : 0;
@@ -215,6 +234,10 @@ void MHlod::Item::set_data(const Dictionary& d){
     case Type::COLLISION:
         new (&collision) MHLodItemCollision();
         collision.set_data(d["data"]);
+        break;
+    case Type::PACKED_SCENE:
+        new (&packed_scene) MHLodItemPackedScene();
+        packed_scene.set_data(d["data"]);
         break;
     case Type::LIGHT:
         new (&light) MHLodItemLight();
@@ -236,6 +259,9 @@ Dictionary MHlod::Item::get_data() const{
     case Type::COLLISION:
         data = collision.get_data();
         break;
+    case Type::PACKED_SCENE:
+        data = packed_scene.get_data();
+        break;
     case Type::LIGHT:
         data = light.get_data();
         break;
@@ -245,6 +271,7 @@ Dictionary MHlod::Item::get_data() const{
     }
     Dictionary d;
     d["type"] = (int)type;
+    d["is_bound"] = is_bound;
     d["t_index"] = transform_index;
     d["item_layers"] = item_layers;
     d["lod"] = (int)lod;
@@ -262,6 +289,11 @@ Dictionary MHlod::Item::get_data() const{
 ////////////////////////
 //////////////////////////////////////////////
 ///////////////////////
+
+MHlod::Type MHlod::get_item_type(int32_t item_id) const{
+    ERR_FAIL_INDEX_V(item_id,item_list.size(),Type::NONE);
+    return item_list[item_id].type;
+}
 
 void MHlod::set_join_at_lod(int input){
     join_at_lod = input;
@@ -453,7 +485,8 @@ void MHlod::clear(){
     sub_hlods_transforms.clear();
 }
 
-int MHlod::shape_add_sphere(const Transform3D& _transform,float radius,int body_id){
+int MHlod::shape_add_sphere(const Transform3D& _transform,float radius,uint16_t layers,int body_id){
+    ERR_FAIL_COND_V_MSG(body_id>std::numeric_limits<int16_t>::max(),-1,"Body Id can be bigger than "+std::numeric_limits<int16_t>::max());
     MHLodItemCollision mcol(MHLodItemCollision::Type::SHPERE);
     mcol.set_param(radius);
     mcol.set_body_id(body_id);
@@ -461,10 +494,12 @@ int MHlod::shape_add_sphere(const Transform3D& _transform,float radius,int body_
     _item.collision = mcol;
     transforms.push_back(_transform);
     _item.transform_index = transforms.size() - 1;
+    _item.item_layers = layers;
     item_list.push_back(_item);
     return item_list.size() - 1;
 }
-int MHlod::shape_add_box(const Transform3D& _transform,const Vector3& size,int body_id){
+int MHlod::shape_add_box(const Transform3D& _transform,const Vector3& size,uint16_t layers,int body_id){
+    ERR_FAIL_COND_V_MSG(body_id>std::numeric_limits<int16_t>::max(),-1,"Body Id can be bigger than "+std::numeric_limits<int16_t>::max());
     MHLodItemCollision mcol(MHLodItemCollision::Type::BOX);
     mcol.set_param(size.x/2,size.y/2,size.z/2);
     mcol.set_body_id(body_id);
@@ -472,11 +507,13 @@ int MHlod::shape_add_box(const Transform3D& _transform,const Vector3& size,int b
     _item.collision = mcol;
     transforms.push_back(_transform);
     _item.transform_index = transforms.size() - 1;
+    _item.item_layers = layers;
     item_list.push_back(_item);
     return item_list.size() - 1;
 }
 
-int MHlod::shape_add_capsule(const Transform3D& _transform,float radius,float height,int body_id){
+int MHlod::shape_add_capsule(const Transform3D& _transform,float radius,float height,uint16_t layers,int body_id){
+    ERR_FAIL_COND_V_MSG(body_id>std::numeric_limits<int16_t>::max(),-1,"Body Id can be bigger than "+std::numeric_limits<int16_t>::max());
     MHLodItemCollision mcol(MHLodItemCollision::Type::CAPSULE);
     mcol.set_param(radius,height);
     mcol.set_body_id(body_id);
@@ -484,11 +521,13 @@ int MHlod::shape_add_capsule(const Transform3D& _transform,float radius,float he
     _item.collision = mcol;
     transforms.push_back(_transform);
     _item.transform_index = transforms.size() - 1;
+    _item.item_layers = layers;
     item_list.push_back(_item);
     return item_list.size() - 1;
 }
 
-int MHlod::shape_add_cylinder(const Transform3D& _transform,float radius,float height,int body_id){
+int MHlod::shape_add_cylinder(const Transform3D& _transform,float radius,float height,uint16_t layers,int body_id){
+    ERR_FAIL_COND_V_MSG(body_id>std::numeric_limits<int16_t>::max(),-1,"Body Id can be bigger than "+std::numeric_limits<int16_t>::max());
     MHLodItemCollision mcol(MHLodItemCollision::Type::CYLINDER);
     mcol.set_param(radius,height);
     mcol.set_body_id(body_id);
@@ -496,11 +535,38 @@ int MHlod::shape_add_cylinder(const Transform3D& _transform,float radius,float h
     _item.collision = mcol;
     transforms.push_back(_transform);
     _item.transform_index = transforms.size() - 1;
+    _item.item_layers = layers;
     item_list.push_back(_item);
     return item_list.size() - 1;
 }
 
-int MHlod::light_add(Object* light_node,const Transform3D transform){
+int MHlod::packed_scene_add(const Transform3D& _transform,int32_t id,int32_t arg0,int32_t arg1,int32_t arg2,uint16_t layers){
+    MHLodItemPackedScene item_packed_scene;
+    item_packed_scene.id = id;
+    item_packed_scene.args[0] = arg0;
+    item_packed_scene.args[1] = arg1;
+    item_packed_scene.args[2] = arg2;
+    Item _item(MHlod::Type::PACKED_SCENE);
+    _item.packed_scene = item_packed_scene;
+    transforms.push_back(_transform);
+    _item.transform_index = transforms.size() - 1;
+    _item.item_layers = layers;
+    item_list.push_back(_item);
+    return item_list.size() - 1;
+}
+
+void MHlod::packed_scene_set_bind_items(int32_t packed_scene_item_id,int32_t bind0,int32_t bind1){
+    ERR_FAIL_INDEX(packed_scene_item_id,item_list.size());
+    if(bind0>=0) ERR_FAIL_INDEX(bind0,item_list.size());
+    if(bind1>=0) ERR_FAIL_INDEX(bind1,item_list.size());
+    if(bind0>=0) item_list.ptrw()[bind0].is_bound = true;
+    if(bind1>=0) item_list.ptrw()[bind1].is_bound = true;
+    ERR_FAIL_COND(item_list[packed_scene_item_id].type!=MHlod::Type::PACKED_SCENE);
+    item_list.ptrw()[packed_scene_item_id].packed_scene.bind_items[0] = bind0;
+    item_list.ptrw()[packed_scene_item_id].packed_scene.bind_items[1] = bind1;
+}
+
+int MHlod::light_add(Object* light_node,const Transform3D transform,uint16_t layers){
     String cn = light_node->get_class();
     ERR_FAIL_COND_V(cn!=String("OmniLight3D")&&cn!=String("SpotLight3D"),-1);
     MHLodItemLight light_item;
@@ -546,6 +612,7 @@ int MHlod::light_add(Object* light_node,const Transform3D transform){
     Item item(MHlod::Type::LIGHT);
     item.light = light_item;
     item.transform_index = transforms.size();
+    item.item_layers = layers;
     transforms.push_back(transform);
     item_list.push_back(item);
     return item_list.size() - 1;

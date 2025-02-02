@@ -64,6 +64,7 @@ func bake_to_hlod_resource():
 		else:
 			aabb.merge( item.get_joined_aabb() )			
 		if item.collection_id == -1: continue							
+		item.set_meta("item_ids",PackedInt32Array()) # clear
 		for mdata:MAssetMeshData in item.get_mesh_data():						
 			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
 			var material_set_id = mdata.get_material_set_id()
@@ -73,6 +74,7 @@ func bake_to_hlod_resource():
 			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_set_id	, shadow_array, gi_array, render_layers, item.hlod_layers)
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
+			item.get_meta("item_ids").push_back(mesh_id)
 			var i = 0			
 			var max = join_at_lod if join_at_lod >= 0 else MAX_LOD
 			if item.lod_cutoff >= 0: max = min(max,item.lod_cutoff)			
@@ -87,36 +89,76 @@ func bake_to_hlod_resource():
 				var params:Vector3 = mdata.get_collision_params(cindex)
 				var iid:int = -1
 				match type:
-					MAssetTable.CollisionType.SHPERE: iid = hlod_resource.shape_add_sphere(t,params[0],-1)
-					MAssetTable.CollisionType.CYLINDER: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],-1)
-					MAssetTable.CollisionType.CAPSULE: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],-1)
-					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,-1)
+					MAssetTable.CollisionType.SHPERE: iid = hlod_resource.shape_add_sphere(t,params[0],0,-1)
+					MAssetTable.CollisionType.CYLINDER: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],0,-1)
+					MAssetTable.CollisionType.CAPSULE: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],0,-1)
+					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,0,-1)
 				if iid==-1: printerr("Error inserting shape")
-				else: hlod_resource.insert_item_in_lod_table(iid,0)
+				else:
+					hlod_resource.insert_item_in_lod_table(iid,0)
+					item.get_meta("item_ids").push_back(iid)
 	################################
 	## BAKE CollisionShape3D Node ##
 	################################
 	for n in get_all_collision_shape_nodes(self):
+		n.set_meta("item_ids",PackedInt32Array())
 		var shape:Shape3D= n.shape
 		var t = baker_inverse_transform * n.global_transform
 		var item_id:int = -1
-		if shape is BoxShape3D: item_id = hlod_resource.shape_add_box(t,shape.size,-1)
-		elif shape is SphereShape3D: item_id = hlod_resource.shape_add_sphere(t,shape.radius,-1)
-		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,-1)
-		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,-1)
+		if shape is BoxShape3D: item_id = hlod_resource.shape_add_box(t,shape.size,0,-1)
+		elif shape is SphereShape3D: item_id = hlod_resource.shape_add_sphere(t,shape.radius,0,-1)
+		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,0,-1)
+		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,0,-1)
 		else: continue
+		n.get_meta("item_ids").push_back(item_id)
 		var max = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else 1
-		for i in range(0,1):
+		for i in range(0,max):
 			hlod_resource.insert_item_in_lod_table(item_id,i)
 	##################
 	## BAKE Lights ##
 	##################
 	for l in get_all_lights_nodes(self):
-		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform)
+		l.set_meta("item_ids",PackedInt32Array())
+		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform,0)
+		l.get_meta("item_ids").push_back(iid)
 		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else 1
 		for i in range(0, max):
 			hlod_resource.insert_item_in_lod_table(iid,i)
-			
+	#######################
+	## BAKE Packed Scene ##
+	#######################
+	for p:MHlodNode3D in get_all_packed_scenes(self,get_children()):
+		p.set_meta("item_ids",PackedInt32Array())
+		var t:Transform3D = baker_inverse_transform * p.global_transform
+		if p.scene_file_path.get_base_dir()!=MHlod.get_packed_scene_root_dir().get_base_dir():
+			push_warning("Ignoring: p.scene_file_path is not in "+MHlod.get_packed_scene_root_dir())
+			continue
+		var id:= p.scene_file_path.get_file().get_basename().to_int()
+		if p.scene_file_path!=MHlod.get_packed_scene_path(id):
+			push_warning(p.scene_file_path+" is not a valid path!!!")
+			continue
+		var iid = hlod_resource.packed_scene_add(t,id,p.get_arg(0),p.get_arg(1),p.get_arg(2),0)
+		p.get_meta("item_ids").push_back(iid)
+		for i in range(0,2):
+			hlod_resource.insert_item_in_lod_table(iid,i)
+	############################
+	## Set Packed Scene binds ##
+	############################
+	for p:MHlodNode3D in get_all_packed_scenes(self,get_children()):
+		var item_id=-1
+		if p.has_meta("item_ids") and p.get_meta("item_ids").size()==1:item_id=p.get_meta("item_ids")[0]
+		if item_id==-1:
+			printerr("Invalid item id in ",p.name)
+			continue
+		var bind0:int=-1
+		var bind1:int=-1
+		var type_hint0:MHlod.Type = MHlod.Type.NONE
+		var type_hint1:MHlod.Type = MHlod.Type.NONE
+		if p.has_meta("bind_item_hint_0"): type_hint0 = p.get_meta("bind_item_hint_0")
+		if p.has_meta("bind_item_hint_1"): type_hint1 = p.get_meta("bind_item_hint_1")
+		if p.has_meta("bind_item_0"): bind0 = get_node_item_id(p.get_meta("bind_item_0"),type_hint0)
+		if p.has_meta("bind_item_1"): bind1 = get_node_item_id(p.get_meta("bind_item_1"),type_hint1)
+		hlod_resource.packed_scene_set_bind_items(item_id,bind0,bind1)
 	######################
 	## BAKE JOINED_MESH ##
 	######################
@@ -190,9 +232,9 @@ func make_hlod_thumbnail(aabb:AABB):
 		
 
 #region Getters
-func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
+func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
 	var stack:Array
-	stack.append_array(baker_node.get_children())
+	stack.append_array(search_nodes)
 	var result:Array
 	var baker_invers_transform = baker_node.global_transform.inverse()
 	while stack.size()!=0:
@@ -200,59 +242,58 @@ func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
 		stack.remove_at(stack.size() -1)
 		if (current_node is HLod_Baker and current_node != baker_node):
 			continue
-		if current_node is CollisionShape3D and not current_node.disabled:	
+		if filter_func.call(current_node):
 			result.push_back(current_node)
 		stack.append_array(current_node.get_children())		
 	return result
+
+func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
+	return get_all_nodes_in_baker(baker_node,baker_node.get_children(),func(n):return n is CollisionShape3D and not n.disabled)
 
 func get_all_lights_nodes(baker_node:Node3D)->Array:
-	var stack:Array
-	stack.append_array(baker_node.get_children())
-	var result:Array
-	var baker_invers_transform = baker_node.global_transform.inverse()
-	while stack.size()!=0:
-		var current_node = stack[-1]
-		stack.remove_at(stack.size() -1)
-		if (current_node is HLod_Baker and current_node != baker_node):
-			continue
-		if current_node is OmniLight3D or current_node is SpotLight3D:	
-			result.push_back(current_node)
-		stack.append_array(current_node.get_children())		
-	return result
+	return get_all_nodes_in_baker(baker_node,baker_node.get_children(),func(n):return n is OmniLight3D or n is SpotLight3D)
 
 func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
-	var stack:Array
-	stack.append_array(search_nodes)
-	var result:Array
-	var baker_invers_transform = baker_node.global_transform.inverse()
-	while stack.size()!=0:
-		var current_node = stack[-1]
-		stack.remove_at(stack.size() -1)
-		if (current_node is HLod_Baker and current_node != baker_node):
-			continue
-		if current_node is MAssetMesh:	
-			result.push_back(current_node)
-		stack.append_array(current_node.get_children())		
-	return result
+	return get_all_nodes_in_baker(baker_node,search_nodes,func(n): return n is MAssetMesh)
+
+func get_all_packed_scenes(baker_node:Node3D,search_nodes:Array)->Array:
+	return get_all_nodes_in_baker(baker_node,search_nodes,func(n): return n is MHlodNode3D)
+
+func get_node_item_id(node_unique_name:String,type_hint:MHlod.Type)->int:
+	if node_unique_name.is_empty(): return -1
+	if not has_node("%"+node_unique_name):
+		printerr("There is not node with unique name \"",node_unique_name,"\" to be bind to PackedScene Node!")
+		return -1
+	var n = get_node("%"+node_unique_name)
+	if not n.has_meta("item_ids"):
+		printerr("Node \"",node_unique_name,"\" Item id is invalide!")
+		return -1
+	var item_ids:PackedInt32Array=n.get_meta("item_ids")
+	var final_item_ids:PackedInt32Array
+	# Filtring
+	if type_hint == MHlod.Type.NONE: final_item_ids = item_ids
+	else:
+		for iid in item_ids:
+			if hlod_resource.get_item_type(iid) == type_hint:
+				final_item_ids.push_back(iid)
+	if final_item_ids.size() == 0:
+		if item_ids.size(): printerr("Node \"",node_unique_name,"\" Item id is invalide!")
+		else: printerr("can not find item with the type hint in \"",node_unique_name,"\" Node")
+		return -1
+	if final_item_ids.size() > 1:
+		push_warning("Node \"",node_unique_name,"\" has mutltiple valid item ID, only assign the first one and ignoring the rest!")
+	return final_item_ids[0]
 
 func get_all_sub_hlod(baker_node:Node3D,search_nodes:Array)->Array:
-	var stack:Array
-	stack.append_array(search_nodes)
+	var nodes = get_all_nodes_in_baker(baker_node,search_nodes,func(n):return n is MHlodScene and n.hlod != null)
 	var result:Array
 	var baker_invers_transform = baker_node.global_transform.inverse()	
-	while stack.size()!=0:
-		var current_node = stack[stack.size() - 1]
-		stack.remove_at(stack.size() - 1)		
-		if (current_node is HLod_Baker and current_node != baker_node):
-			continue
-		if current_node is MHlodScene:
-			if current_node.hlod != null:
-				var hlod_data := SubHlodBakeData.new()
-				hlod_data.sub_hlod = current_node.hlod
-				hlod_data.node = current_node
-				hlod_data.tr = baker_invers_transform * current_node.global_transform
-				result.push_back(hlod_data)				
-		stack.append_array(current_node.get_children())	
+	for n in nodes:
+		var hlod_data := SubHlodBakeData.new()
+		hlod_data.sub_hlod = n.hlod
+		hlod_data.node = n
+		hlod_data.tr = baker_invers_transform * n.global_transform
+		result.push_back(hlod_data)				
 	return result
 	
 func get_all_sub_bakers(baker_node:Node3D,search_nodes:Array)->Array:
@@ -272,6 +313,7 @@ func get_all_sub_bakers(baker_node:Node3D,search_nodes:Array)->Array:
 			continue	
 		stack.append_array(current_node.get_children())	
 	return result
+
 
 #region JOINED MESH				
 func get_joined_mesh():

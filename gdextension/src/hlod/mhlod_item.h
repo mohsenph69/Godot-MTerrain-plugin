@@ -1,6 +1,7 @@
 #ifndef __MHLODITEM__
 #define __MHLODITEM__
 
+#include <godot_cpp/classes/packed_scene.hpp>
 #include <godot_cpp/classes/mesh.hpp>
 #include <godot_cpp/classes/material.hpp>
 #include <godot_cpp/classes/geometry_instance3d.hpp>
@@ -29,6 +30,9 @@
 #define M_GET_MESH_PATH(mesh_id) String(M_MESH_ROOT_DIR) + itos(mesh_id) + String(".res")
 #define M_GET_PHYSIC_SETTING_PATH(id) String(M_PHYSICS_SETTINGS_DIR) + itos(id) + String(".res")
 #define M_SHAPE_PARAM_ROUND(num) std::round(num * 100.0f) / 100.0f
+
+#define M_PACKED_SCENE_BIND_COUNT 2
+#define M_PACKED_SCENE_ARG_COUNT 3
 
 #define M_COLLISION_ROOT_DIR "res://massets/collissions/"
 #define M_GET_COLLISION_PATH(id) String(M_COLLISION_ROOT_DIR) + itos(id) + String(".res")
@@ -163,7 +167,7 @@ struct MHLodItemCollision {
         _FORCE_INLINE_ ShapeData(RID rid): rid(rid){}
     };
     private:
-    int32_t static_body = -1;
+    int16_t static_body = -1;
     Param param;
     public:
     MHLodItemCollision() = default;
@@ -186,7 +190,7 @@ struct MHLodItemCollision {
         param.param_2 = M_SHAPE_PARAM_ROUND(param_2);
         param.param_3 = M_SHAPE_PARAM_ROUND(param_3);
     }
-    _FORCE_INLINE_ void set_body_id(const int body_id){
+    _FORCE_INLINE_ void set_body_id(const int16_t body_id){
         static_body = body_id;
     }
     _FORCE_INLINE_ int get_body_id() const{
@@ -265,6 +269,7 @@ struct MHLodItemCollision {
         param.param_1 = d.decode_float(0);
         param.param_2 = d.decode_float(4);
         param.param_3 = d.decode_float(8);
+        static_body = d.decode_s32(12);
         param.type = (Type)d[16];
     }
     _FORCE_INLINE_ PackedByteArray get_data() const{
@@ -304,7 +309,7 @@ struct MHLodItemLight { // No more memebr or increase item size
     MByteFloat<false,4> specular;
     MByteFloat<false,512> range;
     MByteFloat<false,4> attenuation;
-    MByteFloat<false,4> spot_angle;
+    MByteFloat<false,180> spot_angle;
     MByteFloat<false,4> spot_attenuation;
     //Shadow
     MByteFloat<false,8> shadow_bias;
@@ -388,6 +393,48 @@ struct MHLodItemLight { // No more memebr or increase item size
         PackedByteArray d;
         d.resize(sizeof(MHLodItemLight));
         memcpy(d.ptrw(),this,sizeof(MHLodItemLight));
+        return d;
+    }
+};
+
+
+struct MHLodItemPackedScene {
+    static inline VMap<MHLodItemPackedScene*,Ref<PackedScene>> packed_scenes;
+    int32_t id = -1;
+    int32_t bind_items[M_PACKED_SCENE_BIND_COUNT] = {-1};
+    int32_t args[M_PACKED_SCENE_ARG_COUNT];
+
+    _FORCE_INLINE_ PackedScene* load(){
+        if(packed_scenes.has(this)){
+            WARN_PRINT("Has already and loading");
+            return packed_scenes[this].ptr();
+        }
+        Ref<PackedScene> obj_res = ResourceLoader::get_singleton()->load(M_GET_PACKEDSCENE_PATH(id));
+        if(obj_res.is_null()){
+            return nullptr;
+        }
+        packed_scenes.insert(this,obj_res);
+        return obj_res.ptr();
+    }
+
+    _FORCE_INLINE_ PackedScene* get_packed_scene(){
+        ERR_FAIL_COND_V(!packed_scenes.has(this),nullptr);
+        return packed_scenes[this].ptr();
+    }
+
+    _FORCE_INLINE_ void unload(){
+        packed_scenes.erase(this);
+    }
+
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
+        ERR_FAIL_COND(d.size()!=sizeof(MHLodItemPackedScene));
+        memcpy(this,d.ptr(),sizeof(MHLodItemLight));
+    }
+
+    _FORCE_INLINE_ PackedByteArray get_data() const{
+        PackedByteArray d;
+        d.resize(sizeof(MHLodItemPackedScene));
+        memcpy(d.ptrw(),this,sizeof(MHLodItemPackedScene));
         return d;
     }
 };

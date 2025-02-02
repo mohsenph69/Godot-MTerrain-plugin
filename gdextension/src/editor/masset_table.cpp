@@ -60,11 +60,9 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("tag_get_names"), &MAssetTable::tag_get_names);
     ClassDB::bind_method(D_METHOD("tag_get_id","tag_name"), &MAssetTable::tag_get_id);
     ClassDB::bind_method(D_METHOD("tag_get_collections","tag_id"), &MAssetTable::tag_get_collections);
-    ClassDB::bind_method(D_METHOD("tag_get_collections_in_collections","search_collections","tag_id"), &MAssetTable::tag_get_collections_in_collections);
-    ClassDB::bind_method(D_METHOD("tags_get_collections_any","tags"), &MAssetTable::tags_get_collections_any);
-    ClassDB::bind_method(D_METHOD("tags_get_collections_all","tags"), &MAssetTable::tags_get_collections_all);
+    ClassDB::bind_method(D_METHOD("tags_get_collections_any","search_collections","tags","exclude_tags"), &MAssetTable::tags_get_collections_any);
+    ClassDB::bind_method(D_METHOD("tags_get_collections_all","search_collections","tags","exclude_tags"), &MAssetTable::tags_get_collections_all);
     ClassDB::bind_method(D_METHOD("tag_get_tagless_collections"), &MAssetTable::tag_get_tagless_collections);
-    ClassDB::bind_method(D_METHOD("tag_names_begin_with","prefix"), &MAssetTable::tag_names_begin_with);
     ClassDB::bind_method(D_METHOD("collection_create","name","item_id","type","glb_id"), &MAssetTable::collection_create);
     ClassDB::bind_method(D_METHOD("collection_get_glb_id","collection_id"), &MAssetTable::collection_get_glb_id);
     ClassDB::bind_method(D_METHOD("collection_get_item_id","collection_id"), &MAssetTable::collection_get_item_id);
@@ -81,7 +79,6 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("collection_get_name","collection_id"), &MAssetTable::collection_get_name);
     ClassDB::bind_method(D_METHOD("collection_get_id","collection_name"), &MAssetTable::collection_get_id);
     ClassDB::bind_method(D_METHOD("collection_get_tags","collection_id"), &MAssetTable::collection_get_tags);
-    ClassDB::bind_method(D_METHOD("collection_names_begin_with","prefix"), &MAssetTable::collection_names_begin_with);
 
     ClassDB::bind_method(D_METHOD("group_exist","group_name"), &MAssetTable::group_exist);
     ClassDB::bind_method(D_METHOD("group_create","group_name"), &MAssetTable::group_create);
@@ -135,33 +132,43 @@ Ref<MAssetTable> MAssetTable::get_singleton(){
 void MAssetTable::make_assets_dir(){
     if(!DirAccess::dir_exists_absolute(String(MHlod::get_asset_root_dir()))){
         Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_asset_root_dir()));
-        if(err!=OK){
-            WARN_PRINT("Can not create folder");
-        }
+        if(err!=OK){WARN_PRINT("Can not create folder");}
     }
     if(!DirAccess::dir_exists_absolute(String(MAssetTable::asset_editor_root_dir))){
         Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::asset_editor_root_dir));
-        if(err!=OK){
-            WARN_PRINT("Can not create folder");
-        }
+        if(err!=OK){WARN_PRINT("Can not create folder");}
     }
     if(!DirAccess::dir_exists_absolute(String(MAssetTable::editor_baker_scenes_dir))){
         Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::editor_baker_scenes_dir));
-        if(err!=OK){
-            WARN_PRINT("Can not create folder");
-        }
+        if(err!=OK){WARN_PRINT("Can not create folder");}
     }
     if(!DirAccess::dir_exists_absolute(String(MAssetTable::asset_thumbnails_dir))){
         Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::asset_thumbnails_dir));
-        if(err!=OK){
-            WARN_PRINT("Can not create folder");
-        }
+        if(err!=OK){WARN_PRINT("Can not create folder");}
     }
     if(!DirAccess::dir_exists_absolute(String(MHlod::get_mesh_root_dir()))){
         Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_mesh_root_dir()));
-        if(err!=OK){
-            WARN_PRINT("Can not create folder");
-        }
+        if(err!=OK){ WARN_PRINT("Can not create folder");}
+    }
+    if(!DirAccess::dir_exists_absolute(String(MHlod::get_hlod_root_dir()))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_hlod_root_dir()));
+        if(err!=OK){ WARN_PRINT("Can not create folder");}
+    }
+    if(!DirAccess::dir_exists_absolute(String(MHlod::get_packed_scene_root_dir()))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_packed_scene_root_dir()));
+        if(err!=OK){ WARN_PRINT("Can not create folder");}
+    }
+    if(!DirAccess::dir_exists_absolute(String(MHlod::get_decal_root_dir()))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_decal_root_dir()));
+        if(err!=OK){ WARN_PRINT("Can not create folder");}
+    }
+    if(!DirAccess::dir_exists_absolute(String(MHlod::get_collision_root_dir()))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_collision_root_dir()));
+        if(err!=OK){ WARN_PRINT("Can not create folder");}
+    }
+    if(!DirAccess::dir_exists_absolute(String(MHlod::get_physics_settings_dir()))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MHlod::get_physics_settings_dir()));
+        if(err!=OK){ WARN_PRINT("Can not create folder");}
     }
 }
 
@@ -386,70 +393,43 @@ PackedInt32Array MAssetTable::tag_get_collections(int tag_id) const{
     return out;
 }
 
-PackedInt32Array MAssetTable::tag_get_collections_in_collections(const PackedInt32Array& search_collections,int tag_id) const{
-    PackedInt32Array out;
-    for(int i=0; i < search_collections.size(); i++){
-        int cid = search_collections[i];
-        if(collections_tags[cid].has_tag(tag_id)){
-            out.push_back(cid);
-        }
-    }
-    return out;
-}
-
-PackedInt32Array MAssetTable::tags_get_collections_any(const PackedInt32Array& tags) const{
+PackedInt32Array MAssetTable::tags_get_collections_any(const PackedInt32Array& search_collections,const PackedInt32Array& tags,const PackedInt32Array& exclude_tags) const{
     Tag mtag;
+    Tag etag;
     for(int32_t t : tags){
         mtag.add_tag(t);
     }
-    PackedInt32Array out;
-    for(int i=0; i < collections_tags.size(); i++){
-        if(collections_tags[i].has_match(mtag)){
-            out.push_back(i);
-        }
-    }
-    return out;
-}
-
-PackedInt32Array MAssetTable::tags_get_collections_all(const PackedInt32Array& tags) const{
-    Tag mtag;
-    for(int32_t t : tags){
-        mtag.add_tag(t);
-    }
-    PackedInt32Array out;
-    for(int i=0; i < collections_tags.size(); i++){
-        if(collections_tags[i].has_all(mtag)){
-            out.push_back(i);
-        }
-    }
-    return out;
-}
-
-PackedInt32Array MAssetTable::tags_get_collections_in_collections_any(const PackedInt32Array& search_collections,const PackedInt32Array& tags) const{
-    Tag mtag;
-    for(int32_t t : tags){
-        mtag.add_tag(t);
+    for(int32_t t : exclude_tags){
+        etag.add_tag(t);
     }
     PackedInt32Array out;
     for(int i=0; i < search_collections.size(); i++){
         int cid = search_collections[i];
         if(collections_tags[cid].has_match(mtag)){
-            out.push_back(cid);
+            if(collections_tags.size()==0 || !collections_tags[cid].has_match(etag)){
+                out.push_back(cid);   
+            }
         }
     }
     return out;
 }
 
-PackedInt32Array MAssetTable::tags_get_collections_in_collections_all(const PackedInt32Array& search_collections,const PackedInt32Array& tags) const{
+PackedInt32Array MAssetTable::tags_get_collections_all(const PackedInt32Array& search_collections,const PackedInt32Array& tags,const PackedInt32Array& exclude_tags) const{
     Tag mtag;
+    Tag etag;
     for(int32_t t : tags){
         mtag.add_tag(t);
+    }
+    for(int32_t t : exclude_tags){
+        etag.add_tag(t);
     }
     PackedInt32Array out;
     for(int i=0; i < search_collections.size(); i++){
         int cid = search_collections[i];
         if(collections_tags[cid].has_all(mtag)){
-            out.push_back(cid);
+            if(collections_tags.size()==0 || !collections_tags[cid].has_match(etag)){
+                out.push_back(cid);
+            }
         }
     }
     return out;
@@ -460,16 +440,6 @@ PackedInt32Array MAssetTable::tag_get_tagless_collections() const{
     PackedInt32Array out;
     for(int i=0; i < collections_tags.size(); i++){
         if(collections_tags[i] == clear_tag && !free_collections.has(i)){
-            out.push_back(i);
-        }
-    }
-    return out;
-}
-
-PackedInt32Array MAssetTable::tag_names_begin_with(const String& prefix){
-    PackedInt32Array out;
-    for(int i=0; i < tag_names.size(); i++){
-        if(tag_names[i].begins_with(prefix)){
             out.push_back(i);
         }
     }
@@ -992,16 +962,6 @@ PackedInt32Array MAssetTable::collection_get_tags(int collection_id) const{
     return out;
 }
 
-PackedInt32Array MAssetTable::collection_names_begin_with(const String& prefix) const{
-    PackedInt32Array out;
-    for(int i=0; i < collections_names.size();i++){
-        if(collections_names[i].begins_with(prefix)){
-            out.push_back(i);
-        }
-    }
-    return out;
-}
-
 Vector<Pair<int,Transform3D>> MAssetTable::collection_get_sub_collection_id_transform(int collection_id) const{
     Vector<Pair<int,Transform3D>> out;
     int cindex = sub_collections.find(collection_id);
@@ -1023,11 +983,9 @@ bool MAssetTable::group_exist(const String& name) const{
 
 bool MAssetTable::group_create(const String& name){
     ERR_FAIL_COND_V(name.length()==0,false);
-    if(group_names.push_back(name)){
-        groups.push_back(Tag());
-        return true;
-    }
-    return false;
+    group_names.push_back(name);
+    groups.push_back(Tag());
+    return true;
 }
 
 bool MAssetTable::group_rename(const String& name,const String& new_name){

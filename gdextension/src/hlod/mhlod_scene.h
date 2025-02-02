@@ -18,11 +18,21 @@
 #include "../moctree.h"
 #include "mhlod.h"
 
+class MHlodNode3D;
+
 class MMesh;
 
 using namespace godot;
 
+template <typename T>
+struct MDummyType
+{
+    MDummyType(const T& foo){}
+};
+
+
 class MHlodScene : public Node3D {
+    friend MHlodNode3D;
     GDCLASS(MHlodScene,Node3D);
 
     protected:
@@ -37,22 +47,48 @@ class MHlodScene : public Node3D {
             int32_t transform_index;
         };
         int64_t id;
+        _FORCE_INLINE_ GlobalItemID(){
+            oct_point_id = -1;
+            transform_index = -1;
+        };
         _FORCE_INLINE_ GlobalItemID(int32_t oct_point_id,int32_t transform_index):oct_point_id(oct_point_id),transform_index(transform_index){};
         _FORCE_INLINE_ GlobalItemID(int64_t id):id(id){};
+        _FORCE_INLINE_ bool is_valid()const{return transform_index>=0;}
+    };
+
+    union PermanentItemID
+    {
+        struct
+        {
+            int32_t proc_id; // or index in procs
+            int32_t item_id;
+        };
+        int64_t id;
+        PermanentItemID()=default;
+        _FORCE_INLINE_ PermanentItemID(int32_t proc_id,int32_t item_id):proc_id(proc_id),item_id(item_id){};
+        _FORCE_INLINE_ PermanentItemID(int64_t id):id(id){};
+        _FORCE_INLINE_ bool is_valid(){return item_id>=0;}
     };
     
     struct CreationInfo
     {
-        // There is another 4 byte space here!!!
+        // 1 more free byte Up here
         MHlod::Type type = MHlod::Type::NONE;
-        int item_id = -1;
+        int16_t body_id = -1; // in case need this space for other type just put this in union
+        int32_t item_id = -1;
         union
         {
             int64_t rid;
-            Node* packed_scene;
+            MHlodNode3D* root_node;
         };
-        _FORCE_INLINE_ void set_rid(const RID input);
-        _FORCE_INLINE_ RID get_rid() const;
+        _FORCE_INLINE_ void set_rid(const RID input){
+            rid = input.get_id();
+        }
+        _FORCE_INLINE_ RID get_rid() const{
+            RID out;
+            memcpy(&out,&rid,sizeof(RID));
+            return out;
+        }
         CreationInfo()=default;
     };
 
@@ -112,15 +148,18 @@ class MHlodScene : public Node3D {
         // or in another word enable and disable will only turn off and not remove the the sturcture of procs and subprocs
         // enable and disable will remove themself from octree
         void enable(const bool recursive=true);
-        void disable(const bool recursive=true);
+        void disable(const bool recursive=true,const bool immediate=false,const bool is_destruction=false);
         void enable_sub_proc();
         void disable_sub_proc();
         _FORCE_INLINE_ void add_item(MHlod::Item* item,const int item_id,const bool immediate=false); // can be called in non-game loop thread as it generate apply info which will be affected in main game-loop
-        _FORCE_INLINE_ void remove_item(MHlod::Item* item,const int item_id,const bool immediate=false);
-        _FORCE_INLINE_ void update_item_transform(MHlod::Item* item);
+        _FORCE_INLINE_ void remove_item(MHlod::Item* item,const int item_id,const bool immediate=false,const bool is_destruction=false);
+        _FORCE_INLINE_ Transform3D get_item_transform(const int32_t transform_index) const;
+        // use bellow rather than upper
+        _FORCE_INLINE_ Transform3D get_item_transform(const MHlod::Item* item) const;
+        void update_item_transform(const int32_t transform_index,const Transform3D& new_transform);// Must be protect with packed_scene_mutex if Item is_bound = true
         void update_all_transform();
         void reload_meshes(const bool recursive=true); // must be called with mutex lock
-        void remove_all_items(const bool immediate=false,const bool recursive=true);
+        void remove_all_items(const bool immediate=false,const bool is_destruction=false);
         void update_lod(int8_t _lod,const bool immediate=false);
         void set_visibility(bool visibility);
         _FORCE_INLINE_ const Proc* get_subprocs_ptr() const{
@@ -129,6 +168,28 @@ class MHlodScene : public Node3D {
         _FORCE_INLINE_ Proc* get_subprocs_ptrw() const{
             return scene->procs.ptrw() + sub_proc_index;
         }
+        _FORCE_INLINE_ GlobalItemID get_item_global_id(int item_id) const{
+            ERR_FAIL_COND_V(!is_enable,GlobalItemID());
+            if(item_id<0){
+                return GlobalItemID();
+            }
+            ERR_FAIL_COND_V(item_id>=hlod->item_list.size(),GlobalItemID());
+            int32_t btransform_index = hlod->item_list[item_id].transform_index;
+            return GlobalItemID(oct_point_id,btransform_index);
+        }
+        _FORCE_INLINE_ PermanentItemID get_item_permanent_id(int item_id) const{
+            ERR_FAIL_COND_V(!is_enable,PermanentItemID());
+            if(item_id<0){
+                return PermanentItemID();
+            }
+            return PermanentItemID(proc_id,item_id);
+        }
+        // All function bellow should be protected by packed_scene_mutex
+        _FORCE_INLINE_ void bind_item_clear(const GlobalItemID bound_id);
+        _FORCE_INLINE_ Transform3D bind_item_get_transform(const GlobalItemID bound_id) const;
+        _FORCE_INLINE_ void bind_item_modify_transform(const GlobalItemID bound_id,const Transform3D& new_transform);
+        _FORCE_INLINE_ bool bind_item_get_disable(const GlobalItemID bound_id) const;
+        _FORCE_INLINE_ void bind_item_set_disable(const GlobalItemID bound_id,const bool disable);
     };
     bool is_init = false;
     uint16_t scene_layers = 0;
@@ -145,12 +206,19 @@ class MHlodScene : public Node3D {
     static MOctree* octree;
     static WorkerThreadPool::TaskID thread_task_id;
     static std::mutex update_mutex;
+    static std::mutex packed_scene_mutex;
     static bool is_updating;
     static bool is_octree_inserted;
     static uint16_t oct_id;
     static int32_t last_oct_point_id;
     static Vector<ApplyInfo> apply_info;
     static Vector<MHlod::Item*> removing_users;
+    static VSet<MHlodNode3D*> removed_packed_scenes;
+    // key is global ID if Item, should be access with protection of packed_scene_mutex
+    // Bellow has only Creation info of bound items (none bound Item are not here)
+    static HashMap<int64_t,CreationInfo> bound_items_creation_info;
+    static HashMap<int64_t,Transform3D> bound_items_modified_transforms;
+    static HashSet<int64_t> bound_items_disabled;
     public:
     static bool is_my_octree(MOctree* input);
     static bool set_octree(MOctree* input);
@@ -213,9 +281,7 @@ class MHlodScene : public Node3D {
         if(is_init_procs() || get_root_proc()->hlod.is_null()){
             return;
         }
-        if constexpr (UseLock){
-            std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
-        }
+        std::conditional_t<UseLock,std::lock_guard<std::mutex>,MDummyType<std::mutex>> lock(MHlodScene::update_mutex);
         if(is_sleep){
             return;
         }
@@ -258,28 +324,84 @@ class MHlodScene : public Node3D {
         if(!is_init_procs()){
             return;
         }
-        if constexpr (UseLock){
-            std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
-        }
+        std::conditional_t<UseLock,std::lock_guard<std::mutex>,MDummyType<std::mutex>> lock(MHlodScene::update_mutex);
         is_init = false;
-        get_root_proc()->disable(true);
+        get_root_proc()->disable(true,true,true);
         flush();
         procs.resize(1);
     }
+};
 
-    void check_transform_change(){
-        UtilityFunctions::print("CHeki");
-        for(int i=0; i < all_tmp_procs.size();i++){
-            if(!all_tmp_procs[i]->is_transform_changed){
-                UtilityFunctions::print(i ," not changed");
-            }
-        }
-        return;
-        for(int i=0; i < procs.size();i++){
-            if(!procs[i].is_transform_changed){
-                UtilityFunctions::print(i ," not changed");
-            }
+_FORCE_INLINE_ Transform3D MHlodScene::Proc::get_item_transform(const int32_t transform_index) const{
+    GlobalItemID gid(oct_point_id,transform_index);
+    {
+        std::lock_guard<std::mutex> plock(packed_scene_mutex);
+        if(bound_items_modified_transforms.has(gid.id)){
+            return bound_items_modified_transforms[gid.id];
         }
     }
-};
+    return transform * hlod->transforms[transform_index];
+}
+
+_FORCE_INLINE_ Transform3D MHlodScene::Proc::get_item_transform(const MHlod::Item* item) const{
+    if(item->is_bound){
+        GlobalItemID gid(oct_point_id,item->transform_index);
+        std::lock_guard<std::mutex> plock(packed_scene_mutex);
+        if(bound_items_modified_transforms.has(gid.id)){
+            return bound_items_modified_transforms[gid.id];
+        }
+    }
+    return transform * hlod->transforms[item->transform_index];
+}
+
+// All bind_item_ should be called with std::lock_guard<std::mutex> plock(packed_scene_mutex);
+_FORCE_INLINE_ void MHlodScene::Proc::bind_item_clear(const MHlodScene::GlobalItemID bound_id){
+    bind_item_set_disable(bound_id,false);
+    bound_items_modified_transforms.erase(bound_id.id);
+    // Not using get_item_transform function as it use packed_scene_mutex and will cause dead lock!
+    update_item_transform(bound_id.transform_index,transform * hlod->transforms[bound_id.transform_index]);
+}
+
+_FORCE_INLINE_ Transform3D MHlodScene::Proc::bind_item_get_transform(const MHlodScene::GlobalItemID bound_id) const{
+   UtilityFunctions::print("bind_item_get_transform");
+   return get_item_transform(bound_id.transform_index);
+}
+
+_FORCE_INLINE_ void MHlodScene::Proc::bind_item_modify_transform(const MHlodScene::GlobalItemID bound_id,const Transform3D& new_transform){
+    bound_items_modified_transforms.insert(bound_id.id,new_transform);
+    update_item_transform(bound_id.transform_index,new_transform);
+}
+
+_FORCE_INLINE_ bool MHlodScene::Proc::bind_item_get_disable(const GlobalItemID bound_id) const{
+    return bound_items_disabled.has(bound_id.id);
+}
+
+_FORCE_INLINE_ void MHlodScene::Proc::bind_item_set_disable(const MHlodScene::GlobalItemID bound_id,const bool disable){
+    if(disable){
+        bound_items_disabled.insert(bound_id.id);
+    } else {
+        bound_items_disabled.erase(bound_id.id);
+    }
+    if(!bound_items_creation_info.has(bound_id.id)){
+        return; // not exist nothing to do anymore
+    }
+    const CreationInfo& ci = bound_items_creation_info[bound_id.id];
+    switch (ci.type)
+    {
+    case MHlod::Type::MESH:
+    case MHlod::Type::LIGHT:
+        RS->instance_set_visible(ci.get_rid(),!disable);
+        break;
+    case MHlod::Type::COLLISION:
+        {
+            MHlod::PhysicBodyInfo& binfo = MHlod::get_physic_body(ci.body_id);
+            int index = binfo.shapes.find(bound_id.id);
+            ERR_FAIL_COND(index==-1);
+            PhysicsServer3D::get_singleton()->body_set_shape_disabled(binfo.rid,index,disable);
+        }
+        break;
+    default:
+        break;
+    }
+}
 #endif
