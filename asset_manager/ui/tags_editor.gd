@@ -2,6 +2,7 @@
 extends Control
 
 signal tag_changed
+signal options_changed
 @onready var tag_list:Tree = find_child("tag_list")
 @onready var group_by_button:Button = find_child("group_by_button")
 
@@ -89,7 +90,9 @@ func add_tag():
 		i+= 1
 		tag_name = str("New Tag ", i)		 
 	
-	for tag_id in 256:
+	var tag_id = 0
+	for j in 256:
+		tag_id+=1
 		if tag_id < 2: continue #0: single_item_collection, 1: hidden
 		if asset_library.tag_get_name(tag_id) == "":
 			asset_library.tag_set_name(tag_id, tag_name)
@@ -97,14 +100,15 @@ func add_tag():
 			break
 	asset_library.save()
 	set_options()	
-	
+	options_changed.emit()
 	
 func remove_tags():			
-	for tag_id in get_selected_tags().values():		
-		print(tag_id)			
+	var selected_tags = get_selected_tags().values()
+	for tag_id in selected_tags:					
 		asset_library.tag_set_name(tag_id, "")		
 	asset_library.save()					
 	set_options()
+	options_changed.emit()
 
 func multi_selected(item: TreeItem, column, selected:bool):
 	%tag_name_error.visible = false

@@ -31,6 +31,7 @@ var gltf_extras_importer
 var asset_table:MAssetTable
 
 func check_restart():
+	
 	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
 		if needs_restart:
 			EditorInterface.restart_editor()
@@ -145,6 +146,7 @@ func _enter_tree():
 		add_control_to_bottom_panel(asset_browser, "Assets")
 		
 		asset_browser_inspector_plugin = load("res://addons/m_terrain/asset_manager/inspector_plugin.gd").new()
+		asset_browser_inspector_plugin.asset_placer = asset_browser
 		add_inspector_plugin(asset_browser_inspector_plugin)
 		gltf_extras_importer = GLTFExtras.new()
 		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)		

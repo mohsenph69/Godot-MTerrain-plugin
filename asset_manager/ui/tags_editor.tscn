@@ -9,6 +9,7 @@
 font_color = Color(1, 0, 0, 1)
 
 [node name="Tags" type="VBoxContainer"]
+custom_minimum_size = Vector2(0, 180)
 offset_right = 393.0
 offset_bottom = 318.0
 size_flags_horizontal = 3

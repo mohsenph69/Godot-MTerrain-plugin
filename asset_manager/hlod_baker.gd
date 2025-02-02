@@ -47,6 +47,7 @@ func force_lod(lod:int):
 		
 func bake_to_hlod_resource():	
 	MHlodScene.sleep()	
+	var aabb: AABB	
 	hlod_resource = MHlod.new()
 	hlod_resource.set_baker_path(scene_file_path)
 	var join_at_lod = MAssetTable.mesh_join_start_lod(joined_mesh_id)	
@@ -55,7 +56,13 @@ func bake_to_hlod_resource():
 	#################
 	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())				
 	var baker_inverse_transform = global_transform.inverse()		
+	var first_item = true
 	for item:MAssetMesh in all_masset_mesh_nodes:				
+		if first_item:
+			first_item = false
+			aabb = item.get_joined_aabb()
+		else:
+			aabb.merge( item.get_joined_aabb() )			
 		if item.collection_id == -1: continue							
 		for mdata:MAssetMeshData in item.get_mesh_data():						
 			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
@@ -170,8 +177,17 @@ func bake_to_hlod_resource():
 	if save_err == OK:
 		MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
 		MAssetTable.save()
+	make_hlod_thumbnail(aabb)
 	MHlodScene.awake()
 	#EditorInterface.get_resource_filesystem().scan()
+
+func make_hlod_thumbnail(aabb:AABB):
+	aabb.grow(5)
+	var cam = Camera3D.new()
+	#cam.look_at_from_position()
+	#aabb.get_center()
+	asset_mesh_updater.update_force_lod(0)
+		
 
 #region Getters
 func get_all_collision_shape_nodes(baker_node:Node3D)->Array:

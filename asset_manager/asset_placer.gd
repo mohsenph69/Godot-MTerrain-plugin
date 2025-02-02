@@ -242,22 +242,19 @@ func _drop_data(at_position, data):
 ####################
 func get_filtered_collections(text="", tags_to_excluded=[]):		
 	var result = []
-	result = Array(asset_library.collections_get_by_type(current_filter_types))	
-	var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
+	result = asset_library.collections_get_by_type(current_filter_types)
+	#var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
 	var collection_to_include = null
 	if current_filter_tags and len(current_filter_tags)>0:
-		if current_filter_mode_all:		
-			collection_to_include = asset_library.tags_get_collections_all(current_filter_tags)
+		if current_filter_mode_all:					
+			result = asset_library.tags_get_collections_all(result, current_filter_tags, tags_to_excluded)
 		else:		
-			collection_to_include = asset_library.tags_get_collections_any(current_filter_tags)
+			result = asset_library.tags_get_collections_any(result, current_filter_tags, tags_to_excluded)
 	
-	return result.filter(func(a): 		
-		if a in collections_to_exclude: return false
-		if collection_to_include and not a in collection_to_include: return false
-		if not text.is_empty():
-			if not text.to_lower() in asset_library.collection_get_name(a).to_lower(): return false
-		return true		
-	)			
+	if not text.is_empty():
+		for i in range(len(result)-1, -1):									
+			if not text.to_lower() in asset_library.collection_get_name(result[i]).to_lower(): return result.remove_at(i)				
+	return result
 	
 func debounce_regroup():
 	if not is_inside_tree():  return false
@@ -274,7 +271,6 @@ func debounce_regroup():
 	return true
 	
 func regroup(group = current_group, sort_mode="asc"):	
-	
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
@@ -300,14 +296,13 @@ func regroup(group = current_group, sort_mode="asc"):
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
 		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
-		for tag_id in asset_library.group_get_tags(group):
-			if current_filter_tags and len(current_filter_tags) >0:
-				if not tag_id in current_filter_tags: 
-					continue							
+		var processed_collection: PackedInt32Array = []
+		for tag_id in asset_library.group_get_tags(group) :			
 			var tag_name = asset_library.tag_get_name(tag_id)
 			if tag_name == "": continue
 			var group_control
 			var sorted_items = []
+			# Make the tag button if it doesn't exist yet
 			if not groups.has_node(tag_name):				
 				group_control = group_control_scene.instantiate()								
 				groups.add_child(group_control)							
@@ -323,19 +318,21 @@ func regroup(group = current_group, sort_mode="asc"):
 			else:
 				group_control = groups.get_node(tag_name)			
 				group_control.group_list.clear()
-			for collection_id in asset_library.tag_get_collections_in_collections(filtered_collections, tag_id):
+						
+			for collection_id in asset_library.tags_get_collections_any(filtered_collections, [tag_id],[]):
 				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
+				processed_collection.push_back(collection_id)
 			if sort_mode == "asc":
 				sorted_items.sort_custom(func(a,b): return a.name < b.name)
 			elif sort_mode == "desc":
 				sorted_items.sort_custom(func(a,b): return a.name > b.name)
 			for item in sorted_items:
 				group_control.add_item(item.name, item.id)		
+		# Now add leftovers to "Ungrouped" tag
 		ungrouped.group_list.clear()		
 		var sorted_items = []
-		for id in filtered_collections:
-			if not id in asset_library.tags_get_collections_any(asset_library.group_get_tags(group)):
-				sorted_items.push_back({"name": asset_library.collection_get_name(id), "id":id})				
+		for collection_id in asset_library.tags_get_collections_any(filtered_collections, current_filter_tags, processed_collection ):
+			sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)
 		elif sort_mode == "desc":
@@ -359,6 +356,7 @@ func add_asset_to_scene(id, asset_name,create_ur:=true):
 	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
 		node = MHlodScene.new()		
 		node.hlod = load(MHlod.get_hlod_path( asset_library.collection_get_item_id(id) ))
+		node.set_meta("collection_id", id)
 	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
 		node = load(MHlod.get_decal_path( asset_library.collection_get_item_id(id) ))		
 	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
@@ -549,3 +547,9 @@ func init_debug_tags():
 			asset_library.group_add_tag(group, tag_id)			
 	asset_library.save()	
 #endregion
+
+func open_settings_window(tab, data):
+	if tab == "tag":
+		settings_button.button_pressed = true
+		settings_button.settings.select_tab("manage_tags")
+		settings_button.settings.manage_tags_control.select_collection(data)		

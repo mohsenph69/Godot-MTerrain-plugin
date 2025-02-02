@@ -7,18 +7,16 @@ var asset_library = MAssetTable.get_singleton()
 var items := {}
 var active_collections = []
 var grouping = "None"
-func _ready():			
+
+func _ready():		
 	find_child("search").text_changed.connect(func(text):
 		for item in items:
 			items[item].visible = text == "" or text.to_lower() in items[item].get_text(0).to_lower()
-		
-		#var filtered_collections = asset_library.collection_names_begin_with(text) if text != "" else asset_library.collection_get_list()
-		#for item in items.keys():
-		#	items[item].visible = filtered_collections.has(item)
-	)	
-	regroup()
-	tag_list.set_editable(true)
-	tag_list.set_options()			
+	)		
+	tag_list.set_editable(false)
+	tag_list.set_options()	
+	tag_list.visibility_changed.connect(tag_list.set_options)	
+	regroup()	
 	tag_list.tag_changed.connect(func(tag_id, toggle_on):		
 		var changed = false		
 		if toggle_on:
@@ -64,7 +62,7 @@ func regroup(group = grouping):
 			var tag = asset_library.tag_get_name(tag_id)
 			var tag_item = root.create_child()
 			tag_item.set_text(0, tag)
-			for collection_id in asset_library.tags_get_collections_any([tag_id]):
+			for collection_id in asset_library.tags_get_collections_any(asset_library.collection_get_list(),[tag_id],[]):
 				if not asset_library.has_collection(collection_id):					
 					#asset_library.collection_remove_tag(collection_id, tag_id)
 					#push_error("tag get collections returned a collection id that doesn't exist")
@@ -89,3 +87,8 @@ func regroup(group = grouping):
 				item.set_metadata(0, collection_id)
 				items[collection_id] = item	
 			
+func select_collection(id):
+	collection_list.deselect_all()
+	items[id].select(0)
+	collection_list.scroll_to_item(items[id])
+	

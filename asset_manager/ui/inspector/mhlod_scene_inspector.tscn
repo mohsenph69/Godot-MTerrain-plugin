@@ -14,7 +14,7 @@ text = "Edit Baker Scene"
 
 [node name="Label" type="Label" parent="."]
 layout_mode = 2
-text = "Variation Layers"
+text = "HLOD Active Variation Layers"
 
 [node name="Layers" parent="." instance=ExtResource("2_3rehg")]
 layout_mode = 2

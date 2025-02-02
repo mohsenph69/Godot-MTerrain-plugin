@@ -21,17 +21,17 @@ func _ready():
 			asset_library.group_rename(original_name, new_name)
 		else:
 			item.set_text(0, original_name)
-			%group_rename_error.visible = true
-		
+			%group_rename_error.visible = true		
 	)
-	group_list.multi_selected.connect(func(current_item:TreeItem, column, selected:bool):
-		print('selected_group ')		
+	group_list.nothing_selected.connect(func():
+		deselect_all_groups()
+	)
+		
+	group_list.multi_selected.connect(func(current_item:TreeItem, column, selected:bool):			
 		if selected:
-			current_item.set_editable(0, true)			
-			selected_groups = group_list.get_root().get_children().filter(func(item): return item.is_selected(0)).map(func(item): return item.get_text(0))			
-			remove_selected_groups_button.disabled = false			
-			tag_list.set_tags_from_data(asset_library.group_get_tags(current_item.get_text(0)))							
+			select_group(current_item)
 		else:
+			# Deselect
 			current_item.set_editable(0, false)
 			if current_item.get_text(0) in selected_groups:
 				selected_groups.erase(current_item.get_text(0))
@@ -47,8 +47,7 @@ func _ready():
 	)
 	add_group_button.pressed.connect(add_group)		
 	
-	tag_list.tag_changed.connect(func(tag, toggle_on):			
-		print("tag changed ", tag, " to ", toggle_on)
+	tag_list.tag_changed.connect(func(tag, toggle_on):					
 		if len(selected_groups) == 0: return
 		if tag is String:
 			tag = asset_library.tag_get_id(tag)
@@ -58,12 +57,28 @@ func _ready():
 		else:
 			for group in selected_groups:
 				asset_library.group_remove_tag(group, tag)	
+		tag_list.set_tags_from_data(asset_library.group_get_tags(selected_groups[-1]))
 	)		
+	tag_list.options_changed.connect(func():		
+		deselect_all_groups()
+	)
 	visibility_changed.connect(init_settings)	
 	
-	tag_list.set_editable(false)
+	tag_list.set_editable(true)
+	tag_list
 	var group_search = find_child("group_search")
 	group_search.text_changed.connect(filter_groups)
+	
+func select_group(current_item):
+	current_item.set_editable(0, true)	# allow for renaming if click again		
+	selected_groups = group_list.get_root().get_children().filter(func(item): return item.is_selected(0)).map(func(item): return item.get_text(0))			
+	remove_selected_groups_button.disabled = false			
+	tag_list.set_tags_from_data(asset_library.group_get_tags(current_item.get_text(0)))							
+
+func deselect_all_groups():
+	group_list.deselect_all()
+	selected_groups =[]
+	tag_list.set_tags_from_data([])							
 	
 func filter_groups(text):
 	for item: TreeItem in group_list.get_root().get_children():
