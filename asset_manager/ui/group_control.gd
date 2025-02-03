@@ -22,10 +22,15 @@ func set_group(group_name):
 func add_item(item_name, item):
 	var i = group_list.add_item(item_name)	
 	group_list.set_item_tooltip(i, item_name)
-	group_list.set_item_metadata(i, item)
-	var asset_library:MAssetTable = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+	group_list.set_item_metadata(i, item)	
+	var asset_library = MAssetTable.get_singleton()
+	if item in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+		group_list.set_item_custom_bg_color(i, Color(1,0.5,0,0.15))		
+	if item in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
+		group_list.set_item_custom_bg_color(i, Color(0,1,0.8,0.15))
 	group_list.set_item_tooltip(i, str(item_name))
-	set_icon(i) # should be called last
+	if item in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
+		set_icon(i) # should be called last	
 
 func get_item_collection_id(item_index:int)->int:
 	return group_list.get_item_metadata(item_index)
@@ -48,7 +53,7 @@ func update_thumbnail(data):
 	var asset_library = MAssetTable.get_singleton()
 	var thumbnail_path = asset_library.get_asset_thumbnails_path(data.collection_id)
 	### Updating Cache
-	ThumbnailManager.save_thumbnail(data.texture, thumbnail_path)
+	ThumbnailManager.save_thumbnail(data.texture.get_image(), thumbnail_path)
 	## This function excute with delay we should check if item collection id is not changed	
 	if get_item_collection_id(data.caller) == data.collection_id:			
 		group_list.set_item_icon(data.caller,data.texture)

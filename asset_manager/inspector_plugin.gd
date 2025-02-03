@@ -40,41 +40,26 @@ func _parse_begin(object):
 	elif object is MHlodScene:
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.tscn").instantiate()
 		control.mhlod_scene = object
-		control.add_child( make_variation_layer_control_for_assigning(object))				
+		control.add_child(make_variation_layer_control_for_assigning(object))				
 		control.add_child(make_tag_collection_control(object))		
-	elif object is MAssetMesh:				
+	elif object is MAssetMesh:						
 		control = VBoxContainer.new()		
-		control.add_child( make_variation_layer_control_for_assigning(object))						
-		control.add_child( make_tag_collection_control(object))						
+		control.add_child(make_variation_layer_control_for_assigning(object))						
+		control.add_child(make_tag_collection_control(object))						
 	elif object is MMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
 		control.mmesh = object		
 	elif object is MHlodNode3D:				
-		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()
+		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()		
 		control.mhlod_node = object				
-		control.add_child( make_variation_layer_control_for_assigning(object))				
+		control.asset_placer = asset_placer
+		control.add_child(make_variation_layer_control_for_assigning(object))				
 		control.add_child(make_tag_collection_control(object))		
 	elif object is CollisionShape3D:
 		control = VBoxContainer.new()
 		control.add_child( make_cutoff_lod_control(object) )
-		var hbox = HBoxContainer.new()
-		var label = Label.new()
-		label.text = "Physics Setting: "
-		hbox.add_child(label)
-		var dropdown = OptionButton.new()
-		var dir =MHlod.get_physics_settings_dir()
-		var physics_setting_filename = object.get_meta("physics_settings") if object.has_meta("physics_settings") else null
-		for file in DirAccess.get_files_at(dir):
-			var physics_setting: MHlodCollisionSetting = load(dir.path_join(file))
-			dropdown.add_item(physics_setting.name)
-			dropdown.set_item_metadata(dropdown.item_count-1, file)		
-			if not physics_setting_filename == null and physics_setting_filename == file:
-				dropdown.select(dropdown.item_count-1)
-		dropdown.item_selected.connect(func(id):			
-			object.set_meta("physics_settings", dropdown.get_item_metadata(id))
-		)		
-		hbox.add_child(dropdown)
-		control.add_child(hbox)
+		control.add_child( make_physics_settings_control(object))		
+		control.add_child( make_variation_layer_control_for_assigning(object))
 		
 	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
 		if object.get_class() == "Node3D":
@@ -87,10 +72,30 @@ func _parse_begin(object):
 		elif object is OmniLight3D or object is SpotLight3D:
 			control = VBoxContainer.new()
 			control.add_child(make_cutoff_lod_control(object))
-			control.add_child( make_variation_layer_control_for_assigning(object))							
+			control.add_child(make_variation_layer_control_for_assigning(object))							
 	margin.add_child(control)
 	add_custom_control(margin)			
 
+func make_physics_settings_control(object):
+	var hbox = HBoxContainer.new()
+	var label = Label.new()
+	label.text = "Physics Setting: "
+	hbox.add_child(label)
+	var dropdown = OptionButton.new()
+	var dir =MHlod.get_physics_settings_dir()
+	var physics_setting_id:int = object.get_meta("physics_settings") if object.has_meta("physics_settings") else -1
+	for file in DirAccess.get_files_at(dir):
+		var physics_setting: MHlodCollisionSetting = load(dir.path_join(file))
+		dropdown.add_item(physics_setting.name)
+		dropdown.set_item_metadata(dropdown.item_count-1, int(file))		
+		if physics_setting_id != -1 and physics_setting_id == int(file):
+			dropdown.select(dropdown.item_count-1)		
+	dropdown.item_selected.connect(func(id):			
+		object.set_meta("physics_settings", dropdown.get_item_metadata(id))
+	)		
+	hbox.add_child(dropdown)
+	return hbox
+	
 func make_tag_collection_control(object):
 	#var tags_editor = preload("res://addons/m_terrain/asset_manager/ui/tags_editor.tscn").instantiate()
 	#tags_editor.set_options(MAssetTable.get_singleton().tag_get_names())

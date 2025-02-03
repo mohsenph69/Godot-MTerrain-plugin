@@ -1,6 +1,8 @@
-[gd_scene format=3 uid="uid://dqrbarvkf0l2i"]
+[gd_scene load_steps=2 format=3 uid="uid://cl7pw54mmpvlb"]
 
-[node name="@VBoxContainer@26448" type="VBoxContainer"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.gd" id="1_nlfb7"]
+
+[node name="_VBoxContainer_26448" type="VBoxContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -8,3 +10,4 @@ offset_left = 8.0
 offset_top = 8.0
 offset_right = -8.0
 offset_bottom = -8.0
+script = ExtResource("1_nlfb7")

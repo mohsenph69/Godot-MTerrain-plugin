@@ -20,6 +20,7 @@ const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_bake
 @onready var add_asset_button:Button = find_child("add_asset_button")
 @onready var add_baker_button:Button = find_child("add_baker_button")
 @onready var add_decal_button:Button = find_child("add_decal_button")
+@onready var add_packed_scene_button:Button = find_child("add_packed_scene_button")
 
 @onready var x_btn:Button = find_child("x_btn")
 @onready var y_btn:Button = find_child("y_btn")
@@ -110,27 +111,38 @@ func _ready():
 				object_being_placed = null
 	)
 			
-	add_baker_button.pressed.connect(func():		
-		var dir = MAssetTable.get_editor_baker_scenes_dir()
-		var existing_files = DirAccess.get_files_at(dir)		
-		var file = "baker.tscn" 
-		var i = 0		
-		while file in existing_files:			
-			i+= 1
-			file = "baker" +str(i) +".tscn"
-		var node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
-		node.name = file.trim_suffix(".tscn")
-		var packed = PackedScene.new()
-		packed.pack(node)
-		ResourceSaver.save(packed, dir.path_join(file))		
-		EditorInterface.open_scene_from_path(dir.path_join(file))
-		#EditorInterface.get_edited_scene_root().name = "baker" +str(i) 
-	)
+	add_baker_button.pressed.connect(create_baker_scene)
+	add_packed_scene_button.pressed.connect(create_packed_scene)
+	
 	find_child("asset_type_tree").asset_type_filter_changed.connect(func(selected_types):
 		current_filter_types = selected_types
 		regroup()
 	)
-
+	
+func create_baker_scene():	
+	var dir = MAssetTable.get_editor_baker_scenes_dir()
+	var existing_files = DirAccess.get_files_at(dir)		
+	var file = "baker.tscn" 
+	var i = 0		
+	while file in existing_files:			
+		i+= 1
+		file = "baker" +str(i) +".tscn"
+	var node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
+	node.name = file.trim_suffix(".tscn")
+	var packed = PackedScene.new()
+	packed.pack(node)
+	ResourceSaver.save(packed, dir.path_join(file))		
+	EditorInterface.open_scene_from_path(dir.path_join(file))
+		
+func create_packed_scene():
+	var id = MAssetTable.get_last_free_packed_scene_id()	
+	var node := MHlodNode3D.new()	
+	var packed = PackedScene.new()
+	packed.pack(node)
+	var path = MHlod.get_packed_scene_path(id)
+	ResourceSaver.save(packed, path)			
+	EditorInterface.open_scene_from_path(path)	
+	
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
 	if add_asset and object_being_placed!=null:
@@ -296,7 +308,7 @@ func regroup(group = current_group, sort_mode="asc"):
 	elif group in asset_library.group_get_list():
 		ungrouped.group_button.visible = true
 		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
-		var processed_collection: PackedInt32Array = []
+		var processed_collections: PackedInt32Array = []
 		for tag_id in asset_library.group_get_tags(group) :			
 			var tag_name = asset_library.tag_get_name(tag_id)
 			if tag_name == "": continue
@@ -321,7 +333,7 @@ func regroup(group = current_group, sort_mode="asc"):
 						
 			for collection_id in asset_library.tags_get_collections_any(filtered_collections, [tag_id],[]):
 				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
-				processed_collection.push_back(collection_id)
+				processed_collections.push_back(collection_id)
 			if sort_mode == "asc":
 				sorted_items.sort_custom(func(a,b): return a.name < b.name)
 			elif sort_mode == "desc":
@@ -330,8 +342,11 @@ func regroup(group = current_group, sort_mode="asc"):
 				group_control.add_item(item.name, item.id)		
 		# Now add leftovers to "Ungrouped" tag
 		ungrouped.group_list.clear()		
+		print(len(processed_collections))
+		print(len(filtered_collections))
 		var sorted_items = []
-		for collection_id in asset_library.tags_get_collections_any(filtered_collections, current_filter_tags, processed_collection ):
+		for collection_id in filtered_collections:
+			if collection_id in processed_collections: continue
 			sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)
@@ -360,8 +375,8 @@ func add_asset_to_scene(id, asset_name,create_ur:=true):
 	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
 		node = load(MHlod.get_decal_path( asset_library.collection_get_item_id(id) ))		
 	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
-		node = load(MHlod.get_packed_scene_path( asset_library.collection_get_item_id(id) ))
-		
+		node = load(MHlod.get_packed_scene_path( asset_library.collection_get_item_id(id) )).instantiate()
+		node.set_meta("collection_id", id)
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	var main_selected_node = null
@@ -517,7 +532,7 @@ func process_selection(who:ItemList, id, selected):
 			for item in	group.get_selected_items():
 				current_selection.push_back( group.get_item_text(item) )
 	selection_changed.emit()
-	
+		
 func on_main_screen_changed():
 	settings_button.button_pressed = false
 	
