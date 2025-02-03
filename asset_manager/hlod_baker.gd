@@ -244,7 +244,8 @@ func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Cal
 			continue
 		if filter_func.call(current_node):
 			result.push_back(current_node)
-		stack.append_array(current_node.get_children())		
+		if not current_node is MHlodNode3D:
+			stack.append_array(current_node.get_children())
 	return result
 
 func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
