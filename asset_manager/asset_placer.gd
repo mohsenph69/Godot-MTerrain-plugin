@@ -123,7 +123,7 @@ func _ready():
 			
 	add_baker_button.pressed.connect(create_baker_scene)
 	add_packed_scene_button.pressed.connect(create_packed_scene)
-	
+	add_decal_button.pressed.connect(create_decal)
 	find_child("asset_type_tree").asset_type_filter_changed.connect(func(selected_types):
 		current_filter_types = selected_types
 		regroup()
@@ -147,12 +147,35 @@ func create_baker_scene():
 	
 func create_packed_scene():
 	var id = MAssetTable.get_last_free_packed_scene_id()	
-	var node := MHlodNode3D.new()	
+	var node := MHlodNode3D.new()		
+	var collection_id = asset_library.collection_create(node.name, id, MAssetTable.PACKEDSCENE, -1)
+	asset_library.save()
+	node.set_meta("collection_id", collection_id)	
 	var packed = PackedScene.new()
 	packed.pack(node)
 	var path = MHlod.get_packed_scene_path(id)
 	ResourceSaver.save(packed, path)			
-	EditorInterface.open_scene_from_path(path)	
+	EditorInterface.open_scene_from_path(path)			
+
+func create_decal():
+	var id = MAssetTable.get_last_free_decal_id()		
+	var decal := MDecal.new()
+	decal.resource_name = "New Decal"
+	var path = MHlod.get_decal_path(id)		
+	#if FileAccess.file_exists(path):	
+	ResourceSaver.save(decal, path)	
+	decal.take_over_path(path)	
+	var collection_id = asset_library.collection_create(decal.resource_name, id, MAssetTable.DECAL, -1)
+	asset_library.save()
+	assets_changed.emit(decal)		
+	var node := MDecalInstance.new()	
+	node.decal = decal
+	ResourceSaver.save(decal, path)				
+	var scene_root = EditorInterface.get_edited_scene_root()
+	scene_root.add_child(node)
+	node.name = "New Decal"
+	node.owner = scene_root
+	node.set_meta("collection_id", collection_id)
 	
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
@@ -388,7 +411,10 @@ func add_asset_to_scene(id, asset_name,create_ur:=true):
 		node.hlod = load(MHlod.get_hlod_path( asset_library.collection_get_item_id(id) ))
 		node.set_meta("collection_id", id)
 	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
-		node = load(MHlod.get_decal_path( asset_library.collection_get_item_id(id) ))		
+		node = MDecalInstance.new()
+		var path = MHlod.get_decal_path( asset_library.collection_get_item_id(id) )		
+		node.decal = load(path)		
+		node.name = asset_library.collection_get_name(id)
 	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
 		node = load(MHlod.get_packed_scene_path( asset_library.collection_get_item_id(id) )).instantiate()
 		node.set_meta("collection_id", id)

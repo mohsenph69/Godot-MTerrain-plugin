@@ -3,7 +3,7 @@ extends Control
 
 @onready var collection_list:Tree = find_child("collection_list")
 @onready var tag_list = find_child("tag_list")
-@onready var asset_placer = get_asset_placer()
+@onready var asset_placer = await get_asset_placer()
 var asset_library = MAssetTable.get_singleton()
 var items := {}
 var active_collections = []
@@ -108,7 +108,10 @@ func select_collection(id):
 	items[id].select(0)
 	collection_list.scroll_to_item(items[id])
 	
-func get_asset_placer():
-	var path: String = str(get_path()).split("AssetPlacer/")[0]
-	path = path.path_join("AssetPlacer")	
-	return get_tree().root.get_node(path)
+func get_asset_placer():	
+	asset_placer = self
+	while asset_placer.name != "AssetPlacer" and asset_placer != get_tree().root:
+		asset_placer = asset_placer.get_parent()
+		if asset_placer == get_tree().root:
+			push_error("CCCCCCCCCCCCCCCCCCC: Asset placer is root")
+	return asset_placer	

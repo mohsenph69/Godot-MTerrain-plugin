@@ -100,6 +100,21 @@ func bake_to_hlod_resource():
 					hlod_resource.insert_item_in_lod_table(iid,0)
 					item.get_meta("item_ids").push_back(iid)
 	################################
+	##      BAKE Decals Node      ##
+	################################
+	for d:MDecalInstance in get_all_decals(self,get_children()):
+		d.set_meta("item_ids",PackedInt32Array())
+		if not d.decal: continue
+		var decal_id=d.decal.resource_path.get_basename().get_file().to_int()		
+		if MHlod.get_decal_path(decal_id)!=d.decal.resource_path:
+			push_warning(d.name+" :Ivalide decal path \""+d.decal.resource_path+"\"")
+			continue
+		var t:Transform3D= baker_inverse_transform * d.global_transform
+		var item_variation_layer = d.get_meta("variation_layers") if d.has_meta("variation_layers") else 0
+		var iid:int=hlod_resource.decal_add(decal_id,t,d.layers, item_variation_layer)
+		for i in range(0,2):
+			hlod_resource.insert_item_in_lod_table(iid,i)
+	################################
 	## BAKE CollisionShape3D Node ##
 	################################
 	for n in get_all_collision_shape_nodes(self):
@@ -291,6 +306,9 @@ func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
 
 func get_all_packed_scenes(baker_node:Node3D,search_nodes:Array)->Array:
 	return get_all_nodes_in_baker(baker_node,search_nodes,func(n): return n is MHlodNode3D)
+
+func get_all_decals(baker_node:Node3D,search_nodes:Array)->Array:
+	return get_all_nodes_in_baker(baker_node,search_nodes,func(n): return n is MDecalInstance)
 
 func get_node_item_id(node_unique_name:String,type_hint:MHlod.Type)->int:
 	if node_unique_name.is_empty(): return -1

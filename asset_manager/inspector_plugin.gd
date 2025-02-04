@@ -14,6 +14,8 @@ func _can_handle(object):
 	if object is MAssetMesh: return true	
 	if object is MMesh: return true		
 	if object is CollisionShape3D: return true		
+	if object is MDecalInstance: return true		
+	if object is MDecal: return true		
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
 	if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is HLod_Baker: return true
 	
@@ -67,7 +69,34 @@ func _parse_begin(object):
 		control.add_child( make_physics_settings_control(object))		
 		if EditorInterface.get_edited_scene_root() is HLod_Baker:
 			control.add_child( make_variation_layer_control_for_assigning(object))
-		
+	elif object is MDecal or object is MDecalInstance: 
+		control = VBoxContainer.new()
+		var hbox = HBoxContainer.new()
+		hbox.size_flags_horizontal =Control.SIZE_EXPAND_FILL		
+		var name_label = Label.new()
+		name_label.text = "Name:"
+		var name_edit = LineEdit.new()
+		name_edit.size_flags_horizontal =Control.SIZE_EXPAND_FILL
+		name_edit.text = object.resource_name if object is MDecal else object.decal.resource_name
+		name_edit.text_submitted.connect(func(text):
+			var decal = object if object is MDecal else object.decal
+			if decal.resource_name == text: return
+			if asset_library.collection_get_id(text) != -1: 
+				MTool.print_edmsg("Trying to rename an MDecal, but name already exist")						
+				return				
+			decal.resource_name = text
+			#var item id = int(decal.resource_path.get_file())			
+			var item_id = int(decal.resource_path.get_file())
+			var collection_id = asset_library.collection_find_with_item_type_item_id(MAssetTable.DECAL, item_id)
+			if collection_id == -1:
+				MTool.print_edmsg("Trying to rename an MDecal, but can't find collection_id")					
+			asset_library.collection_create(decal.resource_name, item_id, MAssetTable.DECAL, -1)									
+			asset_placer.assets_changed.emit(decal)
+		)
+		hbox.add_child(name_label)
+		hbox.add_child(name_edit)
+		control.add_child(hbox)
+		control.add_child(make_variation_layer_control_for_assigning(object))							
 	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
 		if object.get_class() == "Node3D":
 			control = Button.new()
