@@ -96,7 +96,8 @@ func _parse_begin(object):
 		hbox.add_child(name_label)
 		hbox.add_child(name_edit)
 		control.add_child(hbox)
-		control.add_child(make_variation_layer_control_for_assigning(object))							
+		if object is MDecalInstance:
+			control.add_child(make_variation_layer_control_for_assigning(object))							
 	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
 		if object.get_class() == "Node3D":
 			control = Button.new()
