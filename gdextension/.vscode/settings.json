@@ -99,7 +99,8 @@
         "numeric": "cpp",
         "shared_mutex": "cpp",
         "stdfloat": "cpp",
-        "text_encoding": "cpp"
+        "text_encoding": "cpp",
+        "*.rh": "cpp"
     },
     "cmake.configureOnOpen": false
 }
