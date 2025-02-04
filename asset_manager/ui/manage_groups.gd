@@ -82,7 +82,7 @@ func deselect_all_groups():
 	
 func filter_groups(text):
 	for item: TreeItem in group_list.get_root().get_children():
-		item.visible = text.to_lower() in item.get_text(0).to_lower() or text == ""
+		item.visible = item.get_text(0).containsn(text) or text == ""
 		
 func init_settings():		
 	group_list.clear()

@@ -3,8 +3,14 @@
 extends PanelContainer
 
 signal selection_changed
+signal assets_changed
 
 const hlod_baker_script:=preload("res://addons/m_terrain/asset_manager/hlod_baker.gd")
+const ITEM_COLORS = {
+	"HLOD": Color(0,1,0.8,0.15),
+	"PACKEDSCENE": Color(1,0.5,0,0.15),
+	"DECAL": Color(0,0.5,0.8,0.15)
+}
 
 @onready var groups = find_child("groups")
 @onready var ungrouped = find_child("other")
@@ -68,9 +74,13 @@ func _ready():
 	update_reposition_button_text()
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 
-		regroup()
+		assets_changed.emit(_arg)
 	)			
+	ungrouped.asset_placer = self
 	ungrouped.set_group("other")	
+	assets_changed.connect(func(_who):
+		regroup()
+	)
 	regroup()	
 	find_child("sort_popup").sort_mode_changed.connect(func(mode):
 		regroup(current_group, mode)
@@ -133,7 +143,8 @@ func create_baker_scene():
 	packed.pack(node)
 	ResourceSaver.save(packed, dir.path_join(file))		
 	EditorInterface.open_scene_from_path(dir.path_join(file))
-		
+	#MTool.print_edmsg("")
+	
 func create_packed_scene():
 	var id = MAssetTable.get_last_free_packed_scene_id()	
 	var node := MHlodNode3D.new()	
@@ -263,9 +274,12 @@ func get_filtered_collections(text="", tags_to_excluded=[]):
 		else:		
 			result = asset_library.tags_get_collections_any(result, current_filter_tags, tags_to_excluded)
 	
-	if not text.is_empty():
-		for i in range(len(result)-1, -1):									
-			if not text.to_lower() in asset_library.collection_get_name(result[i]).to_lower(): return result.remove_at(i)				
+	if not text.is_empty():	
+		var max = len(result)
+		for i in range(max):									
+			var id = max - i -1			
+			if not asset_library.collection_get_name(result[id]).containsn(text): 				
+				result.remove_at(id)				
 	return result
 	
 func debounce_regroup():
@@ -317,6 +331,7 @@ func regroup(group = current_group, sort_mode="asc"):
 			# Make the tag button if it doesn't exist yet
 			if not groups.has_node(tag_name):				
 				group_control = group_control_scene.instantiate()								
+				group_control.asset_placer = self
 				groups.add_child(group_control)							
 				if not group_control.group_list:
 					continue

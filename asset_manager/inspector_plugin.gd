@@ -28,8 +28,10 @@ func _parse_begin(object):
 	elif object is HLod_Baker:	
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()		
 		control.baker = object
+		control.asset_placer = asset_placer
 		if not object == EditorInterface.get_edited_scene_root():
-			control.add_child(make_variation_layer_control_for_assigning(object))
+			if EditorInterface.get_edited_scene_root() is HLod_Baker:
+				control.add_child(make_variation_layer_control_for_assigning(object))
 		else:
 			var tag_control = make_tag_collection_control(object)
 			control.add_child(tag_control)			
@@ -40,11 +42,14 @@ func _parse_begin(object):
 	elif object is MHlodScene:
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.tscn").instantiate()
 		control.mhlod_scene = object
-		control.add_child(make_variation_layer_control_for_assigning(object))				
+		# TO DO - add variation layer feature to mhlod_scene to assign it to parent baker's layers.
+		#if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			#control.add_child(make_variation_layer_control_for_assigning(object))				
 		control.add_child(make_tag_collection_control(object))		
 	elif object is MAssetMesh:						
 		control = VBoxContainer.new()		
-		control.add_child(make_variation_layer_control_for_assigning(object))						
+		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			control.add_child(make_variation_layer_control_for_assigning(object))						
 		control.add_child(make_tag_collection_control(object))						
 	elif object is MMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
@@ -53,13 +58,15 @@ func _parse_begin(object):
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()		
 		control.mhlod_node = object				
 		control.asset_placer = asset_placer
-		control.add_child(make_variation_layer_control_for_assigning(object))				
+		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			control.add_child(make_variation_layer_control_for_assigning(object))				
 		control.add_child(make_tag_collection_control(object))		
 	elif object is CollisionShape3D:
 		control = VBoxContainer.new()
 		control.add_child( make_cutoff_lod_control(object) )
 		control.add_child( make_physics_settings_control(object))		
-		control.add_child( make_variation_layer_control_for_assigning(object))
+		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			control.add_child( make_variation_layer_control_for_assigning(object))
 		
 	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
 		if object.get_class() == "Node3D":
@@ -72,9 +79,11 @@ func _parse_begin(object):
 		elif object is OmniLight3D or object is SpotLight3D:
 			control = VBoxContainer.new()
 			control.add_child(make_cutoff_lod_control(object))
-			control.add_child(make_variation_layer_control_for_assigning(object))							
-	margin.add_child(control)
-	add_custom_control(margin)			
+			if EditorInterface.get_edited_scene_root() is HLod_Baker:
+				control.add_child(make_variation_layer_control_for_assigning(object))							
+	if control:
+		margin.add_child(control)
+		add_custom_control(margin)			
 
 func make_physics_settings_control(object):
 	var hbox = HBoxContainer.new()
@@ -109,7 +118,7 @@ func make_tag_collection_control(object):
 			collection_id = object.collection_id
 		elif object is MHlodScene:
 			collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1		
-			asset_placer.open_settings_window("tag", collection_id)
+		asset_placer.open_settings_window("tag", collection_id)
 		#%manage_tags_button.button_pressed = true
 	)
 	return tag_button
@@ -120,6 +129,7 @@ func make_variation_layer_control_for_assigning(object):
 	vbox.add_child(label)						
 	var variation_layer_control = variation_layers_scene.instantiate()	
 	vbox.add_child(variation_layer_control)
+	variation_layer_control.layer_names = EditorInterface.get_edited_scene_root().variation_layers
 	variation_layer_control.value_changed.connect(func(new_value):
 		object.set_meta("variation_layers", new_value)
 	)

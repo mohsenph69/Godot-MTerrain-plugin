@@ -15,7 +15,6 @@ func _ready():
 		create_packed_scene_collection()
 	if mhlod_node.scene_file_path.is_empty() or mhlod_node.scene_file_path != MHlod.get_packed_scene_path( int(mhlod_node.scene_file_path.get_file())):				
 		var id = mhlod_node.get_meta("packed_scene_id") if mhlod_node.has_meta("packed_scene_id") else MAssetTable.get_last_free_packed_scene_id()		
-		mhlod_node.set_meta("packed_scene_id", id)
 		var new_path = MHlod.get_packed_scene_path(id)
 		var old_path = mhlod_node.scene_file_path
 		var packed_scene := PackedScene.new()
@@ -72,9 +71,11 @@ func rename_packed_scene():
 		create_packed_scene_collection()		
 	# If new name is taken by other collection, reset to old name
 	elif not asset_library.collection_get_id(mhlod_node.name) in [-1, collection_id]:
+		var new_name = mhlod_node.name
 		mhlod_node.name = asset_library.collection_get_name(collection_id)
+		MTool.print_edmsg(str(new_name, " already exist. Please choose a different name"))
 	# If renaming existing collection
 	else:		
 		asset_library.collection_create(mhlod_node.name, int(mhlod_node.scene_file_path.get_file()), MAssetTable.PACKEDSCENE,-1)
-		asset_placer.regroup()
+		asset_placer.assets_changed.emit(mhlod_node)
 		

@@ -2,7 +2,7 @@
 extends Tree
 
 func _can_drop_data(at_position: Vector2, data: Variant):		
-	if "files" in data and ".glb" in data.files[0].to_lower():
+	if "files" in data and data.files[0].containsn(".glb" ):
 		return true
 
 func _drop_data(at_position, data):		

@@ -1,3 +1,10 @@
+#################
+## TAGS EDITOR ##
+#################
+# 1. call set_editable(bool) to begin
+# 2. connect to "tag_changed(tag_id, toggle_on)" signal
+# 3. connect to options_changed() signal for when tags are renamed/added/removed
+# 4. use set_tags_from_data(Array[tag_id]) to tell this control which tags should be selected
 @tool
 extends Control
 
@@ -9,29 +16,34 @@ signal options_changed
 var editable = false
 var asset_library:MAssetTable = MAssetTable.get_singleton()
 var current_tags = []
-func _ready():
+
+func _ready():	
 	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	var search = find_child("search")
 	search.text_changed.connect(search_tags)
 	set_options()
 	group_by_button.pressed.connect(set_options)
 	group_by_button.pressed.connect(set_tags_from_data)
-		
-
+	%clear_tags_button.pressed.connect(func():
+		for tag in current_tags:
+			tag_changed.emit(tag, false)
+		set_tags_from_data([])
+	)
+	
 func search_tags(new_text):		
 	if group_by_button.button_pressed:		
 		for group_item in tag_list.get_root().get_children():
 			var hide_group = true
 			for item in group_item.get_children():
 				var tag_text = item.get_text(1).to_lower() if editable else item.get_text(0).to_lower()			
-				item.visible = new_text.to_lower() in tag_text or new_text == ""				
+				item.visible = tag_text.containsn(new_text) or new_text == ""				
 				if item.visible:
 					hide_group = false
 			group_item.visible = not hide_group
 	else:
 		for item in tag_list.get_root().get_children():
 			var tag_text = item.get_text(1).to_lower() if editable else item.get_text(0).to_lower()			
-			item.visible = new_text.to_lower() in tag_text or new_text == ""				
+			item.visible = tag_text.containsn(new_text) or new_text == ""				
 	
 func get_selected_tags():
 	var result = {}	
@@ -60,7 +72,8 @@ func set_editable(toggle_on):
 	else:
 		tag_list.columns = 1
 		tag_list.select_mode = Tree.SELECT_ROW
-		tag_list.item_selected.connect(single_item_selected)
+		if not tag_list.item_selected.is_connected(single_item_selected):
+			tag_list.item_selected.connect(single_item_selected)
 		if %add_tag_button.pressed.is_connected(add_tag):
 			%add_tag_button.pressed.disconnect(add_tag)
 		if %remove_selected_tags_button.pressed.is_connected(remove_tags):
@@ -82,6 +95,7 @@ func item_edited():
 			asset_library.tag_set_name(tag_id, new_name)			
 	elif tag_list.get_edited_column() == 0:
 		tag_changed.emit(item.get_metadata(0), item.is_checked(0))
+		set_tags_from_data()
 		
 func add_tag():
 	var tag_name = "New Tag"
@@ -121,6 +135,7 @@ func single_item_selected():
 	var item = tag_list.get_selected()	
 	#if item.is_selected(0):		
 	tag_changed.emit(item.get_metadata(0), not item.is_checked(0))
+	set_tags_from_data()
 #		item.deselect(0)
 #	else:
 #		tag_changed.emit(item.get_metadata(0), true)		
@@ -166,9 +181,10 @@ func add_tag_item(tag_id, tag, root := tag_list.get_root()):
 		
 			
 func toggle_tag(button, tag):	
-	tag_changed.emit(tag, button.button_pressed)	
+	tag_changed.emit(tag, button.button_pressed)		
+	set_tags_from_data()
 							
-func set_tags_from_data(tags = current_tags): #data: Array[int32]
+func set_tags_from_data(tags = current_tags): #tags: Array[int32]
 	if not is_instance_valid(tag_list): await ready	
 	current_tags = tags
 	var groups = tag_list.get_root().get_children() if group_by_button.button_pressed else [null]		

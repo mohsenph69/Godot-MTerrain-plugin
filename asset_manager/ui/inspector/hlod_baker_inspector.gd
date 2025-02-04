@@ -2,22 +2,24 @@
 extends VBoxContainer
 
 var baker: HLod_Baker
+var asset_placer
 
 func _ready():	
 	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return		
+
+	baker.renamed.connect(baker_renamed)		
 		
-	
-	%Bake.pressed.connect(baker.bake_to_hlod_resource)		
 	%Bake.pressed.connect(func():
-		var tween:Tween = create_tween()
-		%bake_successful.visible = true
-		%bake_successful.modulate = Color(1,1,1,1)
-		tween.tween_property(%bake_successful, "modulate", Color(1,1,1,1),1.2)
-		tween.set_ease(Tween.EASE_OUT)
-		tween.chain().tween_property(%bake_successful, "modulate", Color(1,1,1,0),2)
-		
+		if baker.bake_to_hlod_resource() == OK:			
+			var tween:Tween = create_tween()
+			%bake_successful.visible = true
+			%bake_successful.modulate = Color(1,1,1,1)
+			tween.tween_property(%bake_successful, "modulate", Color(1,1,1,1),1.2)
+			tween.set_ease(Tween.EASE_OUT)
+			tween.chain().tween_property(%bake_successful, "modulate", Color(1,1,1,0),2)	
+			asset_placer.assets_changed.emit(baker)
 	)	
 	%bake_successful.visible=false		
 	
@@ -41,8 +43,7 @@ func _ready():
 		tween.tween_property(%import_join_mesh_successful, "modulate", Color(1,1,1,1),1.2)
 		tween.set_ease(Tween.EASE_OUT)
 		tween.chain().tween_property(%import_join_mesh_successful, "modulate", Color(1,1,1,0),2)		
-	)	
-	
+	)		
 	%export_join_mesh_button.pressed.connect(AssetIOBaker.export_join_mesh_only.bind(baker))		
 	%export_join_mesh_button.pressed.connect(func():
 		var tween:Tween = create_tween()
@@ -134,7 +135,27 @@ func validate_show_joined_mesh_button(toggle_on = null):
 func bake_button_gui_input(event):
 	if event is InputEventMouse:
 		%Bake.disabled = not validate_bake_button()
-		
+
+func baker_renamed():
+	if EditorInterface.get_edited_scene_root() == baker:
+		if not baker.scene_file_path.get_file() == baker.name+".tscn":
+			if not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+".tscn")):			
+				var old_path = baker.scene_file_path
+				var new_path = old_path.get_base_dir().path_join(baker.name+".tscn")
+				DirAccess.rename_absolute(baker.scene_file_path, new_path)
+				baker.scene_file_path = new_path
+				for file in DirAccess.get_files_at(MAssetTable.get_hlod_res_dir()):
+					var hlod = load(MAssetTable.get_hlod_res_dir().path_join(file))
+					if hlod.baker_path == old_path:
+						hlod.baker_path = new_path
+						ResourceSaver.save(hlod)
+			elif false: # If returning to old name creates a conflict, ahhhh! TODO
+				pass
+			else: #Return to old name
+				var new_name = baker.name
+				baker.name = baker.scene_file_path.get_file().trim_suffix(".tscn")
+				MTool.print_edmsg(str(new_name, " already exists. Please pick a different name"))						
+	
 func validate_bake_button():
 	%Bake.disabled = not baker.can_bake
 	if baker.can_bake:

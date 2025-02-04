@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+
+<svg
+   fill="#000000"
+   version="1.1"
+   id="Capa_1"
+   width="32px"
+   height="32px"
+   viewBox="0 0 408.483 408.483"
+   xml:space="preserve"
+   sodipodi:docname="trash.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs3" /><sodipodi:namedview
+   id="namedview3"
+   pagecolor="#505050"
+   bordercolor="#eeeeee"
+   borderopacity="1"
+   inkscape:showpageshadow="0"
+   inkscape:pageopacity="0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   inkscape:zoom="0.79069921"
+   inkscape:cx="522.95487"
+   inkscape:cy="292.77884"
+   inkscape:current-layer="Capa_1" />
+<g
+   id="g3"
+   style="fill:#e0e0e0"
+   transform="matrix(0.81334572,0,0,0.82926504,38.122551,34.871165)">
+	<g
+   id="g2"
+   style="fill:#e0e0e0">
+		<path
+   d="m 87.748,388.784 c 0.461,11.01 9.521,19.699 20.539,19.699 h 191.911 c 11.018,0 20.078,-8.689 20.539,-19.699 L 334.442,99.468 H 74.043 Z M 247.655,171.329 c 0,-4.61 3.738,-8.349 8.35,-8.349 h 13.355 c 4.609,0 8.35,3.738 8.35,8.349 v 165.293 c 0,4.611 -3.738,8.349 -8.35,8.349 h -13.355 c -4.61,0 -8.35,-3.736 -8.35,-8.349 z m -58.439,0 c 0,-4.61 3.738,-8.349 8.349,-8.349 h 13.355 c 4.609,0 8.349,3.738 8.349,8.349 v 165.293 c 0,4.611 -3.737,8.349 -8.349,8.349 h -13.355 c -4.61,0 -8.349,-3.736 -8.349,-8.349 V 171.329 Z m -58.441,0 c 0,-4.61 3.738,-8.349 8.349,-8.349 h 13.356 c 4.61,0 8.349,3.738 8.349,8.349 v 165.293 c 0,4.611 -3.738,8.349 -8.349,8.349 h -13.356 c -4.61,0 -8.349,-3.736 -8.349,-8.349 z"
+   id="path1"
+   style="fill:#e0e0e0" />
+		<path
+   d="M 343.567,21.043 H 255.032 V 4.305 C 255.032,1.928 253.105,0 250.727,0 h -92.971 c -2.377,0 -4.304,1.928 -4.304,4.305 V 21.042 H 64.916 c -7.125,0 -12.9,5.776 -12.9,12.901 V 74.47 H 356.467 V 33.944 c 0,-7.125 -5.775,-12.901 -12.9,-12.901 z"
+   id="path2"
+   style="fill:#e0e0e0" />
+	</g>
+</g>
+</svg>

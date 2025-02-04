@@ -232,7 +232,7 @@ func bake_to_hlod_resource():
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
 		make_hlod_thumbnail(collection_id, aabb)	
 	#EditorInterface.get_resource_filesystem().scan()
-
+	return save_err
 func make_hlod_thumbnail(collection_id:int, aabb:AABB):
 	aabb.grow(5)		
 	#ThumbnailManager.make_tscn_thumbnail(scene_file_path, collection_id, aabb )	
@@ -447,16 +447,7 @@ func _enter_tree():
 	activate_mesh_updater()
 	validate_can_bake()
 
-func validate_can_bake():
-	if EditorInterface.get_edited_scene_root() == self:
-		if not scene_file_path.get_file() == name+".tscn":
-			if FileAccess.file_exists(scene_file_path.get_base_dir().path_join(name+".tscn")):
-				name = scene_file_path.get_file().trim_suffix(".tscn")
-			else:
-				var new_path = scene_file_path.get_base_dir().path_join(name+".tscn")
-				DirAccess.rename_absolute(scene_file_path, new_path)
-				scene_file_path = new_path
-				
+func validate_can_bake():			
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	
 	if not FileAccess.file_exists(path): 
 		can_bake = true

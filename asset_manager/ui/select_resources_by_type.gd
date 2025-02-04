@@ -41,7 +41,7 @@ func select_button_pressed():
 
 func filter_tree(text):
 	for item:TreeItem in list.get_root().get_children():
-		item.visible = text.to_lower() in item.get_text(1).to_lower() or text ==""
+		item.visible = item.get_text(1).containsn(text) or text ==""
 
 func build_tree(root:TreeItem, path:="res://"):
 	for file in DirAccess.get_files_at(path):

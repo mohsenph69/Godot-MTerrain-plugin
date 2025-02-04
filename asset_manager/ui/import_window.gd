@@ -6,7 +6,13 @@ extends PanelContainer
 @onready var import_button:Button = find_child("import_button")
 @onready var import_label:Label = find_child("import_label")
 @onready var node_container = find_child("node_container")
-
+@onready var tabs = {
+	%materials_tab_button: %materials_hsplit, 
+	%meshes_tab_button: %meshes_hsplit,
+	%collections_tab_button: %collections_hsplit,
+	%tags_tab_button: %tags_hsplit
+	#%variations_hsplit
+}
 var asset_data:AssetIOData
 var asset_library = MAssetTable.get_singleton()
 var material_table_items = {}
@@ -43,28 +49,12 @@ func _ready():
 	init_materials_tree()	
 	init_meshes_tree()
 	init_variations_tree()
-	%variations_tab_button.visible = len(asset_data.variation_groups) >0
+	init_tags_tree()
+	#%variations_tab_button.visible = len(asset_data.variation_groups) >0
 	%materials_tab_button.button_group.pressed.connect(func(button):		
-		if button == %materials_tab_button:
-			%materials_hsplit.visible = true
-			%meshes_hsplit.visible = false
-			%collections_hsplit.visible = false			
-			%variations_hsplit.visible = false
-		elif button == %meshes_tab_button:
-			%materials_hsplit.visible = false
-			%meshes_hsplit.visible = true
-			%collections_hsplit.visible = false
-			%variations_hsplit.visible = false
-		elif button == %collections_tab_button:
-			%materials_hsplit.visible = false
-			%meshes_hsplit.visible = false
-			%collections_hsplit.visible = true
-			%variations_hsplit.visible = false
-		elif button == %variations_tab_button:			
-			%materials_hsplit.visible = false
-			%meshes_hsplit.visible = false
-			%collections_hsplit.visible = false	
-			%variations_hsplit.visible = true	
+		for tab_button in tabs:
+			tabs[tab_button].visible = tab_button == button		
+			tab_button
 	)
 
 func init_meshes_tree():
@@ -251,6 +241,33 @@ func init_materials_tree():
 			selected_glb_material_item.set_text(1, str(asset_data.materials[glb_material_name].material))						
 			selected_glb_material_item.set_icon(1, selected_material_item.get_icon(0))
 	)
+	
+func init_tags_tree():
+	var tree = %tags_tree		
+	tree.set_editable(false)
+	asset_data.tags.current_tags = asset_data.tags.original_tags.duplicate()		
+	if not tree.tag_changed.is_connected( tag_changed ):
+		tree.tag_changed.connect( tag_changed )		
+	tree.set_tags_from_data.call_deferred(asset_data.tags.current_tags)
+	var tag_mode_button = %tag_mode_button
+	if not tag_mode_button.item_selected.is_connected(set_tag_mode):	
+		tag_mode_button.item_selected.connect(	set_tag_mode )
+	var reset_tags_button = %load_tags_from_last_import_button
+	if not reset_tags_button.pressed.is_connected(init_tags_tree):
+		reset_tags_button.pressed.connect(	init_tags_tree )
+
+func tag_changed(tag, toggle_on):		
+	if toggle_on:
+		if not tag in asset_data.tags.current_tags:
+			asset_data.tags.current_tags.push_back(tag)
+	else:
+		if tag in asset_data.tags.current_tags:
+			asset_data.tags.current_tags.erase(tag)
+	%tags_tree.set_tags_from_data.call_deferred(asset_data.tags.current_tags)
+
+func set_tag_mode(id):
+	asset_data.tags.mode = id		
+		 
 func invalid_material_fixed(material_name):
 	invalid_materials.erase(material_name)
 	if len(invalid_materials) == 0:

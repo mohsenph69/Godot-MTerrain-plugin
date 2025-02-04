@@ -51,6 +51,7 @@ alignment = 1
 
 [node name="cancel_button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+toggle_mode = true
 text = "Cancel"
 
 [node name="confirm_button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer"]

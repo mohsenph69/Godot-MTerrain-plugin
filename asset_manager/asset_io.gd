@@ -23,7 +23,7 @@ static func glb_load(path, metadata={},no_window:bool=false):
 	gltf_document.append_from_file(path,gltf_state)
 	
 	var root_name = gltf_state.get_nodes()[gltf_state.root_nodes[0]].original_name
-	if "_hlod" in root_name.to_lower() or "_baker" in root_name.to_lower():
+	if root_name.containsn("_hlod") or root_name.containsn("_baker"):
 		print("processing baker import begin")		
 		var original_root = gltf_document.generate_scene(gltf_state)
 		var baker_node = original_root.get_child(0)					
@@ -296,7 +296,18 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 			if not asset_library.has_collection(sub_collection_id):
 				push_error("trying to add subcollection to collection, but sub_collection_id ", sub_collection_id, " does not exist")
 			asset_library.collection_add_sub_collection(collection_id, sub_collection_id,sub_collections[sub_collection_name])
-
+	## ADD TAGS
+	if collection_id != -1:		
+		if asset_data.tags.mode == 0:
+			for tag in asset_data.tags.current_tags:
+				asset_library.collection_add_tag(collection_id, tag)
+		else:
+			for old_tag_id in asset_library.collection_get_tags(collection_id):
+				if not old_tag_id in asset_data.tags.current_tags:
+					asset_library.collection_remove_tag(collection_id, old_tag_id)
+			for tag_id in asset_data.tags.current_tags:
+				asset_library.collection_add_tag(collection_id, tag_id)
+				
 static func glb_show_import_window(asset_data:AssetIOData):
 	var popup = Window.new()
 	popup.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
@@ -377,6 +388,7 @@ static func get_orphaned_collections():
 			if asset_library.import_info[glb][node_name].has("id"):						
 				if asset_library.import_info[glb][node_name].id in result:
 					result.erase(asset_library.import_info[glb][node_name].id)
+	print(result)
 	return result
 				
 static func import_settings(path):
