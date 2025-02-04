@@ -398,26 +398,26 @@ func collection_item_activated(id, group_list:ItemList,create_ur:=true):
 	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_tooltip(id),create_ur)		
 	return node 
 
-func add_asset_to_scene(id, asset_name,create_ur:=true):
+func add_asset_to_scene(collection_id, asset_name,create_ur:=true):
 	var node
-	if id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
+	if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
 		node = MAssetMesh.new()
-		node.collection_id = id		
+		node.collection_id = collection_id		
 		var blend_file = AssetIO.get_asset_blend_file(node.collection_id) 
 		if blend_file:
 			node.set_meta("blend_file", blend_file)
-	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
+	elif collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
 		node = MHlodScene.new()		
-		node.hlod = load(MHlod.get_hlod_path( asset_library.collection_get_item_id(id) ))
-		node.set_meta("collection_id", id)
-	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
+		node.hlod = load(MHlod.get_hlod_path( asset_library.collection_get_item_id(collection_id) ))
+		node.set_meta("collection_id", collection_id)
+	elif collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
 		node = MDecalInstance.new()
-		var path = MHlod.get_decal_path( asset_library.collection_get_item_id(id) )		
+		var path = MHlod.get_decal_path( asset_library.collection_get_item_id(collection_id) )		
 		node.decal = load(path)		
-		node.name = asset_library.collection_get_name(id)
-	elif id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
-		node = load(MHlod.get_packed_scene_path( asset_library.collection_get_item_id(id) )).instantiate()
-		node.set_meta("collection_id", id)
+		node.name = asset_library.collection_get_name(collection_id)
+	elif collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+		node = load(MHlod.get_packed_scene_path( asset_library.collection_get_item_id(collection_id) )).instantiate()
+		node.set_meta("collection_id", collection_id)
 	var selected_nodes = EditorInterface.get_selection().get_selected_nodes()	
 	var scene_root = EditorInterface.get_edited_scene_root()	
 	var main_selected_node = null
