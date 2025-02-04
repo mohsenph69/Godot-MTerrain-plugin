@@ -11,6 +11,7 @@
 
 #include <godot_cpp/classes/resource_loader.hpp>
 #include "mhlod_item.h"
+#include "../util/lru_cache.h"
 
 using namespace godot;
 
@@ -156,24 +157,8 @@ class MHlod : public Resource{
 
 
     void start_test(){
-        if(false){
-        MHLodItemLight l = item_list[61].light;
-        UtilityFunctions::print("energy ",l.energy);
-        UtilityFunctions::print("light_indirect_energy ",l.light_indirect_energy);
-        UtilityFunctions::print("light_volumetric_fog_energy ",l.light_volumetric_fog_energy);
-        UtilityFunctions::print("size ",l.size);
-        UtilityFunctions::print("negetive ",l.negetive);
-        UtilityFunctions::print("specular ",l.specular);
-        UtilityFunctions::print("range ",l.range);
-        UtilityFunctions::print("attenuation ",l.attenuation);
-        UtilityFunctions::print("shadow_mode ",l.shadow_mode);
-        }
+        MLRUCache<int64_t,godot::Variant> foo(4);
         
-        UtilityFunctions::print("size of MHLodItemPackedScene ",sizeof(MHLodItemPackedScene));
-        UtilityFunctions::print("size of light ",sizeof(MHLodItemLight));
-        UtilityFunctions::print("so of MHLodItemMesh  ",sizeof(MHLodItemMesh));
-        UtilityFunctions::print("so of MHLodItemCollision  ",sizeof(MHLodItemCollision));
-        UtilityFunctions::print("so of Item  ",sizeof(Item));
     }
 
     void _set_data(const Dictionary& data);
