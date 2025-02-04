@@ -92,6 +92,7 @@ func _parse_begin(object):
 				MTool.print_edmsg("Trying to rename an MDecal, but can't find collection_id")					
 			asset_library.collection_create(decal.resource_name, item_id, MAssetTable.DECAL, -1)									
 			asset_placer.assets_changed.emit(decal)
+			object.notify_property_list_changed()
 		)
 		hbox.add_child(name_label)
 		hbox.add_child(name_edit)
