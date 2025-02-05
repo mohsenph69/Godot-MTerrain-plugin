@@ -2,6 +2,7 @@ class_name ThumbnailManager extends Node
 
 static var thumbnail_queue := [] # {resource, caller, callback, ...}
 static var generating_thumbnail := false
+static var thumbnail_cache = {}
 
 func _process(delta):
 	if len(thumbnail_queue)==0: return
@@ -39,8 +40,8 @@ static func get_valid_thumbnail(collection_id:int)->Texture2D:
 		return null
 	return tex
 
-static func save_thumbnail(preview:ImageTexture, thumbnail_path:String):			
-	var data = preview.get_image().save_png_to_buffer() if preview else Image.create_empty(64,64,false, Image.FORMAT_R8).save_png_to_buffer()
+static func save_thumbnail(preview:Image, thumbnail_path:String):			
+	var data = preview.save_png_to_buffer() if preview else Image.create_empty(64,64,false, Image.FORMAT_R8).save_png_to_buffer()
 	var file = FileAccess.open(thumbnail_path, FileAccess.WRITE)
 	if not DirAccess.dir_exists_absolute( thumbnail_path.get_base_dir() ):
 		DirAccess.make_dir_recursive_absolute( thumbnail_path.get_base_dir() )
@@ -54,3 +55,38 @@ static func get_collection_import_time(collection_id:int)->float:
 		if k.begins_with("__"): continue
 		if import_info[k]["__id"] == glb_id: return import_info[k]["__import_time"]
 	return -1
+
+static func make_tscn_thumbnail(scene_path, collection_id, aabb = null):		
+	# THIS IS NOT WORKING
+	return
+	var viewport := SubViewport.new()
+	viewport.size = Vector2(256, 256)  # Adjust resolution
+	viewport.own_world_3d = true
+	#viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	EditorInterface.get_edited_scene_root().add_child(viewport)
+
+	# Load the scene
+	var instance 
+	if not scene_path is Node:
+		instance = load(scene_path).instantiate()
+		viewport.add_child(instance)
+		
+	# Add a camera
+	var camera = Camera3D.new()
+	if aabb:
+		var size = aabb.size.length()
+		var distance = size * 1.2  # Adjust factor as needed
+		camera.position = aabb.get_center() + Vector3(0, size, distance)
+	else:
+		camera.position = Vector3(0, 4, 20)
+		camera.look_at(Vector3.ZERO)
+	viewport.add_child(camera)
+
+	# Wait a frame, then capture the image
+	var tree = EditorInterface.get_edited_scene_root().get_tree()
+	await tree.process_frame				
+	save_thumbnail(viewport.get_texture().get_image(), MAssetTable.get_singleton().get_asset_thumbnails_path( collection_id ))		
+	# DEBUG: save png
+	viewport.get_texture().get_image().save_png("res://thumbnail.png")
+	# Cleanup
+	viewport.queue_free()

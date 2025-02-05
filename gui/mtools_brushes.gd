@@ -91,15 +91,15 @@ func init_height_brushes(new_brush_manager):
 	for n in brush_names:		
 		var brush_item = preload("res://addons/m_terrain/gui/mtools_brush_item.tscn").instantiate()
 		brush_container.add_child(brush_item)				
-		if "raise" in n.to_lower():			
+		if n.containsn("raise"):
 			brush_item.set_height_brush(n, preload("res://addons/m_terrain/icons/brush_icon_raise.svg"))
-		if "height" in n.to_lower():
+		if n.containsn("height"):
 			brush_item.set_height_brush(n, preload("res://addons/m_terrain/icons/brush_icon_to_height.svg"))
-		if "smooth" in n.to_lower():
+		if n.containsn("smooth"):
 			brush_item.set_height_brush(n, preload("res://addons/m_terrain/icons/brush_icon_smooth.svg"))
-		if "hole" in n.to_lower():
+		if n.containsn("hole"):
 			brush_item.set_height_brush(n, preload("res://addons/m_terrain/icons/brush_icon_hole.svg"))	
-		if "layer" in n.to_lower():
+		if n.containsn("layer"):
 			brush_item.set_height_brush(n, preload("res://addons/m_terrain/icons/eraser_icon.svg"))	
 			
 		brush_item.brush_selected.connect(on_height_brush_select.bind(brush_item))
@@ -149,7 +149,7 @@ func create_props(dic:Dictionary):
 	element.set_name(dic["name"])
 	element.update_name(dic["name"])
 	property_element_list.append(element)	
-	if element.prop_name.to_lower() == "revers":
+	if element.prop_name.containsn("revers"):
 		reverse_property_control = element	
 
 func clear_property_element():

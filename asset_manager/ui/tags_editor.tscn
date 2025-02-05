@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://b0e74s117ljja"]
+[gd_scene load_steps=7 format=3 uid="uid://b0e74s117ljja"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/tags_editor.gd" id="1_jgok0"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_xvavf"]
 [ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="3_4xju2"]
 [ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="4_vmma1"]
+[ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="5_tdl4l"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_tn0dd"]
 font_color = Color(1, 0, 0, 1)
@@ -32,6 +33,14 @@ theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
 icon = ExtResource("4_vmma1")
+expand_icon = true
+
+[node name="clear_tags_button" type="Button" parent="HBoxContainer2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("5_tdl4l")
 expand_icon = true
 
 [node name="tag_name_error" type="Label" parent="."]

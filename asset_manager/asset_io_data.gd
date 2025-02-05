@@ -14,6 +14,7 @@ var collections:Dictionary
 var forgotten_collections_import_info:Dictionary
 var variation_groups: Array #array of array of glb node names
 var meta_data:Dictionary
+var tags: Dictionary = {"original_tags":[], "current_tags":[], "mode": 0 } #mode 0 = add, mode 1 = overwrite
 
 func import_state_str(_state:int) -> String:
 		if _state==0:return "NOT_HANDLE"
@@ -345,6 +346,7 @@ func get_glb_import_info():
 		result["__materials"][key] = {"path":materials[key].material, "meshes":materials[key].meshes}
 	result["__metadata"] = meta_data
 	result["__import_time"] = (Time.get_unix_time_from_system())
+	result["__tags"] = tags['current_tags']		
 	return result
 		
 #Add original mesh and collection data to asset_data
@@ -381,8 +383,10 @@ func add_glb_import_info(info:Dictionary)->void:
 		for key in info["__materials"]:
 			if key in materials:
 				materials[key].original_material = info["__materials"][key].path
-				materials[key].material = info["__materials"][key].path
-	
+				materials[key].material = info["__materials"][key].path	
+	if "__tags" in info:
+		tags['original_tags'] = info["__tags"] # array of tag_id
+		
 func add_metadata_to_data(old:Dictionary, new:Dictionary):
 	var result = old.duplicate()
 	for key in new:

@@ -45,7 +45,7 @@ func force_lod(lod:int):
 		asset_mesh_updater.update_force_lod(lod)
 		force_lod_enabled = true
 		
-func bake_to_hlod_resource():	
+func bake_to_hlod_resource():		
 	MHlodScene.sleep()	
 	var aabb: AABB	
 	hlod_resource = MHlod.new()
@@ -71,7 +71,8 @@ func bake_to_hlod_resource():
 			var shadow_array = mesh_array.map(func(a): return 0)
 			var gi_array = mesh_array.map(func(a): return 0)			
 			var render_layers = 0			
-			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_set_id	, shadow_array, gi_array, render_layers, item.hlod_layers)
+			var item_variation_layer = item.get_meta("variation_layers") if item.has_meta("variation_layers") else 0
+			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_set_id, shadow_array, gi_array, render_layers, item_variation_layer)
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
 			item.get_meta("item_ids").push_back(mesh_id)
@@ -83,20 +84,36 @@ func bake_to_hlod_resource():
 					hlod_resource.insert_item_in_lod_table(mesh_id, i)
 				i += 1
 			## Mesh With Collssion
+			var physics_settings = item.get_meta("physics_settings") if item.has_meta("physics_settings") else -1
 			for cindex in mdata.get_collision_count():
 				var type:MAssetTable.CollisionType= mdata.get_collision_type(cindex)
 				var t:Transform3D = baker_inverse_transform * mdata.get_collision_transform(cindex)
 				var params:Vector3 = mdata.get_collision_params(cindex)
-				var iid:int = -1
+				var iid:int = -1								
 				match type:
-					MAssetTable.CollisionType.SHPERE: iid = hlod_resource.shape_add_sphere(t,params[0],0,-1)
-					MAssetTable.CollisionType.CYLINDER: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],0,-1)
-					MAssetTable.CollisionType.CAPSULE: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],0,-1)
-					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,0,-1)
+					MAssetTable.CollisionType.SHPERE: iid = hlod_resource.shape_add_sphere(t,params[0],item_variation_layer,physics_settings)
+					MAssetTable.CollisionType.CYLINDER: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],item_variation_layer,physics_settings)
+					MAssetTable.CollisionType.CAPSULE: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],item_variation_layer,physics_settings)
+					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,item_variation_layer,physics_settings)
 				if iid==-1: printerr("Error inserting shape")
 				else:
 					hlod_resource.insert_item_in_lod_table(iid,0)
 					item.get_meta("item_ids").push_back(iid)
+	################################
+	##      BAKE Decals Node      ##
+	################################
+	for d:MDecalInstance in get_all_decals(self,get_children()):
+		d.set_meta("item_ids",PackedInt32Array())
+		if not d.decal: continue
+		var decal_id=d.decal.resource_path.get_basename().get_file().to_int()		
+		if MHlod.get_decal_path(decal_id)!=d.decal.resource_path:
+			push_warning(d.name+" :Ivalide decal path \""+d.decal.resource_path+"\"")
+			continue
+		var t:Transform3D= baker_inverse_transform * d.global_transform
+		var item_variation_layer = d.get_meta("variation_layers") if d.has_meta("variation_layers") else 0
+		var iid:int=hlod_resource.decal_add(decal_id,t,d.layers, item_variation_layer)
+		for i in range(0,2):
+			hlod_resource.insert_item_in_lod_table(iid,i)
 	################################
 	## BAKE CollisionShape3D Node ##
 	################################
@@ -105,10 +122,12 @@ func bake_to_hlod_resource():
 		var shape:Shape3D= n.shape
 		var t = baker_inverse_transform * n.global_transform
 		var item_id:int = -1
-		if shape is BoxShape3D: item_id = hlod_resource.shape_add_box(t,shape.size,0,-1)
-		elif shape is SphereShape3D: item_id = hlod_resource.shape_add_sphere(t,shape.radius,0,-1)
-		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,0,-1)
-		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,0,-1)
+		var item_variation_layer = n.get_meta("variation_layers") if n.has_meta("variation_layers") else 0
+		var physics_settings = n.get_meta("physics_settings") if n.has_meta("physics_settings") else -1
+		if shape is BoxShape3D: item_id = hlod_resource.shape_add_box(t,shape.size,item_variation_layer, physics_settings)
+		elif shape is SphereShape3D: item_id = hlod_resource.shape_add_sphere(t,shape.radius,item_variation_layer,physics_settings)
+		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,item_variation_layer,physics_settings)
+		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,item_variation_layer,physics_settings)
 		else: continue
 		n.get_meta("item_ids").push_back(item_id)
 		var max = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else 1
@@ -119,7 +138,8 @@ func bake_to_hlod_resource():
 	##################
 	for l in get_all_lights_nodes(self):
 		l.set_meta("item_ids",PackedInt32Array())
-		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform,0)
+		var item_variation_layer = l.get_meta("variation_layers") if l.has_meta("variation_layers") else 0
+		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform,item_variation_layer)
 		l.get_meta("item_ids").push_back(iid)
 		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else 1
 		for i in range(0, max):
@@ -137,10 +157,11 @@ func bake_to_hlod_resource():
 		if p.scene_file_path!=MHlod.get_packed_scene_path(id):
 			push_warning(p.scene_file_path+" is not a valid path!!!")
 			continue
-		var iid = hlod_resource.packed_scene_add(t,id,p.get_arg(0),p.get_arg(1),p.get_arg(2),0)
+		var item_variation_layer = p.get_meta("variation_layers") if p.has_meta("variation_layers") else 0
+		var iid = hlod_resource.packed_scene_add(t,id,p.get_arg(0),p.get_arg(1),p.get_arg(2),item_variation_layer)
 		p.get_meta("item_ids").push_back(iid)
 		for i in range(0,2):
-			hlod_resource.insert_item_in_lod_table(iid,i)
+			hlod_resource.insert_item_in_lod_table(iid,i)		
 	############################
 	## Set Packed Scene binds ##
 	############################
@@ -162,8 +183,7 @@ func bake_to_hlod_resource():
 	######################
 	## BAKE JOINED_MESH ##
 	######################
-	var joined_mesh_array = MAssetTable.mesh_join_meshes(joined_mesh_id) 
-	MHlod
+	var joined_mesh_array = MAssetTable.mesh_join_meshes(joined_mesh_id) 	
 	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
 		material_array.resize(len(joined_mesh_array))
@@ -197,11 +217,15 @@ func bake_to_hlod_resource():
 	###################
 	all_hlod.append_array( get_all_sub_hlod(self, get_children()) )	
 	for hlod_data in all_hlod:		
-		var scene_layers := 0
-		if hlod_data.node and hlod_data.node is MHlodScene:
-			scene_layers = hlod_data.node.scene_layers
-		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod, scene_layers)
-		#hlod.lod_limit = join_at_lod	
+		# scene_layers = which of this hlod's layers are active
+		var scene_layers := hlod_data.node.scene_layers if hlod_data.node and hlod_data.node is MHlodScene else 0					
+		# item_variation_layer = which of the parent baker's layers this hlod belongs to 
+		var item_variation_layer = hlod_data.node.get_meta("variation_layers") if hlod_data.node and hlod_data.node.has_meta("variation_layers") else 0			
+		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod, scene_layers) #, item_variation_layer)
+		
+	##################################
+	## FINALIZE AND SAVE BAKED HLOD ##
+	##################################
 	hlod_resource.join_at_lod = join_at_lod
 	hlod_id = MAssetTable.get_last_free_hlod_id(hlod_id,scene_file_path)
 	var bake_path := MHlod.get_hlod_path(hlod_id)
@@ -215,21 +239,44 @@ func bake_to_hlod_resource():
 			DirAccess.make_dir_absolute(bake_path.get_base_dir())
 		save_err = ResourceSaver.save(hlod_resource, bake_path)
 	for n in users:
-		n.hlod = hlod_resource
-	if save_err == OK:
-		MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
-		MAssetTable.save()
-	make_hlod_thumbnail(aabb)
+		n.hlod = hlod_resource	
+	if save_err == OK:				
+		MAssetTable.save()		
 	MHlodScene.awake()
+	if save_err == OK:		
+		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
+		make_hlod_thumbnail(collection_id, aabb)	
 	#EditorInterface.get_resource_filesystem().scan()
-
-func make_hlod_thumbnail(aabb:AABB):
-	aabb.grow(5)
-	var cam = Camera3D.new()
-	#cam.look_at_from_position()
-	#aabb.get_center()
-	asset_mesh_updater.update_force_lod(0)
-		
+	return save_err
+func make_hlod_thumbnail(collection_id:int, aabb:AABB):
+	aabb.grow(5)		
+	#ThumbnailManager.make_tscn_thumbnail(scene_file_path, collection_id, aabb )	
+	#if EditorInterface.get_edited_scene_root().scene_file_path == scene_file_path:		
+		#var viewport := EditorInterface.get_editor_viewport_3d(0)
+		#viewport.get_parent().stretch = false
+		#var original_viewport_size = viewport.size		
+		#viewport.size = Vector2i(64,64)
+		#
+		#var cam = viewport.get_camera_3d()
+		#var original_position = cam.position
+		#var original_rotation = cam.rotation
+		#
+		#var size = aabb.size.length()
+		#var center = aabb.get_center()
+		#var pos = center - Vector3(0,size/2, -size)
+		#cam.look_at_from_position(pos, center)				
+		#asset_mesh_updater.update_force_lod(0)
+		#
+		#viewport.get_texture().get_image().save_png("res://thumbnail.png")
+		##ThumbnailManager.save_thumbnail(viewport.get_texture().get_image(), MAssetTable.get_asset_thumbnails_path(collection_id))
+		#
+		#cam.position = original_position
+		#cam.rotation = original_rotation
+		#viewport.size = original_viewport_size
+		#viewport.get_parent().stretch = true	
+	#else:
+		#print(scene_file_path)
+		#print(EditorInterface.get_edited_scene_root().scene_file_path)
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
@@ -259,6 +306,9 @@ func get_all_masset_mesh_nodes(baker_node:Node3D,search_nodes:Array)->Array:
 
 func get_all_packed_scenes(baker_node:Node3D,search_nodes:Array)->Array:
 	return get_all_nodes_in_baker(baker_node,search_nodes,func(n): return n is MHlodNode3D)
+
+func get_all_decals(baker_node:Node3D,search_nodes:Array)->Array:
+	return get_all_nodes_in_baker(baker_node,search_nodes,func(n): return n is MDecalInstance)
 
 func get_node_item_id(node_unique_name:String,type_hint:MHlod.Type)->int:
 	if node_unique_name.is_empty(): return -1
@@ -415,16 +465,7 @@ func _enter_tree():
 	activate_mesh_updater()
 	validate_can_bake()
 
-func validate_can_bake():
-	if EditorInterface.get_edited_scene_root() == self:
-		if not scene_file_path.get_file() == name+".tscn":
-			if FileAccess.file_exists(scene_file_path.get_base_dir().path_join(name+".tscn")):
-				name = scene_file_path.get_file().trim_suffix(".tscn")
-			else:
-				var new_path = scene_file_path.get_base_dir().path_join(name+".tscn")
-				DirAccess.rename_absolute(scene_file_path, new_path)
-				scene_file_path = new_path
-				
+func validate_can_bake():			
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	
 	if not FileAccess.file_exists(path): 
 		can_bake = true

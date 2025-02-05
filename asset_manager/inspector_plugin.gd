@@ -14,6 +14,8 @@ func _can_handle(object):
 	if object is MAssetMesh: return true	
 	if object is MMesh: return true		
 	if object is CollisionShape3D: return true		
+	if object is MDecalInstance: return true		
+	if object is MDecal: return true		
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
 	if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is HLod_Baker: return true
 	
@@ -28,8 +30,10 @@ func _parse_begin(object):
 	elif object is HLod_Baker:	
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()		
 		control.baker = object
+		control.asset_placer = asset_placer
 		if not object == EditorInterface.get_edited_scene_root():
-			control.add_child(make_variation_layer_control_for_assigning(object))
+			if EditorInterface.get_edited_scene_root() is HLod_Baker:
+				control.add_child(make_variation_layer_control_for_assigning(object))
 		else:
 			var tag_control = make_tag_collection_control(object)
 			control.add_child(tag_control)			
@@ -40,42 +44,61 @@ func _parse_begin(object):
 	elif object is MHlodScene:
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.tscn").instantiate()
 		control.mhlod_scene = object
-		control.add_child( make_variation_layer_control_for_assigning(object))				
+		# TO DO - add variation layer feature to mhlod_scene to assign it to parent baker's layers.
+		#if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			#control.add_child(make_variation_layer_control_for_assigning(object))				
 		control.add_child(make_tag_collection_control(object))		
-	elif object is MAssetMesh:				
+	elif object is MAssetMesh:						
 		control = VBoxContainer.new()		
-		control.add_child( make_variation_layer_control_for_assigning(object))						
-		control.add_child( make_tag_collection_control(object))						
+		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			control.add_child(make_variation_layer_control_for_assigning(object))						
+		control.add_child(make_tag_collection_control(object))						
 	elif object is MMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
 		control.mmesh = object		
 	elif object is MHlodNode3D:				
-		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()
+		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()		
 		control.mhlod_node = object				
-		control.add_child( make_variation_layer_control_for_assigning(object))				
+		control.asset_placer = asset_placer
+		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			control.add_child(make_variation_layer_control_for_assigning(object))				
 		control.add_child(make_tag_collection_control(object))		
 	elif object is CollisionShape3D:
 		control = VBoxContainer.new()
 		control.add_child( make_cutoff_lod_control(object) )
+		control.add_child( make_physics_settings_control(object))		
+		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			control.add_child( make_variation_layer_control_for_assigning(object))
+	elif object is MDecal or object is MDecalInstance: 
+		control = VBoxContainer.new()
 		var hbox = HBoxContainer.new()
-		var label = Label.new()
-		label.text = "Physics Setting: "
-		hbox.add_child(label)
-		var dropdown = OptionButton.new()
-		var dir =MHlod.get_physics_settings_dir()
-		var physics_setting_filename = object.get_meta("physics_settings") if object.has_meta("physics_settings") else null
-		for file in DirAccess.get_files_at(dir):
-			var physics_setting: MHlodCollisionSetting = load(dir.path_join(file))
-			dropdown.add_item(physics_setting.name)
-			dropdown.set_item_metadata(dropdown.item_count-1, file)		
-			if not physics_setting_filename == null and physics_setting_filename == file:
-				dropdown.select(dropdown.item_count-1)
-		dropdown.item_selected.connect(func(id):			
-			object.set_meta("physics_settings", dropdown.get_item_metadata(id))
-		)		
-		hbox.add_child(dropdown)
+		hbox.size_flags_horizontal =Control.SIZE_EXPAND_FILL		
+		var name_label = Label.new()
+		name_label.text = "Name:"
+		var name_edit = LineEdit.new()
+		name_edit.size_flags_horizontal =Control.SIZE_EXPAND_FILL
+		name_edit.text = object.resource_name if object is MDecal else object.decal.resource_name
+		name_edit.text_submitted.connect(func(text):
+			var decal = object if object is MDecal else object.decal
+			if decal.resource_name == text: return
+			if asset_library.collection_get_id(text) != -1: 
+				MTool.print_edmsg("Trying to rename an MDecal, but name already exist")						
+				return				
+			decal.resource_name = text
+			#var item id = int(decal.resource_path.get_file())			
+			var item_id = int(decal.resource_path.get_file())
+			var collection_id = asset_library.collection_find_with_item_type_item_id(MAssetTable.DECAL, item_id)
+			if collection_id == -1:
+				MTool.print_edmsg("Trying to rename an MDecal, but can't find collection_id")					
+			asset_library.collection_create(decal.resource_name, item_id, MAssetTable.DECAL, -1)									
+			asset_placer.assets_changed.emit(decal)
+			object.notify_property_list_changed()
+		)
+		hbox.add_child(name_label)
+		hbox.add_child(name_edit)
 		control.add_child(hbox)
-		
+		if object is MDecalInstance:
+			control.add_child(make_variation_layer_control_for_assigning(object))							
 	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
 		if object.get_class() == "Node3D":
 			control = Button.new()
@@ -87,10 +110,32 @@ func _parse_begin(object):
 		elif object is OmniLight3D or object is SpotLight3D:
 			control = VBoxContainer.new()
 			control.add_child(make_cutoff_lod_control(object))
-			control.add_child( make_variation_layer_control_for_assigning(object))							
-	margin.add_child(control)
-	add_custom_control(margin)			
+			if EditorInterface.get_edited_scene_root() is HLod_Baker:
+				control.add_child(make_variation_layer_control_for_assigning(object))							
+	if control:
+		margin.add_child(control)
+		add_custom_control(margin)			
 
+func make_physics_settings_control(object):
+	var hbox = HBoxContainer.new()
+	var label = Label.new()
+	label.text = "Physics Setting: "
+	hbox.add_child(label)
+	var dropdown = OptionButton.new()
+	var dir =MHlod.get_physics_settings_dir()
+	var physics_setting_id:int = object.get_meta("physics_settings") if object.has_meta("physics_settings") else -1
+	for file in DirAccess.get_files_at(dir):
+		var physics_setting: MHlodCollisionSetting = load(dir.path_join(file))
+		dropdown.add_item(physics_setting.name)
+		dropdown.set_item_metadata(dropdown.item_count-1, int(file))		
+		if physics_setting_id != -1 and physics_setting_id == int(file):
+			dropdown.select(dropdown.item_count-1)		
+	dropdown.item_selected.connect(func(id):			
+		object.set_meta("physics_settings", dropdown.get_item_metadata(id))
+	)		
+	hbox.add_child(dropdown)
+	return hbox
+	
 func make_tag_collection_control(object):
 	#var tags_editor = preload("res://addons/m_terrain/asset_manager/ui/tags_editor.tscn").instantiate()
 	#tags_editor.set_options(MAssetTable.get_singleton().tag_get_names())
@@ -104,7 +149,7 @@ func make_tag_collection_control(object):
 			collection_id = object.collection_id
 		elif object is MHlodScene:
 			collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1		
-			asset_placer.open_settings_window("tag", collection_id)
+		asset_placer.open_settings_window("tag", collection_id)
 		#%manage_tags_button.button_pressed = true
 	)
 	return tag_button
@@ -115,6 +160,7 @@ func make_variation_layer_control_for_assigning(object):
 	vbox.add_child(label)						
 	var variation_layer_control = variation_layers_scene.instantiate()	
 	vbox.add_child(variation_layer_control)
+	variation_layer_control.layer_names = EditorInterface.get_edited_scene_root().variation_layers
 	variation_layer_control.value_changed.connect(func(new_value):
 		object.set_meta("variation_layers", new_value)
 	)

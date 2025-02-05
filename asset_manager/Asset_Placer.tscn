@@ -194,7 +194,7 @@ script = ExtResource("4_he502")
 
 [node name="Popup" type="Popup" parent="VBoxContainer/HBoxContainer/add_asset_button"]
 position = Vector2i(1063, 33)
-max_size = Vector2i(32768, 629)
+max_size = Vector2i(16384, 629)
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup"]
 anchors_preset = 15
@@ -215,6 +215,10 @@ text = "Baker"
 [node name="add_decal_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup/PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Decal"
+
+[node name="add_packed_scene_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Packed Scene"
 
 [node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(17.64, 0)

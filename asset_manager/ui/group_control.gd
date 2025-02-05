@@ -6,6 +6,7 @@ signal collection_activated
 @onready var group_button:Button = find_child("group_button")
 @onready var group_container = find_child("group_container")
 @onready var group_list:ItemList = find_child("group_list")
+var asset_placer
 
 func _ready():
 	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
@@ -22,10 +23,15 @@ func set_group(group_name):
 func add_item(item_name, item):
 	var i = group_list.add_item(item_name)	
 	group_list.set_item_tooltip(i, item_name)
-	group_list.set_item_metadata(i, item)
-	var asset_library:MAssetTable = MAssetTable.get_singleton() #load(ProjectSettings.get_setting("addons/m_terrain/asset_libary_path"))
+	group_list.set_item_metadata(i, item)	
+	var asset_library = MAssetTable.get_singleton()
+	if item in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+		group_list.set_item_custom_bg_color(i, asset_placer.ITEM_COLORS.PACKEDSCENE) # Color(1,0.5,0,0.15))		
+	if item in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
+		group_list.set_item_custom_bg_color(i, asset_placer.ITEM_COLORS.HLOD) #Color(0,1,0.8,0.15))
 	group_list.set_item_tooltip(i, str(item_name))
-	set_icon(i) # should be called last
+	if item in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
+		set_icon(i) # should be called last	
 
 func get_item_collection_id(item_index:int)->int:
 	return group_list.get_item_metadata(item_index)
@@ -48,7 +54,7 @@ func update_thumbnail(data):
 	var asset_library = MAssetTable.get_singleton()
 	var thumbnail_path = asset_library.get_asset_thumbnails_path(data.collection_id)
 	### Updating Cache
-	ThumbnailManager.save_thumbnail(data.texture, thumbnail_path)
+	ThumbnailManager.save_thumbnail(data.texture.get_image(), thumbnail_path)
 	## This function excute with delay we should check if item collection id is not changed	
 	if get_item_collection_id(data.caller) == data.collection_id:			
 		group_list.set_item_icon(data.caller,data.texture)

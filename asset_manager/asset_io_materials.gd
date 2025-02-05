@@ -2,7 +2,6 @@ class_name AssetIOMaterials extends Object
 
 #static var material_regex = RegEx.create_from_string("(.*)[_ ]set[_ ]?(\\d+)$")
 
-
 #func _init():
 #	import_info = get_material_table()
 

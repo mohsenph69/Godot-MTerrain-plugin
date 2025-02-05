@@ -3,6 +3,7 @@ extends Control
 
 @onready var collection_list:Tree = find_child("collection_list")
 @onready var tag_list = find_child("tag_list")
+@onready var asset_placer = await get_asset_placer()
 var asset_library = MAssetTable.get_singleton()
 var items := {}
 var active_collections = []
@@ -11,13 +12,19 @@ var grouping = "None"
 func _ready():		
 	find_child("search").text_changed.connect(func(text):
 		for item in items:
-			items[item].visible = text == "" or text.to_lower() in items[item].get_text(0).to_lower()
+			items[item].visible = text.is_empty() or items[item].get_text(0).containsn(text)
 	)		
 	tag_list.set_editable(false)
 	tag_list.set_options()	
-	tag_list.visibility_changed.connect(tag_list.set_options)	
+	visibility_changed.connect(tag_list.set_options)	
+	visibility_changed.connect(regroup)		
 	regroup()	
-	tag_list.tag_changed.connect(func(tag_id, toggle_on):		
+	asset_placer.assets_changed.connect(func(who): 				
+		if who is Dictionary and who.has("tag"):			
+			tag_list.set_tags_from_data.call_deferred(asset_library.collection_get_tags(active_collections[-1]))
+	)
+	
+	tag_list.tag_changed.connect(func(tag_id, toggle_on):				
 		var changed = false		
 		if toggle_on:
 			for id in active_collections:
@@ -27,27 +34,30 @@ func _ready():
 			for id in active_collections:
 				asset_library.collection_remove_tag(id, tag_id)
 				changed = true
-		if changed: regroup()
+		if changed: 
+			asset_placer.assets_changed.emit({"tag":active_collections})
+			#regroup()
 	)
-	collection_list.multi_selected.connect(func(item, column, selected):		
-		var id = item.get_metadata(0)
-		if id == null: return
-		if selected and not id in active_collections:
-			active_collections.push_back(id)
-		elif not selected and id in active_collections:
-			active_collections.erase(id)		
-		if len(active_collections)>0:
-			tag_list.set_tags_from_data( asset_library.collection_get_tags(active_collections[-1]))		
-	)
+	collection_list.cell_selected.connect( update_active_collection.call_deferred )
 	find_child("grouping_popup").group_selected.connect(func(group):
 		regroup(group)
 	)
+func update_active_collection():
+	active_collections = []
+	var from = collection_list.get_next_selected(null)	
+	while from != null:
+		active_collections.push_back(from.get_metadata(0))
+		from = collection_list.get_next_selected(from)
+	if len(active_collections)>0:
+		tag_list.set_tags_from_data( asset_library.collection_get_tags(active_collections[-1]))		
+	else:
+		tag_list.set_tags_from_data( [] )
 	
 func regroup(group = grouping):
 	grouping = group
 	collection_list.clear()	
 	var root = collection_list.create_item() 	
-	if group == "None":
+	if group == "None":		
 		for collection_id in asset_library.collection_get_list():
 			var collection_name = asset_library.collection_get_name(collection_id)
 			var item = root.create_child()
@@ -55,6 +65,12 @@ func regroup(group = grouping):
 			#var thumbnail = asset_library.collection_get_cache_thumbnail(collection_id)
 			#item.set_icon(0, thumbnail)
 			item.set_metadata(0, collection_id)
+			if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+				item.set_custom_bg_color(0, asset_placer.ITEM_COLORS.PACKEDSCENE )
+			if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
+				item.set_custom_bg_color(0, asset_placer.ITEM_COLORS.HLOD )
+			if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
+				item.set_custom_bg_color(0, asset_placer.ITEM_COLORS.DECAL )
 			items[collection_id] = item		
 	else:
 		var remaining_collections = Array(asset_library.collection_get_list())
@@ -92,3 +108,10 @@ func select_collection(id):
 	items[id].select(0)
 	collection_list.scroll_to_item(items[id])
 	
+func get_asset_placer():	
+	asset_placer = self
+	while asset_placer.name != "AssetPlacer" and asset_placer != get_tree().root:
+		asset_placer = asset_placer.get_parent()
+		if asset_placer == get_tree().root:
+			push_error("CCCCCCCCCCCCCCCCCCC: Asset placer is root")
+	return asset_placer	
