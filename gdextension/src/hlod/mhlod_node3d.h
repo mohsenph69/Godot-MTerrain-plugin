@@ -5,8 +5,10 @@
 #include <godot_cpp/core/gdvirtual.gen.inc>
 
 #include "mhlod_scene.h"
+#include "../util/lru_cache.h"
 
 using namespace godot;
+
 
 class MHlodNode3D : public Node3D {
     GDCLASS(MHlodNode3D,Node3D);
@@ -15,7 +17,9 @@ class MHlodNode3D : public Node3D {
     protected:
     static void _bind_methods();
     private:
+    static MLRUCache<int64_t,Variant> state_data;
     bool is_inside_hlod_scene = false;
+    bool hlod_remove_me = false; // should be set when removed by HLODSCENE, realy important otherwise you will see the most wierd bug in your life
     int8_t lod = -1;
     int32_t args[M_PACKED_SCENE_ARG_COUNT] = {0};
     MHlodScene::GlobalItemID bind_items[M_PACKED_SCENE_BIND_COUNT];
@@ -27,6 +31,7 @@ class MHlodNode3D : public Node3D {
     MHlodNode3D();
     ~MHlodNode3D();
     void _notify_update_lod(int _lod); // only called by MHlodScene
+    void _notify_before_remove();
     int get_current_lod() const;
     int32_t get_arg(int idx) const;
     int64_t get_global_id() const;
@@ -39,6 +44,13 @@ class MHlodNode3D : public Node3D {
     bool bind_item_get_disabled(int idx) const;
     void bind_item_set_disabled(int idx,bool disabled);
 
+    // Sate Data
+    static int64_t state_data_get_cache_size();
+    static String state_data_get_prop_name();
+    void state_data_set(const Variant& data);
+    const Variant& state_data_get();
+    bool state_data_exist();
+
     void _set_args(const PackedInt32Array& input);
     PackedInt32Array _get_args();
 
@@ -50,5 +62,6 @@ class MHlodNode3D : public Node3D {
 
 
     GDVIRTUAL1(_update_lod,int);
+    GDVIRTUAL0(_before_remove);
 };
 #endif

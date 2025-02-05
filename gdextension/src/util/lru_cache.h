@@ -44,16 +44,19 @@ class MLRUCache {
             return;
         }
         memdelete_arr(data);
+        data = nullptr;
         free_indicies.clear();
         data_hashmap.clear();
     }
-    private:
+    
     void init_cache(uint64_t size){
-        ERR_FAIL_COND(!is_empty());
+        clear();
+        if(size==0){
+            return;
+        }
         uint64_t max_size = std::numeric_limits<IndexType>::max() - 4;
         ERR_FAIL_COND_MSG(size > max_size,"LRU Cache can not be bigger than "+itos(max_size));
         size += 3;
-        clear();
         data = memnew_arr(NodeData,size);
         data[most_left].left = 0;
         data[most_left].right = most_right;
@@ -62,6 +65,14 @@ class MLRUCache {
         for(int i=3; i < size; i++){
             free_indicies.push_back(i);
         }
+    }
+    void set_invalid_data(const DataType& _data){
+        ERR_FAIL_COND_MSG(is_empty(),"You should call set_invalid_data after init_cache");
+        data[0].data = _data;
+    }
+    private:
+    _FORCE_INLINE_ const DataType& get_invalid_data() const{
+        return data[0].data;
     }
 
     template<bool removeData=true>
@@ -73,7 +84,7 @@ class MLRUCache {
         data[right].left = left;
         // clearing
         if constexpr (removeData){
-            data[remove_index].data = DataType();
+            data[remove_index].data = get_invalid_data();
             data_hashmap.erase(data[remove_index].key);
             free_indicies.push_back(remove_index);
         }
@@ -94,7 +105,7 @@ class MLRUCache {
     _FORCE_INLINE_ bool has(const KeyType key) const{
         return data_hashmap.has(key);
     }
-    
+
     _FORCE_INLINE_ void remove_left(){
         remove_by_index(data[most_left].right);
     }
@@ -127,9 +138,10 @@ class MLRUCache {
         insert_by_index(add_index);
     };
 
-    DataType& get_data(const KeyType key){
+    const DataType& get_data(const KeyType key){
+        UtilityFunctions::print("Data is null ",data==nullptr);
         if(!data_hashmap.has(key)){
-            return DataType();
+            return get_invalid_data();
         }
         IndexType index = data_hashmap[key];
         // remove only indices not data

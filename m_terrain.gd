@@ -12,6 +12,7 @@ var action=""
 
 var current_window_info=null
 
+var gizmo_aabb
 var gizmo_moctmesh
 var gizmo_mpath
 var gizmo_masset_mesh
@@ -83,7 +84,8 @@ func init_asset_table():
 
 #region init and de-init
 func _enter_tree():		
-	if Engine.is_editor_hint():	
+	if Engine.is_editor_hint():
+		MTerrainSettings.add_projects_settings()
 		init_asset_table()
 		timer.one_shot = true
 		timer.timeout.connect(check_restart)
@@ -124,6 +126,8 @@ func _enter_tree():
 		add_control_to_container(EditorPlugin.CONTAINER_SPATIAL_EDITOR_MENU,tsnap)				
 				
 		###### GIZMO
+		gizmo_aabb = load("res://addons/m_terrain/gizmos/aabb_gizmo.gd").new()
+		add_node_3d_gizmo_plugin(gizmo_aabb)
 		gizmo_masset_mesh = load("res://addons/m_terrain/gizmos/masset_mesh_gizmo.gd").new()
 		add_node_3d_gizmo_plugin(gizmo_masset_mesh)
 		gizmo_moctmesh = load("res://addons/m_terrain/gizmos/moct_mesh_gizmo.gd").new()
@@ -172,6 +176,7 @@ func _exit_tree():
 		tools.queue_free()
 		
 		###### GIZMO
+		remove_node_3d_gizmo_plugin(gizmo_aabb)
 		remove_node_3d_gizmo_plugin(gizmo_masset_mesh)
 		remove_node_3d_gizmo_plugin(gizmo_moctmesh)
 		remove_node_3d_gizmo_plugin(gizmo_mpath)

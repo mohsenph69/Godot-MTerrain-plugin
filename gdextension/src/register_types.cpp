@@ -52,6 +52,8 @@
 #include "hlod/mhlod_node3d.h"
 #include "hlod/mhlod_collision_setting.h"
 #include "hlod/mmesh.h"
+#include "hlod/mdecal.h"
+#include "hlod/mdecal_instance.h"
 
 using namespace godot;
 
@@ -102,6 +104,8 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MHlodScene>();
 	ClassDB::register_class<MHlodNode3D>();
 	ClassDB::register_class<MMesh>();
+	ClassDB::register_class<MDecal>();
+	ClassDB::register_class<MDecalInstance>();
 }
 
 void uninitialize_test_module(ModuleInitializationLevel p_level) {

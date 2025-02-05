@@ -1,9 +1,12 @@
 #include "mhlod_node3d.h"
+#include <godot_cpp/classes/project_settings.hpp>
 #include <mutex>
 
+MLRUCache<int64_t,Variant> MHlodNode3D::state_data;
 
 void MHlodNode3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("_notify_update_lod","lod"), &MHlodNode3D::_notify_update_lod);
+    ClassDB::bind_method(D_METHOD("_notify_before_remove"), &MHlodNode3D::_notify_before_remove);
     ClassDB::bind_method(D_METHOD("get_current_lod"), &MHlodNode3D::get_current_lod);
     ClassDB::bind_method(D_METHOD("get_arg","idx"), &MHlodNode3D::get_arg);
     ClassDB::bind_method(D_METHOD("get_global_id"), &MHlodNode3D::get_global_id);
@@ -15,15 +18,27 @@ void MHlodNode3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("bind_item_get_disabled","idx"), &MHlodNode3D::bind_item_get_disabled);
     ClassDB::bind_method(D_METHOD("bind_item_set_disabled","idx","disabled"), &MHlodNode3D::bind_item_set_disabled);
 
+    // state data
+    ClassDB::bind_static_method("MHlodNode3D",D_METHOD("state_data_get_cache_size"), &MHlodNode3D::state_data_get_cache_size);
+    ClassDB::bind_static_method("MHlodNode3D",D_METHOD("state_data_get_prop_name"), &MHlodNode3D::state_data_get_prop_name);
+    ClassDB::bind_method(D_METHOD("state_data_set","data"), &MHlodNode3D::state_data_set);
+    ClassDB::bind_method(D_METHOD("state_data_get"), &MHlodNode3D::state_data_get);
+    ClassDB::bind_method(D_METHOD("state_data_exist"), &MHlodNode3D::state_data_exist);
+
     ClassDB::bind_method(D_METHOD("_set_args","input"), &MHlodNode3D::_set_args);
     ClassDB::bind_method(D_METHOD("_get_args"), &MHlodNode3D::_get_args);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT32_ARRAY,"_args",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_args","_get_args");
 
     GDVIRTUAL_BIND(_update_lod,"lod");
+    GDVIRTUAL_BIND(_before_remove);
 }
 
 MHlodNode3D::MHlodNode3D(){
-
+    if(state_data.is_empty()){
+        state_data.init_cache(state_data_get_cache_size());
+        UtilityFunctions::print("state_data_get_cache_size() ",state_data_get_cache_size());
+        state_data.set_invalid_data(Variant());
+    }
 }
 
 MHlodNode3D::~MHlodNode3D(){
@@ -34,13 +49,19 @@ MHlodNode3D::~MHlodNode3D(){
                 proc->bind_item_clear(bind_items[i]);
             }
         }
-        MHlodScene::removed_packed_scenes.insert(this);
+        if(!hlod_remove_me){
+            MHlodScene::removed_packed_scenes.insert(this);
+        }
     }
 }
 // only called by MHlodScene
 void MHlodNode3D::_notify_update_lod(int _lod){
     lod = _lod;
     GDVIRTUAL_CALL(_update_lod,lod);
+}
+
+void MHlodNode3D::_notify_before_remove(){
+    GDVIRTUAL_CALL(_before_remove);
 }
 
 int MHlodNode3D::get_current_lod() const{
@@ -97,6 +118,35 @@ void MHlodNode3D::bind_item_set_disabled(int idx,bool disabled){
     }
 }
 
+int64_t MHlodNode3D::state_data_get_cache_size(){
+    int64_t cache_size = DEFAULT_STATE_DATA_CACHE_SIZE;
+    if(ProjectSettings::get_singleton()->has_setting(STATE_DATA_CACHE_PROP_NAME)){
+        cache_size = ProjectSettings::get_singleton()->get(STATE_DATA_CACHE_PROP_NAME);
+    }
+    if(cache_size < MIN_STATE_DATA_CACHE_SIZE){
+        WARN_PRINT("packed_scene_state_data_cache_size can not be less than "+itos(MIN_STATE_DATA_CACHE_SIZE));
+    }
+    return cache_size;
+}
+
+String MHlodNode3D::state_data_get_prop_name(){
+    return STATE_DATA_CACHE_PROP_NAME;
+}
+
+void MHlodNode3D::state_data_set(const Variant& data){
+    ERR_FAIL_COND(!global_id.is_valid());
+    state_data.insert(global_id.id,data);
+}
+
+const Variant& MHlodNode3D::state_data_get(){
+    return state_data.get_data(global_id.id);
+}
+
+bool MHlodNode3D::state_data_exist(){
+    return state_data.has(global_id.id);
+}
+
+
 void MHlodNode3D::_set_args(const PackedInt32Array& input){
     if(is_inside_hlod_scene){
         return;
@@ -117,7 +167,15 @@ PackedInt32Array MHlodNode3D::MHlodNode3D::_get_args(){
 }
 
 void MHlodNode3D::_notification(int32_t what){
-
+    switch (what)
+    {
+    case NOTIFICATION_READY:
+        break;
+    case NOTIFICATION_PROCESS:
+        break;
+    default:
+        break;
+    }
 }
 
 void MHlodNode3D::_get_property_list(List<PropertyInfo> *p_list) const{

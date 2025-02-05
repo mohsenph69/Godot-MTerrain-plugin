@@ -47,6 +47,7 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("packed_scene_set_bind_items","packed_scene_item_id","bind0","bind1"), &MHlod::packed_scene_set_bind_items);
 
     ClassDB::bind_method(D_METHOD("light_add","light_node","transform","layers"), &MHlod::light_add);
+    ClassDB::bind_method(D_METHOD("decal_add","decal_id","transform","render_layer","variation_layer"), &MHlod::decal_add);
 
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MHlod::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MHlod::_get_data);
@@ -140,6 +141,9 @@ void MHlod::Item::create(){
     case Type::LIGHT:
         new (&light) MHLodItemLight();
         break;
+    case Type::DECAL:
+        new (&decal) MHLodItemDecal();
+        break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
         break;
@@ -166,6 +170,9 @@ void MHlod::Item::copy(const Item& other){
     case Type::LIGHT:
         light = other.light;
         break;
+    case Type::DECAL:
+        decal = other.decal;
+        break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
         break;
@@ -189,6 +196,8 @@ void MHlod::Item::clear(){
         break;
     case Type::LIGHT:
         light.~MHLodItemLight();
+    case Type::DECAL:
+        decal.~MHLodItemDecal();
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
         break;
@@ -243,6 +252,10 @@ void MHlod::Item::set_data(const Dictionary& d){
         new (&light) MHLodItemLight();
         light.set_data(d["data"]);
         break;
+    case Type::DECAL:
+        new (&decal) MHLodItemDecal();
+        decal.set_data(d["data"]);
+        break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
         break;
@@ -264,6 +277,9 @@ Dictionary MHlod::Item::get_data() const{
         break;
     case Type::LIGHT:
         data = light.get_data();
+        break;
+    case Type::DECAL:
+        data = decal.get_data();
         break;
     default:
         ERR_FAIL_V_MSG(Dictionary(),"Undefine Item Type!"); 
@@ -613,6 +629,18 @@ int MHlod::light_add(Object* light_node,const Transform3D transform,uint16_t lay
     item.light = light_item;
     item.transform_index = transforms.size();
     item.item_layers = layers;
+    transforms.push_back(transform);
+    item_list.push_back(item);
+    return item_list.size() - 1;
+}
+
+int MHlod::decal_add(int32_t decal_id,const Transform3D transform,int32_t render_layer,uint16_t variation_layer){
+    MHLodItemDecal decal_item;
+    decal_item.set_data(decal_id,render_layer);
+    Item item(Type::DECAL);
+    item.decal = decal_item;
+    item.item_layers = variation_layer;
+    item.transform_index = transforms.size();
     transforms.push_back(transform);
     item_list.push_back(item);
     return item_list.size() - 1;

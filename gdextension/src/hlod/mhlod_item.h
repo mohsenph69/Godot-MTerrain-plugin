@@ -12,6 +12,7 @@
 #include <godot_cpp/templates/vmap.hpp>
 
 #include "mmesh.h"
+#include "mdecal.h"
 #include "../util/mbyte_float.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -126,6 +127,49 @@ struct MHLodItemMesh {
         d.encode_s32(6,render_layers);
         d.encode_s32(10,mesh_id);
         return d;
+    }
+};
+
+struct MHLodItemDecal {
+    int32_t decal_id;
+    int32_t render_layers;
+    Ref<MDecal> decal;
+    _FORCE_INLINE_ RID load(){
+        if(decal.is_valid()){
+            return decal->get_decal_rid();
+        }
+        decal = RL->load(M_GET_DECAL_PATH(decal_id));
+        if(decal.is_valid()){
+            return decal->get_rid();
+        }
+        return RID();
+    }
+    _FORCE_INLINE_ RID get_decal(){
+        if(decal.is_valid()){
+            return decal->get_decal_rid();
+        }
+        return RID();
+    }
+    _FORCE_INLINE_ void unload(){
+        if(decal.is_valid()){
+            decal.unref();
+        }
+    }
+    _FORCE_INLINE_ void set_data(int32_t _decal_id,int32_t _render_layers){
+        render_layers = _render_layers;
+        decal_id = _decal_id;
+    }
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
+        ERR_FAIL_COND(d.size()!=8);
+        decal_id = d.decode_s32(0);
+        render_layers = d.decode_s32(4);
+    }
+    _FORCE_INLINE_ PackedByteArray get_data() const{
+        PackedByteArray out;
+        out.resize(8);
+        out.encode_s32(0,decal_id);
+        out.encode_s32(4,render_layers);
+        return out;
     }
 };
 
