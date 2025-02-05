@@ -7,6 +7,7 @@
 #include "mmesh_joiner.h"
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/file_access.hpp>
 
 #define RS RenderingServer::get_singleton()
 
@@ -17,6 +18,7 @@ void MAssetMeshData::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_global_transform"), &MAssetMeshData::get_global_transform);
     ClassDB::bind_method(D_METHOD("get_mesh_lod"), &MAssetMeshData::get_mesh_lod);
     ClassDB::bind_method(D_METHOD("get_item_ids"), &MAssetMeshData::get_item_ids);
+    ClassDB::bind_method(D_METHOD("get_complex_shape_id"), &MAssetMeshData::get_complex_shape_id);
 
     ClassDB::bind_method(D_METHOD("get_last_valid_lod"), &MAssetMeshData::get_last_valid_lod);
     ClassDB::bind_method(D_METHOD("get_last_valid_mesh"), &MAssetMeshData::get_last_valid_mesh);
@@ -55,6 +57,24 @@ TypedArray<MMesh> MAssetMeshData::get_mesh_lod() const{
 
 PackedInt32Array MAssetMeshData::get_item_ids() const{
     return item_ids;
+}
+
+int32_t MAssetMeshData::get_complex_shape_id(){
+    int32_t main_mesh_id = -1;
+    PackedInt32Array ids = get_item_ids();
+    for(int32_t id : ids){
+        if (id!=-1){
+            main_mesh_id = MAssetTable::mesh_item_get_first_lod(id);
+        }
+    }
+    if(main_mesh_id==-1){
+        return -1;
+    }
+    String shape_path = MHlod::get_collsion_path(main_mesh_id);
+    if(FileAccess::file_exists(shape_path)){
+        return main_mesh_id;
+    }
+    return -1;
 }
 
 int8_t MAssetMeshData::get_last_valid_lod() const{

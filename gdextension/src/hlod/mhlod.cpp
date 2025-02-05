@@ -42,6 +42,7 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("shape_add_box","transform","size","layers","body_id"), &MHlod::shape_add_box);
     ClassDB::bind_method(D_METHOD("shape_add_capsule","transform","radius","height","layers","body_id"), &MHlod::shape_add_capsule);
     ClassDB::bind_method(D_METHOD("shape_add_cylinder","transform","radius","height","layers","body_id"), &MHlod::shape_add_cylinder);
+    ClassDB::bind_method(D_METHOD("shape_add_complex","id","transform","layers","body_id"), &MHlod::shape_add_complex);
 
     ClassDB::bind_method(D_METHOD("packed_scene_add","transform","id","arg0","arg0","arg2","layers"), &MHlod::packed_scene_add);
     ClassDB::bind_method(D_METHOD("packed_scene_set_bind_items","packed_scene_item_id","bind0","bind1"), &MHlod::packed_scene_set_bind_items);
@@ -135,6 +136,9 @@ void MHlod::Item::create(){
     case Type::COLLISION:
         new (&collision) MHLodItemCollision();
         break;
+    case Type::COLLISION_COMPLEX:
+        new (&collision_complex) MHLodItemCollisionComplex();
+        break;
     case Type::PACKED_SCENE:
         new (&packed_scene) MHLodItemPackedScene();
         break;
@@ -164,6 +168,9 @@ void MHlod::Item::copy(const Item& other){
     case Type::COLLISION:
         collision = other.collision;
         break;
+    case Type::COLLISION_COMPLEX:
+        collision_complex = other.collision_complex;
+        break;
     case Type::PACKED_SCENE:
         packed_scene = other.packed_scene;
         break;
@@ -190,6 +197,9 @@ void MHlod::Item::clear(){
         break;
     case Type::COLLISION:
         collision.~MHLodItemCollision();
+        break;
+    case Type::COLLISION_COMPLEX:
+        collision_complex.~MHLodItemCollisionComplex();
         break;
     case Type::PACKED_SCENE:
         packed_scene.~MHLodItemPackedScene();
@@ -244,6 +254,10 @@ void MHlod::Item::set_data(const Dictionary& d){
         new (&collision) MHLodItemCollision();
         collision.set_data(d["data"]);
         break;
+    case Type::COLLISION_COMPLEX:
+        new (&collision_complex) MHLodItemCollision();
+        collision_complex.set_data(d["data"]);
+        break;
     case Type::PACKED_SCENE:
         new (&packed_scene) MHLodItemPackedScene();
         packed_scene.set_data(d["data"]);
@@ -271,6 +285,9 @@ Dictionary MHlod::Item::get_data() const{
         break;
     case Type::COLLISION:
         data = collision.get_data();
+        break;
+    case Type::COLLISION_COMPLEX:
+        data = collision_complex.get_data();
         break;
     case Type::PACKED_SCENE:
         data = packed_scene.get_data();
@@ -549,6 +566,20 @@ int MHlod::shape_add_cylinder(const Transform3D& _transform,float radius,float h
     mcol.set_body_id(body_id);
     Item _item(MHlod::Type::COLLISION);
     _item.collision = mcol;
+    transforms.push_back(_transform);
+    _item.transform_index = transforms.size() - 1;
+    _item.item_layers = layers;
+    item_list.push_back(_item);
+    return item_list.size() - 1;
+}
+
+int MHlod::shape_add_complex(const int32_t id,const Transform3D& _transform,uint16_t layers,int body_id){
+    ERR_FAIL_COND_V_MSG(body_id>std::numeric_limits<int16_t>::max(),-1,"Body Id can be bigger than "+std::numeric_limits<int16_t>::max());
+    MHLodItemCollisionComplex mcol;
+    mcol.id = id;
+    mcol.static_body = body_id;
+    Item _item(MHlod::Type::COLLISION_COMPLEX);
+    _item.collision_complex = mcol;
     transforms.push_back(_transform);
     _item.transform_index = transforms.size() - 1;
     _item.item_layers = layers;

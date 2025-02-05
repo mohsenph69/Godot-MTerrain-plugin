@@ -30,6 +30,7 @@ class MAssetMeshData : public RefCounted {
     Transform3D get_global_transform() const;
     TypedArray<MMesh> get_mesh_lod() const;
     PackedInt32Array get_item_ids() const;
+    int32_t get_complex_shape_id();
     int8_t get_last_valid_lod() const;
     Ref<MMesh> get_last_valid_mesh() const;
     int get_collision_count() const;

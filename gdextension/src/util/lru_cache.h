@@ -55,7 +55,10 @@ class MLRUCache {
             return;
         }
         uint64_t max_size = std::numeric_limits<IndexType>::max() - 4;
-        ERR_FAIL_COND_MSG(size > max_size,"LRU Cache can not be bigger than "+itos(max_size));
+        if(size > max_size){
+            WARN_PRINT("LRU Cache can not be bigger than "+itos(max_size));
+            size = max_size;
+        }
         size += 3;
         data = memnew_arr(NodeData,size);
         data[most_left].left = 0;
@@ -139,7 +142,6 @@ class MLRUCache {
     };
 
     const DataType& get_data(const KeyType key){
-        UtilityFunctions::print("Data is null ",data==nullptr);
         if(!data_hashmap.has(key)){
             return get_invalid_data();
         }
