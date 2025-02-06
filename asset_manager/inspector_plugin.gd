@@ -16,6 +16,7 @@ func _can_handle(object):
 	if object is CollisionShape3D: return true		
 	if object is MDecalInstance: return true		
 	if object is MDecal: return true		
+	if object is Material: return true
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
 	if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is HLod_Baker: return true
 	
@@ -99,6 +100,20 @@ func _parse_begin(object):
 		control.add_child(hbox)
 		if object is MDecalInstance:
 			control.add_child(make_variation_layer_control_for_assigning(object))							
+	elif object is Material:
+		var hbox = HBoxContainer.new()
+		hbox.size_flags_horizontal =Control.SIZE_EXPAND_FILL		
+		var name_label = Label.new()
+		name_label.text = "Material Name:"
+		var name_edit = LineEdit.new()
+		name_edit.size_flags_horizontal =Control.SIZE_EXPAND_FILL
+		name_edit.text = object.resource_name
+		name_edit.text_submitted.connect(func(text):
+			object.resource_name = text
+		)
+		hbox.add_child(name_label)
+		hbox.add_child(name_edit)
+		control = hbox
 	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
 		if object.get_class() == "Node3D":
 			control = Button.new()

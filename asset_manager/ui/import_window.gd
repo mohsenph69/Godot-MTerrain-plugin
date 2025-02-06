@@ -180,7 +180,7 @@ func update_collection_details(is_collection:bool, item_node:Dictionary ):
 	#if node_name in asset_data.collections:
 	#	%preview_dictionary_label.text = str(asset_data.collections[node_name]).erase(0,2).replace("{", "{\n").replace("}", "\n}").replace("}, ", "},\n")	
 	
-func init_materials_tree():
+func init_materials_tree():	
 	var materials_tree: Tree = %materials_tree	
 	materials_tree.set_column_expand(1, false)	
 	materials_tree.set_column_custom_minimum_width(1, 64)		
@@ -188,18 +188,25 @@ func init_materials_tree():
 	var root := materials_tree.create_item()		
 	for material_name in asset_data.materials.keys():
 		var material_tree_node = root.create_child()
-		var text = str(material_name) if material_name != "" else "???" 
+		var text = str(material_name) if not material_name.is_empty() else "???" 
 		material_tree_node.set_text(0, text)										
 		if asset_data.materials[material_name].material is int:								
 			var material_id = asset_data.materials[material_name].material
-			material_tree_node.set_text(1, str(material_id))			
+			if material_id != -1:
+				material_tree_node.set_text(1, material_table[material_id].name if not material_table[material_id].name.is_empty() else material_table[material_id].path)			
+			else:
+				material_tree_node.set_text(1, "(no material)")
 			ThumbnailManager.thumbnail_queue.push_back({"resource": AssetIOMaterials.get_material(material_id), "caller":material_tree_node, "callback": update_material_icon, "column": 1})			
 		else:
-			invalid_materials.push_back(material_name)
-			%materials_tab_button.text = "Materials (!)"
-			import_button.disabled = true
-			material_tree_node.set_text(1, "???")
-			material_tree_node.set_custom_color(1, Color.ORANGE)
+			var material_id = AssetIOMaterials.find_material_by_name(material_name)
+			if material_id != -1:
+				assign_material_to_glb_material(material_name, material_id, material_tree_node, material_table)				
+			else:
+				invalid_materials.push_back(material_name)
+				%materials_tab_button.text = "Materials (!)"
+				import_button.disabled = true
+				material_tree_node.set_text(1, "???")
+				material_tree_node.set_custom_color(1, Color.ORANGE)
 					
 	var material_details_tree:Tree = %material_details_tree
 	root = material_details_tree.create_item()		
@@ -210,10 +217,10 @@ func init_materials_tree():
 	for id in material_table:				
 		var item = root.create_child() 		
 		material_table_items[id] = item
-		var material_path = material_table[id].path
-		item.set_text(0,material_path.get_file())
+		var mat = load(material_table[id].path)				
+		item.set_text(0,mat.resource_name if not mat.resource_name.is_empty() else mat.resource_path.get_file())
 		item.set_metadata(0, id)
-		item.set_tooltip_text(0, material_path)				
+		item.set_tooltip_text(0, mat.resource_path)				
 		ThumbnailManager.thumbnail_queue.push_back({"resource": AssetIOMaterials.get_material(id), "caller":item, "callback": update_material_icon, "column": 0})					
 	materials_tree.item_selected.connect(func():
 		material_details_tree.visible = true
@@ -233,15 +240,26 @@ func init_materials_tree():
 			var selected_material_item = material_details_tree.get_selected()			
 			if glb_material_name in invalid_materials:
 				invalid_material_fixed(glb_material_name)
-			asset_data.materials[glb_material_name].material = int(selected_material_item.get_metadata(0))			
-			if asset_data.materials[glb_material_name].material != asset_data.materials[glb_material_name].original_material:				
-				for mesh_id in asset_data.materials[glb_material_name].meshes:
-					pass
-					#if asset_data.meshes[mesh_id].state = 
-			selected_glb_material_item.set_text(1, str(asset_data.materials[glb_material_name].material))						
-			selected_glb_material_item.set_icon(1, selected_material_item.get_icon(0))
-	)
+			var material_id = int(selected_material_item.get_metadata(0))
+			if material_id != -1:
+				assign_material_to_glb_material(glb_material_name, material_id, selected_glb_material_item, material_table)			
+	)	
 	
+func assign_material_to_glb_material(glb_material_name, material_id, glb_material_item, material_table):
+	asset_data.materials[glb_material_name].material = material_id
+	#############################################################
+	## TODO: update mesh state to changed if material has changed... is this necessary?
+	#if asset_data.materials[glb_material_name].material != asset_data.materials[glb_material_name].original_material:				
+		#for mesh_id in asset_data.materials[glb_material_name].meshes:
+			#pass
+			#if asset_data.meshes[mesh_id].state = 
+	#############################################################
+				
+	glb_material_item.set_text(1, str(asset_data.materials[glb_material_name].material))						
+	ThumbnailManager.thumbnail_queue.push_back({"resource": AssetIOMaterials.get_material(material_id), "caller":glb_material_item, "callback": update_material_icon, "column": 1})					
+	if material_id != -1:
+		glb_material_item.set_tooltip_text(1, material_table[material_id].name if not material_table[material_id].name.is_empty() else material_table[material_id].path)						
+
 func init_tags_tree():
 	var tree = %tags_tree		
 	tree.set_editable(false)
@@ -281,7 +299,6 @@ func validate_can_import():
 	
 func update_material_icon(data):		
 	data.caller.set_icon(data.column, data.texture)
-	
 					
 func build_collection_tree(node_name:String, root:TreeItem):	
 	var item := root.create_child()		
