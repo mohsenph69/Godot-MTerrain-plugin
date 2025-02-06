@@ -12,6 +12,7 @@
 #include <godot_cpp/templates/vmap.hpp>
 
 #include "mmesh.h"
+#include "mdecal.h"
 #include "../util/mbyte_float.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -126,6 +127,49 @@ struct MHLodItemMesh {
         d.encode_s32(6,render_layers);
         d.encode_s32(10,mesh_id);
         return d;
+    }
+};
+
+struct MHLodItemDecal {
+    int32_t decal_id;
+    int32_t render_layers;
+    Ref<MDecal> decal;
+    _FORCE_INLINE_ RID load(){
+        if(decal.is_valid()){
+            return decal->get_decal_rid();
+        }
+        decal = RL->load(M_GET_DECAL_PATH(decal_id));
+        if(decal.is_valid()){
+            return decal->get_rid();
+        }
+        return RID();
+    }
+    _FORCE_INLINE_ RID get_decal(){
+        if(decal.is_valid()){
+            return decal->get_decal_rid();
+        }
+        return RID();
+    }
+    _FORCE_INLINE_ void unload(){
+        if(decal.is_valid()){
+            decal.unref();
+        }
+    }
+    _FORCE_INLINE_ void set_data(int32_t _decal_id,int32_t _render_layers){
+        render_layers = _render_layers;
+        decal_id = _decal_id;
+    }
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
+        ERR_FAIL_COND(d.size()!=8);
+        decal_id = d.decode_s32(0);
+        render_layers = d.decode_s32(4);
+    }
+    _FORCE_INLINE_ PackedByteArray get_data() const{
+        PackedByteArray out;
+        out.resize(8);
+        out.encode_s32(0,decal_id);
+        out.encode_s32(4,render_layers);
+        return out;
     }
 };
 
@@ -284,6 +328,46 @@ struct MHLodItemCollision {
     }
     private:
     static inline HashMap<Param,ShapeData,Param,Param> shapes_list;
+};
+
+struct MHLodItemCollisionComplex {
+    int16_t static_body = -1;
+    int32_t id = -1;
+    Ref<Shape3D> shape;
+    _FORCE_INLINE_ RID load(){
+        if(shape.is_valid()){
+            return shape->get_rid();
+        }
+        shape = RL->load(M_GET_COLLISION_PATH(id));
+        if(shape.is_valid()){
+            return shape->get_rid();
+        }
+        return RID();
+    }
+    _FORCE_INLINE_ RID get_shape() const{
+        if(shape.is_valid()){
+            return shape->get_rid();
+        }
+        return RID();
+    }
+    _FORCE_INLINE_ int16_t get_body_id() const{
+        return static_body;
+    }
+    _FORCE_INLINE_ void unload(){
+        shape.unref();
+    }
+    _FORCE_INLINE_ void set_data(const PackedByteArray& data){
+        ERR_FAIL_COND(data.size()!=6);
+        id = data.decode_s32(0);
+        static_body = data.decode_s16(4);
+    }
+    _FORCE_INLINE_ PackedByteArray get_data() const{
+        PackedByteArray out;
+        out.resize(6);
+        out.encode_s32(0,id);
+        out.encode_s16(4,static_body);
+        return out;
+    }
 };
 
 struct MHLodItemLight { // No more memebr or increase item size

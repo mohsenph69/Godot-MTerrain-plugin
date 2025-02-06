@@ -131,7 +131,7 @@ func add_sub_collection(node_name:String,sub_collection_node_name:String,sub_col
 	collections[node_name]["is_master"] = true
 
 	
-func add_mesh_data(sets, mesh:MMesh, mesh_node:Node):						
+func add_mesh_data(sets, mesh:MMesh, mesh_node:Node):							
 	if mesh==null:
 		return
 	if mesh_data.has(mesh):
@@ -141,7 +141,7 @@ func add_mesh_data(sets, mesh:MMesh, mesh_node:Node):
 	mesh_data[mesh].name = mesh_node.name 
 	mesh_data[mesh].transform = mesh_node.transform
 	for set_id in len(sets):
-		var material_names = sets[set_id]			
+		var material_names = sets[set_id]					
 		for material_name in material_names:
 			if not materials.has(material_name):
 				materials[material_name] = get_empty_material()

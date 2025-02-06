@@ -89,6 +89,7 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("group_add_tag","group_name","tag"), &MAssetTable::group_add_tag);
     ClassDB::bind_method(D_METHOD("group_remove_tag","group_name","tag"), &MAssetTable::group_remove_tag);
     ClassDB::bind_method(D_METHOD("group_get_tags","group_name"), &MAssetTable::group_get_tags);
+    ClassDB::bind_method(D_METHOD("collection_find_with_item_type_item_id","type","item_id"), &MAssetTable::collection_find_with_item_type_item_id);
     ClassDB::bind_method(D_METHOD("groups_get_collections_any","group_name"), &MAssetTable::groups_get_collections_any);
     ClassDB::bind_method(D_METHOD("groups_get_collections_all","group_name"), &MAssetTable::groups_get_collections_all);
     ClassDB::bind_method(D_METHOD("group_get_collections_with_tags","group_name"), &MAssetTable::group_get_collections_with_tags);
@@ -846,7 +847,6 @@ PackedInt32Array MAssetTable::collection_get_list() const{
 
 PackedInt32Array MAssetTable::collections_get_by_type(int item_types) const{
     PackedInt32Array out;
-    UtilityFunctions::print("item_types ",item_types);
     for(int i=0; i < collections.size(); i++){
         if((collections[i].type & item_types) != 0){
             out.push_back(i);

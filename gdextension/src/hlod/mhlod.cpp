@@ -42,11 +42,13 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("shape_add_box","transform","size","layers","body_id"), &MHlod::shape_add_box);
     ClassDB::bind_method(D_METHOD("shape_add_capsule","transform","radius","height","layers","body_id"), &MHlod::shape_add_capsule);
     ClassDB::bind_method(D_METHOD("shape_add_cylinder","transform","radius","height","layers","body_id"), &MHlod::shape_add_cylinder);
+    ClassDB::bind_method(D_METHOD("shape_add_complex","id","transform","layers","body_id"), &MHlod::shape_add_complex);
 
     ClassDB::bind_method(D_METHOD("packed_scene_add","transform","id","arg0","arg0","arg2","layers"), &MHlod::packed_scene_add);
     ClassDB::bind_method(D_METHOD("packed_scene_set_bind_items","packed_scene_item_id","bind0","bind1"), &MHlod::packed_scene_set_bind_items);
 
     ClassDB::bind_method(D_METHOD("light_add","light_node","transform","layers"), &MHlod::light_add);
+    ClassDB::bind_method(D_METHOD("decal_add","decal_id","transform","render_layer","variation_layer"), &MHlod::decal_add);
 
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MHlod::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MHlod::_get_data);
@@ -134,11 +136,17 @@ void MHlod::Item::create(){
     case Type::COLLISION:
         new (&collision) MHLodItemCollision();
         break;
+    case Type::COLLISION_COMPLEX:
+        new (&collision_complex) MHLodItemCollisionComplex();
+        break;
     case Type::PACKED_SCENE:
         new (&packed_scene) MHLodItemPackedScene();
         break;
     case Type::LIGHT:
         new (&light) MHLodItemLight();
+        break;
+    case Type::DECAL:
+        new (&decal) MHLodItemDecal();
         break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
@@ -160,11 +168,17 @@ void MHlod::Item::copy(const Item& other){
     case Type::COLLISION:
         collision = other.collision;
         break;
+    case Type::COLLISION_COMPLEX:
+        collision_complex = other.collision_complex;
+        break;
     case Type::PACKED_SCENE:
         packed_scene = other.packed_scene;
         break;
     case Type::LIGHT:
         light = other.light;
+        break;
+    case Type::DECAL:
+        decal = other.decal;
         break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
@@ -184,11 +198,16 @@ void MHlod::Item::clear(){
     case Type::COLLISION:
         collision.~MHLodItemCollision();
         break;
+    case Type::COLLISION_COMPLEX:
+        collision_complex.~MHLodItemCollisionComplex();
+        break;
     case Type::PACKED_SCENE:
         packed_scene.~MHLodItemPackedScene();
         break;
     case Type::LIGHT:
         light.~MHLodItemLight();
+    case Type::DECAL:
+        decal.~MHLodItemDecal();
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
         break;
@@ -235,6 +254,10 @@ void MHlod::Item::set_data(const Dictionary& d){
         new (&collision) MHLodItemCollision();
         collision.set_data(d["data"]);
         break;
+    case Type::COLLISION_COMPLEX:
+        new (&collision_complex) MHLodItemCollision();
+        collision_complex.set_data(d["data"]);
+        break;
     case Type::PACKED_SCENE:
         new (&packed_scene) MHLodItemPackedScene();
         packed_scene.set_data(d["data"]);
@@ -242,6 +265,10 @@ void MHlod::Item::set_data(const Dictionary& d){
     case Type::LIGHT:
         new (&light) MHLodItemLight();
         light.set_data(d["data"]);
+        break;
+    case Type::DECAL:
+        new (&decal) MHLodItemDecal();
+        decal.set_data(d["data"]);
         break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
@@ -259,11 +286,17 @@ Dictionary MHlod::Item::get_data() const{
     case Type::COLLISION:
         data = collision.get_data();
         break;
+    case Type::COLLISION_COMPLEX:
+        data = collision_complex.get_data();
+        break;
     case Type::PACKED_SCENE:
         data = packed_scene.get_data();
         break;
     case Type::LIGHT:
         data = light.get_data();
+        break;
+    case Type::DECAL:
+        data = decal.get_data();
         break;
     default:
         ERR_FAIL_V_MSG(Dictionary(),"Undefine Item Type!"); 
@@ -540,6 +573,20 @@ int MHlod::shape_add_cylinder(const Transform3D& _transform,float radius,float h
     return item_list.size() - 1;
 }
 
+int MHlod::shape_add_complex(const int32_t id,const Transform3D& _transform,uint16_t layers,int body_id){
+    ERR_FAIL_COND_V_MSG(body_id>std::numeric_limits<int16_t>::max(),-1,"Body Id can be bigger than "+std::numeric_limits<int16_t>::max());
+    MHLodItemCollisionComplex mcol;
+    mcol.id = id;
+    mcol.static_body = body_id;
+    Item _item(MHlod::Type::COLLISION_COMPLEX);
+    _item.collision_complex = mcol;
+    transforms.push_back(_transform);
+    _item.transform_index = transforms.size() - 1;
+    _item.item_layers = layers;
+    item_list.push_back(_item);
+    return item_list.size() - 1;
+}
+
 int MHlod::packed_scene_add(const Transform3D& _transform,int32_t id,int32_t arg0,int32_t arg1,int32_t arg2,uint16_t layers){
     MHLodItemPackedScene item_packed_scene;
     item_packed_scene.id = id;
@@ -613,6 +660,18 @@ int MHlod::light_add(Object* light_node,const Transform3D transform,uint16_t lay
     item.light = light_item;
     item.transform_index = transforms.size();
     item.item_layers = layers;
+    transforms.push_back(transform);
+    item_list.push_back(item);
+    return item_list.size() - 1;
+}
+
+int MHlod::decal_add(int32_t decal_id,const Transform3D transform,int32_t render_layer,uint16_t variation_layer){
+    MHLodItemDecal decal_item;
+    decal_item.set_data(decal_id,render_layer);
+    Item item(Type::DECAL);
+    item.decal = decal_item;
+    item.item_layers = variation_layer;
+    item.transform_index = transforms.size();
     transforms.push_back(transform);
     item_list.push_back(item);
     return item_list.size() - 1;

@@ -1,13 +1,4 @@
 class_name AssetIOMaterials extends Object
-
-#static var material_regex = RegEx.create_from_string("(.*)[_ ]set[_ ]?(\\d+)$")
-
-#func _init():
-#	import_info = get_material_table()
-
-#func _notification(what: int) -> void:
-#	if what == NOTIFICATION_PREDELETE:
-#		update_material_table(null)
 	
 static func get_material_table():
 	var asset_library := MAssetTable.get_singleton()	
@@ -20,6 +11,7 @@ static func update_material_table(material_table:Dictionary):
 	var asset_library := MAssetTable.get_singleton()	
 	if not asset_library: push_error("trying to update material table, but asset library doesn't exist yet")
 	asset_library.import_info["__materials"] = material_table
+	asset_library.save()
 
 static func get_material_id(material:Material)->int:
 	if not material: return -1
@@ -42,14 +34,15 @@ static func get_material(id:int)->Material:
 				return material
 	return null
 
-static func update_material(id, path):		
-	var material_table = get_material_table()
-	var material = load(path)
-	if not material is Material:
-		push_error("failed adding material to material table: resource is not material")
-		return
-	if material.resource_name == "": 
-		material.resource_name = path.get_file().get_slice(".",0)
+static func rename_material(id, new_name):	
+	var material_table = get_material_table()		
+	material_table[id].name = new_name
+	update_material_table(material_table)
+		
+static func update_material(id, material:Material):		
+	var material_table = get_material_table()		
+	if material.resource_name.is_empty(): 
+		material.resource_name = material.resource_path.get_file().get_slice(".",0)
 		ResourceSaver.save(material)
 	##################
 	## New Material ##
@@ -58,14 +51,15 @@ static func update_material(id, path):
 		id = 0		
 		while material_table.has(id):
 			id += 1
-		material_table[id] = {"path": path, "meshes": {}}		 				
+		material_table[id] = {"path": material.resource_path, "name":material.resource_name, "meshes": {}}		 				
 		return		
 	#######################
 	## Existing Material ##
-	#######################
+	#######################	
 	## 1. Update path in material table 
-	material_table[id].path = path
-			
+	material_table[id].path = material.resource_path
+	material_table[id].name = material.resource_name
+	
 	## 2. Update all mmesh resources that use this material
 	for mesh_path in material_table[id].meshes:						
 		if not FileAccess.file_exists(mesh_path): 			
@@ -73,10 +67,17 @@ static func update_material(id, path):
 		var mmesh:MMesh = load(mesh_path)					
 		for set_id in material_table[id].meshes[mesh_path]:
 			for surface_id in len(material_table[id].meshes[mesh_path][set_id]):		
-				mmesh.surface_set_material(set_id, surface_id, path)			
+				mmesh.surface_set_material(set_id, surface_id, material.resource_path)			
 		ResourceSaver.save(mmesh)		
 	update_material_table(material_table)	
 	
+static func find_material_by_name(material_name):
+	var material_table = get_material_table()
+	for id in material_table:	
+		if material_table[id].name.matchn(material_name):
+			return id	
+	return -1	
+
 static func remove_material(id):	
 	var material_table = get_material_table()
 	if material_table.has(id):	

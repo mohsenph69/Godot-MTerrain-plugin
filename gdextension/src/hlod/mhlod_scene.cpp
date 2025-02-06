@@ -186,6 +186,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
             }
         }
         break;
+    case MHlod::Type::DECAL:
     case MHlod::Type::LIGHT:
         if(item_res.rid.is_valid()){
             RID instance = RS->instance_create();
@@ -199,12 +200,13 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
         } else {
             // Basically this should not happen
             remove_item(item,item_id);
-            ERR_FAIL_MSG("Item empty light");
+            ERR_FAIL_MSG("Item empty light or decal");
         }
         break;
     case MHlod::Type::COLLISION:
+    case MHlod::Type::COLLISION_COMPLEX:
         if(item_res.rid.is_valid()){
-            ci.body_id = item->collision.get_body_id();
+            ci.body_id = item->get_physics_body();
             MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(ci.body_id);
             PhysicsServer3D::get_singleton()->body_add_shape(body_info.rid,item_res.rid);
             PhysicsServer3D::get_singleton()->body_set_shape_transform(body_info.rid,body_info.shapes.size(),get_item_transform(item));
@@ -292,6 +294,7 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
             }
         }
         break;
+    case MHlod::Type::DECAL:
     case MHlod::Type::LIGHT:
         {
             RID instance = c_info.get_rid();
@@ -302,8 +305,9 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
         }
         break;
     case MHlod::Type::COLLISION:
+    case MHlod::Type::COLLISION_COMPLEX:
         {
-            MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(item->collision.get_body_id());
+            MHlod::PhysicBodyInfo& body_info = MHlod::get_physic_body(c_info.body_id);
             int shape_index_in_body = body_info.shapes.find(gitem_id.id);
             ERR_FAIL_COND(shape_index_in_body==-1);
             PhysicsServer3D::get_singleton()->body_remove_shape(body_info.rid,shape_index_in_body);
@@ -320,6 +324,8 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
                 if(is_destruction){
                     c_info.root_node->proc = nullptr;
                 }
+                c_info.root_node->hlod_remove_me = true; // realy important otherwise you will see the most wierd bug in your life
+                c_info.root_node->call_deferred("_notify_before_remove");
                 c_info.root_node->call_deferred("queue_free");
             }
         }
@@ -338,6 +344,7 @@ void MHlodScene::Proc::update_item_transform(const int32_t transform_index,const
     switch (c_info.type)
     {
     case MHlod::Type::MESH:
+    case MHlod::Type::DECAL:
     case MHlod::Type::LIGHT:
         {
             RID instance = c_info.get_rid();
@@ -347,6 +354,7 @@ void MHlodScene::Proc::update_item_transform(const int32_t transform_index,const
         }
         break;
     case MHlod::Type::COLLISION:
+    case MHlod::Type::COLLISION_COMPLEX:
         {
             GlobalItemID gid(oct_point_id,transform_index);
             MHlod::PhysicBodyInfo& b = MHlod::get_physic_body(c_info.body_id);
@@ -461,6 +469,7 @@ void MHlodScene::Proc::set_visibility(bool visibility){
         switch (it->value.type)
         {
         case MHlod::Type::MESH:
+        case MHlod::Type::DECAL:
         case MHlod::Type::LIGHT:
             RS->instance_set_visible(it->value.get_rid(),visibility);
             break;

@@ -41,7 +41,7 @@ func select_button_pressed():
 
 func filter_tree(text):
 	for item:TreeItem in list.get_root().get_children():
-		item.visible = item.get_text(1).containsn(text) or text ==""
+		item.visible = item.get_text(1).containsn(text) or text =="" #or item.get_tooltip_text(1).containsn(text)s
 
 func build_tree(root:TreeItem, path:="res://"):
 	for file in DirAccess.get_files_at(path):
@@ -49,7 +49,8 @@ func build_tree(root:TreeItem, path:="res://"):
 		if not EditorInterface.get_resource_filesystem().get_file_type(current_path) in types: continue
 		var resource = load(current_path)
 		var item := root.create_child()		
-		item.set_text(1, current_path)				
+		item.set_text(1, resource.resource_name if not resource.resource_name.is_empty() else current_path)				
+		item.set_tooltip_text(1, current_path)				
 		EditorInterface.get_resource_previewer().queue_resource_preview(current_path, self, "update_icon_preview", item)				
 	for folder in DirAccess.get_directories_at(path):
 		if folder == "addons": continue
