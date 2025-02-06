@@ -13,6 +13,6 @@ func _drop_data(at_position: Vector2, data: Variant):
 			var mat = load(file)
 			if not mat is Material: continue
 			if materials.find_key(file) == null:			
-				AssetIOMaterials.update_material(-1, file)								
+				AssetIOMaterials.update_material(-1, load(file))
 				material_table_changed.emit()
 			
