@@ -155,8 +155,8 @@ func bake_to_hlod_resource():
 		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,item_variation_layer,physics_settings)
 		else: continue
 		n.get_meta("item_ids").push_back(item_id)		
-		var max = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else collision_lod_cutoff_default
-		for i in max:
+		var cutoff_lod = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else collision_lod_cutoff_default
+		for i in cutoff_lod:
 			hlod_resource.insert_item_in_lod_table(item_id,i)
 	##################
 	## BAKE Lights ##
@@ -166,8 +166,8 @@ func bake_to_hlod_resource():
 		var item_variation_layer = l.get_meta("variation_layers") if l.has_meta("variation_layers") else 0
 		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform,item_variation_layer)
 		l.get_meta("item_ids").push_back(iid)
-		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else lights_lod_cutoff_default
-		for i in max:
+		var cutoff_lod = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else lights_lod_cutoff_default
+		for i in cutoff_lod:
 			hlod_resource.insert_item_in_lod_table(iid,i)
 	#######################
 	## BAKE Packed Scene ##
@@ -183,11 +183,9 @@ func bake_to_hlod_resource():
 			push_warning(p.scene_file_path+" is not a valid path!!!")
 			continue
 		var item_variation_layer = p.get_meta("variation_layers") if p.has_meta("variation_layers") else 0
-		var iid = hlod_resource.packed_scene_add(t,id,p.get_arg(0),p.get_arg(1),p.get_arg(2),item_variation_layer)
-		
+		var iid = hlod_resource.packed_scene_add(t,id,p.get_arg(0),p.get_arg(1),p.get_arg(2),item_variation_layer)		
 		p.get_meta("item_ids").push_back(iid)
-		var cutoff_lod = p.get_meta("cutoff_lod") if p.has_meta("cutoff_lod") else packed_scene_lod_cutoff_default
-		
+		var cutoff_lod = p.get_meta("cutoff_lod") if p.has_meta("cutoff_lod") else packed_scene_lod_cutoff_default		
 		for i in cutoff_lod:
 			hlod_resource.insert_item_in_lod_table(iid,i)		
 	############################
