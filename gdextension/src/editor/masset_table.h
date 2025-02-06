@@ -85,6 +85,8 @@ class MAssetTable : public Resource {
 
     struct Collection {
         ItemType type = NONE;
+        int8_t colcutoff = -1;
+        int16_t physics_name = -1; // is id in PackedStringArray physics_names (-1 is default)
         int32_t item_id=-1;
         int32_t glb_id = -1;
     };
@@ -108,6 +110,7 @@ class MAssetTable : public Resource {
     Vector<Collection> collections;
     VMap<int32_t,SubCollectionData> sub_collections;
     VMap<int32_t,CollisionData> collisions_data;
+    PackedStringArray physics_names;
     PackedStringArray collections_names;
     Vector<Tag> collections_tags;
     Vector<int> free_collections;
@@ -186,7 +189,14 @@ class MAssetTable : public Resource {
 
     CollisionData collection_get_collision_data(int collection_id) const;
 
+    int physics_id_get_add(const String& physics_name);
+
     int collection_create(const String& _name,int32_t item_id,ItemType type,int32_t glb_id);
+    void collection_set_physics_setting(int collection_id,const String& physics_name);
+    String collection_get_physics_setting(int collection_id) const;
+    void collection_set_colcutoff(int collection_id,int value);
+    int8_t collection_get_colcutoff(int collection_id) const;
+    void collection_clear_unused_physics_settings();
     int32_t collection_get_glb_id(int collection_id) const;
     int32_t collection_find_with_item_type_item_id(ItemType type, int32_t item_id) const;
     int32_t collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const;

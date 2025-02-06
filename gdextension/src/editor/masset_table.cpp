@@ -64,6 +64,10 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("tags_get_collections_all","search_collections","tags","exclude_tags"), &MAssetTable::tags_get_collections_all);
     ClassDB::bind_method(D_METHOD("tag_get_tagless_collections"), &MAssetTable::tag_get_tagless_collections);
     ClassDB::bind_method(D_METHOD("collection_create","name","item_id","type","glb_id"), &MAssetTable::collection_create);
+    ClassDB::bind_method(D_METHOD("collection_set_physics_setting","collection_id","physics_name"), &MAssetTable::collection_set_physics_setting);
+    ClassDB::bind_method(D_METHOD("collection_get_physics_setting","collection_id"), &MAssetTable::collection_get_physics_setting);
+    ClassDB::bind_method(D_METHOD("collection_set_colcutoff","collection_id","value"), &MAssetTable::collection_set_colcutoff);
+    ClassDB::bind_method(D_METHOD("collection_get_colcutoff","collection_id"), &MAssetTable::collection_get_colcutoff);
     ClassDB::bind_method(D_METHOD("collection_get_glb_id","collection_id"), &MAssetTable::collection_get_glb_id);
     ClassDB::bind_method(D_METHOD("collection_get_item_id","collection_id"), &MAssetTable::collection_get_item_id);
     ClassDB::bind_method(D_METHOD("collection_clear_sub_and_col","collection_id"), &MAssetTable::collection_clear_sub_and_col);
@@ -177,6 +181,7 @@ void MAssetTable::save(){
     //ERR_FAIL_COND(asset_table_singelton.is_null());
     make_assets_dir();
     Error err = ResourceSaver::get_singleton()->save(asset_table_singelton,asset_table_path);
+    asset_table_singelton->collection_clear_unused_physics_settings();
     ERR_FAIL_COND_MSG(err!=OK,"can not save asset table!");
 }
 
@@ -759,6 +764,24 @@ MAssetTable::CollisionData MAssetTable::collection_get_collision_data(int collec
     return CollisionData();
 }
 
+int MAssetTable::physics_id_get_add(const String& physics_name){
+    int index = physics_names.find(physics_name);
+    if(index!=-1){
+        return index;
+    }
+    // check if we have empty one
+    for(int i=0; i < physics_names.size(); i++){
+        if(physics_names.is_empty()){
+            physics_names.set(i,physics_name);
+            return i;
+        }
+    }
+    //Add new
+    ERR_FAIL_COND_V_MSG(physics_names.size()>=std::numeric_limits<int16_t>::max(),-1,"physics_names can not be bigger than "+itos(std::numeric_limits<int16_t>::max()));
+    physics_names.push_back(physics_name);
+    return physics_names.size() - 1;
+}
+
 int MAssetTable::collection_create(const String& _name,int32_t item_id,MAssetTable::ItemType type,int32_t glb_id){
     ERR_FAIL_COND_V(_name.length()==0,-1);
     int index = -1;
@@ -774,6 +797,47 @@ int MAssetTable::collection_create(const String& _name,int32_t item_id,MAssetTab
     collections.ptrw()[index].glb_id = glb_id;
     collections.ptrw()[index].item_id = item_id;
     return index;
+}
+
+void MAssetTable::collection_set_physics_setting(int collection_id,const String& physics_name){
+    ERR_FAIL_COND(physics_name.length()==0);
+    ERR_FAIL_COND(!has_collection(collection_id));
+    collections.ptrw()[collection_id].physics_name = physics_id_get_add(physics_name);
+}
+
+String MAssetTable::collection_get_physics_setting(int collection_id) const{
+    ERR_FAIL_COND_V(!has_collection(collection_id),"");
+    int pid = collections[collection_id].physics_name;
+    if(pid < 0){
+        return "";
+    }
+    ERR_FAIL_INDEX_V(pid,physics_names.size(),"");
+    return physics_names[pid];
+}
+
+void MAssetTable::collection_set_colcutoff(int collection_id,int value){
+    ERR_FAIL_COND(!has_collection(collection_id));
+    ERR_FAIL_COND(value>std::numeric_limits<int8_t>::max()-1);
+    collections.ptrw()[collection_id].colcutoff = value;
+}
+
+int8_t MAssetTable::collection_get_colcutoff(int collection_id) const{
+    ERR_FAIL_COND_V(!has_collection(collection_id),-1);
+    return collections[collection_id].colcutoff;
+}
+
+void MAssetTable::collection_clear_unused_physics_settings(){
+    HashSet<int16_t> used_physics_id;
+    for(int i=0; i < collections.size(); i++){
+        if(collections[i].physics_name!=-1){
+            used_physics_id.insert(collections[i].physics_name);
+        }
+    }
+    for(int i=0; i < physics_names.size(); i++){
+        if(!used_physics_id.has(i)){
+            physics_names.set(i,"");
+        }
+    }
 }
 
 int32_t MAssetTable::collection_get_glb_id(int collection_id) const{
@@ -1102,36 +1166,31 @@ Dictionary MAssetTable::group_get_collections_with_tags(const String& gname) con
 
 /*
     data structure:
-    4byte (int32_t)  -> item_type -> 0
-    4byte (int32_t)  -> item_id -> 4
-    4byte (int32_t) -> glb_id -> 8
-    4byte (uint32_t) -> sub_collection_count -> 12
-    4byte (uint32_t) -> collision_shapes count -> 16
+    4byte (uint32_t) -> sub_collection_count -> 0
+    4byte (uint32_t) -> collision_shapes count -> 4
     subs
     cols
-    Total size = 20 + i_size + t_size
+    Total size = COLLECTION_DATA_HEADER_SIZE + sizeof(MAssetTable::Collection) +  i_size + t_size
 */
-#define COLLECTION_DATA_HEADER_SIZE 20
+#define COLLECTION_DATA_HEADER_SIZE 8
 void MAssetTable::set_collection_data(int collection_id,const PackedByteArray& data) {
     ERR_FAIL_INDEX(collection_id,collections.size());
     //collection_clear(collection_id); // don't add this
     if(data.size()==0){
         return;
     }
-    ERR_FAIL_COND(data.size() < COLLECTION_DATA_HEADER_SIZE);
-    Collection& cl = collections.ptrw()[collection_id];
-    cl.type = (ItemType)data.decode_s32(0);
-    cl.item_id = data.decode_s32(4);
-    cl.glb_id = data.decode_s32(8);
-    int32_t sub_count = data.decode_s32(12);
-    int32_t col_count = data.decode_s32(16);
+    ERR_FAIL_COND(data.size() < COLLECTION_DATA_HEADER_SIZE + sizeof(Collection));
+    int32_t sub_count = data.decode_s32(0);
+    int32_t col_count = data.decode_s32(4);
     ERR_FAIL_COND(sub_count<0||col_count<0);
     int sub_id_total_size = sub_count * (sizeof(int32_t));
     int sub_t_total_size = sub_count * (sizeof(Transform3D));
     int col_s_total_size = col_count * (sizeof(CollisionShape));
     int col_t_total_size = col_count * (sizeof(Transform3D));
-    ERR_FAIL_COND(data.size()!=COLLECTION_DATA_HEADER_SIZE+sub_id_total_size+sub_t_total_size+col_s_total_size+col_t_total_size);
+    ERR_FAIL_COND(data.size()!=COLLECTION_DATA_HEADER_SIZE+sizeof(Collection)+sub_id_total_size+sub_t_total_size+col_s_total_size+col_t_total_size);
     int head = COLLECTION_DATA_HEADER_SIZE;
+    memcpy(collections.ptrw()+collection_id,data.ptr()+head,sizeof(Collection));
+    head += sizeof(Collection);
     if(sub_count!=0){
         sub_collections.insert(collection_id,SubCollectionData());
         int c = sub_collections.find(collection_id);
@@ -1164,9 +1223,6 @@ PackedByteArray MAssetTable::get_collection_data(int collection_id) const {
     }
     data.resize(COLLECTION_DATA_HEADER_SIZE);
     const Collection& cl = collections[collection_id];
-    data.encode_s32(0,(int32_t)cl.type);
-    data.encode_s32(4,(int32_t)cl.item_id);
-    data.encode_s32(8,cl.glb_id);
     int sub_count=0;
     const PackedInt32Array* sub_cl;
     const Vector<Transform3D>* sub_t;
@@ -1189,15 +1245,17 @@ PackedByteArray MAssetTable::get_collection_data(int collection_id) const {
             col_count = col_shapes->size();
         }
     }
-    data.encode_s32(12,sub_count);
-    data.encode_s32(16,col_count);
+    data.encode_s32(0,sub_count);
+    data.encode_s32(4,col_count);
     
     int sub_id_total_size = sub_count * (sizeof(int32_t));
     int sub_t_total_size = sub_count * (sizeof(Transform3D));
     int col_s_total_size = col_count * (sizeof(CollisionShape));
     int col_t_total_size = col_count * (sizeof(Transform3D));
-    data.resize(COLLECTION_DATA_HEADER_SIZE+sub_id_total_size+sub_t_total_size+col_s_total_size+col_t_total_size);
+    data.resize(COLLECTION_DATA_HEADER_SIZE+sizeof(Collection)+sub_id_total_size+sub_t_total_size+col_s_total_size+col_t_total_size);
     int head = COLLECTION_DATA_HEADER_SIZE;
+    memcpy(data.ptrw()+head,collections.ptr()+collection_id,sizeof(Collection));
+    head += sizeof(Collection);
     if(sub_count!=0){
         memcpy(data.ptrw()+head,sub_cl->ptr(),sub_id_total_size);
         head += sub_id_total_size;
@@ -1245,7 +1303,7 @@ void MAssetTable::set_data(const Dictionary& data){
 
     collections_tags = MTool::packed_byte_array_to_vector<Tag>(data["collections_tags"]);
     groups = MTool::packed_byte_array_to_vector<Tag>(data["groups"]);
-
+    physics_names = data["physics_names"];
     collections_names = data["collections_names"];
     tag_names = data["tag_names"];
     group_names = data["group_names"];
@@ -1267,6 +1325,7 @@ Dictionary MAssetTable::get_data(){
     data["groups"] = MTool::vector_to_packed_byte_array<Tag>(groups);
 
     data["collections_names"] = collections_names;
+    data["physics_names"] = physics_names;
     data["tag_names"] = tag_names;
     data["group_names"] = group_names;
     return data;

@@ -66,14 +66,15 @@ func bake_to_hlod_resource():
 			aabb.merge( item.get_joined_aabb() )			
 		if item.collection_id == -1: continue							
 		item.set_meta("item_ids",PackedInt32Array()) # clear
-		for mdata:MAssetMeshData in item.get_mesh_data():						
+		for mdata:MAssetMeshData in item.get_mesh_data():
 			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
 			var material_set_id = mdata.get_material_set_id()
 			var shadow_array = mesh_array.map(func(a): return 0)
-			var gi_array = mesh_array.map(func(a): return 0)			
+			var gi_array = mesh_array.map(func(a): return 0)
 			var render_layers = 0			
 			var item_variation_layer = item.get_meta("variation_layers") if item.has_meta("variation_layers") else 0
-			var mesh_id = hlod_resource.add_mesh_item(baker_inverse_transform * mdata.get_global_transform(), mesh_array, material_set_id, shadow_array, gi_array, render_layers, item_variation_layer)
+			var current_mesh_transform:Transform3D = baker_inverse_transform * mdata.get_global_transform()
+			var mesh_id = hlod_resource.add_mesh_item(current_mesh_transform, mesh_array, material_set_id, shadow_array, gi_array, render_layers, item_variation_layer)
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
 			item.get_meta("item_ids").push_back(mesh_id)
@@ -100,8 +101,16 @@ func bake_to_hlod_resource():
 				else:
 					hlod_resource.insert_item_in_lod_table(iid,0)
 					item.get_meta("item_ids").push_back(iid)
+			####################################################
+			#####     Bake Complex shape in Item Node    #######
+			####################################################
+			var complex_shape_id = mdata.get_complex_shape_id()
+			if complex_shape_id != -1:
+				var iid = hlod_resource.shape_add_complex(complex_shape_id,current_mesh_transform,item_variation_layer,physics_settings)
+				item.get_meta("item_ids").push_back(iid)
+				for ll in range(0,2): hlod_resource.insert_item_in_lod_table(iid,ll)
 	################################
-	##      BAKE Decals Node      ##
+	##      BAKE Decals Node     ###
 	################################
 	for d:MDecalInstance in get_all_decals(self,get_children()):
 		d.set_meta("item_ids",PackedInt32Array())

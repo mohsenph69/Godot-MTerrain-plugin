@@ -11,6 +11,7 @@ var blend_file: String
 var mesh_data: Dictionary # key is mesh_name, value is array of material sets, each set is an array of material names references the materials dictionary
 var materials:Dictionary #Key is import material name
 var collections:Dictionary
+var global_options:Dictionary = get_empty_option()
 var forgotten_collections_import_info:Dictionary
 var variation_groups: Array #array of array of glb node names
 var meta_data:Dictionary
@@ -44,11 +45,11 @@ func print_pretty_dic(dic:Dictionary,dic_name:String="Dictionary",tab_count:int=
 
 func print_data():
 	print("\n---------- Asset data ------------")
-	print_pretty_dic(mesh_data,"Mesh Data")
-	print_pretty_dic(materials,"Materials")
+	#print_pretty_dic(mesh_data,"Mesh Data")
+	#print_pretty_dic(materials,"Materials")
+	print_pretty_dic(global_options,"Global Options")
 	print_pretty_dic(collections,"Collections")
-	print_pretty_dic(meta_data,"Meta Data")
-	print("Variation Groups ",variation_groups)
+	#print("Variation Groups ",variation_groups)
 	print("\n")
 
 func clear():
@@ -72,9 +73,17 @@ func get_empty_material()->Dictionary:
 		"original_material": null,		
 		"meshes": [] #array of MMesh that use this material...should be converted to ids later
 	}.duplicate()
-		
+
+func get_empty_option()->Dictionary:
+	return {
+		"meshcutoff":"",
+		"colcutoff":"",
+		"physics":""
+	}.duplicate()
+
 func get_empty_collection()->Dictionary:
 	return {
+		"options":get_empty_option(),
 		"mesh_id":-1,
 		"meshes":[],
 		"original_meshes":[],
@@ -82,12 +91,10 @@ func get_empty_collection()->Dictionary:
 		"is_master":false,
 		"base_transform":Transform3D(),
 		"convex":false,
-		"concav":null,
+		"concave":null,
 		"collisions":[], # only simple shapes
 		"sub_collections":{},
 		"original_sub_collections":{},
-		"stop_lod":-1,
-		"original_stop_lod":-1,
 		"tags": [],
 		"original_tags": [],
 		"id":-1,
@@ -102,13 +109,27 @@ func get_empty_collision_item()->Dictionary:
 		"transform":Transform3D(),
 	}.duplicate()
 
-# collection[name]["collision_items"] = [ ]
+func add_option(collection_name:String,option_name:String,option_value:String)->void:
+	if option_name=="collisioncutoff": option_name = "colcutoff"
+	if not global_options.has(option_name):
+		printerr("Invalid option name "+option_name)
+		return
+	if collection_name == "_global":
+		global_options[option_name] = option_value
+		return
+	if not collections.has(collection_name):
+		collections[collection_name] = get_empty_collection()
+	collections[collection_name]["options"][option_name] = option_value
 
-func add_possible_stop_lod(node_name:String,lod:int):
-	if not collections.has(node_name):
-		collections[node_name] = get_empty_collection()
-	if collections[node_name]["meshes"].size() - 1 < lod:
-		collections[node_name]["stop_lod"] = lod
+func get_option(collection_name:String,option_name:String)->String:
+	if not global_options.has(option_name):
+		printerr("Invalid option name "+option_name)
+		return ""
+	var c_option = collections[collection_name]["options"]
+	var option_value:String = ""
+	if not c_option[option_name].is_empty(): option_value = c_option[option_name]
+	else:  option_value = global_options[option_name]
+	return option_value
 
 func update_collection_mesh(node_name:String,lod:int,mesh:MMesh)->void:
 	if not collections.has(node_name):
@@ -116,8 +137,6 @@ func update_collection_mesh(node_name:String,lod:int,mesh:MMesh)->void:
 	if collections[node_name]["meshes"].size() < lod + 1:
 		collections[node_name]["meshes"].resize(lod+1)
 	collections[node_name]["meshes"][lod] = mesh
-	if collections[node_name]["meshes"].size() > collections[node_name]["stop_lod"]:
-		collections[node_name]["stop_lod"] = -1
 
 func add_master_collection(node_name:String,transform:Transform3D):
 	if not collections.has(node_name):
@@ -156,6 +175,15 @@ func add_collision_to_collection(collection_name, collision_type:MAssetTable.Col
 	item.transform = col_transform
 	# item.obj_transform = obj_transform # this will be determine in finilize function
 	collections[collection_name]["collisions"].push_back(item)
+
+func add_collision_none_simple(collection_name,shape_name:String,info):
+	if not info: return
+	if not collections.has(collection_name):
+		collections[collection_name] = get_empty_collection()
+	if collections[collection_name][shape_name]:
+		printerr("Duplicate collision shape of type "+shape_name+" in collection name "+collection_name)
+		return
+	collections[collection_name][shape_name] = info
 
 func get_collection_id(collection_name:String)->int:	
 	if collections.has(collection_name):
@@ -240,8 +268,7 @@ func generate_import_tags():
 					collections[key]["mesh_states"].push_back(IMPORT_STATE.CHANGE)
 					is_mesh_change = true
 			var is_sub_collection_change = collections[key]["sub_collections"] == collections[key]["original_sub_collections"]
-			var is_stop_lod_change = collections[key]["stop_lod"]==collections[key]["original_stop_lod"]
-			if not is_mesh_change and is_sub_collection_change and is_stop_lod_change:
+			if not is_mesh_change and is_sub_collection_change:
 				collections[key]["state"] = IMPORT_STATE.NO_CHANGE
 			else:
 				collections[key]["state"] = IMPORT_STATE.CHANGE
@@ -262,6 +289,10 @@ func save_meshes()->int:
 		var original_meshes:Array= collections[key]["original_meshes"]
 		meshes.resize(MAssetTable.mesh_item_get_max_lod())
 		original_meshes.resize(MAssetTable.mesh_item_get_max_lod())
+		#####################################
+		### Saving and removing ALL meshes ##
+		#####################################
+		var first_mesh:ArrayMesh = null
 		for i in range(MAssetTable.mesh_item_get_max_lod()):
 			var mesh_lod_id = mesh_id + i
 			var mesh_path = MHlod.get_mesh_path(mesh_lod_id)
@@ -270,16 +301,49 @@ func save_meshes()->int:
 			if not meshes[i]:
 				if FileAccess.file_exists(mesh_path): DirAccess.remove_absolute(mesh_path)
 			else:
+				if not first_mesh: first_mesh = meshes[i].get_mesh()
 				meshes[i].take_over_path(mesh_path)
 				meshes[i].resource_name = key
 				set_correct_material(meshes[i], mesh_path)
 				ResourceSaver.save(meshes[i],mesh_path)
 				meshes[i].take_over_path(mesh_path)
 		# Adding stop lod if exist
-		if collections[key]["stop_lod"] != -1:
-			var stop_path = MHlod.get_mesh_path(mesh_id + collections[key]["stop_lod"]).get_basename() + ".stop"
+		if not first_mesh:
+			printerr("No valid mesh in Collection: \""+key+"\"")
+			continue
+		var meshcutoff = get_option(key,"meshcutoff")
+		if not meshcutoff.is_empty():
+			if not meshcutoff.is_valid_int():
+				printerr("meshcutoff is not a valid integer")
+				continue
+			var stop_lod:int = meshcutoff.to_int()
+			if stop_lod < 1:
+				printerr("stop_lod can't be smaller than 1")
+				continue
+			var stop_path = MHlod.get_mesh_path(mesh_id + stop_lod).get_basename() + ".stop"
 			var f = FileAccess.open(stop_path,FileAccess.WRITE)
 			f.close()
+		#####################################
+		### Saving complex collision shapes ##
+		#####################################
+		var col_path = MHlod.get_collsion_path(mesh_id)
+		if FileAccess.file_exists(col_path):
+			DirAccess.remove_absolute(col_path)
+		if collections[key]["convex"] or collections[key]["concave"]:
+			var col_gen_mesh:ArrayMesh = first_mesh
+			var col_shape:Shape3D = null
+			if collections[key]["convex"]:
+				if collections[key]["convex"] is ArrayMesh: col_gen_mesh = collections[key]["convex"]
+				col_shape = col_gen_mesh.create_convex_shape(true,true)
+			if collections[key]["concave"]:
+				if col_shape: printerr("For Collection \""+key+"\" both convex and concave shapes are active saving just convex one")
+				else:
+					if collections[key]["concave"] is ArrayMesh: col_gen_mesh = collections[key]["concave"]
+					col_shape = col_gen_mesh.create_trimesh_shape()
+			if not col_shape: printerr("No col Shape to save!")
+			else:
+				ResourceSaver.save(col_shape,col_path)
+				col_shape.take_over_path(col_path)
 	return OK
 
 func set_correct_material(mmesh:MMesh, mesh_path):
@@ -369,7 +433,6 @@ func add_glb_import_info(info:Dictionary)->void:
 		var original_meshes:=[]
 		if mesh_id!=-1:
 			original_meshes = MAssetTable.mesh_item_meshes_no_replace(mesh_id)
-			collections[collection_glb_name]["original_stop_lod"] = MAssetTable.mesh_item_get_stop_lod(mesh_id)
 		var original_sub_collections:Dictionary = info[collection_glb_name]["sub_collections"]		
 		for sub_collection_name in original_sub_collections:
 			var t = asset_library.collection_get_sub_collections_transform(collection_id,original_sub_collections[sub_collection_name])

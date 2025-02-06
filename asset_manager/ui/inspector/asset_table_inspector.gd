@@ -71,7 +71,7 @@ func update_collections():
 		cl.set_cell_border_color(Color.SEA_GREEN)
 		cl.append_text("collisions")
 		cl.pop() #end cel
-		
+	
 		for cid in collections:
 			cl.push_cell()
 			cl.set_cell_row_background_color(Color.DARK_BLUE,Color.DARK_BLUE)
@@ -96,7 +96,10 @@ func update_collections():
 			
 			cl.push_cell()
 			cl.set_cell_border_color(Color.SEA_GREEN)
-			cl.append_text(str(asset_library.collection_get_collision_count(cid)))
+			var col_text = str(asset_library.collection_get_collision_count(cid))
+			col_text += "("+asset_library.collection_get_physics_setting(cid)+")"
+			col_text += "["+str(asset_library.collection_get_colcutoff(cid))+"]"
+			cl.append_text(col_text)
 			cl.pop() #end cel
 	cl.pop() # end table
 	
