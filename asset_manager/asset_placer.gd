@@ -12,18 +12,25 @@ const ITEM_COLORS = {
 	"DECAL": Color(0,0.5,0.8,0.15)
 }
 
+var popup_button_group: ButtonGroup
+@onready var asset_type_filter_button:Button = find_child("asset_type_filter_button")
+@onready var filter_button:Button = find_child("filter_button")
+@onready var grouping_button:Button = find_child("grouping_button")
+@onready var sort_by_button:Button = find_child("sort_by_button")
+@onready var add_asset_button:Button = find_child("add_asset_button")
+
+
+
 @onready var groups = find_child("groups")
 @onready var ungrouped = find_child("other")
-@onready var grouping_popup:Popup = find_child("grouping_popup")
+@onready var grouping_popup:Control = find_child("grouping_popup")
 @onready var search_collections_node:Control = find_child("search_collections")
-@onready var group_by_button:Button = find_child("group_by_button")		
 
 @onready var place_button:Button = find_child("place_button")	
 @onready var snap_enabled_button:BaseButton = find_child("snap_enabled_button")
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
 
-@onready var add_asset_button:Button = find_child("add_asset_button")
 @onready var add_baker_button:Button = find_child("add_baker_button")
 @onready var add_decal_button:Button = find_child("add_decal_button")
 @onready var add_packed_scene_button:Button = find_child("add_packed_scene_button")
@@ -67,7 +74,12 @@ var current_placement_dir:Vector3
 
 static var thumbnail_manager 
 
-func _ready():		
+func _ready():	
+	popup_button_group = ButtonGroup.new()
+	popup_button_group.allow_unpress = true
+	for button:Button in [asset_type_filter_button, filter_button, grouping_button, sort_by_button, add_asset_button ]:
+		button.button_group = popup_button_group
+	
 	thumbnail_manager = ThumbnailManager.new()
 	add_child(thumbnail_manager)
 	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
@@ -144,6 +156,7 @@ func create_baker_scene():
 	ResourceSaver.save(packed, dir.path_join(file))		
 	EditorInterface.open_scene_from_path(dir.path_join(file))
 	#MTool.print_edmsg("")
+	add_asset_button.button_pressed = false
 	
 func create_packed_scene():
 	var id = MAssetTable.get_last_free_packed_scene_id()	
@@ -156,7 +169,8 @@ func create_packed_scene():
 	var path = MHlod.get_packed_scene_path(id)
 	ResourceSaver.save(packed, path)			
 	EditorInterface.open_scene_from_path(path)			
-
+	add_asset_button.button_pressed = false
+	
 func create_decal():
 	var id = MAssetTable.get_last_free_decal_id()		
 	var decal := MDecal.new()
@@ -176,6 +190,7 @@ func create_decal():
 	node.name = "New Decal"
 	node.owner = scene_root
 	node.set_meta("collection_id", collection_id)
+	add_asset_button.button_pressed = false
 	
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
@@ -395,10 +410,12 @@ func regroup(group = current_group, sort_mode="asc"):
 	current_group = group
 
 func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
-	var node = add_asset_to_scene(group_list.get_item_metadata(id), group_list.get_item_tooltip(id),create_ur)		
+	var collection_id = group_list.get_item_metadata(id)
+	if not collection_id or collection_id == -1: return
+	var node = add_asset_to_scene(collection_id, group_list.get_item_tooltip(id),create_ur)		
 	return node 
 
-func add_asset_to_scene(collection_id, asset_name,create_ur:=true):
+func add_asset_to_scene(collection_id, asset_name,create_ur:=true):	
 	var node
 	if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
 		node = MAssetMesh.new()

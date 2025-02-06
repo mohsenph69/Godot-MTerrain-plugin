@@ -1,5 +1,5 @@
 @tool
-extends Popup
+extends Control
 signal group_selected
 
 @onready var group_list = find_child("group_list")
@@ -9,7 +9,7 @@ var button_group:ButtonGroup #= load("res://addons/m_terrain/asset_manager/ui/gr
 func _ready():
 	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 	visible = false
-	button_group = ButtonGroup.new()
+	button_group = ButtonGroup.new()	
 	group_list.get_child(0).button_group = button_group
 	update_grouping_options()
 	button_group.pressed.connect( select_group )

@@ -1,19 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://dwqtl6yv318k2"]
+[gd_scene load_steps=4 format=3 uid="uid://dwqtl6yv318k2"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/sort_popup.gd" id="1_wqrt0"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="2_ifg7f"]
 [ext_resource type="ButtonGroup" uid="uid://dgsyafll57jff" path="res://addons/m_terrain/asset_manager/ui/sort_button_group.tres" id="3_nae5q"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_qdadt"]
-
-[node name="sort_popup" type="Popup"]
-auto_translate_mode = 1
-size = Vector2i(163, 100)
-visible = true
-max_size = Vector2i(16384, 670)
-script = ExtResource("1_wqrt0")
-
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -22,18 +13,19 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource("2_ifg7f")
+script = ExtResource("1_wqrt0")
 
-[node name="sort_type_list" type="VBoxContainer" parent="PanelContainer"]
+[node name="sort_type_list" type="VBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="asc" type="Button" parent="PanelContainer/sort_type_list"]
+[node name="asc" type="Button" parent="sort_type_list"]
 layout_mode = 2
 toggle_mode = true
 button_group = ExtResource("3_nae5q")
 text = "Name ascending"
 
-[node name="desc" type="Button" parent="PanelContainer/sort_type_list"]
+[node name="desc" type="Button" parent="sort_type_list"]
 layout_mode = 2
 toggle_mode = true
-button_group = SubResource("ButtonGroup_qdadt")
+button_group = ExtResource("3_nae5q")
 text = "Name descending"

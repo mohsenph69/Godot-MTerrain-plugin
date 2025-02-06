@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=23 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -22,6 +22,9 @@
 [ext_resource type="Texture2D" uid="uid://c5yiqj08mgihl" path="res://addons/m_terrain/icons/scale_icon.svg" id="16_sjn2r"]
 [ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="17_xg855"]
 
+[sub_resource type="ButtonGroup" id="ButtonGroup_ulmmt"]
+allow_unpress = true
+
 [node name="AssetPlacer" type="PanelContainer"]
 anchors_preset = 15
 anchor_right = 1.0
@@ -43,21 +46,18 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
+button_group = SubResource("ButtonGroup_ulmmt")
 text = "Types"
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="Popup2" type="Popup" parent="VBoxContainer/HBoxContainer/asset_type_filter_button"]
-auto_translate_mode = 1
-size = Vector2i(100, 200)
-
-[node name="asset_type_tree" type="Tree" parent="VBoxContainer/HBoxContainer/asset_type_filter_button/Popup2"]
+[node name="asset_type_tree" type="Tree" parent="VBoxContainer/HBoxContainer/asset_type_filter_button"]
+visible = false
 custom_minimum_size = Vector2(160, 170)
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 1
+offset_top = -168.0
+offset_right = 160.0
+offset_bottom = 2.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 hide_folding = true
@@ -70,39 +70,67 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
+button_group = SubResource("ButtonGroup_ulmmt")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
 
 [node name="filter_popup" parent="VBoxContainer/HBoxContainer/filter_button" instance=ExtResource("3_dfwqm")]
-initial_position = 4
 visible = false
+custom_minimum_size = Vector2(300, 560)
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 5.0
+offset_top = -413.0
+offset_right = 255.0
+offset_bottom = -13.0
+grow_horizontal = 1
+grow_vertical = 1
 
-[node name="group_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="grouping_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
+button_group = SubResource("ButtonGroup_ulmmt")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_40ifn")]
-initial_position = 4
+[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/grouping_button" instance=ExtResource("9_40ifn")]
 visible = false
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_top = -154.0
+offset_right = 73.0
+offset_bottom = -10.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
+button_group = SubResource("ButtonGroup_ulmmt")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
 
 [node name="sort_popup" parent="VBoxContainer/HBoxContainer/sort_by_button" instance=ExtResource("7_uoy1f")]
-initial_position = 4
 visible = false
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="search_collections" parent="VBoxContainer/HBoxContainer" instance=ExtResource("5_14byr")]
 layout_mode = 2
@@ -188,35 +216,36 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
+button_group = SubResource("ButtonGroup_ulmmt")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="Popup" type="Popup" parent="VBoxContainer/HBoxContainer/add_asset_button"]
-position = Vector2i(1063, 33)
-max_size = Vector2i(16384, 629)
-
-[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup"]
-anchors_preset = 15
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer/add_asset_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_left = -129.0
+offset_top = -110.0
+offset_bottom = -3.0
+grow_horizontal = 0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer"]
 layout_mode = 2
 
-[node name="add_baker_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup/PanelContainer/VBoxContainer"]
+[node name="add_baker_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Baker"
 
-[node name="add_decal_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup/PanelContainer/VBoxContainer"]
+[node name="add_decal_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Decal"
 
-[node name="add_packed_scene_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/Popup/PanelContainer/VBoxContainer"]
+[node name="add_packed_scene_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Packed Scene"
 
