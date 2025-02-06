@@ -45,14 +45,17 @@ func _parse_begin(object):
 	elif object is MHlodScene:
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.tscn").instantiate()
 		control.mhlod_scene = object
-		# TO DO - add variation layer feature to mhlod_scene to assign it to parent baker's layers.
-		#if EditorInterface.get_edited_scene_root() is HLod_Baker:
-			#control.add_child(make_variation_layer_control_for_assigning(object))				
+
 		control.add_child(make_tag_collection_control(object))		
+		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			#TODO - add variation layer feature to mhlod_scene to assign it to parent baker's layers.
+			#control.add_child(make_variation_layer_control_for_assigning(object))						
+			control.add_child(make_cutoff_lod_control(object))									
 	elif object is MAssetMesh:						
 		control = VBoxContainer.new()		
 		if EditorInterface.get_edited_scene_root() is HLod_Baker:
 			control.add_child(make_variation_layer_control_for_assigning(object))						
+			control.add_child(make_cutoff_lod_control(object))									
 		control.add_child(make_tag_collection_control(object))						
 	elif object is MMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
@@ -63,13 +66,14 @@ func _parse_begin(object):
 		control.asset_placer = asset_placer
 		if EditorInterface.get_edited_scene_root() is HLod_Baker:
 			control.add_child(make_variation_layer_control_for_assigning(object))				
+			control.add_child(make_cutoff_lod_control(object))
 		control.add_child(make_tag_collection_control(object))		
 	elif object is CollisionShape3D:
 		control = VBoxContainer.new()
 		control.add_child( make_cutoff_lod_control(object) )
 		control.add_child( make_physics_settings_control(object))		
 		if EditorInterface.get_edited_scene_root() is HLod_Baker:
-			control.add_child( make_variation_layer_control_for_assigning(object))
+			control.add_child( make_variation_layer_control_for_assigning(object))			
 	elif object is MDecal or object is MDecalInstance: 
 		control = VBoxContainer.new()
 		var hbox = HBoxContainer.new()
@@ -100,6 +104,7 @@ func _parse_begin(object):
 		control.add_child(hbox)
 		if object is MDecalInstance:
 			control.add_child(make_variation_layer_control_for_assigning(object))							
+			control.add_child(make_cutoff_lod_control(object))
 	elif object is Material:
 		var hbox = HBoxContainer.new()
 		hbox.size_flags_horizontal =Control.SIZE_EXPAND_FILL		
@@ -191,7 +196,7 @@ func make_cutoff_lod_control(object):
 	hbox.add_child(label)
 	var spinbox = SpinBox.new()
 	hbox.add_child(spinbox)
-	spinbox.value = object.get_meta("lod_cuttoff") if object.has_meta("lod_cuttoff") else 1
+	spinbox.value = object.get_meta("lod_cutoff") if object.has_meta("lod_cutoff") else 1
 	spinbox.step = 1
 	spinbox.max_value = 10
 	spinbox.value_changed.connect(func(new_value):

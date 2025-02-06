@@ -31,7 +31,7 @@ func select_button_pressed():
 	var result = []
 	var current_item = list.get_next_selected(null)
 	while current_item:
-		result.push_back(current_item.get_text(1))
+		result.push_back(current_item.get_tooltip_text(1))
 		current_item = list.get_next_selected(current_item)
 	if select_multiple:
 		resources_selected.emit(result)

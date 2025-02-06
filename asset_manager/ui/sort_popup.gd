@@ -1,5 +1,5 @@
 @tool
-extends Popup
+extends Control
 
 signal sort_mode_changed
 

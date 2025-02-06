@@ -54,12 +54,13 @@ func _ready() -> void:
 			confirm.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
 			confirm.confirmed.connect(func():
 				AssetIOMaterials.remove_material(material_id)
+				update_materials_list()
 			)
 			
-			var mesh_count = len(material_table[id].meshes)
+			var mesh_count = len(material_table[material_id].meshes)
 			confirm.dialog_text = "Are you sure you want to delete this material?"
 			add_child(confirm)
-			confirm.popup_centered()						
+			confirm.popup_centered()								
 	)
 	materials_list.empty_clicked.connect(empty_clicked)
 	materials_list.material_table_changed.connect(update_materials_list)		
@@ -78,6 +79,7 @@ func empty_clicked(_click_position,_mouse_button_index):
 	empty_double_click_time = Time.get_ticks_msec()
 	
 func add_materials_to_table(paths):	
+	print(paths)
 	for path in paths:
 		if not path in AssetIOMaterials.get_material_table().values().map(func(a):return a.path):			
 			AssetIOMaterials.update_material(-1, load(path))
