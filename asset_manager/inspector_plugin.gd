@@ -142,16 +142,19 @@ func make_physics_settings_control(object):
 	label.text = "Physics Setting: "
 	hbox.add_child(label)
 	var dropdown = OptionButton.new()
-	var dir =MHlod.get_physics_settings_dir()
-	var physics_setting_id:int = object.get_meta("physics_settings") if object.has_meta("physics_settings") else -1
-	for file in DirAccess.get_files_at(dir):
-		var physics_setting: MHlodCollisionSetting = load(dir.path_join(file))
-		dropdown.add_item(physics_setting.name)
-		dropdown.set_item_metadata(dropdown.item_count-1, int(file))		
-		if physics_setting_id != -1 and physics_setting_id == int(file):
+	dropdown.add_item("(default)")
+	var current_physics_setting_name
+	if object.has_meta("physics_settings"):
+		current_physics_setting_name = object.get_meta("physics_settings") 	
+	for physics_setting_name in AssetIOMaterials.get_physics_ids().keys():
+		dropdown.add_item(physics_setting_name)		
+		if physics_setting_name==current_physics_setting_name:
 			dropdown.select(dropdown.item_count-1)		
 	dropdown.item_selected.connect(func(id):			
-		object.set_meta("physics_settings", dropdown.get_item_metadata(id))
+		if id != 0:
+			object.set_meta("physics_settings", dropdown.get_item_text(id))
+		else:
+			object.remove_meta("physics_settings")
 	)		
 	hbox.add_child(dropdown)
 	return hbox

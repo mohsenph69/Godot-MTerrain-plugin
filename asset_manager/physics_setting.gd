@@ -47,8 +47,7 @@ func _ready() -> void:
 			var material_table = AssetIOMaterials.get_material_table()
 			var material_id = int(item.get_text(0))
 			if not material_table.has(material_id):	
-				push_error("MTerrain MaterialTable Error: Trying to delete material that does not exist")
-				print(material_table.keys())
+				push_error("MTerrain MaterialTable Error: Trying to delete material that does not exist")				
 				return	
 			var confirm := ConfirmationDialog.new()
 			confirm.initial_position = Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
@@ -144,7 +143,7 @@ func update_material_icon(data):
 	data.caller.set_icon(1, data.texture)
 	
 func update_static_body_list(filter = null):
-	var list = get_setting_list()
+	var list = AssetIOMaterials.get_physics_ids()
 	static_body_list.clear()
 	var root = static_body_list.get_root()
 	if not root:
@@ -156,25 +155,6 @@ func update_static_body_list(filter = null):
 		item.set_editable(0, true)		
 		item.set_text(0, sname)
 		item.set_metadata(0, sname)
-
-func get_setting_list()->Dictionary: #key -> asset_name, value asset
-	var dir_path = MHlod.get_physics_settings_dir()
-	var dir = DirAccess.open(dir_path)
-	var out:Dictionary
-	if not dir:
-		return out
-	dir.list_dir_begin()
-	var fname = dir.get_next()
-	while fname != "":
-		var fpath = dir_path.path_join(fname)
-		fname = dir.get_next()
-		var s:MHlodCollisionSetting = load(fpath)
-		if out.has(s.name):
-			printerr("Duplicate Physcis Setting name Please change the name mannually and restart Godot"+fpath)
-			continue
-		if s:
-			out[s.name] = s
-	return out
 	
 func show_material_in_file_system_dock() -> void:	
 	var material_table = AssetIOMaterials.get_material_table()
@@ -185,7 +165,7 @@ func show_material_in_file_system_dock() -> void:
 
 func show_static_body_in_file_system_dock() -> void:	
 	add_err.visible = false
-	var list = get_setting_list()	
+	var list = AssetIOMaterials.get_physics_ids()
 	var sname = static_body_list.get_selected().get_text(0)
 	if not list.has(sname):
 		printerr("Can not find Item ",sname)
@@ -203,7 +183,7 @@ func show_static_body_in_file_system_dock() -> void:
 func rename_static_body():
 	var item := static_body_list.get_edited()
 	var original_name = item.get_metadata(0)
-	var list = get_setting_list()
+	var list = AssetIOMaterials.get_physics_ids()
 	if not original_name in list: 
 		print("static body with original name ", original_name,  " does not exist")
 		return
@@ -221,7 +201,7 @@ func validate_static_body_name(sname)->bool:
 		add_err.visible = true
 		add_err.text = "Empty Setting Name"
 		return false
-	var list = get_setting_list()
+	var list = AssetIOMaterials.get_physics_ids()
 	if list.has(sname):
 		add_err.visible = true
 		add_err.text = "Duplicate Setting Name"
@@ -229,7 +209,7 @@ func validate_static_body_name(sname)->bool:
 	return true
 
 func add_static_body() -> void:
-	var list = get_setting_list()
+	var list = AssetIOMaterials.get_physics_ids()
 	var i = 0	
 	var sname = "new_static_body"
 	while list.has(sname):
@@ -259,3 +239,6 @@ func add_static_body() -> void:
 	ResourceSaver.save(ns,npath)
 	update_static_body_list()
 	editor_file_system.scan()
+
+static func get_physics_setting_id():
+	pass

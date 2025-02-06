@@ -26,7 +26,10 @@ var can_bake =false
 const MAX_LOD = 10
 const UPDATE_INTERVAL = 0.5
 
-
+const collision_lod_cutoff_default = 2
+const decal_lod_cutoff_default = 2
+const packed_scene_lod_cutoff_default =2
+const lights_lod_cutoff_default = 2
 
 class SubHlodBakeData:
 	var sub_hlod: MHlod
@@ -47,6 +50,7 @@ func force_lod(lod:int):
 		force_lod_enabled = true
 		
 func bake_to_hlod_resource():		
+	var physics_dictionary = AssetIOMaterials.get_physics_ids()
 	MHlodScene.sleep()	
 	var aabb: AABB	
 	hlod_resource = MHlod.new()
@@ -86,29 +90,38 @@ func bake_to_hlod_resource():
 					hlod_resource.insert_item_in_lod_table(mesh_id, i)
 				i += 1
 			## Mesh With Collssion
-			var physics_settings = item.get_meta("physics_settings") if item.has_meta("physics_settings") else -1
+			var physics_settings_id: int = -1
+			var physics_setting_name = item.get_meta("physics_settings") if item.has_meta("physics_settings") else asset_library.collection_get_physics_setting(item.collection_id)							
+			if not physics_setting_name.is_empty() and physics_dictionary.has(physics_setting_name):
+				physics_settings_id = physics_dictionary[physics_setting_name]
+							
+			var col_cutoff = asset_library.collection_get_colcutoff(item.collection_id)						
+			if col_cutoff == -1: 
+				col_cutoff = collision_lod_cutoff_default
 			for cindex in mdata.get_collision_count():
 				var type:MAssetTable.CollisionType= mdata.get_collision_type(cindex)
 				var t:Transform3D = baker_inverse_transform * mdata.get_collision_transform(cindex)
 				var params:Vector3 = mdata.get_collision_params(cindex)
 				var iid:int = -1								
 				match type:
-					MAssetTable.CollisionType.SHPERE: iid = hlod_resource.shape_add_sphere(t,params[0],item_variation_layer,physics_settings)
-					MAssetTable.CollisionType.CYLINDER: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],item_variation_layer,physics_settings)
-					MAssetTable.CollisionType.CAPSULE: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],item_variation_layer,physics_settings)
-					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,item_variation_layer,physics_settings)
+					MAssetTable.CollisionType.SHPERE: iid = hlod_resource.shape_add_sphere(t,params[0],item_variation_layer,physics_settings_id)
+					MAssetTable.CollisionType.CYLINDER: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],item_variation_layer,physics_settings_id)
+					MAssetTable.CollisionType.CAPSULE: iid = hlod_resource.shape_add_cylinder(t,params[0],params[1],item_variation_layer,physics_settings_id)
+					MAssetTable.CollisionType.BOX: iid = hlod_resource.shape_add_box(t,params,item_variation_layer,physics_settings_id)					
 				if iid==-1: printerr("Error inserting shape")
-				else:
-					hlod_resource.insert_item_in_lod_table(iid,0)
-					item.get_meta("item_ids").push_back(iid)
+				else:										
+					for j in col_cutoff:
+						hlod_resource.insert_item_in_lod_table(iid,j)
+						item.get_meta("item_ids").push_back(iid)
 			####################################################
 			#####     Bake Complex shape in Item Node    #######
 			####################################################
 			var complex_shape_id = mdata.get_complex_shape_id()
 			if complex_shape_id != -1:
-				var iid = hlod_resource.shape_add_complex(complex_shape_id,current_mesh_transform,item_variation_layer,physics_settings)
+				var iid = hlod_resource.shape_add_complex(complex_shape_id,current_mesh_transform,item_variation_layer,physics_settings_id)
 				item.get_meta("item_ids").push_back(iid)
-				for ll in range(0,2): hlod_resource.insert_item_in_lod_table(iid,ll)
+				for ll in col_cutoff: 
+					hlod_resource.insert_item_in_lod_table(iid,ll)
 	################################
 	##      BAKE Decals Node     ###
 	################################
@@ -123,7 +136,8 @@ func bake_to_hlod_resource():
 		var item_variation_layer = d.get_meta("variation_layers") if d.has_meta("variation_layers") else 0
 		var iid:int=hlod_resource.decal_add(decal_id,t,d.layers, item_variation_layer)
 		d.get_meta("item_ids").push_back(iid)
-		for i in range(0,2):
+		var cutoff_lod = d.get_meta("cutoff_lod") if d.has_meta("cutoff_lod") else decal_lod_cutoff_default
+		for i in cutoff_lod:
 			hlod_resource.insert_item_in_lod_table(iid,i)
 	################################
 	## BAKE CollisionShape3D Node ##
@@ -134,15 +148,15 @@ func bake_to_hlod_resource():
 		var t = baker_inverse_transform * n.global_transform
 		var item_id:int = -1
 		var item_variation_layer = n.get_meta("variation_layers") if n.has_meta("variation_layers") else 0
-		var physics_settings = n.get_meta("physics_settings") if n.has_meta("physics_settings") else -1
+		var physics_settings = physics_dictionary[n.get_meta("physics_settings")] if n.has_meta("physics_settings") else -1
 		if shape is BoxShape3D: item_id = hlod_resource.shape_add_box(t,shape.size,item_variation_layer, physics_settings)
 		elif shape is SphereShape3D: item_id = hlod_resource.shape_add_sphere(t,shape.radius,item_variation_layer,physics_settings)
 		elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,item_variation_layer,physics_settings)
 		elif shape is CylinderShape3D: item_id = hlod_resource.shape_add_cylinder(t,shape.radius,shape.height,item_variation_layer,physics_settings)
 		else: continue
-		n.get_meta("item_ids").push_back(item_id)
-		var max = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else 1
-		for i in range(0,max):
+		n.get_meta("item_ids").push_back(item_id)		
+		var max = n.get_meta("cutoff_lod") if n.has_meta("cutoff_lod") else collision_lod_cutoff_default
+		for i in max:
 			hlod_resource.insert_item_in_lod_table(item_id,i)
 	##################
 	## BAKE Lights ##
@@ -152,8 +166,8 @@ func bake_to_hlod_resource():
 		var item_variation_layer = l.get_meta("variation_layers") if l.has_meta("variation_layers") else 0
 		var iid := hlod_resource.light_add(l,baker_inverse_transform * l.global_transform,item_variation_layer)
 		l.get_meta("item_ids").push_back(iid)
-		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else 1
-		for i in range(0, max):
+		var max = l.get_meta("cutoff_lod") if l.has_meta("cutoff_lod") else lights_lod_cutoff_default
+		for i in max:
 			hlod_resource.insert_item_in_lod_table(iid,i)
 	#######################
 	## BAKE Packed Scene ##
@@ -170,8 +184,11 @@ func bake_to_hlod_resource():
 			continue
 		var item_variation_layer = p.get_meta("variation_layers") if p.has_meta("variation_layers") else 0
 		var iid = hlod_resource.packed_scene_add(t,id,p.get_arg(0),p.get_arg(1),p.get_arg(2),item_variation_layer)
+		
 		p.get_meta("item_ids").push_back(iid)
-		for i in range(0,2):
+		var cutoff_lod = p.get_meta("cutoff_lod") if p.has_meta("cutoff_lod") else packed_scene_lod_cutoff_default
+		
+		for i in cutoff_lod:
 			hlod_resource.insert_item_in_lod_table(iid,i)		
 	############################
 	## Set Packed Scene binds ##

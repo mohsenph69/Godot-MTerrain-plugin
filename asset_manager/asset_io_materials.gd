@@ -117,3 +117,24 @@ static func get_material_sets_from_surface_names(surface_names:PackedStringArray
 			_mm.push_back(surface_names[s]+ext_name)
 		material_sets.push_back(_mm)
 	return material_sets
+
+static func get_physics_ids():	
+	var dir_path = MHlod.get_physics_settings_dir()
+	var dir = DirAccess.open(dir_path)
+	var out:Dictionary
+	if not dir:
+		return out
+	dir.list_dir_begin()
+	var fname = dir.get_next()
+	while fname != "":
+		var fpath = dir_path.path_join(fname)
+		fname = dir.get_next()
+		var s:MHlodCollisionSetting = load(fpath)
+		if out.has(s.name):
+			printerr("Duplicate Physcis Setting name Please change the name mannually and restart Godot"+fpath)
+			continue
+		if s:
+			out[s.name] = s
+	return out
+
+	

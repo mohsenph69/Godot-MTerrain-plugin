@@ -32,3 +32,5 @@ max_columns = 100
 fixed_column_width = 64
 icon_mode = 0
 fixed_icon_size = Vector2i(64, 64)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
