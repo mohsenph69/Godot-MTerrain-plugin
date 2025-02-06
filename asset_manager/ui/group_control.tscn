@@ -1,8 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://5wjjba4i6uji"]
+[gd_scene load_steps=2 format=3 uid="uid://5wjjba4i6uji"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/group_control.gd" id="1_plja8"]
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_0d1dq"]
 
 [node name="group" type="VBoxContainer"]
 size_flags_horizontal = 3
@@ -34,6 +32,3 @@ max_columns = 100
 fixed_column_width = 64
 icon_mode = 0
 fixed_icon_size = Vector2i(64, 64)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("PlaneMesh_0d1dq")
