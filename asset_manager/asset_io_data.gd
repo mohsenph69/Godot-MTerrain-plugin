@@ -45,8 +45,8 @@ func print_pretty_dic(dic:Dictionary,dic_name:String="Dictionary",tab_count:int=
 
 func print_data():
 	print("\n---------- Asset data ------------")
-	#print_pretty_dic(mesh_data,"Mesh Data")
-	#print_pretty_dic(materials,"Materials")
+	print_pretty_dic(mesh_data,"Mesh Data")
+	print_pretty_dic(materials,"Materials")
 	print_pretty_dic(global_options,"Global Options")
 	print_pretty_dic(collections,"Collections")
 	#print("Variation Groups ",variation_groups)
@@ -61,17 +61,8 @@ func clear():
 func get_empty_mesh_data()->Dictionary:
 	return {
 		"material_sets": [],		
-		"original_material_sets": null,				
 		"transform":Transform3D(),
-		"mesh_id": null,
 		"name": null,
-	}.duplicate()
-
-func get_empty_material()->Dictionary:
-	return {
-		"material": null,
-		"original_material": null,		
-		"meshes": [] #array of MMesh that use this material...should be converted to ids later
 	}.duplicate()
 
 func get_empty_option()->Dictionary:
@@ -163,8 +154,7 @@ func add_mesh_data(sets, mesh:MMesh, mesh_node:Node):
 		var material_names = sets[set_id]					
 		for material_name in material_names:
 			if not materials.has(material_name):
-				materials[material_name] = get_empty_material()
-			materials[material_name].meshes.push_back(mesh)
+				materials[material_name] = -1
 		mesh_data[mesh].material_sets.push_back(material_names)
 
 func add_collision_to_collection(collection_name, collision_type:MAssetTable.CollisionType,col_transform):
@@ -358,7 +348,7 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 	var first_material_set_names = material_sets_names[0]
 	var set_count = mmesh.material_set_get_count()	
 	for set_num in set_count:
-		var current_material_name
+		var current_material_name:Array
 		# if does not exist using first set of material always
 		if material_sets_names.size() > set_num:
 			current_material_name = material_sets_names[set_num]
@@ -370,19 +360,11 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 			var material_name = current_material_name[surface_index]
 			if not materials.has(material_name):
 				continue
-			var material_id = materials[material_name]["material"]
-			var original_material_id = materials[material_name].original_material if materials[material_name].has("original_material") else -1
+			var material_id = materials[material_name]
 			if material_id == -1:
 				continue
-			var material_path = import_info["__materials"][material_id]["path"]			
+			var material_path = import_info["__materials"][material_id]["path"]
 			mmesh.surface_set_material(set_num,surface_index,material_path)
-			# Remove this mmesh from old material mmesh list			
-			if original_material_id and original_material_id != -1 and import_info['__materials'][original_material_id].meshes.has(mesh_path):
-				import_info['__materials'][original_material_id].meshes.erase(mesh_path)
-			# Add this mmesh to new material mmesh list								
-			import_info['__materials'][material_id].meshes[mesh_path] = {}
-			for set_id in mmesh.material_set_get_count():
-				import_info['__materials'][material_id].meshes[mesh_path][set_id] = mmesh.material_set_get(set_id) 
 
 # will return the information which is need to save with glb_path in import_info in AssetTable
 func get_glb_import_info():
@@ -405,10 +387,8 @@ func get_glb_import_info():
 			printerr("Result has key ",key)
 			continue
 		result[key] =  forgotten_collections_import_info[key]
-	result["__materials"] = {}
-	for key in materials:				
-		result["__materials"][key] = {"path":materials[key].material, "meshes":materials[key].meshes}
 	result["__metadata"] = meta_data
+	result["__materials"] = materials
 	result["__import_time"] = (Time.get_unix_time_from_system())
 	result["__tags"] = tags['current_tags']		
 	return result
@@ -444,9 +424,8 @@ func add_glb_import_info(info:Dictionary)->void:
 	add_metadata_to_data(info["__metadata"], meta_data)
 	if "__materials" in info:
 		for key in info["__materials"]:
-			if key in materials:
-				materials[key].original_material = info["__materials"][key].path
-				materials[key].material = info["__materials"][key].path	
+			if materials.has(key):
+				materials[key] = info["__materials"][key]
 	if "__tags" in info:
 		tags['original_tags'] = info["__tags"] # array of tag_id
 		
