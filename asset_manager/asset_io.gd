@@ -68,7 +68,6 @@ static func glb_load_assets(scene_root, path, metadata={},no_window:bool=false):
 	if scene_root:
 		scene_root.queue_free() ## Really important otherwise memory leaks	
 	#STEP 4: Allow user to change import settings
-	asset_data.print_data()
 	if not no_window:
 		glb_show_import_window(asset_data)
 	#STEP 5: Commit changes - import window will call this step when user clicks "import"
@@ -87,7 +86,6 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				push_error("Option (%s , %s) has a empty name "% [option_data["option"],option_data["value"]])
 				continue
 			asset_data.add_option(c_name,option_data["option"],option_data["value"])
-			print("Continue so this is a option")
 			continue
 		var name_data := node_parse_name(node)
 		var child_count:int = node.get_child_count()
@@ -278,6 +276,13 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 		return
 	if not asset_library.has_collection(collection_id):
 		push_error("import collection error: ", collection_id, " does not exist")
+	## Options
+	var physics_setting_name = asset_data.get_option(glb_node_name,"physics")
+	if not physics_setting_name.is_empty():
+		asset_library.collection_set_physics_setting(collection_id,physics_setting_name)
+	var colcutoff = asset_data.get_option(glb_node_name,"colcutoff")
+	if not colcutoff.is_empty():
+		asset_library.collection_set_colcutoff(collection_id,colcutoff.to_int())
 	## Collissions
 	for c in collection_info["collisions"]:
 		asset_library.collection_add_collision(collection_id,c["type"],c["transform"],collection_info["base_transform"])

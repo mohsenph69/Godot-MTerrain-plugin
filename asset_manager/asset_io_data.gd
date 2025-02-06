@@ -122,6 +122,9 @@ func add_option(collection_name:String,option_name:String,option_value:String)->
 	collections[collection_name]["options"][option_name] = option_value
 
 func get_option(collection_name:String,option_name:String)->String:
+	if not global_options.has(option_name):
+		printerr("Invalid option name "+option_name)
+		return ""
 	var c_option = collections[collection_name]["options"]
 	var option_value:String = ""
 	if not c_option[option_name].is_empty(): option_value = c_option[option_name]
