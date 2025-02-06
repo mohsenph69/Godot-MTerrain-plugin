@@ -113,10 +113,7 @@ func bake_to_hlod_resource():
 		var t:Transform3D= baker_inverse_transform * d.global_transform
 		var item_variation_layer = d.get_meta("variation_layers") if d.has_meta("variation_layers") else 0
 		var iid:int=hlod_resource.decal_add(decal_id,t,d.layers, item_variation_layer)
-<<<<<<< HEAD
-=======
 		d.get_meta("item_ids").push_back(iid)
->>>>>>> temp
 		for i in range(0,2):
 			hlod_resource.insert_item_in_lod_table(iid,i)
 	################################
