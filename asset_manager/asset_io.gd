@@ -4,7 +4,8 @@ class_name AssetIO extends Object
 static var LOD_COUNT = 10  # The number of different LODs in your project
 
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
-static var regex_col_match:= RegEx.create_from_string("((.*)[_|\\s])?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|mesh).*")
+static var regex_col_match:= RegEx.create_from_string("((.*)[_|\\s])?(col|collision)[_|\\s](box|sphere|capsule|cylinder|concave|convex).*")
+static var regex_option_match:= RegEx.create_from_string("((.*)_)?(physics|meshcutoff|collisioncutoff|colcutoff)_(.*)")
 static var blender_end_number_regex = RegEx.create_from_string("(.*)(\\.\\d+)")
 static var asset_data:AssetIOData = null
 static var DEBUG_MODE = true #true
@@ -67,6 +68,7 @@ static func glb_load_assets(scene_root, path, metadata={},no_window:bool=false):
 	if scene_root:
 		scene_root.queue_free() ## Really important otherwise memory leaks	
 	#STEP 4: Allow user to change import settings
+	asset_data.print_data()
 	if not no_window:
 		glb_show_import_window(asset_data)
 	#STEP 5: Commit changes - import window will call this step when user clicks "import"
@@ -77,6 +79,16 @@ static func glb_load_assets(scene_root, path, metadata={},no_window:bool=false):
 static func generate_asset_data_from_glb(scene:Array,active_collection="__root__"):
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	for node in scene:
+		var option_data := node_parse_option(node)
+		if option_data.size()!=0:
+			var c_name:String= option_data["name"]
+			if c_name.is_empty() and active_collection!="__root__": c_name = active_collection
+			if c_name.is_empty():
+				push_error("Option (%s , %s) has a empty name "% [option_data["option"],option_data["value"]])
+				continue
+			asset_data.add_option(c_name,option_data["option"],option_data["value"])
+			print("Continue so this is a option")
+			continue
 		var name_data := node_parse_name(node)
 		var child_count:int = node.get_child_count()
 		#######################
@@ -100,12 +112,8 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 			else: 
 				var mesh_item_name = name_data["name"]
 				var mesh:ArrayMesh = null
-				if node is ImporterMeshInstance3D:
-					mesh = node.mesh.get_mesh()
-				else:
-					# possible stop lod
-					asset_data.add_possible_stop_lod(mesh_item_name,name_data["lod"])
-					continue
+				if node is ImporterMeshInstance3D: mesh = node.mesh.get_mesh()
+				else: continue
 				if mesh==null:
 					printerr(node.name," mesh is null")
 					continue
@@ -128,7 +136,7 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		############################
 		## PROCESS COLLISION NODE ##
 		############################
-		elif name_data["col"] != MAssetTable.CollisionType.UNDEF:
+		elif name_data["col"] != MAssetTable.CollisionType.UNDEF or name_data["convex"] or name_data["concave"]:
 			var collection_name:String
 			if name_data.name.is_empty() and active_collection!="__root__":
 				collection_name = active_collection
@@ -137,7 +145,11 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 			else:
 				print("GLB name %s Found collision with empty name, this is only allowed in collections with sub_collections"%node.name)
 				continue
-			asset_data.add_collision_to_collection(collection_name,name_data["col"],node.transform)
+			if name_data["col"] != MAssetTable.CollisionType.UNDEF:
+				asset_data.add_collision_to_collection(collection_name,name_data["col"],node.transform)
+			else:
+				asset_data.add_collision_none_simple(collection_name,"convex",name_data["convex"])
+				asset_data.add_collision_none_simple(collection_name,"concave",name_data["concave"])
 			if child_count > 0:
 				push_error(node.name + " is detected as a collission due to using _col in its name! ignoring its children!")
 		#############################
@@ -317,27 +329,41 @@ static func glb_show_import_window(asset_data:AssetIOData):
 	panel.asset_data = asset_data
 	popup.add_child(panel)
 	popup.popup_centered(Vector2i(800,600))	
-	
+
+static func node_parse_option(node:Node)->Dictionary:
+	var result:Dictionary # 0 is option name and 1 is option value
+	var search_result = regex_option_match.search(node.name)
+	if search_result:
+		result["name"] = search_result.strings[2]
+		result["option"] = search_result.strings[3]
+		result["value"] = search_result.strings[4]
+	return result
+
 static func node_parse_name(node:Node)->Dictionary:
-	var result = {"name":"","lod":-1,"col":MAssetTable.CollisionType.UNDEF,"has_convex":false}
+	var result = {"name":"","lod":-1,"col":MAssetTable.CollisionType.UNDEF,"convex":false,"concave":false}
 	var lod:int = -1	
 	var search_result = regex_mesh_match.search(node.name)
 	if search_result:		
 		result["name"] = search_result.strings[1]
 		result["lod"] = search_result.strings[2].to_int()
+		return result
+	search_result = regex_col_match.search(node.name)
+	if search_result:			
+		result["name"] = search_result.strings[2]
+		match(search_result.strings[4]):
+			"box": result["col"] = MAssetTable.CollisionType.BOX
+			"sphere": result["col"] = MAssetTable.CollisionType.SHPERE
+			"cylinder": result["col"] = MAssetTable.CollisionType.CYLINDER
+			"capsule": result["col"] = MAssetTable.CollisionType.CAPSULE
+			"convex":
+				if node is ImporterMeshInstance3D and node.mesh.get_mesh(): result["convex"] = node.mesh.get_mesh()
+				else: result["convex"] = true
+			"concave":
+				if node is ImporterMeshInstance3D and node.mesh.get_mesh(): result["concave"] = node.mesh.get_mesh()
+				else: result["concave"] = true
 	elif node is ImporterMeshInstance3D:
 		result["name"] = String(node.name)
 		result["lod"] = 0
-	else:
-		search_result = regex_col_match.search(node.name)		
-		if search_result:			
-			result["name"] = search_result.strings[2]
-			match(search_result.strings[4]):
-				"box": result["col"] = MAssetTable.CollisionType.BOX
-				"sphere": result["col"] = MAssetTable.CollisionType.SHPERE
-				"cylinder": result["col"] = MAssetTable.CollisionType.CYLINDER
-				"capsule": result["col"] = MAssetTable.CollisionType.CAPSULE
-				"convex": result["has_convex"] = true
 	return result
 
 static func blender_end_number_remove(input:String)->String:
