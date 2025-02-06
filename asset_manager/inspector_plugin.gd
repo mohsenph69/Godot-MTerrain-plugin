@@ -104,10 +104,7 @@ func _parse_begin(object):
 		control.add_child(hbox)
 		if object is MDecalInstance:
 			control.add_child(make_variation_layer_control_for_assigning(object))							
-<<<<<<< HEAD
 			control.add_child(make_cutoff_lod_control(object))
-=======
->>>>>>> cc9159149d30873b2cd6546092fba92f41c1dd88
 	elif object is Material:
 		var hbox = HBoxContainer.new()
 		hbox.size_flags_horizontal =Control.SIZE_EXPAND_FILL		
