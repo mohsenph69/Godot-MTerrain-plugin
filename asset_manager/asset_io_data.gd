@@ -361,7 +361,7 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 			if not materials.has(material_name):
 				continue
 			var material_id = materials[material_name]
-			if material_id == -1:
+			if material_id < 0:
 				continue
 			var material_path = import_info["__materials"][material_id]["path"]
 			mmesh.surface_set_material(set_num,surface_index,material_path)

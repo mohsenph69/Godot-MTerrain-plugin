@@ -411,7 +411,7 @@ func regroup(group = current_group, sort_mode="asc"):
 
 func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
 	var collection_id = group_list.get_item_metadata(id)
-	if not collection_id or collection_id == -1: return
+	if collection_id == -1: return
 	var node = add_asset_to_scene(collection_id, group_list.get_item_tooltip(id),create_ur)		
 	return node 
 
