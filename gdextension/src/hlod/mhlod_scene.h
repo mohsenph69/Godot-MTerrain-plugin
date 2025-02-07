@@ -239,6 +239,9 @@ class MHlodScene : public Node3D {
     static void sleep();
     static void awake();
     static Array get_hlod_users(const String& hlod_path);
+    // Debug Tools
+    static Dictionary get_debug_info();
+
 
     private:
     _FORCE_INLINE_ Proc* get_root_proc(){
