@@ -140,7 +140,7 @@ struct MHLodItemDecal {
         }
         decal = RL->load(M_GET_DECAL_PATH(decal_id));
         if(decal.is_valid()){
-            return decal->get_rid();
+            return decal->get_decal_rid();
         }
         return RID();
     }
