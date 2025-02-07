@@ -27,6 +27,7 @@ void MHlodScene::_bind_methods(){
     ClassDB::bind_static_method("MHlodScene",D_METHOD("awake"), &MHlodScene::awake);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("get_hlod_users","hlod_path"), &MHlodScene::get_hlod_users);
 
+    ClassDB::bind_static_method("MHlodScene",D_METHOD("get_debug_info"), &MHlodScene::get_debug_info);
 }
 
 MHlodScene::ApplyInfo::ApplyInfo(MHlod::Type _type,bool _remove): type(_type) , remove(_remove)
@@ -733,7 +734,55 @@ Array MHlodScene::get_hlod_users(const String& hlod_path){
     }
     return out;
 }
-
+/////////////////////////////////////////////////////
+/// Debug Info
+/////////////////////////////////////////////////////
+Dictionary MHlodScene::get_debug_info(){
+    std::lock_guard<std::mutex> lock(update_mutex);
+    int mesh_instance_count = 0;
+    int light_count = 0;
+    int decal_count = 0;
+    int packed_scene_count = 0;
+    int simple_shape_count = 0;
+    int complex_shape_count = 0;
+    for(HashMap<int32_t,Proc*>::ConstIterator pit=octpoints_to_proc.begin(); pit!=octpoints_to_proc.end();++pit){
+        if(!pit->value->is_enable){
+            continue;
+        }
+        const HashMap<int32_t,CreationInfo>& creation_info = pit->value->items_creation_info;
+        for(HashMap<int32_t,CreationInfo>::ConstIterator cit=creation_info.begin();cit!=creation_info.end();++cit){
+            const CreationInfo& ci = cit->value;
+            switch (ci.type)
+            {
+            case MHlod::MESH:
+                mesh_instance_count++;
+                break;
+            case MHlod::LIGHT:
+                light_count++;
+                break;
+            case MHlod::DECAL:
+                decal_count++;
+                break;
+            case MHlod::COLLISION:
+                simple_shape_count++;
+                break;
+            case MHlod::COLLISION_COMPLEX:
+                complex_shape_count++;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    Dictionary out;
+    out["mesh_instance_count"] = mesh_instance_count;
+    out["light_count"] = light_count;
+    out["decal_count"] = decal_count;
+    out["packed_scene_count"] = packed_scene_count;
+    out["simple_shape_count"] = simple_shape_count;
+    out["complex_shape_count"] = complex_shape_count;
+    return out;
+}
 /////////////////////////////////////////////////////
 /// END Static --> Proc Manager
 /////////////////////////////////////////////////////

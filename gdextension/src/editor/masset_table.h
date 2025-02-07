@@ -124,6 +124,7 @@ class MAssetTable : public Resource {
     static int32_t last_free_item_id; // should be updated before each import
     void _increase_collection_buffer_size(int q);
     int _get_free_collection_index();
+    static const char* import_info_path;
     static const char* asset_table_path;
     static const char* asset_editor_root_dir;
     static const char* editor_baker_scenes_dir;
@@ -238,6 +239,9 @@ class MAssetTable : public Resource {
 
     void test(Dictionary d);
 
+    void clear_import_info_cache();
+    void save_import_info();
+    void load_import_info();
     void set_import_info(const Dictionary& input);
     Dictionary get_import_info();
 

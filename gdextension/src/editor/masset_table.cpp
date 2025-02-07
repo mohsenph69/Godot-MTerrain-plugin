@@ -6,7 +6,9 @@
 #include <godot_cpp/classes/resource_saver.hpp>
 #include <godot_cpp/classes/dir_access.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/json.hpp>
 int32_t MAssetTable::last_free_item_id = -1;
+const char* MAssetTable::import_info_path="res://massets_editor/import_info.json";
 const char* MAssetTable::asset_table_path = "res://massets_editor/asset_table.res";
 const char* MAssetTable::asset_editor_root_dir = "res://massets_editor/";
 const char* MAssetTable::editor_baker_scenes_dir = "res://massets_editor/baker_scenes/";
@@ -117,9 +119,11 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_data","data"), &MAssetTable::set_data);
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"data"),"set_data","get_data");
 
+    ClassDB::bind_method(D_METHOD("clear_import_info_cache"), &MAssetTable::clear_import_info_cache);
+    ClassDB::bind_method(D_METHOD("save_import_info"), &MAssetTable::save_import_info);
     ClassDB::bind_method(D_METHOD("get_import_info"), &MAssetTable::get_import_info);
     ClassDB::bind_method(D_METHOD("set_import_info","input"), &MAssetTable::set_import_info);
-    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"import_info"),"set_import_info","get_import_info");
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"import_info",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_import_info","get_import_info");
 
     ClassDB::bind_method(D_METHOD("test","data") , &MAssetTable::test);
     ClassDB::bind_method(D_METHOD("debug_test") , &MAssetTable::debug_test);
@@ -182,6 +186,8 @@ void MAssetTable::save(){
     make_assets_dir();
     Error err = ResourceSaver::get_singleton()->save(asset_table_singelton,asset_table_path);
     asset_table_singelton->collection_clear_unused_physics_settings();
+    asset_table_singelton->save_import_info();
+    asset_table_singelton->clear_import_info_cache();
     ERR_FAIL_COND_MSG(err!=OK,"can not save asset table!");
 }
 
@@ -1349,11 +1355,40 @@ void MAssetTable::test(Dictionary d){
     UtilityFunctions::print("A ",a);
 }
 
+void MAssetTable::clear_import_info_cache(){
+    import_info.clear();
+}
+
+void MAssetTable::save_import_info(){
+    if(import_info.is_empty()){
+        return;
+    }
+    make_assets_dir();
+    String imstr = JSON::stringify(import_info);
+    Ref<FileAccess> f = FileAccess::open(import_info_path,FileAccess::WRITE);
+    f->store_string(imstr);
+    f->close();
+}
+
+void MAssetTable::load_import_info(){
+    if(FileAccess::file_exists(import_info_path)){
+        String imstr = FileAccess::get_file_as_string(import_info_path);
+        import_info =  JSON::parse_string(imstr);
+    }
+}
+
 void MAssetTable::set_import_info(const Dictionary& input){
+    if(import_info.is_empty()){
+        load_import_info();
+    }
     import_info = input;
 }
 
 Dictionary MAssetTable::get_import_info(){
+    if(!import_info.is_empty()){
+        return import_info;
+    }
+    load_import_info();
     return import_info;
 }
 
