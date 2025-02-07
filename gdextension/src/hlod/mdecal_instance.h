@@ -13,8 +13,9 @@ class MDecalInstance : public VisualInstance3D {
 
 
     public:
+    bool has_decal() const;
     void set_decal(Ref<MDecal> input);
-    Ref<MDecal> get_decal();
+    Ref<MDecal> get_decal() const;
 
     AABB _get_aabb() const;
 

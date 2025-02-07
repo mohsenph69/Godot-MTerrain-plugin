@@ -16,7 +16,7 @@ class MDecal : public Resource {
     static void _bind_methods();
     private:
 	RID decal;
-	Vector3 size = Vector3(2, 2, 2);
+	// Vector3 size = Vector3(2, 2, 2); -> size is fixed with this val
 	Ref<Texture2D> textures[DecalTexture::DECAL_TEXTURE_MAX];
 	real_t emission_energy = 1.0;
 	real_t albedo_mix = 1.0;
@@ -34,9 +34,6 @@ class MDecal : public Resource {
 	~MDecal();
 
 	RID get_decal_rid() const;
-
-	void set_size(const Vector3 &p_size);
-	Vector3 get_size() const;
 
 	void set_texture(DecalTexture p_type, const Ref<Texture2D> &p_texture);
 	Ref<Texture2D> get_texture(DecalTexture p_type) const;

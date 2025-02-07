@@ -3,9 +3,6 @@
 
 void MDecal::_bind_methods(){
 	
-	ClassDB::bind_method(D_METHOD("set_size", "size"), &MDecal::set_size);
-	ClassDB::bind_method(D_METHOD("get_size"), &MDecal::get_size);
-	
 	ClassDB::bind_method(D_METHOD("set_texture", "type", "texture"), &MDecal::set_texture);
 	ClassDB::bind_method(D_METHOD("get_texture", "type"), &MDecal::get_texture);
 
@@ -39,7 +36,6 @@ void MDecal::_bind_methods(){
 	ClassDB::bind_method(D_METHOD("set_cull_mask", "mask"), &MDecal::set_cull_mask);
 	ClassDB::bind_method(D_METHOD("get_cull_mask"), &MDecal::get_cull_mask);
 
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "size", PROPERTY_HINT_RANGE, "0,1024,0.001,or_greater,suffix:m"), "set_size", "get_size");
 
 	ADD_GROUP("Textures", "texture_");
 	ADD_PROPERTYI(PropertyInfo(Variant::OBJECT, "texture_albedo", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D"), "set_texture", "get_texture", DecalTexture::DECAL_TEXTURE_ALBEDO);
@@ -79,15 +75,6 @@ MDecal::~MDecal(){
 
 RID MDecal::get_decal_rid() const{
 	return decal;
-}
-
-void MDecal::set_size(const Vector3 &p_size){
-	size = p_size.maxf(0.001);
-	RS->decal_set_size(decal, size);
-}
-
-Vector3 MDecal::get_size() const {
-	return size;
 }
 
 void MDecal::set_texture(DecalTexture p_type, const Ref<Texture2D> &p_texture) {
@@ -194,8 +181,5 @@ uint32_t MDecal::get_cull_mask() const {
 }
 
 AABB MDecal::get_aabb() const {
-	AABB aabb;
-	aabb.position = -size / 2;
-	aabb.size = size;
-	return aabb;
+	return AABB(Vector3(-1,-1,-1),Vector3(2,2,2));
 }

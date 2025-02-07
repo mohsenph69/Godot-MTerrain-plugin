@@ -1,9 +1,24 @@
 extends EditorNode3DGizmoPlugin
 
 
-var accepeted_class:PackedStringArray=["MDecalInstance"]
-var aabb_call_back:PackedStringArray =["get_aabb"]
-var mesh_call_back:PackedStringArray =[""]
+var classes_info:= {
+	# any non exist func should be empty string
+	# at least aabb function is neccassary for this to work
+	###############      0     #####    1     ######    2      #########     3   ########
+	# class_name : [func_is_valid,func_aabb_getter,func_mesh_getter,has_handle],
+	"MDecalInstance":["has_decal","get_aabb","",true]
+}
+
+var handle_ids:PackedInt32Array = [0,1,2,3,4,5]
+var handles_dir:Dictionary= {
+	# Odd index are negetive
+	0:Vector3(1,0,0),
+	1:Vector3(-1,0,0),
+	2:Vector3(0,1,0),
+	3:Vector3(0,-1,0),
+	4:Vector3(0,0,1),
+	5:Vector3(0,0,-1),
+}
 
 var box_mesh:=BoxMesh.new()
 
@@ -19,12 +34,13 @@ func _init():
 	sel_line_mat.albedo_color = Color(0.2,0.8,0.2)
 	sel_line_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	selection.selection_changed.connect(on_selection_change)
+	create_handle_material("hmat")
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	gizmo.clear()
 	var node = gizmo.get_node_3d()
-	var node_class_index = accepeted_class.find(node.get_class())
-	var aabb:AABB= node.call(aabb_call_back[node_class_index])
+	var cname = node.get_class()
+	var aabb:AABB= node.call(classes_info[cname][1])
 	box_mesh.size = aabb.size
 	gizmo.add_collision_triangles(box_mesh.generate_triangle_mesh())
 	if selection.get_selected_nodes().has(node):
@@ -59,6 +75,17 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 		l[22] = Vector3(e.x,s.y,e.z)
 		l[23] = Vector3(s.x,s.y,e.z)
 		gizmo.add_lines(l,sel_line_mat,false)
+	if classes_info[cname][3]:
+		var size:Vector3 = aabb.size/2
+		var h:PackedVector3Array
+		h.resize(6)
+		h.set(0,Vector3(size.x,0,0))
+		h.set(1,Vector3(-size.x,0,0))
+		h.set(2,Vector3(0,size.y,0))
+		h.set(3,Vector3(0,-size.y,0))
+		h.set(4,Vector3(0,0,size.z))
+		h.set(5,Vector3(0,0,-size.z))
+		gizmo.add_handles(h,get_material("hmat"),handle_ids)
 
 
 func _get_handle_name(gizmo, handle_id, secondary):
@@ -68,7 +95,28 @@ func _get_handle_value(gizmo: EditorNode3DGizmo, _id: int, _secondary: bool):
 	return
 
 func _set_handle(gizmo, handle_id, secondary, camera, screen_pos):
-	return
+	var n:Node3D= gizmo.get_node_3d()
+	var hdir_sign=1 if handle_id%2==0 else -1
+	var hdir_local = handles_dir[handle_id]
+	var hdir:Vector3= n.global_basis * hdir_local
+	hdir = hdir.normalized()
+	var hpos = n.global_position
+	var cpos = camera.global_position
+	var cdir = camera.project_ray_normal(screen_pos)
+	var _b_:float = hdir.dot(cdir)
+	var _d_:float = hdir.dot(hpos - cpos)
+	var _e_:float = cdir.dot(hpos - cpos)
+	var t = (_b_*_e_ - _d_)/(1.0 - _b_*_b_)
+	t = max(t,0)
+	var hnew_pos:Vector3= (t*hdir).length() * hdir_local
+	var old_size = n.get_scale()
+	var diff = hnew_pos - (old_size * hdir_local)
+	diff /= 2
+	var new_size_dir = diff * hdir_sign  + old_size
+	n.set_scale(new_size_dir)
+	var b = n.global_basis.orthonormalized()
+	n.global_position += b * diff
+	n.update_gizmos()
 
 func _get_gizmo_name():
 	return "AABB_Gizmo"
@@ -78,7 +126,12 @@ func _get_priority():
 	return -1
 
 func _has_gizmo(for_node_3d):
-	return accepeted_class.find(for_node_3d.get_class()) != -1;
+	var cname:String = for_node_3d.get_class()
+	if classes_info.has(cname):
+		if classes_info[cname][0].is_empty():
+			return true
+		else: return for_node_3d.call(classes_info[cname][0])
+	return false
 
 func on_selection_change():
 	var snodes = selection.get_selected_nodes()
@@ -91,7 +144,7 @@ func on_selection_change():
 			selected_mesh.remove_at(i)
 		i-=1
 	for n in snodes:
-		if accepeted_class.find(n.get_class())!=-1 and n.is_inside_tree():
+		if classes_info.has(n.get_class()) and n.is_inside_tree():
 			n.update_gizmos()
 			if not selected_mesh.has(n):
 				selected_mesh.push_back(n)
