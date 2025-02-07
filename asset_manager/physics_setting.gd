@@ -54,9 +54,7 @@ func _ready() -> void:
 			confirm.confirmed.connect(func():
 				AssetIOMaterials.remove_material(material_id)
 				update_materials_list()
-			)
-			
-			var mesh_count = len(material_table[material_id].meshes)
+			)					
 			confirm.dialog_text = "Are you sure you want to delete this material?"
 			add_child(confirm)
 			confirm.popup_centered()								
@@ -130,14 +128,14 @@ func update_materials_list(filter = null):
 		var remove_button_texture = preload("res://addons/m_terrain/icons/trash.svg")
 		item.add_button(2, edit_button_texture)		
 		item.add_button(2, remove_button_texture)	
-		if len(material_table[i].meshes) > 0:
+		var glbs_using_material = AssetIOMaterials.get_glbs_using_material(i)
+		if len(glbs_using_material) > 0:
 			item.set_button_disabled(2, 1, true)
-			item.set_button_tooltip_text(2,1,"Material still has meshes depending on it")		
-				
-		for mesh_id in material_table[i].meshes:	
-			var mesh_item := item.create_child()
-			mesh_item.set_text(2, str("Mesh ", mesh_id))
-		item.collapsed = true
+			item.set_button_tooltip_text(2,1,"Material still has meshes depending on it")						
+			for glb_path in glbs_using_material:	
+				var glb_item := item.create_child()
+				glb_item.set_text(2, glb_path)
+			item.collapsed = true
 
 func update_material_icon(data):	
 	data.caller.set_icon(1, data.texture)

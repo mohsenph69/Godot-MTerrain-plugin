@@ -194,9 +194,16 @@ static func glb_import_commit_changes():
 			if used_ids.find(i) == -1:
 				glb_id = i 
 				break
+	###############################
+	## FIX JOINED MESH MATERIALS ##
+	###############################
+	if asset_data.glb_path.ends_with("joined_mesh.glb"):
+		print("fixing joined mesh materials")
+		for glb_material_name in asset_data.materials:
+			asset_data.materials[glb_material_name] = AssetIOMaterials.find_material_by_name(glb_material_name)	
 	#################
 	## Save Meshes ##
-	#################
+	#################	
 	var saved_successful = asset_data.save_meshes() # will add mesh_item_id if is new
 	if not saved_successful == OK:
 		push_error("GLB import cannot import meshes: mesh could not be saved to file \n", str(asset_data.glb_path))

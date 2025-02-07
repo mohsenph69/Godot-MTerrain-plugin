@@ -22,7 +22,7 @@
 [ext_resource type="Texture2D" uid="uid://c5yiqj08mgihl" path="res://addons/m_terrain/icons/scale_icon.svg" id="16_sjn2r"]
 [ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="17_xg855"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_ulmmt"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_rhmh1"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -46,7 +46,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ulmmt")
+button_group = SubResource("ButtonGroup_rhmh1")
 text = "Types"
 expand_icon = true
 script = ExtResource("4_he502")
@@ -70,7 +70,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ulmmt")
+button_group = SubResource("ButtonGroup_rhmh1")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -94,7 +94,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ulmmt")
+button_group = SubResource("ButtonGroup_rhmh1")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -117,7 +117,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ulmmt")
+button_group = SubResource("ButtonGroup_rhmh1")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -216,7 +216,7 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
-button_group = SubResource("ButtonGroup_ulmmt")
+button_group = SubResource("ButtonGroup_rhmh1")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
