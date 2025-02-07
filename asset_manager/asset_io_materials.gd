@@ -51,7 +51,7 @@ static func update_material(id, material:Material):
 		id = 0		
 		while material_table.has(id):
 			id += 1
-		material_table[id] = {"path": material.resource_path, "name":material.resource_name, "meshes": {}}		 				
+		material_table[id] = {"path": material.resource_path, "name":material.resource_name}		 				
 		return		
 	#######################
 	## Existing Material ##
@@ -60,16 +60,22 @@ static func update_material(id, material:Material):
 	material_table[id].path = material.resource_path
 	material_table[id].name = material.resource_name
 	
-	## 2. Update all mmesh resources that use this material
-	for mesh_path in material_table[id].meshes:						
-		if not FileAccess.file_exists(mesh_path): 			
-			continue		
-		var mmesh:MMesh = load(mesh_path)					
-		for set_id in material_table[id].meshes[mesh_path]:
-			for surface_id in len(material_table[id].meshes[mesh_path][set_id]):		
-				mmesh.surface_set_material(set_id, surface_id, material.resource_path)			
-		ResourceSaver.save(mmesh)		
+	## 2. Reimport all glb that use this material	
+	var glb_to_reimport = get_glbs_using_material(id)
 	update_material_table(material_table)	
+	for glb in glb_to_reimport:
+		AssetIO.glb_load(glb, {}, true)
+
+static func get_glbs_using_material(material_id):
+	var import_info = MAssetTable.get_singleton().import_info
+	var glb_to_reimport = []	
+	for glb_path in import_info:
+		if glb_path in glb_to_reimport: continue
+		if glb_path.begins_with("__"): continue
+		if not import_info[glb_path].has("__materials"):continue
+		if not material_id in import_info[glb_path]["__materials"].values(): continue		
+		glb_to_reimport.push_back(glb_path)	
+	return glb_to_reimport
 	
 static func find_material_by_name(material_name):
 	var material_table = get_material_table()
