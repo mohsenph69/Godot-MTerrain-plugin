@@ -1374,6 +1374,18 @@ void MAssetTable::load_import_info(){
     if(FileAccess::file_exists(import_info_path)){
         String imstr = FileAccess::get_file_as_string(import_info_path);
         import_info =  JSON::parse_string(imstr);
+        Dictionary __materials;
+        Dictionary __materials_final;
+        if(import_info.has("__materials")){
+            __materials = import_info["__materials"];
+        }
+        Array keys = __materials.keys();
+        for(int i=0; i < keys.size(); i++){
+            String skey = keys[i];
+            int ikey = skey.to_int();
+            __materials_final[ikey] = __materials[skey];
+        }
+        import_info["__materials"] = __materials_final;
     }
 }
 
