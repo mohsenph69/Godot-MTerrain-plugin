@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=25 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -21,8 +21,10 @@
 [ext_resource type="Texture2D" uid="uid://es81s75t7i2n" path="res://addons/m_terrain/icons/scale_disabled_icon.svg" id="15_krpno"]
 [ext_resource type="Texture2D" uid="uid://c5yiqj08mgihl" path="res://addons/m_terrain/icons/scale_icon.svg" id="16_sjn2r"]
 [ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="17_xg855"]
+[ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="19_sansc"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_rhmh1"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_f1fh3"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -46,7 +48,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_rhmh1")
+button_group = SubResource("ButtonGroup_f1fh3")
 text = "Types"
 expand_icon = true
 script = ExtResource("4_he502")
@@ -70,7 +72,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_rhmh1")
+button_group = SubResource("ButtonGroup_f1fh3")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -94,7 +96,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_rhmh1")
+button_group = SubResource("ButtonGroup_f1fh3")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -117,7 +119,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_rhmh1")
+button_group = SubResource("ButtonGroup_f1fh3")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -216,7 +218,7 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
-button_group = SubResource("ButtonGroup_rhmh1")
+button_group = SubResource("ButtonGroup_f1fh3")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
@@ -250,6 +252,34 @@ layout_mode = 2
 text = "Packed Scene"
 
 [node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(17.64, 0)
+layout_mode = 2
+
+[node name="show_debug_info_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("19_sansc")
+expand_icon = true
+script = ExtResource("20_t8s58")
+
+[node name="debug_info_tree" type="Tree" parent="VBoxContainer/HBoxContainer/show_debug_info_button"]
+z_index = 2
+custom_minimum_size = Vector2(300, 180)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -245.0
+offset_top = -183.0
+offset_right = 55.0
+offset_bottom = 17.0
+grow_horizontal = 0
+columns = 2
+hide_root = true
+
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(17.64, 0)
 layout_mode = 2
 
