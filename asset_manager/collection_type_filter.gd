@@ -18,10 +18,17 @@ func _init():
 	asset_type_filter_changed.emit.call_deferred(selected_types)		
 	item_edited.connect(func():
 		var id = get_edited().get_metadata(0)
-		var checked = get_edited().is_checked(0)
-		if checked:			
-			selected_types = selected_types | id
+		var current_item = get_edited()
+		if Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_SHIFT):
+			current_item.set_checked(0,true)
+			selected_types = id
+			for item in get_root().get_children():
+				if item!=current_item: item.set_checked(0,false)
 		else:
-			selected_types = selected_types & ~id		
+			var checked = current_item.is_checked(0)
+			if checked:
+				selected_types = selected_types | id
+			else:
+				selected_types = selected_types & ~id
 		asset_type_filter_changed.emit(selected_types)
 	)

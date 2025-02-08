@@ -2,6 +2,10 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <mutex>
 
+#define DEFAULT_STATE_DATA_CACHE_SIZE 50
+#define MIN_STATE_DATA_CACHE_SIZE 2
+#define STATE_DATA_CACHE_PROP_NAME "mterrain/hlod/state_cache_size"
+
 MLRUCache<int64_t,Variant> MHlodNode3D::state_data;
 
 void MHlodNode3D::_bind_methods(){
@@ -36,7 +40,6 @@ void MHlodNode3D::_bind_methods(){
 MHlodNode3D::MHlodNode3D(){
     if(state_data.is_empty()){
         state_data.init_cache(state_data_get_cache_size());
-        UtilityFunctions::print("state_data_get_cache_size() ",state_data_get_cache_size());
         state_data.set_invalid_data(Variant());
     }
 }
