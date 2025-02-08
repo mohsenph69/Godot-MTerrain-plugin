@@ -2,12 +2,12 @@
 extends Button
 
 @onready var tree:Tree = get_child(0)
-var last_update = 0
+var last_update:int= 0
 var tree_items = {}	
 
 func _toggled(toggled_on):
+	set_process(toggled_on)
 	tree.visible = toggled_on
-	print(tree.name)
 	
 func _ready():
 	tree.visible = false
@@ -21,7 +21,7 @@ func _ready():
 		item.set_text(0, key)
 		item.set_text_alignment(1, HORIZONTAL_ALIGNMENT_RIGHT)
 			
-func _physics_process(delta):
+func _process(delta):
 	if not is_node_ready() or not is_visible_in_tree(): return			
 	if abs(Time.get_ticks_msec() - last_update) > 1000:
 		last_update = Time.get_ticks_msec()
