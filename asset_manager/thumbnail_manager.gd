@@ -85,15 +85,20 @@ static func make_tscn_thumbnail(scene_path, collection_id, aabb = null):
 	# Cleanup
 	viewport.queue_free()
 
-static func add_watermark(img:Image):
-	var wt:Image=load("res://addons/m_terrain/icons/mdecal.svg").get_image()
+static func add_watermark(img:Image,type:MAssetTable.ItemType):
+	var wt:Image
+	match type:
+		MAssetTable.DECAL:
+			wt=load("res://addons/m_terrain/icons/mdecal.svg").get_image()
+		MAssetTable.HLOD:
+			wt=load("res://addons/m_terrain/icons/hlod.svg").get_image()
+		_:
+			return
 	var wt_size = wt.get_size()
 	for i in range(wt_size.x):
 		for j in range(wt_size.y):
 			var wpx:Color= wt.get_pixel(i,j)
-			var ipx:Color= img.get_pixel(i,j)
-			var cmix = wpx.lerp(ipx,0.5)
-			img.set_pixel(i,j,cmix)
+			img.set_pixel(i,j,wpx)
 
 static func generate_decal_texture(collection_id:int)->Texture:
 	var decal_item_id = MAssetTable.get_singleton().collection_get_item_id(collection_id)
@@ -106,7 +111,7 @@ static func generate_decal_texture(collection_id:int)->Texture:
 		var albedo_image = mdecal.texture_albedo.get_image().duplicate()
 		albedo_image.resize(64,64)
 		var path = MAssetTable.get_asset_thumbnails_path(collection_id)
-		add_watermark(albedo_image)
+		add_watermark(albedo_image,MAssetTable.DECAL)
 		save_thumbnail(albedo_image,path)
 		return ImageTexture.create_from_image(albedo_image)
 	return null

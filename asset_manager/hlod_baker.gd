@@ -250,8 +250,7 @@ func bake_to_hlod_resource():
 		var gh_aabb:AABB = MTool.get_global_aabb(hlod_data.node.get_aabb(),hlod_data.tr)
 		aabb.merge(gh_aabb)
 	# some subhlod may not included in join mesh
-	hlod_resource.aabb = aabb
-	#Thumbnail later
+	# using jmesh down for thumnail
 	##################################
 	## FINALIZE AND SAVE BAKED HLOD ##
 	##################################
@@ -275,8 +274,18 @@ func bake_to_hlod_resource():
 	MHlodScene.awake()
 	if save_err == OK:		
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
+		hlod_resource.aabb = aabb
+		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id})
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
+
+func finish_generating_thumnail(data):
+	var tex:Texture2D=data["texture"]
+	var img = tex.get_image()
+	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD)
+	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])
+	ThumbnailManager.save_thumbnail(img,tpath)
+	AssetIO.asset_placer.regroup()
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:

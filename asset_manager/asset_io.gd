@@ -11,7 +11,7 @@ static var asset_data:AssetIOData = null
 static var DEBUG_MODE = true #true
 
 static var obj_to_call_on_table_update:Array
-
+static var asset_placer:Control
 
 
 #region GLB Import	

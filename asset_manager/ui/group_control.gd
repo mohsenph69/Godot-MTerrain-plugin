@@ -9,7 +9,8 @@ signal collection_activated
 var asset_placer:Control
 
 func _ready():
-	get_parent().mouse_entered.connect(revalidate_icons)
+	if get_parent() is Control:
+		get_parent().connect("mouse_entered",revalidate_icons)
 	group_button.toggled.connect(func(toggle_on):
 		group_container.visible = toggle_on	
 	)
@@ -38,11 +39,11 @@ func add_item(item_name, item):
 func set_icon(item_index:int)->void:
 	var current_item_collection_id:int= group_list.get_item_metadata(item_index)
 	var tex:Texture2D= ThumbnailManager.get_valid_thumbnail(current_item_collection_id)
+	var type = MAssetTable.get_singleton().collection_get_type(current_item_collection_id)
 	if tex != null:
 		group_list.set_item_icon(item_index,tex)
 		group_list.set_item_text(item_index, "")
 		return
-	var type = MAssetTable.get_singleton().collection_get_type(current_item_collection_id)
 	if type==MAssetTable.MESH:
 		var _cmesh = MAssetMesh.get_collection_merged_mesh(current_item_collection_id,true)
 		if _cmesh:		
@@ -52,6 +53,8 @@ func set_icon(item_index:int)->void:
 		if dtex:
 			group_list.set_item_icon(item_index,dtex)
 			group_list.set_item_text(item_index, "")
+	# For HLOD it should be generated at bake time we don't generate that here
+	# so normaly it should be grabed by the first step
 
 func update_thumbnail(data):
 	if not data.texture is Texture2D:
