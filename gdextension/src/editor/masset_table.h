@@ -87,6 +87,7 @@ class MAssetTable : public Resource {
         ItemType type = NONE;
         int8_t colcutoff = -1;
         int16_t physics_name = -1; // is id in PackedStringArray physics_names (-1 is default)
+        uint32_t modify_time = 0;
         int32_t item_id=-1;
         int32_t glb_id = -1;
     };
@@ -142,6 +143,7 @@ class MAssetTable : public Resource {
     static String get_asset_editor_root_dir();
     static String get_editor_baker_scenes_dir();
     static String get_asset_thumbnails_dir();
+    static String get_thumbnails_dir();
     static String get_asset_thumbnails_path(int collection_id);
     static String get_material_thumbnails_path(int material_id);
     static String get_hlod_res_dir();
@@ -194,11 +196,14 @@ class MAssetTable : public Resource {
     int physics_id_get_add(const String& physics_name);
 
     int collection_create(const String& _name,int32_t item_id,ItemType type,int32_t glb_id);
+    void collection_update_modify_time(int collection_id);
+    int64_t collection_get_modify_time(int collection_id) const;
     void collection_set_physics_setting(int collection_id,const String& physics_name);
     String collection_get_physics_setting(int collection_id) const;
     void collection_set_colcutoff(int collection_id,int value);
     int8_t collection_get_colcutoff(int collection_id) const;
     void collection_clear_unused_physics_settings();
+    ItemType collection_get_type(int collection_id) const;
     int32_t collection_get_glb_id(int collection_id) const;
     int32_t collection_find_with_item_type_item_id(ItemType type, int32_t item_id) const;
     int32_t collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const;

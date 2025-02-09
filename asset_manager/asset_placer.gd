@@ -309,7 +309,6 @@ func _drop_data(at_position, data):
 func get_filtered_collections(text="", tags_to_excluded=[]):		
 	var result = []
 	result = asset_library.collections_get_by_type(current_filter_types)
-	print("Current TYPE FOUND ",result)
 	#var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
 	var collection_to_include = null
 	if current_filter_tags and len(current_filter_tags)>0:

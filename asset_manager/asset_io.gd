@@ -283,6 +283,7 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 		return
 	if not asset_library.has_collection(collection_id):
 		push_error("import collection error: ", collection_id, " does not exist")
+	asset_library.collection_update_modify_time(collection_id)
 	## Options
 	var physics_setting_name = asset_data.get_option(glb_node_name,"physics")
 	if not physics_setting_name.is_empty():

@@ -79,9 +79,16 @@ RID MDecal::get_decal_rid() const{
 
 void MDecal::set_texture(DecalTexture p_type, const Ref<Texture2D> &p_texture) {
 	ERR_FAIL_INDEX(p_type, DecalTexture::DECAL_TEXTURE_MAX);
+	if(textures[p_type].is_valid()){
+		textures[p_type]->disconnect("changed",Callable(this,"emit_changed"));
+	}
+	if(p_texture.is_valid()){
+		p_texture->connect("changed",Callable(this,"emit_changed"));
+	}
 	textures[p_type] = p_texture;
 	RID texture_rid = p_texture.is_valid() ? p_texture->get_rid() : RID();
 	RS->decal_set_texture(decal, DecalTexture(p_type), texture_rid);
+	emit_changed(); // User for updating icon if other element affect icon, should add this there too!
 }
 
 Ref<Texture2D> MDecal::get_texture(DecalTexture p_type) const {

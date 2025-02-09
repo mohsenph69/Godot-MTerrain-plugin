@@ -360,7 +360,7 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 			var material_name = current_material_name[surface_index]
 			if not materials.has(material_name):
 				continue
-			var material_id = materials[material_name]
+			var material_id = int(round(materials[material_name]))
 			if material_id < 0:
 				continue
 			var material_path = import_info["__materials"][material_id]["path"]
