@@ -9,11 +9,20 @@
 #define RS RenderingServer::get_singleton()
 
 
+#ifdef DEBUG_ENABLED
+#include "../editor/mmesh_joiner.h"
+#include <godot_cpp/classes/triangle_mesh.hpp>
+#endif
+
 
 void MHlodScene::_bind_methods(){
+    ClassDB::bind_method(D_METHOD("is_init_scene"), &MHlodScene::is_init_scene);
+
     ClassDB::bind_method(D_METHOD("set_hlod","input"), &MHlodScene::set_hlod);
     ClassDB::bind_method(D_METHOD("get_hlod"), &MHlodScene::get_hlod);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"hlod",PROPERTY_HINT_RESOURCE_TYPE,"MHlod"),"set_hlod","get_hlod");
+
+    ClassDB::bind_method(D_METHOD("get_aabb"), &MHlodScene::get_aabb);
 
     ClassDB::bind_method(D_METHOD("set_scene_layers","input"), &MHlodScene::set_scene_layers);
     ClassDB::bind_method(D_METHOD("get_scene_layers"), &MHlodScene::get_scene_layers);
@@ -21,13 +30,15 @@ void MHlodScene::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("_update_visibility"), &MHlodScene::_update_visibility);
     ClassDB::bind_method(D_METHOD("get_last_lod_mesh_ids_transforms"), &MHlodScene::get_last_lod_mesh_ids_transforms);
-    ClassDB::bind_method(D_METHOD("get_triangle_meshes"), &MHlodScene::get_triangle_meshes);
 
     ClassDB::bind_static_method("MHlodScene",D_METHOD("sleep"), &MHlodScene::sleep);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("awake"), &MHlodScene::awake);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("get_hlod_users","hlod_path"), &MHlodScene::get_hlod_users);
 
     ClassDB::bind_static_method("MHlodScene",D_METHOD("get_debug_info"), &MHlodScene::get_debug_info);
+    #ifdef DEBUG_ENABLED
+    ClassDB::bind_method(D_METHOD("get_triangle_mesh"), &MHlodScene::get_triangle_mesh);
+    #endif
 }
 
 MHlodScene::ApplyInfo::ApplyInfo(MHlod::Type _type,bool _remove): type(_type) , remove(_remove)
@@ -798,6 +809,10 @@ MHlodScene::~MHlodScene(){
     deinit_proc<true>();
 }
 
+bool MHlodScene::is_init_scene() const {
+    return is_init;
+}
+
 void MHlodScene::set_hlod(Ref<MHlod> input){
     if(is_init_procs()){
         deinit_proc<true>();
@@ -818,6 +833,13 @@ Ref<MHlod> MHlodScene::get_hlod(){
         return Ref<MHlod>();
     }
     return get_root_proc()->hlod;
+}
+
+AABB MHlodScene::get_aabb() const{
+    if(procs.size()==0 || procs[0].hlod.is_null()){
+        return AABB();
+    }
+    return procs[0].hlod->get_aabb();
 }
 
 void MHlodScene::set_scene_layers(int64_t input){
@@ -870,35 +892,6 @@ void MHlodScene::_update_visibility(){
     get_root_proc()->set_visibility(v);
 }
 
-#ifdef DEBUG_ENABLED
-void MHlodScene::_update_editor_tri_mesh(){ // will be called in update thread
-    PackedVector3Array vertices;
-    PackedInt32Array indices;
-    Transform3D t;
-    get_root_proc()->_get_editor_tri_mesh_info(vertices,indices,t);
-    if(vertices.size()==0){
-        return;
-    }
-    Array joined_mesh_info;
-    joined_mesh_info.resize(Mesh::ARRAY_MAX);
-    joined_mesh_info[Mesh::ARRAY_VERTEX] = vertices;
-    joined_mesh_info[Mesh::ARRAY_INDEX] = indices;
-    Ref<ArrayMesh> arr_mesh;
-    arr_mesh.instantiate();
-    arr_mesh->add_surface_from_arrays(godot::Mesh::PrimitiveType::PRIMITIVE_TRIANGLES,joined_mesh_info);
-    editor_tri_mesh = arr_mesh->generate_triangle_mesh();
-}
-#endif
-
-Array MHlodScene::get_triangle_meshes(){
-    #ifdef DEBUG_ENABLED
-    Array out;
-    return out;
-    #else
-    return Array();
-    #endif
-}
-
 
 Array MHlodScene::get_last_lod_mesh_ids_transforms(){
     Array out;
@@ -925,3 +918,19 @@ Array MHlodScene::get_last_lod_mesh_ids_transforms(){
     }
     return out;
 }
+
+#ifdef DEBUG_ENABLED
+Ref<TriangleMesh> MHlodScene::get_triangle_mesh(){
+    ERR_FAIL_COND_V(procs.size()==0,Ref<TriangleMesh>());
+    ERR_FAIL_COND_V(procs[0].hlod.is_null(),Ref<TriangleMesh>());
+
+    if(cached_triangled_mesh.is_valid()){
+        return cached_triangled_mesh;
+    }
+    Ref<ArrayMesh> jmesh = procs[0].hlod->get_joined_mesh(false,false);
+    ERR_FAIL_COND_V(jmesh.is_null(),Ref<TriangleMesh>());
+    //cached_triangled_mesh = jmesh->generate_triangle_mesh();
+    return jmesh->generate_triangle_mesh();
+    return cached_triangled_mesh;
+}
+#endif

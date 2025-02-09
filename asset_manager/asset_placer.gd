@@ -161,6 +161,7 @@ func create_baker_scene():
 func create_packed_scene():
 	var id = MAssetTable.get_last_free_packed_scene_id()	
 	var node := MHlodNode3D.new()		
+	node.name = "MHlodNode3D_" + str(id)
 	var collection_id = asset_library.collection_create(node.name, id, MAssetTable.PACKEDSCENE, -1)
 	asset_library.save()
 	node.set_meta("collection_id", collection_id)	
@@ -170,6 +171,7 @@ func create_packed_scene():
 	ResourceSaver.save(packed, path)			
 	EditorInterface.open_scene_from_path(path)			
 	add_asset_button.button_pressed = false
+	regroup()
 	
 func create_decal():
 	var id = MAssetTable.get_last_free_decal_id()		
@@ -186,11 +188,14 @@ func create_decal():
 	node.decal = decal
 	ResourceSaver.save(decal, path)				
 	var scene_root = EditorInterface.get_edited_scene_root()
+	if scene_root==null:
+		return
 	scene_root.add_child(node)
 	node.name = "New Decal"
 	node.owner = scene_root
 	node.set_meta("collection_id", collection_id)
 	add_asset_button.button_pressed = false
+	regroup()
 	
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
@@ -304,6 +309,7 @@ func _drop_data(at_position, data):
 func get_filtered_collections(text="", tags_to_excluded=[]):		
 	var result = []
 	result = asset_library.collections_get_by_type(current_filter_types)
+	print("Current TYPE FOUND ",result)
 	#var collections_to_exclude = asset_library.tags_get_collections_any(tags_to_excluded) 
 	var collection_to_include = null
 	if current_filter_tags and len(current_filter_tags)>0:

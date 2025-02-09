@@ -86,7 +86,7 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 4
-text = " WARNING: this will overwrite existing glb"
+text = " WARNING: this will overwrite join meshes"
 label_settings = SubResource("LabelSettings_plgpf")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]

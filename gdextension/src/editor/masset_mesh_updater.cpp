@@ -99,7 +99,6 @@ void MAssetMeshUpdater::update_join_mesh(){
     }
     if(!MAssetTable::mesh_join_is_valid(join_mesh_id)){
         join_at == -1;
-        ERR_FAIL_MSG("Join mesh Id "+itos(join_mesh_id)+" is not valid ");
         return;
     }
     joined_mesh_ids = MAssetTable::mesh_join_ids(join_mesh_id);

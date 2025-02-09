@@ -15,23 +15,11 @@ func _ready():
 	cancel_button.pressed.connect(queue_free)
 	close_requested.connect(queue_free)
 	 
-	%warning_label.visible = FileAccess.file_exists(baker.scene_file_path.get_basename() + "_joined_mesh.glb")
+	%warning_label.visible = baker.has_joined_mesh()
 	
 	var node_tree:Tree = find_child("node_tree")
 	var root = node_tree.create_item()
 	node_tree.hide_root = true
-	#node_tree.columns = 2
-	#root.set_text(0, "Join at...")
-	#node_tree.set_column_expand(1, false)	
-	#node_tree.set_column_custom_minimum_width(1, 130) 	
-	#root.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)
-	#root.set_range_config(1, -1, AssetIO.LOD_COUNT, 1)
-	#root.set_range(1, 1)	
-	#var text = "Do Not Join"
-	#for i in AssetIO.LOD_COUNT:
-		#text += ", Lod " + str(i)
-	#root.set_text(1, text)	
-	#root.set_editable(1,true)
 	for node in baker.get_children():
 		build_tree(node, root)
 		
@@ -49,33 +37,27 @@ func _ready():
 				if node in nodes_to_join:
 					nodes_to_join.erase(node)
 	)
-	#var import_info = MAssetTable.get_singleton().import_info
-	#var joined_mesh_glb_path = baker.get_joined_mesh_path()
-	#if import_info.has(joined_mesh_glb_path):
-		#if import_info[joined_mesh_glb_path].has("__metadata"):
-			#if import_info[joined_mesh_glb_path]["__metadata"].has
 		
-	%JoinLod.value = baker.asset_mesh_updater.get_join_at_lod()
+	%JoinLod.value = baker.asset_mesh_updater.get_join_at_lod() if baker.asset_mesh_updater.get_join_at_lod()!=-1 else 4
 	%JoinLod.max_value = AssetIO.LOD_COUNT-1	
 						
-	%export_joined_mesh_toggle.button_pressed = false #not baker.has_joined_mesh_glb() 
-	set_update_mode(true) #not baker.has_joined_mesh_glb())
-	%export_joined_mesh_toggle.disabled = not baker.has_joined_mesh_glb()
+	%export_joined_mesh_toggle.button_pressed = false #not baker.has_joined_mesh() 
+	set_update_mode(true) #not baker.has_joined_mesh())
+	%export_joined_mesh_toggle.disabled = not baker.has_joined_mesh()
 	%export_joined_mesh_toggle.toggled.connect(set_update_mode)
 	%show_joined_mesh_glb_button.pressed.connect(func():
 		var path = baker.get_joined_mesh_glb_path()
 		EditorInterface.get_file_system_dock().navigate_to_path(path)		
 	)
 	var remove_joined_mesh = %remove_joined_mesh
-	remove_joined_mesh.visible = baker.has_joined_mesh_glb()
+	remove_joined_mesh.visible = baker.has_joined_mesh()
 	remove_joined_mesh.pressed.connect(func():
 		var dialog := ConfirmationDialog.new()
 		dialog.dialog_text = "Are you sure you want to delete the joined mesh .glb file?"
 		dialog.confirmed.connect(func():		
 			baker.remove_joined_mesh()
 			remove_joined_mesh.visible = false
-			#%export_joined_mesh_toggle.button_pressed = true
-			#%export_joined_mesh_toggle.disabled = true
+			%warning_label.visible = false
 		)
 		add_child(dialog)
 		dialog.popup_centered()

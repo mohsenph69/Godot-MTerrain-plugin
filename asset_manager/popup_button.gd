@@ -10,7 +10,6 @@ func _input(event: InputEvent):
 				release_focus()					
 				button_pressed = false		
 		elif event is InputEventMouseButton:
-			print("AAAA")
 			get_viewport().set_input_as_handled()
 
 func _ready():

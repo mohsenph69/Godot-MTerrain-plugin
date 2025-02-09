@@ -130,8 +130,11 @@ static func save_joined_mesh(joined_mesh_id:int, joined_meshes:Array, joined_mes
 	## clear
 	for l in range(0,MAssetTable.mesh_item_get_max_lod()):
 		var mesh_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id - l, ".res"))
+		var stop_path = mesh_path.get_basename() + ".stop"
 		if FileAccess.file_exists(mesh_path):
 			DirAccess.remove_absolute(mesh_path)
+		if FileAccess.file_exists(stop_path):
+			DirAccess.remove_absolute(stop_path)
 	## saving
 	for i in len(joined_meshes):
 		var mesh_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id - joined_mesh_lods[i], ".res"))

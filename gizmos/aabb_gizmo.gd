@@ -1,12 +1,18 @@
 extends EditorNode3DGizmoPlugin
 
-
+enum {
+	FUNC_VALID=0, #string, call this function to check if is valid for gizmo
+	HAS_COL=2, #bool -> should have function get_aabb() or get_triangle_mesh()
+	HAS_HANDLE=3 #bool -> should have function get_aabb()
+}
+# if HAS_AABB and HAS_COL but don't have function get_triangle_mesh will be using aabb box as col
 var classes_info:= {
 	# any non exist func should be empty string
 	# at least aabb function is neccassary for this to work
 	###############      0     #####    1     ######    2      #########     3   ########
-	# class_name : [func_is_valid,func_aabb_getter,func_mesh_getter,has_handle],
-	"MDecalInstance":["has_decal","get_aabb","",true]
+	# class_name : [func_is_valid,HAS_AABB,HAS_COL,HAS_HANDLE],
+	"MDecalInstance":["has_decal",true,true,true],
+	"MHlodScene":["is_init_scene",true,true,false]
 }
 
 var handle_ids:PackedInt32Array = [0,1,2,3,4,5]
@@ -24,6 +30,7 @@ var box_mesh:=BoxMesh.new()
 
 var selection:EditorSelection
 var sel_line_mat:StandardMaterial3D
+var not_sel_line_mat:StandardMaterial3D
 var selected_mesh:Array
 
 func _init():
@@ -33,6 +40,9 @@ func _init():
 	sel_line_mat = StandardMaterial3D.new()
 	sel_line_mat.albedo_color = Color(0.2,0.8,0.2)
 	sel_line_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	not_sel_line_mat = sel_line_mat.duplicate()
+	not_sel_line_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	not_sel_line_mat.albedo_color = Color(0,0,0,0)
 	selection.selection_changed.connect(on_selection_change)
 	create_handle_material("hmat")
 
@@ -40,42 +50,46 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	gizmo.clear()
 	var node = gizmo.get_node_3d()
 	var cname = node.get_class()
-	var aabb:AABB= node.call(classes_info[cname][1])
-	box_mesh.size = aabb.size
-	gizmo.add_collision_triangles(box_mesh.generate_triangle_mesh())
-	if selection.get_selected_nodes().has(node):
-		aabb.position -= Vector3(0.02,0.02,0.02)
-		aabb.size += Vector3(0.04,0.04,0.04)
-		var s = aabb.position
-		var e = aabb.size + s
-		var l:PackedVector3Array
-		l.resize(24)
-		l[0] = s
-		l[1] = Vector3(e.x,s.y,s.z)
-		l[2] = s
-		l[3] = Vector3(s.x,e.y,s.z)
-		l[4] = s
-		l[5] = Vector3(s.x,s.y,e.z)
-		l[6] = e
-		l[7] = Vector3(e.x,s.y,e.z)
-		l[8] = e
-		l[9] = Vector3(s.x,e.y,e.z)
-		l[10] = e
-		l[11] = Vector3(e.x,e.y,s.z)
-		l[12] = Vector3(e.x,e.y,s.z)
-		l[13] = Vector3(e.x,s.y,s.z)
-		l[14] = Vector3(e.x,s.y,s.z)
-		l[15] = Vector3(e.x,s.y,e.z)
-		l[16] = Vector3(s.x,s.y,e.z)
-		l[17] = Vector3(s.x,e.y,e.z)
-		l[18] = Vector3(s.x,e.y,e.z)
-		l[19] = Vector3(s.x,e.y,s.z)
-		l[20] = Vector3(s.x,e.y,s.z)
-		l[21] = Vector3(e.x,e.y,s.z)
-		l[22] = Vector3(e.x,s.y,e.z)
-		l[23] = Vector3(s.x,s.y,e.z)
-		gizmo.add_lines(l,sel_line_mat,false)
-	if classes_info[cname][3]:
+	var aabb:AABB = node.get_aabb()
+	if classes_info[cname][HAS_COL]:
+		if node.has_method("get_triangle_mesh"):
+			var tmesh = node.get_triangle_mesh()
+			gizmo.add_collision_triangles(tmesh)
+		else:
+			box_mesh.size = aabb.size
+			gizmo.add_collision_triangles(box_mesh.generate_triangle_mesh())
+	aabb.position -= Vector3(0.02,0.02,0.02)
+	aabb.size += Vector3(0.04,0.04,0.04)
+	var s = aabb.position
+	var e = aabb.size + s
+	var l:PackedVector3Array
+	l.resize(24)
+	l[0] = s
+	l[1] = Vector3(e.x,s.y,s.z)
+	l[2] = s
+	l[3] = Vector3(s.x,e.y,s.z)
+	l[4] = s
+	l[5] = Vector3(s.x,s.y,e.z)
+	l[6] = e
+	l[7] = Vector3(e.x,s.y,e.z)
+	l[8] = e
+	l[9] = Vector3(s.x,e.y,e.z)
+	l[10] = e
+	l[11] = Vector3(e.x,e.y,s.z)
+	l[12] = Vector3(e.x,e.y,s.z)
+	l[13] = Vector3(e.x,s.y,s.z)
+	l[14] = Vector3(e.x,s.y,s.z)
+	l[15] = Vector3(e.x,s.y,e.z)
+	l[16] = Vector3(s.x,s.y,e.z)
+	l[17] = Vector3(s.x,e.y,e.z)
+	l[18] = Vector3(s.x,e.y,e.z)
+	l[19] = Vector3(s.x,e.y,s.z)
+	l[20] = Vector3(s.x,e.y,s.z)
+	l[21] = Vector3(e.x,e.y,s.z)
+	l[22] = Vector3(e.x,s.y,e.z)
+	l[23] = Vector3(s.x,s.y,e.z)
+	gizmo.add_lines(l,sel_line_mat,false)
+	if classes_info[cname][HAS_HANDLE]:
 		var size:Vector3 = aabb.size/2
 		var h:PackedVector3Array
 		h.resize(6)
@@ -130,7 +144,7 @@ func _has_gizmo(for_node_3d):
 	if classes_info.has(cname):
 		if classes_info[cname][0].is_empty():
 			return true
-		else: return for_node_3d.call(classes_info[cname][0])
+		else: return for_node_3d.call(classes_info[cname][FUNC_VALID])
 	return false
 
 func on_selection_change():

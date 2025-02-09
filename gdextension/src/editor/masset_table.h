@@ -129,6 +129,7 @@ class MAssetTable : public Resource {
     static const char* asset_editor_root_dir;
     static const char* editor_baker_scenes_dir;
     static const char* asset_thumbnails_dir;
+    static const char* thumbnails_dir;
     static const char* hlod_res_dir;
     static MAssetTable* asset_table_singelton;
 
@@ -212,6 +213,7 @@ class MAssetTable : public Resource {
     PackedInt32Array collection_get_sub_collections(int collection_id) const;
     int collection_get_collision_count(int collection_id) const;
     void collection_remove_tag(int collection_id,int tag);
+    void collection_set_name(int collection_id,ItemType expected_type,const String& new_name);
     String collection_get_name(int collection_id) const;
     int collection_get_id(const String& name) const;
     PackedInt32Array collection_get_tags(int collection_id) const;
@@ -244,6 +246,8 @@ class MAssetTable : public Resource {
     void load_import_info();
     void set_import_info(const Dictionary& input);
     Dictionary get_import_info();
+
+    void auto_asset_update_from_dir(ItemType type);
 
     // Only for debug
     static void reset(bool hard);

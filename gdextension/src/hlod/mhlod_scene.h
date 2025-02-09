@@ -256,20 +256,23 @@ class MHlodScene : public Node3D {
     inline bool is_init_procs(){
         return is_init;
     }
+    bool is_init_scene() const;
     void set_hlod(Ref<MHlod> input);
     Ref<MHlod> get_hlod();
+    AABB get_aabb() const;
     void set_scene_layers(int64_t input);
     int64_t get_scene_layers();
     void _notification(int p_what);
     void _update_visibility();
-    #ifdef DEBUG_ENABLED
-    Ref<TriangleMesh> editor_tri_mesh;
-    void _update_editor_tri_mesh(); // will be called in update thread
-    #endif
-    Array get_triangle_meshes();
 
     // usefull for joining the mesh
     Array get_last_lod_mesh_ids_transforms();
+
+    // Works only in editor
+    #ifdef DEBUG_ENABLED
+    Ref<TriangleMesh> cached_triangled_mesh;
+    Ref<TriangleMesh> get_triangle_mesh();
+    #endif
 
 
     template<bool UseLock>
