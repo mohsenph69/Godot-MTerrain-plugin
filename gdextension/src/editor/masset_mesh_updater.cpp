@@ -29,6 +29,10 @@ void MAssetMeshUpdater::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_join_mesh_id"), &MAssetMeshUpdater::get_join_mesh_id);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"join_mesh_id"),"set_join_mesh_id","get_join_mesh_id");
 
+    ClassDB::bind_method(D_METHOD("set_variation_layers","input"), &MAssetMeshUpdater::set_variation_layers);
+    ClassDB::bind_method(D_METHOD("get_variation_layers"), &MAssetMeshUpdater::get_variation_layers);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"variation_layers"),"set_variation_layers","get_variation_layers");
+
     ClassDB::bind_method(D_METHOD("set_root_node","input"), &MAssetMeshUpdater::set_root_node);
     ClassDB::bind_method(D_METHOD("get_root_node"), &MAssetMeshUpdater::get_root_node);
 
@@ -85,7 +89,22 @@ void MAssetMeshUpdater::_update_lod(int lod){
             if(is_join_mesh){
                 amesh->destroy_meshes();
             } else {
-                amesh->update_lod(lod);
+                uint16_t avariation_layer = amesh->has_meta("variation_layers") ?  (int)amesh->get_meta("variation_layers") : 0;
+                if(avariation_layer==0 || (avariation_layer&variation_layer)!=0){
+                    amesh->update_lod(lod);
+                } else {
+                    amesh->update_lod(-1);
+                }
+            }
+            return;
+        }
+        if(cur_node->has_meta("variation_layers") ){
+            uint16_t avariation_layer = (int)cur_node->get_meta("variation_layers");
+            if(avariation_layer!=0){
+                Node3D* nd3d = Object::cast_to<Node3D>(cur_node);
+                if(nd3d){
+                    nd3d->set_visible((avariation_layer&variation_layer)!=0);
+                }
             }
         }
     }
@@ -192,6 +211,13 @@ int MAssetMeshUpdater::get_join_mesh_id(){
     return join_mesh_id;
 }
 
+void MAssetMeshUpdater::set_variation_layers(int input){
+    variation_layer = input;
+}
+
+int MAssetMeshUpdater::get_variation_layers(){
+    return variation_layer;
+}
 
 void MAssetMeshUpdater::set_root_node(Node3D* input){
     root_node = input;

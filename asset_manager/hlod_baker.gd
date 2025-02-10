@@ -466,16 +466,16 @@ func remove_joined_mesh():
 #endregion
 
 func set_variation_layers_visibility(value):
-	for child in get_all_masset_mesh_nodes(self, get_children()):
-		child.visible = child.hlod_layers & value > 0 or child.hlod_layers == 0 or value == 0
 	variation_layers_preview_value = value
-	
+	asset_mesh_updater.variation_layers = value
+
 #region MAssetMesh Updater			
 func _enter_tree():		
 	if not is_node_ready(): 	
 		await ready
 	activate_mesh_updater()
 	validate_can_bake()
+	asset_mesh_updater.variation_layers = variation_layers_preview_value
 
 func validate_can_bake():			
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	

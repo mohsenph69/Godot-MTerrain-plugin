@@ -23,6 +23,7 @@ class MAssetMeshUpdater : public RefCounted {
     int current_lod = -1;
     // For join mesh always the transform is at the same position of baker
     int join_mesh_id = -1;
+    uint16_t variation_layer = 0;
     int join_at = -1;
     TypedArray<MMesh> joined_mesh;
     PackedInt32Array joined_mesh_ids;
@@ -47,6 +48,9 @@ class MAssetMeshUpdater : public RefCounted {
 
     void set_join_mesh_id(int input);
     int get_join_mesh_id();
+
+    void set_variation_layers(int input);
+    int get_variation_layers();
 
     void set_root_node(Node3D* input);
     Node3D* get_root_node() const;
