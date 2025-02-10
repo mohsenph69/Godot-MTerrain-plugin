@@ -196,8 +196,9 @@ func finalize_glb_parse():
 	for k in collections:
 		if collections[k]["is_master"] : continue
 		for m in collections[k].meshes:
-			if m: collections[k]["base_transform"] = mesh_data[m].transform
-
+			if m:
+				collections[k]["base_transform"] = mesh_data[m].transform
+				break
 
 func check_for_infinite_recursion_in_collections(name, checked_collections = []):
 	var asset_library = MAssetTable.get_singleton()

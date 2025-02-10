@@ -214,7 +214,7 @@ class MAssetTable : public Resource {
     PackedInt32Array collections_get_by_type(int item_types) const;
     void collection_add_tag(int collection_id,int tag);
     bool collection_add_sub_collection(int collection_id,int sub_collection_id,const Transform3D& transform);
-    void collection_add_collision(int collection_id,CollisionType col_type,const Transform3D& col_transform,const Transform3D& obj_transform);
+    void collection_add_collision(int collection_id,CollisionType col_type,Transform3D col_transform,const Transform3D& obj_transform);
     PackedInt32Array collection_get_sub_collections(int collection_id) const;
     int collection_get_collision_count(int collection_id) const;
     void collection_remove_tag(int collection_id,int tag);

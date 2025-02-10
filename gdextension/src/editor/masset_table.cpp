@@ -1009,9 +1009,45 @@ bool MAssetTable::collection_add_sub_collection(int collection_id,int sub_collec
     return true;
 }
 
-void MAssetTable::collection_add_collision(int collection_id,CollisionType col_type,const Transform3D& col_transform,const Transform3D& base_transform){
+void MAssetTable::collection_add_collision(int collection_id,CollisionType col_type,Transform3D col_transform,const Transform3D& base_transform){
     ERR_FAIL_COND(!has_collection(collection_id));
-    Vector3 size = col_transform.get_basis().get_scale();
+    // Getting sign with correct sing
+    // Godot Basis class does not have this so we have to write it by outself
+    Vector3 size_signs;
+    {
+        float det = col_transform.basis.determinant() < 0 ? -1.0f : 1.0f;
+        ERR_FAIL_COND(UtilityFunctions::is_equal_approx(det,0.0f));
+        Basis bx = col_transform.basis;
+        bx.set_column(0,Vector3(1,1,1));
+        Basis by = col_transform.basis;
+        by.set_column(1,Vector3(1,1,1));
+        Basis bz = col_transform.basis;
+        bz.set_column(2,Vector3(1,1,1));
+        size_signs.x = det * bx.determinant();
+        size_signs.y = det * by.determinant();
+        size_signs.z = det * bz.determinant();
+        // -----
+        size_signs.x = size_signs.x < 0 ? -1.0f : 1.0f;
+        size_signs.y = size_signs.y < 0 ? -1.0f : 1.0f;
+        size_signs.z = size_signs.z < 0 ? -1.0f : 1.0f;
+    }
+    Vector3 size;
+    {
+        size.x = col_transform.basis.get_column(0).length();
+        size.y = col_transform.basis.get_column(1).length();
+        size.z = col_transform.basis.get_column(2).length();
+    }
+    if(size_signs.x < 0){
+        col_transform.basis.scale(Vector3(-1,1,1));
+    }
+    if(size_signs.y < 0){
+        col_transform.basis.scale(Vector3(1,-1,1));
+    }
+    if(size_signs.z < 0){
+        col_transform.basis.scale(Vector3(1,1,-1));
+    }
+    size = col_transform.get_basis().get_scale();
+    
     Transform3D t = base_transform.inverse() * col_transform;
     t.orthonormalize();
     // Shape
@@ -1031,12 +1067,14 @@ void MAssetTable::collection_add_collision(int collection_id,CollisionType col_t
         shape.param_2 *= 2.0f;
         shape.param_3 *= 2.0f;
     }
-    int index;
+    
+    int index=-1;
     if(!collisions_data.has(collection_id)){
         index = collisions_data.insert(collection_id,CollisionData());
     } else {
-        collisions_data.find(collection_id);
+        index = collisions_data.find(collection_id);
     }
+    ERR_FAIL_COND(index==-1);
     CollisionData& col_data = collisions_data.get_array()[index].value;
     col_data.collision_shapes.push_back(shape);
     col_data.collision_shapes_transforms.push_back(t);
