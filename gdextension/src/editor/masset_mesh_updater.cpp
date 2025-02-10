@@ -98,14 +98,11 @@ void MAssetMeshUpdater::_update_lod(int lod){
             }
             return;
         }
-        if(cur_node->has_meta("variation_layers") ){
-            uint16_t avariation_layer = (int)cur_node->get_meta("variation_layers");
-            if(avariation_layer!=0){
-                Node3D* nd3d = Object::cast_to<Node3D>(cur_node);
-                if(nd3d){
-                    nd3d->set_visible((avariation_layer&variation_layer)!=0);
-                }
-            }
+        VisualInstance3D* nd3d = Object::cast_to<VisualInstance3D>(cur_node);
+        if(nd3d){
+            uint16_t avariation_layer = nd3d->has_meta("variation_layers") ?  (int)nd3d->get_meta("variation_layers") : 0;
+            bool is_visible = avariation_layer==0 || (avariation_layer&variation_layer)!=0;
+            RS->instance_set_visible(nd3d->get_instance(),is_visible);
         }
     }
 }
