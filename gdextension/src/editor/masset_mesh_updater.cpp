@@ -96,7 +96,7 @@ void MAssetMeshUpdater::_update_lod(int lod){
                     amesh->update_lod(-1);
                 }
             }
-            return;
+            continue;
         }
         VisualInstance3D* nd3d = Object::cast_to<VisualInstance3D>(cur_node);
         if(nd3d){

@@ -30,7 +30,7 @@ void MHlod::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("set_aabb","aabb"), &MHlod::set_aabb);
     ClassDB::bind_method(D_METHOD("get_aabb"), &MHlod::get_aabb);
-    ADD_PROPERTY(PropertyInfo(Variant::AABB,"aabb",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_DEFAULT),"set_aabb","get_aabb");
+    ADD_PROPERTY(PropertyInfo(Variant::AABB,"aabb",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_aabb","get_aabb");
 
     ClassDB::bind_method(D_METHOD("set_join_at_lod","input"), &MHlod::set_join_at_lod);
     ClassDB::bind_method(D_METHOD("get_join_at_lod"), &MHlod::get_join_at_lod);

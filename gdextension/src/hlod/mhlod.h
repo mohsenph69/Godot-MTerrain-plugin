@@ -124,6 +124,7 @@ class MHlod : public Resource{
     static String get_hlod_root_dir();
     static String get_hlod_path(int id);
     static _FORCE_INLINE_ MHlod::PhysicBodyInfo& get_physic_body(int16_t id);
+    static _FORCE_INLINE_ void clear_physic_body();
 
     MHlod::Type get_item_type(int32_t item_id) const;
     void set_aabb(const AABB& aabb);
@@ -308,5 +309,13 @@ _FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
     physic_bodies.insert(id,r);
     return *physic_bodies.getptr(id);
 }
+
+_FORCE_INLINE_ void MHlod::clear_physic_body(){
+    for(HashMap<int16_t,PhysicBodyInfo>::Iterator it=physic_bodies.begin();it!=physic_bodies.end();++it){
+        PhysicsServer3D::get_singleton()->free_rid(it->value.rid);
+    }
+    physic_bodies.clear();
+}
+
 VARIANT_ENUM_CAST(MHlod::Type);
 #endif

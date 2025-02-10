@@ -327,6 +327,11 @@ class MHlodScene : public Node3D {
     
     template<bool UseLock>
     void deinit_proc(){
+        #ifdef DEBUG_ENABLED
+        if(cached_triangled_mesh.is_valid()){
+            cached_triangled_mesh.unref();
+        }
+        #endif
         if(!is_init_procs()){
             return;
         }
@@ -369,7 +374,6 @@ _FORCE_INLINE_ void MHlodScene::Proc::bind_item_clear(const MHlodScene::GlobalIt
 }
 
 _FORCE_INLINE_ Transform3D MHlodScene::Proc::bind_item_get_transform(const MHlodScene::GlobalItemID bound_id) const{
-   UtilityFunctions::print("bind_item_get_transform");
    return get_item_transform(bound_id.transform_index);
 }
 

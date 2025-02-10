@@ -56,7 +56,7 @@ RID MHlodScene::ApplyInfo::get_instance() const{
 }
 
 MHlodScene::Proc::Proc(MHlodScene* _scene,Ref<MHlod> _hlod,int32_t _proc_id,int32_t _scene_layers,const Transform3D& _transform):
-hlod(_hlod),scene(_scene),proc_id(_proc_id),scene_layers(scene_layers),transform(_transform)
+hlod(_hlod),scene(_scene),proc_id(_proc_id),scene_layers(_scene_layers),transform(_transform)
 {
 
 }
@@ -807,6 +807,9 @@ MHlodScene::MHlodScene(){
 MHlodScene::~MHlodScene(){
     all_hlod_scenes.erase(this);
     deinit_proc<true>();
+    if(all_hlod_scenes.size()==0){ // so we are the last one
+        MHlod::clear_physic_body();
+    }
 }
 
 bool MHlodScene::is_init_scene() const {
