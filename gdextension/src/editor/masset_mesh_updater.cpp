@@ -243,6 +243,10 @@ int MAssetMeshUpdater::get_current_lod(){
 
 void MAssetMeshUpdater::set_show_boundary(bool input){
     show_boundary = input;
+    if(inner_bound_instance.is_valid() && outer_bound_instance.is_valid()){
+        RS->instance_set_visible(inner_bound_instance,show_boundary);
+        RS->instance_set_visible(outer_bound_instance,show_boundary);
+    }
 }
 
 bool MAssetMeshUpdater::get_show_boundary() const{
