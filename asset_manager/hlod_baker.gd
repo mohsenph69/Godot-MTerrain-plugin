@@ -491,6 +491,7 @@ func validate_can_bake():
 
 	
 func _exit_tree():	
+	asset_mesh_updater.show_boundary = false
 	if is_instance_valid(timer) and timer.is_inside_tree():
 		timer.stop()
 

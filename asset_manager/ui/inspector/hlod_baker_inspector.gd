@@ -8,9 +8,10 @@ func _ready():
 	if EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
 
 	if not is_instance_valid(baker) or not baker.has_method("bake_to_hlod_resource"): return		
-
+	
 	baker.renamed.connect(baker_renamed)		
-	$show_boundary_btn.toggled.connect(func(toggle):
+	%show_boundary_btn.button_pressed = baker.asset_mesh_updater.show_boundary
+	%show_boundary_btn.toggled.connect(func(toggle):
 		baker.asset_mesh_updater.show_boundary = toggle
 	)
 	%Bake.pressed.connect(func():

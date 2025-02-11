@@ -9,17 +9,18 @@ varying vec3 normal_local;
 varying vec3 color;
 
 void vertex() {
-	pos_local = VERTEX + TIME/8.0;
 	normal_local = abs(NORMAL);
-	if(dot(VERTEX,NORMAL) < 0.0){
+	if(dot(VERTEX,NORMAL) < 0.0){ // inner BOX
 		color = inner_color;
-	} else {
+		pos_local = VERTEX + TIME/8.0;
+	} else { // outer BOX
 		color = outer_color;
+		pos_local = VERTEX + TIME/6.0;
 	}
 }
 
 void fragment() {
-	vec3 val = mod(pos_local,vec3(1.5));
+	vec3 val = mod(pos_local,vec3(1.0));
 	float f = val.y * (normal_local.x + normal_local.z);
 	f += val.z * normal_local.y;
 	f = smoothstep(0.5,0.501,f);
