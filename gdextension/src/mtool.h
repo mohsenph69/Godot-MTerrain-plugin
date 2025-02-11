@@ -40,6 +40,8 @@ public:
     static PackedInt64Array packed_32_to_64(const PackedInt32Array& p32);
     static PackedInt32Array packed_64_to_32(const PackedInt64Array& p64);
 
+    static AABB get_global_aabb(const AABB& aabb,const Transform3D& global_transform);
+
     template <typename T>
     static Vector<T> packed_byte_array_to_vector(const PackedByteArray& data){
         Vector<T> out;

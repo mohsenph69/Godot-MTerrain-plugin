@@ -2,6 +2,10 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <mutex>
 
+#define DEFAULT_STATE_DATA_CACHE_SIZE 50
+#define MIN_STATE_DATA_CACHE_SIZE 2
+#define STATE_DATA_CACHE_PROP_NAME "mterrain/hlod/state_cache_size"
+
 MLRUCache<int64_t,Variant> MHlodNode3D::state_data;
 
 void MHlodNode3D::_bind_methods(){
@@ -36,7 +40,6 @@ void MHlodNode3D::_bind_methods(){
 MHlodNode3D::MHlodNode3D(){
     if(state_data.is_empty()){
         state_data.init_cache(state_data_get_cache_size());
-        UtilityFunctions::print("state_data_get_cache_size() ",state_data_get_cache_size());
         state_data.set_invalid_data(Variant());
     }
 }
@@ -254,4 +257,19 @@ bool MHlodNode3D::_set(const StringName &p_name, const Variant &p_value){
         return true;
     }
     return false;
+}
+
+PackedStringArray MHlodNode3D::_get_configuration_warnings() const{
+    if(get_scene_file_path().is_empty()){
+        PackedStringArray out;
+        out.push_back("This shoud be save as a PackedScene with a unique ID in masset/packe_scene, please use plus button on asset place panel in bottom! OR save this with unique ID in masset/packe_scene");
+        return out;
+    }
+    int32_t item_id = get_scene_file_path().get_file().to_int();
+    if(get_scene_file_path()!=MHlod::get_packed_scene_path(item_id)) {
+        PackedStringArray out;
+        out.push_back("This shoud be save as a PackedScene with a unique ID in masset/packe_scene, please use plus button on asset place panel in bottom! OR save this with unique ID in masset/packe_scene");
+        return out;
+    }
+    return PackedStringArray();
 }

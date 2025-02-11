@@ -79,7 +79,7 @@ func _ready():
 	force_lod_value.max_value = AssetIO.LOD_COUNT-1
 	force_lod_value.value_changed.connect(baker.force_lod)
 	
-	%disable_joined_mesh_button.visible = baker.has_joined_mesh_glb()	
+	%disable_joined_mesh_button.visible = baker.has_joined_mesh()	
 	%disable_joined_mesh_button.toggled.connect(func(toggle):
 		baker.toggle_joined_mesh_disabled(toggle)
 		validate_show_joined_mesh_button(toggle)
@@ -130,7 +130,7 @@ func show_join_mesh_window():
 
 func validate_show_joined_mesh_button(toggle_on = null):	
 	%disable_joined_mesh_button.tooltip_text = "disable joined mesh" if not toggle_on else "enable joined mesh"
-	%show_joined_button.visible = %force_lod_checkbox.button_pressed and baker.has_joined_mesh_glb() and not baker.joined_mesh_disabled
+	%show_joined_button.visible = %force_lod_checkbox.button_pressed and baker.has_joined_mesh() and not baker.joined_mesh_disabled
 
 func bake_button_gui_input(event):
 	if event is InputEventMouse:

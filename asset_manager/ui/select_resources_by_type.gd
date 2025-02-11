@@ -9,10 +9,21 @@ signal resources_selected
 @onready var search = find_child("search")
 @onready var title_label = find_child("title_label")
 
+
 var types = []# ["StandardMaterial3D", "ShaderMaterial", "ORMMaterial3D"]:
 var select_multiple = false
 
+var existing_materials:PackedStringArray
+var exclude_directories:PackedStringArray = ["addons"]
+
+func _exit_tree() -> void:
+	MAssetTable.save()
+
 func _ready():
+	exclude_directories.push_back(MAssetTable.get_asset_editor_root_dir().get_base_dir().get_file())
+	var __materials = AssetIOMaterials.get_material_table()
+	for m in  __materials:
+		existing_materials.push_back(__materials[m].path)
 	if select_multiple:
 		list.select_mode = Tree.SELECT_MULTI
 	else:
@@ -47,16 +58,16 @@ func build_tree(root:TreeItem, path:="res://"):
 	for file in DirAccess.get_files_at(path):
 		var current_path = path.path_join(file)
 		if not EditorInterface.get_resource_filesystem().get_file_type(current_path) in types: continue
+		if current_path in existing_materials: continue
 		var resource = load(current_path)
 		var item := root.create_child()		
 		item.set_text(1, resource.resource_name if not resource.resource_name.is_empty() else current_path)				
 		item.set_tooltip_text(1, current_path)				
 		EditorInterface.get_resource_previewer().queue_resource_preview(current_path, self, "update_icon_preview", item)				
 	for folder in DirAccess.get_directories_at(path):
-		if folder == "addons": continue
+		if folder in exclude_directories: continue
 		build_tree(root, path.path_join(folder))
 	
 	
 func update_icon_preview(path, preview,thumbnail, data:TreeItem):
 	data.set_icon(0, preview)
-	

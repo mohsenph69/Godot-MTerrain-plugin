@@ -124,13 +124,16 @@ class MHlod : public Resource{
     static String get_hlod_root_dir();
     static String get_hlod_path(int id);
     static _FORCE_INLINE_ MHlod::PhysicBodyInfo& get_physic_body(int16_t id);
+    static _FORCE_INLINE_ void clear_physic_body();
 
     MHlod::Type get_item_type(int32_t item_id) const;
+    void set_aabb(const AABB& aabb);
+    const AABB& get_aabb() const;
     void set_join_at_lod(int input);
     int get_join_at_lod();
     int get_sub_hlod_size_rec();
     void add_sub_hlod(const Transform3D& transform,Ref<MHlod> hlod,uint16_t scene_layers);
-    int add_mesh_item(const Transform3D& transform,const PackedInt64Array& mesh,const PackedInt32Array& material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers);
+    int add_mesh_item(const Transform3D& transform,const PackedInt32Array& mesh,const PackedInt32Array& material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers);
     Dictionary get_mesh_item(int item_id);
     PackedInt32Array get_mesh_items_ids() const;
     int get_last_lod_with_mesh() const;
@@ -139,6 +142,8 @@ class MHlod : public Resource{
     Array get_lod_table();
     void clear();
 
+    void get_last_valid_item_ids(Type type,PackedInt32Array& ids);
+    int32_t get_mesh_id(int32_t item_id,bool current_lod,bool lowest_lod) const;
 
     /// Physics
     int shape_add_sphere(const Transform3D& _transform,float radius,uint16_t layers,int body_id=-1);
@@ -157,6 +162,7 @@ class MHlod : public Resource{
     String get_baker_path();
     #ifdef DEBUG_ENABLED
     Dictionary get_used_mesh_ids() const;
+    Ref<ArrayMesh> get_joined_mesh(bool for_triangle_mesh,bool best_mesh_quality) const;
     #endif
 
 
@@ -303,5 +309,13 @@ _FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
     physic_bodies.insert(id,r);
     return *physic_bodies.getptr(id);
 }
+
+_FORCE_INLINE_ void MHlod::clear_physic_body(){
+    for(HashMap<int16_t,PhysicBodyInfo>::Iterator it=physic_bodies.begin();it!=physic_bodies.end();++it){
+        PhysicsServer3D::get_singleton()->free_rid(it->value.rid);
+    }
+    physic_bodies.clear();
+}
+
 VARIANT_ENUM_CAST(MHlod::Type);
 #endif

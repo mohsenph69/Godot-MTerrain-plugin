@@ -4,6 +4,7 @@ static var thumbnail_queue := [] # {resource, caller, callback, ...}
 static var generating_thumbnail := false
 static var thumbnail_cache = {}
 
+
 func _process(delta):
 	if len(thumbnail_queue)==0: return
 	if generating_thumbnail:
@@ -27,7 +28,8 @@ static func get_valid_thumbnail(collection_id:int)->Texture2D:
 	var creation_time = -1
 	if tex==null or creation_time < 0:
 		var thumbnail_path = MAssetTable.get_asset_thumbnails_path(collection_id)
-		if not FileAccess.file_exists(thumbnail_path): return null
+		if thumbnail_path.is_empty() or not FileAccess.file_exists(thumbnail_path):
+			return null
 		var file = FileAccess.open(thumbnail_path, FileAccess.READ)		
 		var image:= Image.new()
 		image.load_png_from_buffer(file.get_var())
@@ -36,7 +38,7 @@ static func get_valid_thumbnail(collection_id:int)->Texture2D:
 		if tex==null: return null
 		creation_time = FileAccess.get_modified_time(thumbnail_path)
 	creation_time += 1.5
-	if get_collection_import_time(collection_id) > creation_time:
+	if MAssetTable.get_singleton().collection_get_modify_time(collection_id) > creation_time:
 		return null
 	return tex
 
@@ -47,14 +49,6 @@ static func save_thumbnail(preview:Image, thumbnail_path:String):
 		DirAccess.make_dir_recursive_absolute( thumbnail_path.get_base_dir() )
 	file.store_var(data)
 	file.close()
-
-static func get_collection_import_time(collection_id:int)->float:
-	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
-	var import_info:Dictionary = MAssetTable.get_singleton().import_info
-	for k in import_info:
-		if k.begins_with("__"): continue
-		if import_info[k]["__id"] == glb_id: return import_info[k]["__import_time"]
-	return -1
 
 static func make_tscn_thumbnail(scene_path, collection_id, aabb = null):		
 	# THIS IS NOT WORKING
@@ -90,3 +84,34 @@ static func make_tscn_thumbnail(scene_path, collection_id, aabb = null):
 	viewport.get_texture().get_image().save_png("res://thumbnail.png")
 	# Cleanup
 	viewport.queue_free()
+
+static func add_watermark(img:Image,type:MAssetTable.ItemType):
+	var wt:Image
+	match type:
+		MAssetTable.DECAL:
+			wt=load("res://addons/m_terrain/icons/mdecal.svg").get_image()
+		MAssetTable.HLOD:
+			wt=load("res://addons/m_terrain/icons/hlod.svg").get_image()
+		_:
+			return
+	var wt_size = wt.get_size()
+	for i in range(wt_size.x):
+		for j in range(wt_size.y):
+			var wpx:Color= wt.get_pixel(i,j)
+			img.set_pixel(i,j,wpx)
+
+static func generate_decal_texture(collection_id:int)->Texture:
+	var decal_item_id = MAssetTable.get_singleton().collection_get_item_id(collection_id)
+	if decal_item_id==-1: return null
+	var decal_path = MHlod.get_decal_path(decal_item_id)
+	if ResourceLoader.exists(decal_path):
+		var mdecal:MDecal = ResourceLoader.load(decal_path)
+		if not mdecal.texture_albedo:
+			return null
+		var albedo_image = mdecal.texture_albedo.get_image().duplicate()
+		albedo_image.resize(64,64)
+		var path = MAssetTable.get_asset_thumbnails_path(collection_id)
+		add_watermark(albedo_image,MAssetTable.DECAL)
+		save_thumbnail(albedo_image,path)
+		return ImageTexture.create_from_image(albedo_image)
+	return null

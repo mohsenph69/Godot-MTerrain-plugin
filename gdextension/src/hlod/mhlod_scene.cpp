@@ -9,11 +9,20 @@
 #define RS RenderingServer::get_singleton()
 
 
+#ifdef DEBUG_ENABLED
+#include "../editor/mmesh_joiner.h"
+#include <godot_cpp/classes/triangle_mesh.hpp>
+#endif
+
 
 void MHlodScene::_bind_methods(){
+    ClassDB::bind_method(D_METHOD("is_init_scene"), &MHlodScene::is_init_scene);
+
     ClassDB::bind_method(D_METHOD("set_hlod","input"), &MHlodScene::set_hlod);
     ClassDB::bind_method(D_METHOD("get_hlod"), &MHlodScene::get_hlod);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"hlod",PROPERTY_HINT_RESOURCE_TYPE,"MHlod"),"set_hlod","get_hlod");
+
+    ClassDB::bind_method(D_METHOD("get_aabb"), &MHlodScene::get_aabb);
 
     ClassDB::bind_method(D_METHOD("set_scene_layers","input"), &MHlodScene::set_scene_layers);
     ClassDB::bind_method(D_METHOD("get_scene_layers"), &MHlodScene::get_scene_layers);
@@ -21,12 +30,15 @@ void MHlodScene::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("_update_visibility"), &MHlodScene::_update_visibility);
     ClassDB::bind_method(D_METHOD("get_last_lod_mesh_ids_transforms"), &MHlodScene::get_last_lod_mesh_ids_transforms);
-    ClassDB::bind_method(D_METHOD("get_triangle_meshes"), &MHlodScene::get_triangle_meshes);
 
     ClassDB::bind_static_method("MHlodScene",D_METHOD("sleep"), &MHlodScene::sleep);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("awake"), &MHlodScene::awake);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("get_hlod_users","hlod_path"), &MHlodScene::get_hlod_users);
 
+    ClassDB::bind_static_method("MHlodScene",D_METHOD("get_debug_info"), &MHlodScene::get_debug_info);
+    #ifdef DEBUG_ENABLED
+    ClassDB::bind_method(D_METHOD("get_triangle_mesh"), &MHlodScene::get_triangle_mesh);
+    #endif
 }
 
 MHlodScene::ApplyInfo::ApplyInfo(MHlod::Type _type,bool _remove): type(_type) , remove(_remove)
@@ -44,7 +56,7 @@ RID MHlodScene::ApplyInfo::get_instance() const{
 }
 
 MHlodScene::Proc::Proc(MHlodScene* _scene,Ref<MHlod> _hlod,int32_t _proc_id,int32_t _scene_layers,const Transform3D& _transform):
-hlod(_hlod),scene(_scene),proc_id(_proc_id),scene_layers(scene_layers),transform(_transform)
+hlod(_hlod),scene(_scene),proc_id(_proc_id),scene_layers(_scene_layers),transform(_transform)
 {
 
 }
@@ -733,7 +745,55 @@ Array MHlodScene::get_hlod_users(const String& hlod_path){
     }
     return out;
 }
-
+/////////////////////////////////////////////////////
+/// Debug Info
+/////////////////////////////////////////////////////
+Dictionary MHlodScene::get_debug_info(){
+    std::lock_guard<std::mutex> lock(update_mutex);
+    int mesh_instance_count = 0;
+    int light_count = 0;
+    int decal_count = 0;
+    int packed_scene_count = 0;
+    int simple_shape_count = 0;
+    int complex_shape_count = 0;
+    for(HashMap<int32_t,Proc*>::ConstIterator pit=octpoints_to_proc.begin(); pit!=octpoints_to_proc.end();++pit){
+        if(!pit->value->is_enable){
+            continue;
+        }
+        const HashMap<int32_t,CreationInfo>& creation_info = pit->value->items_creation_info;
+        for(HashMap<int32_t,CreationInfo>::ConstIterator cit=creation_info.begin();cit!=creation_info.end();++cit){
+            const CreationInfo& ci = cit->value;
+            switch (ci.type)
+            {
+            case MHlod::MESH:
+                mesh_instance_count++;
+                break;
+            case MHlod::LIGHT:
+                light_count++;
+                break;
+            case MHlod::DECAL:
+                decal_count++;
+                break;
+            case MHlod::COLLISION:
+                simple_shape_count++;
+                break;
+            case MHlod::COLLISION_COMPLEX:
+                complex_shape_count++;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    Dictionary out;
+    out["mesh_instance_count"] = mesh_instance_count;
+    out["light_count"] = light_count;
+    out["decal_count"] = decal_count;
+    out["packed_scene_count"] = packed_scene_count;
+    out["simple_shape_count"] = simple_shape_count;
+    out["complex_shape_count"] = complex_shape_count;
+    return out;
+}
 /////////////////////////////////////////////////////
 /// END Static --> Proc Manager
 /////////////////////////////////////////////////////
@@ -747,6 +807,13 @@ MHlodScene::MHlodScene(){
 MHlodScene::~MHlodScene(){
     all_hlod_scenes.erase(this);
     deinit_proc<true>();
+    if(all_hlod_scenes.size()==0){ // so we are the last one
+        MHlod::clear_physic_body();
+    }
+}
+
+bool MHlodScene::is_init_scene() const {
+    return is_init;
 }
 
 void MHlodScene::set_hlod(Ref<MHlod> input){
@@ -769,6 +836,13 @@ Ref<MHlod> MHlodScene::get_hlod(){
         return Ref<MHlod>();
     }
     return get_root_proc()->hlod;
+}
+
+AABB MHlodScene::get_aabb() const{
+    if(procs.size()==0 || procs[0].hlod.is_null()){
+        return AABB();
+    }
+    return procs[0].hlod->get_aabb();
 }
 
 void MHlodScene::set_scene_layers(int64_t input){
@@ -821,35 +895,6 @@ void MHlodScene::_update_visibility(){
     get_root_proc()->set_visibility(v);
 }
 
-#ifdef DEBUG_ENABLED
-void MHlodScene::_update_editor_tri_mesh(){ // will be called in update thread
-    PackedVector3Array vertices;
-    PackedInt32Array indices;
-    Transform3D t;
-    get_root_proc()->_get_editor_tri_mesh_info(vertices,indices,t);
-    if(vertices.size()==0){
-        return;
-    }
-    Array joined_mesh_info;
-    joined_mesh_info.resize(Mesh::ARRAY_MAX);
-    joined_mesh_info[Mesh::ARRAY_VERTEX] = vertices;
-    joined_mesh_info[Mesh::ARRAY_INDEX] = indices;
-    Ref<ArrayMesh> arr_mesh;
-    arr_mesh.instantiate();
-    arr_mesh->add_surface_from_arrays(godot::Mesh::PrimitiveType::PRIMITIVE_TRIANGLES,joined_mesh_info);
-    editor_tri_mesh = arr_mesh->generate_triangle_mesh();
-}
-#endif
-
-Array MHlodScene::get_triangle_meshes(){
-    #ifdef DEBUG_ENABLED
-    Array out;
-    return out;
-    #else
-    return Array();
-    #endif
-}
-
 
 Array MHlodScene::get_last_lod_mesh_ids_transforms(){
     Array out;
@@ -876,3 +921,19 @@ Array MHlodScene::get_last_lod_mesh_ids_transforms(){
     }
     return out;
 }
+
+#ifdef DEBUG_ENABLED
+Ref<TriangleMesh> MHlodScene::get_triangle_mesh(){
+    ERR_FAIL_COND_V(procs.size()==0,Ref<TriangleMesh>());
+    ERR_FAIL_COND_V(procs[0].hlod.is_null(),Ref<TriangleMesh>());
+
+    if(cached_triangled_mesh.is_valid()){
+        return cached_triangled_mesh;
+    }
+    Ref<ArrayMesh> jmesh = procs[0].hlod->get_joined_mesh(false,false);
+    ERR_FAIL_COND_V(jmesh.is_null(),Ref<TriangleMesh>());
+    //cached_triangled_mesh = jmesh->generate_triangle_mesh();
+    return jmesh->generate_triangle_mesh();
+    return cached_triangled_mesh;
+}
+#endif

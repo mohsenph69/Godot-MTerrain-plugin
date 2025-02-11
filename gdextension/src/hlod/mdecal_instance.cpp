@@ -2,9 +2,15 @@
 
 
 void MDecalInstance::_bind_methods(){
+    ClassDB::bind_method(D_METHOD("has_decal"), &MDecalInstance::has_decal);
+
     ClassDB::bind_method(D_METHOD("set_decal"), &MDecalInstance::set_decal);
     ClassDB::bind_method(D_METHOD("get_decal"), &MDecalInstance::get_decal);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"decal",PROPERTY_HINT_RESOURCE_TYPE,"MDecal"), "set_decal","get_decal");
+}
+
+bool MDecalInstance::has_decal() const{
+    return mdecal.is_valid();
 }
 
 void MDecalInstance::set_decal(Ref<MDecal> input){
@@ -18,7 +24,7 @@ void MDecalInstance::set_decal(Ref<MDecal> input){
     }
 }
 
-Ref<MDecal> MDecalInstance::get_decal(){
+Ref<MDecal> MDecalInstance::get_decal() const{
     return mdecal;
 }
 

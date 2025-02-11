@@ -25,7 +25,6 @@ func _parse_begin(object):
 	var margin = MarginContainer.new()			
 	margin.add_theme_constant_override("margin_left", 4)
 	margin.add_theme_constant_override("margin_bottom", 4)	
-
 	if object is MAssetTable:
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/asset_table_inspector.tscn").instantiate()	
 	elif object is HLod_Baker:	
@@ -74,7 +73,7 @@ func _parse_begin(object):
 		control.add_child( make_physics_settings_control(object))		
 		if EditorInterface.get_edited_scene_root() is HLod_Baker:
 			control.add_child( make_variation_layer_control_for_assigning(object))			
-	elif object is MDecal or object is MDecalInstance: 
+	elif object is MDecal or object is MDecalInstance:
 		control = VBoxContainer.new()
 		var hbox = HBoxContainer.new()
 		hbox.size_flags_horizontal =Control.SIZE_EXPAND_FILL		
@@ -83,19 +82,16 @@ func _parse_begin(object):
 		var name_edit = LineEdit.new()
 		name_edit.size_flags_horizontal =Control.SIZE_EXPAND_FILL
 		name_edit.text = object.resource_name if object is MDecal else object.decal.resource_name
+		var decal:MDecal= object if object is MDecal else object.decal
+		var item_id = int(decal.resource_path.get_file())
+		var collection_id = asset_library.collection_find_with_item_type_item_id(MAssetTable.DECAL, item_id)
+		if collection_id == -1:
+			MTool.print_edmsg("Trying to rename an MDecal, but can't find collection_id")
+			return
 		name_edit.text_submitted.connect(func(text):
-			var decal = object if object is MDecal else object.decal
 			if decal.resource_name == text: return
-			if asset_library.collection_get_id(text) != -1: 
-				MTool.print_edmsg("Trying to rename an MDecal, but name already exist")						
-				return				
 			decal.resource_name = text
-			#var item id = int(decal.resource_path.get_file())			
-			var item_id = int(decal.resource_path.get_file())
-			var collection_id = asset_library.collection_find_with_item_type_item_id(MAssetTable.DECAL, item_id)
-			if collection_id == -1:
-				MTool.print_edmsg("Trying to rename an MDecal, but can't find collection_id")					
-			asset_library.collection_create(decal.resource_name, item_id, MAssetTable.DECAL, -1)									
+			asset_library.collection_set_name(collection_id,MAssetTable.DECAL,decal.resource_name)
 			asset_placer.assets_changed.emit(decal)
 			object.notify_property_list_changed()
 		)
@@ -105,6 +101,9 @@ func _parse_begin(object):
 		if object is MDecalInstance:
 			control.add_child(make_variation_layer_control_for_assigning(object))							
 			control.add_child(make_cutoff_lod_control(object))
+		var mt:Callable = MAssetTable.get_singleton().collection_update_modify_time.bind(collection_id)
+		if object is MDecal and not decal.changed.is_connected(mt):
+			decal.changed.connect(mt)
 	elif object is Material:
 		var hbox = HBoxContainer.new()
 		hbox.size_flags_horizontal =Control.SIZE_EXPAND_FILL		

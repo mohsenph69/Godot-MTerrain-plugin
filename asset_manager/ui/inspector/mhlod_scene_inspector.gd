@@ -11,9 +11,18 @@ func _ready():
 		edit_baker_scene_button.disabled = true			
 		return
 		
-	edit_baker_scene_button.pressed.connect(func():				
-		EditorInterface.open_scene_from_path(mhlod_scene.hlod.get_baker_path())
-	)		
+	edit_baker_scene_button.pressed.connect(func():
+		if not mhlod_scene:
+			MTool.print_edmsg("mhlod_scene node is not valid")
+			return
+		if not mhlod_scene.hlod:
+			MTool.print_edmsg("MHlod resource is not valid")
+			return
+		if(not FileAccess.file_exists(mhlod_scene.hlod.get_baker_path())):
+			MTool.print_edmsg("baker path not exist: "+mhlod_scene.hlod.get_baker_path())
+			return
+		EditorInterface.call_deferred("open_scene_from_path",mhlod_scene.hlod.get_baker_path())
+	)
 	set_variation_layer_names()
 	
 func set_variation_layer_names():

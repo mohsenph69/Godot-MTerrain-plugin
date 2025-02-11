@@ -239,6 +239,9 @@ class MHlodScene : public Node3D {
     static void sleep();
     static void awake();
     static Array get_hlod_users(const String& hlod_path);
+    // Debug Tools
+    static Dictionary get_debug_info();
+
 
     private:
     _FORCE_INLINE_ Proc* get_root_proc(){
@@ -253,20 +256,23 @@ class MHlodScene : public Node3D {
     inline bool is_init_procs(){
         return is_init;
     }
+    bool is_init_scene() const;
     void set_hlod(Ref<MHlod> input);
     Ref<MHlod> get_hlod();
+    AABB get_aabb() const;
     void set_scene_layers(int64_t input);
     int64_t get_scene_layers();
     void _notification(int p_what);
     void _update_visibility();
-    #ifdef DEBUG_ENABLED
-    Ref<TriangleMesh> editor_tri_mesh;
-    void _update_editor_tri_mesh(); // will be called in update thread
-    #endif
-    Array get_triangle_meshes();
 
     // usefull for joining the mesh
     Array get_last_lod_mesh_ids_transforms();
+
+    // Works only in editor
+    #ifdef DEBUG_ENABLED
+    Ref<TriangleMesh> cached_triangled_mesh;
+    Ref<TriangleMesh> get_triangle_mesh();
+    #endif
 
 
     template<bool UseLock>
@@ -321,6 +327,11 @@ class MHlodScene : public Node3D {
     
     template<bool UseLock>
     void deinit_proc(){
+        #ifdef DEBUG_ENABLED
+        if(cached_triangled_mesh.is_valid()){
+            cached_triangled_mesh.unref();
+        }
+        #endif
         if(!is_init_procs()){
             return;
         }
@@ -363,7 +374,6 @@ _FORCE_INLINE_ void MHlodScene::Proc::bind_item_clear(const MHlodScene::GlobalIt
 }
 
 _FORCE_INLINE_ Transform3D MHlodScene::Proc::bind_item_get_transform(const MHlodScene::GlobalItemID bound_id) const{
-   UtilityFunctions::print("bind_item_get_transform");
    return get_item_transform(bound_id.transform_index);
 }
 

@@ -29,6 +29,10 @@ void MAssetMeshUpdater::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_join_mesh_id"), &MAssetMeshUpdater::get_join_mesh_id);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"join_mesh_id"),"set_join_mesh_id","get_join_mesh_id");
 
+    ClassDB::bind_method(D_METHOD("set_variation_layers","input"), &MAssetMeshUpdater::set_variation_layers);
+    ClassDB::bind_method(D_METHOD("get_variation_layers"), &MAssetMeshUpdater::get_variation_layers);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"variation_layers"),"set_variation_layers","get_variation_layers");
+
     ClassDB::bind_method(D_METHOD("set_root_node","input"), &MAssetMeshUpdater::set_root_node);
     ClassDB::bind_method(D_METHOD("get_root_node"), &MAssetMeshUpdater::get_root_node);
 
@@ -85,8 +89,20 @@ void MAssetMeshUpdater::_update_lod(int lod){
             if(is_join_mesh){
                 amesh->destroy_meshes();
             } else {
-                amesh->update_lod(lod);
+                uint16_t avariation_layer = amesh->has_meta("variation_layers") ?  (int)amesh->get_meta("variation_layers") : 0;
+                if(avariation_layer==0 || (avariation_layer&variation_layer)!=0){
+                    amesh->update_lod(lod);
+                } else {
+                    amesh->update_lod(-1);
+                }
             }
+            continue;
+        }
+        VisualInstance3D* nd3d = Object::cast_to<VisualInstance3D>(cur_node);
+        if(nd3d){
+            uint16_t avariation_layer = nd3d->has_meta("variation_layers") ?  (int)nd3d->get_meta("variation_layers") : 0;
+            bool is_visible = avariation_layer==0 || (avariation_layer&variation_layer)!=0;
+            RS->instance_set_visible(nd3d->get_instance(),is_visible);
         }
     }
 }
@@ -99,7 +115,6 @@ void MAssetMeshUpdater::update_join_mesh(){
     }
     if(!MAssetTable::mesh_join_is_valid(join_mesh_id)){
         join_at == -1;
-        ERR_FAIL_MSG("Join mesh Id "+itos(join_mesh_id)+" is not valid ");
         return;
     }
     joined_mesh_ids = MAssetTable::mesh_join_ids(join_mesh_id);
@@ -193,6 +208,13 @@ int MAssetMeshUpdater::get_join_mesh_id(){
     return join_mesh_id;
 }
 
+void MAssetMeshUpdater::set_variation_layers(int input){
+    variation_layer = input;
+}
+
+int MAssetMeshUpdater::get_variation_layers(){
+    return variation_layer;
+}
 
 void MAssetMeshUpdater::set_root_node(Node3D* input){
     root_node = input;

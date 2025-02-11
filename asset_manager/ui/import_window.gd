@@ -29,6 +29,7 @@ func _ready():
 		get_parent().close_requested.connect(get_parent().queue_free)
 	cancel_button.pressed.connect(func():
 		if get_parent() is Window:
+			if MAssetTable.get_singleton(): MAssetTable.get_singleton().clear_import_info_cache()
 			get_parent().queue_free()
 	)
 	if asset_data == null:

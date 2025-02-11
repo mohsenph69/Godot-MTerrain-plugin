@@ -24,7 +24,7 @@
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="19_sansc"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_f1fh3"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_imlxr"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -46,9 +46,10 @@ layout_mode = 2
 [node name="asset_type_filter_button" type="Button" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
+tooltip_text = "Hold Shift or Ctrl to single select"
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_f1fh3")
+button_group = SubResource("ButtonGroup_imlxr")
 text = "Types"
 expand_icon = true
 script = ExtResource("4_he502")
@@ -62,7 +63,6 @@ offset_right = 160.0
 offset_bottom = 2.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-hide_folding = true
 hide_root = true
 select_mode = 1
 script = ExtResource("10_m1w1c")
@@ -72,7 +72,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_f1fh3")
+button_group = SubResource("ButtonGroup_imlxr")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -96,7 +96,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_f1fh3")
+button_group = SubResource("ButtonGroup_imlxr")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -119,7 +119,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_f1fh3")
+button_group = SubResource("ButtonGroup_imlxr")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -218,7 +218,7 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
-button_group = SubResource("ButtonGroup_f1fh3")
+button_group = SubResource("ButtonGroup_imlxr")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
@@ -265,6 +265,7 @@ expand_icon = true
 script = ExtResource("20_t8s58")
 
 [node name="debug_info_tree" type="Tree" parent="VBoxContainer/HBoxContainer/show_debug_info_button"]
+visible = false
 z_index = 2
 custom_minimum_size = Vector2(300, 180)
 layout_mode = 1

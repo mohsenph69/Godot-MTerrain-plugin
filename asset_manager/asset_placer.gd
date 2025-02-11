@@ -75,6 +75,7 @@ var current_placement_dir:Vector3
 static var thumbnail_manager 
 
 func _ready():	
+	AssetIO.asset_placer = self
 	popup_button_group = ButtonGroup.new()
 	popup_button_group.allow_unpress = true
 	for button:Button in [asset_type_filter_button, filter_button, grouping_button, sort_by_button, add_asset_button ]:
@@ -161,6 +162,7 @@ func create_baker_scene():
 func create_packed_scene():
 	var id = MAssetTable.get_last_free_packed_scene_id()	
 	var node := MHlodNode3D.new()		
+	node.name = "MHlodNode3D_" + str(id)
 	var collection_id = asset_library.collection_create(node.name, id, MAssetTable.PACKEDSCENE, -1)
 	asset_library.save()
 	node.set_meta("collection_id", collection_id)	
@@ -170,6 +172,7 @@ func create_packed_scene():
 	ResourceSaver.save(packed, path)			
 	EditorInterface.open_scene_from_path(path)			
 	add_asset_button.button_pressed = false
+	regroup()
 	
 func create_decal():
 	var id = MAssetTable.get_last_free_decal_id()		
@@ -186,11 +189,14 @@ func create_decal():
 	node.decal = decal
 	ResourceSaver.save(decal, path)				
 	var scene_root = EditorInterface.get_edited_scene_root()
+	if scene_root==null:
+		return
 	scene_root.add_child(node)
 	node.name = "New Decal"
 	node.owner = scene_root
 	node.set_meta("collection_id", collection_id)
 	add_asset_button.button_pressed = false
+	regroup()
 	
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
@@ -411,7 +417,7 @@ func regroup(group = current_group, sort_mode="asc"):
 
 func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
 	var collection_id = group_list.get_item_metadata(id)
-	if not collection_id or collection_id == -1: return
+	if collection_id == -1: return
 	var node = add_asset_to_scene(collection_id, group_list.get_item_tooltip(id),create_ur)		
 	return node 
 

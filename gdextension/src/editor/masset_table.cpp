@@ -6,11 +6,17 @@
 #include <godot_cpp/classes/resource_saver.hpp>
 #include <godot_cpp/classes/dir_access.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/json.hpp>
+#include <godot_cpp/classes/scene_state.hpp>
+#include <godot_cpp/classes/packed_scene.hpp>
+#include <godot_cpp/classes/time.hpp>
 int32_t MAssetTable::last_free_item_id = -1;
+const char* MAssetTable::import_info_path="res://massets_editor/import_info.json";
 const char* MAssetTable::asset_table_path = "res://massets_editor/asset_table.res";
 const char* MAssetTable::asset_editor_root_dir = "res://massets_editor/";
 const char* MAssetTable::editor_baker_scenes_dir = "res://massets_editor/baker_scenes/";
-const char* MAssetTable::asset_thumbnails_dir = "res://massets_editor/thumbnails/";
+const char* MAssetTable::asset_thumbnails_dir = "res://massets_editor/thumbnails_meshes/";
+const char* MAssetTable::thumbnails_dir = "res://massets_editor/thumbnails/";
 const char* MAssetTable::hlod_res_dir = "res://massets/hlod/";
 MAssetTable* MAssetTable::asset_table_singelton = nullptr;
 
@@ -64,10 +70,13 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("tags_get_collections_all","search_collections","tags","exclude_tags"), &MAssetTable::tags_get_collections_all);
     ClassDB::bind_method(D_METHOD("tag_get_tagless_collections"), &MAssetTable::tag_get_tagless_collections);
     ClassDB::bind_method(D_METHOD("collection_create","name","item_id","type","glb_id"), &MAssetTable::collection_create);
+    ClassDB::bind_method(D_METHOD("collection_get_modify_time","collection_id"), &MAssetTable::collection_get_modify_time);
+    ClassDB::bind_method(D_METHOD("collection_update_modify_time","collection_id"), &MAssetTable::collection_update_modify_time);
     ClassDB::bind_method(D_METHOD("collection_set_physics_setting","collection_id","physics_name"), &MAssetTable::collection_set_physics_setting);
     ClassDB::bind_method(D_METHOD("collection_get_physics_setting","collection_id"), &MAssetTable::collection_get_physics_setting);
     ClassDB::bind_method(D_METHOD("collection_set_colcutoff","collection_id","value"), &MAssetTable::collection_set_colcutoff);
     ClassDB::bind_method(D_METHOD("collection_get_colcutoff","collection_id"), &MAssetTable::collection_get_colcutoff);
+    ClassDB::bind_method(D_METHOD("collection_get_type","collection_id"), &MAssetTable::collection_get_type);
     ClassDB::bind_method(D_METHOD("collection_get_glb_id","collection_id"), &MAssetTable::collection_get_glb_id);
     ClassDB::bind_method(D_METHOD("collection_get_item_id","collection_id"), &MAssetTable::collection_get_item_id);
     ClassDB::bind_method(D_METHOD("collection_clear_sub_and_col","collection_id"), &MAssetTable::collection_clear_sub_and_col);
@@ -80,6 +89,7 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("collection_get_sub_collections","collection_id"), &MAssetTable::collection_get_sub_collections);
     ClassDB::bind_method(D_METHOD("collection_get_collision_count","collection_id"), &MAssetTable::collection_get_collision_count);
     ClassDB::bind_method(D_METHOD("collection_remove_tag","collection_id","tag"), &MAssetTable::collection_remove_tag);
+    ClassDB::bind_method(D_METHOD("collection_set_name","collection_id","expected_type","new_name"), &MAssetTable::collection_set_name);
     ClassDB::bind_method(D_METHOD("collection_get_name","collection_id"), &MAssetTable::collection_get_name);
     ClassDB::bind_method(D_METHOD("collection_get_id","collection_name"), &MAssetTable::collection_get_id);
     ClassDB::bind_method(D_METHOD("collection_get_tags","collection_id"), &MAssetTable::collection_get_tags);
@@ -117,9 +127,13 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_data","data"), &MAssetTable::set_data);
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"data"),"set_data","get_data");
 
+    ClassDB::bind_method(D_METHOD("clear_import_info_cache"), &MAssetTable::clear_import_info_cache);
+    ClassDB::bind_method(D_METHOD("save_import_info"), &MAssetTable::save_import_info);
     ClassDB::bind_method(D_METHOD("get_import_info"), &MAssetTable::get_import_info);
     ClassDB::bind_method(D_METHOD("set_import_info","input"), &MAssetTable::set_import_info);
-    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"import_info"),"set_import_info","get_import_info");
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"import_info",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_NONE),"set_import_info","get_import_info");
+
+    ClassDB::bind_method(D_METHOD("auto_asset_update_from_dir","type"), &MAssetTable::auto_asset_update_from_dir);
 
     ClassDB::bind_method(D_METHOD("test","data") , &MAssetTable::test);
     ClassDB::bind_method(D_METHOD("debug_test") , &MAssetTable::debug_test);
@@ -149,6 +163,10 @@ void MAssetTable::make_assets_dir(){
     }
     if(!DirAccess::dir_exists_absolute(String(MAssetTable::asset_thumbnails_dir))){
         Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::asset_thumbnails_dir));
+        if(err!=OK){WARN_PRINT("Can not create folder");}
+    }
+    if(!DirAccess::dir_exists_absolute(String(MAssetTable::thumbnails_dir))){
+        Error err = DirAccess::make_dir_recursive_absolute(String(MAssetTable::thumbnails_dir));
         if(err!=OK){WARN_PRINT("Can not create folder");}
     }
     if(!DirAccess::dir_exists_absolute(String(MHlod::get_mesh_root_dir()))){
@@ -182,6 +200,8 @@ void MAssetTable::save(){
     make_assets_dir();
     Error err = ResourceSaver::get_singleton()->save(asset_table_singelton,asset_table_path);
     asset_table_singelton->collection_clear_unused_physics_settings();
+    asset_table_singelton->save_import_info();
+    asset_table_singelton->clear_import_info_cache();
     ERR_FAIL_COND_MSG(err!=OK,"can not save asset table!");
 }
 
@@ -201,12 +221,34 @@ String MAssetTable::get_asset_thumbnails_dir(){
     return asset_thumbnails_dir;
 }
 
+String MAssetTable::get_thumbnails_dir(){
+    return thumbnails_dir;
+}
+
 String MAssetTable::get_asset_thumbnails_path(int collection_id){
-    return String(asset_thumbnails_dir) + itos(collection_id) + String(".dat");
+    ERR_FAIL_COND_V(asset_table_singelton==nullptr,"");
+    ItemType type = asset_table_singelton->collection_get_type(collection_id);
+    String tprefix;
+    switch (type)
+    {
+    case MESH:
+        /* No Prefix */
+        break;
+    case DECAL:
+        tprefix = "d";
+        break;
+    case HLOD:
+        tprefix = "h";
+        break;
+    default:
+        return "";
+    }
+    const char* tdir = type==MESH ? asset_thumbnails_dir : thumbnails_dir;
+    return String(tdir) + tprefix +itos(collection_id) + String(".dat");
 }
 
 String MAssetTable::get_material_thumbnails_path(int material_id){
-    return String(asset_thumbnails_dir) + "material_" + itos(material_id) + String(".dat");
+    return String(thumbnails_dir) + "material_" + itos(material_id) + String(".dat");
 }
 
 String MAssetTable::get_hlod_res_dir(){
@@ -796,7 +838,18 @@ int MAssetTable::collection_create(const String& _name,int32_t item_id,MAssetTab
     collections.ptrw()[index].type = type;
     collections.ptrw()[index].glb_id = glb_id;
     collections.ptrw()[index].item_id = item_id;
+    collections.ptrw()[index].modify_time = Time::get_singleton()->get_unix_time_from_system();
     return index;
+}
+
+void MAssetTable::collection_update_modify_time(int collection_id){
+    ERR_FAIL_COND(!has_collection(collection_id));
+    collections.ptrw()[collection_id].modify_time = Time::get_singleton()->get_unix_time_from_system();
+}
+
+int64_t MAssetTable::collection_get_modify_time(int collection_id) const{
+    ERR_FAIL_COND_V(!has_collection(collection_id),0);
+    return collections[collection_id].modify_time;
 }
 
 void MAssetTable::collection_set_physics_setting(int collection_id,const String& physics_name){
@@ -840,6 +893,11 @@ void MAssetTable::collection_clear_unused_physics_settings(){
     }
 }
 
+MAssetTable::ItemType MAssetTable::collection_get_type(int collection_id) const{
+    ERR_FAIL_COND_V(!has_collection(collection_id),NONE);
+    return collections[collection_id].type;
+}
+
 int32_t MAssetTable::collection_get_glb_id(int collection_id) const{
     ERR_FAIL_COND_V(!has_collection(collection_id),-1);
     return collections[collection_id].glb_id;
@@ -879,6 +937,7 @@ void MAssetTable::collection_remove(int id){
     collection_clear_sub_and_col(id);
     collections.ptrw()[id].glb_id = -1;
     collections.ptrw()[id].item_id = -1;
+    collections.ptrw()[id].type = ItemType::NONE;
     collections_names.set(id,"");
     collections_tags.ptrw()[id].clear();
     free_collections.push_back(id);
@@ -950,9 +1009,45 @@ bool MAssetTable::collection_add_sub_collection(int collection_id,int sub_collec
     return true;
 }
 
-void MAssetTable::collection_add_collision(int collection_id,CollisionType col_type,const Transform3D& col_transform,const Transform3D& base_transform){
+void MAssetTable::collection_add_collision(int collection_id,CollisionType col_type,Transform3D col_transform,const Transform3D& base_transform){
     ERR_FAIL_COND(!has_collection(collection_id));
-    Vector3 size = col_transform.get_basis().get_scale();
+    // Getting sign with correct sing
+    // Godot Basis class does not have this so we have to write it by outself
+    Vector3 size_signs;
+    {
+        float det = col_transform.basis.determinant() < 0 ? -1.0f : 1.0f;
+        ERR_FAIL_COND(UtilityFunctions::is_equal_approx(det,0.0f));
+        Basis bx = col_transform.basis;
+        bx.set_column(0,Vector3(1,1,1));
+        Basis by = col_transform.basis;
+        by.set_column(1,Vector3(1,1,1));
+        Basis bz = col_transform.basis;
+        bz.set_column(2,Vector3(1,1,1));
+        size_signs.x = det * bx.determinant();
+        size_signs.y = det * by.determinant();
+        size_signs.z = det * bz.determinant();
+        // -----
+        size_signs.x = size_signs.x < 0 ? -1.0f : 1.0f;
+        size_signs.y = size_signs.y < 0 ? -1.0f : 1.0f;
+        size_signs.z = size_signs.z < 0 ? -1.0f : 1.0f;
+    }
+    Vector3 size;
+    {
+        size.x = col_transform.basis.get_column(0).length();
+        size.y = col_transform.basis.get_column(1).length();
+        size.z = col_transform.basis.get_column(2).length();
+    }
+    if(size_signs.x < 0){
+        col_transform.basis.scale(Vector3(-1,1,1));
+    }
+    if(size_signs.y < 0){
+        col_transform.basis.scale(Vector3(1,-1,1));
+    }
+    if(size_signs.z < 0){
+        col_transform.basis.scale(Vector3(1,1,-1));
+    }
+    size = col_transform.get_basis().get_scale();
+    
     Transform3D t = base_transform.inverse() * col_transform;
     t.orthonormalize();
     // Shape
@@ -972,12 +1067,14 @@ void MAssetTable::collection_add_collision(int collection_id,CollisionType col_t
         shape.param_2 *= 2.0f;
         shape.param_3 *= 2.0f;
     }
-    int index;
+    
+    int index=-1;
     if(!collisions_data.has(collection_id)){
         index = collisions_data.insert(collection_id,CollisionData());
     } else {
-        collisions_data.find(collection_id);
+        index = collisions_data.find(collection_id);
     }
+    ERR_FAIL_COND(index==-1);
     CollisionData& col_data = collisions_data.get_array()[index].value;
     col_data.collision_shapes.push_back(shape);
     col_data.collision_shapes_transforms.push_back(t);
@@ -1003,6 +1100,13 @@ void MAssetTable::collection_remove_tag(int collection_id,int tag){
     ERR_FAIL_COND(!has_collection(collection_id));
     ERR_FAIL_COND(tag > M_MAX_TAG);
     collections_tags.ptrw()[collection_id].remove_tag(tag);
+}
+
+void MAssetTable::collection_set_name(int collection_id,ItemType expected_type,const String& new_name){
+    ERR_FAIL_COND(!has_collection(collection_id));
+    ERR_FAIL_COND(expected_type==MESH);
+    ERR_FAIL_COND(collections[collection_id].type!=expected_type);
+    collections_names.set(collection_id,new_name);
 }
 
 String MAssetTable::collection_get_name(int collection_id) const{
@@ -1349,12 +1453,129 @@ void MAssetTable::test(Dictionary d){
     UtilityFunctions::print("A ",a);
 }
 
+void MAssetTable::clear_import_info_cache(){
+    import_info.clear();
+}
+
+void MAssetTable::save_import_info(){
+    if(import_info.is_empty()){
+        return;
+    }
+    make_assets_dir();
+    String imstr = JSON::stringify(import_info);
+    Ref<FileAccess> f = FileAccess::open(import_info_path,FileAccess::WRITE);
+    f->store_string(imstr);
+    f->close();
+}
+
+void MAssetTable::load_import_info(){
+    if(FileAccess::file_exists(import_info_path)){
+        String imstr = FileAccess::get_file_as_string(import_info_path);
+        import_info =  JSON::parse_string(imstr);
+        Dictionary __materials;
+        Dictionary __materials_final;
+        if(import_info.has("__materials")){
+            __materials = import_info["__materials"];
+        }
+        Array keys = __materials.keys();
+        for(int i=0; i < keys.size(); i++){
+            String skey = keys[i];
+            int ikey = skey.to_int();
+            __materials_final[ikey] = __materials[skey];
+        }
+        import_info["__materials"] = __materials_final;
+    }
+}
+
 void MAssetTable::set_import_info(const Dictionary& input){
+    if(import_info.is_empty()){
+        load_import_info();
+    }
     import_info = input;
 }
 
 Dictionary MAssetTable::get_import_info(){
+    if(!import_info.is_empty()){
+        return import_info;
+    }
+    load_import_info();
     return import_info;
+}
+
+void MAssetTable::auto_asset_update_from_dir(ItemType type){
+    ERR_FAIL_COND_MSG(type==MESH,"Type mesh can not be update with directory checking!");
+    HashMap<int32_t,String> found_item_id_names;
+    String dir_path;
+    String (*func_path)(int32_t) = nullptr;
+    String default_name;
+    switch (type)
+    {
+    case HLOD:
+        dir_path = MHlod::get_hlod_root_dir();
+        func_path = &MHlod::get_hlod_path;
+        default_name = "HOLD_";
+        break;
+    case PACKEDSCENE:
+        dir_path = MHlod::get_packed_scene_root_dir();
+        func_path = &MHlod::get_packed_scene_path;
+        default_name = "PACKEDSCENE_";
+        break;
+    case DECAL:
+        dir_path = MHlod::get_decal_root_dir();
+        func_path = &MHlod::get_decal_path;
+        default_name = "DECAL_";
+        break;
+    default:
+        ERR_FAIL_MSG("Invalid Item Type");
+    }
+    Ref<DirAccess> dir = DirAccess::open(dir_path);
+    PackedStringArray file_names = dir->get_files();
+    if(dir.is_valid()){
+        PackedStringArray file_names = dir->get_files();
+        dir.unref();
+    }
+    UtilityFunctions::print("File names ",file_names);
+    for(const String& fname : file_names){
+        String tmp = fname.get_basename();
+        if(!tmp.is_valid_int()){
+            continue;
+        }
+        int32_t item_id = tmp.to_int();
+        Ref<Resource> res = RL->load(func_path(item_id));
+        if(res.is_valid()){
+            String rname;
+            if(type==ItemType::PACKEDSCENE){
+                Ref<PackedScene> pscene = res;
+                if(pscene.is_valid()){
+                    rname = pscene->get_state()->get_node_name(0);
+                }
+            } else {
+                rname = res->get_name();
+            }
+            if(rname.is_empty()){
+                rname = default_name + itos(item_id);
+            }
+            found_item_id_names.insert(item_id,rname);
+        }
+    }
+    for(int i=0; i < collections.size(); i++){
+        if(collections[i].type!=type || collections[i].item_id==-1){
+            continue;
+        }
+        int32_t current_item_id = collections[i].item_id;
+        if(found_item_id_names.has(current_item_id)){
+            collection_set_name(i,type,found_item_id_names[current_item_id]);
+            found_item_id_names.erase(current_item_id); // handled
+        } else { // means it is removed
+            UtilityFunctions::print("Removing ",collection_get_item_id(i));
+            collection_remove(i);
+        }
+    }
+    // What not handled is new
+    for(HashMap<int32_t,String>::ConstIterator it=found_item_id_names.begin();it!=found_item_id_names.end();++it){
+        int new_collection = collection_create(it->value,it->key,type,-1);
+    }
+    save();
 }
 
 void MAssetTable::reset(bool hard){

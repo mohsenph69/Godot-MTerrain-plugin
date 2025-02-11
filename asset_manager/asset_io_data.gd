@@ -196,8 +196,9 @@ func finalize_glb_parse():
 	for k in collections:
 		if collections[k]["is_master"] : continue
 		for m in collections[k].meshes:
-			if m: collections[k]["base_transform"] = mesh_data[m].transform
-
+			if m:
+				collections[k]["base_transform"] = mesh_data[m].transform
+				break
 
 func check_for_infinite_recursion_in_collections(name, checked_collections = []):
 	var asset_library = MAssetTable.get_singleton()
@@ -360,8 +361,8 @@ func set_correct_material(mmesh:MMesh, mesh_path):
 			var material_name = current_material_name[surface_index]
 			if not materials.has(material_name):
 				continue
-			var material_id = materials[material_name]
-			if material_id == -1:
+			var material_id = int(round(materials[material_name]))
+			if material_id < 0:
 				continue
 			var material_path = import_info["__materials"][material_id]["path"]
 			mmesh.surface_set_material(set_num,surface_index,material_path)

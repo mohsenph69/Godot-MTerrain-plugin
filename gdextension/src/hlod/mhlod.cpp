@@ -3,6 +3,7 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 #ifdef DEBUG_ENABLED
 #include "../editor/masset_table.h"
+#include "../editor/mmesh_joiner.h"
 #endif
 
 
@@ -26,6 +27,10 @@ void MHlod::_bind_methods(){
     ClassDB::bind_static_method("MHlod",D_METHOD("get_hlod_path","id"), &MHlod::get_hlod_path);
 
     ClassDB::bind_method(D_METHOD("get_item_type","item_id"), &MHlod::get_item_type);
+
+    ClassDB::bind_method(D_METHOD("set_aabb","aabb"), &MHlod::set_aabb);
+    ClassDB::bind_method(D_METHOD("get_aabb"), &MHlod::get_aabb);
+    ADD_PROPERTY(PropertyInfo(Variant::AABB,"aabb",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_aabb","get_aabb");
 
     ClassDB::bind_method(D_METHOD("set_join_at_lod","input"), &MHlod::set_join_at_lod);
     ClassDB::bind_method(D_METHOD("get_join_at_lod"), &MHlod::get_join_at_lod);
@@ -60,6 +65,7 @@ void MHlod::_bind_methods(){
     ADD_PROPERTY(PropertyInfo(Variant::STRING,"baker_path"),"set_baker_path","get_baker_path");
     #ifdef DEBUG_ENABLED
     ClassDB::bind_method(D_METHOD("get_used_mesh_ids"), &MHlod::get_used_mesh_ids);
+    ClassDB::bind_method(D_METHOD("get_joined_mesh","for_triangle_mesh","best_mesh_quality"), &MHlod::get_joined_mesh);
     #endif
 
     ClassDB::bind_method(D_METHOD("start_test"), &MHlod::start_test);
@@ -70,6 +76,7 @@ void MHlod::_bind_methods(){
     BIND_ENUM_CONSTANT(NONE);
     BIND_ENUM_CONSTANT(MESH);
     BIND_ENUM_CONSTANT(COLLISION);
+    BIND_ENUM_CONSTANT(COLLISION_COMPLEX);
     BIND_ENUM_CONSTANT(LIGHT);
     BIND_ENUM_CONSTANT(PACKED_SCENE);
     BIND_ENUM_CONSTANT(DECAL);
@@ -328,6 +335,14 @@ MHlod::Type MHlod::get_item_type(int32_t item_id) const{
     return item_list[item_id].type;
 }
 
+void MHlod::set_aabb(const AABB& _aabb){
+    aabb = _aabb;
+}
+
+const AABB& MHlod::get_aabb() const{
+    return aabb;
+}
+
 void MHlod::set_join_at_lod(int input){
     join_at_lod = input;
 }
@@ -358,7 +373,7 @@ void MHlod::add_sub_hlod(const Transform3D& transform,Ref<MHlod> hlod,uint16_t s
     sub_hlods_scene_layers.push_back(scene_layers);
 }
 
-int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt64Array& mesh,const PackedInt32Array& material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers){
+int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt32Array& mesh,const PackedInt32Array& material,const PackedByteArray& shadow_settings,const PackedByteArray& gi_modes,int32_t render_layers,int32_t hlod_layers){
     int lod_count = mesh.size();
     ERR_FAIL_COND_V(lod_count==0,-1);
     ERR_FAIL_COND_V(shadow_settings.size()!=lod_count,-1);
@@ -516,6 +531,51 @@ void MHlod::clear(){
     item_list.clear();
     sub_hlods.clear();
     sub_hlods_transforms.clear();
+}
+
+void MHlod::get_last_valid_item_ids(Type type,PackedInt32Array& ids){
+    ERR_FAIL_COND(ids.size()!=0);
+    for(int i=lods.size()-1; i >=0 ; i--){
+        for(int j=0; j < lods[i].size(); j++){
+            int32_t iid = lods[i][j];
+            if(item_list[iid].type==type){
+                ids.push_back(iid);
+            }
+        }
+        if(ids.size()!=0){ // found something
+            break;
+        }
+    }
+}
+
+int32_t MHlod::get_mesh_id(int32_t item_id,bool current_lod,bool lowest_lod) const {
+    ERR_FAIL_INDEX_V(item_id,item_list.size(),-1);
+    ERR_FAIL_COND_V(item_list[item_id].type!=MESH,-1);
+    int32_t current_mesh_id = item_list[item_id].mesh.mesh_id;
+    if(current_lod){
+        return current_mesh_id;
+    }
+    int32_t transform_index = item_list[item_id].transform_index;
+    int32_t last_valid_item_id = item_id;
+    int msign = current_mesh_id < 0 ? -1 : 1;
+    while (true)
+    {
+        if(lowest_lod){
+            item_id -= msign;
+        } else {
+            item_id += msign;
+        }
+        if(item_id<0 || item_id >= item_list.size()){
+            break;
+        }
+        if(item_list[item_id].transform_index == transform_index){
+            last_valid_item_id = item_id;
+        } else {
+            break;
+        }
+    }
+    ERR_FAIL_COND_V(item_list[last_valid_item_id].type!=MESH,-1);
+    return item_list[last_valid_item_id].mesh.mesh_id;
 }
 
 int MHlod::shape_add_sphere(const Transform3D& _transform,float radius,uint16_t layers,int body_id){
@@ -700,6 +760,91 @@ Dictionary MHlod::get_used_mesh_ids() const{
             out[mesh_id] = true;
         }
     }
+    return out;
+}
+
+Ref<ArrayMesh> MHlod::get_joined_mesh(bool for_triangle_mesh,bool best_mesh_quality) const{
+    Ref<ArrayMesh> out;
+    Vector<Pair<Ref<MHlod>,Transform3D>> stack;
+    stack.push_back({Ref<MHlod>(this),Transform3D()}); // is local so start from Transform3D()
+    Array meshes;
+    Array transforms;
+    PackedInt32Array materials;
+    while (stack.size()!=0)
+    {
+        Ref<MHlod> current_hlod = stack[stack.size()-1].first;
+        Transform3D current_transform = stack[stack.size()-1].second;
+        stack.remove_at(stack.size()-1);
+        ERR_CONTINUE(current_hlod.is_null());
+        PackedInt32Array item_ids;
+        current_hlod->get_last_valid_item_ids(MHlod::MESH,item_ids);
+        bool is_join_mesh=false;
+        for(const int32_t item_id : item_ids){
+            int mesh_id = current_hlod->get_mesh_id(item_id,false,best_mesh_quality);
+            if(mesh_id <= -10){
+                is_join_mesh = true;
+            }
+            Transform3D item_transform = current_transform * current_hlod->transforms[current_hlod->item_list[item_id].transform_index];
+            Ref<MMesh> mmesh = RL->load(MHlod::get_mesh_path(mesh_id));
+            if(mmesh.is_valid()){
+                meshes.push_back(mmesh);
+                transforms.push_back(item_transform);
+                if(!for_triangle_mesh){
+                    int32_t mat_set = current_hlod->item_list[item_id].mesh.material_id;
+                    // item id can be different than mesh id as we used get_mesh_id with lowest_lod=false
+                    // different lod use same materal set
+                    // if some lod does not have the set we use the material_set=0
+                    // according the rule above we apply our method
+                    mat_set = mat_set < mmesh->material_set_get_count() && mat_set>=0 ? mat_set : 0;
+                    materials.push_back(mat_set);
+                }
+            }
+        }
+        // Sub Hlod
+        if(is_join_mesh){ // the we cover inner layer
+            continue;
+        }
+        for(int h=0; h < current_hlod->sub_hlods.size(); h++){
+            Ref<MHlod> sub = current_hlod->sub_hlods[h];
+            Transform3D sub_t = current_transform * current_hlod->sub_hlods_transforms[h];
+            stack.push_back({sub,sub_t});
+        }
+    }
+    // Finish gathering meshes
+    if(!for_triangle_mesh){
+        Ref<MMeshJoiner> mesh_joiner;
+        mesh_joiner.instantiate();
+        mesh_joiner->insert_mmesh_data(meshes,transforms,materials);
+        out = mesh_joiner->join_meshes();
+        return out;
+    }
+    // No for triangle mesh
+    PackedVector3Array verticies;
+    PackedInt32Array indices;
+    for(int i=0; i < meshes.size(); i++){
+        Ref<MMesh> mmesh = meshes[i];
+        Transform3D t = transforms[i];
+        for(int s=0; s < mmesh->get_surface_count(); s++){
+            Array sinfo = mmesh->surface_get_arrays(s);
+            int32_t index_offset = verticies.size();
+            PackedVector3Array svert = sinfo[Mesh::ARRAY_VERTEX];
+            PackedInt32Array sind = sinfo[Mesh::ARRAY_INDEX];
+            for(const Vector3& v : svert){
+                verticies.push_back(t.xform(v));
+            }
+            for(const int32_t index : sind){
+                indices.push_back(index + index_offset);
+            }
+        }
+    }
+    Array sinfo;
+    UtilityFunctions::print("Vert ccc ",verticies.size());
+    UtilityFunctions::print("inde ccc ",indices.size());
+    sinfo.resize(Mesh::ARRAY_MAX);
+    sinfo[Mesh::ARRAY_VERTEX] = verticies;
+    sinfo[Mesh::ARRAY_INDEX] = indices;
+    out.instantiate();
+    out->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES,sinfo);
     return out;
 }
 #endif

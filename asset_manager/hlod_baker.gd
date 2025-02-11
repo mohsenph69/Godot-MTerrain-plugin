@@ -52,7 +52,6 @@ func force_lod(lod:int):
 func bake_to_hlod_resource():		
 	var physics_dictionary = AssetIOMaterials.get_physics_ids()
 	MHlodScene.sleep()	
-	var aabb: AABB	
 	hlod_resource = MHlod.new()
 	hlod_resource.set_baker_path(scene_file_path)
 	var join_at_lod = MAssetTable.mesh_join_start_lod(joined_mesh_id)	
@@ -61,13 +60,7 @@ func bake_to_hlod_resource():
 	#################
 	var all_masset_mesh_nodes = get_all_masset_mesh_nodes(self, get_children())				
 	var baker_inverse_transform = global_transform.inverse()		
-	var first_item = true
 	for item:MAssetMesh in all_masset_mesh_nodes:				
-		if first_item:
-			first_item = false
-			aabb = item.get_joined_aabb()
-		else:
-			aabb.merge( item.get_joined_aabb() )			
 		if item.collection_id == -1: continue							
 		item.set_meta("item_ids",PackedInt32Array()) # clear
 		for mdata:MAssetMeshData in item.get_mesh_data():
@@ -209,7 +202,7 @@ func bake_to_hlod_resource():
 	######################
 	## BAKE JOINED_MESH ##
 	######################
-	var joined_mesh_array = MAssetTable.mesh_join_meshes(joined_mesh_id) 	
+	var joined_mesh_array = MAssetTable.mesh_join_ids(joined_mesh_id) 	
 	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
 		material_array.resize(len(joined_mesh_array))
@@ -248,11 +241,21 @@ func bake_to_hlod_resource():
 		# item_variation_layer = which of the parent baker's layers this hlod belongs to 
 		var item_variation_layer = hlod_data.node.get_meta("variation_layers") if hlod_data.node and hlod_data.node.has_meta("variation_layers") else 0			
 		hlod_resource.add_sub_hlod(hlod_data.tr, hlod_data.sub_hlod, scene_layers) #, item_variation_layer)
-		
+	##################################
+	## Thumnail AND AABB ############
+	##################################
+	var jmesh = hlod_resource.get_joined_mesh(false,true)
+	var aabb = jmesh.get_aabb()
+	for hlod_data in all_hlod:
+		var gh_aabb:AABB = MTool.get_global_aabb(hlod_data.node.get_aabb(),hlod_data.tr)
+		aabb.merge(gh_aabb)
+	# some subhlod may not included in join mesh
+	# using jmesh down for thumnail
 	##################################
 	## FINALIZE AND SAVE BAKED HLOD ##
 	##################################
 	hlod_resource.join_at_lod = join_at_lod
+	hlod_resource.resource_name = name
 	hlod_id = MAssetTable.get_last_free_hlod_id(hlod_id,scene_file_path)
 	var bake_path := MHlod.get_hlod_path(hlod_id)
 	var users = MHlodScene.get_hlod_users(bake_path)
@@ -271,38 +274,18 @@ func bake_to_hlod_resource():
 	MHlodScene.awake()
 	if save_err == OK:		
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
-		make_hlod_thumbnail(collection_id, aabb)	
+		hlod_resource.aabb = aabb
+		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id})
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
-func make_hlod_thumbnail(collection_id:int, aabb:AABB):
-	aabb.grow(5)		
-	#ThumbnailManager.make_tscn_thumbnail(scene_file_path, collection_id, aabb )	
-	#if EditorInterface.get_edited_scene_root().scene_file_path == scene_file_path:		
-		#var viewport := EditorInterface.get_editor_viewport_3d(0)
-		#viewport.get_parent().stretch = false
-		#var original_viewport_size = viewport.size		
-		#viewport.size = Vector2i(64,64)
-		#
-		#var cam = viewport.get_camera_3d()
-		#var original_position = cam.position
-		#var original_rotation = cam.rotation
-		#
-		#var size = aabb.size.length()
-		#var center = aabb.get_center()
-		#var pos = center - Vector3(0,size/2, -size)
-		#cam.look_at_from_position(pos, center)				
-		#asset_mesh_updater.update_force_lod(0)
-		#
-		#viewport.get_texture().get_image().save_png("res://thumbnail.png")
-		##ThumbnailManager.save_thumbnail(viewport.get_texture().get_image(), MAssetTable.get_asset_thumbnails_path(collection_id))
-		#
-		#cam.position = original_position
-		#cam.rotation = original_rotation
-		#viewport.size = original_viewport_size
-		#viewport.get_parent().stretch = true	
-	#else:
-		#print(scene_file_path)
-		#print(EditorInterface.get_edited_scene_root().scene_file_path)
+
+func finish_generating_thumnail(data):
+	var tex:Texture2D=data["texture"]
+	var img = tex.get_image()
+	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD)
+	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])
+	ThumbnailManager.save_thumbnail(img,tpath)
+	AssetIO.asset_placer.regroup()
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
@@ -449,9 +432,8 @@ func get_joined_mesh_glb_path()->String:
 		return owner.scene_file_path.get_basename() + "_" + name + "_joined_mesh.glb"
 	return ""
 
-func has_joined_mesh_glb()->bool:
-	var path = get_joined_mesh_glb_path()	
-	return path != "" and FileAccess.file_exists(path)
+func has_joined_mesh()->bool:
+	return MAssetTable.mesh_join_is_valid(joined_mesh_id)
 
 func toggle_joined_mesh_disabled(toggle_on):
 	joined_mesh_disabled = toggle_on
@@ -465,14 +447,18 @@ func toggle_joined_mesh_disabled(toggle_on):
 		force_lod(-1)
 
 func remove_joined_mesh():
-	if MAssetTable.mesh_join_get_stop_lod(joined_mesh_id) == 0: return	
 	asset_mesh_updater.join_mesh_id = -1
 	for id in MAssetTable.mesh_join_ids_no_replace(joined_mesh_id):					
 		if id == -1: continue			
 		var path = MHlod.get_mesh_path(id)
+		var stop_path = path.get_basename() + ".stop"
 		if FileAccess.file_exists(path):
-			DirAccess.remove_absolute(path)						
-	ResourceSaver.save(Resource.new(), MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id, ".stop")))
+			DirAccess.remove_absolute(path)
+		if FileAccess.file_exists(stop_path):
+			DirAccess.remove_absolute(stop_path)
+	var stop_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id, ".stop"))
+	var f = FileAccess.open(stop_path,FileAccess.WRITE)
+	f.close()
 	var glb_path = get_joined_mesh_glb_path()
 	if FileAccess.file_exists(glb_path):
 		DirAccess.remove_absolute(glb_path)						
@@ -480,16 +466,16 @@ func remove_joined_mesh():
 #endregion
 
 func set_variation_layers_visibility(value):
-	for child in get_all_masset_mesh_nodes(self, get_children()):
-		child.visible = child.hlod_layers & value > 0 or child.hlod_layers == 0 or value == 0
 	variation_layers_preview_value = value
-	
+	asset_mesh_updater.variation_layers = value
+
 #region MAssetMesh Updater			
 func _enter_tree():		
 	if not is_node_ready(): 	
 		await ready
 	activate_mesh_updater()
 	validate_can_bake()
+	asset_mesh_updater.variation_layers = variation_layers_preview_value
 
 func validate_can_bake():			
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	

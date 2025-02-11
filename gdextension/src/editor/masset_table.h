@@ -87,6 +87,7 @@ class MAssetTable : public Resource {
         ItemType type = NONE;
         int8_t colcutoff = -1;
         int16_t physics_name = -1; // is id in PackedStringArray physics_names (-1 is default)
+        uint32_t modify_time = 0;
         int32_t item_id=-1;
         int32_t glb_id = -1;
     };
@@ -124,10 +125,12 @@ class MAssetTable : public Resource {
     static int32_t last_free_item_id; // should be updated before each import
     void _increase_collection_buffer_size(int q);
     int _get_free_collection_index();
+    static const char* import_info_path;
     static const char* asset_table_path;
     static const char* asset_editor_root_dir;
     static const char* editor_baker_scenes_dir;
     static const char* asset_thumbnails_dir;
+    static const char* thumbnails_dir;
     static const char* hlod_res_dir;
     static MAssetTable* asset_table_singelton;
 
@@ -140,6 +143,7 @@ class MAssetTable : public Resource {
     static String get_asset_editor_root_dir();
     static String get_editor_baker_scenes_dir();
     static String get_asset_thumbnails_dir();
+    static String get_thumbnails_dir();
     static String get_asset_thumbnails_path(int collection_id);
     static String get_material_thumbnails_path(int material_id);
     static String get_hlod_res_dir();
@@ -192,11 +196,14 @@ class MAssetTable : public Resource {
     int physics_id_get_add(const String& physics_name);
 
     int collection_create(const String& _name,int32_t item_id,ItemType type,int32_t glb_id);
+    void collection_update_modify_time(int collection_id);
+    int64_t collection_get_modify_time(int collection_id) const;
     void collection_set_physics_setting(int collection_id,const String& physics_name);
     String collection_get_physics_setting(int collection_id) const;
     void collection_set_colcutoff(int collection_id,int value);
     int8_t collection_get_colcutoff(int collection_id) const;
     void collection_clear_unused_physics_settings();
+    ItemType collection_get_type(int collection_id) const;
     int32_t collection_get_glb_id(int collection_id) const;
     int32_t collection_find_with_item_type_item_id(ItemType type, int32_t item_id) const;
     int32_t collection_find_with_glb_id_collection_name(int32_t glb_id,const String collection_name) const;
@@ -207,10 +214,11 @@ class MAssetTable : public Resource {
     PackedInt32Array collections_get_by_type(int item_types) const;
     void collection_add_tag(int collection_id,int tag);
     bool collection_add_sub_collection(int collection_id,int sub_collection_id,const Transform3D& transform);
-    void collection_add_collision(int collection_id,CollisionType col_type,const Transform3D& col_transform,const Transform3D& obj_transform);
+    void collection_add_collision(int collection_id,CollisionType col_type,Transform3D col_transform,const Transform3D& obj_transform);
     PackedInt32Array collection_get_sub_collections(int collection_id) const;
     int collection_get_collision_count(int collection_id) const;
     void collection_remove_tag(int collection_id,int tag);
+    void collection_set_name(int collection_id,ItemType expected_type,const String& new_name);
     String collection_get_name(int collection_id) const;
     int collection_get_id(const String& name) const;
     PackedInt32Array collection_get_tags(int collection_id) const;
@@ -238,8 +246,13 @@ class MAssetTable : public Resource {
 
     void test(Dictionary d);
 
+    void clear_import_info_cache();
+    void save_import_info();
+    void load_import_info();
     void set_import_info(const Dictionary& input);
     Dictionary get_import_info();
+
+    void auto_asset_update_from_dir(ItemType type);
 
     // Only for debug
     static void reset(bool hard);
