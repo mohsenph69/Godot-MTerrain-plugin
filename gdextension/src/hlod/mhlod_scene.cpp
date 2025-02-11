@@ -757,7 +757,7 @@ Dictionary MHlodScene::get_debug_info(){
     int simple_shape_count = 0;
     int complex_shape_count = 0;
     for(HashMap<int32_t,Proc*>::ConstIterator pit=octpoints_to_proc.begin(); pit!=octpoints_to_proc.end();++pit){
-        if(!pit->value->is_enable){
+        if(!pit->value->is_enable || !pit->value->is_visible){
             continue;
         }
         const HashMap<int32_t,CreationInfo>& creation_info = pit->value->items_creation_info;
@@ -810,6 +810,14 @@ MHlodScene::~MHlodScene(){
     if(all_hlod_scenes.size()==0){ // so we are the last one
         MHlod::clear_physic_body();
     }
+}
+
+void MHlodScene::set_is_hidden(bool input){
+    if(input==is_hidden){
+        return;
+    }
+    is_hidden = input;
+    _update_visibility();
 }
 
 bool MHlodScene::is_init_scene() const {
@@ -891,7 +899,7 @@ void MHlodScene::_update_visibility(){
     if(!is_init){
         return;
     }
-    bool v = is_visible_in_tree() && is_inside_tree();
+    bool v = is_visible_in_tree() && is_inside_tree() && !is_hidden;
     get_root_proc()->set_visibility(v);
 }
 
@@ -932,8 +940,7 @@ Ref<TriangleMesh> MHlodScene::get_triangle_mesh(){
     }
     Ref<ArrayMesh> jmesh = procs[0].hlod->get_joined_mesh(false,false);
     ERR_FAIL_COND_V(jmesh.is_null(),Ref<TriangleMesh>());
-    //cached_triangled_mesh = jmesh->generate_triangle_mesh();
-    return jmesh->generate_triangle_mesh();
+    cached_triangled_mesh = jmesh->generate_triangle_mesh();
     return cached_triangled_mesh;
 }
 #endif

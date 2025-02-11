@@ -191,6 +191,7 @@ class MHlodScene : public Node3D {
         _FORCE_INLINE_ bool bind_item_get_disable(const GlobalItemID bound_id) const;
         _FORCE_INLINE_ void bind_item_set_disable(const GlobalItemID bound_id,const bool disable);
     };
+    bool is_hidden = false;
     bool is_init = false;
     uint16_t scene_layers = 0;
     Vector<Proc> procs; // Consist root proc and all sub_procs /// 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
@@ -256,6 +257,7 @@ class MHlodScene : public Node3D {
     inline bool is_init_procs(){
         return is_init;
     }
+    void set_is_hidden(bool input);
     bool is_init_scene() const;
     void set_hlod(Ref<MHlod> input);
     Ref<MHlod> get_hlod();

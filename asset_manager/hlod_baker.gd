@@ -72,6 +72,7 @@ func bake_to_hlod_resource():
 			var item_variation_layer = item.get_meta("variation_layers") if item.has_meta("variation_layers") else 0
 			var current_mesh_transform:Transform3D = baker_inverse_transform * mdata.get_global_transform()
 			var mesh_id = hlod_resource.add_mesh_item(current_mesh_transform, mesh_array, material_set_id, shadow_array, gi_array, render_layers, item_variation_layer)
+			print("FFO MESH ",mesh_id)
 			if mesh_id == -1:
 				push_error("failed to add mesh item to HLod during baking")
 			item.get_meta("item_ids").push_back(mesh_id)
@@ -216,7 +217,6 @@ func bake_to_hlod_resource():
 				hlod_resource.insert_item_in_lod_table(mesh_id, i)						
 		else:
 			push_error("Hlod baker error: cannot add joined mesh to hlod table because mesh_id is -1")
-	
 	#######################
 	## PREBAKE SUB_BAKER ##
 	#######################

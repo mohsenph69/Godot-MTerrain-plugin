@@ -140,6 +140,7 @@ static func save_joined_mesh(joined_mesh_id:int, joined_meshes:Array, joined_mes
 		var mesh_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id - joined_mesh_lods[i], ".res"))
 		if FileAccess.file_exists(mesh_path):
 			joined_meshes[i].take_over_path(mesh_path)
+		print("mesh_path ",mesh_path)
 		ResourceSaver.save(joined_meshes[i], mesh_path)
 	EditorInterface.get_resource_filesystem().scan()
 
@@ -178,28 +179,37 @@ static func import_join_mesh_only(baker_node:Node3D):
 	var gltf_document= GLTFDocument.new()
 	var gltf_state = GLTFState.new()
 	var path = baker_node.scene_file_path.get_basename() + "_joined_mesh.glb"
+	if not FileAccess.file_exists(path):
+		MTool.print_edmsg("There is no gltf for join mesh, to export your gltf file click on save button in inspector after creating join mesh!")
+	else:
+		print("OK exist:",path)
 	gltf_document.append_from_file(path, gltf_state)		
 	var scene = gltf_document.generate_scene(gltf_state)				
 	var joined_mesh_nodes = scene.find_children("*_joined_mesh*")
+	var mesh_arr:Array
+	var lod_arr:Array
 	for joined_mesh_node in joined_mesh_nodes:
-		var name_data = AssetIO.node_parse_name(joined_mesh_node)		
-		if name_data.lod != -1:			
-			if joined_mesh_node is ImporterMeshInstance3D:
-				var smesh:ArrayMesh= joined_mesh_node.mesh.get_mesh()
-				for s in range(smesh.get_surface_count()):
-					var sname:String = smesh.surface_get_name(s)
-					sname = AssetIO.blender_end_number_remove(sname)
-					var sid = sname.to_int()
-					var mat = AssetIOMaterials.get_material(sid)
-					if mat:
-						smesh.surface_set_material(s,mat)
-				var mmesh = MMesh.new()
-				mmesh.create_from_mesh(smesh)
-				save_joined_mesh(baker_node.joined_mesh_id, [mmesh], [name_data.lod])
+		if not joined_mesh_node is ImporterMeshInstance3D: continue
+		var name_data = AssetIO.node_parse_name(joined_mesh_node)
+		if name_data.lod != -1:
+			var smesh:ArrayMesh= joined_mesh_node.mesh.get_mesh()
+			for s in range(smesh.get_surface_count()):
+				var sname:String = smesh.surface_get_name(s)
+				sname = AssetIO.blender_end_number_remove(sname)
+				var sid = sname.to_int()
+				var mat = AssetIOMaterials.get_material(sid)
+				if mat:
+					smesh.surface_set_material(s,mat)
+			var mmesh = MMesh.new()
+			mmesh.create_from_mesh(smesh)
+			mesh_arr.push_back(mmesh)
+			lod_arr.push_back(name_data.lod)
+	save_joined_mesh(baker_node.joined_mesh_id, mesh_arr, lod_arr)
 	MAssetMeshUpdater.refresh_all_masset_updater()
 	EditorInterface.get_resource_filesystem().scan()
 
 static func import_join_mesh_auto(path, joined_mesh_nodes, joined_mesh_id):		
+	return
 	for joined_mesh_node in joined_mesh_nodes:
 		var name_data = AssetIO.node_parse_name(joined_mesh_node)		
 		if name_data.lod != -1:			

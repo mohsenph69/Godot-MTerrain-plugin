@@ -9,6 +9,9 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #define RS RenderingServer::get_singleton()
 
+#include <godot_cpp/classes/resource_loader.hpp>
+#define RL ResourceLoader::get_singleton()
+
 #include "../mtool.h"
 #include "../moctree.h"
 #include "../hlod/mhlod_scene.h"
@@ -28,6 +31,10 @@ void MAssetMeshUpdater::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_join_mesh_id","input"), &MAssetMeshUpdater::set_join_mesh_id);
     ClassDB::bind_method(D_METHOD("get_join_mesh_id"), &MAssetMeshUpdater::get_join_mesh_id);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"join_mesh_id"),"set_join_mesh_id","get_join_mesh_id");
+
+    ClassDB::bind_method(D_METHOD("set_show_boundary","input"), &MAssetMeshUpdater::set_show_boundary);
+    ClassDB::bind_method(D_METHOD("get_show_boundary"), &MAssetMeshUpdater::get_show_boundary);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"show_boundary"),"set_show_boundary","get_show_boundary");
 
     ClassDB::bind_method(D_METHOD("set_variation_layers","input"), &MAssetMeshUpdater::set_variation_layers);
     ClassDB::bind_method(D_METHOD("get_variation_layers"), &MAssetMeshUpdater::get_variation_layers);
@@ -51,11 +58,29 @@ void MAssetMeshUpdater::refresh_all_masset_updater(){
 
 MAssetMeshUpdater::MAssetMeshUpdater(){
     asset_mesh_updater_list.insert(this);
+    inner_box_mesh.instantiate();
+    inner_box_mesh->set_flip_faces(true);
+    outer_box_mesh.instantiate();
+    inner_bound_instance = RS->instance_create();
+    outer_bound_instance = RS->instance_create();
+    RS->instance_set_base(inner_bound_instance,inner_box_mesh->get_rid());
+    RS->instance_set_base(outer_bound_instance,outer_box_mesh->get_rid());
+    RS->instance_geometry_set_cast_shadows_setting(outer_bound_instance,RenderingServer::ShadowCastingSetting::SHADOW_CASTING_SETTING_OFF);
+    RS->instance_geometry_set_cast_shadows_setting(inner_bound_instance,RenderingServer::ShadowCastingSetting::SHADOW_CASTING_SETTING_OFF);
+    RS->instance_set_visible(inner_bound_instance,false);
+    RS->instance_set_visible(outer_bound_instance,false);
+    ERR_FAIL_COND(!RL->exists("res://addons/m_terrain/shaders/boundary.gdshader"));
+    boundary_material.instantiate();
+    boundary_material->set_shader(RL->load("res://addons/m_terrain/shaders/boundary.gdshader"));
+    RS->instance_geometry_set_material_override(inner_bound_instance,boundary_material->get_rid());
+    RS->instance_geometry_set_material_override(outer_bound_instance,boundary_material->get_rid());
 }
 
 MAssetMeshUpdater::~MAssetMeshUpdater(){
     asset_mesh_updater_list.erase(this);
     remove_join_mesh();
+    RS->free_rid(inner_bound_instance);
+    RS->free_rid(outer_bound_instance);
 }
 
 void MAssetMeshUpdater::_update_lod(int lod){
@@ -103,7 +128,28 @@ void MAssetMeshUpdater::_update_lod(int lod){
             uint16_t avariation_layer = nd3d->has_meta("variation_layers") ?  (int)nd3d->get_meta("variation_layers") : 0;
             bool is_visible = avariation_layer==0 || (avariation_layer&variation_layer)!=0;
             RS->instance_set_visible(nd3d->get_instance(),is_visible);
+            return;
         }
+        MHlodScene* h = Object::cast_to<MHlodScene>(cur_node);
+        if(h){
+            h->set_is_hidden(is_join_mesh);
+        }
+    }
+    if(show_boundary && MHlodScene::get_octree()){
+        RS->instance_set_transform(inner_bound_instance,root_node->get_global_transform());
+        RS->instance_set_transform(outer_bound_instance,root_node->get_global_transform());
+        RS->instance_set_visible(inner_bound_instance,true);
+        RS->instance_set_visible(outer_bound_instance,true);
+        PackedFloat32Array lod_settings = MHlodScene::get_octree()->get_lod_setting();
+        float inner_size = lod==0 ? 0.f : lod>=lod_settings.size() ? lod_settings[lod_settings.size()-1] : lod_settings[lod-1];
+        float outer_size = lod_settings.size() - 1 >= lod ? lod_settings[lod] : 0.f;
+        inner_size *= 2.0;
+        outer_size *= 2.0;
+        inner_box_mesh->set_size(Vector3(inner_size,inner_size,inner_size));
+        outer_box_mesh->set_size(Vector3(outer_size,outer_size,outer_size));
+    } else {
+        RS->instance_set_visible(inner_bound_instance,false);
+        RS->instance_set_visible(outer_bound_instance,false);
     }
 }
 
@@ -195,6 +241,14 @@ int MAssetMeshUpdater::get_current_lod(){
     return current_lod;
 }
 
+void MAssetMeshUpdater::set_show_boundary(bool input){
+    show_boundary = input;
+}
+
+bool MAssetMeshUpdater::get_show_boundary() const{
+    return show_boundary;
+}
+
 void MAssetMeshUpdater::set_join_mesh_id(int input){
     if(input == join_mesh_id){
         return;
@@ -219,6 +273,8 @@ int MAssetMeshUpdater::get_variation_layers(){
 void MAssetMeshUpdater::set_root_node(Node3D* input){
     root_node = input;
     update_join_mesh();
+    RS->instance_set_scenario(inner_bound_instance,input->get_world_3d()->get_scenario());
+    RS->instance_set_scenario(outer_bound_instance,input->get_world_3d()->get_scenario());
 }
 
 Node3D* MAssetMeshUpdater::get_root_node() const{

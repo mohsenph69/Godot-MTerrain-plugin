@@ -41,7 +41,10 @@ static func glb_load(path, metadata={},no_window:bool=false):
 				scene_root.set_meta("variation_groups", gltf_state.json.scenes[0].extras.variation_groups)
 		glb_load_assets(scene_root, path, metadata,no_window)
 			
-static func glb_load_assets(scene_root, path, metadata={},no_window:bool=false):	
+static func glb_load_assets(scene_root, path:String, metadata={},no_window:bool=false):	
+	if path.ends_with("joined_mesh.glb"):
+		MTool.print_edmsg("It seems that you want to import a join-mesh this way! you should import join mesh in bake inspector! if this is not a join-mesh please change the file name!")
+		return
 	var asset_library:MAssetTable = MAssetTable.get_singleton()
 	
 	#STEP 1: Init Asset Data

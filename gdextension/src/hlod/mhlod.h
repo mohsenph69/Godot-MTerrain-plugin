@@ -129,6 +129,7 @@ class MHlod : public Resource{
     MHlod::Type get_item_type(int32_t item_id) const;
     void set_aabb(const AABB& aabb);
     const AABB& get_aabb() const;
+    int get_item_count() const;
     void set_join_at_lod(int input);
     int get_join_at_lod();
     int get_sub_hlod_size_rec();
