@@ -73,7 +73,8 @@ class MAssetMesh : public Node3D {
     uint16_t hlod_layers = 0;
     int collection_id = -1;
     int current_lod = -1;
-    int lod_cutoff = -1;
+    int mesh_lod_cutoff = -1;
+    int collision_lod_cutoff = -1;
     int32_t glb_id = -1;
     MAssetTable::CollectionIdentifier collection_identifier;
     String collection_name;
@@ -101,8 +102,11 @@ class MAssetMesh : public Node3D {
     void set_hlod_layers(int64_t input);
     int64_t get_hlod_layers() const;
 
-    void set_lod_cutoff(int input);
-    int get_lod_cutoff();
+    void set_mesh_lod_cutoff(int input);
+    int get_mesh_lod_cutoff();
+
+    void set_collision_lod_cutoff(int input);
+    int get_collision_lod_cutoff();
     
     void set_collection_id_no_lod_update(int input);
     void set_collection_id(int input);

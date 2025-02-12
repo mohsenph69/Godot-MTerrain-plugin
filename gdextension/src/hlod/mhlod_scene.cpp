@@ -181,7 +181,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
                     instance = ci.get_rid();
                     RS->instance_set_base(instance,item_res.rid);
                     ERR_FAIL_COND(ci.item_id==-1);
-                    hlod->item_list.ptrw()[ci.item_id].remove_user();
+                    removing_users.push_back(hlod->item_list.ptrw() + ci.item_id);
                 }
                 /// Setting material
                 Vector<RID> surfaces_materials;
@@ -297,7 +297,6 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
                 CreationInfo apply_creation_info;
                 if(immediate){
                     RS->free_rid(instance);
-                    item->remove_user();
                 } else{
                     ApplyInfo ainfo(MHlod::Type::MESH,true);
                     ainfo.set_instance(instance);
@@ -312,7 +311,6 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
             RID instance = c_info.get_rid();
             if(instance.is_valid()){
                 RS->free_rid(instance);
-                item->remove_user();
             }
         }
         break;
@@ -324,7 +322,6 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
             ERR_FAIL_COND(shape_index_in_body==-1);
             PhysicsServer3D::get_singleton()->body_remove_shape(body_info.rid,shape_index_in_body);
             body_info.shapes.remove_at(shape_index_in_body);
-            item->remove_user();
         }
         break;
     case MHlod::Type::PACKED_SCENE:
@@ -346,6 +343,7 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
         break;
     }
     items_creation_info.erase(item->transform_index);
+    removing_users.push_back(item);
 }
 // Must be protect with packed_scene_mutex if Item is_bound = true
 void MHlodScene::Proc::update_item_transform(const int32_t transform_index,const Transform3D& new_transform){
@@ -413,13 +411,6 @@ void MHlodScene::Proc::reload_meshes(const bool recursive){
 }
 
 void MHlodScene::Proc::remove_all_items(const bool immediate,const bool is_destruction){
-    if(hlod.is_null()){
-        return;
-    }
-    if(lod<0 || lod >= hlod->lods.size() || hlod->lods[lod].size() == 0){
-        return; // Nothing to remove
-    }
-    VSet<int32_t> lod_table = hlod->lods[lod];
     for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
         remove_item(hlod->item_list.ptrw() + it->value.item_id,it->value.item_id,immediate,is_destruction);
     }
@@ -464,13 +455,9 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
         // nothing to do just update lod and go out
         return;
     }
-    const VSet<int32_t>* last_lod_table = hlod->lods.ptr() + last_lod;
-    for(int i=0; i < (*last_lod_table).size(); i++){
-        MHlod::Item* last_item = hlod->item_list.ptrw() + (*last_lod_table)[i];
-        if(last_item->item_layers==0 || (last_item->item_layers & scene_layers)!=0){ // Layers filter
-            if(!exist_transform_index.has(last_item->transform_index)){
-                remove_item(last_item,(*last_lod_table)[i],immediate);
-            }
+    for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
+        if(!exist_transform_index.has(it->key)){
+            remove_item(hlod->item_list.ptrw()+it->value.item_id, it->value.item_id, immediate);
         }
     }
 }
@@ -650,7 +637,6 @@ void MHlodScene::octree_thread_update(void* input){
     for(int i=0; i < all_hlod_scenes.size() ;++i){
         all_hlod_scenes[i]->procs_update_state.fill_false(); // set it to false and if then updated we set it back to true
     }
-    apply_remove_item_users();
     Vector<MOctree::PointUpdate>* update_info = (Vector<MOctree::PointUpdate>*)input;
     // more close to root proc has smaller ID!
     // if not sorted some proc can create items and diable later in same update which is a waste
@@ -663,12 +649,10 @@ void MHlodScene::octree_thread_update(void* input){
         Proc* _proc = octpoints_to_proc.get(p.id);
         _proc->update_lod(p.lod);
     }
-    // Updating triangle collission mesh for editor
-    #ifdef DEBUG_ENABLED
-    //for(HashSet<MHlodScene*>::Iterator it=all_hlod_scenes.begin();it!=all_hlod_scenes.end();++it){
-    //    (*it)->_update_editor_tri_mesh();
-    //}
-    #endif
+    // We call apply_remove_item_users after update_lod to give it the change maybe some other proc increase its count
+    // apply_remove_item_users remove the user count from the last update!
+    // by calling this after _proc->update_lod(p.lod); we give items a change if they want to stay a bit more!
+    apply_remove_item_users();
 }
 
 void MHlodScene::update_tick(){
