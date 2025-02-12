@@ -102,6 +102,7 @@ void MHlodScene::Proc::disable(const bool recursive,const bool immediate,const b
     if(!is_enable){
         return;
     }
+    ERR_FAIL_COND(hlod.is_null());
     is_enable = false;
     is_sub_proc_enable = false;
     remove_all_items(immediate,is_destruction);
@@ -162,7 +163,29 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
                 if(!item_exist){
                     instance = RS->instance_create();
                     RS->instance_set_scenario(instance,octree->get_scenario());
+                    RS->instance_geometry_set_cast_shadows_setting(instance,(RenderingServer::ShadowCastingSetting)item->mesh.shadow_setting);
                     RS->instance_set_transform(instance,get_item_transform(item));
+                    switch (item->mesh.gi_mode)
+                    {
+                    case MHLOD_CONST_GI_MODE_DISABLED:
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, false);
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, false);
+                        break;
+                    case MHLOD_CONST_GI_MODE_STATIC:
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, true);
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, false);
+                        break;
+                    case MHLOD_CONST_GI_MODE_DYNAMIC:
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, false);
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, true);
+                        break;
+                    case MHLOD_CONST_GI_MODE_STATIC_DYNAMIC:
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, true);
+                        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, true);
+                        break;
+                    default:
+                        WARN_PRINT("Invalid GI Mode");
+                    }
                     // in this case we need to insert this inside creation info as it changed
                     ci.set_rid(instance);
                     // Generating apply info
@@ -194,6 +217,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
             } else {
                 // Basically this should not happen
                 remove_item(item,item_id);
+                items_creation_info.erase(item->transform_index); // can ci be shared between multiple LOD meshes
                 ERR_FAIL_MSG("Item empty mesh");
             }
         }
@@ -211,7 +235,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
             }
         } else {
             // Basically this should not happen
-            remove_item(item,item_id);
+            remove_item(item,item_id); // no need to items_creation_info.erase(item->transform_index); as we add creation info later
             ERR_FAIL_MSG("Item empty light or decal");
         }
         break;
@@ -229,7 +253,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
         } else {
             // Basically this should not happen
             remove_item(item,item_id);
-            ERR_FAIL_MSG("Item empty Shape");
+            ERR_FAIL_MSG("Item empty Shape"); // no need to items_creation_info.erase(item->transform_index); as we add creation info later
         }
         break;
     case MHlod::Type::PACKED_SCENE:
@@ -255,7 +279,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
             ci.root_node->call_deferred("_notify_update_lod",lod);
         } else {
             // Basically this should not happen
-            remove_item(item,item_id);
+            remove_item(item,item_id); // no need to items_creation_info.erase(item->transform_index); as we add creation info later
             ERR_FAIL_MSG("Item empty Packed Scene");
         }
         break;
@@ -273,6 +297,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
     }
 }
 
+// should clear creation_info afer calling this
 void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const bool immediate,const bool is_destruction){
     if(!items_creation_info.has(item->transform_index)){
         return;
@@ -342,8 +367,8 @@ void MHlodScene::Proc::remove_item(MHlod::Item* item,const int item_id,const boo
     default:
         break;
     }
-    items_creation_info.erase(item->transform_index);
     removing_users.push_back(item);
+    // items_creation_info erase(__item->transform_index); should be called from outside after this
 }
 // Must be protect with packed_scene_mutex if Item is_bound = true
 void MHlodScene::Proc::update_item_transform(const int32_t transform_index,const Transform3D& new_transform){
@@ -414,6 +439,7 @@ void MHlodScene::Proc::remove_all_items(const bool immediate,const bool is_destr
     for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
         remove_item(hlod->item_list.ptrw() + it->value.item_id,it->value.item_id,immediate,is_destruction);
     }
+    items_creation_info.clear();
 }
 
 // Will return if it is diry or not (has something to apply in the main game loop)
@@ -455,16 +481,21 @@ void MHlodScene::Proc::update_lod(int8_t c_lod,const bool immediate){
         // nothing to do just update lod and go out
         return;
     }
+    Vector<int32_t> removed_trasform_indices;
     for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
         if(!exist_transform_index.has(it->key)){
-            remove_item(hlod->item_list.ptrw()+it->value.item_id, it->value.item_id, immediate);
+            remove_item(hlod->item_list.ptrw()+it->value.item_id, it->value.item_id, immediate,false);
+            removed_trasform_indices.push_back(it->key);
         }
+    }
+    for(int32_t rm_t : removed_trasform_indices){
+        items_creation_info.erase(rm_t);
     }
 }
 
 void MHlodScene::Proc::set_visibility(bool visibility){
     is_visible = visibility;
-    for(HashMap<int32_t,CreationInfo>::Iterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
+    for(HashMap<int32_t,CreationInfo>::ConstIterator it=items_creation_info.begin();it!=items_creation_info.end();++it){
         switch (it->value.type)
         {
         case MHlod::Type::MESH:

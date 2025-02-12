@@ -14,6 +14,11 @@
 
 using namespace godot;
 
+#define MHLOD_CONST_GI_MODE_DISABLED 0
+#define MHLOD_CONST_GI_MODE_STATIC 1
+#define MHLOD_CONST_GI_MODE_DYNAMIC 2
+#define MHLOD_CONST_GI_MODE_STATIC_DYNAMIC 3
+
 class MHlod : public Resource{
     GDCLASS(MHlod, Resource);
 
@@ -41,6 +46,12 @@ class MHlod : public Resource{
         }
     };
     static inline const char* type_string = "NONE,MESH,COLLISION,LIGHT,PACKED_SCENE,DECAL";
+    enum GIMode : uint8_t {
+        GI_MODE_DISABLED = MHLOD_CONST_GI_MODE_DISABLED,
+        GI_MODE_STATIC = MHLOD_CONST_GI_MODE_STATIC,
+        GI_MODE_DYNAMIC = MHLOD_CONST_GI_MODE_DYNAMIC,
+        GI_MODE_STATIC_DYNAMIC = MHLOD_CONST_GI_MODE_STATIC_DYNAMIC
+    };
     enum Type : uint8_t {NONE,MESH,COLLISION,COLLISION_COMPLEX,LIGHT,PACKED_SCENE,DECAL};
     struct Item
     {
@@ -89,6 +100,8 @@ class MHlod : public Resource{
         Only two neghbor similar lod can be detected
     */
     public:
+    MHlod() = default;
+    ~MHlod() = default;
     MByteFloat<false,1024> v1;
     void set_v1(float input){
         v1 = input;
@@ -319,4 +332,5 @@ _FORCE_INLINE_ void MHlod::clear_physic_body(){
 }
 
 VARIANT_ENUM_CAST(MHlod::Type);
+VARIANT_ENUM_CAST(MHlod::GIMode);
 #endif

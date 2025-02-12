@@ -82,6 +82,11 @@ void MHlod::_bind_methods(){
     BIND_ENUM_CONSTANT(LIGHT);
     BIND_ENUM_CONSTANT(PACKED_SCENE);
     BIND_ENUM_CONSTANT(DECAL);
+
+    BIND_ENUM_CONSTANT(GI_MODE_DISABLED);
+    BIND_ENUM_CONSTANT(GI_MODE_STATIC);
+    BIND_ENUM_CONSTANT(GI_MODE_DYNAMIC);
+    BIND_ENUM_CONSTANT(GI_MODE_STATIC_DYNAMIC);
 }
 
 String MHlod::get_asset_root_dir(){
@@ -384,7 +389,6 @@ int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt32Array& me
     ERR_FAIL_COND_V(lod_count==0,-1);
     ERR_FAIL_COND_V(shadow_settings.size()!=lod_count,-1);
     ERR_FAIL_COND_V(gi_modes.size()!=lod_count,-1);
-
     int item_index = item_list.size();
     int transform_index = transforms.size();
     transforms.push_back(transform);

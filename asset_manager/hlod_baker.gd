@@ -68,8 +68,8 @@ func bake_to_hlod_resource():
 		for mdata:MAssetMeshData in item.get_mesh_data():
 			var mesh_array = mdata.get_mesh_lod().map(func(mmesh): return int(mmesh.resource_path.get_file()) if mmesh is MMesh else -1)
 			var material_set_id = mdata.get_material_set_id()
-			var shadow_array = mesh_array.map(func(a): return 0)
-			var gi_array = mesh_array.map(func(a): return 0)
+			var shadow_array = mesh_array.map(func(a): return int(item.shadow_setting))
+			var gi_array = mesh_array.map(func(a): return int(item.gi_mode))
 			var render_layers = 0			
 			var item_variation_layer = item.get_meta("variation_layers") if item.has_meta("variation_layers") else 0
 			var current_mesh_transform:Transform3D = baker_inverse_transform * mdata.get_global_transform()
@@ -524,7 +524,7 @@ func _ready():
 	set_join_mesh_id(joined_mesh_id)
 	if Engine.is_editor_hint() and not EditorInterface.get_resource_filesystem().filesystem_changed.is_connected(validate_can_bake):
 		EditorInterface.get_resource_filesystem().filesystem_changed.connect(validate_can_bake)
-
+	
 func set_join_mesh_id(input:int):
 	joined_mesh_id = input
 	asset_mesh_updater.join_mesh_id = input

@@ -208,30 +208,33 @@ void MAssetMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_disable_collision"), &MAssetMesh::get_disable_collision);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"disable_collision"),"set_disable_collision","get_disable_collision");
 
+    ClassDB::bind_method(D_METHOD("set_visual_layers","input"), &MAssetMesh::set_visual_layers);
+    ClassDB::bind_method(D_METHOD("get_visual_layers"), &MAssetMesh::get_visual_layers);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"visual_layers",PROPERTY_HINT_LAYERS_3D_RENDER),"set_visual_layers","get_visual_layers");
+
+    ClassDB::bind_method(D_METHOD("set_shadow_setting","input"), &MAssetMesh::set_shadow_setting);
+    ClassDB::bind_method(D_METHOD("get_shadow_setting"), &MAssetMesh::get_shadow_setting);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"shadow_setting",PROPERTY_HINT_ENUM,"OFF,ON,DOUBLE_SIDED,SHADOWS_ONLY"),"set_shadow_setting","get_shadow_setting");
+
+    ClassDB::bind_method(D_METHOD("set_gi_mode","input"), &MAssetMesh::set_gi_mode);
+    ClassDB::bind_method(D_METHOD("get_gi_mode"), &MAssetMesh::get_gi_mode);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"gi_mode",PROPERTY_HINT_ENUM,"DISABLED,STATIC,DYNAMIC,STATIC_DYNAMIC"),"set_gi_mode","get_gi_mode");
+
     ClassDB::bind_method(D_METHOD("set_mesh_lod_cutoff","input"), &MAssetMesh::set_mesh_lod_cutoff);
     ClassDB::bind_method(D_METHOD("get_mesh_lod_cutoff"), &MAssetMesh::get_mesh_lod_cutoff);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"mesh_lod_cutoff"),"set_mesh_lod_cutoff","get_mesh_lod_cutoff");
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"mesh_lod_cutoff",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_mesh_lod_cutoff","get_mesh_lod_cutoff");
 
     ClassDB::bind_method(D_METHOD("set_collision_lod_cutoff","input"), &MAssetMesh::set_collision_lod_cutoff);
     ClassDB::bind_method(D_METHOD("get_collision_lod_cutoff"), &MAssetMesh::get_collision_lod_cutoff);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_lod_cutoff"),"set_collision_lod_cutoff","get_collision_lod_cutoff");
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_lod_cutoff",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_collision_lod_cutoff","get_collision_lod_cutoff");
 
     ClassDB::bind_method(D_METHOD("set_hlod_layers","input"), &MAssetMesh::set_hlod_layers);
     ClassDB::bind_method(D_METHOD("get_hlod_layers"), &MAssetMesh::get_hlod_layers);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"hlod_layers"),"set_hlod_layers","get_hlod_layers");
-
-    ClassDB::bind_method(D_METHOD("get_collection_name"), &MAssetMesh::get_collection_name);
-    ClassDB::bind_method(D_METHOD("set_collection_name","input"), &MAssetMesh::set_collection_name);
-
-    ClassDB::bind_method(D_METHOD("get_glb_id"), &MAssetMesh::get_glb_id);
-    ClassDB::bind_method(D_METHOD("set_glb_id","input"), &MAssetMesh::set_glb_id);
-    
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"_glb_id"),"set_glb_id","get_glb_id");
-    ADD_PROPERTY(PropertyInfo(Variant::STRING,"_collection_name"),"set_collection_name","get_collection_name");
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"hlod_layers",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_hlod_layers","get_hlod_layers");
 
     ClassDB::bind_method(D_METHOD("get_collection_id"), &MAssetMesh::get_collection_id);
     ClassDB::bind_method(D_METHOD("set_collection_id","input"), &MAssetMesh::set_collection_id);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"collection_id",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR),"set_collection_id","get_collection_id");
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collection_id",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_collection_id","get_collection_id");
 
     ClassDB::bind_method(D_METHOD("_get_collection_identifier"), &MAssetMesh::get_collection_identifier);
     ClassDB::bind_method(D_METHOD("_set_collection_identifier","input"), &MAssetMesh::set_collection_identifier);
@@ -288,6 +291,15 @@ void MAssetMesh::generate_instance_data(int collection_id,const Transform3D& tra
         idata.collection_id = collection_id;
         idata.local_transform = transform;
         idata.meshes = MAssetTable::mesh_item_meshes(item_id);
+        for(int k=0; k < idata.meshes.size(); k++){
+            Ref<MMesh> __mm = idata.meshes[k];
+            if(__mm.is_valid()){
+                int mm_set_count = __mm->material_set_get_count();
+                if(mm_set_count > idata.max_material_set_count){
+                    idata.max_material_set_count = mm_set_count;
+                }
+            }
+        }
         idata.item_ids = MAssetTable::mesh_item_ids(item_id);
         idata.collission_data = asset_table->collection_get_collision_data(collection_id);
         for(int k=0; k < idata.collission_data.collision_shapes.size();k++){
@@ -361,6 +373,8 @@ void MAssetMesh::update_lod(int lod){
             RS->instance_set_scenario(data.instance_rid,get_world_3d()->get_scenario());
             RS->instance_set_transform(data.instance_rid,get_global_transform() * data.local_transform);
             RS->instance_set_visible(data.instance_rid,is_visible);
+            RS->instance_geometry_set_cast_shadows_setting(data.instance_rid,shadow_setting);
+            set_instance_gi_mode(data.instance_rid,gi_mode);
         } // create finish or update
         // First set mesh and then material override important
         data.mesh_rid = mesh_rid;
@@ -424,6 +438,30 @@ bool MAssetMesh::get_disable_collision() const{
     return disable_collision;
 }
 
+void MAssetMesh::set_instance_gi_mode(const RID instance,const MHlod::GIMode gi_mode){
+    switch (gi_mode)
+    {
+    case MHlod::GI_MODE_DISABLED:
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, false);
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, false);
+        break;
+    case MHlod::GI_MODE_STATIC:
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, true);
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, false);
+        break;
+    case MHlod::GI_MODE_DYNAMIC:
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, false);
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, true);
+        break;
+    case MHlod::GI_MODE_STATIC_DYNAMIC:
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_BAKED_LIGHT, true);
+        RS->instance_geometry_set_flag(instance,RenderingServer::INSTANCE_FLAG_USE_DYNAMIC_GI, true);
+        break;
+    default:
+        break;
+    }
+}
+
 void MAssetMesh::remove_instances(bool hard_remove){
     for(InstanceData& data : instance_data){
         if(data.instance_rid.is_valid()){
@@ -453,6 +491,40 @@ void MAssetMesh::set_hlod_layers(int64_t input){
 
 int64_t MAssetMesh::get_hlod_layers() const {
     return hlod_layers;
+}
+
+void MAssetMesh::set_visual_layers(int64_t input){
+    visual_layers = input;
+}
+
+int64_t MAssetMesh::get_visual_layers() const{
+    return visual_layers;
+}
+
+void MAssetMesh::set_shadow_setting(RenderingServer::ShadowCastingSetting input){
+    shadow_setting = input;
+    for(InstanceData& data : instance_data){
+        if(data.instance_rid.is_valid()){
+            RS->instance_geometry_set_cast_shadows_setting(data.instance_rid,shadow_setting);
+        }
+    }
+}
+
+RenderingServer::ShadowCastingSetting MAssetMesh::get_shadow_setting() const{
+    return shadow_setting;
+}
+
+void MAssetMesh::set_gi_mode(MHlod::GIMode input){
+    gi_mode = input;
+    for(InstanceData& data : instance_data){
+        if(data.instance_rid.is_valid()){
+            set_instance_gi_mode(data.instance_rid,gi_mode);
+        }
+    }
+}
+
+MHlod::GIMode MAssetMesh::get_gi_mode() const{
+    return gi_mode;
 }
 
 void MAssetMesh::set_mesh_lod_cutoff(int input){
@@ -520,28 +592,6 @@ Array MAssetMesh::get_collection_identifier(){
     out[0] = collection_identifier.glb_id;
     out[1] = collection_identifier.name;
     return out;
-}
-
-void MAssetMesh::set_glb_id(int32_t _glb_id){
-    if(is_inside_tree()){
-        return;
-    }
-    glb_id = _glb_id;
-}
-
-int32_t MAssetMesh::get_glb_id(){
-    return glb_id;
-}
-
-void MAssetMesh::set_collection_name(const String& input){
-    if(is_inside_tree()){
-        return;
-    }
-    collection_name = input;
-}
-
-String MAssetMesh::get_collection_name(){
-    return collection_name;
 }
 
 PackedInt32Array MAssetMesh::get_collection_ids() const {
@@ -630,8 +680,16 @@ void MAssetMesh::_notification(int32_t what){
 
 void MAssetMesh::_get_property_list(List<PropertyInfo> *p_list) const{
     for(const InstanceData& idata : instance_data){
-        if(idata.meshes.size()==0){
+        if(idata.meshes.size()==0 && idata.max_material_set_count>0){
             continue;
+        }
+        String enum_names;
+        for(int i=0; i < idata.max_material_set_count; i++){
+            if(i==0){
+                enum_names = "Set_0";
+            } else {
+                enum_names += ",Set_" +itos(i);
+            }
         }
         String prop_name;
         if(idata.collection_id == collection_id){
@@ -639,7 +697,7 @@ void MAssetMesh::_get_property_list(List<PropertyInfo> *p_list) const{
         } else {
             prop_name = String("Sub_Collections_material_set/") + itos(idata.collection_id);
         }
-        p_list->push_back(PropertyInfo(Variant::INT,prop_name,PROPERTY_HINT_RANGE,"0,128"));
+        p_list->push_back(PropertyInfo(Variant::INT,prop_name,PROPERTY_HINT_ENUM,enum_names,PROPERTY_USAGE_EDITOR));
     }
 }
 
@@ -653,7 +711,7 @@ bool MAssetMesh::_get(const StringName &p_name, Variant &r_ret) const{
     }
     if(_u_collection_id!=-1){
         r_ret = get_collection_material_set(_u_collection_id);
-        return r_ret;
+        return true;
     }
     return false;
 }
@@ -672,7 +730,6 @@ bool MAssetMesh::_set(const StringName &p_name, const Variant &p_value){
     }
     return false;
 }
-
 
 TypedArray<MAssetMeshData> MAssetMesh::get_mesh_data(){
     if(instance_data.is_empty()){

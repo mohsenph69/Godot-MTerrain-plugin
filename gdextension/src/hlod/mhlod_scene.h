@@ -152,7 +152,7 @@ class MHlodScene : public Node3D {
         void enable_sub_proc();
         void disable_sub_proc();
         _FORCE_INLINE_ void add_item(MHlod::Item* item,const int item_id,const bool immediate=false); // can be called in non-game loop thread as it generate apply info which will be affected in main game-loop
-        _FORCE_INLINE_ void remove_item(MHlod::Item* item,const int item_id,const bool immediate=false,const bool is_destruction=false);
+        _FORCE_INLINE_ void remove_item(MHlod::Item* item,const int item_id,const bool immediate=false,const bool is_destruction=false); // should clear creation_info afer calling this
         _FORCE_INLINE_ Transform3D get_item_transform(const int32_t transform_index) const;
         // use bellow rather than upper
         _FORCE_INLINE_ Transform3D get_item_transform(const MHlod::Item* item) const;
