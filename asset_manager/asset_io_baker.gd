@@ -140,7 +140,6 @@ static func save_joined_mesh(joined_mesh_id:int, joined_meshes:Array, joined_mes
 		var mesh_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id - joined_mesh_lods[i], ".res"))
 		if FileAccess.file_exists(mesh_path):
 			joined_meshes[i].take_over_path(mesh_path)
-		print("mesh_path ",mesh_path)
 		ResourceSaver.save(joined_meshes[i], mesh_path)
 	EditorInterface.get_resource_filesystem().scan()
 
@@ -158,7 +157,12 @@ static func explode_join_mesh_nodes(baker_node):
 		var mesh_node = MeshInstance3D.new()
 		mesh_node.mesh = mmesh.get_mesh()
 		for s in mesh_node.mesh.get_surface_count():
-			mesh_node.mesh.surface_set_material(s,null)
+			var surf_mat:Material = mesh_node.mesh.surface_get_material(s)
+			var mname = AssetIOMaterials.get_material_name(surf_mat)
+			if mname.is_empty(): mname="None"
+			var dummy_material:=StandardMaterial3D.new()
+			dummy_material.resource_name = mname
+			mesh_node.mesh.surface_set_material(s,dummy_material)
 		joined_mesh_node.add_child(mesh_node)		
 		mesh_node.owner = baker_node
 		mesh_node.name = baker_node.name + "_joined_mesh_lod_" + str(abs(lod))			
@@ -166,6 +170,7 @@ static func explode_join_mesh_nodes(baker_node):
 	
 static func export_join_mesh_only(baker_node:Node3D):	 	
 	var joined_mesh_node = explode_join_mesh_nodes(baker_node)
+	var m:ArrayMesh = joined_mesh_node.get_children()[0].mesh
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()					
 	var path = baker_node.scene_file_path.get_base_dir().path_join(joined_mesh_node.name+".glb")
@@ -181,8 +186,6 @@ static func import_join_mesh_only(baker_node:Node3D):
 	var path = baker_node.scene_file_path.get_basename() + "_joined_mesh.glb"
 	if not FileAccess.file_exists(path):
 		MTool.print_edmsg("There is no gltf for join mesh, to export your gltf file click on save button in inspector after creating join mesh!")
-	else:
-		print("OK exist:",path)
 	gltf_document.append_from_file(path, gltf_state)		
 	var scene = gltf_document.generate_scene(gltf_state)				
 	var joined_mesh_nodes = scene.find_children("*_joined_mesh*")
@@ -197,9 +200,11 @@ static func import_join_mesh_only(baker_node:Node3D):
 				var sname:String = smesh.surface_get_name(s)
 				sname = AssetIO.blender_end_number_remove(sname)
 				var sid = sname.to_int()
-				var mat = AssetIOMaterials.get_material(sid)
+				var mat = AssetIOMaterials.get_material_by_name(sname)
 				if mat:
 					smesh.surface_set_material(s,mat)
+				else:
+					MTool.print_edmsg("Can not find material with name: "+sname)
 			var mmesh = MMesh.new()
 			mmesh.create_from_mesh(smesh)
 			mesh_arr.push_back(mmesh)

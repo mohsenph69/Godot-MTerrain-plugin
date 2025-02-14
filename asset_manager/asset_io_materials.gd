@@ -1,8 +1,8 @@
 class_name AssetIOMaterials extends Object
 	
-static func get_material_table():
+static func get_material_table()->Dictionary:
 	var asset_library := MAssetTable.get_singleton()	
-	if not asset_library: return null
+	if not asset_library: return {}
 	if not asset_library.import_info.has("__materials"):
 		asset_library.import_info["__materials"] = {}
 	return asset_library.import_info["__materials"]
@@ -33,6 +33,20 @@ static func get_material(id:int)->Material:
 			if material is Material:
 				return material
 	return null
+
+static func get_material_by_name(mname:String)->Material:	
+	var materials = get_material_table()
+	for id in materials:
+		if materials[id].name == mname:
+			return load(materials[id]["path"])
+	return null
+	
+static func get_material_name(material:Material)->String:
+	var mid:int= get_material_id(material)
+	if mid >= 0:
+		var materials:= get_material_table()
+		return materials[mid]["name"]
+	return ""
 
 static func rename_material(id, new_name):	
 	var material_table = get_material_table()		
