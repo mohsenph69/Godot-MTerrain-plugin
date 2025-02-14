@@ -1,0 +1,39 @@
+name: Group builds
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Download Build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path:  ${{ github.workspace }}/libs/
+          merge-multiple: true
+
+      - name: Delete Build artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: libmterrain-*
+
+      - name: Package
+        shell: sh
+        run: |
+          rm -rf .github .gitmodules gdextension
+          mkdir -p addons/m_terrain
+          mv `ls | grep -v addons` addons/m_terrain
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MTerrain
+          path: ${{ github.workspace }}/
+          if-no-files-found: error
