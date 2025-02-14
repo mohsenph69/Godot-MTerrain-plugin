@@ -146,7 +146,7 @@ func make_physics_settings_control(object):
 	var current_physics_setting_name
 	if object.has_meta("physics_settings"):
 		current_physics_setting_name = object.get_meta("physics_settings") 	
-	for physics_setting_name in AssetIOMaterials.get_physics_ids().keys():
+	for physics_setting_name in AssetIOMaterials.get_physics().keys():
 		dropdown.add_item(physics_setting_name)		
 		if physics_setting_name==current_physics_setting_name:
 			dropdown.select(dropdown.item_count-1)		

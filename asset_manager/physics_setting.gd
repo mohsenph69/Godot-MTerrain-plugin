@@ -141,7 +141,7 @@ func update_material_icon(data):
 	data.caller.set_icon(1, data.texture)
 	
 func update_static_body_list(filter = null):
-	var list = AssetIOMaterials.get_physics_ids()
+	var list = AssetIOMaterials.get_physics()
 	static_body_list.clear()
 	var root = static_body_list.get_root()
 	if not root:
@@ -163,7 +163,7 @@ func show_material_in_file_system_dock() -> void:
 
 func show_static_body_in_file_system_dock() -> void:	
 	add_err.visible = false
-	var list = AssetIOMaterials.get_physics_ids()
+	var list = AssetIOMaterials.get_physics()
 	var sname = static_body_list.get_selected().get_text(0)
 	if not list.has(sname):
 		printerr("Can not find Item ",sname)
@@ -181,7 +181,7 @@ func show_static_body_in_file_system_dock() -> void:
 func rename_static_body():
 	var item := static_body_list.get_edited()
 	var original_name = item.get_metadata(0)
-	var list = AssetIOMaterials.get_physics_ids()
+	var list = AssetIOMaterials.get_physics()
 	if not original_name in list: 
 		print("static body with original name ", original_name,  " does not exist")
 		return
@@ -199,7 +199,7 @@ func validate_static_body_name(sname)->bool:
 		add_err.visible = true
 		add_err.text = "Empty Setting Name"
 		return false
-	var list = AssetIOMaterials.get_physics_ids()
+	var list = AssetIOMaterials.get_physics()
 	if list.has(sname):
 		add_err.visible = true
 		add_err.text = "Duplicate Setting Name"
@@ -207,7 +207,7 @@ func validate_static_body_name(sname)->bool:
 	return true
 
 func add_static_body() -> void:
-	var list = AssetIOMaterials.get_physics_ids()
+	var list = AssetIOMaterials.get_physics()
 	var i = 0	
 	var sname = "new_static_body"
 	while list.has(sname):

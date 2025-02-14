@@ -316,8 +316,8 @@ _FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
         PhysicsServer3D::get_singleton()->body_set_param(r,PhysicsServer3D::BODY_PARAM_BOUNCE,bounce);
         PhysicsServer3D::get_singleton()->body_set_param(r,PhysicsServer3D::BODY_PARAM_FRICTION,friction);
     }
-    PhysicsServer3D::get_singleton()->body_set_constant_force(r,setting->constant_linear_velocity);
-    PhysicsServer3D::get_singleton()->body_set_constant_torque(r,setting->constant_angular_velocity);
+    PhysicsServer3D::get_singleton()->body_set_state(r,PhysicsServer3D::BODY_STATE_LINEAR_VELOCITY,setting->constant_linear_velocity);
+    PhysicsServer3D::get_singleton()->body_set_state(r,PhysicsServer3D::BODY_STATE_ANGULAR_VELOCITY,setting->constant_angular_velocity);
     MHlod::PhysicBodyInfo p(r);
     physic_bodies.insert(id,p);
     physic_bodies.insert(id,r);

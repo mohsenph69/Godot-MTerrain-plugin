@@ -94,7 +94,8 @@ func bake_to_hlod_resource():
 				var physics_setting_name = item.get_meta("physics_settings") if item.has_meta("physics_settings") else asset_library.collection_get_physics_setting(item.collection_id)							
 				if not physics_setting_name.is_empty() and physics_dictionary.has(physics_setting_name):
 					physics_settings_id = physics_dictionary[physics_setting_name]
-								
+				elif not physics_setting_name.is_empty():
+					push_warning("Can not find physics setting with name %s in node %s" % [physics_setting_name,item.name])
 				var col_cutoff:int = item.collision_lod_cutoff
 				if col_cutoff < 0:
 					col_cutoff = asset_library.collection_get_colcutoff(item.collection_id)						
@@ -155,7 +156,12 @@ func bake_to_hlod_resource():
 			var t = baker_inverse_transform * n.global_transform
 			var item_id:int = -1
 			var item_variation_layer = n.get_meta("variation_layers") if n.has_meta("variation_layers") else 0
-			var physics_settings = physics_dictionary[n.get_meta("physics_settings")] if n.has_meta("physics_settings") else -1
+			var physics_setting_name:String= n.get_meta("physics_settings") if n.has_meta("physics_settings") else ""
+			var physics_settings = -1
+			if not physics_setting_name.is_empty() and physics_dictionary.has(physics_setting_name):
+				physics_settings = physics_dictionary[physics_setting_name]
+			elif not physics_setting_name.is_empty():
+				push_warning("Can not find physics setting with name %s in node %s" % [physics_setting_name,n.name])
 			if shape is BoxShape3D: item_id = hlod_resource.shape_add_box(t,shape.size,item_variation_layer, physics_settings)
 			elif shape is SphereShape3D: item_id = hlod_resource.shape_add_sphere(t,shape.radius,item_variation_layer,physics_settings)
 			elif shape is CapsuleShape3D: item_id = hlod_resource.shape_add_capsule(t,shape.radius,shape.height,item_variation_layer,physics_settings)
