@@ -446,13 +446,6 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	AssetIOBaker.save_joined_mesh(joined_mesh_id, [mmesh], [join_at_lod])
 	asset_mesh_updater.join_mesh_id = joined_mesh_id # should call after saving
 	MAssetMeshUpdater.refresh_all_masset_updater()
-	
-func get_joined_mesh_glb_path()->String:	
-	if FileAccess.file_exists(scene_file_path):
-		return scene_file_path.get_basename() + "_joined_mesh.glb"
-	elif owner is HLod_Baker and FileAccess.file_exists(owner.scene_file_path):		
-		return owner.scene_file_path.get_basename() + "_" + name + "_joined_mesh.glb"
-	return ""
 
 func has_joined_mesh()->bool:
 	return MAssetTable.mesh_join_is_valid(joined_mesh_id)
@@ -481,7 +474,7 @@ func remove_joined_mesh():
 	var stop_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id, ".stop"))
 	var f = FileAccess.open(stop_path,FileAccess.WRITE)
 	f.close()
-	var glb_path = get_joined_mesh_glb_path()
+	var glb_path = AssetIOBaker.get_glb_path_by_baker_path(scene_file_path)
 	if FileAccess.file_exists(glb_path):
 		DirAccess.remove_absolute(glb_path)						
 	EditorInterface.get_resource_filesystem().scan()

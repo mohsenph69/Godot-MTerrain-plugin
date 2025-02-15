@@ -175,11 +175,14 @@ static func explode_join_mesh_nodes(baker_node):
 	return joined_mesh_node
 	
 static func export_join_mesh_only(baker_node:Node3D):	 	
+	if not MAssetTable.mesh_join_is_valid(baker_node.joined_mesh_id):
+		MTool.print_edmsg("There is no join mesh for this! first create a join mesh!")
+		return
 	var joined_mesh_node = explode_join_mesh_nodes(baker_node)
 	var m:ArrayMesh = joined_mesh_node.get_children()[0].mesh
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()					
-	var path = baker_node.scene_file_path.get_base_dir().path_join(joined_mesh_node.name+".glb")
+	var path = get_glb_path_by_baker_path(baker_node.scene_file_path)
 	gltf_document.append_from_scene(joined_mesh_node, gltf_save_state)		
 	gltf_document.write_to_filesystem(gltf_save_state, path)
 	if joined_mesh_node:
@@ -190,7 +193,7 @@ static func import_join_mesh_only(baker_node:Node3D):
 	var gltf_document= GLTFDocument.new()
 	var gltf_state = GLTFState.new()
 	gltf_document.image_format = "None"
-	var path = baker_node.scene_file_path.get_basename() + "_joined_mesh.glb"
+	var path = get_glb_path_by_baker_path(baker_node.scene_file_path)
 	if not FileAccess.file_exists(path):
 		MTool.print_edmsg("There is no gltf for join mesh, to export your gltf file click on save button in inspector after creating join mesh!")
 	gltf_document.append_from_file(path, gltf_state)		
