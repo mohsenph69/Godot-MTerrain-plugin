@@ -6,8 +6,15 @@ class_name AssetIOBaker extends Object
 # - re-import hlod scene with joined mesh
 # - save joined meseh to .res from baker scene
 	
-static func baker_export_to_glb(baker_node:HLod_Baker):
-	var path = baker_node.scene_file_path.get_base_dir().path_join(baker_node.name + ".glb")		
+static func get_baker_joined_mesh_glb_path(baker_node:HLod_Baker):	
+	if baker_node.scene_file_path:		
+		return baker_node.scene_file_path.get_base_dir().path_join(baker_node.name + "_joined_mesh.glb")		
+	else:				
+		return baker_node.owner.scene_file_path.get_base_dir().path_join(baker_node.owner.scene_file_path.get_file().trim_suffix(".tscn") + "__" + baker_node.name + "_joined_mesh.glb")				
+	
+	
+static func baker_export_to_glb(baker_node:HLod_Baker):	
+	var path = get_baker_joined_mesh_glb_path(baker_node)
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()		
 	#TO DO : add joined mesh meshes to root node
@@ -135,6 +142,7 @@ static func save_joined_mesh(joined_mesh_id:int, joined_meshes:Array, joined_mes
 			DirAccess.remove_absolute(mesh_path)
 		if FileAccess.file_exists(stop_path):
 			DirAccess.remove_absolute(stop_path)
+	
 	## saving
 	for i in len(joined_meshes):
 		var mesh_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id - joined_mesh_lods[i], ".res"))
@@ -173,7 +181,7 @@ static func export_join_mesh_only(baker_node:Node3D):
 	var m:ArrayMesh = joined_mesh_node.get_children()[0].mesh
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()					
-	var path = baker_node.scene_file_path.get_base_dir().path_join(joined_mesh_node.name+".glb")
+	var path =  get_baker_joined_mesh_glb_path(baker_node)
 	gltf_document.append_from_scene(joined_mesh_node, gltf_save_state)		
 	gltf_document.write_to_filesystem(gltf_save_state, path)
 	if joined_mesh_node:
@@ -183,7 +191,7 @@ static func export_join_mesh_only(baker_node:Node3D):
 static func import_join_mesh_only(baker_node:Node3D):
 	var gltf_document= GLTFDocument.new()
 	var gltf_state = GLTFState.new()
-	var path = baker_node.scene_file_path.get_basename() + "_joined_mesh.glb"
+	var path =  get_baker_joined_mesh_glb_path(baker_node)
 	if not FileAccess.file_exists(path):
 		MTool.print_edmsg("There is no gltf for join mesh, to export your gltf file click on save button in inspector after creating join mesh!")
 	gltf_document.append_from_file(path, gltf_state)		
@@ -193,7 +201,7 @@ static func import_join_mesh_only(baker_node:Node3D):
 	var lod_arr:Array
 	for joined_mesh_node in joined_mesh_nodes:
 		if not joined_mesh_node is ImporterMeshInstance3D: continue
-		var name_data = AssetIO.node_parse_name(joined_mesh_node)
+		var name_data = AssetIO.node_parse_name(joined_mesh_node)		
 		if name_data.lod != -1:
 			var smesh:ArrayMesh= joined_mesh_node.mesh.get_mesh()
 			for s in range(smesh.get_surface_count()):
@@ -208,7 +216,7 @@ static func import_join_mesh_only(baker_node:Node3D):
 			var mmesh = MMesh.new()
 			mmesh.create_from_mesh(smesh)
 			mesh_arr.push_back(mmesh)
-			lod_arr.push_back(name_data.lod)
+			lod_arr.push_back(name_data.lod)	
 	save_joined_mesh(baker_node.joined_mesh_id, mesh_arr, lod_arr)
 	MAssetMeshUpdater.refresh_all_masset_updater()
 	EditorInterface.get_resource_filesystem().scan()

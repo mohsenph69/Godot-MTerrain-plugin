@@ -81,14 +81,16 @@ static func update_material(id, material:Material):
 		AssetIO.glb_load(glb, {}, true)
 
 static func get_glbs_using_material(material_id):
-	var import_info = MAssetTable.get_singleton().import_info
+	var import_info = MAssetTable.get_singleton().import_info	
 	var glb_to_reimport = []	
-	for glb_path in import_info:
+	for glb_path in import_info:				
 		if glb_path in glb_to_reimport: continue
-		if glb_path.begins_with("__"): continue
-		if not import_info[glb_path].has("__materials"):continue
-		if not material_id in import_info[glb_path]["__materials"].values(): continue		
-		glb_to_reimport.push_back(glb_path)	
+		if glb_path.begins_with("__"): continue		
+		if not import_info[glb_path].has("__materials"):continue	
+		for id in import_info[glb_path]["__materials"].values():
+			if id == material_id:	
+				glb_to_reimport.push_back(glb_path)	
+				break									
 	return glb_to_reimport
 	
 static func find_material_by_name(material_name):
@@ -101,7 +103,8 @@ static func find_material_by_name(material_name):
 static func remove_material(id):	
 	var material_table = get_material_table()
 	if material_table.has(id):	
-		if len(material_table[id].meshes) > 0:
+		var glbs = get_glbs_using_material(id)
+		if len(glbs) > 0:
 			push_error("cannot remove material from table: still in use by ", len(material_table[id].meshes) , " meshes")
 			#TODO: prevent user from trying to delete material that's still in use
 			return

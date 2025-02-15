@@ -4,11 +4,11 @@ signal asset_type_filter_changed
 
 @onready var asset_placer:=$"../../../.."
 
-var refresh_tex= load("res://addons/m_terrain/icons/rotate_icon.svg")
-
 var selected_types:int = 0
 const OPTIONS = {MAssetTable.ItemType.MESH: "Mesh", MAssetTable.ItemType.HLOD:"HLOD", MAssetTable.ItemType.PACKEDSCENE: "PackedScene", MAssetTable.ItemType.DECAL: "Decal"}
-func _init():	
+func _init():		
+
+	var refresh_tex = load("res://addons/m_terrain/icons/rotation.svg")
 	var root = create_item()	
 	for id in OPTIONS:
 		var item = root.create_child()		
@@ -17,10 +17,10 @@ func _init():
 		item.set_metadata(0, id)
 		item.set_checked(0, true)
 		item.set_editable(0,true)
-		item.collapsed = true
-		if id!=MAssetTable.ItemType.MESH:
-			var child = item.create_child()
-			child.add_button(0,refresh_tex,id,false,"Refresh base on file in Directory")
+		item.collapsed = true		
+		if id!=MAssetTable.ItemType.MESH:									
+			item.add_button(0,refresh_tex,-1,false,"Refresh base on file in Directory")
+			item.set_metadata(0, id)
 		selected_types |= id
 	
 	asset_type_filter_changed.emit.call_deferred(selected_types)		
@@ -45,5 +45,6 @@ func _init():
 
 func _on_button_clicked(item: TreeItem, column: int, id: int, mouse_button_index: int) -> void:
 	if MAssetTable.get_singleton():
-		MAssetTable.get_singleton().auto_asset_update_from_dir(id)
+		
+		MAssetTable.get_singleton().auto_asset_update_from_dir( item.get_metadata(0) )
 		asset_placer.regroup()

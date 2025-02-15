@@ -110,9 +110,10 @@ func update_materials_list(filter = null):
 	if not root:
 		root = materials_list.create_item()		
 	var material_table = AssetIOMaterials.get_material_table()	
-	var null_item := root.create_child()
-	null_item.set_text(0, "-1")
-	null_item.set_text(2, "(no material)")
+	#var null_item := root.create_child()
+	#null_item.set_text(0, "-1")
+	#null_item.set_editable(2,false)
+	#null_item.set_text(2, "(no material)")
 	for i in material_table.keys():
 		if filter and not filter in material_table[i].path: continue
 		var item := root.create_child()
