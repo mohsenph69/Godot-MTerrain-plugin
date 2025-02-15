@@ -75,7 +75,8 @@ var current_placement_dir:Vector3
 static var thumbnail_manager 
 
 func _ready():	
-	AssetIO.asset_placer = self
+	if AssetIO.asset_placer==null:
+		AssetIO.asset_placer = self
 	popup_button_group = ButtonGroup.new()
 	popup_button_group.allow_unpress = true
 	for button:Button in [asset_type_filter_button, filter_button, grouping_button, sort_by_button, add_asset_button ]:

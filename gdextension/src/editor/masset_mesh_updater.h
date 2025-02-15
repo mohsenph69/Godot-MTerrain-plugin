@@ -5,6 +5,9 @@
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/templates/vset.hpp>
+#include <godot_cpp/classes/box_mesh.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
+#include <godot_cpp/classes/shader.hpp>
 #include "../hlod/mmesh.h"
 
 using namespace godot;
@@ -19,6 +22,12 @@ class MAssetMeshUpdater : public RefCounted {
 
     private:
     static VSet<MAssetMeshUpdater*> asset_mesh_updater_list;
+    bool show_boundary = false;
+    RID inner_bound_instance = RID();
+    RID outer_bound_instance = RID();
+    Ref<BoxMesh> inner_box_mesh;
+    Ref<BoxMesh> outer_box_mesh;
+    Ref<ShaderMaterial> boundary_material;
     Node3D* root_node = nullptr;
     int current_lod = -1;
     // For join mesh always the transform is at the same position of baker
@@ -45,6 +54,9 @@ class MAssetMeshUpdater : public RefCounted {
     int get_join_at_lod();
 
     int get_current_lod();
+
+    void set_show_boundary(bool input);
+    bool get_show_boundary() const;
 
     void set_join_mesh_id(int input);
     int get_join_mesh_id();

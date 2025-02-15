@@ -287,6 +287,7 @@ Ref<ArrayMesh> MMesh::get_mesh() const{
     ERR_FAIL_COND_V(materials_set.size()==0,out);
     for(int i=0; i < _surfaces.size(); i++){
         out->surface_set_material(i,materials_set[0].get_material_no_user(i));
+        out->surface_set_name(i,surface_get_name(i));
     }
     return out;
 }

@@ -32,6 +32,8 @@ void MHlod::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_aabb"), &MHlod::get_aabb);
     ADD_PROPERTY(PropertyInfo(Variant::AABB,"aabb",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_aabb","get_aabb");
 
+    ClassDB::bind_method(D_METHOD("get_item_count"), &MHlod::get_item_count);
+
     ClassDB::bind_method(D_METHOD("set_join_at_lod","input"), &MHlod::set_join_at_lod);
     ClassDB::bind_method(D_METHOD("get_join_at_lod"), &MHlod::get_join_at_lod);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"join_at_lod",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_join_at_lod","get_join_at_lod");
@@ -80,6 +82,11 @@ void MHlod::_bind_methods(){
     BIND_ENUM_CONSTANT(LIGHT);
     BIND_ENUM_CONSTANT(PACKED_SCENE);
     BIND_ENUM_CONSTANT(DECAL);
+
+    BIND_ENUM_CONSTANT(GI_MODE_DISABLED);
+    BIND_ENUM_CONSTANT(GI_MODE_STATIC);
+    BIND_ENUM_CONSTANT(GI_MODE_DYNAMIC);
+    BIND_ENUM_CONSTANT(GI_MODE_STATIC_DYNAMIC);
 }
 
 String MHlod::get_asset_root_dir(){
@@ -343,6 +350,10 @@ const AABB& MHlod::get_aabb() const{
     return aabb;
 }
 
+int MHlod::get_item_count() const{
+    return item_list.size();
+}
+
 void MHlod::set_join_at_lod(int input){
     join_at_lod = input;
 }
@@ -378,7 +389,6 @@ int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt32Array& me
     ERR_FAIL_COND_V(lod_count==0,-1);
     ERR_FAIL_COND_V(shadow_settings.size()!=lod_count,-1);
     ERR_FAIL_COND_V(gi_modes.size()!=lod_count,-1);
-
     int item_index = item_list.size();
     int transform_index = transforms.size();
     transforms.push_back(transform);
@@ -390,6 +400,9 @@ int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt32Array& me
     int lod = -1;
     for(int i=0 ; i < lod_count; i++){
         lod++;
+        if(mesh[i]==-1){
+            continue;
+        }
         if(
             last_mesh == mesh[i] &&
             last_shadow_setting == shadow_settings[i] &&
@@ -415,6 +428,7 @@ int MHlod::add_mesh_item(const Transform3D& transform,const PackedInt32Array& me
         _item.mesh.set_data(mesh[i],material[i],shadow_settings[i],gi_modes[i],render_layers);
         item_list.push_back(_item);
     }
+    ERR_FAIL_COND_V_MSG(item_index==item_list.size(),-1,"No mesh item has been added! Empty mesh array!");
     return item_index;
 }
 
@@ -781,6 +795,7 @@ Ref<ArrayMesh> MHlod::get_joined_mesh(bool for_triangle_mesh,bool best_mesh_qual
         bool is_join_mesh=false;
         for(const int32_t item_id : item_ids){
             int mesh_id = current_hlod->get_mesh_id(item_id,false,best_mesh_quality);
+            ERR_CONTINUE_MSG(mesh_id ==-1,vformat("Mesh id %d is not valid in item id %d in hlod %s",mesh_id,item_id,current_hlod->get_path()));
             if(mesh_id <= -10){
                 is_join_mesh = true;
             }

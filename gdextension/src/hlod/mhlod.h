@@ -14,6 +14,11 @@
 
 using namespace godot;
 
+#define MHLOD_CONST_GI_MODE_DISABLED 0
+#define MHLOD_CONST_GI_MODE_STATIC 1
+#define MHLOD_CONST_GI_MODE_DYNAMIC 2
+#define MHLOD_CONST_GI_MODE_STATIC_DYNAMIC 3
+
 class MHlod : public Resource{
     GDCLASS(MHlod, Resource);
 
@@ -41,6 +46,12 @@ class MHlod : public Resource{
         }
     };
     static inline const char* type_string = "NONE,MESH,COLLISION,LIGHT,PACKED_SCENE,DECAL";
+    enum GIMode : uint8_t {
+        GI_MODE_DISABLED = MHLOD_CONST_GI_MODE_DISABLED,
+        GI_MODE_STATIC = MHLOD_CONST_GI_MODE_STATIC,
+        GI_MODE_DYNAMIC = MHLOD_CONST_GI_MODE_DYNAMIC,
+        GI_MODE_STATIC_DYNAMIC = MHLOD_CONST_GI_MODE_STATIC_DYNAMIC
+    };
     enum Type : uint8_t {NONE,MESH,COLLISION,COLLISION_COMPLEX,LIGHT,PACKED_SCENE,DECAL};
     struct Item
     {
@@ -89,6 +100,8 @@ class MHlod : public Resource{
         Only two neghbor similar lod can be detected
     */
     public:
+    MHlod() = default;
+    ~MHlod() = default;
     MByteFloat<false,1024> v1;
     void set_v1(float input){
         v1 = input;
@@ -129,6 +142,7 @@ class MHlod : public Resource{
     MHlod::Type get_item_type(int32_t item_id) const;
     void set_aabb(const AABB& aabb);
     const AABB& get_aabb() const;
+    int get_item_count() const;
     void set_join_at_lod(int input);
     int get_join_at_lod();
     int get_sub_hlod_size_rec();
@@ -302,8 +316,8 @@ _FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
         PhysicsServer3D::get_singleton()->body_set_param(r,PhysicsServer3D::BODY_PARAM_BOUNCE,bounce);
         PhysicsServer3D::get_singleton()->body_set_param(r,PhysicsServer3D::BODY_PARAM_FRICTION,friction);
     }
-    PhysicsServer3D::get_singleton()->body_set_constant_force(r,setting->constant_linear_velocity);
-    PhysicsServer3D::get_singleton()->body_set_constant_torque(r,setting->constant_angular_velocity);
+    PhysicsServer3D::get_singleton()->body_set_state(r,PhysicsServer3D::BODY_STATE_LINEAR_VELOCITY,setting->constant_linear_velocity);
+    PhysicsServer3D::get_singleton()->body_set_state(r,PhysicsServer3D::BODY_STATE_ANGULAR_VELOCITY,setting->constant_angular_velocity);
     MHlod::PhysicBodyInfo p(r);
     physic_bodies.insert(id,p);
     physic_bodies.insert(id,r);
@@ -318,4 +332,5 @@ _FORCE_INLINE_ void MHlod::clear_physic_body(){
 }
 
 VARIANT_ENUM_CAST(MHlod::Type);
+VARIANT_ENUM_CAST(MHlod::GIMode);
 #endif

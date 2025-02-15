@@ -54,7 +54,8 @@ func _parse_begin(object):
 		control = VBoxContainer.new()		
 		if EditorInterface.get_edited_scene_root() is HLod_Baker:
 			control.add_child(make_variation_layer_control_for_assigning(object))						
-			control.add_child(make_cutoff_lod_control(object))									
+			control.add_child(make_masset_mesh_cutoff_lod_control(object))									
+			control.add_child(make_masset_collision_cutoff_lod_control(object))
 		control.add_child(make_tag_collection_control(object))						
 	elif object is MMesh:		
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
@@ -145,7 +146,7 @@ func make_physics_settings_control(object):
 	var current_physics_setting_name
 	if object.has_meta("physics_settings"):
 		current_physics_setting_name = object.get_meta("physics_settings") 	
-	for physics_setting_name in AssetIOMaterials.get_physics_ids().keys():
+	for physics_setting_name in AssetIOMaterials.get_physics().keys():
 		dropdown.add_item(physics_setting_name)		
 		if physics_setting_name==current_physics_setting_name:
 			dropdown.select(dropdown.item_count-1)		
@@ -195,16 +196,55 @@ func make_cutoff_lod_control(object):
 	var hbox = HBoxContainer.new()
 	var label = Label.new()
 	label.text = "Cutoff at Lod "
+	label.tooltip_text="Will not be shown at this lod and above\n\"-1\" means the default lod\n\"0\" will disable the item\nyou can change the default value in baker inspector"
+	label.mouse_filter=Control.MOUSE_FILTER_STOP
 	hbox.add_child(label)
 	var spinbox = SpinBox.new()
 	hbox.add_child(spinbox)
-	spinbox.value = object.get_meta("lod_cutoff") if object.has_meta("lod_cutoff") else 1
 	spinbox.step = 1
 	spinbox.max_value = 10
+	spinbox.min_value = -1
+	spinbox.value = object.get_meta("lod_cutoff") if object.has_meta("lod_cutoff") else -1
 	spinbox.value_changed.connect(func(new_value):
 		object.set_meta("lod_cutoff", new_value)
 	)
 	return hbox
+	
+func make_masset_mesh_cutoff_lod_control(object:MAssetMesh):
+	var hbox = HBoxContainer.new()
+	var label = Label.new()
+	label.text = "Mesh Cutoff LOD "
+	label.tooltip_text="Will not be shown at this lod and above\n\"-1\" means the default lod\n\"0\" will disable the item\ndefault value is define in GLB imported file"
+	label.mouse_filter=Control.MOUSE_FILTER_STOP
+	hbox.add_child(label)
+	var spinbox = SpinBox.new()
+	hbox.add_child(spinbox)
+	spinbox.step = 1
+	spinbox.max_value = 10
+	spinbox.min_value = -1
+	spinbox.value = object.mesh_lod_cutoff
+	spinbox.value_changed.connect(func(new_value):
+		object.mesh_lod_cutoff = new_value
+	)
+	return hbox
+func make_masset_collision_cutoff_lod_control(object:MAssetMesh):
+	var hbox = HBoxContainer.new()
+	var label = Label.new()
+	label.text = "Collision Cutoff LOD "
+	label.tooltip_text="Collision Will not be disabled at this lod and above\n\"-1\" means the default lod\n\"0\" will disable the item\ndefault value is define in GLB imported file"
+	label.mouse_filter=Control.MOUSE_FILTER_STOP
+	hbox.add_child(label)
+	var spinbox = SpinBox.new()
+	hbox.add_child(spinbox)
+	spinbox.step = 1
+	spinbox.max_value = 10
+	spinbox.min_value = -1
+	spinbox.value = object.collision_lod_cutoff
+	spinbox.value_changed.connect(func(new_value):
+		object.collision_lod_cutoff = new_value
+	)
+	return hbox
+	
 func save_changes(object):
 	pass
 			 	

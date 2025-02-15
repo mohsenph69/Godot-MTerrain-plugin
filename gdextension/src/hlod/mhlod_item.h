@@ -67,6 +67,7 @@ struct MHLodItemMesh {
         return mesh.is_valid() && mesh->has_material_override() && material_id >= 0;
     }
     _FORCE_INLINE_ RID load(){
+        ERR_FAIL_COND_V(mesh_id==-1,RID());
         if(mesh.is_null()){
             mesh = RL->load(M_GET_MESH_PATH(mesh_id));
         }

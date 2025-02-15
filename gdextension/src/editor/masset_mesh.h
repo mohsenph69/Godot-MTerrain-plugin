@@ -51,6 +51,7 @@ class MAssetMesh : public Node3D {
     struct InstanceData
     {
         bool material_set_user_added = false;
+        int8_t max_material_set_count = 0;
         int8_t material_set_id = 0; // main one
         int8_t active_mesh_index = -1;
         int32_t collection_id = -1;
@@ -70,19 +71,22 @@ class MAssetMesh : public Node3D {
         Ref<MMesh> get_mesh_last(int lod) const;
     };
     bool disable_collision = false;
+    RenderingServer::ShadowCastingSetting shadow_setting = RenderingServer::ShadowCastingSetting::SHADOW_CASTING_SETTING_ON;
+    MHlod::GIMode gi_mode = MHlod::GIMode::GI_MODE_STATIC;
     uint16_t hlod_layers = 0;
+    int64_t visual_layers = 1;
     int collection_id = -1;
     int current_lod = -1;
-    int lod_cutoff = -1;
-    int32_t glb_id = -1;
+    int mesh_lod_cutoff = -1;
+    int collision_lod_cutoff = -1;
     MAssetTable::CollectionIdentifier collection_identifier;
-    String collection_name;
     Vector<InstanceData> instance_data;
     Ref<TriangleMesh> joined_triangle_mesh; // chached for editor selection
     AABB joined_aabb; // if above is cached the this is also is calculated
     Dictionary collections_material_set; // key collection id , value material set, should be updated with InstanceData 
 
     private:
+    void set_instance_gi_mode(const RID instance,const MHlod::GIMode gi_mode);
     void remove_instances(bool hard_remove);
     public:
     static void refresh_all_masset_nodes();
@@ -101,18 +105,26 @@ class MAssetMesh : public Node3D {
     void set_hlod_layers(int64_t input);
     int64_t get_hlod_layers() const;
 
-    void set_lod_cutoff(int input);
-    int get_lod_cutoff();
+    void set_visual_layers(int64_t input);
+    int64_t get_visual_layers() const;
+
+    void set_shadow_setting(RenderingServer::ShadowCastingSetting input);
+    RenderingServer::ShadowCastingSetting get_shadow_setting() const;
+
+    void set_gi_mode(MHlod::GIMode input);
+    MHlod::GIMode get_gi_mode() const;
+
+    void set_mesh_lod_cutoff(int input);
+    int get_mesh_lod_cutoff();
+
+    void set_collision_lod_cutoff(int input);
+    int get_collision_lod_cutoff();
     
     void set_collection_id_no_lod_update(int input);
     void set_collection_id(int input);
     int get_collection_id();
     void set_collection_identifier(const Array& info);
     Array get_collection_identifier();
-    void set_glb_id(int32_t glb_id);
-    int32_t get_glb_id();
-    void set_collection_name(const String& input);
-    String get_collection_name();
     PackedInt32Array get_collection_ids() const;
     int get_collection_material_set(int collection_id) const;
     void set_collection_material_set(int collection_id, int material_set);
