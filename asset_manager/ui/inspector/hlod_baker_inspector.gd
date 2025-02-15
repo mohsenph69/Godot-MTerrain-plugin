@@ -195,7 +195,11 @@ func open_baker_gltf_with_blender():
 	py_script = py_script.replace("_GLB_FILE_PATH",glb_path)
 	py_script = py_script.replace("_BAKER_NAME",baker.name)
 	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
+	if FileAccess.file_exists(tmp_path):DirAccess.remove_absolute(tmp_path) # good idea to clear to make sure eveyrthing go well
 	var tmpf = FileAccess.open(tmp_path,FileAccess.WRITE)
+	if not tmpf:
+		MTool.print_edmsg("Can not create tmp file for blender python script")
+		return
 	tmpf.store_string(py_script)
 	tmpf.close()
 	OS.create_process(blender_path,["--python",ProjectSettings.globalize_path(tmp_path)])

@@ -13,7 +13,7 @@ class ExportGLBOperator(bpy.types.Operator):
 
     def execute(self, context):
         default_path = '_GLB_FILE_PATH'
-        bpy.ops.export_scene.gltf(filepath=default_path, export_format='GLB',export_images=False)
+        bpy.ops.export_scene.gltf(filepath=default_path, export_format='GLB',export_image_format = 'NONE',export_materials = 'EXPORT')
         self.report({'INFO'}, "GLB Exported Successfully to _GLB_FILE_PATH")
         return {'FINISHED'}
 
