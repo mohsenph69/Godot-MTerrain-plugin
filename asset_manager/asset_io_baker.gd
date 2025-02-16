@@ -11,6 +11,12 @@ static func get_glb_path_by_baker_path(baker_path:String)->String:
 	var baker_name = baker_path.get_file().get_basename()
 	return baker_path.get_base_dir().path_join(baker_name+"_joined_mesh.glb")
 
+static func rebake_hlod(hlod:MHlod):
+	var baker: HLod_Baker= load(hlod.baker_path).instantiate()
+	baker.is_tmp_bake = true
+	EditorInterface.get_base_control().add_child(baker)
+	baker.bake_to_hlod_resource()
+
 static func baker_export_to_glb(baker_node:HLod_Baker):
 	var path = baker_node.scene_file_path.get_base_dir().path_join(baker_node.name + ".glb")		
 	var gltf_document= GLTFDocument.new()

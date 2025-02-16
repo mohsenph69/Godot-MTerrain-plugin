@@ -19,6 +19,7 @@ func _ready() -> void:
 	var tpscene = MAssetTable.PACKEDSCENE
 	var tdecal = MAssetTable.DECAL
 	var thlod = MAssetTable.HLOD
+	add_item("Rebake",thlod,rebake_hlod)
 	add_item("Open BakerScene",thlod,open_hlod_baker)
 	add_item("Show in FileSystem",tmesh|tpscene|tdecal|thlod,show_in_file_system)
 	add_item("Show GLTF",tmesh,show_gltf)
@@ -49,7 +50,9 @@ func add_buttons(collection_id:int):
 			btn.text = item_name
 			btn.size_flags_horizontal=Control.SIZE_FILL
 			btn.button_down.connect(set_visible.bind(false))
-			btn.button_down.connect(items[item_name][1].bind(collection_id))
+			var func_callback:Callable= items[item_name][1]
+			func_callback = func_callback.bind(collection_id)
+			btn.button_down.connect(func_callback)
 			vbox.add_child(btn)
 
 func item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
@@ -163,5 +166,16 @@ func remove_collection(collection_id:int,only_hlod=false)->void:
 		EditorInterface.get_resource_filesystem().scan()
 	)
 
-func remove_only_hlod(collection_id:int):
+func remove_only_hlod(collection_id:int)->void:
 	remove_collection(collection_id,true)
+
+func rebake_hlod(collection_id:int)->void:
+	var at:=MAssetTable.get_singleton()
+	var type = at.collection_get_type(collection_id)
+	if type!=MAssetTable.ItemType.HLOD:
+		printerr("Not valid HLOD type")
+		return
+	var item_id:int= at.collection_get_item_id(collection_id)
+	var hpath = MHlod.get_hlod_path(item_id)
+	var hres:MHlod=load(hpath)
+	AssetIOBaker.rebake_hlod(hres)

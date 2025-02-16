@@ -23,6 +23,7 @@ signal asset_mesh_updated
 @export_storage var joined_mesh_modified_time: int = -1
 
 
+var is_tmp_bake=false #is true when called from AssetIoBaker.rebake_hlod, and we should free ourseself if this true!
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
@@ -52,6 +53,7 @@ func force_lod(lod:int):
 		force_lod_enabled = true
 		
 func bake_to_hlod_resource():		
+	var has_sub_hlod:=false
 	var physics_dictionary = AssetIOMaterials.get_physics_ids()
 	MHlodScene.sleep()	
 	hlod_resource = MHlod.new()
@@ -229,7 +231,7 @@ func bake_to_hlod_resource():
 	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
 		material_array.resize(len(joined_mesh_array))
-		material_array.fill(-1)		
+		material_array.fill(0)		
 		var shadow_array = material_array.map(func(a): return 0)
 		var gi_array = material_array.map(func(a): return 0)		
 		# MAKE SURE ALL ARRAYS ARE THE SAME LENGTH!				
@@ -256,7 +258,9 @@ func bake_to_hlod_resource():
 	###################
 	## BAKE SUB_HLOD ##
 	###################
-	all_hlod.append_array( get_all_sub_hlod(self, get_children()) )	
+	var __sub_hlod = get_all_sub_hlod(self, get_children())
+	has_sub_hlod = __sub_hlod.size() > 0
+	all_hlod.append_array(__sub_hlod)	
 	for hlod_data in all_hlod:		
 		# scene_layers = which of this hlod's layers are active
 		var scene_layers := hlod_data.node.scene_layers if hlod_data.node and hlod_data.node is MHlodScene else 0					
@@ -299,18 +303,23 @@ func bake_to_hlod_resource():
 	MHlodScene.awake()
 	if save_err == OK:		
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
-		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id})
+		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})
+	elif is_tmp_bake:
+		call_deferred("queue_free")
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
 func finish_generating_thumnail(data):
 	var tex:Texture2D=data["texture"]
-	if not tex: return
+	if not tex:
+		if is_tmp_bake: call_deferred("queue_free")
+		return
 	var img = tex.get_image()
-	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD)
+	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD,data["has_sub_hlod"],Color(0,0,0.5))
 	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])
 	ThumbnailManager.save_thumbnail(img,tpath)
 	AssetIO.asset_placer.regroup()
+	if is_tmp_bake: call_deferred("queue_free")
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
@@ -443,6 +452,7 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 		var id = AssetIOMaterials.get_material_id(mat)
 		joined_mesh.surface_set_name(s,str(id))
 	var mmesh = MMesh.new()
+	ResourceSaver.save(joined_mesh,"res://fooj.res")
 	mmesh.create_from_mesh(joined_mesh)
 	if joined_mesh_id == -1:
 		joined_mesh_id=MAssetTable.get_last_free_mesh_join_id()
