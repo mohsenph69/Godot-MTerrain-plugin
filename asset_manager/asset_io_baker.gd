@@ -205,8 +205,9 @@ static func import_join_mesh_only(baker_node:Node3D):
 		if name_data.lod != -1:
 			var smesh:ArrayMesh= joined_mesh_node.mesh.get_mesh()
 			for s in range(smesh.get_surface_count()):
-				var sname:String = smesh.surface_get_name(s)
+				var sname:String = smesh.surface_get_name(s)				
 				sname = AssetIO.blender_end_number_remove(sname)
+				if sname == "None": continue
 				var sid = sname.to_int()
 				var mat = AssetIOMaterials.get_material_by_name(sname)
 				if mat:
