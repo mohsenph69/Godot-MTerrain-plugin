@@ -271,6 +271,7 @@ func bake_to_hlod_resource():
 	for hlod_data in all_hlod:
 		var gh_aabb:AABB = MTool.get_global_aabb(hlod_data.node.get_aabb(),hlod_data.tr)
 		aabb.merge(gh_aabb)
+	hlod_resource.aabb = aabb
 	# some subhlod may not included in join mesh
 	# using jmesh down for thumnail
 	##################################
@@ -278,17 +279,19 @@ func bake_to_hlod_resource():
 	##################################
 	hlod_resource.join_at_lod = join_at_lod
 	hlod_resource.resource_name = name
-	hlod_id = MAssetTable.get_last_free_hlod_id(hlod_id,scene_file_path)
+	if hlod_id==-1:
+		hlod_id = MAssetTable.get_last_free_hlod_id()
 	var bake_path := MHlod.get_hlod_path(hlod_id)
+	var stop_path = bake_path.get_basename() + ".stop"
+	if FileAccess.file_exists(stop_path):
+		DirAccess.remove_absolute(stop_path)
 	var users = MHlodScene.get_hlod_users(bake_path)
 	var save_err
+	if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
+			DirAccess.make_dir_absolute(bake_path.get_base_dir())
+	save_err = ResourceSaver.save(hlod_resource,bake_path)
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
-		save_err = ResourceSaver.save(hlod_resource)
-	else:
-		if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
-			DirAccess.make_dir_absolute(bake_path.get_base_dir())
-		save_err = ResourceSaver.save(hlod_resource, bake_path)
 	for n in users:
 		n.hlod = hlod_resource	
 	if save_err == OK:				
@@ -296,13 +299,13 @@ func bake_to_hlod_resource():
 	MHlodScene.awake()
 	if save_err == OK:		
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
-		hlod_resource.aabb = aabb
 		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id})
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
 func finish_generating_thumnail(data):
 	var tex:Texture2D=data["texture"]
+	if not tex: return
 	var img = tex.get_image()
 	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD)
 	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])

@@ -20,6 +20,7 @@ size_flags_vertical = 3
 mouse_filter = 1
 
 [node name="group_list" type="ItemList" parent="group_container"]
+clip_contents = false
 layout_mode = 2
 mouse_filter = 1
 select_mode = 1
