@@ -53,6 +53,9 @@ func force_lod(lod:int):
 		force_lod_enabled = true
 		
 func bake_to_hlod_resource():		
+	if (owner and owner.scene_file_path.is_empty()) or (not owner and scene_file_path.is_empty()):
+		MTool.print_edmsg("Pelase first save the baker scene")
+		return
 	var has_sub_hlod:=false
 	var physics_dictionary = AssetIOMaterials.get_physics_ids()
 	MHlodScene.sleep()	
@@ -301,7 +304,7 @@ func bake_to_hlod_resource():
 	if save_err == OK:				
 		MAssetTable.save()		
 	MHlodScene.awake()
-	if save_err == OK:		
+	if save_err == OK and not scene_file_path.is_empty():
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
 		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})
 	elif is_tmp_bake:
@@ -452,7 +455,6 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 		var id = AssetIOMaterials.get_material_id(mat)
 		joined_mesh.surface_set_name(s,str(id))
 	var mmesh = MMesh.new()
-	ResourceSaver.save(joined_mesh,"res://fooj.res")
 	mmesh.create_from_mesh(joined_mesh)
 	if joined_mesh_id == -1:
 		joined_mesh_id=MAssetTable.get_last_free_mesh_join_id()
