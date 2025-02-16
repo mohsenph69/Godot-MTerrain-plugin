@@ -451,7 +451,7 @@ func add_asset_to_scene(collection_id, asset_name,create_ur:=true):
 	else:
 		parent = selected_nodes[0]
 		main_selected_node = selected_nodes[0]
-		while parent is MAssetMesh and parent != scene_root:
+		while (parent is MAssetMesh or parent is MHlodScene or parent is MDecalInstance) and parent != scene_root:
 			parent = parent.get_parent()			
 	parent.add_child(node)
 	node.owner = EditorInterface.get_edited_scene_root()
@@ -494,9 +494,11 @@ func single_select_node(node:Node):
 func get_added_node_transform(neighbor:Node,dir:Vector3) -> Transform3D:
 	if neighbor == null or not neighbor is Node3D:
 		return Transform3D()
-	if not neighbor is MAssetMesh:
+	if not neighbor is MAssetMesh and not neighbor is MHlodScene and not neighbor is MDecalInstance:
 		return Transform3D(Basis(),neighbor.global_transform.origin)
-	var aabb:AABB= neighbor.get_joined_aabb()
+	var aabb:AABB
+	if neighbor is MAssetMesh: aabb=neighbor.get_joined_aabb()
+	else: aabb=neighbor.get_aabb()
 	var origin = neighbor.global_transform * (dir * aabb.size)
 	return Transform3D(neighbor.global_basis,origin)
 

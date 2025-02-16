@@ -128,7 +128,7 @@ void MAssetMeshUpdater::_update_lod(int lod){
             uint16_t avariation_layer = nd3d->has_meta("variation_layers") ?  (int)nd3d->get_meta("variation_layers") : 0;
             bool is_visible = avariation_layer==0 || (avariation_layer&variation_layer)!=0;
             RS->instance_set_visible(nd3d->get_instance(),is_visible);
-            return;
+            continue;
         }
         MHlodScene* h = Object::cast_to<MHlodScene>(cur_node);
         if(h){
