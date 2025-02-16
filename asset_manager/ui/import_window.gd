@@ -189,7 +189,7 @@ func init_materials_tree():
 		material_tree_node.set_text(1, NO_MATERIAL_TEXT)
 		var text = str(glb_material_name) if not glb_material_name.is_empty() else NO_MATERIAL_TEXT
 		material_tree_node.set_text(0, text)										
-		var material_id = asset_data.materials[glb_material_name]
+		var material_id:int = asset_data.materials[glb_material_name]
 		if material_id == -1:  
 			material_id = AssetIOMaterials.find_material_by_name(glb_material_name)			
 		if material_id > -1:
@@ -200,7 +200,7 @@ func init_materials_tree():
 		else:			
 			material_tree_node.set_metadata(1, -1)			
 	materials_tree.item_selected.connect(func():				
-		var id = materials_tree.get_selected().get_metadata(1)		
+		var id:int = materials_tree.get_selected().get_metadata(1)		
 		for item:TreeItem in material_table_items.values():
 			item.set_selectable(0,true)
 		#var glb_material_name = materials_tree.get_selected().get_text(1)
