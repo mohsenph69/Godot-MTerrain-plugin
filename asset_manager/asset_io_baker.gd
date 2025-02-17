@@ -14,11 +14,11 @@ static func get_glb_path_by_baker_path(baker_path:String, sub_baker_name: String
 	else:				
 		return baker_path.get_base_dir().path_join(baker_name+ "__" + sub_baker_name + "_joined_mesh.glb")				
 
-static func get_glb_path_by_baker_node(baker_node: HLod_Baker)	
+static func get_glb_path_by_baker_node(baker_node: HLod_Baker):
 	if baker_node.owner and baker_node.owner.scene_file_path: # sub-baker
-		return get_glb_path_by_baker_path(owner.scene_file_path, baker_node.name)
+		return get_glb_path_by_baker_path(baker_node.owner.scene_file_path, baker_node.name)
 	else: # root baker
-	 	return get_glb_path_by_baker_path(baker_node.scene_file_path)	
+		return get_glb_path_by_baker_path(baker_node.scene_file_path)	
 
 static func rebake_hlod(hlod:MHlod):
 	var baker: HLod_Baker= load(hlod.baker_path).instantiate()
@@ -209,7 +209,7 @@ static func import_join_mesh_only(baker_node:Node3D):
 	var gltf_document= GLTFDocument.new()
 	var gltf_state = GLTFState.new()
 	gltf_document.image_format = "None"
-	var path = get_glb_path_by_baker_node(baker_node.scene_file_path)
+	var path = get_glb_path_by_baker_node(baker_node)
 	if not FileAccess.file_exists(path):
 		MTool.print_edmsg("There is no gltf for join mesh, to export your gltf file click on save button in inspector after creating join mesh!")
 	gltf_document.append_from_file(path, gltf_state)		

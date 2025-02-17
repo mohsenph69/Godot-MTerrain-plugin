@@ -5,13 +5,13 @@ varying float is_inner;
 varying vec3 pos_local;
 varying vec3 normal_local;
 
-void vertex() {	
+void vertex() {
 	normal_local = abs(NORMAL);
 	if(dot(VERTEX,NORMAL) < 0.0){ // inner BOX
-		is_inner = 1.;		
+		is_inner = 1.;
 		pos_local = VERTEX;
 	} else { // outer BOX
-		is_inner = 0.;		
+		is_inner = 0.;
 		pos_local = VERTEX;
 	}
 }
@@ -27,21 +27,21 @@ vec3 hsv_adjustment(vec3 col, float hue_offset, float sat_offset, float val_offs
 	hsv.z += val_offset;
 	K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
 	p.xyz = abs(fract(hsv.xxx + K.xyz) * 6.0 - K.www);
-	return hsv.z * mix(K.xxx, clamp(p.xyz - K.xxx, 0.0, 1.0), hsv.y);	
+	return hsv.z * mix(K.xxx, clamp(p.xyz - K.xxx, 0.0, 1.0), hsv.y);
 }
-void fragment() {			
-	float speed = .1; //pow(max(abs(pos_local.x), max(abs(pos_local.z), abs(pos_local.y))), .65)* 0.001;	
+void fragment() {
+	float speed = .1; //pow(max(abs(pos_local.x), max(abs(pos_local.z), abs(pos_local.y))), .65)* 0.001;
 	float line_count = 10. * (1. + step(0.5,is_inner)*.5 );
 	float line_width = 0.15 + (is_inner * 0.4);
 	float offset = TIME * 0.05;
 	float result = step(normal_local.y + normal_local.x + fract((TIME*abs(pos_local.z*speed) + pos_local.y) / 2. / pos_local.z * line_count), line_width);
 	result = max(result, step(normal_local.y + normal_local.z + fract((TIME*abs(pos_local.x*speed) + pos_local.y) / 2. / pos_local.x * line_count), line_width));
 	result = max(result, step(normal_local.z + normal_local.x + fract((TIME*abs(pos_local.y*speed) + pos_local.z) / 2. / pos_local.y * line_count), line_width));
-	
+
 	float fres = 0.2;// clamp( abs(dot( normalize(normal_local), CAMERA_DIRECTION_WORLD)) , 0.1, 0.9) -0.4; //fresnel_glow(0.379,.002, vec3(0.,3.,5.), normalize(normal_local), CAMERA_DIRECTION_WORLD);
-	
+
 	//ALPHA = fres;
-	ALPHA = result ;//+ (.15* is_inner);		
+	ALPHA = result ;//+ (.15* is_inner);
 	ALPHA_SCISSOR_THRESHOLD = 0.5;
 	ALBEDO = hsv_adjustment(normal_local, 50. + (180.*is_inner), -0.05 , -0.6 - (0.25* is_inner));
 	//ALBEDO = vec3(fres); //1. - abs(dot( normalize(normal_local), CAMERA_DIRECTION_WORLD)) ) * 0.25;// pow(fres, vec3(0.5));
