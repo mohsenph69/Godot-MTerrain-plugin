@@ -723,11 +723,6 @@ void MHlodScene::apply_update(){
     apply_info.clear();
 }
 
-void MHlodScene::flush(){
-    apply_update();
-    apply_remove_item_users();
-}
-
 void MHlodScene::sleep(){
     std::lock_guard<std::mutex> lock(MHlodScene::update_mutex);
     if(is_sleep){

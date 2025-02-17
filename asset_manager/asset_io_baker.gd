@@ -5,16 +5,24 @@ class_name AssetIOBaker extends Object
 # - import hlod scene with joined mesh
 # - re-import hlod scene with joined mesh
 # - save joined meseh to .res from baker scene
-	
-static func get_baker_joined_mesh_glb_path(baker_node:HLod_Baker):	
-	if baker_node.scene_file_path:		
-		return baker_node.scene_file_path.get_base_dir().path_join(baker_node.name + "_joined_mesh.glb")		
+
+static func get_glb_path_by_baker_path(baker_path:String, sub_baker_name: String = "")->String:
+	if baker_path.is_empty(): return ""
+	var baker_name = baker_path.get_file().get_basename()
+	if sub_baker_name.is_empty():
+		return baker_path.get_base_dir().path_join(baker_name+"_joined_mesh.glb")		
 	else:				
-		return baker_node.owner.scene_file_path.get_base_dir().path_join(baker_node.owner.scene_file_path.get_file().trim_suffix(".tscn") + "__" + baker_node.name + "_joined_mesh.glb")				
+		return baker_path.get_base_dir().path_join(baker_name+ "__" + sub_baker_name + "_joined_mesh.glb")				
 	
-	
-static func baker_export_to_glb(baker_node:HLod_Baker):	
-	var path = get_baker_joined_mesh_glb_path(baker_node)
+
+static func rebake_hlod(hlod:MHlod):
+	var baker: HLod_Baker= load(hlod.baker_path).instantiate()
+	baker.is_tmp_bake = true
+	EditorInterface.get_base_control().add_child(baker)
+	baker.bake_to_hlod_resource()
+
+static func baker_export_to_glb(baker_node:HLod_Baker):
+	var path = baker_node.scene_file_path.get_base_dir().path_join(baker_node.name + ".glb")		
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()		
 	#TO DO : add joined mesh meshes to root node
@@ -170,6 +178,7 @@ static func explode_join_mesh_nodes(baker_node):
 			if mname.is_empty(): mname="None"
 			var dummy_material:=StandardMaterial3D.new()
 			dummy_material.resource_name = mname
+			dummy_material.albedo_color = Color(randf_range(0.2,1.0),randf_range(0.2,1.0),randf_range(0.2,1.0),1)
 			mesh_node.mesh.surface_set_material(s,dummy_material)
 		joined_mesh_node.add_child(mesh_node)		
 		mesh_node.owner = baker_node
@@ -177,11 +186,18 @@ static func explode_join_mesh_nodes(baker_node):
 	return joined_mesh_node
 	
 static func export_join_mesh_only(baker_node:Node3D):	 	
+	if not MAssetTable.mesh_join_is_valid(baker_node.joined_mesh_id):
+		MTool.print_edmsg("There is no join mesh for this! first create a join mesh!")
+		return
 	var joined_mesh_node = explode_join_mesh_nodes(baker_node)
 	var m:ArrayMesh = joined_mesh_node.get_children()[0].mesh
 	var gltf_document= GLTFDocument.new()
 	var gltf_save_state = GLTFState.new()					
-	var path =  get_baker_joined_mesh_glb_path(baker_node)
+	var path
+	if baker_node.owner and baker_node.owner.scene_file_path: # sub-baker
+		path = get_glb_path_by_baker_path(owner.scene_file_path, baker_node.name)
+	else: # root baker
+	 	path = get_glb_path_by_baker_path(baker_node.scene_file_path)
 	gltf_document.append_from_scene(joined_mesh_node, gltf_save_state)		
 	gltf_document.write_to_filesystem(gltf_save_state, path)
 	if joined_mesh_node:
@@ -191,7 +207,8 @@ static func export_join_mesh_only(baker_node:Node3D):
 static func import_join_mesh_only(baker_node:Node3D):
 	var gltf_document= GLTFDocument.new()
 	var gltf_state = GLTFState.new()
-	var path =  get_baker_joined_mesh_glb_path(baker_node)
+	gltf_document.image_format = "None"
+	var path = get_glb_path_by_baker_path(baker_node.scene_file_path)
 	if not FileAccess.file_exists(path):
 		MTool.print_edmsg("There is no gltf for join mesh, to export your gltf file click on save button in inspector after creating join mesh!")
 	gltf_document.append_from_file(path, gltf_state)		

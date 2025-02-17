@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=12 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dj86rx42xt6wc" path="res://addons/m_terrain/icons/save_icon.svg" id="5_nmnhy"]
 [ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="7_622l2"]
 [ext_resource type="Texture2D" uid="uid://cjs22nfbjl71l" path="res://addons/m_terrain/icons/rotation.svg" id="8_fi4h8"]
+[ext_resource type="Texture2D" uid="uid://jidske1yh0tn" path="res://addons/m_terrain/icons/blender.svg" id="9_gl3m1"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_gfps4"]
 font_color = Color(0.92785, 0.495612, 0, 1)
@@ -227,6 +228,14 @@ grow_vertical = 2
 texture = ExtResource("2_kaebi")
 expand_mode = 2
 stretch_mode = 5
+
+[node name="blender_btn" type="Button" parent="HBoxContainer5"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Show joined mesh glb in file system"
+icon = ExtResource("9_gl3m1")
+expand_icon = true
 
 [node name="show_join_mesh_glb_button" type="Button" parent="HBoxContainer5"]
 unique_name_in_owner = true

@@ -120,11 +120,12 @@ func _ready():
 	%show_baker_glb_button.pressed.connect(func():
 		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+".glb"))
 	)
-	%show_join_mesh_glb_button.disabled = not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+"_joined_mesh.glb"))
+	%show_join_mesh_glb_button.disabled = not FileAccess.file_exists(AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path))
 	%show_join_mesh_glb_button.pressed.connect(func():
-		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+"_joined_mesh.glb"))
+		EditorInterface.get_file_system_dock().navigate_to_path(AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path))
 	)
-
+	
+	%blender_btn.pressed.connect(open_baker_gltf_with_blender)
 	
 func show_join_mesh_window():	
 	var window = preload("res://addons/m_terrain/asset_manager/ui/mesh_join_window.tscn").instantiate()	
@@ -143,6 +144,7 @@ func baker_renamed():
 	if EditorInterface.get_edited_scene_root() == baker:
 		if not baker.scene_file_path.get_file() == baker.name+".tscn":
 			if not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+".tscn")):			
+				var old_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path)
 				var old_path = baker.scene_file_path
 				var new_path = old_path.get_base_dir().path_join(baker.name+".tscn")
 				DirAccess.rename_absolute(baker.scene_file_path, new_path)
@@ -152,6 +154,10 @@ func baker_renamed():
 					if hlod.baker_path == old_path:
 						hlod.baker_path = new_path
 						ResourceSaver.save(hlod)
+				if FileAccess.file_exists(old_join_mesh_glb_path):
+					var new_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(new_path)
+					DirAccess.rename_absolute(old_join_mesh_glb_path, new_join_mesh_glb_path)
+				EditorInterface.get_resource_filesystem().scan()
 			elif false: # If returning to old name creates a conflict, ahhhh! TODO
 				pass
 			else: #Return to old name
@@ -168,3 +174,32 @@ func validate_bake_button():
 		#%hlod_bake_warning.text= "Baker name must be unique!"		
 		%Bake.tooltip_text = "HLod with the name " + baker.name + " is already used by another baker scene. please rename the baker scene"
 		
+
+
+func open_baker_gltf_with_blender():
+	var glb_path = AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path)
+	if not FileAccess.file_exists(glb_path):
+		MTool.print_edmsg("File path %s does not exist, please first create and then export the glb file!" % glb_path)
+		return
+	var blender_path:String= EditorInterface.get_editor_settings().get_setting("filesystem/import/blender/blender_path")
+	if blender_path.is_empty():
+		MTool.print_edmsg("Blender path is empty! please set blender path in editor setting")
+		return
+	if not FileAccess.file_exists(blender_path):
+		MTool.print_edmsg("Blender path is not valid: "+blender_path)
+		return
+	glb_path = ProjectSettings.globalize_path(glb_path)
+	var f = FileAccess.open("res://addons/m_terrain/asset_manager/blender_addons/open_gltf_file.py",FileAccess.READ)
+	var py_script = f.get_as_text()
+	f.close()
+	py_script = py_script.replace("_GLB_FILE_PATH",glb_path)
+	py_script = py_script.replace("_BAKER_NAME",baker.name)
+	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
+	if FileAccess.file_exists(tmp_path):DirAccess.remove_absolute(tmp_path) # good idea to clear to make sure eveyrthing go well
+	var tmpf = FileAccess.open(tmp_path,FileAccess.WRITE)
+	if not tmpf:
+		MTool.print_edmsg("Can not create tmp file for blender python script")
+		return
+	tmpf.store_string(py_script)
+	tmpf.close()
+	OS.create_process(blender_path,["--python",ProjectSettings.globalize_path(tmp_path)])

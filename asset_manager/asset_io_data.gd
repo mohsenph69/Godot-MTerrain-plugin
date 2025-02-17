@@ -449,15 +449,8 @@ func get_changed_hlods():
 	if len(hlod_to_rebake) == 0: return
 	MHlodScene.sleep()
 	for hlod in hlod_to_rebake:
-		rebake_hlod(hlod)
+		AssetIOBaker.rebake_hlod(hlod)
 	MHlodScene.awake()
-		
-
-static func rebake_hlod(hlod:MHlod):
-	var baker: HLod_Baker= load(hlod.baker_path).instantiate()
-	EditorInterface.get_base_control().add_child(baker)
-	baker.bake_to_hlod_resource()
-	baker.queue_free()
 	
 	
 static func rebake_hlods_for_meshes(mesh_ids):

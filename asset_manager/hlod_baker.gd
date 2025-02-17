@@ -23,6 +23,7 @@ signal asset_mesh_updated
 @export_storage var joined_mesh_modified_time: int = -1
 
 
+var is_tmp_bake=false #is true when called from AssetIoBaker.rebake_hlod, and we should free ourseself if this true!
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
@@ -52,6 +53,10 @@ func force_lod(lod:int):
 		force_lod_enabled = true
 		
 func bake_to_hlod_resource():		
+	if (owner and owner.scene_file_path.is_empty()) or (not owner and scene_file_path.is_empty()):
+		MTool.print_edmsg("Pelase first save the baker scene")
+		return
+	var has_sub_hlod:=false
 	var physics_dictionary = AssetIOMaterials.get_physics_ids()
 	MHlodScene.sleep()	
 	hlod_resource = MHlod.new()
@@ -229,7 +234,7 @@ func bake_to_hlod_resource():
 	if not joined_mesh_disabled and join_at_lod >= 0 and len(joined_mesh_array) != null: 				
 		var material_array = []
 		material_array.resize(len(joined_mesh_array))
-		material_array.fill(-1)		
+		material_array.fill(0)		
 		var shadow_array = material_array.map(func(a): return 0)
 		var gi_array = material_array.map(func(a): return 0)		
 		# MAKE SURE ALL ARRAYS ARE THE SAME LENGTH!				
@@ -256,7 +261,9 @@ func bake_to_hlod_resource():
 	###################
 	## BAKE SUB_HLOD ##
 	###################
-	all_hlod.append_array( get_all_sub_hlod(self, get_children()) )	
+	var __sub_hlod = get_all_sub_hlod(self, get_children())
+	has_sub_hlod = __sub_hlod.size() > 0
+	all_hlod.append_array(__sub_hlod)	
 	for hlod_data in all_hlod:		
 		# scene_layers = which of this hlod's layers are active
 		var scene_layers := hlod_data.node.scene_layers if hlod_data.node and hlod_data.node is MHlodScene else 0					
@@ -271,6 +278,7 @@ func bake_to_hlod_resource():
 	for hlod_data in all_hlod:
 		var gh_aabb:AABB = MTool.get_global_aabb(hlod_data.node.get_aabb(),hlod_data.tr)
 		aabb.merge(gh_aabb)
+	hlod_resource.aabb = aabb
 	# some subhlod may not included in join mesh
 	# using jmesh down for thumnail
 	##################################
@@ -278,36 +286,43 @@ func bake_to_hlod_resource():
 	##################################
 	hlod_resource.join_at_lod = join_at_lod
 	hlod_resource.resource_name = name
-	hlod_id = MAssetTable.get_last_free_hlod_id(hlod_id,scene_file_path)
+	if hlod_id==-1:
+		hlod_id = MAssetTable.get_last_free_hlod_id()
 	var bake_path := MHlod.get_hlod_path(hlod_id)
+	var stop_path = bake_path.get_basename() + ".stop"
+	if FileAccess.file_exists(stop_path):
+		DirAccess.remove_absolute(stop_path)
 	var users = MHlodScene.get_hlod_users(bake_path)
 	var save_err
+	if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
+			DirAccess.make_dir_absolute(bake_path.get_base_dir())
+	save_err = ResourceSaver.save(hlod_resource,bake_path)
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
-		save_err = ResourceSaver.save(hlod_resource)
-	else:
-		if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
-			DirAccess.make_dir_absolute(bake_path.get_base_dir())
-		save_err = ResourceSaver.save(hlod_resource, bake_path)
 	for n in users:
 		n.hlod = hlod_resource	
 	if save_err == OK:				
 		MAssetTable.save()		
 	MHlodScene.awake()
-	if save_err == OK:		
+	if save_err == OK and not scene_file_path.is_empty():
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
-		hlod_resource.aabb = aabb
-		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id})
+		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})
+	elif is_tmp_bake:
+		call_deferred("queue_free")
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
 func finish_generating_thumnail(data):
 	var tex:Texture2D=data["texture"]
+	if not tex:
+		if is_tmp_bake: call_deferred("queue_free")
+		return
 	var img = tex.get_image()
-	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD)
+	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD,data["has_sub_hlod"],Color(0,0,0.5))
 	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])
 	ThumbnailManager.save_thumbnail(img,tpath)
 	AssetIO.asset_placer.regroup()
+	if is_tmp_bake: call_deferred("queue_free")
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
@@ -446,13 +461,6 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 	AssetIOBaker.save_joined_mesh(joined_mesh_id, [mmesh], [join_at_lod])
 	asset_mesh_updater.join_mesh_id = joined_mesh_id # should call after saving
 	MAssetMeshUpdater.refresh_all_masset_updater()
-	
-func get_joined_mesh_glb_path()->String:	
-	if FileAccess.file_exists(scene_file_path):
-		return scene_file_path.get_basename() + "_joined_mesh.glb"
-	elif owner is HLod_Baker and FileAccess.file_exists(owner.scene_file_path):		
-		return owner.scene_file_path.get_basename() + "_" + name + "_joined_mesh.glb"
-	return ""
 
 func has_joined_mesh()->bool:
 	return MAssetTable.mesh_join_is_valid(joined_mesh_id)
@@ -481,7 +489,7 @@ func remove_joined_mesh():
 	var stop_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id, ".stop"))
 	var f = FileAccess.open(stop_path,FileAccess.WRITE)
 	f.close()
-	var glb_path = get_joined_mesh_glb_path()
+	var glb_path = AssetIOBaker.get_glb_path_by_baker_path(scene_file_path)
 	if FileAccess.file_exists(glb_path):
 		DirAccess.remove_absolute(glb_path)						
 	EditorInterface.get_resource_filesystem().scan()

@@ -166,6 +166,7 @@ class MAssetTable : public Resource {
     static int mesh_item_get_max_lod();
     static int32_t get_last_free_mesh_id_and_increase();
     static int32_t mesh_item_get_first_lod(int item_id);
+    static int32_t mesh_item_get_first_valid_id(int item_id);
     static int32_t mesh_item_get_stop_lod(int item_id);
     static PackedInt32Array mesh_item_ids_no_replace(int item_id);
     static TypedArray<MMesh> mesh_item_meshes_no_replace(int item_id);
@@ -186,7 +187,7 @@ class MAssetTable : public Resource {
     static int32_t get_last_id_in_dir(const String dir_path);
     static int32_t get_last_free_decal_id();
     static int32_t get_last_free_packed_scene_id();
-    static int32_t get_last_free_hlod_id(int32_t last_hlod_id=-1,const String& baker_scene_path="");
+    static int32_t get_last_free_hlod_id();
 
     CollectionIdentifier collection_get_identifier(int collection_id) const;
     int32_t collection_get_id_by_identifier(const CollectionIdentifier& identifier) const;

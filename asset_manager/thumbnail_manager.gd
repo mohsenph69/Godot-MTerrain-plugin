@@ -85,7 +85,7 @@ static func make_tscn_thumbnail(scene_path, collection_id, aabb = null):
 	# Cleanup
 	viewport.queue_free()
 
-static func add_watermark(img:Image,type:MAssetTable.ItemType):
+static func add_watermark(img:Image,type:MAssetTable.ItemType,is_add_color=false,add_color=Color()):
 	var wt:Image
 	match type:
 		MAssetTable.DECAL:
@@ -98,6 +98,8 @@ static func add_watermark(img:Image,type:MAssetTable.ItemType):
 	for i in range(wt_size.x):
 		for j in range(wt_size.y):
 			var wpx:Color= wt.get_pixel(i,j)
+			if is_add_color:
+				wpx += add_color
 			img.set_pixel(i,j,wpx)
 
 static func generate_decal_texture(collection_id:int)->Texture:

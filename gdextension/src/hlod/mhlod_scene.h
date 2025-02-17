@@ -235,7 +235,6 @@ class MHlodScene : public Node3D {
     static void update_tick();
     static void apply_remove_item_users();
     static void apply_update();
-    static void flush();
 
     static void sleep();
     static void awake();
@@ -339,8 +338,9 @@ class MHlodScene : public Node3D {
         }
         std::conditional_t<UseLock,std::lock_guard<std::mutex>,MDummyType<std::mutex>> lock(MHlodScene::update_mutex);
         is_init = false;
+        apply_update();
         get_root_proc()->disable(true,true,true);
-        flush();
+        apply_remove_item_users();
         procs.resize(1);
     }
 };

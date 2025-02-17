@@ -1,4 +1,5 @@
 gdextension/.vscode/*
+tmp/*
 
 *sconsign.dblite
 *.dblite

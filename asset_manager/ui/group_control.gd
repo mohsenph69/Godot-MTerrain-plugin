@@ -15,6 +15,10 @@ func _ready():
 		group_container.visible = toggle_on	
 	)
 	group_list.clear()			
+	var action_menu = load("res://addons/m_terrain/asset_manager/asset_placer_action_menu.gd").new()
+	action_menu.item_list = group_list
+	group_list.add_child(action_menu)
+	group_list.item_clicked.connect(Callable(action_menu,"item_clicked"))
 	
 func set_group(group_name):
 	name = group_name
