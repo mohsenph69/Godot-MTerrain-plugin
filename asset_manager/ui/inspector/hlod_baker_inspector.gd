@@ -120,9 +120,9 @@ func _ready():
 	%show_baker_glb_button.pressed.connect(func():
 		EditorInterface.get_file_system_dock().navigate_to_path(baker.scene_file_path.get_base_dir().path_join(baker.name+".glb"))
 	)
-	%show_join_mesh_glb_button.disabled = not FileAccess.file_exists(AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path))
+	%show_join_mesh_glb_button.disabled = not FileAccess.file_exists(AssetIOBaker.get_glb_path_by_baker_node(baker))
 	%show_join_mesh_glb_button.pressed.connect(func():
-		EditorInterface.get_file_system_dock().navigate_to_path(AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path))
+		EditorInterface.get_file_system_dock().navigate_to_path(AssetIOBaker.get_glb_path_by_baker_node(baker))
 	)
 	
 	%blender_btn.pressed.connect(open_baker_gltf_with_blender)
@@ -177,7 +177,7 @@ func validate_bake_button():
 
 
 func open_baker_gltf_with_blender():
-	var glb_path = AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path)
+	var glb_path = AssetIOBaker.get_glb_path_by_baker_node(baker)
 	if not FileAccess.file_exists(glb_path):
 		MTool.print_edmsg("File path %s does not exist, please first create and then export the glb file!" % glb_path)
 		return

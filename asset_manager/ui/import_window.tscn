@@ -65,6 +65,7 @@ text = "Materials"
 
 [node name="meshes_tab_button" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer4/HBoxContainer"]
 unique_name_in_owner = true
+visible = false
 custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -86,7 +87,6 @@ text = "Variations"
 
 [node name="tags_tab_button" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer4/HBoxContainer"]
 unique_name_in_owner = true
-visible = false
 custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 size_flags_horizontal = 3

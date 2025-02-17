@@ -492,8 +492,8 @@ static func get_asset_blend_file(collection_id):
 		if glb_path.begins_with("__"): continue
 		for glb_node_name in import_info[glb_path]:
 			if glb_node_name.begins_with("__"): continue
-			if import_info[glb_path][glb_node_name].has("collection_id") and import_info[glb_path][glb_node_name]["collection_id"] == collection_id:
-				for blend_file in import_info["__blend_files"]:
+			if import_info[glb_path][glb_node_name].has("id") and import_info[glb_path][glb_node_name]["id"] == collection_id:				
+				for blend_file in import_info["__blend_files"].keys():					
 					if import_info["__blend_files"][blend_file] == glb_path:						
 						return blend_file
 				

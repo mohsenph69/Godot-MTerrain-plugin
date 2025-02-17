@@ -489,7 +489,7 @@ func remove_joined_mesh():
 	var stop_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id, ".stop"))
 	var f = FileAccess.open(stop_path,FileAccess.WRITE)
 	f.close()
-	var glb_path = AssetIOBaker.get_glb_path_by_baker_path(scene_file_path)
+	var glb_path = AssetIOBaker.get_glb_path_by_baker_node(self)
 	if FileAccess.file_exists(glb_path):
 		DirAccess.remove_absolute(glb_path)						
 	EditorInterface.get_resource_filesystem().scan()
