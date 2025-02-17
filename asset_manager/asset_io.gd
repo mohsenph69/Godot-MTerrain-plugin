@@ -231,7 +231,8 @@ static func glb_import_commit_changes():
 	asset_library.import_info[asset_data.glb_path]["__id"] = glb_id
 	if not "__blend_files" in asset_library.import_info:
 		asset_library.import_info["__blend_files"] = {}
-	asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path	
+	if not asset_data.blend_file.is_empty():
+		asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path	
 	
 	asset_library.import_info[asset_data.glb_path]["__variation_groups"] = asset_data.variation_groups
 	
@@ -442,7 +443,8 @@ static func import_settings(path):
 		asset_library.import_info["__materials"][int(material)] = data.materials[material]	
 	if not asset_library.import_info.has("__blend_files"):
 		asset_library.import_info["__blend_files"] = {}
-	for blend_file in data.blend_files:
+	for blend_file in data.blend_files:		
+		if blend_file.is_empty(): continue
 		asset_library.import_info["__blend_files"][blend_file] = data.blend_files[blend_file]
 	for tag in data.tags.keys():
 		asset_library.tag_set_name(int(data.tags[tag]), tag)		

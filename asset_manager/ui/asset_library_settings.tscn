@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://cvkbd1wtigq55"]
+[gd_scene load_steps=20 format=3 uid="uid://cvkbd1wtigq55"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/asset_library_settings.gd" id="1_e10cw"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_s06u1"]
@@ -15,7 +15,9 @@
 [ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="8_wny8y"]
 [ext_resource type="PackedScene" uid="uid://cysovcswko088" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.tscn" id="9_l487g"]
 [ext_resource type="Texture2D" uid="uid://da03coo0w347n" path="res://addons/m_terrain/icons/physics_icon.svg" id="11_xca31"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/manage_paths.gd" id="13_pbwip"]
 [ext_resource type="Texture2D" uid="uid://7x5eqhsdnk4w" path="res://addons/m_terrain/icons/object_icon.svg" id="14_3vamk"]
+[ext_resource type="Texture2D" uid="uid://cylua0xddvmx7" path="res://addons/m_terrain/icons/connect_icon.svg" id="17_oihwd"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_fxsq8"]
 font_color = Color(1, 0, 0, 1)
@@ -128,8 +130,15 @@ expand_icon = true
 script = ExtResource("8_u04fb")
 
 [node name="grouping_popup" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer/group_by_button" instance=ExtResource("9_l487g")]
-size = Vector2i(119, 107)
 visible = false
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 119.0
+offset_bottom = 107.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="search" parent="tab_container/manage_tags/VBoxContainer/HBoxContainer" instance=ExtResource("8_wny8y")]
 custom_minimum_size = Vector2(0, 36)
@@ -233,6 +242,24 @@ hide_root = true
 visible = false
 layout_mode = 2
 
+[node name="manage_paths" type="PanelContainer" parent="tab_container"]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="tab_container/manage_paths"]
+layout_mode = 2
+
+[node name="search" parent="tab_container/manage_paths/VBoxContainer" instance=ExtResource("8_wny8y")]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="manage_paths_tree" type="Tree" parent="tab_container/manage_paths/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+hide_root = true
+script = ExtResource("13_pbwip")
+
 [node name="Control" type="Control" parent="."]
 custom_minimum_size = Vector2(81.795, 36)
 layout_mode = 2
@@ -283,6 +310,14 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 icon = ExtResource("11_xca31")
+expand_icon = true
+
+[node name="manage_paths_button" type="Button" parent="Control/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+icon = ExtResource("17_oihwd")
 expand_icon = true
 
 [node name="close_settings_button" type="Button" parent="Control/HBoxContainer"]

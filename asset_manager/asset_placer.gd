@@ -341,26 +341,25 @@ func debounce_regroup():
 	last_regroup = Time.get_ticks_msec()
 	return true
 	
-func regroup(group = current_group, sort_mode="asc"):	
+func regroup(group = current_group, sort_mode="name_desc"):		
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
 			child.queue_free()
 		current_group = group
-	if not debounce_regroup(): 
-		return
+	#TODO - delete debounce regroup... not necessary anymore? originally it was to ensure thumbnail generator didn't call too often
+	#if not debounce_regroup(): 
+		#return
 	var filtered_collections = get_filtered_collections(current_search, [0])	
 	if group == "None":		
 		ungrouped.group_list.clear()	
 		var sorted_items = []				
 		for collection_id in filtered_collections:
 			var collection_name = asset_library.collection_get_name(collection_id)
-			sorted_items.push_back({"name":collection_name, "id":collection_id})			
+			var modified_time = asset_library.collection_get_modify_time(collection_id)
+			sorted_items.push_back({"name":collection_name, "id":collection_id, "modified_time":modified_time})			
 			collection_id += 1
-		if sort_mode == "asc":
-			sorted_items.sort_custom(func(a,b): return a.name < b.name)
-		elif sort_mode == "desc":
-			sorted_items.sort_custom(func(a,b): return a.name > b.name)
+		sort_items(sorted_items, sort_mode)		
 		for item in sorted_items:
 			ungrouped.add_item(item.name, item.id)												
 		ungrouped.group_button.visible = false			
@@ -394,16 +393,11 @@ func regroup(group = current_group, sort_mode="asc"):
 			for collection_id in asset_library.tags_get_collections_any(filtered_collections, [tag_id],[]):
 				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
 				processed_collections.push_back(collection_id)
-			if sort_mode == "asc":
-				sorted_items.sort_custom(func(a,b): return a.name < b.name)
-			elif sort_mode == "desc":
-				sorted_items.sort_custom(func(a,b): return a.name > b.name)
+			sort_items(sorted_items, sort_mode)	
 			for item in sorted_items:
 				group_control.add_item(item.name, item.id)		
 		# Now add leftovers to "Ungrouped" tag
-		ungrouped.group_list.clear()		
-		print(len(processed_collections))
-		print(len(filtered_collections))
+		ungrouped.group_list.clear()				
 		var sorted_items = []
 		for collection_id in filtered_collections:
 			if collection_id in processed_collections: continue
@@ -415,6 +409,16 @@ func regroup(group = current_group, sort_mode="asc"):
 		for item in sorted_items:			
 			ungrouped.add_item(item.name, item.id)		
 	current_group = group
+
+func sort_items(sorted_items, sort_mode):	
+	if sort_mode == "name_desc":
+		sorted_items.sort_custom(func(a,b): return a.name.nocasecmp_to(b.name) < 0 )
+	elif sort_mode == "name_asc":
+		sorted_items.sort_custom(func(a,b): return a.name.nocasecmp_to(b.name) > 0 )
+	elif sort_mode == "modified_desc":		
+		sorted_items.sort_custom(func(a,b): return a.modified_time < b.modified_time)		
+	elif sort_mode == "modified_asc":
+		sorted_items.sort_custom(func(a,b): return a.modified_time > b.modified_time)		
 
 func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
 	var collection_id = group_list.get_item_metadata(id)
