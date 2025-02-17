@@ -48,3 +48,4 @@ func update_filter(tag_id, toggled_on ):
 			current_filter.erase(tag_id)
 	current_filter.sort()	
 	filter_changed.emit(current_filter, match_all)
+	tag_list.set_tags_from_data.call_deferred(current_filter)

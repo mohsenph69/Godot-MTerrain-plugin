@@ -2,9 +2,34 @@
 # _BAKER_NAME -> will replace by baker name
 import bpy
 
-bpy.ops.wm.read_factory_settings(use_empty=True)
+#bpy.ops.wm.read_factory_settings(use_empty=True)
+for obj in bpy.data.objects:
+    bpy.data.objects.remove(obj)
+
 bpy.ops.import_scene.gltf(filepath='_GLB_FILE_PATH')
 
+if _REPLACE_MATERIALS:
+    material_names = set()
+    materials_data = {}
+    for obj in bpy.data.objects:
+        materials_data[obj.name] = []
+        for material in obj.material_slots:
+            materials_data[obj.name].append(material.name)
+            material_names.add(material.name)
+            material.material = None
+    for material in bpy.data.materials:
+        bpy.data.materials.remove(material)
+    with bpy.data.libraries.load(filepath='_MATERIALS_BLEND_PATH', assets_only = True, link = True) as (data_from, data_to):
+        for i, mat in enumerate(data_from.materials):                
+            if mat in material_names:
+                data_to.materials.append(data_from.materials[i])                                
+    for obj_name in materials_data.keys():
+        for i, slot in enumerate(bpy.data.objects[obj_name].material_slots):
+            material_name = materials_data[obj_name][i]
+            if material_name in bpy.data.materials:
+                slot.material = bpy.data.materials[material_name]
+            else:
+                print("material with name %s not found" % material_name)
 
 class ExportGLBOperator(bpy.types.Operator):
     """Export GLB to Default Path"""

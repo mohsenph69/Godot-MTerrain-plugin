@@ -18,14 +18,26 @@ script = ExtResource("1_wqrt0")
 [node name="sort_type_list" type="VBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="asc" type="Button" parent="sort_type_list"]
+[node name="name_desc" type="Button" parent="sort_type_list"]
 layout_mode = 2
 toggle_mode = true
 button_group = ExtResource("3_nae5q")
-text = "Name ascending"
+text = "Name ↑"
 
-[node name="desc" type="Button" parent="sort_type_list"]
+[node name="name_asc" type="Button" parent="sort_type_list"]
 layout_mode = 2
 toggle_mode = true
 button_group = ExtResource("3_nae5q")
-text = "Name descending"
+text = "Name ↓"
+
+[node name="modified_desc" type="Button" parent="sort_type_list"]
+layout_mode = 2
+toggle_mode = true
+button_group = ExtResource("3_nae5q")
+text = "Modified ↑"
+
+[node name="modified_asc" type="Button" parent="sort_type_list"]
+layout_mode = 2
+toggle_mode = true
+button_group = ExtResource("3_nae5q")
+text = "Modified ↓"

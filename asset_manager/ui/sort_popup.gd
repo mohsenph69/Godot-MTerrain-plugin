@@ -13,7 +13,7 @@ func _ready():
 	if not is_instance_valid(sort_type_list): return
 	for button in sort_type_list.get_children():
 		button.button_group = button_group
-	button_group.pressed.connect(func(button):
+	button_group.pressed.connect(func(button):		
 		if sort_mode != button.name:
 			sort_mode = button.name
 			sort_mode_changed.emit(button.name)		

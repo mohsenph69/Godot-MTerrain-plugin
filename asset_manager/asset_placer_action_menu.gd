@@ -69,12 +69,12 @@ func item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> 
 	add_buttons(collection_id)
 
 func _input(event: InputEvent) -> void:
+	if not visible: return
 	if event is InputEventMouseButton and event.pressed:
-		var levent = make_input_local(event)
-		if levent is InputEventMouseButton and levent.pressed:
-			if not Rect2(Vector2(),get_rect().size).has_point(levent.position):
-				visible = false
-				clear()
+		var levent = make_input_local(event)		
+		if not Rect2(Vector2(),get_rect().size).has_point(levent.position):
+			visible = false
+			clear()
 
 func show_in_file_system(collection_id:int)->void:
 	var type = MAssetTable.get_singleton().collection_get_type(collection_id)

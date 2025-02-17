@@ -10,7 +10,8 @@ extends PanelContainer
 	%materials_tab_button: %materials_hsplit, 
 	%meshes_tab_button: %meshes_hsplit,
 	%collections_tab_button: %collections_hsplit,
-	%tags_tab_button: %tags_hsplit
+	%tags_tab_button: %tags_hsplit,
+	%glb_tab_button: %glb_hsplit
 	#%variations_hsplit
 }
 var asset_data:AssetIOData
@@ -53,7 +54,112 @@ func _ready():
 			tab_button
 	)
 	%collections_tab_button.button_pressed = true
+	
+	var tree:Tree = %glb_hsplit
+	var root = tree.create_item()
+	var blend_file_item = root.create_child()
+	blend_file_item.set_text(0, "Blend File")
+	blend_file_item.set_editable(0, false)	
+	var blend_file_path = asset_data.blend_file if not asset_data.blend_file.is_empty() else asset_data.original_blend_file	if not asset_data.original_blend_file.is_empty() else ""	
+	blend_file_item.set_text(1, blend_file_path)		
+	blend_file_item.set_editable(1, asset_data.blend_file.is_empty())			
+	blend_file_item.add_button(1, preload("res://addons/m_terrain/icons/open.svg"))
+	
+	if not asset_data.blend_file.is_empty():
+		blend_file_item.set_custom_color(1, Color.DARK_GRAY)
+		blend_file_item.set_button_tooltip_text(1,0, "Blend file is already set in the glb")	
+		blend_file_item.set_tooltip_text(1, "Blend file is already set in the glb")		
+	blend_file_item.set_button_disabled(1, 0, not asset_data.blend_file.is_empty())
+	asset_data.blend_file = blend_file_path
+	
+	var meshcutoff_item = root.create_child()
+	meshcutoff_item.set_text(0, "Mesh Cutoff")	
+	var editable = asset_data.global_options["meshcutoff"].is_empty()
+	meshcutoff_item.set_editable(1, editable)				
+	if not editable:
+		meshcutoff_item.set_tooltip_text(1, "Mesh Cutoff is already set in the glb")	
+		meshcutoff_item.set_cell_mode(1, TreeItem.CELL_MODE_STRING)
+		meshcutoff_item.set_text(0, asset_data.global_options["meshcutoff"])		
+	else:
+		meshcutoff_item.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)	
+		var selected
+		if not asset_data.global_options["meshcutoff"].is_empty():
+			selected = int(asset_data.global_options["meshcutoff"])
+		elif "original_meshcutoff" in asset_data.global_options:
+			selected = int(asset_data.global_options["original_meshcutoff"])
+		else:
+			selected = -1	
+		asset_data.global_options["meshcutoff"] = str(selected)
+		meshcutoff_item.set_range(1, selected)				
 
+	var colcutoff_item = root.create_child()
+	colcutoff_item.set_text(0, "Collision Cutoff")	
+	editable = asset_data.global_options["colcutoff"].is_empty()
+	colcutoff_item.set_editable(1, editable)				
+	if not editable:
+		colcutoff_item.set_tooltip_text(1, "Collision Cutoff is already set in the glb")	
+		colcutoff_item.set_cell_mode(1, TreeItem.CELL_MODE_STRING)
+		colcutoff_item.set_text(0, asset_data.global_options["colcutoff"])
+	else:
+		var selected
+		colcutoff_item.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)		
+		if not asset_data.global_options["colcutoff"].is_empty():
+			selected = int(asset_data.global_options["colcutoff"])
+		elif "original_colcutoff" in asset_data.global_options:
+			selected = int(asset_data.global_options["original_colcutoff"])
+		else:
+			selected = -1	
+		asset_data.global_options["colcutoff"] = str(selected)
+		colcutoff_item.set_range(1, selected)	
+		
+	var physics_item = root.create_child()
+	physics_item.set_text(0, "Physics Body")			
+	editable = asset_data.global_options["physics"].is_empty()
+	physics_item.set_editable(1, editable)				
+	if not editable:
+		physics_item.set_tooltip_text(1, "Physics Body is already set in the glb")	
+		physics_item.set_cell_mode(1, TreeItem.CELL_MODE_STRING)
+		physics_item.set_text(0, asset_data.global_options["physics"])
+	else:
+		var selected
+		physics_item.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)	
+		var physics_list: Array = ["(default)"] + AssetIOMaterials.get_physics().keys()	
+		physics_item.set_text(1, ",".join(physics_list))	
+		if not asset_data.global_options["physics"].is_empty():
+			selected = asset_data.global_options["physics"]
+		elif "original_physics" in asset_data.global_options:
+			selected = asset_data.global_options["original_physics"]
+		else:
+			selected = ""	
+		asset_data.global_options["physics"] = selected	
+		physics_item.set_range(1, physics_list.find( selected ))		
+	
+	tree.item_edited.connect(func():
+		var item = tree.get_edited()
+		match item.get_index():
+			0: asset_data.blend_file = item.get_text(1)
+			1: asset_data.global_options["meshcutoff"] = str(item.get_range(1))
+			2: asset_data.global_options["colcutoff"] = str(item.get_range(1))
+			3: asset_data.global_options["physics"] = item.get_text(1).split(",")[item.get_range(1)] if item.get_range(1) > 0 else ""
+	)
+	tree.button_clicked.connect(glb_hsplit_button_pressed)
+	
+func glb_hsplit_button_pressed(item: TreeItem, column: int, id: int, mouse_button_index: int):
+	if item.get_index() == 0:
+		var dialog := EditorFileDialog.new()
+		add_child(dialog)
+		dialog.access = EditorFileDialog.ACCESS_FILESYSTEM		
+		dialog.current_dir = item.get_text(1).get_base_dir()
+		dialog.add_filter("*.blend", "blender file")
+		dialog.display_mode = EditorFileDialog.DISPLAY_LIST
+		dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+		dialog.file_selected.connect(func(path): 					
+			asset_data.blend_file = path
+			item.set_text(1, path)
+		)										
+		dialog.popup_file_dialog()
+											
+	
 func init_meshes_tree():
 	var mesh_tree: Tree = %meshes_tree	
 	mesh_tree.item_edited.connect(func():				

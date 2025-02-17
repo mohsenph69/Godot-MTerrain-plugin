@@ -114,12 +114,14 @@ func update_materials_list(filter = null):
 	#null_item.set_text(0, "-1")
 	#null_item.set_editable(2,false)
 	#null_item.set_text(2, "(no material)")
-	for i in material_table.keys():
+	#print(MAssetTable.get_singleton().import_info["__materials"])	
+	for i in material_table.keys():		
+		if i is String and i.begins_with("__"): continue		
 		if filter and not filter in material_table[i].path: continue
 		var item := root.create_child()
 		item.set_text(0, str(i))
-		item.set_metadata(0, i)
-		var mat = load(material_table[i].path) if FileAccess.file_exists(material_table[i].path) else null
+		item.set_metadata(0, i)		
+		var mat = load(material_table[i].path) if FileAccess.file_exists(material_table[i].	path) else null
 		ThumbnailManager.thumbnail_queue.push_back({"resource":mat, "caller": item, "callback":update_material_icon })		
 		item.set_text(2, mat.resource_name if not mat.resource_name.is_empty() else mat.resource_path)		
 		item.set_tooltip_text(2, mat.resource_path)		
