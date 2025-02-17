@@ -71,6 +71,8 @@ static func glb_load_assets(scene_root, path:String, metadata={},no_window:bool=
 	if scene_root:
 		scene_root.queue_free() ## Really important otherwise memory leaks	
 	#STEP 4: Allow user to change import settings
+	asset_data.print_pretty_dic(asset_library.import_info,"IMPORT INFO")
+	return
 	if not no_window:
 		glb_show_import_window(asset_data)
 	#STEP 5: Commit changes - import window will call this step when user clicks "import"
@@ -498,16 +500,3 @@ static func export_settings(path):
 	var file = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify(result))
 	file.close()
-
-static func get_asset_blend_file(collection_id):
-	var import_info = MAssetTable.get_singleton().import_info	
-	if not import_info.has("__blend_files") or len(import_info["__blend_files"]) == 0: return null
-	for glb_path in import_info.keys():
-		if glb_path.begins_with("__"): continue
-		for glb_node_name in import_info[glb_path]:
-			if glb_node_name.begins_with("__"): continue
-			if import_info[glb_path][glb_node_name].has("id") and import_info[glb_path][glb_node_name]["id"] == collection_id:				
-				for blend_file in import_info["__blend_files"].keys():					
-					if import_info["__blend_files"][blend_file] == glb_path:						
-						return blend_file
-				
