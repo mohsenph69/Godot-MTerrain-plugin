@@ -149,11 +149,14 @@ func baker_renamed():
 				var new_path = old_path.get_base_dir().path_join(baker.name+".tscn")
 				DirAccess.rename_absolute(baker.scene_file_path, new_path)
 				baker.scene_file_path = new_path
-				for file in DirAccess.get_files_at(MAssetTable.get_hlod_res_dir()):
-					var hlod = load(MAssetTable.get_hlod_res_dir().path_join(file))
-					if hlod.baker_path == old_path:
-						hlod.baker_path = new_path
-						ResourceSaver.save(hlod)
+				var hitem_id:int=baker.hlod_id
+				if hitem_id>=0:
+					var hpath = MHlod.get_hlod_path(hitem_id)
+					if FileAccess.file_exists(hpath):
+						var hlod = load(hpath)
+						if hlod:
+							hlod.baker_path = new_path
+							ResourceSaver.save(hlod)
 				if FileAccess.file_exists(old_join_mesh_glb_path):
 					var new_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(new_path)
 					DirAccess.rename_absolute(old_join_mesh_glb_path, new_join_mesh_glb_path)
@@ -196,7 +199,7 @@ func open_baker_gltf_with_blender():
 	py_script = py_script.replace("_BAKER_NAME",baker.name)	
 	var materials_blend_path = MAssetTable.get_singleton().import_info["__blend_files"]["__materials"] if  "__materials" in MAssetTable.get_singleton().import_info["__blend_files"] else null	
 	py_script = py_script.replace("_REPLACE_MATERIALS", "True" if materials_blend_path and FileAccess.file_exists(materials_blend_path) else "False")
-	py_script = py_script.replace("_MATERIALS_BLEND_PATH", materials_blend_path)
+	py_script = py_script.replace("_MATERIALS_BLEND_PATH", str(materials_blend_path))
 	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
 	if FileAccess.file_exists(tmp_path):DirAccess.remove_absolute(tmp_path) # good idea to clear to make sure eveyrthing go well
 	if not DirAccess.dir_exists_absolute(tmp_path.get_base_dir()):

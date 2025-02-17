@@ -20,6 +20,7 @@ func _ready() -> void:
 	var tdecal = MAssetTable.DECAL
 	var thlod = MAssetTable.HLOD
 	add_item("Rebake",thlod,rebake_hlod)
+	add_item("Modify in blender",tmesh,modify_in_blender)
 	add_item("Open BakerScene",thlod,open_hlod_baker)
 	add_item("Show in FileSystem",tmesh|tpscene|tdecal|thlod,show_in_file_system)
 	add_item("Show GLTF",tmesh,show_gltf)
@@ -179,3 +180,49 @@ func rebake_hlod(collection_id:int)->void:
 	var hpath = MHlod.get_hlod_path(item_id)
 	var hres:MHlod=load(hpath)
 	AssetIOBaker.rebake_hlod(hres)
+
+
+func modify_in_blender(collection_id:int)->void:
+	var blender_path:String= EditorInterface.get_editor_settings().get_setting("filesystem/import/blender/blender_path")
+	if blender_path.is_empty():
+		MTool.print_edmsg("Blender path is empty! please set blender path in editor setting")
+		return
+	if not FileAccess.file_exists(blender_path):
+		MTool.print_edmsg("Blender path is not valid: "+blender_path)
+		return
+	var glb_file_path:String = AssetIO.get_glb_path_from_collection_id(collection_id)
+	glb_file_path = ProjectSettings.globalize_path(glb_file_path)
+	var blend_file_path:String= AssetIO.get_blend_path_from_collection_id(collection_id)
+	if blend_file_path.is_empty():
+		MTool.print_edmsg("blend_file_path is empty please set blend file path in import window")
+		return
+	var py_path:="res://addons/m_terrain/asset_manager/blender_addons/open_modify_mesh.py"
+	py_path = ProjectSettings.globalize_path(py_path)
+	var fpy = FileAccess.open(py_path,FileAccess.READ)
+	var py_script = fpy.get_as_text()
+	fpy.close()
+	## replace
+	var obj_name = MAssetTable.get_singleton().collection_get_name(collection_id)
+	py_script = py_script.replace("__OBJ_NAME__",obj_name)
+	py_script = py_script.replace("_GLB_FILE_PATH",glb_file_path)
+	py_script = py_script.replace("_BLEND_FILE_PATH",blend_file_path)
+	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
+	if FileAccess.file_exists(tmp_path):DirAccess.remove_absolute(tmp_path) # good idea to clear to make sure eveyrthing go well
+	if not DirAccess.dir_exists_absolute(tmp_path.get_base_dir()):
+		DirAccess.make_dir_recursive_absolute(tmp_path.get_base_dir())
+	var tmpf = FileAccess.open(tmp_path,FileAccess.WRITE)
+	if not tmpf:
+		MTool.print_edmsg("Can not create tmp file for blender python script")
+		return
+	tmpf.store_string(py_script)
+	tmpf.close()
+	## RUN
+	tmp_path = ProjectSettings.globalize_path(tmp_path)
+	var args:PackedStringArray = ["--python",tmp_path]
+	OS.create_process(blender_path,args)
+	
+	
+	
+	
+	
+	

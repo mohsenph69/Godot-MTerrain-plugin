@@ -276,7 +276,7 @@ func bake_to_hlod_resource():
 	var jmesh = hlod_resource.get_joined_mesh(false,true)
 	var aabb = jmesh.get_aabb()
 	for hlod_data in all_hlod:
-		var gh_aabb:AABB = MTool.get_global_aabb(hlod_data.node.get_aabb(),hlod_data.tr)
+		var gh_aabb:AABB = MTool.get_global_aabb(hlod_data.sub_hlod.get_aabb(),hlod_data.tr)
 		aabb.merge(gh_aabb)
 	hlod_resource.aabb = aabb
 	# some subhlod may not included in join mesh
@@ -522,6 +522,7 @@ func validate_can_bake():
 	
 func _exit_tree():	
 	asset_mesh_updater.show_boundary = false
+	asset_mesh_updater.update_force_lod(-1)
 	if is_instance_valid(timer) and timer.is_inside_tree():
 		timer.stop()
 
