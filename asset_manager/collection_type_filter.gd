@@ -38,7 +38,7 @@ func _init():
 				selected_types = selected_types | id
 			else:
 				selected_types = selected_types & ~id
-		asset_type_filter_changed.emit(selected_types)
+		asset_type_filter_changed.emit(selected_types)		
 	)
 	
 	button_clicked.connect(_on_button_clicked)

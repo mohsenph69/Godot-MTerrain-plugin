@@ -1,5 +1,6 @@
 extends SceneTree
 
+
 func _init():
 	var args = OS.get_cmdline_args()	
 	var separator_index = args.find("--args")

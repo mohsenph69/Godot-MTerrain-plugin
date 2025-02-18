@@ -60,6 +60,7 @@ var accumulated_scale_offset = 1
 
 var asset_library := MAssetTable.get_singleton()
 var current_selection := [] #array of collection name
+var current_sort_mode = "name_desc"
 var current_search := ""
 var current_filter_mode_all := false
 var current_filter_tags := []
@@ -106,6 +107,7 @@ func _ready():
 		current_filter_tags = tags
 		current_filter_mode_all = mode
 		regroup()		
+		update_filter_notifications()
 	)
 	ungrouped.group_list.multi_selected.connect(func(id, selected):
 		process_selection(ungrouped.group_list, id, selected)
@@ -141,7 +143,9 @@ func _ready():
 	find_child("asset_type_tree").asset_type_filter_changed.connect(func(selected_types):
 		current_filter_types = selected_types
 		regroup()
+		update_filter_notifications()
 	)
+	init_import_info_settings()
 	
 func create_baker_scene():	
 	var dir = MAssetTable.get_editor_baker_scenes_dir()
@@ -341,7 +345,8 @@ func debounce_regroup():
 	last_regroup = Time.get_ticks_msec()
 	return true
 	
-func regroup(group = current_group, sort_mode="name_desc"):		
+func regroup(group = current_group, sort_mode= current_sort_mode):		
+	current_sort_mode = sort_mode
 	if current_group != group:		
 		for child in groups.get_children():
 			groups.remove_child(child)
@@ -425,7 +430,7 @@ func collection_item_activated(id, group_list:ItemList,create_ur:=true):
 	if collection_id == -1: return
 	var node = add_asset_to_scene(collection_id, group_list.get_item_tooltip(id),create_ur)		
 	return node 
-
+	
 func add_asset_to_scene(collection_id, asset_name,create_ur:=true):	
 	var node
 	if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
@@ -636,3 +641,17 @@ func open_settings_window(tab, data):
 		settings_button.button_pressed = true
 		settings_button.settings.select_tab("manage_tags")
 		settings_button.settings.manage_tags_control.select_collection(data)		
+
+#TODO: move this function to a more logical place? 
+static func init_import_info_settings():	
+	var import_info = MAssetTable.get_singleton().import_info
+	if not "__settings" in import_info:
+		import_info["__settings"] = {}
+	import_info["__settings"]["Materials blend file"] = {"value": "", "type":TYPE_STRING, "hint":"path_global"}
+	MAssetTable.save()
+
+func update_filter_notifications():
+	var asset_type_notification = asset_type_filter_button.get_node("notification_texture")
+	var filter_notification = filter_button.get_node("notification_texture")		
+	asset_type_notification.visible = current_filter_types < MAssetTable.ItemType.DECAL + MAssetTable.ItemType.HLOD + MAssetTable.ItemType.MESH + MAssetTable.ItemType.PACKEDSCENE 
+	filter_notification.visible = len(current_filter_tags) != 0

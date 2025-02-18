@@ -173,11 +173,12 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 			if node.has_meta("blend_file"):				
 				var blend_file = node.get_meta("blend_file").trim_prefix("//")				
 				if asset_data.blend_file != blend_file:
-					if blend_file in asset_library.import_info["__blend_files"]:
-						var glb_path = asset_library.import_info["__blend_files"][blend_file]
+					var blend_file_dictionary = get_all_collections_blend_file_path()
+					if blend_file_dictionary.has(blend_file):
+						var glb_path = blend_file_dictionary[blend_file]
 						subcollection_name += "::" + glb_path					
 					else:
-						print("error with subcollection from different blend file. Here is the list of blend files in import_info:\n", asset_library.import_info["__blend_files"].keys())
+						print("error with subcollection from different blend file. Here is the list of blend files in import_info:\n", blend_file_dictionary.keys())
 			asset_data.add_sub_collection(active_collection,subcollection_name,node.transform)	
 		
 static func glb_import_commit_changes():
@@ -228,12 +229,7 @@ static func glb_import_commit_changes():
 	## Adding Import Info ##
 	########################
 	asset_library.import_info[asset_data.glb_path] = asset_data.get_glb_import_info()	
-	asset_library.import_info[asset_data.glb_path]["__id"] = glb_id
-	if not "__blend_files" in asset_library.import_info:
-		asset_library.import_info["__blend_files"] = {}
-	if not asset_data.blend_file.is_empty():
-		asset_library.import_info["__blend_files"][asset_data.blend_file] = asset_data.glb_path	
-	
+	asset_library.import_info[asset_data.glb_path]["__id"] = glb_id		
 	asset_library.import_info[asset_data.glb_path]["__variation_groups"] = asset_data.variation_groups
 	
 	#check if this glb was previously removed and erase "removed tag" if reimport has collections
@@ -452,12 +448,7 @@ static func import_settings(path):
 	if not asset_library.import_info.has("__materials"):
 		asset_library.import_info["__materials"] = {}
 	for material in data.materials:
-		asset_library.import_info["__materials"][int(material)] = data.materials[material]	
-	if not asset_library.import_info.has("__blend_files"):
-		asset_library.import_info["__blend_files"] = {}
-	for blend_file in data.blend_files:		
-		if blend_file.is_empty(): continue
-		asset_library.import_info["__blend_files"][blend_file] = data.blend_files[blend_file]
+		asset_library.import_info["__materials"][int(material)] = data.materials[material]		
 	for tag in data.tags.keys():
 		asset_library.tag_set_name(int(data.tags[tag]), tag)		
 	for group in data.groups:
@@ -481,8 +472,7 @@ static func export_settings(path):
 	result["groups"] = {}
 	for group in asset_library.group_get_list():
 		result["groups"][group] = asset_library.group_get_tags(group)
-	result["materials"] = asset_library.import_info["__materials"] if asset_library.import_info.has("__materials") else {}
-	result["blend_files"] = asset_library.import_info["__blend_files"] if asset_library.import_info.has("__blend_files") else {}
+	result["materials"] = asset_library.import_info["__materials"] if asset_library.import_info.has("__materials") else {}	
 	result["collections"] = {}	
 	#COLLECTIONS
 	for glb_path in asset_library.import_info.keys():
@@ -498,3 +488,12 @@ static func export_settings(path):
 	var file = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify(result))
 	file.close()
+
+static func get_all_collections_blend_file_path(): # {blend_file_path: glb_path}
+	var import_info = MAssetTable.get_singleton().import_info
+	var result = {}
+	for glb_path in import_info.keys():
+		if glb_path.begins_with("__"): continue
+		if "__original_blend_file" in import_info[glb_path]:
+			result[ import_info[glb_path]["__original_blend_file"] ] = glb_path
+	return result

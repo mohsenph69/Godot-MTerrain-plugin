@@ -10,16 +10,21 @@ func _ready():
 	#set_column_expand(1, false)
 	
 	var root := create_item()
-	material_blend_item = root.create_child()	
-	material_blend_item.set_text(0, "Materials blend file")
-	material_blend_item.set_editable(0,false)	
-	var material_blend_path = import_info["__blend_files"]["__materials"] if "__materials" in import_info["__blend_files"] else "(...)"
-	material_blend_item.set_text(1, material_blend_path)	
-	material_blend_item.set_editable(1,true)		
-	var open_icon = preload("res://addons/m_terrain/icons/open.svg")
-	material_blend_item.add_button(1, open_icon)	
-	item_edited.connect(on_item_edited)
-	button_clicked.connect(on_button_clicked)
+	var settings = import_info["__settings"] if import_info.has("__settings") else null
+	if settings:
+		for key in import_info["__settings"].keys():					
+			var item = root.create_child()	
+			item.set_text(0, key)
+			item.set_editable(0,false)	
+			var data = import_info["__settings"][key]
+			if data.type == TYPE_STRING:
+				if data.hint == "path_global":					
+					item.set_text(1, data.value)	
+					item.set_editable(1,true)		
+					var open_icon = preload("res://addons/m_terrain/icons/open.svg")
+					item.add_button(1, open_icon)	
+					item_edited.connect(on_item_edited)
+					button_clicked.connect(on_button_clicked)
 
 func on_item_edited():
 	var item = get_edited()	
@@ -43,8 +48,8 @@ func on_button_clicked(item: TreeItem, column: int, id: int, mouse_button_index:
 		dialog.popup_file_dialog()									
 
 func update_material_blend_path(path):			
-	if not "__blend_files" in import_info:
-		import_info["__blend_files"] = {}
-	import_info["__blend_files"]["__materials"] = path
+	if not "__settings" in import_info:
+		import_info["__settings"] = {}
+	import_info["__settings"]["Materials blend file"] = {"value": path, "type":TYPE_STRING, "hint":"path_global"}
 	MAssetTable.save()
 	

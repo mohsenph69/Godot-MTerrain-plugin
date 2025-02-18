@@ -470,7 +470,7 @@ func toggle_joined_mesh_disabled(toggle_on):
 	if toggle_on:		
 		asset_mesh_updater.join_mesh_id = -1		
 	else:
-		asset_mesh_updater.join_mesh_id = joined_mesh_id #TODO: check if fixed
+		asset_mesh_updater.join_mesh_id = joined_mesh_id
 	if force_lod_enabled:
 		force_lod(force_lod_value)
 	else:

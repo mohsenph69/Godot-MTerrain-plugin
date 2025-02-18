@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=26 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -23,8 +23,9 @@
 [ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="17_xg855"]
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="19_sansc"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
+[ext_resource type="MDecal" uid="uid://brudh1dauh82g" path="res://massets/decals/1.res" id="25_6nf0h"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_ku1x2"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_vl2qx"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -43,18 +44,21 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 
-[node name="asset_type_filter_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="filtering_hbox" type="HBoxContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="asset_type_filter_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 tooltip_text = "Hold Shift or Ctrl to single select"
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ku1x2")
-text = "Types"
-expand_icon = true
+button_group = SubResource("ButtonGroup_vl2qx")
+text = " Types "
+icon_alignment = 2
 script = ExtResource("4_he502")
 
-[node name="asset_type_tree" type="Tree" parent="VBoxContainer/HBoxContainer/asset_type_filter_button"]
+[node name="asset_type_tree" type="Tree" parent="VBoxContainer/HBoxContainer/filtering_hbox/asset_type_filter_button"]
 visible = false
 custom_minimum_size = Vector2(200, 170)
 layout_mode = 1
@@ -67,17 +71,31 @@ hide_root = true
 select_mode = 1
 script = ExtResource("10_m1w1c")
 
-[node name="filter_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/asset_type_filter_button"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -12.0
+offset_top = -5.0
+offset_right = 3.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="filter_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ku1x2")
+button_group = SubResource("ButtonGroup_vl2qx")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="filter_popup" parent="VBoxContainer/HBoxContainer/filter_button" instance=ExtResource("3_dfwqm")]
+[node name="filter_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/filter_button" instance=ExtResource("3_dfwqm")]
 visible = false
 custom_minimum_size = Vector2(300, 560)
 layout_mode = 1
@@ -91,17 +109,31 @@ offset_bottom = -13.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="grouping_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/filter_button"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -11.0
+offset_top = -5.0
+offset_right = 4.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="grouping_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ku1x2")
+button_group = SubResource("ButtonGroup_vl2qx")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/grouping_button" instance=ExtResource("9_40ifn")]
+[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/grouping_button" instance=ExtResource("9_40ifn")]
 visible = false
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 1
@@ -114,17 +146,32 @@ offset_bottom = -10.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/grouping_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -11.0
+offset_top = -5.0
+offset_right = 4.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_ku1x2")
+button_group = SubResource("ButtonGroup_vl2qx")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="sort_popup" parent="VBoxContainer/HBoxContainer/sort_by_button" instance=ExtResource("7_uoy1f")]
+[node name="sort_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/sort_by_button" instance=ExtResource("7_uoy1f")]
 visible = false
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 0
@@ -134,7 +181,22 @@ anchor_bottom = 0.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="search_collections" parent="VBoxContainer/HBoxContainer" instance=ExtResource("5_14byr")]
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/sort_by_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -12.0
+offset_top = -5.0
+offset_right = 3.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="search_collections" parent="VBoxContainer/HBoxContainer/filtering_hbox" instance=ExtResource("5_14byr")]
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 
@@ -218,7 +280,7 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
-button_group = SubResource("ButtonGroup_ku1x2")
+button_group = SubResource("ButtonGroup_vl2qx")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
@@ -332,6 +394,10 @@ layout_mode = 2
 [node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="New Decal" type="MDecalInstance" parent="."]
+decal = ExtResource("25_6nf0h")
+metadata/collection_id = 7
 
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/o_btn" to="." method="reposition_origin"]
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/x_btn" to="." method="reposition_x"]
