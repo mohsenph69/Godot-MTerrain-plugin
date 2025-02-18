@@ -645,9 +645,10 @@ func open_settings_window(tab, data):
 #TODO: move this function to a more logical place? 
 static func init_import_info_settings():	
 	var import_info = MAssetTable.get_singleton().import_info
-	if not "__settings" in import_info:
+	if not import_info.has("__settings"):
 		import_info["__settings"] = {}
-	import_info["__settings"]["Materials blend file"] = {"value": "", "type":TYPE_STRING, "hint":"path_global"}
+	if import_info["__settings"].has("Materials blend file"): 
+		import_info["__settings"]["Materials blend file"] = {"value": "", "type":TYPE_STRING, "hint":"path_global"}
 	MAssetTable.save()
 
 func update_filter_notifications():
