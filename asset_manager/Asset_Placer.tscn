@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=25 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
@@ -23,9 +23,8 @@
 [ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="17_xg855"]
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="19_sansc"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
-[ext_resource type="MDecal" uid="uid://brudh1dauh82g" path="res://massets/decals/1.res" id="25_6nf0h"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_vl2qx"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_0kutt"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -53,7 +52,7 @@ layout_mode = 2
 tooltip_text = "Hold Shift or Ctrl to single select"
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_vl2qx")
+button_group = SubResource("ButtonGroup_0kutt")
 text = " Types "
 icon_alignment = 2
 script = ExtResource("4_he502")
@@ -72,6 +71,7 @@ select_mode = 1
 script = ExtResource("10_m1w1c")
 
 [node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/asset_type_filter_button"]
+visible = false
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -90,7 +90,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_vl2qx")
+button_group = SubResource("ButtonGroup_0kutt")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -110,6 +110,7 @@ grow_horizontal = 1
 grow_vertical = 1
 
 [node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/filter_button"]
+visible = false
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -128,7 +129,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_vl2qx")
+button_group = SubResource("ButtonGroup_0kutt")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -166,7 +167,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_vl2qx")
+button_group = SubResource("ButtonGroup_0kutt")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -280,7 +281,7 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
-button_group = SubResource("ButtonGroup_vl2qx")
+button_group = SubResource("ButtonGroup_0kutt")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
@@ -394,10 +395,6 @@ layout_mode = 2
 [node name="other" parent="VBoxContainer/ScrollContainer/PanelContainer" instance=ExtResource("3_4shpx")]
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="New Decal" type="MDecalInstance" parent="."]
-decal = ExtResource("25_6nf0h")
-metadata/collection_id = 7
 
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/o_btn" to="." method="reposition_origin"]
 [connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/x_btn" to="." method="reposition_x"]

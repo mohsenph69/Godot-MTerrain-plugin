@@ -8,6 +8,13 @@ for obj in bpy.data.objects:
 
 bpy.ops.import_scene.gltf(filepath='_GLB_FILE_PATH')
 
+for area in bpy.context.screen.areas:
+    if area.type == 'VIEW_3D':
+        for space in area.spaces:
+            if space.type == 'VIEW_3D':
+                # Set shading mode to 'MATERIAL'
+                space.shading.type = 'MATERIAL'
+
 if _REPLACE_MATERIALS:
     material_names = set()
     materials_data = {}
