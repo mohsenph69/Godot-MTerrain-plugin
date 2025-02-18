@@ -401,10 +401,22 @@ static func collection_parse_name(node)->String:
 
 static func get_glb_path_from_collection_id(collection_id)->String:
 	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
-	var import_info:Dictionary = MAssetTable.get_singleton().import_info
+	var import_info:Dictionary = MAssetTable.get_singleton().import_info.duplicate()
+	MAssetTable.get_singleton().clear_import_info_cache()
 	for k in import_info:
 		if k.begins_with("__"): continue
 		if import_info[k]["__id"] == glb_id: return k
+	return ""
+	
+static func get_blend_path_from_collection_id(collection_id)->String:
+	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
+	var import_info:Dictionary = MAssetTable.get_singleton().import_info.duplicate()
+	MAssetTable.get_singleton().clear_import_info_cache()
+	for k in import_info:
+		if k.begins_with("__"): continue
+		if import_info[k]["__id"] == glb_id:
+			if import_info[k].has("__original_blend_file"):
+				return import_info[k]["__original_blend_file"]
 	return ""
 
 static func remove_collection(collection_id):	
@@ -486,17 +498,3 @@ static func export_settings(path):
 	var file = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify(result))
 	file.close()
-
-static func get_asset_blend_file(collection_id):
-	var import_info = MAssetTable.get_singleton().import_info	
-	if not import_info.has("__blend_files") or len(import_info["__blend_files"]) == 0: return null
-	for glb_path in import_info.keys():
-		if glb_path.begins_with("__"): continue
-		for glb_node_name in import_info[glb_path]:
-			if glb_node_name.begins_with("__"): continue
-			if import_info[glb_path][glb_node_name].has("id") and import_info[glb_path][glb_node_name]["id"] == collection_id:				
-				for blend_file in import_info["__blend_files"].keys():					
-					if import_info["__blend_files"][blend_file] == glb_path:						
-						return blend_file
-				
-					

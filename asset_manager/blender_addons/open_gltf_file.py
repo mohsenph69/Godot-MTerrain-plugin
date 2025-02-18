@@ -21,8 +21,7 @@ if _REPLACE_MATERIALS:
         bpy.data.materials.remove(material)
     with bpy.data.libraries.load(filepath='_MATERIALS_BLEND_PATH', assets_only = True, link = True) as (data_from, data_to):
         for i, mat in enumerate(data_from.materials):                
-            if mat in material_names:
-                data_to.materials.append(data_from.materials[i])                                
+            data_to.materials.append(data_from.materials[i])
     for obj_name in materials_data.keys():
         for i, slot in enumerate(bpy.data.objects[obj_name].material_slots):
             material_name = materials_data[obj_name][i]

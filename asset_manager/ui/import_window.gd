@@ -73,7 +73,7 @@ func _ready():
 	asset_data.blend_file = blend_file_path
 	
 	var meshcutoff_item = root.create_child()
-	meshcutoff_item.set_text(0, "Mesh Cutoff")	
+	meshcutoff_item.set_text(-1, "Mesh Cutoff")	
 	var editable = asset_data.global_options["meshcutoff"].is_empty()
 	meshcutoff_item.set_editable(1, editable)				
 	if not editable:
@@ -82,6 +82,7 @@ func _ready():
 		meshcutoff_item.set_text(0, asset_data.global_options["meshcutoff"])		
 	else:
 		meshcutoff_item.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)	
+		meshcutoff_item.set_range_config(1,-1,MAssetTable.mesh_item_get_max_lod(),1)
 		var selected
 		if not asset_data.global_options["meshcutoff"].is_empty():
 			selected = int(asset_data.global_options["meshcutoff"])
@@ -103,6 +104,7 @@ func _ready():
 	else:
 		var selected
 		colcutoff_item.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)		
+		colcutoff_item.set_range_config(1,-1,MAssetTable.mesh_item_get_max_lod(),1)
 		if not asset_data.global_options["colcutoff"].is_empty():
 			selected = int(asset_data.global_options["colcutoff"])
 		elif "original_colcutoff" in asset_data.global_options:

@@ -309,9 +309,11 @@ func save_meshes()->int:
 				printerr("meshcutoff is not a valid integer")
 				continue
 			var stop_lod:int = meshcutoff.to_int()
-			if stop_lod < 1:
+			if stop_lod==0:
 				printerr("stop_lod can't be smaller than 1")
 				continue
+			if stop_lod==-1:
+				continue #default
 			var stop_path = MHlod.get_mesh_path(mesh_id + stop_lod).get_basename() + ".stop"
 			var f = FileAccess.open(stop_path,FileAccess.WRITE)
 			f.close()

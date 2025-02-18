@@ -431,9 +431,6 @@ func add_asset_to_scene(collection_id, asset_name,create_ur:=true):
 	if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
 		node = MAssetMesh.new()
 		node.collection_id = collection_id		
-		var blend_file = AssetIO.get_asset_blend_file(node.collection_id) 
-		if blend_file:
-			node.set_meta("blend_file", blend_file)
 	elif collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
 		node = MHlodScene.new()		
 		node.hlod = load(MHlod.get_hlod_path( asset_library.collection_get_item_id(collection_id) ))

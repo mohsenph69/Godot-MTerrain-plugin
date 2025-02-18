@@ -38,9 +38,9 @@ void fragment() {
 	result = max(result, step(normal_local.y + normal_local.z + fract((TIME*abs(pos_local.x*speed) + pos_local.y) / 2. / pos_local.x * line_count), line_width));
 	result = max(result, step(normal_local.z + normal_local.x + fract((TIME*abs(pos_local.y*speed) + pos_local.z) / 2. / pos_local.y * line_count), line_width));
 
-	float fres = 0.2;// clamp( abs(dot( normalize(normal_local), CAMERA_DIRECTION_WORLD)) , 0.1, 0.9) -0.4; //fresnel_glow(0.379,.002, vec3(0.,3.,5.), normalize(normal_local), CAMERA_DIRECTION_WORLD);
-
 	ALPHA = result ; //+ (.15* is_inner);
 	ALPHA_SCISSOR_THRESHOLD = 0.5;
 	ALBEDO = hsv_adjustment(normal_local, 50. + (180.*is_inner), -0.05 , -0.6 - (0.25* is_inner));
+
+
 }
