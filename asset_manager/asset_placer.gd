@@ -647,7 +647,7 @@ static func init_import_info_settings():
 	var import_info = MAssetTable.get_singleton().import_info
 	if not import_info.has("__settings"):
 		import_info["__settings"] = {}
-	if import_info["__settings"].has("Materials blend file"): 
+	if not import_info["__settings"].has("Materials blend file"): 
 		import_info["__settings"]["Materials blend file"] = {"value": "", "type":TYPE_STRING, "hint":"path_global"}
 	MAssetTable.save()
 

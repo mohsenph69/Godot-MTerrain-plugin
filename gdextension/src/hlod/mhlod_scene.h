@@ -303,18 +303,17 @@ class MHlodScene : public Node3D {
         while (checked_children_to_add_index != procs.size() - 1)
         {
             ++checked_children_to_add_index;
-            Proc& current_proc = procs.ptrw()[checked_children_to_add_index];
-            Ref<MHlod> current_hlod = current_proc.hlod;
+            Ref<MHlod> current_hlod = procs.ptrw()[checked_children_to_add_index].hlod;
             ERR_CONTINUE(current_hlod.is_null());
             int sub_proc_size = current_hlod->sub_hlods.size();
             int sub_proc_index = procs.size();
-            current_proc.init_sub_proc(sub_proc_index,sub_proc_size,checked_children_to_add_index);
+            procs.ptrw()[checked_children_to_add_index].init_sub_proc(sub_proc_index,sub_proc_size,checked_children_to_add_index);
             // pushing back childrens
             for(int i=0; i < sub_proc_size; i++){
                 Ref<MHlod> s = current_hlod->sub_hlods[i];
                 ERR_FAIL_COND(s.is_null());
                 uint16_t s_layers = current_hlod->sub_hlods_scene_layers[i];
-                Transform3D s_transform = current_proc.transform * current_hlod->sub_hlods_transforms[i];
+                Transform3D s_transform = procs.ptrw()[checked_children_to_add_index].transform * current_hlod->sub_hlods_transforms[i];
                 int32_t proc_id = sub_proc_index + i;
                 procs.push_back(Proc(this,s,proc_id,s_layers,s_transform));
             }

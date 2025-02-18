@@ -198,7 +198,7 @@ func open_baker_gltf_with_blender():
 	py_script = py_script.replace("_GLB_FILE_PATH",glb_path)
 	py_script = py_script.replace("_BAKER_NAME",baker.name)	
 	var settings = MAssetTable.get_singleton().import_info["__settings"]
-	var materials_blend_path = settings["Materials blend file"] if  "Materials blend file" in settings else null	
+	var materials_blend_path:String = settings["Materials blend file"].value if  "Materials blend file" in settings else null	
 	py_script = py_script.replace("_REPLACE_MATERIALS", "True" if materials_blend_path and FileAccess.file_exists(materials_blend_path) else "False")
 	py_script = py_script.replace("_MATERIALS_BLEND_PATH", str(materials_blend_path))
 	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"

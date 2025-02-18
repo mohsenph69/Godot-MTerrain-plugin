@@ -24,6 +24,7 @@ func _ready() -> void:
 	add_item("Open BakerScene",thlod,open_hlod_baker)
 	add_item("Show in FileSystem",tmesh|tpscene|tdecal|thlod,show_in_file_system)
 	add_item("Show GLTF",tmesh,show_gltf)
+	add_item("Tag",tmesh|tpscene|tdecal|thlod,show_tag)
 	add_item("Remove only HLod",thlod,remove_only_hlod)
 	add_item("Remove",tpscene|tdecal|thlod,remove_collection)
 	########## END ADDING ITEMS ##########
@@ -221,8 +222,6 @@ func modify_in_blender(collection_id:int)->void:
 	var args:PackedStringArray = ["--python",tmp_path]
 	OS.create_process(blender_path,args)
 	
-	
-	
-	
-	
+func show_tag(collection_id:int)->void:
+	AssetIO.asset_placer.open_settings_window("tag", collection_id)
 	
