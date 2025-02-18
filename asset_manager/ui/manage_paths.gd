@@ -19,8 +19,7 @@ func _ready():
 			var item = root.create_child()	
 			item.set_text(0, key)
 			item.set_editable(0,false)	
-			var data = import_info["__settings"][key]
-			print(data)
+			var data = import_info["__settings"][key]			
 			if data.type == TYPE_STRING:				
 				if data.hint == "path_global":					
 					item.set_text(1, data.value)	
@@ -58,12 +57,7 @@ func update_setting(item = get_edited()):
 	var value
 	match int(import_info["__settings"][setting_name].type):
 		TYPE_STRING: value = item.get_text(1)
-		TYPE_INT, TYPE_FLOAT: value = item.get_range(1)		
-	print(import_info["__settings"][setting_name].type)
-	print(import_info["__settings"][setting_name].type == TYPE_STRING)
-	print(item.get_text(1))
-	if value == null:
-		print("AAAAAAAAAAAAA")
+		TYPE_INT, TYPE_FLOAT: value = item.get_range(1)				
 	import_info["__settings"][setting_name] = {"value": value, "type":TYPE_STRING, "hint":"path_global"}
 	MAssetTable.save()	
 	

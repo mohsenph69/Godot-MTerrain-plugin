@@ -107,6 +107,7 @@ func select_collection(id):
 	collection_list.deselect_all()
 	items[id].select(0)
 	collection_list.scroll_to_item(items[id])
+	update_active_collection()
 	
 func get_asset_placer():	
 	asset_placer = self
