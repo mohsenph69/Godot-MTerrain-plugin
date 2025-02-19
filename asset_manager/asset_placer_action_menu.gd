@@ -76,7 +76,6 @@ func _input(event: InputEvent) -> void:
 		var levent = make_input_local(event)		
 		if not Rect2(Vector2(),get_rect().size).has_point(levent.position):
 			visible = false
-			clear()
 
 func show_in_file_system(collection_id:int)->void:
 	var type = MAssetTable.get_singleton().collection_get_type(collection_id)
