@@ -20,8 +20,20 @@ static func get_glb_path_by_baker_node(baker_node: HLod_Baker):
 	else: # root baker
 		return get_glb_path_by_baker_path(baker_node.scene_file_path)	
 
+static func rebake_hlod_by_baker_path(baker_path:String):
+	if not FileAccess.file_exists(baker_path):
+		printerr("baker path %s does not exist" % baker_path)
+		return
+	var baker: HLod_Baker= load(baker_path).instantiate()
+	baker.is_tmp_bake = true
+	EditorInterface.get_base_control().add_child(baker)
+	baker.bake_to_hlod_resource()
+
 static func rebake_hlod(hlod:MHlod):
 	var baker: HLod_Baker= load(hlod.baker_path).instantiate()
+	if baker.hlod_id != hlod.resource_path.to_int():
+		push_warning("baker.hlod_id %d is different correcting that!" % baker.hlod_id)
+		baker.hlod_id = hlod.resource_path.to_int()
 	baker.is_tmp_bake = true
 	EditorInterface.get_base_control().add_child(baker)
 	baker.bake_to_hlod_resource()

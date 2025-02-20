@@ -353,11 +353,6 @@ bool MHlod::_is_data_healthy() const {
     return true;
 }
 
-bool MHlod::is_hlod_healthy() const {
-    // or data is healthy or is empty
-    return is_data_healthy || (item_list.is_empty() && sub_hlods.is_empty());
-}
-
 MHlod::Type MHlod::get_item_type(int32_t item_id) const{
     ERR_FAIL_INDEX_V(item_id,item_list.size(),Type::NONE);
     return item_list[item_id].type;
@@ -913,17 +908,21 @@ void MHlod::_set_data(const Array& data){
     sub_hlods_scene_layers = MTool::packed_byte_array_to_vector<uint16_t>(data[ARRAY_DATA_SUBHLOD_SCENE_LAYER]);
     ERR_FAIL_COND(__subhlods.size()!=sub_hlods_transforms.size());
     ERR_FAIL_COND(__subhlods.size()!=sub_hlods_scene_layers.size());
+    sub_hlods.resize(__subhlods.size());
     for(int i=__subhlods.size() - 1; i >=0 ; i--){
         Ref<MHlod> __shlod = __subhlods[i];
         if(__shlod.is_null()){
             __subhlods.remove_at(i);
+            sub_hlods.remove_at(i);
             sub_hlods_transforms.remove_at(i);
             sub_hlods_scene_layers.remove_at(i);
             ERR_CONTINUE_MSG(true,"Null subhlod!");
+        } else {
+            sub_hlods.set(i,__shlod);
         }
     }
     // Check health
-    is_data_healthy = _is_data_healthy();
+    _is_data_healthy();
 }
 
 Array MHlod::_get_data() const{

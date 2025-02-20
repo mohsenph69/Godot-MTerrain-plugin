@@ -113,7 +113,6 @@ class MHlod : public Resource{
     // -1 is default static body any invalid id use default body
     // -2 is invalid static body
     static inline HashMap<int16_t,PhysicBodyInfo> physic_bodies;
-    bool is_data_healthy=false;
     bool _is_data_healthy() const;
 
 
@@ -156,7 +155,6 @@ class MHlod : public Resource{
     static _FORCE_INLINE_ MHlod::PhysicBodyInfo& get_physic_body(int16_t id);
     static _FORCE_INLINE_ void clear_physic_body();
 
-    bool is_hlod_healthy() const;
     MHlod::Type get_item_type(int32_t item_id) const;
     void set_aabb(const AABB& aabb);
     const AABB& get_aabb() const;

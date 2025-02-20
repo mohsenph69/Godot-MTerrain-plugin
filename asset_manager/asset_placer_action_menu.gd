@@ -95,16 +95,19 @@ func show_in_file_system(collection_id:int)->void:
 	EditorInterface.get_file_system_dock().navigate_to_path(path)
 
 func open_hlod_baker(collection_id:int):
-	var type = MAssetTable.get_singleton().collection_get_type(collection_id)
-	if type!=MAssetTable.ItemType.HLOD:
-		printerr("Type MHlod is not valid")
-		return
 	var item_id:int= MAssetTable.get_singleton().collection_get_item_id(collection_id)
 	var hlod:MHlod= load(MHlod.get_hlod_path(item_id))
-	if not hlod:
-		print("hlod resourse is not valid")
-		return
-	EditorInterface.call_deferred("open_scene_from_path",hlod.baker_path)
+	if hlod:
+		EditorInterface.call_deferred("open_scene_from_path",hlod.baker_path)
+	else:
+		## Trying to find it in Masset baker folder
+		var cname = MAssetTable.get_singleton().collection_get_name(collection_id)
+		var bpath = MAssetTable.get_editor_baker_scenes_dir().path_join(cname) + ".tscn"
+		if FileAccess.file_exists(bpath):
+			EditorInterface.call_deferred("open_scene_from_path",bpath)
+		else:
+			MTool.print_edmsg("Can not find file!")
+	
 
 func show_gltf(collection_id:int):
 	var at:=MAssetTable.get_singleton()
@@ -182,7 +185,18 @@ func rebake_hlod(collection_id:int)->void:
 	var item_id:int= at.collection_get_item_id(collection_id)
 	var hpath = MHlod.get_hlod_path(item_id)
 	var hres:MHlod=load(hpath)
-	AssetIOBaker.rebake_hlod(hres)
+	if hres:
+		AssetIOBaker.rebake_hlod(hres)
+	else:
+		## Trying to find it in Masset baker folder
+		var cname = MAssetTable.get_singleton().collection_get_name(collection_id)
+		var bpath = MAssetTable.get_editor_baker_scenes_dir().path_join(cname) + ".tscn"
+		if FileAccess.file_exists(bpath):
+			AssetIOBaker.rebake_hlod_by_baker_path(bpath)
+		else:
+			MTool.print_edmsg("Can not find file!")
+	if AssetIO.asset_placer:
+		AssetIO.asset_placer.regroup()
 
 
 func modify_in_blender(collection_id:int)->void:
