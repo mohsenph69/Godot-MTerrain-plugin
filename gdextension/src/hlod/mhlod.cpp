@@ -1,6 +1,7 @@
 #include "mhlod.h"
 
 #include <godot_cpp/classes/resource_loader.hpp>
+#include "../mtool.h"
 #ifdef DEBUG_ENABLED
 #include "../editor/masset_table.h"
 #include "../editor/mmesh_joiner.h"
@@ -71,9 +72,6 @@ void MHlod::_bind_methods(){
     #endif
 
     ClassDB::bind_method(D_METHOD("start_test"), &MHlod::start_test);
-    ClassDB::bind_method(D_METHOD("set_v1","input"), &MHlod::set_v1);
-    ClassDB::bind_method(D_METHOD("get_v1"), &MHlod::get_v1);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"v1"),"set_v1","get_v1");
 
     BIND_ENUM_CONSTANT(NONE);
     BIND_ENUM_CONSTANT(MESH);
@@ -251,38 +249,55 @@ MHlod::Item& MHlod::Item::operator=(const Item& other){
     return *this;
 }
 
-void MHlod::Item::set_data(const Dictionary& d){
-    ERR_FAIL_COND(!d.has("type"));
-    type = (MHlod::Type)((int)d["type"]);
-    is_bound = d["is_bound"];
-    transform_index = (int)d["t_index"];
-    lod = (int)d["lod"];
-    item_layers = d.has("item_layers") ? (int64_t)d["item_layers"] : 0;
+void MHlod::Item::set_header_data(const PackedByteArray& data){
+    ERR_FAIL_COND(data.size() < ITEM_DATA_MAX);
+    type = (Type)data.decode_u8(ITEM_DATA_TYPE);
+    ERR_FAIL_COND(type>=(uint8_t)Type::TYPE_MAX);
+    is_bound = (bool)data.decode_u8(ITEM_DATA_IS_BOUND);
+    lod = data.decode_s8(ITEM_DATA_LOD);
+    item_layers = data.decode_u16(ITEM_DATA_LAYER);
+    transform_index = data.decode_s32(ITEM_DATA_TRANSFORM_INDEX);
+}
+
+PackedByteArray MHlod::Item::get_header_data() const {
+    PackedByteArray out;
+    out.resize(ITEM_DATA_MAX);
+    out.encode_u8(ITEM_DATA_TYPE,type);
+    out.encode_u8(ITEM_DATA_IS_BOUND,is_bound);
+    out.encode_s8(ITEM_DATA_LOD,lod);
+    out.encode_u16(ITEM_DATA_LAYER,item_layers);
+    out.encode_s32(ITEM_DATA_TRANSFORM_INDEX,transform_index);
+    return out;
+}
+
+void MHlod::Item::set_data(const PackedByteArray& data){
+    set_header_data(data);
+    int head = ITEM_DATA_MAX;
     switch (type)
     {
     case Type::MESH:
         new (&mesh) MHLodItemMesh();
-        mesh.set_data(d["data"]);
+        mesh.set_data(data,head);
         break;
     case Type::COLLISION:
         new (&collision) MHLodItemCollision();
-        collision.set_data(d["data"]);
+        collision.set_data(data,head);
         break;
     case Type::COLLISION_COMPLEX:
         new (&collision_complex) MHLodItemCollision();
-        collision_complex.set_data(d["data"]);
+        collision_complex.set_data(data,head);
         break;
     case Type::PACKED_SCENE:
         new (&packed_scene) MHLodItemPackedScene();
-        packed_scene.set_data(d["data"]);
+        packed_scene.set_data(data,head);
         break;
     case Type::LIGHT:
         new (&light) MHLodItemLight();
-        light.set_data(d["data"]);
+        light.set_data(data,head);
         break;
     case Type::DECAL:
         new (&decal) MHLodItemDecal();
-        decal.set_data(d["data"]);
+        decal.set_data(data,head);
         break;
     default:
         ERR_FAIL_MSG("Undefine Item Type!"); 
@@ -290,52 +305,58 @@ void MHlod::Item::set_data(const Dictionary& d){
     }
 }
 
-Dictionary MHlod::Item::get_data() const{
-    PackedByteArray data;
+PackedByteArray MHlod::Item::get_data() const{
+    PackedByteArray data = get_header_data();
     switch (type)
     {
     case Type::MESH:
-        data = mesh.get_data();
+        data.append_array(mesh.get_data());
         break;
     case Type::COLLISION:
-        data = collision.get_data();
+        data.append_array(collision.get_data());
         break;
     case Type::COLLISION_COMPLEX:
-        data = collision_complex.get_data();
+        data.append_array(collision_complex.get_data());
         break;
     case Type::PACKED_SCENE:
-        data = packed_scene.get_data();
+        data.append_array(packed_scene.get_data());
         break;
     case Type::LIGHT:
-        data = light.get_data();
+        data.append_array(light.get_data());
         break;
     case Type::DECAL:
-        data = decal.get_data();
+        data.append_array(decal.get_data());
         break;
     default:
-        ERR_FAIL_V_MSG(Dictionary(),"Undefine Item Type!"); 
+        ERR_FAIL_V_MSG(PackedByteArray(),"Undefine Item Type!"); 
         break;
     }
-    Dictionary d;
-    d["type"] = (int)type;
-    d["is_bound"] = is_bound;
-    d["t_index"] = transform_index;
-    d["item_layers"] = item_layers;
-    d["lod"] = (int)lod;
-    d["data"] = data;
-    return d;
+    return data;
 }
-
-
-
-
-
-
-
 
 ////////////////////////
 //////////////////////////////////////////////
 ///////////////////////
+
+bool MHlod::_is_data_healthy() const {
+    for(const Item& item : item_list){
+        ERR_FAIL_INDEX_V(item.transform_index,transforms.size(),false);
+        ERR_FAIL_COND_V(item.type==NONE||item.type==TYPE_MAX,false);
+    }
+    ERR_FAIL_COND_V(sub_hlods.size()!=sub_hlods_transforms.size(),false);
+    ERR_FAIL_COND_V(sub_hlods.size()!=sub_hlods_scene_layers.size(),false);
+    for(const VSet<int32_t>& table_row : lods){
+        for(int c=0; c < table_row.size(); c++){
+            ERR_FAIL_INDEX_V(table_row[c],item_list.size(),false);
+        }
+    }
+    return true;
+}
+
+bool MHlod::is_hlod_healthy() const {
+    // or data is healthy or is empty
+    return is_data_healthy || (item_list.is_empty() && sub_hlods.is_empty());
+}
 
 MHlod::Type MHlod::get_item_type(int32_t item_id) const{
     ERR_FAIL_INDEX_V(item_id,item_list.size(),Type::NONE);
@@ -853,8 +874,6 @@ Ref<ArrayMesh> MHlod::get_joined_mesh(bool for_triangle_mesh,bool best_mesh_qual
         }
     }
     Array sinfo;
-    UtilityFunctions::print("Vert ccc ",verticies.size());
-    UtilityFunctions::print("inde ccc ",indices.size());
     sinfo.resize(Mesh::ARRAY_MAX);
     sinfo[Mesh::ARRAY_VERTEX] = verticies;
     sinfo[Mesh::ARRAY_INDEX] = indices;
@@ -864,18 +883,14 @@ Ref<ArrayMesh> MHlod::get_joined_mesh(bool for_triangle_mesh,bool best_mesh_qual
 }
 #endif
 
-void MHlod::_set_data(const Dictionary& data){
-    ERR_FAIL_COND(!data.has("items"));
-    ERR_FAIL_COND(!data.has("lods"));
-    ERR_FAIL_COND(!data.has("transforms"));
-    ERR_FAIL_COND(!data.has("subhlods"));
-    ERR_FAIL_COND(!data.has("subhlods_transforms"));
+void MHlod::_set_data(const Array& data){
+    ERR_FAIL_COND(data.size()!=ARRAY_DATA_MAX);
     item_list.clear();
     lods.clear();
     transforms.clear();
     sub_hlods.clear();
     sub_hlods_transforms.clear();
-    Array __lods = data["lods"];
+    Array __lods = data[ARRAY_DATA_LODS];
     for(int i=0; i < __lods.size();i++){
         PackedInt32Array __lod = __lods[i];
         VSet<int32_t> __l;
@@ -885,35 +900,35 @@ void MHlod::_set_data(const Dictionary& data){
         lods.push_back(__l);
     }
     /// Items
-    Array __items = data["items"];
+    Array __items = data[ARRAY_DATA_ITEM];
     item_list.resize(__items.size());
     for(int i=0; i < __items.size(); i++){
         item_list.ptrw()[i].set_data(__items[i]);
     }
-    Array __transforms = data["transforms"];
+    Array __transforms = data[ARRAY_DATA_TRANSFORMS];
     transforms.resize(__transforms.size());
     for(int i=0; i < __transforms.size(); i++){
         transforms.set(i,__transforms[i]);
     }
-    Array __subhlods = data["subhlods"];
-    Array __subhlods_transforms = data["subhlods_transforms"];
-    ERR_FAIL_COND(__subhlods.size()!=__subhlods_transforms.size());
+    Array __subhlods = data[ARRAY_DATA_SUBHLOD];
+    Vector<Transform3D> __subhlods_transforms_tmp = MTool::packed_byte_array_to_vector<Transform3D>(data[ARRAY_DATA_SUBHLOD_TRANSFORM]);
+    Vector<uint16_t> __sub_hlod_scene_layers_tmp = MTool::packed_byte_array_to_vector<uint16_t>(data[ARRAY_DATA_SUBHLOD_SCENE_LAYER]);
+    ERR_FAIL_COND(__subhlods.size()!=__subhlods_transforms_tmp.size());
+    ERR_FAIL_COND(__subhlods.size()!=__sub_hlod_scene_layers_tmp.size());
     for(int i=0; i < __subhlods.size(); i++){
         Ref<MHlod> __shlod = __subhlods[i];
-        if(__shlod.is_null()){
-            continue;
-        }
-        Transform3D st = __subhlods_transforms[i];
+        ERR_CONTINUE_MSG(__shlod.is_null(),"Null sub hlod");
         sub_hlods.push_back(__shlod);
-        sub_hlods_transforms.push_back(st);
+        sub_hlods_transforms.push_back(__subhlods_transforms_tmp[i]);
+        sub_hlods_scene_layers.push_back(__sub_hlod_scene_layers_tmp[i]);
     }
-    PackedByteArray __sub_hlod_scene_layers = data["sub_hlods_scene_layers"];
-    sub_hlods_scene_layers.resize(__subhlods.size());
-    memcpy(sub_hlods_scene_layers.ptrw(),__sub_hlod_scene_layers.ptr(),sub_hlods_scene_layers.size() * sizeof(uint16_t));
+    // Check health
+    is_data_healthy = _is_data_healthy();
 }
 
-Dictionary MHlod::_get_data() const{
-    Dictionary out;
+Array MHlod::_get_data() const{
+    Array out;
+    out.resize(ARRAY_DATA_MAX);
     //// LODS
     Array __lods;
     for(int i=0; i < lods.size(); i++){
@@ -924,33 +939,27 @@ Dictionary MHlod::_get_data() const{
         }
         __lods.push_back(__lod);
     }
-    out["lods"] = __lods;
+    out[ARRAY_DATA_LODS] = __lods;
     /// Items
     Array __items;
     __items.resize(item_list.size());
     for(int i=0; i < item_list.size(); i++){
         __items[i] = item_list[i].get_data();
     }
-    out["items"] = __items;
+    out[ARRAY_DATA_ITEM] = __items;
     Array __transforms;
     __transforms.resize(transforms.size());
     for(int i=0; i < transforms.size(); i++){
         __transforms[i] = transforms[i];
     }
-    out["transforms"] = __transforms;
+    out[ARRAY_DATA_TRANSFORMS] = __transforms;
     Array __subhlods;
-    Array __subhlods_transforms;
     __subhlods.resize(sub_hlods.size());
-    __subhlods_transforms.resize(sub_hlods.size());
     for(int i=0; i < sub_hlods.size(); i++){
         __subhlods[i] = sub_hlods[i];
-        __subhlods_transforms[i] = sub_hlods_transforms[i];
     }
-    out["subhlods"] = __subhlods;
-    out["subhlods_transforms"] = __subhlods_transforms;
-    PackedByteArray __sub_hlod_scene_layers;
-    __sub_hlod_scene_layers.resize(sub_hlods_scene_layers.size() * sizeof(uint16_t));
-    memcpy(__sub_hlod_scene_layers.ptrw(),sub_hlods_scene_layers.ptr(),__sub_hlod_scene_layers.size());
-    out["sub_hlods_scene_layers"] = __sub_hlod_scene_layers;
+    out[ARRAY_DATA_SUBHLOD] = __subhlods;
+    out[ARRAY_DATA_SUBHLOD_TRANSFORM] = MTool::vector_to_packed_byte_array<Transform3D>(sub_hlods_transforms);
+    out[ARRAY_DATA_SUBHLOD_SCENE_LAYER] = MTool::vector_to_packed_byte_array<uint16_t>(sub_hlods_scene_layers);
     return out;
 }

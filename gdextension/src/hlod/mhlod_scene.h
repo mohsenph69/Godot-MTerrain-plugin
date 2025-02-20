@@ -299,6 +299,7 @@ class MHlodScene : public Node3D {
         Transform3D gtransform = get_global_transform();
         int checked_children_to_add_index = -1;
         // Adding root proc
+        //ERR_FAIL_COND(!main_hlod->is_hlod_healthy());
         procs.push_back(Proc(this,main_hlod,0,scene_layers,gtransform));
         while (checked_children_to_add_index != procs.size() - 1)
         {
@@ -311,6 +312,7 @@ class MHlodScene : public Node3D {
             // pushing back childrens
             for(int i=0; i < sub_proc_size; i++){
                 Ref<MHlod> s = current_hlod->sub_hlods[i];
+                //ERR_CONTINUE(!s->is_hlod_healthy());
                 ERR_FAIL_COND(s.is_null());
                 uint16_t s_layers = current_hlod->sub_hlods_scene_layers[i];
                 Transform3D s_transform = procs.ptrw()[checked_children_to_add_index].transform * current_hlod->sub_hlods_transforms[i];

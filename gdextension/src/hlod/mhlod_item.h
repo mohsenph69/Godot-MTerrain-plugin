@@ -111,13 +111,16 @@ struct MHLodItemMesh {
         gi_mode = _gi_mode;
         render_layers = _render_layers;
     }
-    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
-        ERR_FAIL_COND(d.size()!=14);
-        shadow_setting = d[0];
-        gi_mode = d[1];
-        material_id = d.decode_s32(2);
-        render_layers = d.decode_s32(6);
-        mesh_id = d.decode_s32(10);
+    _FORCE_INLINE_ int get_data_size() const{
+        return 14; // Total saved size
+    }
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d,int head){
+        ERR_FAIL_COND(d.size()<14+head);
+        shadow_setting = d[0+head];
+        gi_mode = d[1+head];
+        material_id = d.decode_s32(2+head);
+        render_layers = d.decode_s32(6+head);
+        mesh_id = d.decode_s32(10+head);
     }
     _FORCE_INLINE_ PackedByteArray get_data() const{
         PackedByteArray d;
@@ -160,10 +163,13 @@ struct MHLodItemDecal {
         render_layers = _render_layers;
         decal_id = _decal_id;
     }
-    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
-        ERR_FAIL_COND(d.size()!=8);
-        decal_id = d.decode_s32(0);
-        render_layers = d.decode_s32(4);
+    _FORCE_INLINE_ int get_data_size() const{
+        return 8; // Total saved size
+    }
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d,int head){
+        ERR_FAIL_COND(d.size()<8+head);
+        decal_id = d.decode_s32(0+head);
+        render_layers = d.decode_s32(4+head);
     }
     _FORCE_INLINE_ PackedByteArray get_data() const{
         PackedByteArray out;
@@ -309,13 +315,13 @@ struct MHLodItemCollision {
     _FORCE_INLINE_ int get_data_size() const{
         return 17; // Total saved size
     }
-    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
-        ERR_FAIL_COND(d.size()!=get_data_size());
-        param.param_1 = d.decode_float(0);
-        param.param_2 = d.decode_float(4);
-        param.param_3 = d.decode_float(8);
-        static_body = d.decode_s32(12);
-        param.type = (Type)d[16];
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d,int head){
+        ERR_FAIL_COND(d.size()<get_data_size()+head);
+        param.param_1 = d.decode_float(0+head);
+        param.param_2 = d.decode_float(4+head);
+        param.param_3 = d.decode_float(8+head);
+        static_body = d.decode_s32(12+head);
+        param.type = (Type)d[16+head];
     }
     _FORCE_INLINE_ PackedByteArray get_data() const{
         PackedByteArray out;
@@ -357,10 +363,13 @@ struct MHLodItemCollisionComplex {
     _FORCE_INLINE_ void unload(){
         shape.unref();
     }
-    _FORCE_INLINE_ void set_data(const PackedByteArray& data){
-        ERR_FAIL_COND(data.size()!=6);
-        id = data.decode_s32(0);
-        static_body = data.decode_s16(4);
+    _FORCE_INLINE_ int get_data_size() const{
+        return 6; // Total saved size
+    }
+    _FORCE_INLINE_ void set_data(const PackedByteArray& data,int head){
+        ERR_FAIL_COND(data.size()<6+head);
+        id = data.decode_s32(0+head);
+        static_body = data.decode_s16(4+head);
     }
     _FORCE_INLINE_ PackedByteArray get_data() const{
         PackedByteArray out;
@@ -468,10 +477,12 @@ struct MHLodItemLight { // No more memebr or increase item size
         RS->free_rid(lights_list[this]);
         lights_list.erase(this);
     }
-
-    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
-        ERR_FAIL_COND(d.size()!=sizeof(MHLodItemLight));
-        memcpy(this,d.ptr(),sizeof(MHLodItemLight));
+    _FORCE_INLINE_ int get_data_size() const{
+        return sizeof(MHLodItemLight); // Total saved size
+    }
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d,int head){
+        ERR_FAIL_COND(d.size()<sizeof(MHLodItemLight)+head);
+        memcpy(this,d.ptr()+head,sizeof(MHLodItemLight));
     }
 
     _FORCE_INLINE_ PackedByteArray get_data() const{
@@ -511,9 +522,13 @@ struct MHLodItemPackedScene {
         packed_scenes.erase(this);
     }
 
-    _FORCE_INLINE_ void set_data(const PackedByteArray& d){
-        ERR_FAIL_COND(d.size()!=sizeof(MHLodItemPackedScene));
-        memcpy(this,d.ptr(),sizeof(MHLodItemLight));
+    _FORCE_INLINE_ int get_data_size() const{
+        return sizeof(MHLodItemPackedScene); // Total saved size
+    }
+
+    _FORCE_INLINE_ void set_data(const PackedByteArray& d,int head){
+        ERR_FAIL_COND(d.size()<sizeof(MHLodItemPackedScene) + head);
+        memcpy(this,d.ptr()+head,sizeof(MHLodItemPackedScene));
     }
 
     _FORCE_INLINE_ PackedByteArray get_data() const{

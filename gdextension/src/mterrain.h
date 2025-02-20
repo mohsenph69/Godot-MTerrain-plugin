@@ -35,7 +35,7 @@ class MTerrain : public  Node3D {
     std::future<void> update_thread_chunks;
     bool finish_updating=true;
     bool chunks_update_loop_enabled=true;
-    Timer* update_chunks_timer;
+    Timer* update_chunks_timer=nullptr;
     float chunks_update_interval = 0.1;
     float distance_update_threshold=32;
     // -1 is Terrain grid update
@@ -48,7 +48,7 @@ class MTerrain : public  Node3D {
     std::future<void> update_thread_physics;
     bool finish_updating_physics=true;
     bool physics_update_loop_enabled=true;
-    Timer* update_physics_timer;
+    Timer* update_physics_timer = nullptr;
     float physics_update_interval = 0.5;
     //Physics update stage is same as chunk update but just for physics
     int update_stage_physics=-1;
@@ -113,7 +113,8 @@ class MTerrain : public  Node3D {
     ~MTerrain();
     void _finish_terrain();
     void create_grid();
-    void remove_grid();
+    void remove_grid(bool is_destruction=false);
+    void remove_grid_gd();
     void restart_grid();
     void update();
     void finish_update();

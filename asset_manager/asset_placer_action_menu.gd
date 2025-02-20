@@ -21,6 +21,7 @@ func _ready() -> void:
 	var thlod = MAssetTable.HLOD
 	add_item("Rebake",thlod,rebake_hlod)
 	add_item("Modify in blender",tmesh,modify_in_blender)
+	add_item("Open Scene",tpscene,open_packed_scene)
 	add_item("Open BakerScene",thlod,open_hlod_baker)
 	add_item("Show in FileSystem",tmesh|tpscene|tdecal|thlod,show_in_file_system)
 	add_item("Show GLTF",tmesh,show_gltf)
@@ -139,7 +140,7 @@ func remove_collection(collection_id:int,only_hlod=false)->void:
 			removing_files.push_back(MHlod.get_decal_path(item_id))
 		MAssetTable.HLOD:
 			removing_files.push_back(MHlod.get_hlod_path(item_id))
-			if not only_hlod:
+			if not only_hlod and FileAccess.file_exists(MHlod.get_hlod_path(item_id)):
 				var hlod:MHlod= load(MHlod.get_hlod_path(item_id))
 				removing_files.push_back(hlod.baker_path)
 	var confirm_box := ConfirmationDialog.new();
@@ -160,6 +161,8 @@ func remove_collection(collection_id:int,only_hlod=false)->void:
 				DirAccess.remove_absolute(f)
 				var __f = FileAccess.open(f.get_basename() + ".stop",FileAccess.WRITE)
 				__f.close()
+			else:
+				MTool.print_edmsg("file not exist to be remove: "+f)
 		at.collection_remove(collection_id)
 		MAssetTable.save()
 		if AssetIO.asset_placer:
@@ -224,3 +227,10 @@ func modify_in_blender(collection_id:int)->void:
 func show_tag(collection_id:int)->void:
 	AssetIO.asset_placer.open_settings_window("tag", collection_id)
 	
+func open_packed_scene(collection_id:int)->void:
+	var item_id = MAssetTable.get_singleton().collection_get_item_id(collection_id)
+	var spath = MHlod.get_packed_scene_path(item_id)
+	if FileAccess.file_exists(spath):
+		EditorInterface.call_deferred("open_scene_from_path",spath)
+	else:
+		MTool.print_edmsg("Path not exist: "+spath)

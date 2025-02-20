@@ -1013,10 +1013,11 @@ void MAssetTable::collection_add_collision(int collection_id,CollisionType col_t
     ERR_FAIL_COND(!has_collection(collection_id));
     // Getting sign with correct sing
     // Godot Basis class does not have this so we have to write it by outself
+    float det = col_transform.basis.determinant();
+    ERR_FAIL_COND_MSG(UtilityFunctions::is_equal_approx(det,0.0f),"Can not add collision shape determinant is zero");
+    det = det < 0 ? -1.0f : 1.0f;
     Vector3 size_signs;
-    {
-        float det = col_transform.basis.determinant() < 0 ? -1.0f : 1.0f;
-        ERR_FAIL_COND(UtilityFunctions::is_equal_approx(det,0.0f));
+    if(det < 0){
         Basis bx = col_transform.basis;
         bx.set_column(0,Vector3(1,1,1));
         Basis by = col_transform.basis;
@@ -1037,17 +1038,21 @@ void MAssetTable::collection_add_collision(int collection_id,CollisionType col_t
         size.y = col_transform.basis.get_column(1).length();
         size.z = col_transform.basis.get_column(2).length();
     }
-    if(size_signs.x < 0){
-        col_transform.basis.scale(Vector3(-1,1,1));
-    }
-    if(size_signs.y < 0){
-        col_transform.basis.scale(Vector3(1,-1,1));
-    }
-    if(size_signs.z < 0){
-        col_transform.basis.scale(Vector3(1,1,-1));
+    if(det < 0){
+        if(size_signs.x < 0){
+            col_transform.basis.scale(Vector3(-1,1,1));
+        }
+        if(size_signs.y < 0){
+            col_transform.basis.scale(Vector3(1,-1,1));
+        }
+        if(size_signs.z < 0){
+            col_transform.basis.scale(Vector3(1,1,-1));
+        }
     }
     size = col_transform.get_basis().get_scale();
-    
+    size.x = std::abs(size.x);
+    size.y = std::abs(size.y);
+    size.z = std::abs(size.z);
     Transform3D t = base_transform.inverse() * col_transform;
     t.orthonormalize();
     // Shape
