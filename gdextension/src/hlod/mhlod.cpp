@@ -885,6 +885,8 @@ Ref<ArrayMesh> MHlod::get_joined_mesh(bool for_triangle_mesh,bool best_mesh_qual
 
 void MHlod::_set_data(const Array& data){
     ERR_FAIL_COND(data.size()!=ARRAY_DATA_MAX);
+    int version = data[ARRAY_DATA_VERSION];
+    ERR_FAIL_COND_MSG(version!=MHLOD_DATA_VERSION,vformat("Current hlod version format is %d and data version is %d you need to rebake hlod",version,MHLOD_DATA_VERSION));
     item_list.clear();
     lods.clear();
     transforms.clear();
@@ -905,22 +907,20 @@ void MHlod::_set_data(const Array& data){
     for(int i=0; i < __items.size(); i++){
         item_list.ptrw()[i].set_data(__items[i]);
     }
-    Array __transforms = data[ARRAY_DATA_TRANSFORMS];
-    transforms.resize(__transforms.size());
-    for(int i=0; i < __transforms.size(); i++){
-        transforms.set(i,__transforms[i]);
-    }
+    transforms = MTool::packed_byte_array_to_vector<Transform3D>(data[ARRAY_DATA_TRANSFORMS]);
     Array __subhlods = data[ARRAY_DATA_SUBHLOD];
-    Vector<Transform3D> __subhlods_transforms_tmp = MTool::packed_byte_array_to_vector<Transform3D>(data[ARRAY_DATA_SUBHLOD_TRANSFORM]);
-    Vector<uint16_t> __sub_hlod_scene_layers_tmp = MTool::packed_byte_array_to_vector<uint16_t>(data[ARRAY_DATA_SUBHLOD_SCENE_LAYER]);
-    ERR_FAIL_COND(__subhlods.size()!=__subhlods_transforms_tmp.size());
-    ERR_FAIL_COND(__subhlods.size()!=__sub_hlod_scene_layers_tmp.size());
-    for(int i=0; i < __subhlods.size(); i++){
+    sub_hlods_transforms = MTool::packed_byte_array_to_vector<Transform3D>(data[ARRAY_DATA_SUBHLOD_TRANSFORM]);
+    sub_hlods_scene_layers = MTool::packed_byte_array_to_vector<uint16_t>(data[ARRAY_DATA_SUBHLOD_SCENE_LAYER]);
+    ERR_FAIL_COND(__subhlods.size()!=sub_hlods_transforms.size());
+    ERR_FAIL_COND(__subhlods.size()!=sub_hlods_scene_layers.size());
+    for(int i=__subhlods.size() - 1; i >=0 ; i--){
         Ref<MHlod> __shlod = __subhlods[i];
-        ERR_CONTINUE_MSG(__shlod.is_null(),"Null sub hlod");
-        sub_hlods.push_back(__shlod);
-        sub_hlods_transforms.push_back(__subhlods_transforms_tmp[i]);
-        sub_hlods_scene_layers.push_back(__sub_hlod_scene_layers_tmp[i]);
+        if(__shlod.is_null()){
+            __subhlods.remove_at(i);
+            sub_hlods_transforms.remove_at(i);
+            sub_hlods_scene_layers.remove_at(i);
+            ERR_CONTINUE_MSG(true,"Null subhlod!");
+        }
     }
     // Check health
     is_data_healthy = _is_data_healthy();
@@ -947,12 +947,7 @@ Array MHlod::_get_data() const{
         __items[i] = item_list[i].get_data();
     }
     out[ARRAY_DATA_ITEM] = __items;
-    Array __transforms;
-    __transforms.resize(transforms.size());
-    for(int i=0; i < transforms.size(); i++){
-        __transforms[i] = transforms[i];
-    }
-    out[ARRAY_DATA_TRANSFORMS] = __transforms;
+    out[ARRAY_DATA_TRANSFORMS] = MTool::vector_to_packed_byte_array<Transform3D>(transforms);
     Array __subhlods;
     __subhlods.resize(sub_hlods.size());
     for(int i=0; i < sub_hlods.size(); i++){
@@ -961,5 +956,6 @@ Array MHlod::_get_data() const{
     out[ARRAY_DATA_SUBHLOD] = __subhlods;
     out[ARRAY_DATA_SUBHLOD_TRANSFORM] = MTool::vector_to_packed_byte_array<Transform3D>(sub_hlods_transforms);
     out[ARRAY_DATA_SUBHLOD_SCENE_LAYER] = MTool::vector_to_packed_byte_array<uint16_t>(sub_hlods_scene_layers);
+    out[ARRAY_DATA_VERSION] = MHLOD_DATA_VERSION;
     return out;
 }

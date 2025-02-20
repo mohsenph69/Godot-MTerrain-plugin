@@ -14,6 +14,8 @@
 
 using namespace godot;
 
+#define MHLOD_DATA_VERSION 1
+
 #define MHLOD_CONST_GI_MODE_DISABLED 0
 #define MHLOD_CONST_GI_MODE_STATIC 1
 #define MHLOD_CONST_GI_MODE_DYNAMIC 2
@@ -29,7 +31,8 @@ class MHlod : public Resource{
         ARRAY_DATA_SUBHLOD=3,
         ARRAY_DATA_SUBHLOD_TRANSFORM=4,
         ARRAY_DATA_SUBHLOD_SCENE_LAYER=5,
-        ARRAY_DATA_MAX=6
+        ARRAY_DATA_VERSION=6,
+        ARRAY_DATA_MAX=7
     };
 
     protected:
