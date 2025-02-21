@@ -306,7 +306,9 @@ func bake_to_hlod_resource():
 		hlod_resource.take_over_path(bake_path)
 	for n in users:
 		n.hlod = hlod_resource	
-	if save_err == OK:				
+	if save_err == OK:
+		EditorInterface.mark_scene_as_unsaved()
+		EditorInterface.save_scene()
 		MAssetTable.save()		
 	MHlodScene.awake()
 	if save_err == OK and not scene_file_path.is_empty():
