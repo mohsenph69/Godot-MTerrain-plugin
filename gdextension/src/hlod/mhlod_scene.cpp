@@ -90,7 +90,9 @@ void MHlodScene::Proc::enable(const bool recursive){
     }
     is_enable = true;
     is_sub_proc_enable = true;
-    oct_point_id = MHlodScene::add_proc(this,oct_point_id);
+    // oct_point_id is defined in init_proc function
+    // oct_point_id should not be changed in lifetime of proc
+    MHlodScene::add_proc(this,oct_point_id);
     if(recursive){
         for(int i=0; i < sub_procs_size; i++){
             get_subprocs_ptrw()[i].enable();
@@ -596,11 +598,12 @@ uint16_t MHlodScene::get_oct_id(){
 // in case the oct_point_id you are sending is aviable that will set this oct_point_id for you!
 // otherwise it will set a new oct_point_id for you
 // ther return oct_point_id is valid and final oct_point_id
+int32_t MHlodScene::get_free_oct_point_id(){
+    last_oct_point_id++;
+    return last_oct_point_id;
+}
+
 int32_t MHlodScene::add_proc(Proc* _proc,int oct_point_id){
-    if(oct_point_id < 0 || octpoints_to_proc.has(oct_point_id)){
-        last_oct_point_id++;
-        oct_point_id = last_oct_point_id;
-    }
     if(octree!=nullptr && is_octree_inserted){
         bool res = octree->insert_point(_proc->transform.origin,oct_point_id,oct_id);
         ERR_FAIL_COND_V_MSG(!res,INVALID_OCT_POINT_ID,"Single Proc point can't be inserted!");
@@ -614,7 +617,6 @@ void MHlodScene::remove_proc(int32_t octpoint_id){
         return;
     }
     Proc* _proc = octpoints_to_proc[octpoint_id];
-    _proc->oct_point_id = INVALID_OCT_POINT_ID;
     _proc->lod = -1;
     octpoints_to_proc.erase(octpoint_id);
     if(octree!=nullptr && is_octree_inserted){
@@ -638,7 +640,7 @@ void MHlodScene::insert_points(){
     }
     octree->insert_points(points_pos,points_ids,oct_id);
 }
-#include <godot_cpp/classes/time.hpp>
+
 void MHlodScene::first_octree_update(Vector<MOctree::PointUpdate>* update_info){
     // more close to root proc has smaller ID!
     // if not sorted some proc can create items and diable later in same update which is a waste

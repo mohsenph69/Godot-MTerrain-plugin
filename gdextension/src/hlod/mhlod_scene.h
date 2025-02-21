@@ -225,6 +225,7 @@ class MHlodScene : public Node3D {
     static bool set_octree(MOctree* input);
     static MOctree* get_octree();
     static uint16_t get_oct_id();
+    static int32_t get_free_oct_point_id();
     static int32_t add_proc(Proc* _proc,int oct_point_id);
     static void remove_proc(int32_t octpoint_id);
     static void move_proc(int32_t octpoint_id,const Vector3& old_pos,const Vector3& new_pos);
@@ -299,7 +300,6 @@ class MHlodScene : public Node3D {
         Transform3D gtransform = get_global_transform();
         int checked_children_to_add_index = -1;
         // Adding root proc
-        //ERR_FAIL_COND(!main_hlod->is_hlod_healthy());
         procs.push_back(Proc(this,main_hlod,0,scene_layers,gtransform));
         while (checked_children_to_add_index != procs.size() - 1)
         {
@@ -312,7 +312,6 @@ class MHlodScene : public Node3D {
             // pushing back childrens
             for(int i=0; i < sub_proc_size; i++){
                 Ref<MHlod> s = current_hlod->sub_hlods[i];
-                //ERR_CONTINUE(!s->is_hlod_healthy());
                 ERR_FAIL_COND(s.is_null());
                 uint16_t s_layers = current_hlod->sub_hlods_scene_layers[i];
                 Transform3D s_transform = procs.ptrw()[checked_children_to_add_index].transform * current_hlod->sub_hlods_transforms[i];
@@ -322,6 +321,7 @@ class MHlodScene : public Node3D {
         }
         // enabling procs, don't use recursive, important for ordering!
         for(int i=0; i < procs.size(); i++){
+            procs.ptrw()[i].oct_point_id = get_free_oct_point_id();
             procs.ptrw()[i].enable(false);
         }
         is_init = true;
