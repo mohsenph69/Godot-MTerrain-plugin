@@ -233,7 +233,7 @@ stretch_mode = 5
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
-tooltip_text = "Show joined mesh glb in file system"
+tooltip_text = "Export joined mesh to GLB and edit in Blender"
 icon = ExtResource("9_gl3m1")
 expand_icon = true
 
