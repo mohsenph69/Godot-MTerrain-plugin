@@ -225,6 +225,7 @@ class MHlodScene : public Node3D {
     static bool set_octree(MOctree* input);
     static MOctree* get_octree();
     static uint16_t get_oct_id();
+    static int32_t get_free_oct_point_id();
     static int32_t add_proc(Proc* _proc,int oct_point_id);
     static void remove_proc(int32_t octpoint_id);
     static void move_proc(int32_t octpoint_id,const Vector3& old_pos,const Vector3& new_pos);
@@ -320,6 +321,7 @@ class MHlodScene : public Node3D {
         }
         // enabling procs, don't use recursive, important for ordering!
         for(int i=0; i < procs.size(); i++){
+            procs.ptrw()[i].oct_point_id = get_free_oct_point_id();
             procs.ptrw()[i].enable(false);
         }
         is_init = true;

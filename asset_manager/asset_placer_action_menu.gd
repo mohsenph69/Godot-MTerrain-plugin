@@ -21,6 +21,7 @@ func _ready() -> void:
 	var thlod = MAssetTable.HLOD
 	add_item("Rebake",thlod,rebake_hlod)
 	add_item("Modify in blender",tmesh,modify_in_blender)
+	add_item("Open Scene",tpscene,open_packed_scene)
 	add_item("Open BakerScene",thlod,open_hlod_baker)
 	add_item("Show in FileSystem",tmesh|tpscene|tdecal|thlod,show_in_file_system)
 	add_item("Show GLTF",tmesh,show_gltf)
@@ -76,7 +77,6 @@ func _input(event: InputEvent) -> void:
 		var levent = make_input_local(event)		
 		if not Rect2(Vector2(),get_rect().size).has_point(levent.position):
 			visible = false
-			clear()
 
 func show_in_file_system(collection_id:int)->void:
 	var type = MAssetTable.get_singleton().collection_get_type(collection_id)
@@ -95,16 +95,19 @@ func show_in_file_system(collection_id:int)->void:
 	EditorInterface.get_file_system_dock().navigate_to_path(path)
 
 func open_hlod_baker(collection_id:int):
-	var type = MAssetTable.get_singleton().collection_get_type(collection_id)
-	if type!=MAssetTable.ItemType.HLOD:
-		printerr("Type MHlod is not valid")
-		return
 	var item_id:int= MAssetTable.get_singleton().collection_get_item_id(collection_id)
 	var hlod:MHlod= load(MHlod.get_hlod_path(item_id))
-	if not hlod:
-		print("hlod resourse is not valid")
-		return
-	EditorInterface.call_deferred("open_scene_from_path",hlod.baker_path)
+	if hlod:
+		EditorInterface.call_deferred("open_scene_from_path",hlod.baker_path)
+	else:
+		## Trying to find it in Masset baker folder
+		var cname = MAssetTable.get_singleton().collection_get_name(collection_id)
+		var bpath = MAssetTable.get_editor_baker_scenes_dir().path_join(cname) + ".tscn"
+		if FileAccess.file_exists(bpath):
+			EditorInterface.call_deferred("open_scene_from_path",bpath)
+		else:
+			MTool.print_edmsg("Can not find file!")
+	
 
 func show_gltf(collection_id:int):
 	var at:=MAssetTable.get_singleton()
@@ -140,7 +143,7 @@ func remove_collection(collection_id:int,only_hlod=false)->void:
 			removing_files.push_back(MHlod.get_decal_path(item_id))
 		MAssetTable.HLOD:
 			removing_files.push_back(MHlod.get_hlod_path(item_id))
-			if not only_hlod:
+			if not only_hlod and FileAccess.file_exists(MHlod.get_hlod_path(item_id)):
 				var hlod:MHlod= load(MHlod.get_hlod_path(item_id))
 				removing_files.push_back(hlod.baker_path)
 	var confirm_box := ConfirmationDialog.new();
@@ -161,6 +164,8 @@ func remove_collection(collection_id:int,only_hlod=false)->void:
 				DirAccess.remove_absolute(f)
 				var __f = FileAccess.open(f.get_basename() + ".stop",FileAccess.WRITE)
 				__f.close()
+			else:
+				MTool.print_edmsg("file not exist to be remove: "+f)
 		at.collection_remove(collection_id)
 		MAssetTable.save()
 		if AssetIO.asset_placer:
@@ -180,7 +185,18 @@ func rebake_hlod(collection_id:int)->void:
 	var item_id:int= at.collection_get_item_id(collection_id)
 	var hpath = MHlod.get_hlod_path(item_id)
 	var hres:MHlod=load(hpath)
-	AssetIOBaker.rebake_hlod(hres)
+	if hres:
+		AssetIOBaker.rebake_hlod(hres)
+	else:
+		## Trying to find it in Masset baker folder
+		var cname = MAssetTable.get_singleton().collection_get_name(collection_id)
+		var bpath = MAssetTable.get_editor_baker_scenes_dir().path_join(cname) + ".tscn"
+		if FileAccess.file_exists(bpath):
+			AssetIOBaker.rebake_hlod_by_baker_path(bpath)
+		else:
+			MTool.print_edmsg("Can not find file!")
+	if AssetIO.asset_placer:
+		AssetIO.asset_placer.regroup()
 
 
 func modify_in_blender(collection_id:int)->void:
@@ -225,3 +241,10 @@ func modify_in_blender(collection_id:int)->void:
 func show_tag(collection_id:int)->void:
 	AssetIO.asset_placer.open_settings_window("tag", collection_id)
 	
+func open_packed_scene(collection_id:int)->void:
+	var item_id = MAssetTable.get_singleton().collection_get_item_id(collection_id)
+	var spath = MHlod.get_packed_scene_path(item_id)
+	if FileAccess.file_exists(spath):
+		EditorInterface.call_deferred("open_scene_from_path",spath)
+	else:
+		MTool.print_edmsg("Path not exist: "+spath)

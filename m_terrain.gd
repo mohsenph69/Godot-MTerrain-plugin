@@ -1,6 +1,6 @@
 @tool
 extends EditorPlugin
-var version:String="0.16.0"
+var version:String="????"
 
 var tools:Control= null
 
@@ -85,6 +85,7 @@ func init_asset_table():
 #region init and de-init
 func _enter_tree():		
 	if Engine.is_editor_hint():
+		version = get_plugin_version()
 		MTerrainSettings.add_projects_settings()
 		init_asset_table()
 		timer.one_shot = true

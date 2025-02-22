@@ -139,7 +139,7 @@ func validate_show_joined_mesh_button(toggle_on = null):
 func bake_button_gui_input(event):
 	if event is InputEventMouse:
 		%Bake.disabled = not validate_bake_button()
-
+#var cid = MAssetTable.get_singleton().collection_find_with_item_type_item_id(MAssetTable.HLOD,hitem_id)
 func baker_renamed():
 	if EditorInterface.get_edited_scene_root() == baker:
 		if not baker.scene_file_path.get_file() == baker.name+".tscn":
@@ -161,6 +161,13 @@ func baker_renamed():
 					var new_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(new_path)
 					DirAccess.rename_absolute(old_join_mesh_glb_path, new_join_mesh_glb_path)
 				EditorInterface.get_resource_filesystem().scan()
+				## rename in asset table
+				var at:= MAssetTable.get_singleton()
+				var cid =at.collection_find_with_item_type_item_id(MAssetTable.HLOD,hitem_id)
+				if cid!=-1:
+					at.collection_set_name(cid,MAssetTable.HLOD,baker.name)
+					MAssetTable.save()
+					if AssetIO.asset_placer: AssetIO.asset_placer.regroup()
 			elif false: # If returning to old name creates a conflict, ahhhh! TODO
 				pass
 			else: #Return to old name

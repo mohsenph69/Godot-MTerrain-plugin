@@ -14,6 +14,8 @@
 
 using namespace godot;
 
+#define MHLOD_DATA_VERSION 1
+
 #define MHLOD_CONST_GI_MODE_DISABLED 0
 #define MHLOD_CONST_GI_MODE_STATIC 1
 #define MHLOD_CONST_GI_MODE_DYNAMIC 2
@@ -21,6 +23,17 @@ using namespace godot;
 
 class MHlod : public Resource{
     GDCLASS(MHlod, Resource);
+
+    enum ARRAY_DATA {
+        ARRAY_DATA_ITEM=0,
+        ARRAY_DATA_LODS=1,
+        ARRAY_DATA_TRANSFORMS=2,
+        ARRAY_DATA_SUBHLOD=3,
+        ARRAY_DATA_SUBHLOD_TRANSFORM=4,
+        ARRAY_DATA_SUBHLOD_SCENE_LAYER=5,
+        ARRAY_DATA_VERSION=6,
+        ARRAY_DATA_MAX=7
+    };
 
     protected:
     static void _bind_methods();
@@ -52,9 +65,17 @@ class MHlod : public Resource{
         GI_MODE_DYNAMIC = MHLOD_CONST_GI_MODE_DYNAMIC,
         GI_MODE_STATIC_DYNAMIC = MHLOD_CONST_GI_MODE_STATIC_DYNAMIC
     };
-    enum Type : uint8_t {NONE,MESH,COLLISION,COLLISION_COMPLEX,LIGHT,PACKED_SCENE,DECAL};
+    enum Type : uint8_t {NONE,MESH,COLLISION,COLLISION_COMPLEX,LIGHT,PACKED_SCENE,DECAL,TYPE_MAX};
     struct Item
     {
+        enum ITEM_DATA { // INDEX IN HEADER DATA
+            ITEM_DATA_TYPE=0, // store format uint8_t
+            ITEM_DATA_IS_BOUND=1, // store format uint8_t -> 0 false 1 true
+            ITEM_DATA_LOD=2, // store format int8_t
+            ITEM_DATA_LAYER=3, // store format uint16_t (3,4)
+            ITEM_DATA_TRANSFORM_INDEX=5, // store format int32_t (5,6,7,8)
+            ITEM_DATA_MAX=9, // no store - header size
+        };
         friend MHlod;
         Type type = NONE; // 0
         bool is_bound = false;
@@ -83,14 +104,16 @@ class MHlod : public Resource{
         _FORCE_INLINE_ int16_t get_physics_body();
         _FORCE_INLINE_ ItemResource get_res_and_add_user();
         _FORCE_INLINE_ void remove_user();
-
-        void set_data(const Dictionary& d);
-        Dictionary get_data() const;
+        void set_header_data(const PackedByteArray& data);
+        PackedByteArray get_header_data() const;
+        void set_data(const PackedByteArray& d);
+        PackedByteArray get_data() const;
     };
     private:
     // -1 is default static body any invalid id use default body
     // -2 is invalid static body
     static inline HashMap<int16_t,PhysicBodyInfo> physic_bodies;
+    bool _is_data_healthy() const;
 
 
     /* Item List structure
@@ -102,13 +125,6 @@ class MHlod : public Resource{
     public:
     MHlod() = default;
     ~MHlod() = default;
-    MByteFloat<false,1024> v1;
-    void set_v1(float input){
-        v1 = input;
-    }
-    float get_v1(){
-        return v1;
-    }
     int join_at_lod = -1;
     #ifdef DEBUG_ENABLED
     String baker_path;
@@ -183,8 +199,8 @@ class MHlod : public Resource{
     void start_test(){        
     }
 
-    void _set_data(const Dictionary& data);
-    Dictionary _get_data() const;
+    void _set_data(const Array& data);
+    Array _get_data() const;
 };
 
 

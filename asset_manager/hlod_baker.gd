@@ -2,11 +2,13 @@
 @icon("res://addons/m_terrain/icons/hbaker.svg")
 class_name HLod_Baker extends Node3D
 
+@export var save_compress:=true
 @export_category("Default Lod cutoff")
 @export var collision_lod_cutoff_default:int= 1
 @export var decal_lod_cutoff_default:int= 3
 @export var packed_scene_lod_cutoff_default:int=2
 @export var lights_lod_cutoff_default:int= 3
+
 
 
 signal asset_mesh_updated
@@ -296,12 +298,17 @@ func bake_to_hlod_resource():
 	var save_err
 	if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
 			DirAccess.make_dir_absolute(bake_path.get_base_dir())
-	save_err = ResourceSaver.save(hlod_resource,bake_path)
+	if save_compress:
+		save_err = ResourceSaver.save(hlod_resource,bake_path,ResourceSaver.FLAG_COMPRESS)
+	else:
+		save_err = ResourceSaver.save(hlod_resource,bake_path)
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
 	for n in users:
 		n.hlod = hlod_resource	
-	if save_err == OK:				
+	if save_err == OK:
+		EditorInterface.mark_scene_as_unsaved()
+		EditorInterface.save_scene()
 		MAssetTable.save()		
 	MHlodScene.awake()
 	if save_err == OK and not scene_file_path.is_empty():
