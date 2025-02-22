@@ -406,6 +406,9 @@ static func get_glb_path_from_collection_id(collection_id)->String:
 	
 static func get_blend_path_from_collection_id(collection_id)->String:
 	var glb_id:int = MAssetTable.get_singleton().collection_get_glb_id(collection_id)
+	return get_blend_path_from_glb_id(glb_id)
+
+static func get_blend_path_from_glb_id(glb_id)->String:	
 	var import_info:Dictionary = MAssetTable.get_singleton().import_info.duplicate()
 	MAssetTable.get_singleton().clear_import_info_cache()
 	for k in import_info:
@@ -414,6 +417,7 @@ static func get_blend_path_from_collection_id(collection_id)->String:
 			if import_info[k].has("__original_blend_file"):
 				return import_info[k]["__original_blend_file"]
 	return ""
+
 
 static func remove_collection(collection_id):	
 	var asset_library = MAssetTable.get_singleton()
