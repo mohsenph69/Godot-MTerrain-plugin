@@ -5,7 +5,6 @@
 [sub_resource type="BoxMesh" id="BoxMesh_oie3e"]
 
 [node name="Node" type="Node3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 script = ExtResource("1_3hnd7")
 metadata/original_name = &"Node"
 
