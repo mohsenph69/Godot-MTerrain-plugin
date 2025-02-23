@@ -73,7 +73,7 @@ void MHlodScene::Proc::init_sub_proc(int32_t _sub_proc_index,uint64_t _sub_proc_
 
 void MHlodScene::Proc::change_transform(const Transform3D& new_transform){
     is_transform_changed = true;
-    if(MHlodScene::octree!=nullptr && oct_point_id!=-1 && is_octree_inserted){
+    if(MHlodScene::octree!=nullptr && is_enable && is_octree_inserted){
         MOctree::PointMoveReq mv_req(oct_point_id,MHlodScene::oct_id,transform.origin,new_transform.origin);
         MHlodScene::octree->add_move_req(mv_req);
     }
@@ -407,7 +407,7 @@ void MHlodScene::Proc::update_item_transform(const int32_t transform_index,const
 }
 
 void MHlodScene::Proc::update_all_transform(){
-    if(lod<0 || lod >= hlod->lods.size() || hlod->lods[lod].size() == 0){
+    if(!is_enable || lod<0 || lod >= hlod->lods.size() || hlod->lods[lod].size() == 0){
         return;
     }
     VSet<int32_t> lod_table = hlod->lods[lod];
