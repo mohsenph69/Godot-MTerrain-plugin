@@ -314,7 +314,11 @@ func init_materials_tree():
 			item.set_selectable(0,true)
 		#var glb_material_name = materials_tree.get_selected().get_text(1)
 		#var id = asset_data.materials[glb_material_name]			
-		material_table_items[id].select(0)		
+		if id >= 0:		
+			material_table_items[id].select(0)		
+		else:
+			material_table_items[-1].select(0)		
+			
 	)
 	materials_tree.nothing_selected.connect(func():		
 		materials_tree.deselect_all()

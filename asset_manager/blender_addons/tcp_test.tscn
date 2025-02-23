@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3 uid="uid://dugjw303s5rih"]
+
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/blender_addons/test_client.gd" id="1_3hnd7"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_oie3e"]
+
+[node name="Node" type="Node3D"]
+script = ExtResource("1_3hnd7")
+metadata/original_name = &"Node"
+
+[node name="Cube" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.119878, 0, -0.992787, 0, 1, 0, 0.992787, 0, 0.119878, 1.18069, 2, 0)
+mesh = SubResource("BoxMesh_oie3e")
+metadata/original_name = &"Cube"
+
+[node name="Deep" type="MeshInstance3D" parent="Cube"]
+transform = Transform3D(1, 0, 2.98023e-08, 0, 1, 0, -2.98023e-08, 0, 1, 2.14747, 0, -1.79369)
+mesh = SubResource("BoxMesh_oie3e")
+skeleton = NodePath("../..")
+metadata/original_name = &"Deep"
+
+[node name="Deep2" type="MeshInstance3D" parent="Cube"]
+transform = Transform3D(0.213123, 0, -0.977025, 0, 1, 0, 0.977025, 0, 0.213123, -2.4208, -1.321, 7.76804)
+mesh = SubResource("BoxMesh_oie3e")
+skeleton = NodePath("../..")
+metadata/original_name = &"Deep2"
+
+[node name="Deep3" type="MeshInstance3D" parent="Cube"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.271)
+mesh = SubResource("BoxMesh_oie3e")
+skeleton = NodePath("../..")
+metadata/original_name = &"Deep3"

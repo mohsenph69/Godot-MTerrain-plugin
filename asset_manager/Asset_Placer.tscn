@@ -24,7 +24,7 @@
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="19_sansc"]
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_qn1o1"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_l47xo"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -52,7 +52,7 @@ layout_mode = 2
 tooltip_text = "Hold Shift or Ctrl to single select"
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_qn1o1")
+button_group = SubResource("ButtonGroup_l47xo")
 text = " Types "
 icon_alignment = 2
 script = ExtResource("4_he502")
@@ -90,7 +90,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_qn1o1")
+button_group = SubResource("ButtonGroup_l47xo")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -129,7 +129,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_qn1o1")
+button_group = SubResource("ButtonGroup_l47xo")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -167,7 +167,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_qn1o1")
+button_group = SubResource("ButtonGroup_l47xo")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -281,7 +281,7 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
-button_group = SubResource("ButtonGroup_qn1o1")
+button_group = SubResource("ButtonGroup_l47xo")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
