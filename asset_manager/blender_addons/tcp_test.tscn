@@ -1,32 +1,55 @@
-[gd_scene load_steps=3 format=3 uid="uid://dugjw303s5rih"]
+[gd_scene load_steps=4 format=3 uid="uid://dugjw303s5rih"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/blender_addons/test_client.gd" id="1_3hnd7"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_oie3e"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/hlod_baker.gd" id="2_cv0cm"]
+[ext_resource type="MHlod" uid="uid://chd2n05m1nwpv" path="res://massets/hlod/1.res" id="3_oa7vt"]
 
 [node name="Node" type="Node3D"]
 script = ExtResource("1_3hnd7")
-metadata/original_name = &"Node"
 
-[node name="Cube" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.119878, 0, -0.992787, 0, 1, 0, 0.992787, 0, 0.119878, 1.18069, 2, 0)
-mesh = SubResource("BoxMesh_oie3e")
-metadata/original_name = &"Cube"
+[node name="HLod_Baker" type="Node3D" parent="."]
+transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0, 0, 0)
+script = ExtResource("2_cv0cm")
+hlod_resource = ExtResource("3_oa7vt")
+hlod_id = 1
+force_lod_enabled = true
+force_lod_value = 2
+variation_layers = PackedStringArray("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "")
 
-[node name="Deep" type="MeshInstance3D" parent="Cube"]
-transform = Transform3D(1, 0, 2.98023e-08, 0, 1, 0, -2.98023e-08, 0, 1, 2.14747, 0, -1.79369)
-mesh = SubResource("BoxMesh_oie3e")
-skeleton = NodePath("../..")
-metadata/original_name = &"Deep"
+[node name="Cube" type="MAssetMesh" parent="HLod_Baker"]
+collection_id = 0
+_collection_identifier = [0, "Cube"]
+transform = Transform3D(0.961055, 0, -0.276356, 0, 1, 0, 0.276356, 0, 0.961055, 0.866026, 3, 0.5)
+metadata/item_ids = PackedInt32Array(1)
 
-[node name="Deep2" type="MeshInstance3D" parent="Cube"]
-transform = Transform3D(0.213123, 0, -0.977025, 0, 1, 0, 0.977025, 0, 0.213123, -2.4208, -1.321, 7.76804)
-mesh = SubResource("BoxMesh_oie3e")
-skeleton = NodePath("../..")
-metadata/original_name = &"Deep2"
+[node name="Sphere" type="MAssetMesh" parent="HLod_Baker/Cube"]
+collection_id = 1
+_collection_identifier = [0, "Sphere"]
+transform = Transform3D(0.966374, 0.255762, -0.0266045, 0.000179407, 0.102792, 0.994698, 0.257142, -0.96126, 0.0992894, 0.938052, 1.9991, 1.49012e-08)
+metadata/item_ids = PackedInt32Array(8)
 
-[node name="Deep3" type="MeshInstance3D" parent="Cube"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 4.5, -1.271)
-mesh = SubResource("BoxMesh_oie3e")
-skeleton = NodePath("../..")
-metadata/original_name = &"Deep3"
+[node name="Sphere3" type="MAssetMesh" parent="HLod_Baker/Cube"]
+collection_id = 1
+_collection_identifier = [0, "Sphere"]
+transform = Transform3D(1, 0, -1.49012e-08, 0, 1, 0, 1.49012e-08, 0, 1, -0.789301, 1.9991, -1.49012e-08)
+metadata/item_ids = PackedInt32Array(7)
+
+[node name="Cube" type="MAssetMesh" parent="HLod_Baker/Cube"]
+collection_id = 0
+_collection_identifier = [0, "Cube"]
+transform = Transform3D(0.719859, 0, -0.694121, 0, 1, 0, 0.694121, 0, 0.719859, -4.24294, -3, -1.05451)
+metadata/item_ids = PackedInt32Array(4)
+
+[node name="Sphere2" type="MAssetMesh" parent="HLod_Baker"]
+collection_id = 1
+_collection_identifier = [0, "Sphere"]
+transform = Transform3D(0.409923, 0, 0.91212, 0, 1, 0, -0.91212, 0, 0.409923, -2.40842, 4.9991, -1.17068)
+metadata/item_ids = PackedInt32Array(0)
+
+[node name="Cube" type="MAssetMesh" parent="."]
+collection_id = 0
+_collection_identifier = [0, "Cube"]
+
+[node name="Cube2" type="MAssetMesh" parent="."]
+collection_id = 0
+_collection_identifier = [0, "Cube"]
