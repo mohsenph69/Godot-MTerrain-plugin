@@ -239,7 +239,7 @@ func modify_in_blender(collection_id:int)->void:
 	OS.create_process(blender_path,args)
 	
 func show_tag(collection_id:int)->void:
-	AssetIO.asset_placer.open_settings_window("tag", collection_id)
+	AssetIO.asset_placer.open_settings_window("tag", [collection_id])
 	
 func open_packed_scene(collection_id:int)->void:
 	var item_id = MAssetTable.get_singleton().collection_get_item_id(collection_id)

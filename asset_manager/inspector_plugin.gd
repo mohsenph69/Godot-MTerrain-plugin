@@ -17,10 +17,21 @@ func _can_handle(object):
 	if object is MDecalInstance: return true		
 	if object is MDecal: return true		
 	if object is Material: return true
+	
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
+	var selection_type
+	for node in nodes:
+		if not selection_type:
+			selection_type = node.get_class()
+		else:
+			if selection_type != node.get_class():
+				return false
 	if len(nodes) > 1 and nodes[-1].owner and nodes[-1].owner is HLod_Baker: return true
 	
 func _parse_begin(object):
+	var nodes = EditorInterface.get_selection().get_selected_nodes()
+	if len(nodes) > 1:		
+		object = nodes[-1]
 	var control	
 	var margin = MarginContainer.new()			
 	margin.add_theme_constant_override("margin_left", 4)
@@ -152,7 +163,9 @@ func make_physics_settings_control(object):
 			dropdown.select(dropdown.item_count-1)		
 	dropdown.item_selected.connect(func(id):			
 		if id != 0:
-			object.set_meta("physics_settings", dropdown.get_item_text(id))
+			var nodes = EditorInterface.get_selection().get_selected_nodes()				
+			for node in nodes:
+				node.set_meta("physics_settings", dropdown.get_item_text(id))
 		else:
 			object.remove_meta("physics_settings")
 	)		
@@ -160,19 +173,23 @@ func make_physics_settings_control(object):
 	return hbox
 	
 func make_tag_collection_control(object):
-	#var tags_editor = preload("res://addons/m_terrain/asset_manager/ui/tags_editor.tscn").instantiate()
-	#tags_editor.set_options(MAssetTable.get_singleton().tag_get_names())
-	#control.add_child(tags_editor)	
 	var tag_button = Button.new()
 	tag_button.text = "Tag Collection"
 	tag_button.pressed.connect(func():
 		asset_placer.settings_button.button_pressed = true
-		var collection_id
+		var collection_ids = []
+		var nodes = EditorInterface.get_selection().get_selected_nodes()				
 		if object is MAssetMesh:
-			collection_id = object.collection_id
+			for node in nodes:
+				if not node.collection_id in collection_ids:
+					collection_ids.push_back(node.collection_id)
 		elif object is MHlodScene:
-			collection_id = object.get_meta("collection_id") if object.has_meta("collection_id") else -1		
-		asset_placer.open_settings_window("tag", collection_id)
+			for node in nodes:						
+				if node.has_meta("collection_id"):
+					var id = node.get_meta("collection_id")
+					if not id in collection_ids:
+						collection_ids.push_back( id )		
+		asset_placer.open_settings_window("tag", collection_ids)
 		#%manage_tags_button.button_pressed = true
 	)
 	return tag_button
@@ -185,7 +202,9 @@ func make_variation_layer_control_for_assigning(object):
 	vbox.add_child(variation_layer_control)
 	variation_layer_control.layer_names = object.owner.variation_layers
 	variation_layer_control.value_changed.connect(func(new_value):
-		object.set_meta("variation_layers", new_value)
+		var nodes = EditorInterface.get_selection().get_selected_nodes()
+		for node in nodes:						
+			node.set_meta("variation_layers", new_value)
 	)
 	if object.has_meta("variation_layers"):					
 		variation_layer_control.set_value.call_deferred(object.get_meta("variation_layers"))
@@ -206,7 +225,9 @@ func make_cutoff_lod_control(object):
 	spinbox.min_value = -1
 	spinbox.value = object.get_meta("lod_cutoff") if object.has_meta("lod_cutoff") else -1
 	spinbox.value_changed.connect(func(new_value):
-		object.set_meta("lod_cutoff", new_value)
+		var nodes = EditorInterface.get_selection().get_selected_nodes()
+		for node in nodes:						
+			node.set_meta("lod_cutoff", new_value)
 	)
 	return hbox
 	
@@ -224,7 +245,9 @@ func make_masset_mesh_cutoff_lod_control(object:MAssetMesh):
 	spinbox.min_value = -1
 	spinbox.value = object.mesh_lod_cutoff
 	spinbox.value_changed.connect(func(new_value):
-		object.mesh_lod_cutoff = new_value
+		var nodes = EditorInterface.get_selection().get_selected_nodes()
+		for node in nodes:			
+			node.mesh_lod_cutoff = new_value
 	)
 	return hbox
 func make_masset_collision_cutoff_lod_control(object:MAssetMesh):
@@ -241,7 +264,9 @@ func make_masset_collision_cutoff_lod_control(object:MAssetMesh):
 	spinbox.min_value = -1
 	spinbox.value = object.collision_lod_cutoff
 	spinbox.value_changed.connect(func(new_value):
-		object.collision_lod_cutoff = new_value
+		var nodes = EditorInterface.get_selection().get_selected_nodes()
+		for node in nodes:
+			node.collision_lod_cutoff = new_value
 	)
 	return hbox
 	
