@@ -8,7 +8,7 @@ var variation_layers_scene = preload("res://addons/m_terrain/asset_manager/ui/in
 func _can_handle(object):				
 	if object is MAssetTable:return true
 	if object is HLod_Baker: return true
-	if EditorInterface.get_edited_scene_root() is HLod_Baker: return true
+	if object is Node and object.owner and object.owner  is HLod_Baker: return true
 	if object is MHlodNode3D: return true	
 	if object is MHlodScene: return true
 	if object is MAssetMesh: return true	
@@ -18,7 +18,7 @@ func _can_handle(object):
 	if object is MDecal: return true		
 	if object is Material: return true
 	var nodes = EditorInterface.get_selection().get_selected_nodes()
-	if len(nodes) > 1 and EditorInterface.get_edited_scene_root() is HLod_Baker: return true
+	if len(nodes) > 1 and nodes[-1].owner and nodes[-1].owner is HLod_Baker: return true
 	
 func _parse_begin(object):
 	var control	
@@ -31,8 +31,8 @@ func _parse_begin(object):
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()		
 		control.baker = object
 		control.asset_placer = asset_placer
-		if not object == EditorInterface.get_edited_scene_root():
-			if EditorInterface.get_edited_scene_root() is HLod_Baker:
+		if not object.scene_file_path:
+			if object.owner and object.owner is HLod_Baker:
 				control.add_child(make_variation_layer_control_for_assigning(object))
 		else:
 			var tag_control = make_tag_collection_control(object)
@@ -46,13 +46,13 @@ func _parse_begin(object):
 		control.mhlod_scene = object
 
 		control.add_child(make_tag_collection_control(object))		
-		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+		if object.owner and object.owner is HLod_Baker:
 			#TODO - add variation layer feature to mhlod_scene to assign it to parent baker's layers.
 			#control.add_child(make_variation_layer_control_for_assigning(object))						
 			control.add_child(make_cutoff_lod_control(object))									
 	elif object is MAssetMesh:						
 		control = VBoxContainer.new()		
-		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+		if object.owner and object.owner is HLod_Baker:
 			control.add_child(make_variation_layer_control_for_assigning(object))						
 			control.add_child(make_masset_mesh_cutoff_lod_control(object))									
 			control.add_child(make_masset_collision_cutoff_lod_control(object))
@@ -64,7 +64,7 @@ func _parse_begin(object):
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()		
 		control.mhlod_node = object				
 		control.asset_placer = asset_placer
-		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+		if object.owner and object.owner is HLod_Baker:
 			control.add_child(make_variation_layer_control_for_assigning(object))				
 			control.add_child(make_cutoff_lod_control(object))
 		control.add_child(make_tag_collection_control(object))		
@@ -72,7 +72,7 @@ func _parse_begin(object):
 		control = VBoxContainer.new()
 		control.add_child( make_cutoff_lod_control(object) )
 		control.add_child( make_physics_settings_control(object))		
-		if EditorInterface.get_edited_scene_root() is HLod_Baker:
+		if object.owner and object.owner is HLod_Baker:
 			control.add_child( make_variation_layer_control_for_assigning(object))			
 	elif object is MDecal or object is MDecalInstance:
 		control = VBoxContainer.new()
@@ -119,7 +119,7 @@ func _parse_begin(object):
 		hbox.add_child(name_label)
 		hbox.add_child(name_edit)
 		control = hbox
-	elif EditorInterface.get_edited_scene_root() is HLod_Baker:
+	elif object.owner and object.owner is HLod_Baker:
 		if object.get_class() == "Node3D":
 			control = Button.new()
 			control.text = "Convert to Sub Baker"
@@ -130,7 +130,7 @@ func _parse_begin(object):
 		elif object is OmniLight3D or object is SpotLight3D:
 			control = VBoxContainer.new()
 			control.add_child(make_cutoff_lod_control(object))
-			if EditorInterface.get_edited_scene_root() is HLod_Baker:
+			if object.owner and object.owner is HLod_Baker:
 				control.add_child(make_variation_layer_control_for_assigning(object))							
 	if control:
 		margin.add_child(control)
@@ -183,7 +183,7 @@ func make_variation_layer_control_for_assigning(object):
 	vbox.add_child(label)						
 	var variation_layer_control = variation_layers_scene.instantiate()	
 	vbox.add_child(variation_layer_control)
-	variation_layer_control.layer_names = EditorInterface.get_edited_scene_root().variation_layers
+	variation_layer_control.layer_names = object.owner.variation_layers
 	variation_layer_control.value_changed.connect(func(new_value):
 		object.set_meta("variation_layers", new_value)
 	)

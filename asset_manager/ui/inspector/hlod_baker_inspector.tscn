@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=13 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
 [ext_resource type="Texture2D" uid="uid://o6bjob1w4w0w" path="res://addons/m_terrain/icons/tick_icon.svg" id="2_kaebi"]
 [ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="3_iqlmd"]
+[ext_resource type="Texture2D" uid="uid://cbdu2j1j6r76t" path="res://addons/m_terrain/icons/hlod_scene.svg" id="4_24w0j"]
 [ext_resource type="PackedScene" uid="uid://emr0fpf2qo8g" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn" id="4_kqv64"]
 [ext_resource type="Texture2D" uid="uid://ryifoq2od5r2" path="res://addons/m_terrain/icons/open.svg" id="4_m333m"]
 [ext_resource type="Texture2D" uid="uid://dj86rx42xt6wc" path="res://addons/m_terrain/icons/save_icon.svg" id="5_nmnhy"]
@@ -62,6 +63,15 @@ grow_vertical = 2
 texture = ExtResource("2_kaebi")
 expand_mode = 2
 stretch_mode = 5
+
+[node name="save_and_replace_with_hlod_button" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Save and replace with mhlod_scene"
+icon = ExtResource("4_24w0j")
+alignment = 0
+icon_alignment = 1
 
 [node name="show_hlod_button" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true

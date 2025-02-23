@@ -126,6 +126,8 @@ func _ready():
 	)
 	
 	%blender_btn.pressed.connect(open_baker_gltf_with_blender)
+	%save_and_replace_with_hlod_button.visible = not baker == EditorInterface.get_edited_scene_root() and baker.scene_file_path
+	%save_and_replace_with_hlod_button.pressed.connect(baker.replace_baker_with_mhlod_scene)
 	
 func show_join_mesh_window():	
 	var window = preload("res://addons/m_terrain/asset_manager/ui/mesh_join_window.tscn").instantiate()	
@@ -141,40 +143,41 @@ func bake_button_gui_input(event):
 		%Bake.disabled = not validate_bake_button()
 #var cid = MAssetTable.get_singleton().collection_find_with_item_type_item_id(MAssetTable.HLOD,hitem_id)
 func baker_renamed():
-	if EditorInterface.get_edited_scene_root() == baker:
-		if not baker.scene_file_path.get_file() == baker.name+".tscn":
-			if not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+".tscn")):			
-				var old_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path)
-				var old_path = baker.scene_file_path
-				var new_path = old_path.get_base_dir().path_join(baker.name+".tscn")
-				DirAccess.rename_absolute(baker.scene_file_path, new_path)
-				baker.scene_file_path = new_path
-				var hitem_id:int=baker.hlod_id
-				if hitem_id>=0:
-					var hpath = MHlod.get_hlod_path(hitem_id)
-					if FileAccess.file_exists(hpath):
-						var hlod = load(hpath)
-						if hlod:
-							hlod.baker_path = new_path
-							ResourceSaver.save(hlod)
-				if FileAccess.file_exists(old_join_mesh_glb_path):
-					var new_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(new_path)
-					DirAccess.rename_absolute(old_join_mesh_glb_path, new_join_mesh_glb_path)
-				EditorInterface.get_resource_filesystem().scan()
-				## rename in asset table
-				var at:= MAssetTable.get_singleton()
-				var cid =at.collection_find_with_item_type_item_id(MAssetTable.HLOD,hitem_id)
-				if cid!=-1:
-					at.collection_set_name(cid,MAssetTable.HLOD,baker.name)
-					MAssetTable.save()
-					if AssetIO.asset_placer: AssetIO.asset_placer.regroup()
-			elif false: # If returning to old name creates a conflict, ahhhh! TODO
-				pass
-			else: #Return to old name
-				var new_name = baker.name
-				baker.name = baker.scene_file_path.get_file().trim_suffix(".tscn")
-				MTool.print_edmsg(str(new_name, " already exists. Please pick a different name"))						
-	
+	if baker.ignore_rename or not baker.scene_file_path: return
+	print("renaming...", baker.ignore_rename)
+	if not baker.scene_file_path.get_file() == baker.name+".tscn":
+		if not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+".tscn")):			
+			var old_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path)
+			var old_path = baker.scene_file_path
+			var new_path = old_path.get_base_dir().path_join(baker.name+".tscn")
+			DirAccess.rename_absolute(baker.scene_file_path, new_path)
+			baker.scene_file_path = new_path
+			var hitem_id:int=baker.hlod_id
+			if hitem_id>=0:
+				var hpath = MHlod.get_hlod_path(hitem_id)
+				if FileAccess.file_exists(hpath):
+					var hlod = load(hpath)
+					if hlod:
+						hlod.baker_path = new_path
+						ResourceSaver.save(hlod)
+			if FileAccess.file_exists(old_join_mesh_glb_path):
+				var new_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(new_path)
+				DirAccess.rename_absolute(old_join_mesh_glb_path, new_join_mesh_glb_path)
+			EditorInterface.get_resource_filesystem().scan()
+			## rename in asset table
+			var at:= MAssetTable.get_singleton()
+			var cid =at.collection_find_with_item_type_item_id(MAssetTable.HLOD,hitem_id)
+			if cid!=-1:
+				at.collection_set_name(cid,MAssetTable.HLOD,baker.name)
+				MAssetTable.save()
+				if AssetIO.asset_placer: AssetIO.asset_placer.regroup()
+		elif false: # If returning to old name creates a conflict, ahhhh! TODO
+			pass
+		else: #Return to old name
+			var new_name = baker.name
+			baker.name = baker.scene_file_path.get_file().trim_suffix(".tscn")
+			MTool.print_edmsg(str(new_name, " already exists. Please pick a different name"))						
+
 func validate_bake_button():
 	%Bake.disabled = not baker.can_bake
 	if baker.can_bake:
@@ -219,3 +222,4 @@ func open_baker_gltf_with_blender():
 	tmpf.store_string(py_script)
 	tmpf.close()
 	OS.create_process(blender_path,["--python",ProjectSettings.globalize_path(tmp_path)])
+	

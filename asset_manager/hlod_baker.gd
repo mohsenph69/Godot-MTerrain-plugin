@@ -33,6 +33,9 @@ var timer: Timer
 
 var can_bake =false
 
+var ignore_rename = false
+var is_saving = false
+
 const MAX_LOD = 10
 const UPDATE_INTERVAL = 0.5
 
@@ -56,7 +59,7 @@ func force_lod(lod:int):
 		
 func bake_to_hlod_resource():		
 	if (owner and owner.scene_file_path.is_empty()) or (not owner and scene_file_path.is_empty()):
-		MTool.print_edmsg("Pelase first save the baker scene")
+		MTool.print_edmsg("Please first save the baker scene")
 		return
 	var has_sub_hlod:=false
 	var physics_dictionary = AssetIOMaterials.get_physics_ids()
@@ -315,21 +318,21 @@ func bake_to_hlod_resource():
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
 		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})
 	elif is_tmp_bake:
-		call_deferred("queue_free")
+		queue_free.call_deferred()
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
 func finish_generating_thumnail(data):
 	var tex:Texture2D=data["texture"]
 	if not tex:
-		if is_tmp_bake: call_deferred("queue_free")
+		if is_tmp_bake: queue_free.call_deferred()
 		return
 	var img = tex.get_image()
 	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD,data["has_sub_hlod"],Color(0,0,0.5))
 	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])
 	ThumbnailManager.save_thumbnail(img,tpath)
 	AssetIO.asset_placer.regroup()
-	if is_tmp_bake: call_deferred("queue_free")
+	if is_tmp_bake: queue_free.call_deferred()
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
@@ -533,12 +536,12 @@ func _exit_tree():
 	if is_instance_valid(timer) and timer.is_inside_tree():
 		timer.stop()
 
-func _notification(what):	
-	if what == NOTIFICATION_EDITOR_PRE_SAVE:
-		for child in get_children():
-			if child.has_meta("collection_id"):
-				for grandchild in child.get_children():					
-					grandchild.owner = null		
+#func _notification(what):	
+	#if what == NOTIFICATION_EDITOR_PRE_SAVE:
+		#var scene_root = EditorInterface.get_edited_scene_root()
+		#if scene_file_path and not self == scene_root and not is_saving: 
+			##
+			#replace_baker_with_mhlod_scene()			
 	
 func _ready():				
 	renamed.connect(validate_can_bake)
@@ -582,3 +585,42 @@ func update_asset_mesh():
 func update_variation_layer_name(i, new_name):
 	variation_layers[i] = new_name
 	notify_property_list_changed()
+
+func save_baker_changes(): #this function is called when editing baker inside another scene	
+	var scene_root = EditorInterface.get_edited_scene_root()
+	if not scene_file_path or scene_root == self: return
+	for child in find_children("*"):
+		if child.owner == scene_root:
+			child.owner = self
+	var packed_scene = PackedScene.new()
+	packed_scene.pack(self)	
+	var path = scene_file_path
+	print("overwrite error?...:", ResourceSaver.save(packed_scene, path	))
+	packed_scene.take_over_path(scene_file_path)	
+	#is_tmp_bake = true
+	bake_to_hlod_resource()		
+	if scene_file_path in EditorInterface.get_open_scenes():
+		EditorInterface.reload_scene_from_path(scene_file_path)
+	is_saving = false
+	
+func replace_baker_with_mhlod_scene():		
+	save_baker_changes() #.call_deferred()	
+	var mhlod_scene := MHlodScene.new() 
+	var node_name = name
+	mhlod_scene.scene_layers = variation_layers_preview_value	
+	if has_meta("lod_cutoff"):
+		mhlod_scene.set_meta("lod_cutoff", get_meta("lod_cutoff"))			
+	#ignore_rename = true
+	#name = "TMP"		
+	#ignore_rename = false
+	var parent = get_parent()
+	parent.add_child(mhlod_scene)
+	parent.move_child(mhlod_scene, get_index())	
+	#get_parent().remove_child(self)			
+	#add_sibling(mhlod_scene)
+	mhlod_scene.owner = owner
+	mhlod_scene.hlod = hlod_resource
+	#mhlod_scene.name = node_name
+	tree_exiting.connect(func(): mhlod_scene.set_deferred("name", node_name))
+	queue_free()
+	
