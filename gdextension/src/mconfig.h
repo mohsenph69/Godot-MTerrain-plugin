@@ -46,7 +46,7 @@
 #define IS_HOLE(value) std::isnan(value)
 #define FLOAT_HOLE std::numeric_limits<float>::quiet_NaN()
 
-#if defined(LINUX_ENABLED) || defined(WINDOWS_ENABLED)
+#if defined(LINUX_ENABLED)
 #define UABS_DIFF(a, b) abs(a-b)
 #else
 #define UABS_DIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))

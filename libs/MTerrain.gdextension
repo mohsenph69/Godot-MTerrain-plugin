@@ -15,7 +15,11 @@ windows.release.x86_64 = "res://addons/m_terrain/libs/libMTerrain.windows.templa
 windows.debug.x86_32 = "res://addons/m_terrain/libs/libMTerrain.windows.template_debug.x86_32.dll"
 windows.release.x86_32 = "res://addons/m_terrain/libs/libMTerrain.windows.template_release.x86_32.dll"
 android.debug.arm64 = "res://addons/m_terrain/libs/libMTerrain.android.template_debug.arm64.so"
+android.debug.x86_64 = "res://addons/m_terrain/libs/libMTerrain.android.template_debug.x86_64.so"
 android.release.arm64 = "res://addons/m_terrain/libs/libMTerrain.android.template_release.arm64.so"
+android.release.x86_64 = "res://addons/m_terrain/libs/libMTerrain.android.template_release.x86_64.so"
+web.debug.wasm32 = "res://addons/m_terrain/libs/libMTerrain.web.template_debug.wasm32.wasm"
+web.release.wasm32 = "res://addons/m_terrain/libs/libMTerrain.web.template_release.wasm32.wasm"
 
 
 [icons]

@@ -1,0 +1,57 @@
+name: Build Web
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - precision: single
+            arch: wasm32
+            platform: web
+            target-type: template_debug
+          - precision: single
+            arch: wasm32
+            platform: web
+            target-type: template_release
+
+    # Taken mostly from https://github.com/godotengine/godot-cpp-template/blob/main/.github/workflows/builds.yml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      # Setup dependencies
+      - name: Setup godot-cpp
+        uses: ./gdextension/godot-cpp/.github/actions/setup-godot-cpp
+        with:
+          platform: ${{ matrix.platform }}
+          em-version: 3.1.62
+
+      # Build GDExtension (with caches)
+      - name: Cache .scons_cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/gdextension/.scons-cache/
+          key: ${{ matrix.platform }}_${{ matrix.arch }}_${{ matrix.precision }}_${{ matrix.target-type }}_cache
+
+      - name: Build GDExtension
+        shell: sh
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/gdextension/.scons-cache/
+        run: |
+          cd ${{ github.workspace }}/gdextension
+          scons target=${{ matrix.target-type }} platform=${{ matrix.platform }} arch=${{ matrix.arch }} precision=${{ matrix.precision }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libmterrain-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.precision }}-${{ matrix.target-type }}
+          path: ${{ github.workspace }}/libs/*.wasm
+          if-no-files-found: error
