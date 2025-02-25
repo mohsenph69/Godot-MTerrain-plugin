@@ -188,38 +188,54 @@ func validate_bake_button():
 		%Bake.tooltip_text = "HLod with the name " + baker.name + " is already used by another baker scene. please rename the baker scene"
 		
 
-
-func open_baker_gltf_with_blender():
-	var glb_path = AssetIOBaker.get_glb_path_by_baker_node(baker)
-	if not FileAccess.file_exists(glb_path):
-		MTool.print_edmsg("File path %s does not exist, please first create and then export the glb file!" % glb_path)
-		return
-	var blender_path:String= EditorInterface.get_editor_settings().get_setting("filesystem/import/blender/blender_path")
+func get_blender_path():
+	var blender_path:String=  EditorInterface.get_editor_settings().get_setting("filesystem/import/blender/blender_path")
 	if blender_path.is_empty():
 		MTool.print_edmsg("Blender path is empty! please set blender path in editor setting")
 		return
 	if not FileAccess.file_exists(blender_path):
 		MTool.print_edmsg("Blender path is not valid: "+blender_path)
 		return
-	glb_path = ProjectSettings.globalize_path(glb_path)
-	var f = FileAccess.open("res://addons/m_terrain/asset_manager/blender_addons/open_gltf_file.py",FileAccess.READ)
-	var py_script = f.get_as_text()
-	f.close()
-	py_script = py_script.replace("_GLB_FILE_PATH",glb_path)
-	py_script = py_script.replace("_BAKER_NAME",baker.name)	
-	var settings = MAssetTable.get_singleton().import_info["__settings"]
-	var materials_blend_path:String = settings["Materials blend file"].value if  "Materials blend file" in settings else null	
-	py_script = py_script.replace("_REPLACE_MATERIALS", "True" if materials_blend_path and FileAccess.file_exists(materials_blend_path) else "False")
-	py_script = py_script.replace("_MATERIALS_BLEND_PATH", str(materials_blend_path))
-	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
-	if FileAccess.file_exists(tmp_path):DirAccess.remove_absolute(tmp_path) # good idea to clear to make sure eveyrthing go well
-	if not DirAccess.dir_exists_absolute(tmp_path.get_base_dir()):
-		DirAccess.make_dir_recursive_absolute(tmp_path.get_base_dir())
-	var tmpf = FileAccess.open(tmp_path,FileAccess.WRITE)
+	return blender_path
+	
+func write_to_tmp_file(path, py_script):
+	if FileAccess.file_exists(path):DirAccess.remove_absolute(path) # good idea to clear to make sure eveyrthing go well
+	if not DirAccess.dir_exists_absolute(path.get_base_dir()):
+		DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var tmpf = FileAccess.open(path,FileAccess.WRITE)
 	if not tmpf:
 		MTool.print_edmsg("Can not create tmp file for blender python script")
 		return
 	tmpf.store_string(py_script)
 	tmpf.close()
+	
+func open_baker_scene_with_blender():		
+	if Input.is_physical_key_pressed(KEY_CTRL) and not Input.is_physical_key_pressed(KEY_SHIFT):
+		var blender_path:String = get_blender_path()	
+		var py_script = FileAccess.get_file_as_string("res://addons/m_terrain/asset_manager/blender_addons/open_baker_scene.py") 		
+		var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
+		write_to_tmp_file(tmp_path, py_script)	
+		OS.create_process(blender_path,["--python",ProjectSettings.globalize_path(tmp_path)])
+
+func open_baker_joined_mesh_gltf_with_blender():
+	var blender_path:String = get_blender_path()	
+	
+	var glb_path = AssetIOBaker.get_glb_path_by_baker_node(baker)
+	if not FileAccess.file_exists(glb_path):
+		MTool.print_edmsg("File path %s does not exist, please first create and then export the glb file!" % glb_path)
+		return	
+	glb_path = ProjectSettings.globalize_path(glb_path)
+	
+	var settings = MAssetTable.get_singleton().import_info["__settings"]
+	var materials_blend_path:String = settings["Materials blend file"].value if  "Materials blend file" in settings else null	
+	
+	var py_script = FileAccess.get_file_as_string("res://addons/m_terrain/asset_manager/blender_addons/open_gltf_file.py") 		
+	py_script = py_script.replace("_GLB_FILE_PATH",glb_path)
+	py_script = py_script.replace("_BAKER_NAME",baker.name)		
+	py_script = py_script.replace("_REPLACE_MATERIALS", "True" if materials_blend_path and FileAccess.file_exists(materials_blend_path) else "False")
+	py_script = py_script.replace("_MATERIALS_BLEND_PATH", str(materials_blend_path))
+	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
+	write_to_tmp_file(tmp_path, py_script)
+	
 	OS.create_process(blender_path,["--python",ProjectSettings.globalize_path(tmp_path)])
 	

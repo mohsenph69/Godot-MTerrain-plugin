@@ -7,10 +7,21 @@
 [ext_resource type="Texture2D" uid="uid://cbdu2j1j6r76t" path="res://addons/m_terrain/icons/hlod_scene.svg" id="4_24w0j"]
 [ext_resource type="PackedScene" uid="uid://emr0fpf2qo8g" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn" id="4_kqv64"]
 [ext_resource type="Texture2D" uid="uid://ryifoq2od5r2" path="res://addons/m_terrain/icons/open.svg" id="4_m333m"]
+[ext_resource type="Texture2D" uid="uid://btxcowh4unbay" path="res://addons/m_terrain/icons/hbaker.svg" id="4_ok68l"]
 [ext_resource type="Texture2D" uid="uid://dj86rx42xt6wc" path="res://addons/m_terrain/icons/save_icon.svg" id="5_nmnhy"]
 [ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="7_622l2"]
 [ext_resource type="Texture2D" uid="uid://cjs22nfbjl71l" path="res://addons/m_terrain/icons/rotation.svg" id="8_fi4h8"]
 [ext_resource type="Texture2D" uid="uid://jidske1yh0tn" path="res://addons/m_terrain/icons/blender.svg" id="9_gl3m1"]
+[ext_resource type="Texture2D" uid="uid://s6jqtql0r2bw" path="res://addons/m_terrain/icons/edit_icon.svg" id="10_fmoy0"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_70tvd"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0.517184, 0.517184, 0.517184, 1)
+corner_radius_top_left = 5
+corner_radius_bottom_left = 5
 
 [sub_resource type="LabelSettings" id="LabelSettings_gfps4"]
 font_color = Color(0.92785, 0.495612, 0, 1)
@@ -31,18 +42,29 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="HBoxContainer3"]
 layout_mode = 2
-text = "Hlod"
+text = "Scene"
 
 [node name="hlod_bake_warning" type="Label" parent="HBoxContainer3"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="edit_scene_in_blender_button" type="Button" parent="HBoxContainer3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Edit scene in blender"
+toggle_mode = true
+icon = ExtResource("9_gl3m1")
+expand_icon = true
+
 [node name="Bake" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-icon = ExtResource("5_nmnhy")
+icon = ExtResource("4_ok68l")
 alignment = 0
+icon_alignment = 1
 
 [node name="bake_successful" type="TextureRect" parent="HBoxContainer3/Bake"]
 unique_name_in_owner = true
@@ -79,6 +101,75 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Show hlod resource in file system"
 icon = ExtResource("3_iqlmd")
+expand_icon = true
+
+[node name="tcp_panel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_70tvd")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="tcp_panel"]
+layout_mode = 2
+alignment = 2
+
+[node name="LineEdit" type="LineEdit" parent="tcp_panel/HBoxContainer"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+tooltip_text = "Port for TCP connection"
+theme_override_constants/minimum_character_width = 0
+text = "9997"
+placeholder_text = "port"
+
+[node name="server_toggle_button" type="Button" parent="tcp_panel/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Start/Stop tcp server"
+toggle_mode = true
+action_mode = 0
+text = "OFF"
+expand_icon = true
+
+[node name="MarginContainer" type="MarginContainer" parent="tcp_panel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="manual_tcp_hbox" type="HBoxContainer" parent="tcp_panel/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="tcp_sync_button" type="Button" parent="tcp_panel/HBoxContainer/manual_tcp_hbox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Refresh - Send full state"
+icon = ExtResource("8_fi4h8")
+expand_icon = true
+
+[node name="tcp_send_button" type="Button" parent="tcp_panel/HBoxContainer/manual_tcp_hbox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Send changes"
+text = "↑"
+expand_icon = true
+
+[node name="tcp_receive_button" type="Button" parent="tcp_panel/HBoxContainer/manual_tcp_hbox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Receive changes"
+text = "↓"
+expand_icon = true
+
+[node name="automatic_tcp_toggle_button" type="Button" parent="tcp_panel/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Automatic/Manual updates"
+toggle_mode = true
+text = "M"
 expand_icon = true
 
 [node name="HBoxContainer4" type="HBoxContainer" parent="."]
@@ -177,7 +268,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 tooltip_text = "Create joined mesh from scene"
-icon = ExtResource("7_622l2")
+icon = ExtResource("10_fmoy0")
 alignment = 0
 expand_icon = true
 
@@ -239,7 +330,7 @@ texture = ExtResource("2_kaebi")
 expand_mode = 2
 stretch_mode = 5
 
-[node name="blender_btn" type="Button" parent="HBoxContainer5"]
+[node name="edit_joined_mesh_in_blender_button" type="Button" parent="HBoxContainer5"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
