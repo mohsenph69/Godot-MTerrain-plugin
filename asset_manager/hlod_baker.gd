@@ -9,9 +9,8 @@ class_name HLod_Baker extends Node3D
 @export var packed_scene_lod_cutoff_default:int=2
 @export var lights_lod_cutoff_default:int= 3
 
-
-
 signal asset_mesh_updated
+signal baked
 
 @export_storage var joined_mesh_id := -1
 @export_storage var joined_mesh_disabled := false
@@ -319,6 +318,7 @@ func bake_to_hlod_resource():
 		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})
 	elif is_tmp_bake:
 		queue_free.call_deferred()
+	baked.emit()
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
