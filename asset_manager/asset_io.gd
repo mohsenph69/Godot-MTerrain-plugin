@@ -511,3 +511,13 @@ static func get_asset_glb_name_from_collection_id(collection_id):
 			if not import_info[glb_path][glb_name].has("id"): continue
 			if import_info[glb_path][glb_name].id == collection_id:
 				return glb_name
+
+static func get_collection_id_from_blend_file_and_glb_name(blend_file, glb_name):
+	var import_info := MAssetTable.get_singleton().import_info	
+	for glb_path in import_info.keys():
+		if glb_path.begins_with("__"): continue
+		if not "__original_blend_file" in import_info[glb_path]:continue
+		if not import_info[glb_path]["__original_blend_file"] == blend_file: continue
+		if not import_info[glb_path].has(glb_name): continue
+		if not import_info[glb_path][glb_name].has("id"): continue
+		return import_info[glb_path][glb_name].id

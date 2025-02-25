@@ -246,7 +246,7 @@ func write_to_tmp_file(path, py_script):
 	tmpf.close()
 	
 func open_baker_scene_with_blender():		
-	if Input.is_physical_key_pressed(KEY_CTRL):
+	if Input.is_physical_key_pressed(KEY_CTRL) and not Input.is_physical_key_pressed(KEY_SHIFT):
 		var blender_path:String = get_blender_path()	
 		var py_script = FileAccess.get_file_as_string("res://addons/m_terrain/asset_manager/blender_addons/open_baker_scene.py") 		
 		var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
