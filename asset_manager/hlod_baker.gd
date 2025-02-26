@@ -319,6 +319,7 @@ func bake_to_hlod_resource():
 	elif is_tmp_bake:
 		queue_free.call_deferred()
 	baked.emit()
+	AssetIOBaker.rebake_hlod_dependent_bakers(bake_path)
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
