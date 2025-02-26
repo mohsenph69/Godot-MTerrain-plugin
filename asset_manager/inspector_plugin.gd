@@ -57,10 +57,10 @@ func _parse_begin(object):
 		control.mhlod_scene = object
 
 		control.add_child(make_tag_collection_control(object))		
-		if object.owner and object.owner is HLod_Baker:
+		#if object.owner and object.owner is HLod_Baker:
 			#TODO - add variation layer feature to mhlod_scene to assign it to parent baker's layers.
 			#control.add_child(make_variation_layer_control_for_assigning(object))						
-			control.add_child(make_cutoff_lod_control(object))									
+			#control.add_child(make_cutoff_lod_control(object))									
 	elif object is MAssetMesh:						
 		control = VBoxContainer.new()		
 		if object.owner and object.owner is HLod_Baker:
