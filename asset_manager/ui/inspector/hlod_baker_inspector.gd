@@ -125,7 +125,7 @@ func _ready():
 		EditorInterface.get_file_system_dock().navigate_to_path(AssetIOBaker.get_glb_path_by_baker_node(baker))
 	)
 	
-	%blender_btn.pressed.connect(open_baker_gltf_with_blender)
+	%blender_btn.pressed.connect(open_baker_joined_mesh_gltf_with_blender)
 	%save_and_replace_with_hlod_button.visible = not baker == EditorInterface.get_edited_scene_root() and baker.scene_file_path
 	%save_and_replace_with_hlod_button.pressed.connect(baker.replace_baker_with_mhlod_scene)
 	
