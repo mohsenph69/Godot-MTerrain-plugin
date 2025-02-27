@@ -181,8 +181,7 @@ func validate_bake_button():
 	if baker.can_bake:								
 		%hlod_bake_warning.text = ""
 		%Bake.tooltip_text = "Bake scene to hlod resource"
-	else:
-		#%hlod_bake_warning.text= "Baker name must be unique!"		
+	else:		
 		%Bake.tooltip_text = baker.cant_bake_reason
 		
 

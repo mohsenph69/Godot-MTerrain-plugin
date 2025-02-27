@@ -57,7 +57,8 @@ func _parse_begin(object):
 				
 	elif object is MHlodScene:
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.tscn").instantiate()
-		control.mhlod_scene = object
+		control.mhlod_scenes = nodes
+		control.active_mhlod_scene = object
 
 		control.add_child(make_tag_collection_control(object))		
 		#if object.owner and object.owner is HLod_Baker:
