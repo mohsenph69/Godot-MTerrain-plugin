@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=16 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
@@ -51,6 +51,7 @@ size_flags_horizontal = 3
 
 [node name="edit_scene_in_blender_button" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true
+visible = false
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 tooltip_text = "Edit scene in blender"
@@ -88,6 +89,7 @@ stretch_mode = 5
 
 [node name="save_and_replace_with_hlod_button" type="Button" parent="HBoxContainer3"]
 unique_name_in_owner = true
+visible = false
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 tooltip_text = "Save and replace with mhlod_scene"
