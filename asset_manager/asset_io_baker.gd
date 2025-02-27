@@ -38,6 +38,42 @@ static func rebake_hlod(hlod:MHlod):
 	EditorInterface.get_base_control().add_child(baker)
 	baker.bake_to_hlod_resource()
 
+static func open_hlod_baker(collection_id:int):
+	var item_id:int= MAssetTable.get_singleton().collection_get_item_id(collection_id)
+	var hlod:MHlod= load(MHlod.get_hlod_path(item_id))
+	if hlod:
+		EditorInterface.call_deferred("open_scene_from_path",hlod.baker_path)
+	else:
+		## Trying to find it in Masset baker folder
+		var cname = MAssetTable.get_singleton().collection_get_name(collection_id)
+		var bpath = MAssetTable.get_editor_baker_scenes_dir().path_join(cname) + ".tscn"
+		if FileAccess.file_exists(bpath):
+			EditorInterface.call_deferred("open_scene_from_path",bpath)
+		else:
+			MTool.print_edmsg("Can not find file!")
+
+static func rebake_hlod_by_collection_id(collection_id:int)->void:
+	var at:=MAssetTable.get_singleton()
+	var type = at.collection_get_type(collection_id)
+	if type!=MAssetTable.ItemType.HLOD:
+		printerr("Not valid HLOD type")
+		return
+	var item_id:int= at.collection_get_item_id(collection_id)
+	var hpath = MHlod.get_hlod_path(item_id)
+	var hres:MHlod=load(hpath)
+	if hres:
+		AssetIOBaker.rebake_hlod(hres)
+	else:
+		## Trying to find it in Masset baker folder
+		var cname = MAssetTable.get_singleton().collection_get_name(collection_id)
+		var bpath = MAssetTable.get_editor_baker_scenes_dir().path_join(cname) + ".tscn"
+		if FileAccess.file_exists(bpath):
+			AssetIOBaker.rebake_hlod_by_baker_path(bpath)
+		else:
+			MTool.print_edmsg("Can not find file!")
+	if AssetIO.asset_placer:
+		AssetIO.asset_placer.regroup()
+
 static func baker_export_to_glb(baker_node:HLod_Baker):
 	var path = baker_node.scene_file_path.get_base_dir().path_join(baker_node.name + ".glb")		
 	var gltf_document= GLTFDocument.new()
@@ -283,3 +319,12 @@ static func rebake_hlod_dependent_bakers(changed_hlod_path):
 		if changed_hlod_path in baker_scene_as_string:
 			rebake_hlod_by_baker_path(hlod.baker_path)		
 			print("rebaked ", hlod.baker_path)
+
+static func find_hlod_id_by_baker_path(baker_path):
+	var dir = MHlod.get_hlod_root_dir() 
+	for file in DirAccess.get_files_at( dir ):
+		var path = dir.path_join(file)
+		var hlod:MHlod = load(path)
+		if hlod.baker_path == baker_path: 
+			return int(file)
+	

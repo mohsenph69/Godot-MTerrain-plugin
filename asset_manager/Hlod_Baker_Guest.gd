@@ -9,7 +9,12 @@ func save_baker_changes(): #this function is called when editing baker inside an
 		if child.owner == scene_root:
 			child.owner = self
 	var packed_scene = PackedScene.new()
-	packed_scene.pack(self)	
+	var baker = HLod_Baker.new()
+	for prop in get_property_list():
+		baker.set(prop.name, get(prop.name))
+	for child in get_children():
+		child.reparent(baker)	
+	packed_scene.pack(baker)	
 	var path = scene_file_path
 	print("overwrite error?...:", ResourceSaver.save(packed_scene, path	))
 	packed_scene.take_over_path(scene_file_path)	
@@ -17,6 +22,7 @@ func save_baker_changes(): #this function is called when editing baker inside an
 	bake_to_hlod_resource()		
 	if scene_file_path in EditorInterface.get_open_scenes():
 		EditorInterface.reload_scene_from_path(scene_file_path)
+	baker.queue_free()
 	is_saving = false
 	
 func replace_baker_with_mhlod_scene():		

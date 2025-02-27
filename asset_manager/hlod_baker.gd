@@ -292,7 +292,9 @@ func bake_to_hlod_resource():
 	hlod_resource.join_at_lod = join_at_lod
 	hlod_resource.resource_name = name
 	if hlod_id==-1:
-		hlod_id = MAssetTable.get_last_free_hlod_id()
+		hlod_id = AssetIOBaker.find_hlod_id_by_baker_path(scene_file_path)		
+		if hlod_id==-1:
+			hlod_id = MAssetTable.get_last_free_hlod_id()
 	var bake_path := MHlod.get_hlod_path(hlod_id)
 	var stop_path = bake_path.get_basename() + ".stop"
 	if FileAccess.file_exists(stop_path):

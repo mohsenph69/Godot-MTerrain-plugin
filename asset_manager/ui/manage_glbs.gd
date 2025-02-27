@@ -70,10 +70,10 @@ func _ready():
 				
 		init_tree()
 	)
-	glb_details.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):		
-		AssetIO.remove_collection(item.get_metadata(0))
-		glb_details.get_root().remove_child(item)
-	)
+	#glb_details.button_clicked.connect(func(item:TreeItem, column, id, mouse_button_index):		
+		#AssetIO.remove_collection(item.get_metadata(0))
+		#glb_details.get_root().remove_child(item)
+	#)
 	
 	find_child("glb_search").text_changed.connect(func(new_text):
 		for item in glb_tree.get_root().get_children():
