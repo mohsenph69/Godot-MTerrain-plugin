@@ -39,7 +39,10 @@ func _parse_begin(object):
 	if object is MAssetTable:
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/asset_table_inspector.tscn").instantiate()	
 	elif object is HLod_Baker:	
-		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()		
+		if object is HLod_Baker_Guest:
+			control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_guest_inspector.tscn").instantiate()		
+		else:
+			control = preload("res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn").instantiate()		
 		control.baker = object
 		control.asset_placer = asset_placer
 		if not object.scene_file_path:

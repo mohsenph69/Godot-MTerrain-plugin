@@ -31,6 +31,7 @@ var asset_mesh_updater := MAssetMeshUpdater.new()
 var timer: Timer
 
 var can_bake =false
+var cant_bake_reason = ""
 
 var ignore_rename = false
 var is_saving = false
@@ -392,12 +393,12 @@ func get_node_item_id(node_unique_name:String,type_hint:MHlod.Type)->int:
 	return final_item_ids[0]
 
 func get_all_sub_hlod(baker_node:Node3D,search_nodes:Array)->Array:
-	var nodes = get_all_nodes_in_baker(baker_node,search_nodes,func(n):return n is MHlodScene and n.hlod != null)
+	var nodes = get_all_nodes_in_baker(baker_node,search_nodes,func(n):return (n is MHlodScene and n.hlod) or (n is HLod_Baker_Guest and n.hlod_resource))
 	var result:Array
 	var baker_invers_transform = baker_node.global_transform.inverse()	
 	for n in nodes:
 		var hlod_data := SubHlodBakeData.new()
-		hlod_data.sub_hlod = n.hlod
+		hlod_data.sub_hlod = n.hlod if n is MHlodScene else n.hlod_resource
 		hlod_data.node = n
 		hlod_data.tr = baker_invers_transform * n.global_transform
 		result.push_back(hlod_data)				
@@ -411,6 +412,7 @@ func get_all_sub_bakers(baker_node:Node3D,search_nodes:Array)->Array:
 	while stack.size()!=0:
 		var current_node = stack[-1]
 		stack.remove_at(stack.size() - 1)			
+		if current_node is HLod_Baker_Guest: continue
 		if current_node is HLod_Baker:
 			#if current_node != null:
 			var baker_data := SubBakerBakeData.new()
@@ -519,29 +521,24 @@ func _enter_tree():
 
 func validate_can_bake():			
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	
-	if not FileAccess.file_exists(path): 
-		can_bake = true
-	else:
+	can_bake = true
+	if FileAccess.file_exists(path): 			
 		var hlod:MHlod = load(path)	
 		if FileAccess.file_exists(hlod.get_baker_path()) and hlod.get_baker_path() != scene_file_path:
 			can_bake = false
-		else:		
-			can_bake = true
-
-
+			cant_bake_reason = "HLod with the name " + name + " is already used by another baker scene. please rename the baker scene"
+	if len(find_children("*", "HLod_Baker_Guest", true, true)) > 0:
+		can_bake = false		
+		cant_bake_reason = "Please resolve baker guest nodes before baking"
+	if not scene_file_path:
+		can_bake = false		
+		cant_bake_reason = "Please save the baker season before trying to bake"
 	
 func _exit_tree():	
 	asset_mesh_updater.show_boundary = false
 	asset_mesh_updater.update_force_lod(-1)
 	if is_instance_valid(timer) and timer.is_inside_tree():
 		timer.stop()
-
-#func _notification(what):	
-	#if what == NOTIFICATION_EDITOR_PRE_SAVE:
-		#var scene_root = EditorInterface.get_edited_scene_root()
-		#if scene_file_path and not self == scene_root and not is_saving: 
-			##
-			#replace_baker_with_mhlod_scene()			
 	
 func _ready():				
 	renamed.connect(validate_can_bake)
@@ -586,41 +583,4 @@ func update_variation_layer_name(i, new_name):
 	variation_layers[i] = new_name
 	notify_property_list_changed()
 
-func save_baker_changes(): #this function is called when editing baker inside another scene	
-	var scene_root = EditorInterface.get_edited_scene_root()
-	if not scene_file_path or scene_root == self: return
-	for child in find_children("*"):
-		if child.owner == scene_root:
-			child.owner = self
-	var packed_scene = PackedScene.new()
-	packed_scene.pack(self)	
-	var path = scene_file_path
-	print("overwrite error?...:", ResourceSaver.save(packed_scene, path	))
-	packed_scene.take_over_path(scene_file_path)	
-	#is_tmp_bake = true
-	bake_to_hlod_resource()		
-	if scene_file_path in EditorInterface.get_open_scenes():
-		EditorInterface.reload_scene_from_path(scene_file_path)
-	is_saving = false
-	
-func replace_baker_with_mhlod_scene():		
-	save_baker_changes() #.call_deferred()	
-	var mhlod_scene := MHlodScene.new() 
-	var node_name = name
-	mhlod_scene.scene_layers = variation_layers_preview_value	
-	if has_meta("lod_cutoff"):
-		mhlod_scene.set_meta("lod_cutoff", get_meta("lod_cutoff"))			
-	#ignore_rename = true
-	#name = "TMP"		
-	#ignore_rename = false
-	var parent = get_parent()
-	parent.add_child(mhlod_scene)
-	parent.move_child(mhlod_scene, get_index())	
-	#get_parent().remove_child(self)			
-	#add_sibling(mhlod_scene)
-	mhlod_scene.owner = owner
-	mhlod_scene.hlod = hlod_resource
-	#mhlod_scene.name = node_name
-	tree_exiting.connect(func(): mhlod_scene.set_deferred("name", node_name))
-	queue_free()
 	

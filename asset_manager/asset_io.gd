@@ -9,6 +9,7 @@ static var regex_option_match:= RegEx.create_from_string("((.*)_)?(physics|meshc
 static var blender_end_number_regex = RegEx.create_from_string("(.*)(\\.\\d+)")
 static var asset_data:AssetIOData = null
 static var DEBUG_MODE = true #true
+static var EXPERIMENTAL_FEATURES_ENABLED = true
 
 static var obj_to_call_on_table_update:Array
 static var asset_placer:Control

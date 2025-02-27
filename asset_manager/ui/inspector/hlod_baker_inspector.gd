@@ -126,8 +126,6 @@ func _ready():
 	)
 	
 	%edit_joined_mesh_in_blender_button.pressed.connect(open_baker_joined_mesh_gltf_with_blender)
-	%save_and_replace_with_hlod_button.visible = not baker == EditorInterface.get_edited_scene_root() and baker.scene_file_path
-	%save_and_replace_with_hlod_button.pressed.connect(baker.replace_baker_with_mhlod_scene)
 	
 func show_join_mesh_window():	
 	var window = preload("res://addons/m_terrain/asset_manager/ui/mesh_join_window.tscn").instantiate()	
@@ -180,12 +178,12 @@ func baker_renamed():
 
 func validate_bake_button():
 	%Bake.disabled = not baker.can_bake
-	if baker.can_bake:
+	if baker.can_bake:								
 		%hlod_bake_warning.text = ""
 		%Bake.tooltip_text = "Bake scene to hlod resource"
 	else:
 		#%hlod_bake_warning.text= "Baker name must be unique!"		
-		%Bake.tooltip_text = "HLod with the name " + baker.name + " is already used by another baker scene. please rename the baker scene"
+		%Bake.tooltip_text = baker.cant_bake_reason
 		
 
 func get_blender_path():
