@@ -3,7 +3,7 @@
 
 
 var active_mhlod_scene:MHlodScene
-var mhlod_scenes: Array[MHlodScene]
+var mhlod_scenes: Array
 @onready var edit_baker_scene_button = find_child("edit_baker_scene_button")
 @onready var layers_control = find_child("Layers")
 
