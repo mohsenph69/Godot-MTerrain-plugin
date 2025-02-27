@@ -1,7 +1,8 @@
+@tool
 @icon("res://addons/m_terrain/icons/hbaker_guest.svg")
 class_name HLod_Baker_Guest extends HLod_Baker
 
-func save_baker_changes(): #this function is called when editing baker inside another scene	
+func save_baker_changes(): #this function is called when editing baker inside another scene		
 	var scene_root = EditorInterface.get_edited_scene_root()
 	if not scene_file_path or scene_root == self: return
 	for child in find_children("*"):
