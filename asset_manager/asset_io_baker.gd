@@ -272,3 +272,14 @@ static func import_join_mesh_auto(path, joined_mesh_nodes, joined_mesh_id):
 				save_joined_mesh(joined_mesh_id, [mmesh], [name_data.lod])
 	MAssetMeshUpdater.refresh_all_masset_updater()
 	EditorInterface.get_resource_filesystem().scan()
+
+static func rebake_hlod_dependent_bakers(changed_hlod_path):		
+	var hlod_dir = MHlod.get_hlod_root_dir()
+	for hlod_file in DirAccess.get_files_at( hlod_dir ):		
+		var hlod_path = hlod_dir.path_join(hlod_file)
+		if hlod_path == changed_hlod_path: continue
+		var hlod:MHlod = load(hlod_path)
+		var baker_scene_as_string = FileAccess.get_file_as_string(hlod.baker_path)
+		if changed_hlod_path in baker_scene_as_string:
+			rebake_hlod_by_baker_path(hlod.baker_path)		
+			print("rebaked ", hlod.baker_path)

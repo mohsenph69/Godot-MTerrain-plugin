@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://boyvdfyc4qv16"]
+[gd_scene load_steps=16 format=3 uid="uid://boyvdfyc4qv16"]
 
 [ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
