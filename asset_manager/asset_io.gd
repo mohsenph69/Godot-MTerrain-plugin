@@ -9,6 +9,7 @@ static var regex_option_match:= RegEx.create_from_string("((.*)_)?(physics|meshc
 static var blender_end_number_regex = RegEx.create_from_string("(.*)(\\.\\d+)")
 static var asset_data:AssetIOData = null
 static var DEBUG_MODE = true #true
+static var EXPERIMENTAL_FEATURES_ENABLED = false
 
 static var obj_to_call_on_table_update:Array
 static var asset_placer:Control
@@ -418,20 +419,6 @@ static func get_blend_path_from_glb_id(glb_id)->String:
 				return import_info[k]["__original_blend_file"]
 	return ""
 
-
-static func remove_collection(collection_id):	
-	var asset_library = MAssetTable.get_singleton()
-	var glb_path = get_glb_path_from_collection_id(collection_id)
-	if not asset_library.import_info.has(glb_path): 
-		push_error("trying to remove a collection whose glb path does not exist")
-		return
-	for glb_node_name in asset_library.import_info[glb_path]:
-		if asset_library.import_info[glb_path][glb_node_name].id == collection_id:
-			asset_library.remove_collection(collection_id)
-			asset_library.import_info[glb_path][glb_node_name].id = -1					
-			break
-	asset_library.save()
-
 static func get_orphaned_collections():
 	var asset_library := MAssetTable.get_singleton()
 	var ids = asset_library.collection_get_list()			
@@ -501,3 +488,161 @@ static func get_all_collections_blend_file_path(): # {blend_file_path: glb_path}
 		if "__original_blend_file" in import_info[glb_path]:
 			result[ import_info[glb_path]["__original_blend_file"] ] = glb_path
 	return result
+
+static func get_asset_glb_name_from_collection_id(collection_id):
+	var import_info := MAssetTable.get_singleton().import_info	
+	for glb_path in import_info.keys():
+		if glb_path.begins_with("__"): continue
+		for glb_name in import_info[glb_path].keys():
+			if glb_name.begins_with("__"): continue
+			if not import_info[glb_path][glb_name].has("id"): continue
+			if import_info[glb_path][glb_name].id == collection_id:
+				return glb_name
+
+static func get_collection_id_from_blend_file_and_glb_name(blend_file, glb_name):
+	var import_info := MAssetTable.get_singleton().import_info	
+	for glb_path in import_info.keys():
+		if glb_path.begins_with("__"): continue
+		if not "__original_blend_file" in import_info[glb_path]:continue
+		if not import_info[glb_path]["__original_blend_file"] == blend_file: continue
+		if not import_info[glb_path].has(glb_name): continue
+		if not import_info[glb_path][glb_name].has("id"): continue
+		return import_info[glb_path][glb_name].id
+
+
+static func show_in_file_system(collection_id:int)->void:
+	var type = MAssetTable.get_singleton().collection_get_type(collection_id)
+	var item_id:int= MAssetTable.get_singleton().collection_get_item_id(collection_id)
+	var path:String
+	match type:
+		MAssetTable.MESH:
+			item_id = MAssetTable.mesh_item_get_first_valid_id(item_id)
+			if item_id==-1:
+				MTool.print_edmsg("Not valid mesh in collection "+str(collection_id))
+				return
+			path = MHlod.get_mesh_path(item_id)
+		MAssetTable.PACKEDSCENE: path = MHlod.get_packed_scene_path(item_id)
+		MAssetTable.DECAL: path = MHlod.get_decal_path(item_id)
+		MAssetTable.HLOD: path = MHlod.get_hlod_path(item_id)
+	EditorInterface.get_file_system_dock().navigate_to_path(path)
+	
+static func show_gltf(collection_id:int):
+	var at:=MAssetTable.get_singleton()
+	var type = at.collection_get_type(collection_id)
+	if type!=MAssetTable.ItemType.MESH:
+		printerr("Type MESH is not valid")
+		return
+	var glb_id = at.collection_get_glb_id(collection_id)
+	var import_info = at.import_info
+	var gpath:String
+	for path:String in import_info:
+		if path.begins_with("__"): continue
+		if import_info[path]["__id"] == glb_id:
+			gpath = path
+			break
+	at.clear_import_info_cache()
+	if not gpath.is_empty():
+		EditorInterface.get_file_system_dock().navigate_to_path(gpath)
+	
+static func remove_collection(collection_id:int,only_hlod=false, skip_confirmation = false)->void:
+	var at:=MAssetTable.get_singleton()
+	var type = at.collection_get_type(collection_id)
+	var item_id:int= at.collection_get_item_id(collection_id)
+	var cname = at.collection_get_name(collection_id)
+	var removing_files:PackedStringArray
+	match type:
+		MAssetTable.MESH:
+			removing_files.push_back(MHlod.get_mesh_path(item_id))
+		MAssetTable.PACKEDSCENE:
+			removing_files.push_back(MHlod.get_packed_scene_path(item_id))
+		MAssetTable.DECAL:
+			removing_files.push_back(MHlod.get_decal_path(item_id))
+		MAssetTable.HLOD:
+			removing_files.push_back(MHlod.get_hlod_path(item_id))
+			if not only_hlod and FileAccess.file_exists(MHlod.get_hlod_path(item_id)):
+				var hlod:MHlod= load(MHlod.get_hlod_path(item_id))
+				removing_files.push_back(hlod.baker_path)				
+ 	
+	if not skip_confirmation:
+		var confirm_box := ConfirmationDialog.new();
+		confirm_box.canceled.connect(confirm_box.queue_free)
+		confirm_box.initial_position=Window.WINDOW_INITIAL_POSITION_CENTER_SCREEN_WITH_MOUSE_FOCUS
+		confirm_box.dialog_text = "Removing collection \"%s\" These files will be removed:\n" % cname
+		for f in removing_files:
+			confirm_box.dialog_text += f +"\n"
+		confirm_box.visible = true
+		EditorInterface.popup_dialog( confirm_box )
+		confirm_box.confirmed.connect(remove_collection_confirmed.bind(removing_files, collection_id))
+	else:
+		remove_collection_confirmed(removing_files, collection_id)
+
+static func remove_collection_confirmed(removing_files, collection_id):
+	var at:=MAssetTable.get_singleton()
+	for f in removing_files:
+		if FileAccess.file_exists(f):
+			var res=load(f)
+			if res:
+				res.resource_path=""
+				res.emit_changed()
+			DirAccess.remove_absolute(f)
+			var __f = FileAccess.open(f.get_basename() + ".stop",FileAccess.WRITE)
+			__f.close()
+		else:
+			MTool.print_edmsg("file not exist to be remove: "+f)
+	at.collection_remove(collection_id)
+	MAssetTable.save()
+	if AssetIO.asset_placer:
+		AssetIO.asset_placer.regroup()
+	EditorInterface.get_resource_filesystem().scan()
+
+
+
+static func modify_in_blender(collection_id:int)->void:
+	var blender_path:String= EditorInterface.get_editor_settings().get_setting("filesystem/import/blender/blender_path")
+	if blender_path.is_empty():
+		MTool.print_edmsg("Blender path is empty! please set blender path in editor setting")
+		return
+	if not FileAccess.file_exists(blender_path):
+		MTool.print_edmsg("Blender path is not valid: "+blender_path)
+		return
+	var glb_file_path:String = AssetIO.get_glb_path_from_collection_id(collection_id)
+	glb_file_path = ProjectSettings.globalize_path(glb_file_path)
+	var blend_file_path:String= AssetIO.get_blend_path_from_collection_id(collection_id)
+	if blend_file_path.is_empty():
+		MTool.print_edmsg("blend_file_path is empty please set blend file path in import window")
+		return
+	var py_path:="res://addons/m_terrain/asset_manager/blender_addons/open_modify_mesh.py"
+	py_path = ProjectSettings.globalize_path(py_path)
+	var fpy = FileAccess.open(py_path,FileAccess.READ)
+	var py_script = fpy.get_as_text()
+	fpy.close()
+	## replace
+	var obj_name = MAssetTable.get_singleton().collection_get_name(collection_id)
+	py_script = py_script.replace("__OBJ_NAME__",obj_name)
+	py_script = py_script.replace("_GLB_FILE_PATH",glb_file_path)
+	py_script = py_script.replace("_BLEND_FILE_PATH",blend_file_path)
+	var tmp_path = "res://addons/m_terrain/tmp/pytmp.py"
+	if FileAccess.file_exists(tmp_path):DirAccess.remove_absolute(tmp_path) # good idea to clear to make sure eveyrthing go well
+	if not DirAccess.dir_exists_absolute(tmp_path.get_base_dir()):
+		DirAccess.make_dir_recursive_absolute(tmp_path.get_base_dir())
+	var tmpf = FileAccess.open(tmp_path,FileAccess.WRITE)
+	if not tmpf:
+		MTool.print_edmsg("Can not create tmp file for blender python script")
+		return
+	tmpf.store_string(py_script)
+	tmpf.close()
+	## RUN
+	tmp_path = ProjectSettings.globalize_path(tmp_path)
+	var args:PackedStringArray = ["--python",tmp_path]
+	OS.create_process(blender_path,args)
+	
+static func show_tag(collection_id:int)->void:
+	AssetIO.asset_placer.open_settings_window("tag", [collection_id])
+	
+static func open_packed_scene(collection_id:int)->void:
+	var item_id = MAssetTable.get_singleton().collection_get_item_id(collection_id)
+	var spath = MHlod.get_packed_scene_path(item_id)
+	if FileAccess.file_exists(spath):
+		EditorInterface.call_deferred("open_scene_from_path",spath)
+	else:
+		MTool.print_edmsg("Path not exist: "+spath)

@@ -9,9 +9,8 @@ class_name HLod_Baker extends Node3D
 @export var packed_scene_lod_cutoff_default:int=2
 @export var lights_lod_cutoff_default:int= 3
 
-
-
 signal asset_mesh_updated
+signal baked
 
 @export_storage var joined_mesh_id := -1
 @export_storage var joined_mesh_disabled := false
@@ -32,6 +31,10 @@ var asset_mesh_updater := MAssetMeshUpdater.new()
 var timer: Timer
 
 var can_bake =false
+var cant_bake_reason = ""
+
+var ignore_rename = false
+var is_saving = false
 
 const MAX_LOD = 10
 const UPDATE_INTERVAL = 0.5
@@ -56,7 +59,7 @@ func force_lod(lod:int):
 		
 func bake_to_hlod_resource():		
 	if (owner and owner.scene_file_path.is_empty()) or (not owner and scene_file_path.is_empty()):
-		MTool.print_edmsg("Pelase first save the baker scene")
+		MTool.print_edmsg("Please first save the baker scene")
 		return
 	var has_sub_hlod:=false
 	var physics_dictionary = AssetIOMaterials.get_physics_ids()
@@ -289,7 +292,9 @@ func bake_to_hlod_resource():
 	hlod_resource.join_at_lod = join_at_lod
 	hlod_resource.resource_name = name
 	if hlod_id==-1:
-		hlod_id = MAssetTable.get_last_free_hlod_id()
+		hlod_id = AssetIOBaker.find_hlod_id_by_baker_path(scene_file_path)		
+		if hlod_id==-1:
+			hlod_id = MAssetTable.get_last_free_hlod_id()
 	var bake_path := MHlod.get_hlod_path(hlod_id)
 	var stop_path = bake_path.get_basename() + ".stop"
 	if FileAccess.file_exists(stop_path):
@@ -315,21 +320,23 @@ func bake_to_hlod_resource():
 		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
 		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})
 	elif is_tmp_bake:
-		call_deferred("queue_free")
+		queue_free.call_deferred()
+	baked.emit()
+	AssetIOBaker.rebake_hlod_dependent_bakers(bake_path)
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
 func finish_generating_thumnail(data):
 	var tex:Texture2D=data["texture"]
 	if not tex:
-		if is_tmp_bake: call_deferred("queue_free")
+		if is_tmp_bake: queue_free.call_deferred()
 		return
 	var img = tex.get_image()
 	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD,data["has_sub_hlod"],Color(0,0,0.5))
 	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])
 	ThumbnailManager.save_thumbnail(img,tpath)
 	AssetIO.asset_placer.regroup()
-	if is_tmp_bake: call_deferred("queue_free")
+	if is_tmp_bake: queue_free.call_deferred()
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
@@ -389,12 +396,12 @@ func get_node_item_id(node_unique_name:String,type_hint:MHlod.Type)->int:
 	return final_item_ids[0]
 
 func get_all_sub_hlod(baker_node:Node3D,search_nodes:Array)->Array:
-	var nodes = get_all_nodes_in_baker(baker_node,search_nodes,func(n):return n is MHlodScene and n.hlod != null)
+	var nodes = get_all_nodes_in_baker(baker_node,search_nodes,func(n):return (n is MHlodScene and n.hlod) or (n is HLod_Baker_Guest and n.hlod_resource))
 	var result:Array
 	var baker_invers_transform = baker_node.global_transform.inverse()	
 	for n in nodes:
 		var hlod_data := SubHlodBakeData.new()
-		hlod_data.sub_hlod = n.hlod
+		hlod_data.sub_hlod = n.hlod if n is MHlodScene else n.hlod_resource
 		hlod_data.node = n
 		hlod_data.tr = baker_invers_transform * n.global_transform
 		result.push_back(hlod_data)				
@@ -408,6 +415,7 @@ func get_all_sub_bakers(baker_node:Node3D,search_nodes:Array)->Array:
 	while stack.size()!=0:
 		var current_node = stack[-1]
 		stack.remove_at(stack.size() - 1)			
+		if current_node is HLod_Baker_Guest: continue
 		if current_node is HLod_Baker:
 			#if current_node != null:
 			var baker_data := SubBakerBakeData.new()
@@ -516,29 +524,24 @@ func _enter_tree():
 
 func validate_can_bake():			
 	var path = MAssetTable.get_hlod_res_dir().path_join(name+".res")	
-	if not FileAccess.file_exists(path): 
-		can_bake = true
-	else:
+	can_bake = true
+	if FileAccess.file_exists(path): 			
 		var hlod:MHlod = load(path)	
 		if FileAccess.file_exists(hlod.get_baker_path()) and hlod.get_baker_path() != scene_file_path:
 			can_bake = false
-		else:		
-			can_bake = true
-
-
+			cant_bake_reason = "HLod with the name " + name + " is already used by another baker scene. please rename the baker scene"
+	if len(find_children("*", "HLod_Baker_Guest", true, true)) > 0:
+		can_bake = false		
+		cant_bake_reason = "Please resolve baker guest nodes before baking"
+	if not scene_file_path:
+		can_bake = false		
+		cant_bake_reason = "Please save the baker season before trying to bake"
 	
 func _exit_tree():	
 	asset_mesh_updater.show_boundary = false
 	asset_mesh_updater.update_force_lod(-1)
 	if is_instance_valid(timer) and timer.is_inside_tree():
 		timer.stop()
-
-func _notification(what):	
-	if what == NOTIFICATION_EDITOR_PRE_SAVE:
-		for child in get_children():
-			if child.has_meta("collection_id"):
-				for grandchild in child.get_children():					
-					grandchild.owner = null		
 	
 func _ready():				
 	renamed.connect(validate_can_bake)
@@ -582,3 +585,5 @@ func update_asset_mesh():
 func update_variation_layer_name(i, new_name):
 	variation_layers[i] = new_name
 	notify_property_list_changed()
+
+	

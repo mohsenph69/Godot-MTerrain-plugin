@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://8p3wi7b8y3qh"]
+
+[ext_resource type="PackedScene" uid="uid://boyvdfyc4qv16" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn" id="1_l1xqd"]
+[ext_resource type="Texture2D" uid="uid://cbdu2j1j6r76t" path="res://addons/m_terrain/icons/hlod_scene.svg" id="2_65svk"]
+[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/save_and_replace_with_hlod_button.gd" id="3_7odm2"]
+
+[node name="HlodBakerInspector" instance=ExtResource("1_l1xqd")]
+
+[node name="save_and_replace_with_hlod_button" type="Button" parent="HBoxContainer3" index="3"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Save and replace with mhlod_scene"
+icon = ExtResource("2_65svk")
+alignment = 0
+icon_alignment = 1
+script = ExtResource("3_7odm2")

@@ -103,10 +103,11 @@ func regroup(group = grouping):
 				item.set_metadata(0, collection_id)
 				items[collection_id] = item	
 			
-func select_collection(id):
+func select_collection(ids: Array = []):
 	collection_list.deselect_all()
-	items[id].select(0)
-	collection_list.scroll_to_item(items[id])
+	for id in ids:
+		items[id].select(0)
+	collection_list.scroll_to_item(items[ids[-1]])
 	update_active_collection()
 	
 func get_asset_placer():	
