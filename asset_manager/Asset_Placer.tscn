@@ -24,7 +24,7 @@
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="19_sansc"]
 [ext_resource type="Script" uid="uid://bsda7lx3ycgmd" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_l47xo"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_algvq"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -37,6 +37,7 @@ theme = ExtResource("1_nhl8i")
 script = ExtResource("2_b0v3a")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
+clip_children = 1
 layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
@@ -52,7 +53,7 @@ layout_mode = 2
 tooltip_text = "Hold Shift or Ctrl to single select"
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_l47xo")
+button_group = SubResource("ButtonGroup_algvq")
 text = " Types "
 icon_alignment = 2
 script = ExtResource("4_he502")
@@ -90,7 +91,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_l47xo")
+button_group = SubResource("ButtonGroup_algvq")
 icon = ExtResource("3_bmpki")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -129,7 +130,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_l47xo")
+button_group = SubResource("ButtonGroup_algvq")
 icon = ExtResource("6_rsi1g")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -167,7 +168,7 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_l47xo")
+button_group = SubResource("ButtonGroup_algvq")
 icon = ExtResource("5_vcl6i")
 expand_icon = true
 script = ExtResource("4_he502")
@@ -249,15 +250,15 @@ text = "O"
 
 [node name="x_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
-text = "x(0)"
+text = "x(0.0)"
 
 [node name="y_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
-text = "y(0)"
+text = "y(0.0)"
 
 [node name="z_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
-text = "z(0)"
+text = "z(0.0)"
 
 [node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
@@ -281,7 +282,7 @@ layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
 button_pressed = true
-button_group = SubResource("ButtonGroup_l47xo")
+button_group = SubResource("ButtonGroup_algvq")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
