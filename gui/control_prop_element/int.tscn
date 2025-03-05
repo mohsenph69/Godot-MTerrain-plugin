@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://boufyfa4ti3eb"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/gui/control_prop_element/int.gd" id="1_wuss4"]
+[ext_resource type="Script" uid="uid://bqaba4uhxn2on" path="res://addons/m_terrain/gui/control_prop_element/int.gd" id="1_wuss4"]
 
 [node name="int" type="VBoxContainer"]
 offset_right = 161.0

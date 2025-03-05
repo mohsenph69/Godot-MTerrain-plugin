@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://buvo4x4g1q0tr"]
 
 [ext_resource type="PackedScene" uid="uid://emr0fpf2qo8g" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers/variation_layers.tscn" id="2_3rehg"]
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.gd" id="2_dc4at"]
+[ext_resource type="Script" uid="uid://w7t06tg3cm1a" path="res://addons/m_terrain/asset_manager/ui/inspector/mhlod_scene_inspector.gd" id="2_dc4at"]
 
 [node name="MhlodSceneInspector" type="VBoxContainer"]
 offset_right = 1152.0

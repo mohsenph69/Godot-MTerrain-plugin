@@ -1,7 +1,7 @@
 [gd_scene load_steps=14 format=3 uid="uid://btfhp7mnhc5nj"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_byb3a"]
-[ext_resource type="Script" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_y34ur"]
+[ext_resource type="Script" uid="uid://bbaq5maxitm64" path="res://addons/m_terrain/gizmos/mpath_gizmo_gui.gd" id="1_y34ur"]
 [ext_resource type="Texture2D" uid="uid://c64direekaeap" path="res://addons/m_terrain/icons/mirror_icon.svg" id="2_tic3q"]
 [ext_resource type="Texture2D" uid="uid://ckbvdmvbcxfb6" path="res://addons/m_terrain/icons/magnet_icon.svg" id="3_yoi5b"]
 [ext_resource type="Texture2D" uid="uid://30e6iyx7q1y7" path="res://addons/m_terrain/icons/mpath_collapse_point_icon.svg" id="4_38e8d"]

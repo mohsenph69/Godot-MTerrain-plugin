@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b6wfdaqojnwju"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_mask_list.gd" id="1_sg3sf"]
+[ext_resource type="Script" uid="uid://cockrb2et34ps" path="res://addons/m_terrain/gui/mtools_mask_list.gd" id="1_sg3sf"]
 
 [node name="brush_masks" type="ItemList"]
 custom_minimum_size = Vector2(0, 160)

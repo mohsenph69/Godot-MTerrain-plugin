@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cdrdscq3n8pmm"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_be25g"]
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers_dialog.gd" id="2_1vq7g"]
+[ext_resource type="Script" uid="uid://desm26t6ldaq2" path="res://addons/m_terrain/asset_manager/ui/inspector/variation_layers_dialog.gd" id="2_1vq7g"]
 
 [node name="variation_layers_dialog" type="Window"]
 auto_translate_mode = 1

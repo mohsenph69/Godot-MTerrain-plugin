@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bhksdbqbouh35"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_1xcpc"]
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/import_window_hlod_scene.gd" id="2_7sas6"]
+[ext_resource type="Script" uid="uid://dgkng6rjwwm3x" path="res://addons/m_terrain/asset_manager/ui/import_window_hlod_scene.gd" id="2_7sas6"]
 
 [node name="PanelContainer" type="PanelContainer"]
 anchors_preset = 15

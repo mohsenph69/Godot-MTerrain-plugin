@@ -1,9 +1,9 @@
 [gd_scene load_steps=7 format=3 uid="uid://bi64wdm5e26po"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/gui/import_window.gd" id="1_1yy7h"]
+[ext_resource type="Script" uid="uid://bw6j1vtvkxmnr" path="res://addons/m_terrain/gui/import_window.gd" id="1_1yy7h"]
 [ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="2_7c003"]
 [ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="3_6huwx"]
-[ext_resource type="Script" path="res://addons/m_terrain/gui/import Godot res.gd" id="4_wj43a"]
+[ext_resource type="Script" uid="uid://cju48uql17f23" path="res://addons/m_terrain/gui/import Godot res.gd" id="4_wj43a"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cs33g"]
 content_margin_left = 5.0
