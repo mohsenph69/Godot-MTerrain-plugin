@@ -327,10 +327,10 @@ static func rebake_hlod_dependent_bakers(changed_hlod_path):
 static func find_hlod_id_by_baker_path(baker_path):	
 	var dir = MHlod.get_hlod_root_dir() 
 	for file in DirAccess.get_files_at( dir ):		
-		if file.ends_with(".stop"): continue
+		if not file.ends_with(".res"): continue
 		var path = dir.path_join(file)		
 		var hlod:MHlod = load(path)		
-		if hlod.baker_path == baker_path: 			
+		if hlod and hlod.baker_path == baker_path: 			
 			return int(file)
 	return -1
 	
