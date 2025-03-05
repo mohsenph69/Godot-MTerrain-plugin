@@ -646,3 +646,40 @@ static func open_packed_scene(collection_id:int)->void:
 		EditorInterface.call_deferred("open_scene_from_path",spath)
 	else:
 		MTool.print_edmsg("Path not exist: "+spath)
+
+
+static func validate_collections_and_remove_broken():
+	var at = MAssetTable.get_singleton()	
+	var collections_to_remove = []
+	var processed_item_ids = []
+	for collection_id in at.collections_get_by_type(MAssetTable.ItemType.HLOD):
+		var id = at.collection_get_item_id(collection_id)
+		processed_item_ids.push_back(id)
+		if not FileAccess.file_exists( MHlod.get_hlod_path(id) ) or id in processed_item_ids:			
+			collections_to_remove.push_back(collection_id)			
+	for collection_id in at.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+		var id = at.collection_get_item_id(collection_id)
+		if not FileAccess.file_exists( MHlod.get_packed_scene_path(id) ):
+			collections_to_remove.push_back(collection_id)
+	for collection_id in at.collections_get_by_type(MAssetTable.ItemType.DECAL):
+		var id = at.collection_get_item_id(collection_id)
+		if not FileAccess.file_exists( MHlod.get_decal_path(id) ):
+			collections_to_remove.push_back(collection_id)
+	for collection_id in at.collections_get_by_type(MAssetTable.ItemType.MESH):
+		var id = at.collection_get_item_id(collection_id)
+		if not FileAccess.file_exists( MHlod.get_mesh_path(id) ):
+			collections_to_remove.push_back(collection_id)
+	print(collections_to_remove)
+	for collection_id in collections_to_remove:
+		at.collection_remove(collection_id)
+	MAssetTable.save()
+	if AssetIO.asset_placer:
+		AssetIO.asset_placer.regroup()
+	EditorInterface.get_resource_filesystem().scan()
+	
+	
+	
+	
+	
+	
+	

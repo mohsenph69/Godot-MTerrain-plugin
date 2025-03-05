@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://c58bes0ffhqo"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_layer_warning_popup.gd" id="1_ledk4"]
+[ext_resource type="Script" uid="uid://brq462sglv2ak" path="res://addons/m_terrain/gui/mtools_layer_warning_popup.gd" id="1_ledk4"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_or3fh"]
 
 [node name="Control" type="Window"]

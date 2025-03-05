@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dhwm55hy1pmuu"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/collection_editor.gd" id="1_aksm0"]
+[ext_resource type="Script" uid="uid://byqnp56cdrcnb" path="res://addons/m_terrain/asset_manager/collection_editor.gd" id="1_aksm0"]
 
 [node name="Collection_Editor" type="Node3D"]
 script = ExtResource("1_aksm0")

@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://fyftqkg4kk1r"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector_joined_mesh_preview.gd" id="1_uqbcg"]
+[ext_resource type="Script" uid="uid://doly8uawh7l73" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector_joined_mesh_preview.gd" id="1_uqbcg"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_5026g"]
 sky_energy_multiplier = 2.4

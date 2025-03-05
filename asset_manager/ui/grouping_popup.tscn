@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cysovcswko088"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.gd" id="1_oqoy2"]
+[ext_resource type="Script" uid="uid://biofhkjdgeyy3" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.gd" id="1_oqoy2"]
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="2_vflmy"]
 
 [node name="PanelContainer" type="PanelContainer"]

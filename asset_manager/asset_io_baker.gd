@@ -313,18 +313,24 @@ static func rebake_hlod_dependent_bakers(changed_hlod_path):
 	var hlod_dir = MHlod.get_hlod_root_dir()
 	for hlod_file in DirAccess.get_files_at( hlod_dir ):		
 		var hlod_path = hlod_dir.path_join(hlod_file)
+		if hlod_path.ends_with(".stop"): continue		
 		if hlod_path == changed_hlod_path: continue
 		var hlod:MHlod = load(hlod_path)
+		if not hlod.baker_path: 
+			DirAccess.remove_absolute(hlod_path)
+			return
 		var baker_scene_as_string = FileAccess.get_file_as_string(hlod.baker_path)
 		if changed_hlod_path in baker_scene_as_string:
 			rebake_hlod_by_baker_path(hlod.baker_path)		
 			print("rebaked ", hlod.baker_path)
 
-static func find_hlod_id_by_baker_path(baker_path):
+static func find_hlod_id_by_baker_path(baker_path):	
 	var dir = MHlod.get_hlod_root_dir() 
-	for file in DirAccess.get_files_at( dir ):
-		var path = dir.path_join(file)
-		var hlod:MHlod = load(path)
-		if hlod.baker_path == baker_path: 
+	for file in DirAccess.get_files_at( dir ):		
+		if file.ends_with(".stop"): continue
+		var path = dir.path_join(file)		
+		var hlod:MHlod = load(path)		
+		if hlod.baker_path == baker_path: 			
 			return int(file)
+	return -1
 	

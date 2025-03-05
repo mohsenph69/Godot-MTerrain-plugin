@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://yyvmuhqx1jgi"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/gui/mtools_layer_item.gd" id="1_v5m32"]
+[ext_resource type="Script" uid="uid://vppt66u3dq1o" path="res://addons/m_terrain/gui/mtools_layer_item.gd" id="1_v5m32"]
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_h5ewu"]
 [ext_resource type="Texture2D" uid="uid://s6jqtql0r2bw" path="res://addons/m_terrain/icons/edit_icon.svg" id="3_8xkqq"]
 [ext_resource type="Texture2D" uid="uid://tow1rj13cxaw" path="res://addons/m_terrain/icons/merge_down_icon.svg" id="4_brtxh"]

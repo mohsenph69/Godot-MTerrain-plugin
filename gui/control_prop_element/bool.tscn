@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://drpc7g4qxdu8p"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/gui/control_prop_element/bool.gd" id="1_j602s"]
+[ext_resource type="Script" uid="uid://duinamjr8d8uw" path="res://addons/m_terrain/gui/control_prop_element/bool.gd" id="1_j602s"]
 
 [node name="bool" type="VBoxContainer"]
 offset_right = 55.0

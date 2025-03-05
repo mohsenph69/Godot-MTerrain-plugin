@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://5wjjba4i6uji"]
 
-[ext_resource type="Script" path="res://addons/m_terrain/asset_manager/ui/group_control.gd" id="1_plja8"]
+[ext_resource type="Script" uid="uid://bkvw8aljop0uc" path="res://addons/m_terrain/asset_manager/ui/group_control.gd" id="1_plja8"]
 
 [node name="group" type="VBoxContainer"]
 size_flags_horizontal = 3
