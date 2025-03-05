@@ -12,7 +12,8 @@ var classes_info:= {
 	###############      0     #####    1     ######    2      #########     3   ########
 	# class_name : [func_is_valid,HAS_AABB,HAS_COL,HAS_HANDLE],
 	"MDecalInstance":["has_decal",true,true,true],
-	"MHlodScene":["is_init_scene",true,true,false]
+	"MHlodScene":["is_init_scene",true,true,false],
+	"MObstacle":["has_gizmo",true,true,false]
 }
 
 var handle_ids:PackedInt32Array = [0,1,2,3,4,5]
