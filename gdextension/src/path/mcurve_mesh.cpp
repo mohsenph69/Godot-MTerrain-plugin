@@ -320,6 +320,9 @@ Ref<MeshSlicedInfo> MCurveMesh::_generate_mesh_sliced_info(Ref<Mesh> mesh){
 }
 
 void MCurveMesh::_update_visibilty(){
+    if(path==nullptr || curve.is_null()){
+        return;
+    }
     bool v = path->is_visible() && path->is_inside_tree() && is_inside_tree();
     for(HashMap<int64_t,Instance>::Iterator it=curve_mesh_instances.begin();it!=curve_mesh_instances.end();++it){
         RS->instance_set_visible(it->value.instance,v);
