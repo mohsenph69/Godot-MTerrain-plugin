@@ -291,10 +291,12 @@ func bake_to_hlod_resource():
 	##################################
 	hlod_resource.join_at_lod = join_at_lod
 	hlod_resource.resource_name = name
+	if hlod_id != -1:
+		validate_hlod_id()
 	if hlod_id==-1:
 		hlod_id = AssetIOBaker.find_hlod_id_by_baker_path(scene_file_path)		
 		if hlod_id==-1:
-			hlod_id = MAssetTable.get_last_free_hlod_id()
+			hlod_id = MAssetTable.get_last_free_hlod_id()	
 	var bake_path := MHlod.get_hlod_path(hlod_id)
 	var stop_path = bake_path.get_basename() + ".stop"
 	if FileAccess.file_exists(stop_path):
@@ -322,7 +324,7 @@ func bake_to_hlod_resource():
 	elif is_tmp_bake:
 		queue_free.call_deferred()
 	baked.emit()
-	AssetIOBaker.rebake_hlod_dependent_bakers(bake_path)
+	#AssetIOBaker.rebake_hlod_dependent_bakers(bake_path)
 	#EditorInterface.get_resource_filesystem().scan()
 	return save_err
 
@@ -437,38 +439,40 @@ func get_joined_mesh():
 	
 
 func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):			
-	###################
-	## JOIN THE MESH ##
-	###################
-	var mesh_joiner := MMeshJoiner.new()
-	var baker_inverse_transform = global_transform.inverse()	
-	var mesh_array := []	
-	var material_set_id_array:  PackedInt32Array = []
-	var transforms := []
-	for node:MAssetMesh in get_all_masset_mesh_nodes(self, nodes_to_join):					
-		for mesh_item:MAssetMeshData in node.get_mesh_data():
-			mesh_array.push_back(mesh_item.get_last_valid_mesh())
-			material_set_id_array.push_back(mesh_item.get_material_set_id()[mesh_item.get_last_valid_lod()])
-			transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
-	for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
-		var mhlod_node: MHlodScene = data.node
-		if not is_instance_valid(data.node):
-			push_error("trying to join mesh with mhlod_scenes, but node is invalid: ")
-			continue
-		var mesh_transforms = mhlod_node.get_last_lod_mesh_ids_transforms()
-		for mesh_transform in mesh_transforms:			
-			var mmesh:MMesh = load(MHlod.get_mesh_path(mesh_transform[0]))
-			if mmesh:
-				mesh_array.push_back( mmesh )
-				transforms.push_back(baker_inverse_transform * mesh_transform[1])
-				material_set_id_array.push_back( mesh_transform[2] )
-	mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
-	var joined_mesh:ArrayMesh= mesh_joiner.join_meshes()
-	# Setting surface names as ID of material
-	for s in range(joined_mesh.get_surface_count()):
-		var mat = joined_mesh.surface_get_material(s)
-		var id = AssetIOMaterials.get_material_id(mat)
-		joined_mesh.surface_set_name(s,str(id))
+	var joined_mesh := ArrayMesh.new()
+	if len(nodes_to_join)>0:
+		###################
+		## JOIN THE MESH ##
+		###################
+		var mesh_joiner := MMeshJoiner.new()
+		var baker_inverse_transform = global_transform.inverse()	
+		var mesh_array := []	
+		var material_set_id_array:  PackedInt32Array = []
+		var transforms := []
+		for node:MAssetMesh in get_all_masset_mesh_nodes(self, nodes_to_join):					
+			for mesh_item:MAssetMeshData in node.get_mesh_data():
+				mesh_array.push_back(mesh_item.get_last_valid_mesh())
+				material_set_id_array.push_back(mesh_item.get_material_set_id()[mesh_item.get_last_valid_lod()])
+				transforms.push_back(baker_inverse_transform * mesh_item.get_global_transform())		
+		for data:SubHlodBakeData in get_all_sub_hlod(self, get_children()):		
+			var mhlod_node: MHlodScene = data.node
+			if not is_instance_valid(data.node):
+				push_error("trying to join mesh with mhlod_scenes, but node is invalid: ")
+				continue
+			var mesh_transforms = mhlod_node.get_last_lod_mesh_ids_transforms()
+			for mesh_transform in mesh_transforms:			
+				var mmesh:MMesh = load(MHlod.get_mesh_path(mesh_transform[0]))
+				if mmesh:
+					mesh_array.push_back( mmesh )
+					transforms.push_back(baker_inverse_transform * mesh_transform[1])
+					material_set_id_array.push_back( mesh_transform[2] )
+		mesh_joiner.insert_mmesh_data(mesh_array, transforms, material_set_id_array)		
+		joined_mesh = mesh_joiner.join_meshes()
+		# Setting surface names as ID of material
+		for s in range(joined_mesh.get_surface_count()):
+			var mat = joined_mesh.surface_get_material(s)
+			var id = AssetIOMaterials.get_material_id(mat)
+			joined_mesh.surface_set_name(s,str(id))
 	var mmesh = MMesh.new()
 	mmesh.create_from_mesh(joined_mesh)
 	if joined_mesh_id == -1:
@@ -587,3 +591,21 @@ func update_variation_layer_name(i, new_name):
 	notify_property_list_changed()
 
 	
+func validate_hlod_id():
+	print("validating hlod_id ", hlod_id)	
+	if hlod_id == -1: 
+		hlod_id = AssetIOBaker.find_hlod_id_by_baker_path(scene_file_path)		
+		if hlod_id == -1: 
+			hlod_id = MAssetTable.get_last_free_hlod_id()
+		return
+	else:
+		var path = MHlod.get_hlod_path(hlod_id)
+		if not FileAccess.file_exists(path): 
+			return			
+		var mhlod:MHlod = load(path)
+		if not mhlod.baker_path == scene_file_path:			
+			hlod_id = AssetIOBaker.find_hlod_id_by_baker_path(scene_file_path)					
+			if hlod_id ==-1:				
+				hlod_id = MAssetTable.get_last_free_hlod_id()										
+			return	
+		

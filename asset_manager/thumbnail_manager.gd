@@ -17,7 +17,8 @@ func _process(delta):
 	
 func handle_generate_thumbnail(path, preview, thumbnail_preview,data):				
 	data["texture"] = preview	
-	data.callback.call(data)	
+	if data.callback.is_valid():
+		data.callback.call(data)	
 	generating_thumbnail = false
 	
 static func get_valid_thumbnail(collection_id:int)->Texture2D:

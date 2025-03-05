@@ -38,7 +38,10 @@ func _ready():
 			asset_placer.assets_changed.emit({"tag":active_collections})
 			#regroup()
 	)
-	collection_list.cell_selected.connect( update_active_collection.call_deferred )
+	#collection_list.cell_selected.connect( update_active_collection.call_deferred )
+	collection_list.multi_selected.connect(func(item: TreeItem, column: int, selected: bool):
+		update_active_collection.call_deferred()
+	)
 	find_child("grouping_popup").group_selected.connect(func(group):
 		regroup(group)
 	)
@@ -51,7 +54,7 @@ func update_active_collection():
 	if len(active_collections)>0:
 		tag_list.set_tags_from_data( asset_library.collection_get_tags(active_collections[-1]))		
 	else:
-		tag_list.set_tags_from_data( [] )
+		tag_list.set_tags_from_data( [] )	
 	
 func regroup(group = grouping):
 	grouping = group
