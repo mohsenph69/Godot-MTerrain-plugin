@@ -1,7 +1,11 @@
 [gd_scene load_steps=3 format=3 uid="uid://cgvj582ftey6e"]
 
 [ext_resource type="Texture2D" uid="uid://b5cmhvvnwshvc" path="res://addons/m_terrain/icons/brush.png" id="1_tnwak"]
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://c1m30tsc1nhcf" path="res://addons/m_terrain/gui/brush_decal.gd" id="2_ws2n5"]
+=======
+[ext_resource type="Script" uid="uid://da8f3ni8io72l" path="res://addons/m_terrain/gui/brush_decal.gd" id="2_ws2n5"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="brush_decal" type="Decal"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.7598, 0, 20.5917)

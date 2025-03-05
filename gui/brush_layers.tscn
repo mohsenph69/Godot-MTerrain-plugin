@@ -1,6 +1,10 @@
 [gd_scene load_steps=2 format=3 uid="uid://bacapwqdybi81"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://dkb4syagkdhya" path="res://addons/m_terrain/gui/brush_layers.gd" id="1_3au4w"]
+=======
+[ext_resource type="Script" uid="uid://dr04rwb0tovg8" path="res://addons/m_terrain/gui/brush_layers.gd" id="1_3au4w"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="brush_layers" type="ItemList"]
 custom_minimum_size = Vector2(300, 250)

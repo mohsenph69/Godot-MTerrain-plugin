@@ -1,7 +1,11 @@
 [gd_scene load_steps=7 format=3 uid="uid://b8siu75pf6n01"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_f6oq8"]
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://xjdctjwsuyes" path="res://addons/m_terrain/gui/image_creator_window.gd" id="1_ietn6"]
+=======
+[ext_resource type="Script" uid="uid://clt7nkmhx1da4" path="res://addons/m_terrain/gui/image_creator_window.gd" id="1_ietn6"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 [ext_resource type="PackedScene" uid="uid://c2pjojed3ox4q" path="res://addons/m_terrain/gui/gui_part/data_compress_option.tscn" id="3_2dmcf"]
 [ext_resource type="PackedScene" uid="uid://bt4wolcb7b55e" path="res://addons/m_terrain/gui/gui_part/file_compress.tscn" id="4_nqnd6"]
 

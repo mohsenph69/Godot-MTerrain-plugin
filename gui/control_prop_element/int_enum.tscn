@@ -1,6 +1,10 @@
 [gd_scene load_steps=2 format=3 uid="uid://csovwghad2mro"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://bolvn6ff3kakt" path="res://addons/m_terrain/gui/control_prop_element/int_enum.gd" id="1_heunk"]
+=======
+[ext_resource type="Script" uid="uid://dgqv4r30v6k6i" path="res://addons/m_terrain/gui/control_prop_element/int_enum.gd" id="1_heunk"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="int_enum" type="MarginContainer"]
 offset_right = 112.0

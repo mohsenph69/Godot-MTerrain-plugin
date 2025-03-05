@@ -1,9 +1,15 @@
 [gd_scene load_steps=5 format=3 uid="uid://bqkvkqxjl8sx6"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_fc1wt"]
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://c8m4kg4oh1nwy" path="res://addons/m_terrain/asset_manager/physics_setting.gd" id="1_xbhqy"]
 [ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="3_7reqd"]
 [ext_resource type="Script" uid="uid://c3n1hob2nb35i" path="res://addons/m_terrain/asset_manager/materials_list.gd" id="3_jc8wk"]
+=======
+[ext_resource type="Script" uid="uid://b8v7amn4qa04m" path="res://addons/m_terrain/asset_manager/physics_setting.gd" id="1_xbhqy"]
+[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="3_7reqd"]
+[ext_resource type="Script" uid="uid://bb52bbtg5x7gi" path="res://addons/m_terrain/asset_manager/materials_list.gd" id="3_jc8wk"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="physics_setting" type="PanelContainer"]
 anchors_preset = 15

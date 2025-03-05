@@ -1,6 +1,10 @@
 [gd_scene load_steps=2 format=3 uid="uid://b76ioum2i7yjy"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://bwvhcwnbcbyw0" path="res://addons/m_terrain/gizmos/mcurve_mesh_gui.gd" id="1_16uhh"]
+=======
+[ext_resource type="Script" uid="uid://creqec55xp0sw" path="res://addons/m_terrain/gizmos/mcurve_mesh_gui.gd" id="1_16uhh"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="mcurve_mesh" type="HBoxContainer"]
 anchors_preset = 15

@@ -1,6 +1,10 @@
 [gd_scene load_steps=2 format=3 uid="uid://cl7pw54mmpvlb"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://qbcq5woaya26" path="res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.gd" id="1_nlfb7"]
+=======
+[ext_resource type="Script" uid="uid://ddyxq6oxgdr7u" path="res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.gd" id="1_nlfb7"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="_VBoxContainer_26448" type="VBoxContainer"]
 anchors_preset = 15

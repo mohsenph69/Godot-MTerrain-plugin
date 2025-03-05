@@ -1,6 +1,10 @@
 [gd_scene load_steps=4 format=3 uid="uid://dluujoajca0ja"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://k34n8k5qj4k" path="res://addons/m_terrain/asset_manager/ui/search_component.gd" id="1_ohmcf"]
+=======
+[ext_resource type="Script" uid="uid://7f80hufdgyen" path="res://addons/m_terrain/asset_manager/ui/search_component.gd" id="1_ohmcf"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 [ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="2_kncb0"]
 [ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="3_nmuht"]
 

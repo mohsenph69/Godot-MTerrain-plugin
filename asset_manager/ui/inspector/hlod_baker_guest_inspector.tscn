@@ -2,7 +2,11 @@
 
 [ext_resource type="PackedScene" uid="uid://boyvdfyc4qv16" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.tscn" id="1_l1xqd"]
 [ext_resource type="Texture2D" uid="uid://cbdu2j1j6r76t" path="res://addons/m_terrain/icons/hlod_scene.svg" id="2_65svk"]
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://dxp1e5y71p3r8" path="res://addons/m_terrain/asset_manager/ui/inspector/save_and_replace_with_hlod_button.gd" id="3_7odm2"]
+=======
+[ext_resource type="Script" uid="uid://dfh6gdwpgs6wc" path="res://addons/m_terrain/asset_manager/ui/inspector/save_and_replace_with_hlod_button.gd" id="3_7odm2"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="HlodBakerInspector" instance=ExtResource("1_l1xqd")]
 

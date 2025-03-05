@@ -1,6 +1,10 @@
 [gd_scene load_steps=3 format=3 uid="uid://byq2krnjsg1oc"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://dlk6eltt8d7pv" path="res://addons/m_terrain/asset_manager/m_hlod_previewer.gd" id="1_p66ot"]
+=======
+[ext_resource type="Script" uid="uid://dokyhrxmdc7a1" path="res://addons/m_terrain/asset_manager/m_hlod_previewer.gd" id="1_p66ot"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [sub_resource type="Resource" id="Resource_ucqhn"]
 metadata/__load_path__ = "res://massets/hlod/Test_Baker.res"

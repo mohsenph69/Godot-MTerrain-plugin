@@ -1,6 +1,10 @@
 [gd_scene load_steps=4 format=3 uid="uid://cu3koya88juu"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://cvw818ifr4jbb" path="res://addons/m_terrain/gui/mask_decal.gd" id="1_8ow5o"]
+=======
+[ext_resource type="Script" uid="uid://cnn3ptofof2so" path="res://addons/m_terrain/gui/mask_decal.gd" id="1_8ow5o"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ejyee"]
 

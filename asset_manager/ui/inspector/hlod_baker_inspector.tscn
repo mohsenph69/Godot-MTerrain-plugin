@@ -1,6 +1,10 @@
 [gd_scene load_steps=14 format=3 uid="uid://boyvdfyc4qv16"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://cnh56b53omw4b" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
+=======
+[ext_resource type="Script" uid="uid://6vka5suy1afj" path="res://addons/m_terrain/asset_manager/ui/inspector/hlod_baker_inspector.gd" id="1_2wg81"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 [ext_resource type="Texture2D" uid="uid://fj1va27m7i5e" path="res://addons/m_terrain/icons/eye.svg" id="2_gaehx"]
 [ext_resource type="Texture2D" uid="uid://o6bjob1w4w0w" path="res://addons/m_terrain/icons/tick_icon.svg" id="2_kaebi"]
 [ext_resource type="Texture2D" uid="uid://bq8ier4u23etm" path="res://addons/m_terrain/icons/search_icon.svg" id="3_iqlmd"]

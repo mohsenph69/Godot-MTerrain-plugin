@@ -1,6 +1,10 @@
 [gd_scene load_steps=2 format=3 uid="uid://co53fkr4oogwn"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://6iit4ujavgfn" path="res://addons/m_terrain/gui/mtools_keyboard_shortcut_item.gd" id="1_e0rfo"]
+=======
+[ext_resource type="Script" uid="uid://cqkuc8gumbxpa" path="res://addons/m_terrain/gui/mtools_keyboard_shortcut_item.gd" id="1_e0rfo"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="HBoxContainer" type="HBoxContainer"]
 alignment = 1

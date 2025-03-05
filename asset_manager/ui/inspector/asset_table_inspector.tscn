@@ -1,6 +1,10 @@
 [gd_scene load_steps=2 format=3 uid="uid://cypjfwjlguowi"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://cawa336bd5ha7" path="res://addons/m_terrain/asset_manager/ui/inspector/asset_table_inspector.gd" id="1_oevxw"]
+=======
+[ext_resource type="Script" uid="uid://bgpe1kot22fas" path="res://addons/m_terrain/asset_manager/ui/inspector/asset_table_inspector.gd" id="1_oevxw"]
+>>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="Control" type="VBoxContainer"]
 anchors_preset = 15
