@@ -54,8 +54,7 @@ func update_active_collection():
 	if len(active_collections)>0:
 		tag_list.set_tags_from_data( asset_library.collection_get_tags(active_collections[-1]))		
 	else:
-		tag_list.set_tags_from_data( [] )
-	print(active_collections)
+		tag_list.set_tags_from_data( [] )	
 	
 func regroup(group = grouping):
 	grouping = group
