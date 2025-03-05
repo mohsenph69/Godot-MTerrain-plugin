@@ -1,11 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://yt54ov6e46mm"]
 
 [ext_resource type="ArrayMesh" uid="uid://c5eueesxs7em3" path="res://addons/m_terrain/gui/human_male.obj" id="1_mmf7f"]
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://bhlpwj88gy0wp" path="res://addons/m_terrain/gui/human_male.gd" id="2_k8mdx"]
-=======
 [ext_resource type="Script" uid="uid://dmyqtylpm7uno" path="res://addons/m_terrain/gui/human_male.gd" id="2_k8mdx"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uyifb"]
 shading_mode = 2

@@ -1,10 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://br05oyiapuwpf"]
 
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://dhcj4wnvrmma0" path="res://addons/m_terrain/inspector/gui/curve_terrain.gd" id="1_txmoh"]
-=======
 [ext_resource type="Script" uid="uid://kobtpcesvvg0" path="res://addons/m_terrain/inspector/gui/curve_terrain.gd" id="1_txmoh"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 [ext_resource type="Texture2D" uid="uid://bsdfn2yec6vtv" path="res://addons/m_terrain/icons/terrain_icon.png" id="2_n3lna"]
 [ext_resource type="Texture2D" uid="uid://c08s0xlu8tted" path="res://addons/m_terrain/icons/brush_icon.png" id="3_bwp6e"]
 [ext_resource type="Texture2D" uid="uid://d03ukmldfnxs3" path="res://addons/m_terrain/icons/foilage_icon.png" id="4_ftpdb"]

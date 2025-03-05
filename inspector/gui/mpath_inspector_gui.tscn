@@ -1,10 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://d4l2pvir8hm8l"]
 
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://b0seunc3c3mn8" path="res://addons/m_terrain/inspector/gui/mpath_inspector_gui.gd" id="1_jv20c"]
-=======
 [ext_resource type="Script" uid="uid://d1aye7volh22v" path="res://addons/m_terrain/inspector/gui/mpath_inspector_gui.gd" id="1_jv20c"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jefn3"]
 

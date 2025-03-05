@@ -1,10 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://rb1pu2ggav8p"]
 
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://v28t12wmisg0" path="res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.gd" id="1_4jook"]
-=======
 [ext_resource type="Script" uid="uid://n8lw3ac2bnqt" path="res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.gd" id="1_4jook"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="MmeshInspector" type="PanelContainer"]
 script = ExtResource("1_4jook")

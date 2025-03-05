@@ -1,10 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cjjqtr6xhktp4"]
 
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://wktayxlews8h" path="res://addons/m_terrain/gui/control_prop_element/float_range.gd" id="1_0cxmu"]
-=======
 [ext_resource type="Script" uid="uid://bydbws2pntq3l" path="res://addons/m_terrain/gui/control_prop_element/float_range.gd" id="1_0cxmu"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="float_range" type="MarginContainer"]
 anchors_preset = 9

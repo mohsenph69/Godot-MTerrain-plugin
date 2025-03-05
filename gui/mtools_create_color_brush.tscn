@@ -1,15 +1,9 @@
 [gd_scene load_steps=6 format=3 uid="uid://csp8xxyqqfo6"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_10jgu"]
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://ku7s1x0a0eu6" path="res://addons/m_terrain/gui/mtools_create_color_brush.gd" id="2_shva1"]
-[ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="3_hsfs1"]
-[ext_resource type="Script" uid="uid://cs7g6imud1cxr" path="res://addons/m_terrain/gui/channel_brush_control.gd" id="3_maa7g"]
-=======
 [ext_resource type="Script" uid="uid://cfuk1e6g0w1ei" path="res://addons/m_terrain/gui/mtools_create_color_brush.gd" id="2_shva1"]
 [ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="3_hsfs1"]
 [ext_resource type="Script" uid="uid://c8evnnsf40p45" path="res://addons/m_terrain/gui/channel_brush_control.gd" id="3_maa7g"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [sub_resource type="LabelSettings" id="LabelSettings_ukpju"]
 font_size = 32

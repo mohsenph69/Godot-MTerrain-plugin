@@ -1,11 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://drn2ahn5m5ug2"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_dvx7y"]
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://cufwxv2ktc3gt" path="res://addons/m_terrain/asset_manager/ui/import_window.gd" id="1_pijm0"]
-=======
 [ext_resource type="Script" uid="uid://ckwhvejt8epcd" path="res://addons/m_terrain/asset_manager/ui/import_window.gd" id="1_pijm0"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 [ext_resource type="PackedScene" uid="uid://b0e74s117ljja" path="res://addons/m_terrain/asset_manager/ui/tags_editor.tscn" id="3_7c2jg"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yvosm"]

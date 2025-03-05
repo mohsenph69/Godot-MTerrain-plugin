@@ -1,29 +1,12 @@
 [gd_scene load_steps=28 format=3 uid="uid://bdxfu7h15wijq"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_avwfe"]
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://bif2vpen5wi1x" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
-[ext_resource type="Script" uid="uid://v02y02k4ag34" path="res://addons/m_terrain/gui/mtools_options.gd" id="2_2bis6"]
-=======
 [ext_resource type="Script" uid="uid://b4iewrh0vvwof" path="res://addons/m_terrain/gui/mtools.gd" id="1_l6paa"]
 [ext_resource type="Script" uid="uid://bv605j738r7xc" path="res://addons/m_terrain/gui/mtools_options.gd" id="2_2bis6"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 [ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="2_mjshi"]
 [ext_resource type="Texture2D" uid="uid://dgjegrn8jhlf6" path="res://addons/m_terrain/icons/human_disabled.svg" id="4_rgpuu"]
 [ext_resource type="Texture2D" uid="uid://dj86rx42xt6wc" path="res://addons/m_terrain/icons/save_icon.svg" id="6_di4ov"]
 [ext_resource type="Texture2D" uid="uid://btn8tgu2yhlxj" path="res://addons/m_terrain/icons/save_icon_disable.svg" id="7_nh28h"]
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://bceoscsiqb1ff" path="res://addons/m_terrain/gui/mtools_status_bar.gd" id="9_666yn"]
-[ext_resource type="Texture2D" uid="uid://cjs22nfbjl71l" path="res://addons/m_terrain/icons/rotation.svg" id="9_ck5t3"]
-[ext_resource type="Script" uid="uid://c8epf8oihc5jq" path="res://addons/m_terrain/gui/mtools_edit_mode_selector.gd" id="10_qe47s"]
-[ext_resource type="Texture2D" uid="uid://t8tdan3853oy" path="res://addons/m_terrain/icons/icon_close.svg" id="11_0dtgq"]
-[ext_resource type="Script" uid="uid://bpsu3d4kckb38" path="res://addons/m_terrain/gui/mtools_brushes.gd" id="11_c6bj1"]
-[ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="11_qk86q"]
-[ext_resource type="Script" uid="uid://cxmt5iiv8h2wi" path="res://addons/m_terrain/gui/mtools_layers.gd" id="13_1tujl"]
-[ext_resource type="Texture2D" uid="uid://tow1rj13cxaw" path="res://addons/m_terrain/icons/merge_down_icon.svg" id="15_sjvca"]
-[ext_resource type="Script" uid="uid://cruqhw18bgsnr" path="res://addons/m_terrain/gui/mtools_masks.gd" id="16_h7wnm"]
-[ext_resource type="Script" uid="uid://dm6kgg82ie6yn" path="res://addons/m_terrain/gui/mtools_slider_value.gd" id="18_vmcc8"]
-=======
 [ext_resource type="Script" uid="uid://di71mip2nvecg" path="res://addons/m_terrain/gui/mtools_status_bar.gd" id="9_666yn"]
 [ext_resource type="Texture2D" uid="uid://cjs22nfbjl71l" path="res://addons/m_terrain/icons/rotation.svg" id="9_ck5t3"]
 [ext_resource type="Script" uid="uid://dsm3hvb5jjr1g" path="res://addons/m_terrain/gui/mtools_edit_mode_selector.gd" id="10_qe47s"]
@@ -34,7 +17,6 @@
 [ext_resource type="Texture2D" uid="uid://tow1rj13cxaw" path="res://addons/m_terrain/icons/merge_down_icon.svg" id="15_sjvca"]
 [ext_resource type="Script" uid="uid://dstl3ub6mrekw" path="res://addons/m_terrain/gui/mtools_masks.gd" id="16_h7wnm"]
 [ext_resource type="Script" uid="uid://dq0ru2u30qba7" path="res://addons/m_terrain/gui/mtools_slider_value.gd" id="18_vmcc8"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 [ext_resource type="Texture2D" uid="uid://rtqaiuii2jml" path="res://addons/m_terrain/icons/no_mask_icon.svg" id="19_epiyr"]
 [ext_resource type="Texture2D" uid="uid://b8xvuorm57o1s" path="res://addons/m_terrain/icons/invert_icon_normal.svg" id="20_8anom"]
 [ext_resource type="Texture2D" uid="uid://tmhtthjk2rb4" path="res://addons/m_terrain/icons/invert_icon_inverted.svg" id="21_lodvs"]

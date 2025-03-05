@@ -1,10 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bctt0naq7rbmu"]
 
-<<<<<<< HEAD
-[ext_resource type="Script" uid="uid://bc0t7se5pe8hu" path="res://addons/m_terrain/gui/control_prop_element/float.gd" id="1_ch71q"]
-=======
 [ext_resource type="Script" uid="uid://dpmgueho33boa" path="res://addons/m_terrain/gui/control_prop_element/float.gd" id="1_ch71q"]
->>>>>>> ce087de99365d6faba0bbaa2dbafadde6067b8df
 
 [node name="hardness" type="VBoxContainer"]
 anchors_preset = 9
