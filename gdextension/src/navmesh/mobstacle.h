@@ -23,5 +23,7 @@ class MObstacle : public Node3D{
     void set_width(float input);
     float get_depth();
     void set_depth(float input);
+    bool has_gizmo() const;
+    AABB get_aabb() const;
 };
 #endif

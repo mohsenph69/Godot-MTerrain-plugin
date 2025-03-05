@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/box_shape3d.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/resource_saver.hpp>
+#include "../mtool.h"
 
 
 #define CHUNK_INFO grid->grid_update_info[grid_index]
@@ -191,16 +192,10 @@ void MNavigationRegion3D::_update_navmesh(Vector3 cam_pos){
     
     Vector2i top_left = grid->get_closest_pixel(cam_pos - Vector3(navigation_radius,0,navigation_radius));
     Vector2i bottom_right = grid->get_closest_pixel(cam_pos + Vector3(navigation_radius,0,navigation_radius));
-    if(bottom_right.x < 0 || bottom_right.y <0 || top_left.x > (int)grid->grid_pixel_region.right || top_left.y > (int)grid->grid_pixel_region.bottom){
-        last_update_pos = cam_pos;
-        tmp_nav->clear_polygons();
-        call_deferred("_finish_update",tmp_nav);
-        return;
-    }
     uint32_t left = top_left.x < 0 ? 0 : top_left.x;
     uint32_t top = top_left.y < 0 ? 0 : top_left.y;
-    uint32_t right = bottom_right.x > grid->grid_pixel_region.right ? grid->grid_pixel_region.right : bottom_right.x;
-    uint32_t bottom = bottom_right.y > grid->grid_pixel_region.bottom ? grid->grid_pixel_region.bottom : bottom_right.y;
+    uint32_t right = bottom_right.x >= grid->grid_pixel_region.right ? grid->grid_pixel_region.right - 1 : bottom_right.x;
+    uint32_t bottom = bottom_right.y >= grid->grid_pixel_region.bottom ? grid->grid_pixel_region.bottom - 1 : bottom_right.y;
     Ref<NavigationMeshSourceGeometryData3D> geo_data;
     geo_data.instantiate();
     PackedVector3Array faces;
@@ -358,22 +353,9 @@ void MNavigationRegion3D::_set_is_updating(bool input){
 
 void MNavigationRegion3D::get_cam_pos(){
     g_pos = get_global_position();
-    if(!follow_camera){
-        cam_pos = g_pos;
-        return;
-    }
-    if(custom_camera != nullptr){
-        cam_pos = custom_camera->get_global_position();
-        return;
-    }
-    if(terrain->editor_camera !=nullptr){
-        cam_pos = terrain->editor_camera->get_global_position();
-        return;
-    }
-    Viewport* v = get_viewport();
-    Camera3D* camera = v->get_camera_3d();
-    ERR_FAIL_COND_EDMSG(camera==nullptr, "No camera is detected, For MNavigationRegion3D");
-    cam_pos = camera->get_global_position();
+    Node3D* n = MTool::find_editor_camera(false);
+    ERR_FAIL_COND_MSG(n==nullptr,"Can't find editor camera");
+    cam_pos = n->get_global_position();
 }
 
 void MNavigationRegion3D::force_update(){
@@ -608,12 +590,13 @@ void MNavigationRegion3D::set_npoint_by_pixel(uint32_t px, uint32_t py, bool p_v
 }
 
 bool MNavigationRegion3D::get_npoint_by_pixel(uint32_t px, uint32_t py){
+    if(px >= width || py >= height){
+        return false;
+    }
     if(!nav_data.is_valid()){
         return true;
     }
     ERR_FAIL_COND_V(!is_nav_init,false);
-    ERR_FAIL_INDEX_V(px, width,false);
-    ERR_FAIL_INDEX_V(py, height,false);
     uint32_t rx = px/region_pixel_width;
     uint32_t ry = py/region_pixel_width;
     uint32_t rid = ry*region_grid_width + rx;
