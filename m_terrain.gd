@@ -155,7 +155,8 @@ func _enter_tree():
 		add_inspector_plugin(asset_browser_inspector_plugin)
 		gltf_extras_importer = GLTFExtras.new()
 		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)		
-	
+		init_import_info_settings()
+		
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")
 	EditorInterface.set_main_screen_editor("3D")	
@@ -332,3 +333,11 @@ func update_keymap(who, keycode, ctrl, alt, shift):
 			default_keyboard_actions[i].ctrl = ctrl
 			default_keyboard_actions[i].alt = alt
 			default_keyboard_actions[i].shift = shift			
+
+static func init_import_info_settings():	
+	var import_info = MAssetTable.get_singleton().import_info
+	if not import_info.has("__settings"):
+		import_info["__settings"] = {}
+	if not import_info["__settings"].has("Materials blend file"): 
+		import_info["__settings"]["Materials blend file"] = {"value": "", "type":TYPE_STRING, "hint":"path_global"}
+	MAssetTable.save()

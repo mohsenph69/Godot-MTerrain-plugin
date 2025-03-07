@@ -203,8 +203,7 @@ static func save_joined_mesh(joined_mesh_id:int, joined_meshes:Array, joined_mes
 		if FileAccess.file_exists(mesh_path):
 			DirAccess.remove_absolute(mesh_path)
 		if FileAccess.file_exists(stop_path):
-			DirAccess.remove_absolute(stop_path)
-	
+			DirAccess.remove_absolute(stop_path)	
 	## saving
 	for i in len(joined_meshes):
 		var mesh_path = MHlod.get_mesh_root_dir().path_join(str(joined_mesh_id - joined_mesh_lods[i], ".res"))
@@ -333,4 +332,19 @@ static func find_hlod_id_by_baker_path(baker_path):
 		if hlod and hlod.baker_path == baker_path: 			
 			return int(file)
 	return -1
+	
+static func create_baker_scene():	
+	var dir = MAssetTable.get_editor_baker_scenes_dir()
+	var existing_files = DirAccess.get_files_at(dir)		
+	var file = "baker.tscn" 
+	var i = 0		
+	while file in existing_files:			
+		i+= 1
+		file = "baker" +str(i) +".tscn"
+	var node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
+	node.name = file.trim_suffix(".tscn")
+	var packed = PackedScene.new()
+	packed.pack(node)
+	ResourceSaver.save(packed, dir.path_join(file))		
+	EditorInterface.open_scene_from_path(dir.path_join(file))		
 	

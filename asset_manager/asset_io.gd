@@ -676,10 +676,40 @@ static func validate_collections_and_remove_broken():
 	if AssetIO.asset_placer:
 		AssetIO.asset_placer.regroup()
 	EditorInterface.get_resource_filesystem().scan()
+		
+static func create_packed_scene():
+	var asset_library = MAssetTable.get_singleton()
+	var id = MAssetTable.get_last_free_packed_scene_id()	
+	var node := MHlodNode3D.new()		
+	node.name = "MHlodNode3D_" + str(id)
+	var collection_id = asset_library.collection_create(node.name, id, MAssetTable.PACKEDSCENE, -1)
+	asset_library.save()
+	node.set_meta("collection_id", collection_id)	
+	var packed = PackedScene.new()
+	packed.pack(node)
+	var path = MHlod.get_packed_scene_path(id)
+	ResourceSaver.save(packed, path)			
+	EditorInterface.open_scene_from_path(path)					
 	
-	
-	
-	
-	
-	
-	
+static func create_decal():
+	var asset_library = MAssetTable.get_singleton()
+	var id = MAssetTable.get_last_free_decal_id()		
+	var decal := MDecal.new()
+	decal.resource_name = "New Decal"
+	var path = MHlod.get_decal_path(id)		
+	#if FileAccess.file_exists(path):	
+	ResourceSaver.save(decal, path)	
+	decal.take_over_path(path)	
+	var collection_id = asset_library.collection_create(decal.resource_name, id, MAssetTable.DECAL, -1)
+	asset_library.save()	
+	var node := MDecalInstance.new()	
+	node.decal = decal
+	ResourceSaver.save(decal, path)				
+	var scene_root = EditorInterface.get_edited_scene_root()
+	if scene_root==null:
+		return
+	scene_root.add_child(node)
+	node.name = "New Decal"
+	node.owner = scene_root
+	node.set_meta("collection_id", collection_id)		
+	return decal	
