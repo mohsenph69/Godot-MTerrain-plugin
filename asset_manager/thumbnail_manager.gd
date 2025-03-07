@@ -118,3 +118,14 @@ static func generate_decal_texture(collection_id:int)->Texture:
 		save_thumbnail(albedo_image,path)
 		return ImageTexture.create_from_image(albedo_image)
 	return null
+
+static func revalidate_thumbnails()->PackedInt32Array:
+	var at:=MAssetTable.get_singleton()
+	var changed_thumbnails := PackedInt32Array()
+	for cid in at.collection_get_list():		
+		var thum_path:String = at.get_asset_thumbnails_path(cid)
+		if thum_path.is_empty(): continue # not supported
+		var modify_time = at.collection_get_modify_time(cid)
+		if not FileAccess.file_exists(thum_path) or FileAccess.get_modified_time(thum_path) < modify_time:
+			changed_thumbnails.push_back(cid)
+	return changed_thumbnails

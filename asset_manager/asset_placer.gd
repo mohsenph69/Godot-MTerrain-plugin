@@ -20,9 +20,9 @@ var popup_button_group: ButtonGroup
 @onready var add_asset_button:Button = find_child("add_asset_button")
 
 
+@onready var assets_tree: Tree = %assets_tree
+var action_menu
 
-@onready var groups = find_child("groups")
-@onready var ungrouped = find_child("other")
 @onready var grouping_popup:Control = find_child("grouping_popup")
 @onready var search_collections_node:Control = find_child("search_collections")
 
@@ -51,8 +51,6 @@ var need_editor_input:=false
 var ur: EditorUndoRedoManager
 							
 var object_being_placed
-var active_group_list #the last one selected
-var active_group_list_item #id of the last one selected
 enum PLACEMENT_STATE {NONE,MOVING,ROTATING,SCALING} ; var placement_state:=PLACEMENT_STATE.NONE
 #var position_confirmed = false
 var accumulated_rotation_offset = 0
@@ -76,49 +74,54 @@ var current_placement_dir:Vector3
 static var thumbnail_manager 
 
 func _ready():	
+	#############
+	## GLOBALS ##
+	#############
 	if AssetIO.asset_placer==null:
 		AssetIO.asset_placer = self
-	popup_button_group = ButtonGroup.new()
-	popup_button_group.allow_unpress = true
-	for button:Button in [asset_type_filter_button, filter_button, grouping_button, sort_by_button, add_asset_button ]:
-		button.button_group = popup_button_group
-	
 	thumbnail_manager = ThumbnailManager.new()
 	add_child(thumbnail_manager)
-	#if not EditorInterface.get_edited_scene_root() or EditorInterface.get_edited_scene_root() == self or EditorInterface.get_edited_scene_root().is_ancestor_of(self): return
-	update_reposition_button_text()
+		
 	asset_library.tag_set_name(1, "hidden")
 	asset_library.finish_import.connect(func(_arg): 
 		assets_changed.emit(_arg)
-	)			
-	ungrouped.asset_placer = self
-	ungrouped.set_group("other")	
+	)				
 	assets_changed.connect(func(_who):
 		regroup()
 	)
 	regroup()	
-	find_child("sort_popup").sort_mode_changed.connect(func(mode):
-		regroup(current_group, mode)
-	)
 	
-	#Connect signals for buttons	
-	search_collections_node.text_changed.connect(search_items)	
+	##########################################################
+	## Connect signals for search/sort/filter/group buttons ##
+	##########################################################
+	find_child("asset_type_tree").asset_type_filter_changed.connect(func(selected_types):
+		current_filter_types = selected_types
+		regroup()
+		update_filter_notifications()
+	)	
 	find_child("filter_popup").filter_changed.connect(func(tags,mode):		
 		current_filter_tags = tags
 		current_filter_mode_all = mode
 		regroup()		
 		update_filter_notifications()
-	)
-	ungrouped.group_list.multi_selected.connect(func(id, selected):
-		process_selection(ungrouped.group_list, id, selected)
-	)
-	ungrouped.group_list.multi_selected.connect(set_active_group_list_and_id.bind(ungrouped.group_list))
-	ungrouped.group_list.item_activated.connect(collection_item_activated.bind(ungrouped.group_list))
+	)		
 	grouping_popup.group_selected.connect(regroup)		
-	place_button.toggled.connect(func(toggle_on):		
-		#%place_options_hbox.visible = toggle_on
-		if toggle_on:			
-			object_being_placed = collection_item_activated(active_group_list_item, active_group_list,false)
+	find_child("sort_popup").sort_mode_changed.connect(func(mode):
+		regroup(current_group, mode)
+	)	
+	search_collections_node.text_changed.connect(search_items)	
+	
+	popup_button_group = ButtonGroup.new()
+	popup_button_group.allow_unpress = true
+	for button:Button in [asset_type_filter_button, filter_button, grouping_button, sort_by_button, add_asset_button ]:
+		button.button_group = popup_button_group
+					
+	##################
+	## PLACE BUTTON ##
+	##################
+	place_button.toggled.connect(func(toggle_on):				
+		if toggle_on:						
+			object_being_placed = add_asset_to_scene_from_assets_tree_selection()
 			var viewport_camera = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()
 			var mcol:MCollision= MTool.ray_collision_y_zero_plane(viewport_camera.global_position,-viewport_camera.global_basis.z)
 			if mcol.is_collided():
@@ -137,72 +140,57 @@ func _ready():
 				object_being_placed = null
 	)
 			
-	add_baker_button.pressed.connect(create_baker_scene)
-	add_packed_scene_button.pressed.connect(create_packed_scene)
-	add_decal_button.pressed.connect(create_decal)
-	find_child("asset_type_tree").asset_type_filter_changed.connect(func(selected_types):
-		current_filter_types = selected_types
-		regroup()
-		update_filter_notifications()
+	###################
+	## "ADD" BUTTONS ##
+	###################
+	add_baker_button.pressed.connect(func():
+		AssetIOBaker.create_baker_scene()
+		add_asset_button.button_pressed = false
 	)
-	init_import_info_settings()
+	add_packed_scene_button.pressed.connect(func():
+		AssetIO.create_packed_scene()
+		add_asset_button.button_pressed = false
+		regroup()
+	)
+	add_decal_button.pressed.connect(func():
+		var decal = AssetIO.create_decal()
+		assets_changed.emit( decal )
+		add_asset_button.button_pressed = false
+		regroup()
+		
+	)
+		
+	#################
+	## ASSETS TREE ##
+	#################	
+	assets_tree.mouse_entered.connect(func():
+		var changed_thumbnails = ThumbnailManager.revalidate_thumbnails()
+		var tag_headers = [assets_tree.get_root()] if current_group == "None" else assets_tree.get_children()			
+		for tag_header:TreeItem in tag_headers:
+			for item:TreeItem in tag_header.get_children():
+				for column in assets_tree.columns:
+					if not item.get_metadata(column): continue
+					if item.get_metadata(column) in changed_thumbnails:
+						set_icon(item, column, assets_tree.columns > 6)				
+	)	
+	action_menu = load("res://addons/m_terrain/asset_manager/asset_placer_action_menu.gd").new()
+	assets_tree.add_child(action_menu)
+	assets_tree.item_mouse_selected.connect(func(mouse_position, button_index):
+		if not button_index == MOUSE_BUTTON_RIGHT: return
+		var item = assets_tree.get_selected()
+		var column = assets_tree.get_selected_column()
+		var collection_id = item.get_metadata(column)
+		if not collection_id: return					
+		action_menu.item_clicked(collection_id, mouse_position)
+	)		
+	assets_tree.item_activated.connect(add_asset_to_scene_from_assets_tree_selection)	
+	%assets_tree_column_count.value_changed.connect(func(value): regroup())
 	
-func create_baker_scene():	
-	var dir = MAssetTable.get_editor_baker_scenes_dir()
-	var existing_files = DirAccess.get_files_at(dir)		
-	var file = "baker.tscn" 
-	var i = 0		
-	while file in existing_files:			
-		i+= 1
-		file = "baker" +str(i) +".tscn"
-	var node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
-	node.name = file.trim_suffix(".tscn")
-	var packed = PackedScene.new()
-	packed.pack(node)
-	ResourceSaver.save(packed, dir.path_join(file))		
-	EditorInterface.open_scene_from_path(dir.path_join(file))
-	#MTool.print_edmsg("")
-	add_asset_button.button_pressed = false
-	
-func create_packed_scene():
-	var id = MAssetTable.get_last_free_packed_scene_id()	
-	var node := MHlodNode3D.new()		
-	node.name = "MHlodNode3D_" + str(id)
-	var collection_id = asset_library.collection_create(node.name, id, MAssetTable.PACKEDSCENE, -1)
-	asset_library.save()
-	node.set_meta("collection_id", collection_id)	
-	var packed = PackedScene.new()
-	packed.pack(node)
-	var path = MHlod.get_packed_scene_path(id)
-	ResourceSaver.save(packed, path)			
-	EditorInterface.open_scene_from_path(path)			
-	add_asset_button.button_pressed = false
-	regroup()
-	
-func create_decal():
-	var id = MAssetTable.get_last_free_decal_id()		
-	var decal := MDecal.new()
-	decal.resource_name = "New Decal"
-	var path = MHlod.get_decal_path(id)		
-	#if FileAccess.file_exists(path):	
-	ResourceSaver.save(decal, path)	
-	decal.take_over_path(path)	
-	var collection_id = asset_library.collection_create(decal.resource_name, id, MAssetTable.DECAL, -1)
-	asset_library.save()
-	assets_changed.emit(decal)		
-	var node := MDecalInstance.new()	
-	node.decal = decal
-	ResourceSaver.save(decal, path)				
-	var scene_root = EditorInterface.get_edited_scene_root()
-	if scene_root==null:
-		return
-	scene_root.add_child(node)
-	node.name = "New Decal"
-	node.owner = scene_root
-	node.set_meta("collection_id", collection_id)
-	add_asset_button.button_pressed = false
-	regroup()
-	
+	#################
+	## OTHER STUFF ##
+	#################
+	update_reposition_button_text()
+		
 func done_placement(add_asset:=true):
 	placement_state = PLACEMENT_STATE.NONE
 	if add_asset and object_being_placed!=null:
@@ -246,61 +234,7 @@ func advance_placement_state():
 				done_placement()
 		PLACEMENT_STATE.SCALING:
 			done_placement()
-
-func _forward_3d_gui_input(viewport_camera, event):
-	if placement_state==PLACEMENT_STATE.NONE:
-		done_placement()
-		return
-	if event is InputEventKey:
-		if event.keycode == KEY_ESCAPE:
-			place_button.button_pressed = false			
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			done_placement(false)
-		elif event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
-				advance_placement_state()
-				return EditorPlugin.AFTER_GUI_INPUT_STOP
-	if event is InputEventMouseMotion:			
-		if placement_state==PLACEMENT_STATE.ROTATING:
-			accumulated_rotation_offset += sign(event.relative.x) * rotation_speed
-			if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
-				var new_rotation = snapped(accumulated_rotation_offset, rotation_snap)
-				object_being_placed.rotation.y=new_rotation
-			else:
-				object_being_placed.rotation.y = accumulated_rotation_offset
-			return EditorPlugin.AFTER_GUI_INPUT_STOP
-		elif placement_state==PLACEMENT_STATE.SCALING:
-			accumulated_scale_offset += sign(event.relative.y) * scale_speed
-			var fs = accumulated_scale_offset
-			if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
-				fs = snapped(fs,scale_snap)
-			if fs < 0.01:
-				fs = 0.01
-			object_being_placed.scale = Vector3(fs,fs,fs)
-			return EditorPlugin.AFTER_GUI_INPUT_STOP
-		elif placement_state==PLACEMENT_STATE.MOVING:
-			#var viewport_camera: Camera3D = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()						
-			var mcol = MTool.ray_collision_y_zero_plane(viewport_camera.global_position,viewport_camera.project_ray_normal(event.position))
-			if mcol.is_collided():
-				if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
-					object_being_placed.global_position = snapped(mcol.get_collision_position(),Vector3(position_snap,position_snap,position_snap))
-				else:
-					object_being_placed.global_position = mcol.get_collision_position()
-			return EditorPlugin.AFTER_GUI_INPUT_STOP
-	return EditorPlugin.AFTER_GUI_INPUT_PASS
-
-func set_active_group_list_and_id(id, selected, group_list):
-	if not selected: return
-	#print(id, group_list)
-	active_group_list_item = id
-	place_button.disabled = false
-	active_group_list = group_list
-	
-func search_items(text=""):					
-	current_search = text		
-	regroup()	
-						
+							
 func _can_drop_data(at_position: Vector2, data: Variant):		
 	if "files" in data and ".glb" in data.files[0]:
 		return true
@@ -309,9 +243,13 @@ func _drop_data(at_position, data):
 	for file in data.files:
 		AssetIO.glb_load(file)
 		
-####################
-# GROUPS AND ITEMS #
-####################
+##############################
+## SEARCH/FILTER/GROUP/SORT ##
+##############################
+func search_items(text=""):					
+	current_search = text		
+	regroup()	
+
 func get_filtered_collections(text="", tags_to_excluded=[]):		
 	var result = []
 	result = asset_library.collections_get_by_type(current_filter_types)
@@ -330,79 +268,57 @@ func get_filtered_collections(text="", tags_to_excluded=[]):
 			if not asset_library.collection_get_name(result[id]).containsn(text): 				
 				result.remove_at(id)				
 	return result
-	
-func debounce_regroup():
-	if not is_inside_tree():  return false
-	if last_regroup is int and Time.get_ticks_msec() - last_regroup < 1000:
-		last_regroup = get_tree().create_timer(0.2)
-		last_regroup.timeout.connect(func():
-			last_regroup = 0
-			regroup()
-		)
-		return false
-	elif last_regroup is SceneTreeTimer:
-		return false	
-	last_regroup = Time.get_ticks_msec()
-	return true
-	
-func regroup(group = current_group, sort_mode= current_sort_mode):		
-	current_sort_mode = sort_mode
-	if current_group != group:		
-		for child in groups.get_children():
-			groups.remove_child(child)
-			child.queue_free()
-		current_group = group
-	#TODO - delete debounce regroup... not necessary anymore? originally it was to ensure thumbnail generator didn't call too often
-	#if not debounce_regroup(): 
-		#return
+		
+func regroup_tree(group, sort_mode, columns = %assets_tree_column_count.value):
+	assets_tree.clear()
+	assets_tree.columns = columns	
+	for i in columns:
+		assets_tree.set_column_expand(i, false)
+		assets_tree.set_column_clip_content(i, false)
+		assets_tree.set_column_custom_minimum_width(i, floor(size.x/columns)-2)
+	var root:TreeItem = assets_tree.create_item()	
 	var filtered_collections = get_filtered_collections(current_search, [0])	
-	if group == "None":		
-		ungrouped.group_list.clear()	
+	if group == "None":	
+		var ungrouped = root
 		var sorted_items = []				
 		for collection_id in filtered_collections:
 			var collection_name = asset_library.collection_get_name(collection_id)
 			var modified_time = asset_library.collection_get_modify_time(collection_id)
 			sorted_items.push_back({"name":collection_name, "id":collection_id, "modified_time":modified_time})			
 			collection_id += 1
-		sort_items(sorted_items, sort_mode)		
-		for item in sorted_items:
-			ungrouped.add_item(item.name, item.id)												
-		ungrouped.group_button.visible = false			
-	elif group in asset_library.group_get_list():
-		ungrouped.group_button.visible = true
-		var group_control_scene = preload("res://addons/m_terrain/asset_manager/ui/group_control.tscn")		
+		sort_items(sorted_items, sort_mode)				
+		if columns == 1:
+			for item in sorted_items:			
+				add_tree_item(root, [item])
+		else:
+			var row = 0
+			while row * columns < len(sorted_items):								
+				add_tree_item(root, sorted_items.slice(row*columns, (row+1)*columns))
+				row += 1				
+	else:		
 		var processed_collections: PackedInt32Array = []
 		for tag_id in asset_library.group_get_tags(group) :			
 			var tag_name = asset_library.tag_get_name(tag_id)
 			if tag_name == "": continue
-			var group_control
-			var sorted_items = []
-			# Make the tag button if it doesn't exist yet
-			if not groups.has_node(tag_name):				
-				group_control = group_control_scene.instantiate()								
-				group_control.asset_placer = self
-				groups.add_child(group_control)							
-				if not group_control.group_list:
-					continue
-				group_control.group_list.multi_selected.connect(func(id, selected):
-					process_selection(group_control.group_list, id, selected)
-				)
-				group_control.set_group(asset_library.tag_get_name(tag_id))					
-				group_control.group_list.item_activated.connect(collection_item_activated.bind(group_control.group_list))
-				group_control.group_list.multi_selected.connect(set_active_group_list_and_id.bind(group_control))
-				group_control.name = tag_name				
-			else:
-				group_control = groups.get_node(tag_name)			
-				group_control.group_list.clear()
-						
+			var tag_header := root.create_child()
+			tag_header.set_text(0, tag_name)
+			var sorted_items = []									
 			for collection_id in asset_library.tags_get_collections_any(filtered_collections, [tag_id],[]):
 				sorted_items.push_back({"name": asset_library.collection_get_name(collection_id), "id":collection_id})
 				processed_collections.push_back(collection_id)
-			sort_items(sorted_items, sort_mode)	
-			for item in sorted_items:
-				group_control.add_item(item.name, item.id)		
+			sort_items(sorted_items, sort_mode)				
+			if columns == 1:
+				for item in sorted_items:
+					add_tree_item(tag_header, [item])
+			else:
+				var row = 0
+				while row * columns < len(sorted_items):									
+					add_tree_item(tag_header, sorted_items.slice(row*columns, (row+1)*columns))
+					row += 1
+					
 		# Now add leftovers to "Ungrouped" tag
-		ungrouped.group_list.clear()				
+		var ungrouped =root.create_child()
+		ungrouped.set_text(0, "Other")
 		var sorted_items = []
 		for collection_id in filtered_collections:
 			if collection_id in processed_collections: continue
@@ -410,11 +326,81 @@ func regroup(group = current_group, sort_mode= current_sort_mode):
 		if sort_mode == "asc":
 			sorted_items.sort_custom(func(a,b): return a.name < b.name)
 		elif sort_mode == "desc":
-			sorted_items.sort_custom(func(a,b): return a.name > b.name)
-		for item in sorted_items:			
-			ungrouped.add_item(item.name, item.id)		
+			sorted_items.sort_custom(func(a,b): return a.name > b.name)		
+		if columns == 1:		
+			for item in sorted_items:	
+				add_tree_item(ungrouped, [item])
+		else:
+			var row = 0
+			while row * columns < len(sorted_items):								
+				add_tree_item(ungrouped, sorted_items.slice(row*columns, (row+1)*columns))
+				row += 1
 	current_group = group
+	
+func add_tree_item(parent_tree_item:TreeItem, items:Array): #item = {name: name, id: collection_id}	
+	var tree_item := parent_tree_item.create_child()
+	var icon_only = len(items) > 6
+	for i in len(items):		
+		var item = items[i]						
+		tree_item.set_text(i, item.name)
+		tree_item.set_tooltip_text(i, str(item.name))
+		tree_item.set_metadata(i, item.id)		
+		if item.id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
+			tree_item.set_custom_bg_color(i, ITEM_COLORS.PACKEDSCENE)			
+		if item.id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
+			tree_item.set_custom_bg_color(i, ITEM_COLORS.HLOD)				
+	# Now any item has the potential to generate icon
+	# if asset Table get_asset_thumbnails_path return empty path this means
+	# currently this type is not supported
+		set_icon(tree_item, i, icon_only) # should be called last	
 
+## Set icon with no dely if thumbnail is valid
+func set_icon(tree_item:TreeItem, column:int, icon_only:bool)->void:
+	var current_item_collection_id:int= tree_item.get_metadata(column)
+	var tex:Texture2D= ThumbnailManager.get_valid_thumbnail(current_item_collection_id)
+	var type = MAssetTable.get_singleton().collection_get_type(current_item_collection_id)
+	if tex != null:
+		tree_item.set_icon(column, tex)				
+		if icon_only:
+			tree_item.set_text(column, "")								
+		return
+	if type==MAssetTable.MESH:
+		var _cmesh = MAssetMesh.get_collection_merged_mesh(current_item_collection_id,true)
+		if _cmesh:		
+			ThumbnailManager.thumbnail_queue.push_back({"resource": _cmesh, "caller": tree_item, "callback": update_thumbnail, "collection_id": current_item_collection_id})	
+	elif type==MAssetTable.DECAL:
+		var dtex:=ThumbnailManager.generate_decal_texture(current_item_collection_id)
+		if dtex:
+			tree_item.set_icon(column, dtex)			
+			if icon_only:
+				tree_item.set_text(column, "")				
+	# For HLOD it should be generated at bake time we don't generate that here
+	# so normaly it should be grabed by the first step
+
+func update_thumbnail(data):
+	if not data.texture is Texture2D:
+		push_warning("thumbnail error: ", " item ", data.caller.get_text(0))
+	var asset_library = MAssetTable.get_singleton()
+	var thumbnail_path = asset_library.get_asset_thumbnails_path(data.collection_id)
+	### Updating Cache
+	ThumbnailManager.save_thumbnail(data.texture.get_image(), thumbnail_path)
+	## This function excute with delay we should check if item collection id is not changed	
+	if data.caller.get_metadata(0) == data.collection_id:			
+		data.caller.set_icon(0, data.texture)		
+
+#func revalidate_icons():
+	#var at:=MAssetTable.get_singleton()
+	#for i in group_list.item_count:
+		#var cid = group_list.get_item_metadata(i)
+		#var thum_path:String=at.get_asset_thumbnails_path(cid)
+		#if thum_path.is_empty(): return # not supported
+		#var modify_time=at.collection_get_modify_time(cid)
+		#if not FileAccess.file_exists(thum_path) or FileAccess.get_modified_time(thum_path) < modify_time:
+			#set_icon(i)
+	
+func regroup(group = current_group, sort_mode= current_sort_mode):		
+	regroup_tree(group, sort_mode)
+		
 func sort_items(sorted_items, sort_mode):	
 	if sort_mode == "name_desc":
 		sorted_items.sort_custom(func(a,b): return a.name.nocasecmp_to(b.name) < 0 )
@@ -425,11 +411,21 @@ func sort_items(sorted_items, sort_mode):
 	elif sort_mode == "modified_asc":
 		sorted_items.sort_custom(func(a,b): return a.modified_time > b.modified_time)		
 
-func collection_item_activated(id, group_list:ItemList,create_ur:=true):					
-	var collection_id = group_list.get_item_metadata(id)
-	if collection_id == -1: return
-	var node = add_asset_to_scene(collection_id, group_list.get_item_tooltip(id),create_ur)		
-	return node 
+func update_filter_notifications():
+	var asset_type_notification = asset_type_filter_button.get_node("notification_texture")
+	var filter_notification = filter_button.get_node("notification_texture")		
+	asset_type_notification.visible = current_filter_types < MAssetTable.ItemType.DECAL + MAssetTable.ItemType.HLOD + MAssetTable.ItemType.MESH + MAssetTable.ItemType.PACKEDSCENE 
+	filter_notification.visible = len(current_filter_tags) != 0
+
+##################
+## PLACE ASSETS ##
+##################
+func add_asset_to_scene_from_assets_tree_selection():
+	var item = assets_tree.get_selected()
+	var column = assets_tree.get_selected_column()
+	var collection_id = item.get_metadata(column)
+	var collection_name = item.get_tooltip_text(column)
+	return add_asset_to_scene(collection_id, collection_name)
 	
 func add_asset_to_scene(collection_id, asset_name,create_ur:=true):	
 	var node
@@ -465,15 +461,13 @@ func add_asset_to_scene(collection_id, asset_name,create_ur:=true):
 	node.global_transform = get_added_node_transform(main_selected_node,current_placement_dir)
 	if create_ur:
 		ur.create_action("Add Asset",0,EditorInterface.get_edited_scene_root())
-		ur.add_do_reference(node)
-		#ur.add_undo_reference(node)
+		ur.add_do_reference(node)		
 		ur.add_do_method(self,"do_asset_add",node,parent,last_added_neighbor)
 		ur.add_undo_method(self,"undo_asset_add",node,last_added_masset,last_added_neighbor)
 		ur.commit_action(false)
 	last_added_neighbor = main_selected_node
 	last_added_masset = node
-	single_select_node(node)
-	#do_add_asset(id,asset_name,parent,EditorInterface.get_edited_scene_root(),main_selected_node,node.transform)
+	single_select_node(node)	
 	return node
 
 func do_asset_add(node:Node3D,parent:Node,_last_added_neighbor):
@@ -484,7 +478,7 @@ func do_asset_add(node:Node3D,parent:Node,_last_added_neighbor):
 	last_added_neighbor = _last_added_neighbor
 	single_select_node(node)
 
-func undo_asset_add(node:MAssetMesh,_last_added_masset,_last_added_neighbor):
+func undo_asset_add(node:Node,_last_added_masset,_last_added_neighbor):
 	node.get_parent().remove_child(node)
 	node.visible = false
 	last_added_masset = _last_added_masset
@@ -562,27 +556,6 @@ func _replace_asset(new_ids:PackedInt64Array,masset_node:Array) -> void:
 	for i in range(new_ids.size()):
 		masset_node[i].collection_id = new_ids[i]
 
-func replace_assets() -> void:
-	if active_group_list_item==null or active_group_list==null or not active_group_list is ItemList or active_group_list_item < 0:
-		return
-	var sel_collection_id = active_group_list.get_item_metadata(active_group_list_item)
-	var masset_arr:Array
-	var masset_ids:PackedInt64Array
-	for n in EditorInterface.get_selection().get_selected_nodes():
-		if n is MAssetMesh and n.collection_id != sel_collection_id:
-			masset_arr.push_back(n)
-			masset_ids.push_back(n.collection_id)
-	if masset_arr.size() == 0:
-		return
-	var new_ids:PackedInt64Array
-	new_ids.resize(masset_ids.size())
-	new_ids.fill(sel_collection_id)
-	ur.create_action("replace asset",0,EditorInterface.get_edited_scene_root())
-	ur.add_do_method(self,"_replace_asset",new_ids,masset_arr)
-	ur.add_undo_method(self,"_replace_asset",masset_ids,masset_arr)
-	ur.commit_action()
-
-
 # should be called after moving
 func undo_redo_reposition(node:Node3D,old_transform:Transform3D,old_dir:Vector3):
 	ur.create_action("Transform")
@@ -593,22 +566,50 @@ func undo_redo_reposition(node:Node3D,old_transform:Transform3D,old_dir:Vector3)
 	ur.add_undo_method(self,"set","current_placement_dir",old_dir)
 	ur.add_undo_method(self,"update_reposition_button_text")
 	ur.commit_action(false)
+			
+func _forward_3d_gui_input(viewport_camera, event):
+	if placement_state==PLACEMENT_STATE.NONE:
+		done_placement()
+		return
+	if event is InputEventKey:
+		if event.keycode == KEY_ESCAPE:
+			place_button.button_pressed = false			
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			done_placement(false)
+		elif event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				advance_placement_state()
+				return EditorPlugin.AFTER_GUI_INPUT_STOP
+	if event is InputEventMouseMotion:			
+		if placement_state==PLACEMENT_STATE.ROTATING:
+			accumulated_rotation_offset += sign(event.relative.x) * rotation_speed
+			if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
+				var new_rotation = snapped(accumulated_rotation_offset, rotation_snap)
+				object_being_placed.rotation.y=new_rotation
+			else:
+				object_being_placed.rotation.y = accumulated_rotation_offset
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		elif placement_state==PLACEMENT_STATE.SCALING:
+			accumulated_scale_offset += sign(event.relative.y) * scale_speed
+			var fs = accumulated_scale_offset
+			if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
+				fs = snapped(fs,scale_snap)
+			if fs < 0.01:
+				fs = 0.01
+			object_being_placed.scale = Vector3(fs,fs,fs)
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+		elif placement_state==PLACEMENT_STATE.MOVING:
+			#var viewport_camera: Camera3D = EditorInterface.get_editor_viewport_3d(0).get_camera_3d()						
+			var mcol = MTool.ray_collision_y_zero_plane(viewport_camera.global_position,viewport_camera.project_ray_normal(event.position))
+			if mcol.is_collided():
+				if int(snap_enabled_button.button_pressed) ^ int(event.ctrl_pressed):
+					object_being_placed.global_position = snapped(mcol.get_collision_position(),Vector3(position_snap,position_snap,position_snap))
+				else:
+					object_being_placed.global_position = mcol.get_collision_position()
+			return EditorPlugin.AFTER_GUI_INPUT_STOP
+	return EditorPlugin.AFTER_GUI_INPUT_PASS
 
-func process_selection(who:ItemList, id, selected):
-	current_selection = []
-	var all_groups = groups.get_children().map(func(a): return a.group_list)
-	all_groups.push_back(ungrouped.group_list)
-	for group in all_groups:
-		if not Input.is_key_pressed(KEY_SHIFT) and not Input.is_key_pressed(KEY_CTRL) and group != who:
-			group.deselect_all()	
-		else:
-			for item in	group.get_selected_items():
-				current_selection.push_back( group.get_item_text(item) )
-	selection_changed.emit()
-		
-func on_main_screen_changed():
-	settings_button.button_pressed = false
-	
 #region Debug	
 #########
 # DEBUG #
@@ -636,23 +637,15 @@ func init_debug_tags():
 	asset_library.save()	
 #endregion
 
+#####################
+## SETTINGS WINDOW ##
+#####################
 func open_settings_window(tab, data):
 	if tab == "tag":
 		settings_button.button_pressed = true
 		settings_button.settings.select_tab("manage_tags")
 		settings_button.settings.manage_tags_control.select_collection(data)		
 
-#TODO: move this function to a more logical place? 
-static func init_import_info_settings():	
-	var import_info = MAssetTable.get_singleton().import_info
-	if not import_info.has("__settings"):
-		import_info["__settings"] = {}
-	if not import_info["__settings"].has("Materials blend file"): 
-		import_info["__settings"]["Materials blend file"] = {"value": "", "type":TYPE_STRING, "hint":"path_global"}
-	MAssetTable.save()
 
-func update_filter_notifications():
-	var asset_type_notification = asset_type_filter_button.get_node("notification_texture")
-	var filter_notification = filter_button.get_node("notification_texture")		
-	asset_type_notification.visible = current_filter_types < MAssetTable.ItemType.DECAL + MAssetTable.ItemType.HLOD + MAssetTable.ItemType.MESH + MAssetTable.ItemType.PACKEDSCENE 
-	filter_notification.visible = len(current_filter_tags) != 0
+func on_main_screen_changed():
+	settings_button.button_pressed = false

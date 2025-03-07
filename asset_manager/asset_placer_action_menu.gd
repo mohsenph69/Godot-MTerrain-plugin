@@ -2,8 +2,6 @@
 extends PanelContainer
 
 var vbox:VBoxContainer
-
-var item_list:ItemList
 var items:Dictionary
 
 #type is bitwise or between types of MAssetTable
@@ -36,6 +34,7 @@ func _ready() -> void:
 	style_box.bg_color = Color("1b1f27")
 	set("theme_override_styles/panel",style_box)
 	visible=false
+	top_level = true
 
 func clear():
 	for b:Node in vbox.get_children():
@@ -58,17 +57,15 @@ func add_buttons(collection_id:int):
 			btn.button_down.connect(func_callback)
 			vbox.add_child(btn)
 
-func item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
-	if mouse_button_index!=MOUSE_BUTTON_RIGHT: return
+func item_clicked(collection_id: int, at_position: Vector2) -> void:	
 	clear()
-	var at:=MAssetTable.get_singleton()
-	var collection_id = item_list.get_item_metadata(index)
+	var at:=MAssetTable.get_singleton()	
 	visible = true
 	var is_most_left:bool=get_parent().get_rect().size.x/1.3 < at_position.x
 	var a_offset:Vector2
 	a_offset.y = vbox.get_rect().size.y
 	if is_most_left: a_offset.x = vbox.get_rect().size.x
-	position = at_position - a_offset
+	position = at_position - a_offset + get_parent().global_position
 	add_buttons(collection_id)
 
 func _input(event: InputEvent) -> void:
