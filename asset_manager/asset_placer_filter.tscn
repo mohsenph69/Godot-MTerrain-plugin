@@ -1,0 +1,222 @@
+[gd_scene load_steps=15 format=3 uid="uid://bva34dhbh12h8"]
+
+[ext_resource type="Script" uid="uid://ma2dx0qeblo" path="res://addons/m_terrain/asset_manager/asset_placer_filter.gd" id="1_04ohp"]
+[ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="2_5wba7"]
+[ext_resource type="Script" uid="uid://bhilw77wu88pr" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="3_yrogc"]
+[ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="4_5l5rt"]
+[ext_resource type="Script" uid="uid://c4drap1v2ms6n" path="res://addons/m_terrain/asset_manager/collection_type_filter.gd" id="5_7po1r"]
+[ext_resource type="Texture2D" uid="uid://bo00mqw6wv8av" path="res://addons/m_terrain/icons/tag_icon.svg" id="6_ydvf1"]
+[ext_resource type="PackedScene" uid="uid://bq3mcnrp6nw4k" path="res://addons/m_terrain/asset_manager/ui/filter_by_tags_control.tscn" id="7_ik2hp"]
+[ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="8_w5cwh"]
+[ext_resource type="PackedScene" uid="uid://cysovcswko088" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.tscn" id="9_16fjt"]
+[ext_resource type="Texture2D" uid="uid://8qcyrpxdy2po" path="res://addons/m_terrain/icons/sort_icon.svg" id="10_axpy6"]
+[ext_resource type="PackedScene" uid="uid://dwqtl6yv318k2" path="res://addons/m_terrain/asset_manager/ui/sort_popup.tscn" id="11_mfo3u"]
+[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="12_q8u3g"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_algvq"]
+allow_unpress = true
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_o3h43"]
+allow_unpress = true
+
+[node name="asset_placer_filter" type="HBoxContainer"]
+script = ExtResource("1_04ohp")
+
+[node name="view_settings_button" type="Button" parent="."]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Hold Shift or Ctrl to single select"
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_algvq")
+icon = ExtResource("2_5wba7")
+icon_alignment = 1
+expand_icon = true
+script = ExtResource("3_yrogc")
+
+[node name="Panel" type="PanelContainer" parent="view_settings_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -190.0
+offset_right = 190.0
+offset_bottom = -43.0
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="view_settings_button/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="view_settings_button/Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="view_settings_button/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="view_settings_button/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Columns"
+
+[node name="MarginContainer" type="MarginContainer" parent="view_settings_button/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_right = 8
+
+[node name="assets_tree_column_count" type="SpinBox" parent="view_settings_button/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 16.0
+value = 3.0
+rounded = true
+
+[node name="notification_texture" type="TextureRect" parent="view_settings_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -12.0
+offset_top = -25.0
+offset_right = 3.0
+offset_bottom = -10.0
+grow_horizontal = 0
+texture = ExtResource("4_5l5rt")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="asset_type_filter_button" type="Button" parent="."]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Hold Shift or Ctrl to single select"
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_o3h43")
+text = " Types "
+icon_alignment = 2
+script = ExtResource("3_yrogc")
+
+[node name="asset_type_tree" type="Tree" parent="asset_type_filter_button"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 170)
+layout_mode = 1
+offset_top = -168.0
+offset_right = 160.0
+offset_bottom = 2.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+hide_root = true
+select_mode = 1
+script = ExtResource("5_7po1r")
+
+[node name="asset_type_notification_texture" type="TextureRect" parent="asset_type_filter_button"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -12.0
+offset_top = -5.0
+offset_right = 3.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_5l5rt")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="filter_button" type="Button" parent="."]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_o3h43")
+icon = ExtResource("6_ydvf1")
+expand_icon = true
+script = ExtResource("3_yrogc")
+
+[node name="filter_popup" parent="filter_button" instance=ExtResource("7_ik2hp")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(300, 560)
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 5.0
+offset_top = -413.0
+offset_right = 255.0
+offset_bottom = -13.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="filter_notification_texture" type="TextureRect" parent="filter_button"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -11.0
+offset_top = -5.0
+offset_right = 4.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_5l5rt")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="grouping_button" type="Button" parent="."]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_o3h43")
+icon = ExtResource("8_w5cwh")
+expand_icon = true
+script = ExtResource("3_yrogc")
+
+[node name="grouping_popup" parent="grouping_button" instance=ExtResource("9_16fjt")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_top = -154.0
+offset_right = 73.0
+offset_bottom = -10.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="sort_by_button" type="Button" parent="."]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_o3h43")
+icon = ExtResource("10_axpy6")
+expand_icon = true
+script = ExtResource("3_yrogc")
+
+[node name="sort_popup" parent="sort_by_button" instance=ExtResource("11_mfo3u")]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="search_collections" parent="." instance=ExtResource("12_q8u3g")]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"button_icon_only"

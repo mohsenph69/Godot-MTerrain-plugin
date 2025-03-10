@@ -1,0 +1,31 @@
+[gd_scene load_steps=2 format=3 uid="uid://brnnnn7sygntf"]
+
+[ext_resource type="Script" uid="uid://btow8vgtqkq5f" path="res://addons/m_terrain/asset_manager/asset_placer_add.gd" id="1_m0sve"]
+
+[node name="asset_placer_add" type="PanelContainer"]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -129.0
+offset_top = -117.0
+offset_bottom = -10.0
+grow_horizontal = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_m0sve")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="add_baker_button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Baker"
+
+[node name="add_decal_button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Decal"
+
+[node name="add_packed_scene_button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Packed Scene"

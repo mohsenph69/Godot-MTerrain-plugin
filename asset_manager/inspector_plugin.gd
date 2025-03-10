@@ -115,8 +115,9 @@ func _parse_begin(object):
 		hbox.add_child(name_edit)
 		control.add_child(hbox)
 		if object is MDecalInstance:
-			control.add_child(make_variation_layer_control_for_assigning(object))							
-			control.add_child(make_cutoff_lod_control(object))
+			if object.owner and object.owner is HLod_Baker:
+				control.add_child(make_variation_layer_control_for_assigning(object))							
+				control.add_child(make_cutoff_lod_control(object))
 		var mt:Callable = MAssetTable.get_singleton().collection_update_modify_time.bind(collection_id)
 		if object is MDecal and not decal.changed.is_connected(mt):
 			decal.changed.connect(mt)
@@ -197,6 +198,7 @@ func make_tag_collection_control(object):
 		#%manage_tags_button.button_pressed = true
 	)
 	return tag_button
+
 func make_variation_layer_control_for_assigning(object):
 	var vbox = VBoxContainer.new()
 	var label = Label.new()
