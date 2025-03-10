@@ -23,8 +23,6 @@ signal baked
 @export_storage var variation_layers_preview_value = 0
 @export_storage var joined_mesh_modified_time: int = -1
 
-
-var is_tmp_bake=false #is true when called from AssetIoBaker.rebake_hlod, and we should free ourseself if this true!
 var asset_library := MAssetTable.get_singleton()
 var lod_levels = AssetIO.LOD_COUNT
 var asset_mesh_updater := MAssetMeshUpdater.new()
@@ -56,14 +54,15 @@ func force_lod(lod:int):
 	else:		
 		asset_mesh_updater.update_force_lod(lod)
 		force_lod_enabled = true
-		
-func bake_to_hlod_resource():		
+
+func bake_to_hlod_resource(external_bake = false)->int:	# return hlod_id, -1 = fail
 	if (owner and owner.scene_file_path.is_empty()) or (not owner and scene_file_path.is_empty()):
 		MTool.print_edmsg("Please first save the baker scene")
-		return
+		return -1
 	var has_sub_hlod:=false
 	var physics_dictionary = AssetIOMaterials.get_physics_ids()
-	MHlodScene.sleep()	
+	if not external_bake:
+		MHlodScene.sleep()	
 	hlod_resource = MHlod.new()
 	hlod_resource.set_baker_path(scene_file_path)
 	var join_at_lod = MAssetTable.mesh_join_start_lod(joined_mesh_id)	
@@ -312,33 +311,32 @@ func bake_to_hlod_resource():
 	if FileAccess.file_exists(bake_path):	
 		hlod_resource.take_over_path(bake_path)
 	for n in users:
-		n.hlod = hlod_resource	
-	if save_err == OK:
+		n.hlod = hlod_resource			
+	if not save_err == OK:
+		hlod_id = -1
+		return -1
+	if not external_bake:		
 		EditorInterface.mark_scene_as_unsaved()
 		EditorInterface.save_scene()
 		MAssetTable.save()		
-	MHlodScene.awake()
-	if save_err == OK and not scene_file_path.is_empty():
-		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)
-		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})
-	elif is_tmp_bake:
-		queue_free.call_deferred()
+		MHlodScene.awake()
+	if not scene_file_path.is_empty():
+		var collection_id = MAssetTable.get_singleton().collection_create(name,hlod_id,MAssetTable.HLOD,-1)		
+		ThumbnailManager.thumbnail_queue.push_back({"resource": jmesh, "callback": finish_generating_thumnail,"texture":null, "collection_id": collection_id,"has_sub_hlod":has_sub_hlod})	
 	baked.emit()
 	#AssetIOBaker.rebake_hlod_dependent_bakers(bake_path)
-	#EditorInterface.get_resource_filesystem().scan()
-	return save_err
+	#EditorInterface.get_resource_filesystem().scan()	
+	return hlod_id
 
-func finish_generating_thumnail(data):
+static func finish_generating_thumnail(data):
 	var tex:Texture2D=data["texture"]
-	if not tex:
-		if is_tmp_bake: queue_free.call_deferred()
+	if not tex:		
 		return
 	var img = tex.get_image()
 	ThumbnailManager.add_watermark(img,MAssetTable.ItemType.HLOD,data["has_sub_hlod"],Color(0,0,0.5))
 	var tpath = MAssetTable.get_asset_thumbnails_path(data["collection_id"])
 	ThumbnailManager.save_thumbnail(img,tpath)
 	AssetIO.asset_placer.regroup()
-	if is_tmp_bake: queue_free.call_deferred()
 
 #region Getters
 func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Callable)->Array:
