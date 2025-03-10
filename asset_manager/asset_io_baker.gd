@@ -348,26 +348,24 @@ static func create_baker_scene():
 	ResourceSaver.save(packed, dir.path_join(file))		
 	EditorInterface.open_scene_from_path(dir.path_join(file))		
 
-static func bake_hierarchy(root_path:String, processed_bakers:Array = [], result: Dictionary ={}):		
+static func bake_hierarchy(root_path:String, processed_bakers:Array = [], extras: Dictionary ={}):		
 	var root:HLod_Baker = load(root_path).instantiate()	
-	if root_path in processed_bakers:
-		print("bake hierarchy duplicate baker!")
+	if root_path in processed_bakers:		
 		return processed_bakers
-	result[root.scene_file_path] = {"children": []}
+	extras[root.scene_file_path] = {"children": []}
 	for mhlod_scene in root.find_children("*", "MHlodScene",true,false):
 		if not mhlod_scene.hlod or mhlod_scene.hlod.baker_path.is_empty() or not FileAccess.file_exists(mhlod_scene.hlod.baker_path): continue
-		result[root.scene_file_path].children.push_back(mhlod_scene.hlod.baker_path)
+		extras[root.scene_file_path].children.push_back(mhlod_scene.hlod.baker_path)
 		if not mhlod_scene.hlod.baker_path in processed_bakers:
-			var b = bake_hierarchy(mhlod_scene.hlod.baker_path, processed_bakers, result)			
+			var b = bake_hierarchy(mhlod_scene.hlod.baker_path, processed_bakers, extras)			
 			if b:				
 				processed_bakers = b
 	
-	#EditorInterface.get_edited_scene_root().add_child(root)
-	root.bake_to_hlod_resource(true)	
-	#print('baked ', root.scene_file_path)
-	#root.get_parent().remove_child(root)	
-	result[root.scene_file_path].position = root.position	
-	result[root.scene_file_path].size = int( pow(2, 5 + MAssetTable.mesh_join_start_lod(root.joined_mesh_id)))
+	EditorInterface.get_edited_scene_root().add_child(root)
+	root.bake_to_hlod_resource(true)		
+	root.get_parent().remove_child(root)	
+	extras[root.scene_file_path].position = root.position	
+	extras[root.scene_file_path].join_at_lod = MAssetTable.mesh_join_start_lod(root.joined_mesh_id)
 	processed_bakers.push_back(root.scene_file_path)	
 	root.free()	
 	return processed_bakers
