@@ -355,7 +355,7 @@ static func bake_hierarchy(root_path:String, processed_bakers:Array = [], extras
 	extras[root.scene_file_path] = {"children": []}
 	var needs_fix = false
 	for mhlod_scene in root.find_children("*", "MHlodScene",true,false):
-		var baker_path = "res://massets_editor/baker_scenes/".path_join(mhlod_scene.name + ".tscn")	
+		var baker_path = MAssetTable.get_editor_baker_scenes_dir().path_join(mhlod_scene.name + ".tscn")	
 		if not FileAccess.file_exists(baker_path):
 			print("baker not exist: ", baker_path)
 			needs_fix = true
