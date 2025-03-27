@@ -14,6 +14,7 @@ static var EXPERIMENTAL_FEATURES_ENABLED = false
 static var obj_to_call_on_table_update:Array
 static var asset_placer:Control
 
+const filter_settings_path = "res://addons/m_terrain/asset_manager/ui/current_filter_settings.res"
 
 #region GLB Import	
 static func glb_load(path, metadata={},no_window:bool=false):
@@ -668,8 +669,7 @@ static func validate_collections_and_remove_broken():
 	for collection_id in at.collections_get_by_type(MAssetTable.ItemType.MESH):
 		var id = at.collection_get_item_id(collection_id)
 		if not FileAccess.file_exists( MHlod.get_mesh_path(id) ):
-			collections_to_remove.push_back(collection_id)
-	print(collections_to_remove)
+			collections_to_remove.push_back(collection_id)	
 	for collection_id in collections_to_remove:
 		at.collection_remove(collection_id)
 	MAssetTable.save()
@@ -689,6 +689,7 @@ static func create_packed_scene():
 	packed.pack(node)
 	var path = MHlod.get_packed_scene_path(id)
 	ResourceSaver.save(packed, path)			
+	
 	EditorInterface.open_scene_from_path(path)					
 	
 static func create_decal():

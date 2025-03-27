@@ -100,7 +100,7 @@ static func add_watermark(img:Image,type:MAssetTable.ItemType,is_add_color=false
 		for j in range(wt_size.y):
 			var wpx:Color= wt.get_pixel(i,j)
 			if is_add_color:
-				wpx += add_color
+				wpx += add_color			
 			img.set_pixel(i,j,wpx)
 
 static func generate_decal_texture(collection_id:int)->Texture:
@@ -111,7 +111,8 @@ static func generate_decal_texture(collection_id:int)->Texture:
 		var mdecal:MDecal = ResourceLoader.load(decal_path)
 		if not mdecal.texture_albedo:
 			return null
-		var albedo_image = mdecal.texture_albedo.get_image().duplicate()
+		var albedo_image:Image = mdecal.texture_albedo.get_image().duplicate()
+		albedo_image.decompress()
 		albedo_image.resize(64,64)
 		var path = MAssetTable.get_asset_thumbnails_path(collection_id)
 		add_watermark(albedo_image,MAssetTable.DECAL)

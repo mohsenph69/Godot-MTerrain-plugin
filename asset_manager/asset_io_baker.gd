@@ -25,18 +25,18 @@ static func rebake_hlod_by_baker_path(baker_path:String):
 		printerr("baker path %s does not exist" % baker_path)
 		return
 	var baker: HLod_Baker= load(baker_path).instantiate()
-	baker.is_tmp_bake = true
 	EditorInterface.get_base_control().add_child(baker)
 	baker.bake_to_hlod_resource()
+	baker.queue_free()
 
 static func rebake_hlod(hlod:MHlod):
 	var baker: HLod_Baker= load(hlod.baker_path).instantiate()
 	if baker.hlod_id != hlod.resource_path.to_int():
 		push_warning("baker.hlod_id %d is different correcting that!" % baker.hlod_id)
-		baker.hlod_id = hlod.resource_path.to_int()
-	baker.is_tmp_bake = true
+		baker.hlod_id = hlod.resource_path.to_int()	
 	EditorInterface.get_base_control().add_child(baker)
 	baker.bake_to_hlod_resource()
+	baker.queue_free()
 
 static func open_hlod_baker(collection_id:int):
 	var item_id:int= MAssetTable.get_singleton().collection_get_item_id(collection_id)
@@ -347,4 +347,25 @@ static func create_baker_scene():
 	packed.pack(node)
 	ResourceSaver.save(packed, dir.path_join(file))		
 	EditorInterface.open_scene_from_path(dir.path_join(file))		
+
+static func bake_hierarchy(root_path:String, processed_bakers:Array = [], extras: Dictionary ={}):		
+	var root:HLod_Baker = load(root_path).instantiate()	
+	if root_path in processed_bakers:		
+		return processed_bakers
+	extras[root.scene_file_path] = {"children": []}
+	for mhlod_scene in root.find_children("*", "MHlodScene",true,false):
+		if not mhlod_scene.hlod or mhlod_scene.hlod.baker_path.is_empty() or not FileAccess.file_exists(mhlod_scene.hlod.baker_path): continue
+		extras[root.scene_file_path].children.push_back(mhlod_scene.hlod.baker_path)
+		if not mhlod_scene.hlod.baker_path in processed_bakers:
+			var b = bake_hierarchy(mhlod_scene.hlod.baker_path, processed_bakers, extras)			
+			if b:				
+				processed_bakers = b
 	
+	EditorInterface.get_edited_scene_root().add_child(root)
+	root.bake_to_hlod_resource(true)		
+	root.get_parent().remove_child(root)	
+	extras[root.scene_file_path].position = root.position	
+	extras[root.scene_file_path].join_at_lod = MAssetTable.mesh_join_start_lod(root.joined_mesh_id)
+	processed_bakers.push_back(root.scene_file_path)	
+	root.free()	
+	return processed_bakers

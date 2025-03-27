@@ -9,6 +9,8 @@ var items := {}
 var active_collections = []
 var grouping = "None"
 
+@onready var mterrain_theme:Theme = load("res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres")	
+
 func _ready():		
 	find_child("search").text_changed.connect(func(text):
 		for item in items:
@@ -35,10 +37,8 @@ func _ready():
 				asset_library.collection_remove_tag(id, tag_id)
 				changed = true
 		if changed: 
-			asset_placer.assets_changed.emit({"tag":active_collections})
-			#regroup()
-	)
-	#collection_list.cell_selected.connect( update_active_collection.call_deferred )
+			asset_placer.assets_changed.emit({"tag":active_collections})	
+	)	
 	collection_list.multi_selected.connect(func(item: TreeItem, column: int, selected: bool):
 		update_active_collection.call_deferred()
 	)
@@ -69,11 +69,11 @@ func regroup(group = grouping):
 			#item.set_icon(0, thumbnail)
 			item.set_metadata(0, collection_id)
 			if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.PACKEDSCENE):
-				item.set_custom_bg_color(0, asset_placer.ITEM_COLORS.PACKEDSCENE )
+				item.set_custom_bg_color(0, mterrain_theme.get_color("packed_scene", "asset_placer"))
 			if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.HLOD):
-				item.set_custom_bg_color(0, asset_placer.ITEM_COLORS.HLOD )
+				item.set_custom_bg_color(0, mterrain_theme.get_color("hlod", "asset_placer") )
 			if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.DECAL):
-				item.set_custom_bg_color(0, asset_placer.ITEM_COLORS.DECAL )
+				item.set_custom_bg_color(0, mterrain_theme.get_color("decal", "asset_placer"))
 			items[collection_id] = item		
 	else:
 		var remaining_collections = Array(asset_library.collection_get_list())

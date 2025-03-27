@@ -1,0 +1,79 @@
+[gd_scene load_steps=9 format=3 uid="uid://5yqtllp57qjq"]
+
+[ext_resource type="Script" uid="uid://dbhoptkfcvvuh" path="res://addons/m_terrain/asset_manager/asset_placer_place.gd" id="1_ltejh"]
+[ext_resource type="Texture2D" uid="uid://c1x4hadtg1807" path="res://addons/m_terrain/icons/snap_grid_disabled_icon.svg" id="2_mjygv"]
+[ext_resource type="Texture2D" uid="uid://cjpbohf3ons87" path="res://addons/m_terrain/icons/snap_grid_icon.svg" id="3_afkpw"]
+[ext_resource type="Texture2D" uid="uid://bpu07pul55tyv" path="res://addons/m_terrain/icons/rotate_disabled_icon.svg" id="4_rv3j8"]
+[ext_resource type="Texture2D" uid="uid://8bsyqbwgdlor" path="res://addons/m_terrain/icons/rotate_icon.svg" id="5_gckbd"]
+[ext_resource type="Texture2D" uid="uid://es81s75t7i2n" path="res://addons/m_terrain/icons/scale_disabled_icon.svg" id="6_adth1"]
+[ext_resource type="Texture2D" uid="uid://c5yiqj08mgihl" path="res://addons/m_terrain/icons/scale_icon.svg" id="7_5r5ou"]
+[ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="8_vd10j"]
+
+[node name="asset_placer_place" type="HBoxContainer"]
+script = ExtResource("1_ltejh")
+
+[node name="place_button" type="CheckButton" parent="."]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+disabled = true
+text = "Place"
+expand_icon = true
+
+[node name="place_options_hbox" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="snap_enabled_button" type="TextureButton" parent="place_options_hbox"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("2_mjygv")
+texture_pressed = ExtResource("3_afkpw")
+ignore_texture_size = true
+
+[node name="rotation_enabled_button" type="TextureButton" parent="place_options_hbox"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("4_rv3j8")
+texture_pressed = ExtResource("5_gckbd")
+ignore_texture_size = true
+
+[node name="scale_enabled_button" type="TextureButton" parent="place_options_hbox"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+toggle_mode = true
+texture_normal = ExtResource("6_adth1")
+texture_pressed = ExtResource("7_5r5ou")
+ignore_texture_size = true
+
+[node name="VSeparator" type="VSeparator" parent="place_options_hbox"]
+layout_mode = 2
+
+[node name="o_btn" type="Button" parent="place_options_hbox"]
+layout_mode = 2
+text = "O"
+
+[node name="x_btn" type="Button" parent="place_options_hbox"]
+layout_mode = 2
+text = "x(0.0)"
+
+[node name="y_btn" type="Button" parent="place_options_hbox"]
+layout_mode = 2
+text = "y(0.0)"
+
+[node name="z_btn" type="Button" parent="place_options_hbox"]
+layout_mode = 2
+text = "z(0.0)"
+
+[node name="VSeparator3" type="VSeparator" parent="place_options_hbox"]
+layout_mode = 2
+
+[node name="replace_btn" type="Button" parent="place_options_hbox"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+tooltip_text = "Replace Selected Assets"
+theme_type_variation = &"button_icon_only"
+theme_override_font_sizes/font_size = 18
+icon = ExtResource("8_vd10j")
+expand_icon = true

@@ -17,8 +17,7 @@ func save_baker_changes(): #this function is called when editing baker inside an
 	packed_scene.pack(baker)	
 	var path = scene_file_path
 	print("overwrite error?...:", ResourceSaver.save(packed_scene, path	))
-	packed_scene.take_over_path(scene_file_path)	
-	#is_tmp_bake = true
+	packed_scene.take_over_path(scene_file_path)		
 	bake_to_hlod_resource()		
 	if scene_file_path in EditorInterface.get_open_scenes():
 		EditorInterface.reload_scene_from_path(scene_file_path)

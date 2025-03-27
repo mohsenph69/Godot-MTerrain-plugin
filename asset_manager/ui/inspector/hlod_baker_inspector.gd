@@ -142,8 +142,7 @@ func bake_button_gui_input(event):
 		%Bake.disabled = not validate_bake_button()
 #var cid = MAssetTable.get_singleton().collection_find_with_item_type_item_id(MAssetTable.HLOD,hitem_id)
 func baker_renamed():
-	if baker.ignore_rename or not baker.scene_file_path: return
-	print("renaming...", baker.ignore_rename)
+	if baker.ignore_rename or not baker.scene_file_path: return	
 	if not baker.scene_file_path.get_file() == baker.name+".tscn":
 		if not FileAccess.file_exists(baker.scene_file_path.get_base_dir().path_join(baker.name+".tscn")):			
 			var old_join_mesh_glb_path = AssetIOBaker.get_glb_path_by_baker_path(baker.scene_file_path)
@@ -169,7 +168,8 @@ func baker_renamed():
 			if cid!=-1:
 				at.collection_set_name(cid,MAssetTable.HLOD,baker.name)
 				MAssetTable.save()
-				if AssetIO.asset_placer: AssetIO.asset_placer.regroup()
+				if AssetIO.asset_placer: 
+					AssetIO.asset_placer.regroup()
 		elif false: # If returning to old name creates a conflict, ahhhh! TODO
 			pass
 		else: #Return to old name
