@@ -138,68 +138,325 @@ hide_root = true
 select_mode = 1
 script = ExtResource("10_m1w1c")
 
-[node name="place_button" type="CheckButton" parent="."]
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/asset_type_filter_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -12.0
+offset_top = -5.0
+offset_right = 3.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="filter_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_algvq")
+icon = ExtResource("3_bmpki")
+expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="filter_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/filter_button" instance=ExtResource("3_dfwqm")]
+visible = false
+custom_minimum_size = Vector2(300, 560)
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 5.0
+offset_top = -413.0
+offset_right = 255.0
+offset_bottom = -13.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/filter_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -11.0
+offset_top = -5.0
+offset_right = 4.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="grouping_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_algvq")
+icon = ExtResource("6_rsi1g")
+expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/grouping_button" instance=ExtResource("9_40ifn")]
+visible = false
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_top = -154.0
+offset_right = 73.0
+offset_bottom = -10.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/grouping_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -11.0
+offset_top = -5.0
+offset_right = 4.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_algvq")
+icon = ExtResource("5_vcl6i")
+expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="sort_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/sort_by_button" instance=ExtResource("7_uoy1f")]
+visible = false
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/sort_by_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -12.0
+offset_top = -5.0
+offset_right = 3.0
+offset_bottom = 10.0
+grow_horizontal = 0
+texture = ExtResource("4_c73sy")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="search_collections" parent="VBoxContainer/HBoxContainer/filtering_hbox" instance=ExtResource("5_14byr")]
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+
+[node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="place_button" type="CheckButton" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 disabled = true
 text = "Place"
 expand_icon = true
 
-[node name="place_options_hbox" type="HBoxContainer" parent="."]
+[node name="place_options_hbox" type="HBoxContainer" parent="VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="snap_enabled_button" type="TextureButton" parent="place_options_hbox"]
+[node name="snap_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
-texture_normal = ExtResource("2_mjygv")
-texture_pressed = ExtResource("3_afkpw")
+texture_normal = ExtResource("11_1ttxp")
+texture_pressed = ExtResource("12_odvm5")
 ignore_texture_size = true
 
-[node name="rotation_enabled_button" type="TextureButton" parent="place_options_hbox"]
+[node name="rotation_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
-texture_normal = ExtResource("4_rv3j8")
-texture_pressed = ExtResource("5_gckbd")
+texture_normal = ExtResource("13_jbm51")
+texture_pressed = ExtResource("14_kwxpb")
 ignore_texture_size = true
 
-[node name="scale_enabled_button" type="TextureButton" parent="place_options_hbox"]
+[node name="scale_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 toggle_mode = true
-texture_normal = ExtResource("6_adth1")
-texture_pressed = ExtResource("7_5r5ou")
+texture_normal = ExtResource("15_krpno")
+texture_pressed = ExtResource("16_sjn2r")
 ignore_texture_size = true
 
-[node name="VSeparator" type="VSeparator" parent="place_options_hbox"]
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 
-[node name="o_btn" type="Button" parent="place_options_hbox"]
+[node name="o_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "O"
 
-[node name="x_btn" type="Button" parent="place_options_hbox"]
+[node name="x_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "x(0.0)"
 
-[node name="y_btn" type="Button" parent="place_options_hbox"]
+[node name="y_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "y(0.0)"
 
-[node name="z_btn" type="Button" parent="place_options_hbox"]
+[node name="z_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 text = "z(0.0)"
 
-[node name="VSeparator3" type="VSeparator" parent="place_options_hbox"]
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 layout_mode = 2
 
-[node name="replace_btn" type="Button" parent="place_options_hbox"]
+[node name="replace_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 tooltip_text = "Replace Selected Assets"
 theme_type_variation = &"button_icon_only"
 theme_override_font_sizes/font_size = 18
-icon = ExtResource("8_vd10j")
+icon = ExtResource("17_xg855")
 expand_icon = true
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="add_asset_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_algvq")
+text = "+"
+expand_icon = true
+script = ExtResource("4_he502")
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer/add_asset_button"]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -129.0
+offset_top = -117.0
+offset_bottom = -10.0
+grow_horizontal = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer"]
+layout_mode = 2
+
+[node name="add_baker_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Baker"
+
+[node name="add_decal_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Decal"
+
+[node name="add_packed_scene_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Packed Scene"
+
+[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(17.64, 0)
+layout_mode = 2
+
+[node name="show_debug_info_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("19_sansc")
+expand_icon = true
+script = ExtResource("20_t8s58")
+
+[node name="debug_info_tree" type="Tree" parent="VBoxContainer/HBoxContainer/show_debug_info_button"]
+visible = false
+z_index = 2
+custom_minimum_size = Vector2(300, 180)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -245.0
+offset_top = -200.0
+offset_right = 55.0
+grow_horizontal = 0
+columns = 2
+hide_root = true
+
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(17.64, 0)
+layout_mode = 2
+
+[node name="settings_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_type_variation = &"button_icon_only"
+toggle_mode = true
+icon = ExtResource("4_c73sy")
+expand_icon = true
+script = ExtResource("12_ec46f")
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+text = "debug:"
+
+[node name="clear_assets" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Remove All"
+
+[node name="remove_asset" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Remove selected"
+
+[node name="generate_thumbnails_button" type="Button" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Generate Thumbnails"
+
+[node name="assets_tree" type="Tree" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+allow_rmb_select = true
+allow_search = false
+hide_root = true
+select_mode = 2
+
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/o_btn" to="." method="reposition_origin"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/x_btn" to="." method="reposition_x"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/y_btn" to="." method="reposition_y"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/z_btn" to="." method="reposition_z"]
+[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/replace_btn" to="." method="replace_assets"]
