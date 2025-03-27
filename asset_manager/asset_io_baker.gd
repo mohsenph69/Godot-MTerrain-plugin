@@ -323,7 +323,7 @@ static func rebake_hlod_dependent_bakers(changed_hlod_path):
 			rebake_hlod_by_baker_path(hlod.baker_path)		
 			print("rebaked ", hlod.baker_path)
 
-static func find_hlod_id_by_baker_path(baker_path):	
+static func find_hlod_id_by_baker_path(baker_path)->int:	
 	var dir = MHlod.get_hlod_root_dir() 
 	for file in DirAccess.get_files_at( dir ):		
 		if not file.ends_with(".res"): continue
@@ -348,26 +348,31 @@ static func create_baker_scene():
 	ResourceSaver.save(packed, dir.path_join(file))		
 	EditorInterface.open_scene_from_path(dir.path_join(file))		
 
-static func bake_hierarchy(root_path:String, processed_bakers:Array = [], result: Dictionary ={}):		
+static func bake_hierarchy(root_path:String, processed_bakers:Array = [], extras: Dictionary ={}):		
 	var root:HLod_Baker = load(root_path).instantiate()	
-	if root_path in processed_bakers:
-		print("bake hierarchy duplicate baker!")
+	if root_path in processed_bakers:		
 		return processed_bakers
-	result[root.scene_file_path] = {"children": []}
+	extras[root.scene_file_path] = {"children": []}
+	var needs_fix = false
 	for mhlod_scene in root.find_children("*", "MHlodScene",true,false):
-		if not mhlod_scene.hlod or mhlod_scene.hlod.baker_path.is_empty() or not FileAccess.file_exists(mhlod_scene.hlod.baker_path): continue
-		result[root.scene_file_path].children.push_back(mhlod_scene.hlod.baker_path)
-		if not mhlod_scene.hlod.baker_path in processed_bakers:
-			var b = bake_hierarchy(mhlod_scene.hlod.baker_path, processed_bakers, result)			
+		var baker_path = "res://massets_editor/baker_scenes/".path_join(mhlod_scene.name + ".tscn")	
+		if not FileAccess.file_exists(baker_path):
+			print("baker not exist: ", baker_path)
+			needs_fix = true
+			continue		
+		#if not mhlod_scene.hlod or mhlod_scene.hlod.baker_path == baker_path: continue		
+		extras[root.scene_file_path].children.push_back(baker_path)
+		if not baker_path in processed_bakers:
+			var b = bake_hierarchy(baker_path, processed_bakers, extras)			
 			if b:				
 				processed_bakers = b
-	
-	#EditorInterface.get_edited_scene_root().add_child(root)
-	root.bake_to_hlod_resource(true)	
-	#print('baked ', root.scene_file_path)
-	#root.get_parent().remove_child(root)	
-	result[root.scene_file_path].position = root.position	
-	result[root.scene_file_path].size = int( pow(2, 5 + MAssetTable.mesh_join_start_lod(root.joined_mesh_id)))
+	if needs_fix:
+		print("-----------fix: ", root_path)			
+	EditorInterface.get_edited_scene_root().add_child(root)
+	#root.bake_to_hlod_resource(true)		
+	root.get_parent().remove_child(root)	
+	extras[root.scene_file_path].position = root.position	
+	extras[root.scene_file_path].join_at_lod = MAssetTable.mesh_join_start_lod(root.joined_mesh_id)
 	processed_bakers.push_back(root.scene_file_path)	
 	root.free()	
 	return processed_bakers
