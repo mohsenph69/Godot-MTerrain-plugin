@@ -1,30 +1,18 @@
-[gd_scene load_steps=25 format=3 uid="uid://d4b8pa0u65dud"]
+[gd_scene load_steps=13 format=3 uid="uid://d4b8pa0u65dud"]
 
 [ext_resource type="Theme" uid="uid://b3bd1lceed8ec" path="res://addons/m_terrain/gui/styles/mterrain_gui_theme.tres" id="1_nhl8i"]
 [ext_resource type="Script" uid="uid://bggv7u4sgk8kq" path="res://addons/m_terrain/asset_manager/asset_placer.gd" id="2_b0v3a"]
-[ext_resource type="Texture2D" uid="uid://bo00mqw6wv8av" path="res://addons/m_terrain/icons/tag_icon.svg" id="3_bmpki"]
-[ext_resource type="PackedScene" uid="uid://bq3mcnrp6nw4k" path="res://addons/m_terrain/asset_manager/ui/filter_by_tags_control.tscn" id="3_dfwqm"]
-[ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="3_o3h43"]
+[ext_resource type="PackedScene" uid="uid://bva34dhbh12h8" path="res://addons/m_terrain/asset_manager/asset_placer_filter.tscn" id="3_dctwy"]
 [ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="4_c73sy"]
-[ext_resource type="Script" uid="uid://ijmcdn1dc7kf" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="4_he502"]
-[ext_resource type="PackedScene" uid="uid://dluujoajca0ja" path="res://addons/m_terrain/asset_manager/ui/search_component.tscn" id="5_14byr"]
-[ext_resource type="Texture2D" uid="uid://8qcyrpxdy2po" path="res://addons/m_terrain/icons/sort_icon.svg" id="5_vcl6i"]
-[ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="6_rsi1g"]
-[ext_resource type="PackedScene" uid="uid://dwqtl6yv318k2" path="res://addons/m_terrain/asset_manager/ui/sort_popup.tscn" id="7_uoy1f"]
-[ext_resource type="PackedScene" uid="uid://cysovcswko088" path="res://addons/m_terrain/asset_manager/ui/grouping_popup.tscn" id="9_40ifn"]
-[ext_resource type="Script" uid="uid://kck7njj1v1ho" path="res://addons/m_terrain/asset_manager/collection_type_filter.gd" id="10_m1w1c"]
-[ext_resource type="Texture2D" uid="uid://c1x4hadtg1807" path="res://addons/m_terrain/icons/snap_grid_disabled_icon.svg" id="11_1ttxp"]
-[ext_resource type="Script" uid="uid://1sx5e6wxrehk" path="res://addons/m_terrain/asset_manager/settings_button.gd" id="12_ec46f"]
-[ext_resource type="Texture2D" uid="uid://cjpbohf3ons87" path="res://addons/m_terrain/icons/snap_grid_icon.svg" id="12_odvm5"]
-[ext_resource type="Texture2D" uid="uid://bpu07pul55tyv" path="res://addons/m_terrain/icons/rotate_disabled_icon.svg" id="13_jbm51"]
-[ext_resource type="Texture2D" uid="uid://8bsyqbwgdlor" path="res://addons/m_terrain/icons/rotate_icon.svg" id="14_kwxpb"]
-[ext_resource type="Texture2D" uid="uid://es81s75t7i2n" path="res://addons/m_terrain/icons/scale_disabled_icon.svg" id="15_krpno"]
-[ext_resource type="Texture2D" uid="uid://c5yiqj08mgihl" path="res://addons/m_terrain/icons/scale_icon.svg" id="16_sjn2r"]
-[ext_resource type="Texture2D" uid="uid://ckrq26s3bkih3" path="res://addons/m_terrain/icons/switch_direction_icon.svg" id="17_xg855"]
+[ext_resource type="Script" uid="uid://bhilw77wu88pr" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="4_he502"]
+[ext_resource type="PackedScene" uid="uid://5yqtllp57qjq" path="res://addons/m_terrain/asset_manager/asset_placer_place.tscn" id="4_ssbpk"]
+[ext_resource type="PackedScene" uid="uid://brnnnn7sygntf" path="res://addons/m_terrain/asset_manager/asset_placer_add.tscn" id="6_w8qg5"]
+[ext_resource type="PackedScene" uid="uid://b5o4frfy8r423" path="res://addons/m_terrain/asset_manager/assets_tree.tscn" id="11_axmky"]
+[ext_resource type="Script" uid="uid://b2aggsjevt7di" path="res://addons/m_terrain/asset_manager/settings_button.gd" id="12_ec46f"]
 [ext_resource type="Texture2D" uid="uid://cjho7a8u0ixdi" path="res://addons/m_terrain/icons/info_icon.png" id="19_sansc"]
-[ext_resource type="Script" uid="uid://kwosnhrayoxm" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
+[ext_resource type="Script" uid="uid://bsda7lx3ycgmd" path="res://addons/m_terrain/asset_manager/debug_info.gd" id="20_t8s58"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_algvq"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_dctwy"]
 allow_unpress = true
 
 [node name="AssetPlacer" type="PanelContainer"]
@@ -44,300 +32,17 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 
-[node name="filtering_hbox" type="HBoxContainer" parent="VBoxContainer/HBoxContainer"]
-layout_mode = 2
-
-[node name="view_settings_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-tooltip_text = "Hold Shift or Ctrl to single select"
-theme_type_variation = &"button_icon_only"
-toggle_mode = true
-button_group = SubResource("ButtonGroup_algvq")
-icon = ExtResource("3_o3h43")
-icon_alignment = 1
-expand_icon = true
-script = ExtResource("4_he502")
-
-[node name="Panel" type="PanelContainer" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button"]
-visible = false
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -190.0
-offset_right = 190.0
-offset_bottom = -43.0
-grow_vertical = 0
-
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button/Panel"]
-layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
-
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button/Panel/MarginContainer"]
-layout_mode = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "Columns"
-
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-theme_override_constants/margin_right = 8
-
-[node name="assets_tree_column_count" type="SpinBox" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="asset_placer_filter" parent="VBoxContainer/HBoxContainer" instance=ExtResource("3_dctwy")]
 unique_name_in_owner = true
 layout_mode = 2
-min_value = 1.0
-max_value = 16.0
-value = 1.0
-rounded = true
-
-[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/view_settings_button"]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -12.0
-offset_top = -25.0
-offset_right = 3.0
-offset_bottom = -10.0
-grow_horizontal = 0
-texture = ExtResource("4_c73sy")
-expand_mode = 3
-stretch_mode = 5
-
-[node name="asset_type_filter_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-tooltip_text = "Hold Shift or Ctrl to single select"
-theme_type_variation = &"button_icon_only"
-toggle_mode = true
-button_group = SubResource("ButtonGroup_algvq")
-text = " Types "
-icon_alignment = 2
-script = ExtResource("4_he502")
-
-[node name="asset_type_tree" type="Tree" parent="VBoxContainer/HBoxContainer/filtering_hbox/asset_type_filter_button"]
-visible = false
-custom_minimum_size = Vector2(200, 170)
-layout_mode = 1
-offset_top = -168.0
-offset_right = 160.0
-offset_bottom = 2.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-hide_root = true
-select_mode = 1
-script = ExtResource("10_m1w1c")
-
-[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/asset_type_filter_button"]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -12.0
-offset_top = -5.0
-offset_right = 3.0
-offset_bottom = 10.0
-grow_horizontal = 0
-texture = ExtResource("4_c73sy")
-expand_mode = 3
-stretch_mode = 5
-
-[node name="filter_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-theme_type_variation = &"button_icon_only"
-toggle_mode = true
-button_group = SubResource("ButtonGroup_algvq")
-icon = ExtResource("3_bmpki")
-expand_icon = true
-script = ExtResource("4_he502")
-
-[node name="filter_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/filter_button" instance=ExtResource("3_dfwqm")]
-visible = false
-custom_minimum_size = Vector2(300, 560)
-layout_mode = 1
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 5.0
-offset_top = -413.0
-offset_right = 255.0
-offset_bottom = -13.0
-grow_horizontal = 1
-grow_vertical = 1
-
-[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/filter_button"]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -11.0
-offset_top = -5.0
-offset_right = 4.0
-offset_bottom = 10.0
-grow_horizontal = 0
-texture = ExtResource("4_c73sy")
-expand_mode = 3
-stretch_mode = 5
-
-[node name="grouping_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-theme_type_variation = &"button_icon_only"
-toggle_mode = true
-button_group = SubResource("ButtonGroup_algvq")
-icon = ExtResource("6_rsi1g")
-expand_icon = true
-script = ExtResource("4_he502")
-
-[node name="grouping_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/grouping_button" instance=ExtResource("9_40ifn")]
-visible = false
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 1
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_top = -154.0
-offset_right = 73.0
-offset_bottom = -10.0
-grow_horizontal = 1
-grow_vertical = 1
-
-[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/grouping_button"]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -11.0
-offset_top = -5.0
-offset_right = 4.0
-offset_bottom = 10.0
-grow_horizontal = 0
-texture = ExtResource("4_c73sy")
-expand_mode = 3
-stretch_mode = 5
-
-[node name="sort_by_button" type="Button" parent="VBoxContainer/HBoxContainer/filtering_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-theme_type_variation = &"button_icon_only"
-toggle_mode = true
-button_group = SubResource("ButtonGroup_algvq")
-icon = ExtResource("5_vcl6i")
-expand_icon = true
-script = ExtResource("4_he502")
-
-[node name="sort_popup" parent="VBoxContainer/HBoxContainer/filtering_hbox/sort_by_button" instance=ExtResource("7_uoy1f")]
-visible = false
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 0
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-grow_horizontal = 1
-grow_vertical = 1
-
-[node name="notification_texture" type="TextureRect" parent="VBoxContainer/HBoxContainer/filtering_hbox/sort_by_button"]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -12.0
-offset_top = -5.0
-offset_right = 3.0
-offset_bottom = 10.0
-grow_horizontal = 0
-texture = ExtResource("4_c73sy")
-expand_mode = 3
-stretch_mode = 5
-
-[node name="search_collections" parent="VBoxContainer/HBoxContainer/filtering_hbox" instance=ExtResource("5_14byr")]
-layout_mode = 2
-theme_type_variation = &"button_icon_only"
 
 [node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="place_button" type="CheckButton" parent="VBoxContainer/HBoxContainer"]
-custom_minimum_size = Vector2(80, 0)
-layout_mode = 2
-disabled = true
-text = "Place"
-expand_icon = true
-
-[node name="place_options_hbox" type="HBoxContainer" parent="VBoxContainer/HBoxContainer"]
+[node name="asset_placer_place" parent="VBoxContainer/HBoxContainer" instance=ExtResource("4_ssbpk")]
 unique_name_in_owner = true
 layout_mode = 2
-
-[node name="snap_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-toggle_mode = true
-texture_normal = ExtResource("11_1ttxp")
-texture_pressed = ExtResource("12_odvm5")
-ignore_texture_size = true
-
-[node name="rotation_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-toggle_mode = true
-texture_normal = ExtResource("13_jbm51")
-texture_pressed = ExtResource("14_kwxpb")
-ignore_texture_size = true
-
-[node name="scale_enabled_button" type="TextureButton" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-toggle_mode = true
-texture_normal = ExtResource("15_krpno")
-texture_pressed = ExtResource("16_sjn2r")
-ignore_texture_size = true
-
-[node name="VSeparator" type="VSeparator" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-layout_mode = 2
-
-[node name="o_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-layout_mode = 2
-text = "O"
-
-[node name="x_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-layout_mode = 2
-text = "x(0.0)"
-
-[node name="y_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-layout_mode = 2
-text = "y(0.0)"
-
-[node name="z_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-layout_mode = 2
-text = "z(0.0)"
-
-[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-layout_mode = 2
-
-[node name="replace_btn" type="Button" parent="VBoxContainer/HBoxContainer/place_options_hbox"]
-custom_minimum_size = Vector2(40, 0)
-layout_mode = 2
-tooltip_text = "Replace Selected Assets"
-theme_type_variation = &"button_icon_only"
-theme_override_font_sizes/font_size = 18
-icon = ExtResource("17_xg855")
-expand_icon = true
 
 [node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -348,38 +53,22 @@ custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 theme_type_variation = &"button_icon_only"
 toggle_mode = true
-button_group = SubResource("ButtonGroup_algvq")
+button_group = SubResource("ButtonGroup_dctwy")
 text = "+"
 expand_icon = true
 script = ExtResource("4_he502")
 
-[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer/HBoxContainer/add_asset_button"]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -129.0
-offset_top = -117.0
-offset_bottom = -10.0
-grow_horizontal = 0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer"]
-layout_mode = 2
-
-[node name="add_baker_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
-layout_mode = 2
-text = "Baker"
-
-[node name="add_decal_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
-layout_mode = 2
-text = "Decal"
-
-[node name="add_packed_scene_button" type="Button" parent="VBoxContainer/HBoxContainer/add_asset_button/PanelContainer/VBoxContainer"]
-layout_mode = 2
-text = "Packed Scene"
+[node name="asset_placer_add" parent="VBoxContainer/HBoxContainer/add_asset_button" instance=ExtResource("6_w8qg5")]
+unique_name_in_owner = true
+layout_mode = 0
+anchors_preset = 0
+anchor_left = 0.0
+anchor_right = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 129.0
+offset_bottom = 107.0
+grow_horizontal = 1
 
 [node name="VSeparator2" type="VSeparator" parent="VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(17.64, 0)
@@ -445,18 +134,7 @@ visible = false
 layout_mode = 2
 text = "Generate Thumbnails"
 
-[node name="assets_tree" type="Tree" parent="VBoxContainer"]
+[node name="assets_tree" parent="VBoxContainer" instance=ExtResource("11_axmky")]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
-allow_reselect = true
-allow_rmb_select = true
-allow_search = false
-hide_root = true
-select_mode = 2
-
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/o_btn" to="." method="reposition_origin"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/x_btn" to="." method="reposition_x"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/y_btn" to="." method="reposition_y"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/z_btn" to="." method="reposition_z"]
-[connection signal="button_down" from="VBoxContainer/HBoxContainer/place_options_hbox/replace_btn" to="." method="replace_assets"]
+columns = 6
