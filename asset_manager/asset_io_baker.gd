@@ -323,7 +323,7 @@ static func rebake_hlod_dependent_bakers(changed_hlod_path):
 			rebake_hlod_by_baker_path(hlod.baker_path)		
 			print("rebaked ", hlod.baker_path)
 
-static func find_hlod_id_by_baker_path(baker_path):	
+static func find_hlod_id_by_baker_path(baker_path)->int:	
 	var dir = MHlod.get_hlod_root_dir() 
 	for file in DirAccess.get_files_at( dir ):		
 		if not file.ends_with(".res"): continue
@@ -353,16 +353,23 @@ static func bake_hierarchy(root_path:String, processed_bakers:Array = [], extras
 	if root_path in processed_bakers:		
 		return processed_bakers
 	extras[root.scene_file_path] = {"children": []}
+	var needs_fix = false
 	for mhlod_scene in root.find_children("*", "MHlodScene",true,false):
-		if not mhlod_scene.hlod or mhlod_scene.hlod.baker_path.is_empty() or not FileAccess.file_exists(mhlod_scene.hlod.baker_path): continue
-		extras[root.scene_file_path].children.push_back(mhlod_scene.hlod.baker_path)
-		if not mhlod_scene.hlod.baker_path in processed_bakers:
-			var b = bake_hierarchy(mhlod_scene.hlod.baker_path, processed_bakers, extras)			
+		var baker_path = MAssetTable.get_editor_baker_scenes_dir().path_join(mhlod_scene.name + ".tscn")	
+		if not FileAccess.file_exists(baker_path):
+			print("baker not exist: ", baker_path)
+			needs_fix = true
+			continue		
+		#if not mhlod_scene.hlod or mhlod_scene.hlod.baker_path == baker_path: continue		
+		extras[root.scene_file_path].children.push_back(baker_path)
+		if not baker_path in processed_bakers:
+			var b = bake_hierarchy(baker_path, processed_bakers, extras)			
 			if b:				
 				processed_bakers = b
-	
+	if needs_fix:
+		print("-----------fix: ", root_path)			
 	EditorInterface.get_edited_scene_root().add_child(root)
-	root.bake_to_hlod_resource(true)		
+	#root.bake_to_hlod_resource(true)		
 	root.get_parent().remove_child(root)	
 	extras[root.scene_file_path].position = root.position	
 	extras[root.scene_file_path].join_at_lod = MAssetTable.mesh_join_start_lod(root.joined_mesh_id)

@@ -344,15 +344,18 @@ func get_all_nodes_in_baker(baker_node:Node3D,search_nodes:Array,filter_func:Cal
 	stack.append_array(search_nodes)
 	var result:Array
 	var baker_invers_transform = baker_node.global_transform.inverse()
+	var _owner = baker_node.owner
+	if _owner == null: _owner = baker_node
 	while stack.size()!=0:
 		var current_node = stack[-1]
 		stack.remove_at(stack.size() -1)
 		if (current_node is HLod_Baker and current_node != baker_node):
 			continue
+		if _owner != current_node.owner: continue
+		
 		if filter_func.call(current_node):
-			result.push_back(current_node)
-		if not current_node is MHlodNode3D:
-			stack.append_array(current_node.get_children())
+			result.push_back(current_node)		
+		stack.append_array(current_node.get_children().filter(func(node): return node.owner == baker_node ))
 	return result
 
 func get_all_collision_shape_nodes(baker_node:Node3D)->Array:
