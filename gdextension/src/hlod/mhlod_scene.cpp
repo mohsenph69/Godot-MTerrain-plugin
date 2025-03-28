@@ -277,6 +277,7 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
             for(int i=0;i<M_PACKED_SCENE_BIND_COUNT;i++){hlod_node->bind_items[i] = get_item_global_id(item->packed_scene.bind_items[i]);}
             // Done
             scene->call_deferred("add_child",hlod_node);
+            hlod_node->call_deferred("set_global_transform",get_item_transform(item));
             ci.root_node = hlod_node;
             ci.root_node->call_deferred("_notify_update_lod",lod);
         } else {
