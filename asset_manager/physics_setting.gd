@@ -110,20 +110,22 @@ func update_materials_list(filter = null):
 	if not root:
 		root = materials_list.create_item()		
 	var material_table = AssetIOMaterials.get_material_table()	
-	#var null_item := root.create_child()
-	#null_item.set_text(0, "-1")
-	#null_item.set_editable(2,false)
-	#null_item.set_text(2, "(no material)")
-
+	
 	for i in material_table.keys():
 		if filter and not filter in material_table[i].path: continue
 		var item := root.create_child()
 		item.set_text(0, str(i))
 		item.set_metadata(0, i)		
-		var mat = load(material_table[i].path) if FileAccess.file_exists(material_table[i].	path) else null
-		ThumbnailManager.thumbnail_queue.push_back({"resource":mat, "caller": item, "callback":update_material_icon })		
-		item.set_text(2, mat.resource_name if not mat.resource_name.is_empty() else mat.resource_path)		
-		item.set_tooltip_text(2, mat.resource_path)		
+		var mat = load(material_table[i].path) if FileAccess.file_exists(material_table[i].path) else null
+		var is_mat_valid = mat!=null and mat is Material
+		var mat_name = material_table[i].name
+		if is_mat_valid:
+			ThumbnailManager.thumbnail_queue.push_back({"resource":mat, "caller": item, "callback":update_material_icon })		
+		else:
+			mat_name += " [Invalid]"
+			item.set_icon(1,load("res://addons/m_terrain/icons/no_images.png"))
+		item.set_text(2, mat_name)		
+		item.set_tooltip_text(2, material_table[i].path)		
 		var img = Image.load_from_file(ProjectSettings.globalize_path("res://addons/m_terrain/icons/edit_icon.svg"))
 		img.resize(24,24)
 		var edit_button_texture = ImageTexture.create_from_image(img) 
