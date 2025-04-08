@@ -16,8 +16,8 @@ using namespace godot;
 	the material will be applied on top of the mesh automaticly
 */
 
-class MMesh : public Resource {
-    GDCLASS(MMesh,Resource);
+class MMesh : public Mesh {
+    GDCLASS(MMesh,Mesh);
 	protected:
 	static void _bind_methods();
 
@@ -100,6 +100,7 @@ class MMesh : public Resource {
 
 	bool is_same_mesh(Ref<MMesh> other);
 
+	RID _get_rid() const override;
 	// First element in array is material set
 	void _set_surfaces(Array _surfaces);
 	Array _get_surfaces() const;

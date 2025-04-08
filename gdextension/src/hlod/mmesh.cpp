@@ -423,6 +423,10 @@ bool MMesh::is_same_mesh(Ref<MMesh> other){
     return true;
 }
 
+RID MMesh::_get_rid() const{
+    return mesh;
+}
+
 void MMesh::_set_surfaces(Array _surfaces){
     _create_if_not_exist();
     RS->mesh_clear(mesh);
