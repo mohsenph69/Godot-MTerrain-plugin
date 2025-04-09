@@ -1,9 +1,21 @@
-[gd_scene load_steps=2 format=3 uid="uid://rb1pu2ggav8p"]
+[gd_scene load_steps=2 format=3 uid="uid://cjds22e5xolg1"]
 
-[ext_resource type="Script" uid="uid://n8lw3ac2bnqt" path="res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.gd" id="1_4jook"]
+[sub_resource type="GDScript" id="GDScript_0qenp"]
+script/source = "@tool
+extends Control
+
+var mmesh:MMesh
+
+func _ready():
+	var _rp = EditorInterface.get_resource_previewer()			
+	_rp.queue_edited_resource_preview(mmesh.get_mesh(),self,\"handle_generate_thumbnail\",null)
+
+func handle_generate_thumbnail(path, preview, thumbnail_preview,data):	
+	%mmesh_thumbnail.texture = preview
+"
 
 [node name="MmeshInspector" type="PanelContainer"]
-script = ExtResource("1_4jook")
+script = SubResource("GDScript_0qenp")
 
 [node name="mmesh_thumbnail" type="TextureRect" parent="."]
 unique_name_in_owner = true

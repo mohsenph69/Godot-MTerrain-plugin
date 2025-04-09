@@ -12,7 +12,6 @@ func _can_handle(object):
 	if object is MHlodNode3D: return true	
 	if object is MHlodScene: return true
 	if object is MAssetMesh: return true	
-	if object is MMesh: return true		
 	if object is CollisionShape3D: return true		
 	if object is MDecalInstance: return true		
 	if object is MDecal: return true		
@@ -72,9 +71,6 @@ func _parse_begin(object):
 			control.add_child(make_masset_mesh_cutoff_lod_control(object))									
 			control.add_child(make_masset_collision_cutoff_lod_control(object))
 		control.add_child(make_tag_collection_control(object))						
-	elif object is MMesh:		
-		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mmesh_inspector.tscn").instantiate()
-		control.mmesh = object		
 	elif object is MHlodNode3D:				
 		control = preload("res://addons/m_terrain/asset_manager/ui/inspector/mhlod_node_inspector.tscn").instantiate()		
 		control.mhlod_node = object				

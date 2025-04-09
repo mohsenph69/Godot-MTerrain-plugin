@@ -32,8 +32,6 @@ void MMesh::_bind_methods(){
     ClassDB::bind_method(D_METHOD("_set_surfaces","surfaces"), &MMesh::_set_surfaces);
     ClassDB::bind_method(D_METHOD("_get_surfaces"), &MMesh::_get_surfaces);
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"_surfaces",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_surfaces","_get_surfaces");
-
-    ClassDB::bind_method(D_METHOD("debug_test"), &MMesh::debug_test);
 }
 
 void MMesh::_create_if_not_exist(){
@@ -423,10 +421,6 @@ bool MMesh::is_same_mesh(Ref<MMesh> other){
     return true;
 }
 
-RID MMesh::_get_rid() const{
-    return mesh;
-}
-
 void MMesh::_set_surfaces(Array _surfaces){
     _create_if_not_exist();
     RS->mesh_clear(mesh);
@@ -452,6 +446,12 @@ void MMesh::_set_surfaces(Array _surfaces){
     // Mesh Data
     for(int i=0; i < surface_count; i++){
         Dictionary sdata = _surfaces[i];
+        MMesh::Surface s;
+        s.format = sdata["format"];
+        s.array_length = sdata["vertex_count"];
+        s.index_array_length = sdata["index_count"];
+        s.primitive = (Mesh::PrimitiveType)(int)sdata["primitive"];
+        surfaces.push_back(s);
         _surfaces_names.push_back(sdata["name"]);
         RS->mesh_add_surface(mesh,sdata);
         ERR_CONTINUE(!sdata.has("aabb"));
@@ -550,16 +550,47 @@ String MMesh::_to_string(){
     return String("<MMesh-,") + itos(get_instance_id()) + String(">") ;
 }
 
-void MMesh::debug_test() {
-    Ref<Material> mat;
-    mat.instantiate();
-    UtilityFunctions::print("Debug test");
-    PackedStringArray _str_paths;
-    _str_paths.push_back("res://massets/meshes/3.res");
-    //_str_paths.push_back("res://massets/foo.res");
-    //_str_paths.push_back("res://loo.res");
-    MaterialSet ms(1);
-    ms.set_material(0,mat);
-    UtilityFunctions::print(ms.surface_materials_paths.get_string_from_ascii());
-    UtilityFunctions::print(ms.get_surface_materials_paths());
+
+RID MMesh::_get_rid() const{
+    return mesh;
+}
+
+int32_t MMesh::_get_surface_count() const{
+    return get_surface_count();
+}
+
+int32_t MMesh::_surface_get_array_len(int32_t p_index) const{
+    ERR_FAIL_INDEX_V(p_index,surfaces.size(),0);
+    return surfaces[p_index].array_length;
+}
+
+int32_t MMesh::_surface_get_array_index_len(int32_t p_index) const{
+    ERR_FAIL_INDEX_V(p_index,surfaces.size(),0);
+    return surfaces[p_index].index_array_length;
+}
+
+Array MMesh::_surface_get_arrays(int32_t p_index) const{
+    return surface_get_arrays(p_index);
+}
+
+uint32_t MMesh::_surface_get_format(int32_t p_index) const{
+    ERR_FAIL_INDEX_V(p_index,surfaces.size(),0);
+    return surfaces[p_index].format;
+}
+
+uint32_t MMesh::_surface_get_primitive_type(int32_t p_index) const{
+    ERR_FAIL_INDEX_V(p_index,surfaces.size(),0);
+    return surfaces[p_index].primitive;
+}
+/*
+void MMesh::_surface_set_material(int32_t p_index, const Ref<Material> &p_material){
+
+}
+
+Ref<Material> MMesh::_surface_get_material(int32_t p_index) const{
+
+}
+*/
+AABB MMesh::_get_aabb() const{
+    return aabb;
 }

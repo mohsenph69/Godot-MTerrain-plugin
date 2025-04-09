@@ -61,9 +61,16 @@ class MMesh : public Mesh {
 		void add_user();
 		void remove_user();
 	};
+	struct Surface {
+		uint64_t format = 0;
+		int array_length = 0;
+		int index_array_length = 0;
+		Mesh::PrimitiveType primitive = Mesh::PrimitiveType::PRIMITIVE_TRIANGLES;
+	};
 	// Surface names seperated by ;
 	PackedByteArray surfaces_names;
 	Vector<MaterialSet> materials_set;
+	Vector<Surface> surfaces;
 
 	
 	void surfaces_set_names(const PackedStringArray& _surfaces_names);
@@ -99,8 +106,6 @@ class MMesh : public Mesh {
 	void remove_user(int material_set_id);
 
 	bool is_same_mesh(Ref<MMesh> other);
-
-	RID _get_rid() const override;
 	// First element in array is material set
 	void _set_surfaces(Array _surfaces);
 	Array _get_surfaces() const;
@@ -110,6 +115,17 @@ class MMesh : public Mesh {
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 	String _to_string();
 
-	void debug_test();
+
+
+	RID _get_rid() const override;
+	int32_t _get_surface_count() const override;
+	int32_t _surface_get_array_len(int32_t p_index) const override;
+	int32_t _surface_get_array_index_len(int32_t p_index) const override;
+	Array _surface_get_arrays(int32_t p_index) const override;
+	uint32_t _surface_get_format(int32_t p_index) const override;
+	uint32_t _surface_get_primitive_type(int32_t p_index) const override;
+	//void _surface_set_material(int32_t p_index, const Ref<Material> &p_material) override;
+	//Ref<Material> _surface_get_material(int32_t p_index) const override;
+	AABB _get_aabb() const override;
 };
 #endif
