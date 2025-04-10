@@ -115,7 +115,7 @@ void MMesh::MaterialSet::set_material_no_error(int surface_index,Ref<Material> m
             return;
         }
     }
-    PackedStringArray _str_paths = get_surface_materials_paths();
+    PackedStringArray _str_paths = get_surface_materials_paths();    
     ERR_FAIL_INDEX(surface_index,_str_paths.size());
     _str_paths.set(surface_index,path);
     set_surface_materials_paths(_str_paths);
@@ -282,10 +282,12 @@ Ref<ArrayMesh> MMesh::get_mesh() const{
     Ref<ArrayMesh> out;
     out.instantiate();
     out->set("_surfaces",_surfaces);
-    ERR_FAIL_COND_V(materials_set.size()==0,out);
-    for(int i=0; i < _surfaces.size(); i++){
-        out->surface_set_material(i,materials_set[0].get_material_no_user(i));
-        out->surface_set_name(i,surface_get_name(i));
+    //ERR_FAIL_COND_V(materials_set.size()==0,out);
+    if(materials_set.size()>0){
+        for(int i=0; i < _surfaces.size(); i++){
+            out->surface_set_material(i,materials_set[0].get_material_no_user(i));
+            out->surface_set_name(i,surface_get_name(i));
+        }
     }
     return out;
 }
@@ -294,8 +296,8 @@ int MMesh::get_surface_count() const{
     if(!mesh.is_valid()){
         return 0;
     }
-    ERR_FAIL_COND_V(materials_set.size()==0,0);
-    return materials_set[0].get_surface_count();
+    //ERR_FAIL_COND_V(materials_set.size()==0,0);
+    return (materials_set.size()>0) ? materials_set[0].get_surface_count() : 0;    
 }
 
 AABB MMesh::get_aabb() const{
@@ -307,8 +309,8 @@ int MMesh::material_set_get_count() const{
 }
 
 PackedStringArray MMesh::material_set_get(int set_id) const{
-    ERR_FAIL_INDEX_V(set_id,materials_set.size(),PackedStringArray());
-    return materials_set[set_id].get_surface_materials_paths();
+    //ERR_FAIL_INDEX_V(set_id,materials_set.size(),PackedStringArray());
+    return materials_set.size() > set_id ? materials_set[set_id].get_surface_materials_paths() : PackedStringArray();
 }
 
 String MMesh::material_get(int set_id,int surface_index)const{

@@ -239,7 +239,7 @@ _FORCE_INLINE_ MHlod::ItemResource MHlod::Item::get_res_and_add_user(){
             return ItemResource(packed_scene.load());
             break;
         default:
-            ERR_FAIL_V_MSG(RID(),"Undefine Item Type!");
+            ERR_FAIL_V_MSG(RID(),"Undefine Item Type! on get res and add user, user count ==1");
             break;
         }
     } else {
@@ -263,7 +263,7 @@ _FORCE_INLINE_ MHlod::ItemResource MHlod::Item::get_res_and_add_user(){
             return ItemResource(packed_scene.get_packed_scene());
             break;
         default:
-            ERR_FAIL_V_MSG(RID(),"Undefine Item Type!");
+            ERR_FAIL_V_MSG(RID(),"Undefine Item Type! on get res and add user, user count != 1");
             break;
         }
     }
@@ -292,7 +292,7 @@ _FORCE_INLINE_ void MHlod::Item::remove_user(){
             decal.unload();
             break;
         default:
-            ERR_FAIL_MSG("Undefine Item Type!"); 
+            //ERR_FAIL_MSG("Undefine Item Type! on remove user"); 
             break;
         }
     }

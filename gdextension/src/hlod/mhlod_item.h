@@ -502,7 +502,7 @@ struct MHLodItemPackedScene {
 
     _FORCE_INLINE_ PackedScene* load(){
         if(packed_scenes.has(this)){
-            WARN_PRINT("Has already and loading");
+            //WARN_PRINT("Has already and loading");
             return packed_scenes[this].ptr();
         }
         Ref<PackedScene> obj_res = ResourceLoader::get_singleton()->load(M_GET_PACKEDSCENE_PATH(id));

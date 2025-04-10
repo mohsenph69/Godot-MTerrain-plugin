@@ -476,6 +476,7 @@ func make_joined_mesh(nodes_to_join: Array, join_at_lod:int):
 			joined_mesh.surface_set_name(s,str(id))
 	var mmesh = MMesh.new()
 	mmesh.create_from_mesh(joined_mesh)
+	mmesh.resource_name = name
 	if joined_mesh_id == -1:
 		joined_mesh_id=MAssetTable.get_last_free_mesh_join_id()
 	AssetIOBaker.save_joined_mesh(joined_mesh_id, [mmesh], [join_at_lod])

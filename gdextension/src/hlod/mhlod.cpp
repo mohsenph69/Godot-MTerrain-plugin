@@ -161,7 +161,7 @@ void MHlod::Item::create(){
         new (&decal) MHLodItemDecal();
         break;
     default:
-        ERR_FAIL_MSG("Undefine Item Type!"); 
+        ERR_FAIL_MSG("Undefine Item Type! on create"); 
         break;
     }
 }
@@ -193,7 +193,7 @@ void MHlod::Item::copy(const Item& other){
         decal = other.decal;
         break;
     default:
-        ERR_FAIL_MSG("Undefine Item Type!"); 
+        ERR_FAIL_MSG("Undefine Item Type! on copy"); 
         break;
     }
 }
@@ -221,7 +221,7 @@ void MHlod::Item::clear(){
     case Type::DECAL:
         decal.~MHLodItemDecal();
     default:
-        ERR_FAIL_MSG("Undefine Item Type!"); 
+        ERR_FAIL_MSG("Undefine Item Type! on clear"); 
         break;
     }
 }
@@ -300,7 +300,7 @@ void MHlod::Item::set_data(const PackedByteArray& data){
         decal.set_data(data,head);
         break;
     default:
-        ERR_FAIL_MSG("Undefine Item Type!"); 
+        ERR_FAIL_MSG("Undefine Item Type! on setdata"); 
         break;
     }
 }
@@ -328,7 +328,7 @@ PackedByteArray MHlod::Item::get_data() const{
         data.append_array(decal.get_data());
         break;
     default:
-        ERR_FAIL_V_MSG(PackedByteArray(),"Undefine Item Type!"); 
+        ERR_FAIL_V_MSG(PackedByteArray(),"Undefine Item Type! on get_data"); 
         break;
     }
     return data;

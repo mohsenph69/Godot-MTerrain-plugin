@@ -332,21 +332,77 @@ static func find_hlod_id_by_baker_path(baker_path)->int:
 		if hlod and hlod.baker_path == baker_path: 			
 			return int(file)
 	return -1
+
+static func create_empty_hlod(baker_node:HLod_Baker, hlod_id := -1):
+	if hlod_id < 0:
+		hlod_id = MAssetTable.get_last_free_hlod_id()	
+	var bake_path := MHlod.get_hlod_path(hlod_id)	
+	if not DirAccess.dir_exists_absolute(bake_path.get_base_dir()):
+		DirAccess.make_dir_absolute(bake_path.get_base_dir())
 	
-static func create_baker_scene():	
+	var hlod_resource = MHlod.new()	
+	hlod_resource.resource_name = baker_node.name		
+	hlod_resource.set_baker_path(baker_node.scene_file_path)
+	ResourceSaver.save(hlod_resource,bake_path,ResourceSaver.FLAG_COMPRESS)	
+	if FileAccess.file_exists(bake_path):	
+		hlod_resource.take_over_path(bake_path)
+	baker_node.hlod_resource = hlod_resource		
+	baker_node.hlod_id = hlod_id
+	var collection_id = MAssetTable.get_singleton().collection_create(baker_node.name,hlod_id,MAssetTable.HLOD,-1)			
+
+#Returns Hlod_id
+static func create_baker_scene(baker_name:String = "baker", hlod_id=-1, ignore_if_exists:=false, placerholder_join_at_lod := -1, open_for_editing := true, props={}, children_to_add=[])->int:	
 	var dir = MAssetTable.get_editor_baker_scenes_dir()
 	var existing_files = DirAccess.get_files_at(dir)		
-	var file = "baker.tscn" 
-	var i = 0		
+	if baker_name.is_empty():
+		baker_name = "baker" 
+	var file = baker_name + ".tscn"			
+	
+	## If baker already exists, find it's hlod_id and return that
+	if ignore_if_exists and file in existing_files:				
+		var packed_scene = load(dir.path_join(file))
+		var data = packed_scene.get_state()
+		for i in data.get_node_count():
+			if data.get_node_name(i) == baker_name:
+				for j in data.get_node_property_count(i):
+					if data.get_node_property_name(i,j) == "hlod_id":						
+						# if it's -1, this property wont exist here
+						return data.get_node_property_value(i,j)	
+
+	var i = 0
 	while file in existing_files:			
 		i+= 1
-		file = "baker" +str(i) +".tscn"
-	var node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
-	node.name = file.trim_suffix(".tscn")
+		file = baker_name +str(i) +".tscn"		
+	
+	var baker_node = preload("res://addons/m_terrain/asset_manager/hlod_baker.gd").new()				
+	baker_node.name = file.get_basename()
+	baker_node.scene_file_path = dir.path_join(file)	
+	create_empty_hlod(baker_node, hlod_id)	
+	
+	for prop in props.keys():
+		baker_node.set(prop, props[prop])
+	
+	if placerholder_join_at_lod != -1:
+		var mmesh = MMesh.new()
+		mmesh.create_from_mesh(ArrayMesh.new())		
+		if baker_node.joined_mesh_id == -1:
+			baker_node.joined_mesh_id = MAssetTable.get_last_free_mesh_join_id()
+		AssetIOBaker.save_joined_mesh(baker_node.joined_mesh_id, [mmesh], [placerholder_join_at_lod])
+		
+	if len(children_to_add) >0:
+		for child:Node in children_to_add:
+			baker_node.add_child(child)
+			child.owner = baker_node
+			for other in child.find_children("*","",true, false):
+				if not other.owner:
+					other.owner = baker_node			
+			
 	var packed = PackedScene.new()
-	packed.pack(node)
+	packed.pack(baker_node)
 	ResourceSaver.save(packed, dir.path_join(file))		
-	EditorInterface.open_scene_from_path(dir.path_join(file))		
+	if open_for_editing:
+		EditorInterface.open_scene_from_path(dir.path_join(file))		
+	return baker_node.hlod_id	
 
 static func bake_hierarchy(root_path:String, processed_bakers:Array = [], extras: Dictionary ={}):		
 	var root:HLod_Baker = load(root_path).instantiate()	
