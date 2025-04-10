@@ -197,6 +197,7 @@ class MAssetTable : public Resource {
     int physics_id_get_add(const String& physics_name);
 
     int collection_create(const String& _name,int32_t item_id,ItemType type,int32_t glb_id);
+    void collection_update_item_id(int collection_id, int32_t new_item_id);
     void collection_update_modify_time(int collection_id);
     int64_t collection_get_modify_time(int collection_id) const;
     void collection_set_physics_setting(int collection_id,const String& physics_name);

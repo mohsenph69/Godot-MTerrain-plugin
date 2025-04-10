@@ -155,6 +155,7 @@ func _enter_tree():
 		gltf_extras_importer = GLTFExtras.new()
 		GLTFDocument.register_gltf_document_extension(gltf_extras_importer)		
 		init_import_info_settings()
+		MTool.enable_editor_plugin()
 		
 func _ready() -> void:	
 	EditorInterface.set_main_screen_editor("Script")

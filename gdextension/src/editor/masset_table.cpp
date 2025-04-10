@@ -71,6 +71,7 @@ void MAssetTable::_bind_methods(){
     ClassDB::bind_method(D_METHOD("tags_get_collections_all","search_collections","tags","exclude_tags"), &MAssetTable::tags_get_collections_all);
     ClassDB::bind_method(D_METHOD("tag_get_tagless_collections"), &MAssetTable::tag_get_tagless_collections);
     ClassDB::bind_method(D_METHOD("collection_create","name","item_id","type","glb_id"), &MAssetTable::collection_create);
+    ClassDB::bind_method(D_METHOD("collection_update_item_id", "collection_id", "new_item_id"), &MAssetTable::collection_update_item_id);
     ClassDB::bind_method(D_METHOD("collection_get_modify_time","collection_id"), &MAssetTable::collection_get_modify_time);
     ClassDB::bind_method(D_METHOD("collection_update_modify_time","collection_id"), &MAssetTable::collection_update_modify_time);
     ClassDB::bind_method(D_METHOD("collection_set_physics_setting","collection_id","physics_name"), &MAssetTable::collection_set_physics_setting);
@@ -840,6 +841,11 @@ int MAssetTable::collection_create(const String& _name,int32_t item_id,MAssetTab
     collections.ptrw()[index].item_id = item_id;
     collections.ptrw()[index].modify_time = Time::get_singleton()->get_unix_time_from_system();
     return index;
+}
+
+void MAssetTable::collection_update_item_id(int collection_id, int32_t new_item_id){
+    ERR_FAIL_COND(!has_collection(collection_id));
+    collections.ptrw()[collection_id].item_id = new_item_id;    
 }
 
 void MAssetTable::collection_update_modify_time(int collection_id){

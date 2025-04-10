@@ -1327,9 +1327,6 @@ void MOctree::_notification(int p_what){
 		if(!get_parent()->is_class("Window")){
 			ERR_FAIL_EDMSG("MOctree should be added as singlton with active tool mode! Create a gdscript which inherit from MOctree with active tool mode and add that as singlton in project setting");
 		}
-		if(!MTool::is_editor_plugin_active() && Engine::get_singleton()->is_editor_hint()){
-			ERR_FAIL_EDMSG("Make sure to activate MTerrain plugin otherwise gizmo selction will not work!");
-		}
 		if(debug_draw && debug_instance.is_valid()){
 			RS->instance_set_scenario(debug_instance,scenario);
 		}

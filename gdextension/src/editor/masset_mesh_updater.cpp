@@ -15,6 +15,7 @@
 #include "../mtool.h"
 #include "../moctree.h"
 #include "../hlod/mhlod_scene.h"
+#include "../hlod/mhlod_node3d.h"
 #include "masset_table.h"
 
 #include "masset_mesh.h"
@@ -107,7 +108,10 @@ void MAssetMeshUpdater::_update_lod(int lod){
             continue;
         }
         if(cur_node->get("asset_mesh_updater").get_type() == Variant::Type::NIL){
-            children.append_array(cur_node->get_children());
+            MHlodNode3D* packed_scene_asset = Object::cast_to<MHlodNode3D>(cur_node);
+            if(!packed_scene_asset){            
+                children.append_array(cur_node->get_children());
+            }
         }
         MAssetMesh* amesh = Object::cast_to<MAssetMesh>(cur_node);
         if(amesh){
@@ -115,7 +119,7 @@ void MAssetMeshUpdater::_update_lod(int lod){
                 amesh->destroy_meshes();
             } else {
                 uint16_t avariation_layer = amesh->has_meta("variation_layers") ?  (int)amesh->get_meta("variation_layers") : 0;
-                if(avariation_layer==0 || (avariation_layer&variation_layer)!=0){
+                if((avariation_layer==0 || (avariation_layer&variation_layer)!=0) && amesh->is_visible_in_tree()){
                     amesh->update_lod(lod);
                 } else {
                     amesh->update_lod(-1);
@@ -126,13 +130,13 @@ void MAssetMeshUpdater::_update_lod(int lod){
         VisualInstance3D* nd3d = Object::cast_to<VisualInstance3D>(cur_node);
         if(nd3d){
             uint16_t avariation_layer = nd3d->has_meta("variation_layers") ?  (int)nd3d->get_meta("variation_layers") : 0;
-            bool is_visible = avariation_layer==0 || (avariation_layer&variation_layer)!=0;
+            bool is_visible = (avariation_layer==0 || (avariation_layer&variation_layer)!=0)  && nd3d->is_visible_in_tree();
             RS->instance_set_visible(nd3d->get_instance(),is_visible);
             continue;
         }
         MHlodScene* h = Object::cast_to<MHlodScene>(cur_node);
         if(h){
-            h->set_is_hidden(is_join_mesh);
+            h->set_is_hidden(is_join_mesh || !h->is_visible_in_tree());
         }
     }
     if(show_boundary && MHlodScene::get_octree()){
