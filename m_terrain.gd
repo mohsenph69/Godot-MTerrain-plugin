@@ -18,9 +18,6 @@ var gizmo_mpath
 var gizmo_masset_mesh
 
 var inspector_mpath
-
-var timer = Timer.new()
-var needs_restart = false
 	
 #var MLOD_Mesh_Importer
 var asset_browser
@@ -30,17 +27,6 @@ var loaded_scenes = []
 var gltf_extras_importer
 
 var asset_table:MAssetTable
-
-func check_restart():
-	
-	if GDExtensionManager.is_extension_loaded("res://addons/m_terrain/libs/MTerrain.gdextension"):
-		if needs_restart:
-			EditorInterface.restart_editor()
-		else: return true
-	else:
-		needs_restart = true
-		timer.start(0.5)
-		return false
 
 #region keyboard actions
 var default_keyboard_actions 
@@ -88,15 +74,8 @@ func _enter_tree():
 		version = get_plugin_version()
 		MTerrainSettings.add_projects_settings()
 		init_asset_table()
-		timer.one_shot = true
-		timer.timeout.connect(check_restart)
-		add_child(timer)
-		timer.start(0.5)
-		if not check_restart(): return
-			
 		var main_screen = EditorInterface.get_editor_main_screen()											
 		main_screen_changed.connect(_on_main_screen_changed)		
-	
 		tools = load("res://addons/m_terrain/gui/mtools.tscn").instantiate()		
 		tools.request_info_window.connect(show_info_window)
 		tools.request_import_window.connect(show_import_window)
@@ -163,7 +142,6 @@ func _ready() -> void:
 	
 func _exit_tree():	
 	if Engine.is_editor_hint():				
-		timer.queue_free()
 		remove_keymap()	
 		remove_tool_menu_item("MTerrain import/export")
 		remove_tool_menu_item("MTerrain image create/remove")		

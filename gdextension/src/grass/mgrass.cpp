@@ -122,6 +122,27 @@ MGrass::~MGrass(){
     }
 }
 
+Ref<MGrassLodSetting> MGrass::get_default_lod_setting(){
+    static Ref<MGrassLodSetting> def_setting;
+    if(def_setting.is_null()){
+        def_setting.instantiate();
+        Vector3 vzero(0,0,0);
+        Vector3 vone(1,1,1);
+        def_setting->set_offset(vzero);
+        def_setting->set_rand_pos_start(vzero);
+        def_setting->set_rand_pos_start(vzero);
+        def_setting->set_rand_pos_end(vzero);
+        def_setting->set_rand_rot_start(vzero);
+        def_setting->set_rand_rot_end(vzero);
+        def_setting->set_uniform_rand_scale_start(1.0);
+        def_setting->set_uniform_rand_scale_end(1.0);
+        def_setting->set_rand_scale_start(vone);
+        def_setting->set_rand_scale_end(vone);
+    }
+    return def_setting;
+}
+
+
 void MGrass::init_grass(MGrid* _grid) {
     ERR_FAIL_COND_EDMSG(!grass_data.is_valid(),"Grass \""+get_name()+"\" Data is invalid, Please set grass data and save that with .res ext");
     if(!active){
@@ -162,13 +183,12 @@ void MGrass::init_grass(MGrid* _grid) {
         }
     }
     // Rand num Generation
-    default_lod_setting = ResourceLoader::get_singleton()->load("res://addons/m_terrain/default_lod_setting.res");
     for(int i=0;i<lod_settings.size();i++){
         Ref<MGrassLodSetting> s = lod_settings[i];
         if(s.is_valid()){
             settings.push_back(s);
         } else {
-            settings.push_back(default_lod_setting);
+            settings.push_back(get_default_lod_setting());
         }
     }
     for(int i=0;i<settings.size();i++){
@@ -1254,7 +1274,7 @@ bool MGrass::_set(const StringName &p_name, const Variant &p_value){
         }
         if(is_grass_init){
             if(!setting.is_valid()){
-                setting = ResourceLoader::get_singleton()->load("res://addons/m_terrain/default_lod_setting.res");
+                setting = get_default_lod_setting();
             }
             settings.set(index,setting);
             settings[index]->is_dirty = true;

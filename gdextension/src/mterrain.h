@@ -31,7 +31,6 @@ class MNavigationRegion3D;
 class MTerrain : public  Node3D {
     GDCLASS(MTerrain, Node3D);
     private:
-    MChunks* _chunks;
     std::future<void> update_thread_chunks;
     bool finish_updating=true;
     bool chunks_update_loop_enabled=true;

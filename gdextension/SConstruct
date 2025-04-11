@@ -1,8 +1,32 @@
+import os
+from pathlib import Path
+import shutil
+
 
 env = SConscript('godot-cpp/SConstruct')
 
 
+cwd = Path(Dir('.').abspath)
+parent_dir_name = cwd.parent.name
+grandparent_dir_name = cwd.parent.parent.name
+
+if parent_dir_name!="m_terrain":
+    raise ValueError("\033[91mERROR: Please re-name paren root dir from "+parent_dir_name+" to m_terrain\033[0m")
+
+if grandparent_dir_name!="addons":
+    raise ValueError("\033[91mERROR: Please re-name grandparent root dir from "+grandparent_dir_name+" to addons\033[0m")
+
+libdir = cwd.joinpath("../../../mterrain")
+os.makedirs(libdir,0o755,True)
+
 env.Append(CPPPATH="src/")
+if env["precision"] == "single":
+    shutil.copy("MTerrain.txt", libdir.joinpath("MTerrain.gdextension"))
+elif env["precision"] == "double":
+    shutil.copy("MTerrain_double.txt", libdir.joinpath("MTerrain.gdextension"))
+    print("Single double")
+else:
+    raise ValueError("Can't detect presicion!")
 
 
 src = Glob("src/*.cpp")
@@ -19,7 +43,7 @@ if env["target"] == "template_debug":
     print("compiling for Debug and Editor")
     src.append(Glob("src/editor/*.cpp"))
 
-
-libpath = '../libs/MTerrain{}{}'.format( env['suffix'], env['SHLIBSUFFIX'] )
+libname :str= 'MTerrain{}{}'.format( env['suffix'], env['SHLIBSUFFIX'] )
+libpath :str= str(libdir.joinpath(libname).resolve())
 sharedlib = env.SharedLibrary(libpath, src)
 Default(sharedlib)

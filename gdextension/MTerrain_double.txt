@@ -1,0 +1,41 @@
+[configuration]
+
+entry_symbol = "test_library_init"
+compatibility_minimum = 4.3
+
+[libraries]
+macos.debug = "res://mterrain/libMTerrain.macos.template_debug.double.universal.dylib"
+macos.release = "res://mterrain/libMTerrain.macos.template_release.double.universal.dylib"
+ios.debug = "res://mterrain/libMTerrain.ios.template_debug.double.universal.dylib"
+ios.release = "res://mterrain/libMTerrain.ios.template_release.double.universal.dylib"
+linux.debug.x86_64 = "res://mterrain/libMTerrain.linux.template_debug.double.x86_64.so"
+linux.release.x86_64 = "res://mterrain/libMTerrain.linux.template_release.double.x86_64.so"
+linux.debug.x86_32 = "res://mterrain/libMTerrain.linux.template_debug.double.x86_32.so"
+linux.release.x86_32 = "res://mterrain/libMTerrain.linux.template_release.double.x86_32.so"
+windows.debug.x86_64 = "res://mterrain/libMTerrain.windows.template_debug.double.x86_64.dll"
+windows.release.x86_64 = "res://mterrain/libMTerrain.windows.template_release.double.x86_64.dll"
+windows.debug.x86_32 = "res://mterrain/libMTerrain.windows.template_debug.double.x86_32.dll"
+windows.release.x86_32 = "res://mterrain/libMTerrain.windows.template_release.double.x86_32.dll"
+android.debug.arm64 = "res://mterrain/libMTerrain.android.template_debug.double.arm64.so"
+android.release.arm64 = "res://mterrain/libMTerrain.android.template_release.double.arm64.so"
+
+
+[icons]
+
+MTerrain = "res://addons/m_terrain/icons/M-terrain_icon.png"
+MGrass = "res://addons/m_terrain/icons/foilage_icon.png"
+MNavigationRegion3D = "res://addons/m_terrain/icons/MNavigationRegion3D.png"
+MObstacle = "res://addons/m_terrain/icons/obstacle_icon.png"
+MOctMesh = "res://addons/m_terrain/icons/MOctMesh.svg"
+MOctree = "res://addons/m_terrain/icons/MOctree.svg"
+MPath = "res://addons/m_terrain/icons/MPath.svg"
+MCurve = "res://addons/m_terrain/icons/MCurve.svg"
+MMeshLod = "res://addons/m_terrain/icons/MMeshLod.svg"
+MCurveMesh = "res://addons/m_terrain/icons/MCurveMesh.svg"
+MIntersection = "res://addons/m_terrain/icons/MIntersection.svg"
+MHlod = "res://addons/m_terrain/icons/hlod.svg"
+MHlodScene = "res://addons/m_terrain/icons/hlod_scene.svg"
+MAssetMesh = "res://addons/m_terrain/icons/hmasset_mesh.svg"
+MHlodNode3D = "res://addons/m_terrain/icons/hlod_node3d.svg"
+MDecal = "res://addons/m_terrain/icons/mdecal.svg"
+MDecalInstance = "res://addons/m_terrain/icons/mdecal_instance.svg"

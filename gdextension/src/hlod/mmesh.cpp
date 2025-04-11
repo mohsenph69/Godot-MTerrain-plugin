@@ -582,6 +582,11 @@ uint32_t MMesh::_surface_get_primitive_type(int32_t p_index) const{
     ERR_FAIL_INDEX_V(p_index,surfaces.size(),0);
     return surfaces[p_index].primitive;
 }
+
+int32_t MMesh::_get_blend_shape_count() const{
+    return 0;
+}
+
 /*
 void MMesh::_surface_set_material(int32_t p_index, const Ref<Material> &p_material){
 

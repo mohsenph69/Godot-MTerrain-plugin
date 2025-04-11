@@ -75,7 +75,6 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<MTerrain>();
 	ClassDB::register_class<MResource>();
 	ClassDB::register_class<MChunkGenerator>();
-	ClassDB::register_class<MChunks>();
 	ClassDB::register_class<MTool>();
 	ClassDB::register_class<MBrushManager>();
 	ClassDB::register_class<MCollision>();

@@ -124,6 +124,7 @@ class MMesh : public Mesh {
 	Array _surface_get_arrays(int32_t p_index) const override;
 	uint32_t _surface_get_format(int32_t p_index) const override;
 	uint32_t _surface_get_primitive_type(int32_t p_index) const override;
+	int32_t _get_blend_shape_count() const override;
 	//void _surface_set_material(int32_t p_index, const Ref<Material> &p_material) override;
 	//Ref<Material> _surface_get_material(int32_t p_index) const override;
 	AABB _get_aabb() const override;

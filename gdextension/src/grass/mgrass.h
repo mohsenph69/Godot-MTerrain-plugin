@@ -71,7 +71,6 @@ class MGrass : public Node3D {
     Array materials;
     Ref<MMeshLod> meshes;
     Vector<Ref<MGrassLodSetting>> settings;
-    Ref<MGrassLodSetting> default_lod_setting;
     Vector<RID> material_rids;
     //Vector<RID> meshe_rids;
     Vector<PackedFloat32Array> rand_buffer_pull;
@@ -93,6 +92,7 @@ class MGrass : public Node3D {
 
     MGrass();
     ~MGrass();
+    static Ref<MGrassLodSetting> get_default_lod_setting();
     void init_grass(MGrid* _grid);
     void clear_grass();
     void update_grass();

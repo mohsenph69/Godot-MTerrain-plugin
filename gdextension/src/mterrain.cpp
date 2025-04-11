@@ -294,9 +294,8 @@ void MTerrain::create_grid(){
             DirAccess::make_dir_recursive_absolute(layersDataDir);
         }
     }
-    _chunks = memnew(MChunks);
     grid->update_renderer_info();
-    _chunks->create_chunks(size_list[min_size_index],size_list[max_size_index],h_scale_list[min_h_scale_index],h_scale_list[max_h_scale_index],size_info);
+    grid->_chunks.create_chunks(size_list[min_size_index],size_list[max_size_index],h_scale_list[min_h_scale_index],h_scale_list[max_h_scale_index],size_info);
     grid->set_scenario(get_world_3d()->get_scenario());
     grid->space = get_world_3d()->get_space();
     grid->offset = offset;
@@ -330,7 +329,7 @@ void MTerrain::create_grid(){
         grid->set_terrain_material(m);
     }
     grid->lod_distance = lod_distance;
-    grid->create(terrain_size.x,terrain_size.y,_chunks);
+    grid->create(terrain_size.x,terrain_size.y);
     if(!grid->is_created()){
         return;
     }

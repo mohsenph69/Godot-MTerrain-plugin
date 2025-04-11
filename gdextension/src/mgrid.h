@@ -135,7 +135,7 @@ class MGrid {
     bool current_update = true;
     bool is_dirty = false;
     bool is_visible = true;
-    MChunks* _chunks;
+    MChunks _chunks;
     MGridPos _size;
     MGridPos _size_meter;
     MGridPos _vertex_size;
@@ -239,7 +239,7 @@ class MGrid {
     MGridPos get_size();
     void set_scenario(RID scenario);
     RID get_scenario();
-    void create(const int32_t width,const int32_t height, MChunks* chunks);
+    void create(const int32_t width,const int32_t height);
     void update_all_image_list();
     Vector3 get_world_pos(const int32_t x,const int32_t y,const int32_t z);
     Vector3 get_world_pos(const MGridPos& pos);
