@@ -270,7 +270,6 @@ void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id,const bool i
             }
             // Setting Packed Scene Variables
             hlod_node->global_id = GlobalItemID(oct_point_id,item->transform_index);
-            hlod_node->permanent_id = PermanentItemID(proc_id,item_id);
             hlod_node->proc = this;
             hlod_node->set_transform(hlod->transforms[item->transform_index]); // PackeScene transform is different from above
             for(int i=0;i<M_PACKED_SCENE_ARG_COUNT;i++){hlod_node->args[i] = item->packed_scene.args[i];}

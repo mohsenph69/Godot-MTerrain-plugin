@@ -14,7 +14,6 @@ void MHlodNode3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_current_lod"), &MHlodNode3D::get_current_lod);
     ClassDB::bind_method(D_METHOD("get_arg","idx"), &MHlodNode3D::get_arg);
     ClassDB::bind_method(D_METHOD("get_global_id"), &MHlodNode3D::get_global_id);
-    ClassDB::bind_method(D_METHOD("get_permanent_id"), &MHlodNode3D::get_permanent_id);
     // bind items
     ClassDB::bind_method(D_METHOD("bind_item_get_global_id","idx"), &MHlodNode3D::bind_item_get_global_id);
     ClassDB::bind_method(D_METHOD("bind_item_get_transform","idx"), &MHlodNode3D::bind_item_get_transform);
@@ -76,9 +75,6 @@ int32_t MHlodNode3D::get_arg(int idx) const{
 }
 int64_t MHlodNode3D::get_global_id() const{
     return global_id.id;
-}
-int64_t MHlodNode3D::get_permanent_id() const{
-    return permanent_id.id;
 }
 
 // Bid Items

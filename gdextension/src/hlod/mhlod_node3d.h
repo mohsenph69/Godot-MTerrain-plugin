@@ -24,7 +24,6 @@ class MHlodNode3D : public Node3D {
     int32_t args[M_PACKED_SCENE_ARG_COUNT] = {0};
     MHlodScene::GlobalItemID bind_items[M_PACKED_SCENE_BIND_COUNT];
     MHlodScene::GlobalItemID global_id;
-    MHlodScene::PermanentItemID permanent_id;
     MHlodScene::Proc* proc = nullptr;
 
     public:
@@ -35,7 +34,6 @@ class MHlodNode3D : public Node3D {
     int get_current_lod() const;
     int32_t get_arg(int idx) const;
     int64_t get_global_id() const;
-    int64_t get_permanent_id() const;
 
     //Bind Items
     int64_t bind_item_get_global_id(int idx) const;

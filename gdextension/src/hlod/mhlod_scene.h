@@ -55,20 +55,6 @@ class MHlodScene : public Node3D {
         _FORCE_INLINE_ GlobalItemID(int64_t id):id(id){};
         _FORCE_INLINE_ bool is_valid()const{return transform_index>=0;}
     };
-
-    union PermanentItemID
-    {
-        struct
-        {
-            int32_t proc_id; // or index in procs
-            int32_t item_id;
-        };
-        int64_t id;
-        PermanentItemID()=default;
-        _FORCE_INLINE_ PermanentItemID(int32_t proc_id,int32_t item_id):proc_id(proc_id),item_id(item_id){};
-        _FORCE_INLINE_ PermanentItemID(int64_t id):id(id){};
-        _FORCE_INLINE_ bool is_valid(){return item_id>=0;}
-    };
     
     struct CreationInfo
     {
@@ -176,13 +162,6 @@ class MHlodScene : public Node3D {
             ERR_FAIL_COND_V(item_id>=hlod->item_list.size(),GlobalItemID());
             int32_t btransform_index = hlod->item_list[item_id].transform_index;
             return GlobalItemID(oct_point_id,btransform_index);
-        }
-        _FORCE_INLINE_ PermanentItemID get_item_permanent_id(int item_id) const{
-            ERR_FAIL_COND_V(!is_enable,PermanentItemID());
-            if(item_id<0){
-                return PermanentItemID();
-            }
-            return PermanentItemID(proc_id,item_id);
         }
         // All function bellow should be protected by packed_scene_mutex
         _FORCE_INLINE_ void bind_item_clear(const GlobalItemID bound_id);
