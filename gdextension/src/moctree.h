@@ -239,7 +239,7 @@ class MOctree : public Node3D {
     bool is_valid_octmesh_updater();
     static void thread_update(void* instance);
     void _notification(int p_what);
-    void process_tick();
+    void _process(double delta) override;
     void point_process_finished(int oct_id);
     void check_point_process_finished();
     inline void send_first_update_signal();

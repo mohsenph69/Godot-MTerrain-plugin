@@ -66,18 +66,18 @@ struct MHLodItemMesh {
     _FORCE_INLINE_ bool has_material_ovveride(){
         return mesh.is_valid() && mesh->has_material_override() && material_id >= 0;
     }
-    _FORCE_INLINE_ RID load(){
-        ERR_FAIL_COND_V(mesh_id==-1,RID());
-        if(mesh.is_null()){
-            mesh = RL->load(M_GET_MESH_PATH(mesh_id));
+    _FORCE_INLINE_ bool has_cache() const {
+        return mesh.is_valid() || RL->has_cached(M_GET_MESH_PATH(mesh_id));
+    }
+    _FORCE_INLINE_ void load(){
+        ERR_FAIL_COND(mesh_id==-1);
+        ERR_FAIL_COND_MSG(mesh.is_valid(),"Mesh valid on load!");
+        String mpath = M_GET_MESH_PATH(mesh_id);
+        if(RL->has_cached(mpath)){
+            mesh = RL->get_cached_ref(mpath);
+        } else {
+            mesh = RL->load_threaded_request(mpath);
         }
-        if(has_material_ovveride()){
-            mesh->add_user(material_id);
-        }
-        if(mesh.is_valid()){
-            return mesh->get_mesh_rid();
-        }
-        return RID();
     }
     _FORCE_INLINE_ void unload(){
         if(has_material_ovveride()){
@@ -85,7 +85,18 @@ struct MHLodItemMesh {
         }
         mesh.unref();
     }
-    _FORCE_INLINE_ RID get_mesh() const{
+    _FORCE_INLINE_ RID get_mesh() {
+        if(mesh.is_valid()){
+            return mesh->get_mesh_rid();
+        }
+        String mpath = M_GET_MESH_PATH(mesh_id);
+        ResourceLoader::ThreadLoadStatus ls = RL->load_threaded_get_status(mpath);
+        if(ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_IN_PROGRESS || ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_LOADED){
+            mesh = RL->load_threaded_get(mpath);
+            if(has_material_ovveride()){
+                mesh->add_user(material_id);
+            }
+        }
         if(mesh.is_null()){
             return RID();
         }
@@ -138,17 +149,27 @@ struct MHLodItemDecal {
     int32_t decal_id;
     int32_t render_layers;
     Ref<MDecal> decal;
-    _FORCE_INLINE_ RID load(){
-        if(decal.is_valid()){
-            return decal->get_decal_rid();
+    _FORCE_INLINE_ bool has_cache() const {
+        return decal.is_valid() || RL->has_cached(M_GET_DECAL_PATH(decal_id));
+    }
+    _FORCE_INLINE_ void load(){
+        ERR_FAIL_COND_MSG(decal.is_valid(),"Decal valid on load!");
+        String dpath = M_GET_DECAL_PATH(decal_id);
+        if(RL->has_cached(dpath)){
+            decal = RL->get_cached_ref(dpath);
+        } else {
+            decal = RL->load_threaded_request(dpath);
         }
-        decal = RL->load(M_GET_DECAL_PATH(decal_id));
-        if(decal.is_valid()){
-            return decal->get_decal_rid();
-        }
-        return RID();
     }
     _FORCE_INLINE_ RID get_decal(){
+        if(decal.is_valid()){
+            return decal->get_decal_rid();
+        }
+        String dpath = M_GET_DECAL_PATH(decal_id);
+        ResourceLoader::ThreadLoadStatus ls = RL->load_threaded_get_status(dpath);
+        if(ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_IN_PROGRESS || ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_LOADED){
+            decal = RL->load_threaded_get(dpath);
+        }
         if(decal.is_valid()){
             return decal->get_decal_rid();
         }
@@ -247,10 +268,13 @@ struct MHLodItemCollision {
     _FORCE_INLINE_ int get_body_id() const{
         return static_body;
     }
-    _FORCE_INLINE_ RID load(){
+    _FORCE_INLINE_ bool has_cache() const {
+        return true;
+    }
+    _FORCE_INLINE_ void load(){
         if(shapes_list.has(param)){
             shapes_list.getptr(param)->user_count++;
-            return shapes_list[param].rid;
+            return;
         }
         RID shape;
         switch (param.type)
@@ -283,10 +307,9 @@ struct MHLodItemCollision {
             }
             break;
         default:
-            ERR_FAIL_V_MSG(RID(),"Invalid shape type");
+            ERR_FAIL_MSG("Invalid shape type");
         }
         shapes_list.insert(param,ShapeData(shape));
-        return shape;
     }
     _FORCE_INLINE_ void unload(){
         if(shapes_list.has(param)){
@@ -341,17 +364,27 @@ struct MHLodItemCollisionComplex {
     int16_t static_body = -1;
     int32_t id = -1;
     Ref<Shape3D> shape;
-    _FORCE_INLINE_ RID load(){
-        if(shape.is_valid()){
-            return shape->get_rid();
-        }
-        shape = RL->load(M_GET_COLLISION_PATH(id));
-        if(shape.is_valid()){
-            return shape->get_rid();
-        }
-        return RID();
+    _FORCE_INLINE_ bool has_cache() const {
+        return shape.is_valid() || RL->has_cached(M_GET_COLLISION_PATH(id));
     }
-    _FORCE_INLINE_ RID get_shape() const{
+    _FORCE_INLINE_ void load(){
+        ERR_FAIL_COND_MSG(shape.is_valid(),"Load on valid shape MHLodItemCollisionComplex");
+        String spath = M_GET_COLLISION_PATH(id);
+        if(RL->has_cached(spath)){
+            shape = RL->get_cached_ref(spath);
+        } else {
+            RL->load_threaded_request(spath);
+        }
+    }
+    _FORCE_INLINE_ RID get_shape(){
+        if(shape.is_valid()){
+            return shape->get_rid();
+        }
+        String spath = M_GET_COLLISION_PATH(id);
+        ResourceLoader::ThreadLoadStatus ls = RL->load_threaded_get_status(spath);
+        if(ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_IN_PROGRESS || ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_LOADED){
+            shape = RL->load_threaded_get(spath);
+        }
         if(shape.is_valid()){
             return shape->get_rid();
         }
@@ -416,12 +449,11 @@ struct MHLodItemLight { // No more memebr or increase item size
     MByteFloat<false,1024> distance_fade_length;
     int16_t cull_mask;
     int16_t layers;
-
-    _FORCE_INLINE_ RID load(){
-        if(lights_list.has(this)){
-            WARN_PRINT("Loading lights but exist already!");
-            return lights_list[this];
-        }
+    _FORCE_INLINE_ bool has_cache() const {
+        return true;
+    }
+    _FORCE_INLINE_ void load(){
+        ERR_FAIL_COND_MSG(lights_list.has(this),"Load light but exist!");
         RID light;
         switch (type)
         {
@@ -434,7 +466,7 @@ struct MHLodItemLight { // No more memebr or increase item size
             RS->light_omni_set_shadow_mode(light,(RenderingServer::LightOmniShadowMode)shadow_mode);
             break;
         default:
-            ERR_FAIL_V_MSG(RID(),"Unkown light type "+itos((int)type));
+            ERR_FAIL_MSG("Unkown light type "+itos((int)type));
             break;
         }
         // color
@@ -464,7 +496,6 @@ struct MHLodItemLight { // No more memebr or increase item size
         // distance fade
         RS->light_set_distance_fade(light,(bool)distance_fade_enabled,distance_fade_begin,distance_fade_shadow,distance_fade_length);
         lights_list.insert(this,light);
-        return light;
     }
 
     _FORCE_INLINE_ RID get_light(){
@@ -499,23 +530,32 @@ struct MHLodItemPackedScene {
     int32_t id = -1;
     int32_t bind_items[M_PACKED_SCENE_BIND_COUNT] = {-1};
     int32_t args[M_PACKED_SCENE_ARG_COUNT];
-
-    _FORCE_INLINE_ PackedScene* load(){
-        if(packed_scenes.has(this)){
-            WARN_PRINT("Has already and loading");
-            return packed_scenes[this].ptr();
+    _FORCE_INLINE_ bool has_cache() const {
+        return RL->has_cached(M_GET_PACKEDSCENE_PATH(id));
+    }
+    _FORCE_INLINE_ void load(){
+        ERR_FAIL_COND_MSG(packed_scenes.has(this),"PackedScene exist on Load!");
+        String ppath = M_GET_PACKEDSCENE_PATH(id);
+        if(RL->has_cached(ppath)){
+            Ref<PackedScene> pscene = RL->get_cached_ref(ppath);
+            packed_scenes.insert(this,pscene);
+        } else {
+            RL->load_threaded_request(ppath);
         }
-        Ref<PackedScene> obj_res = ResourceLoader::get_singleton()->load(M_GET_PACKEDSCENE_PATH(id));
-        if(obj_res.is_null()){
-            return nullptr;
-        }
-        packed_scenes.insert(this,obj_res);
-        return obj_res.ptr();
     }
 
-    _FORCE_INLINE_ PackedScene* get_packed_scene(){
-        ERR_FAIL_COND_V(!packed_scenes.has(this),nullptr);
-        return packed_scenes[this].ptr();
+    _FORCE_INLINE_ Ref<PackedScene> get_packed_scene(){
+        if(packed_scenes.has(this)){
+            return packed_scenes[this];
+        }
+        String ppath = M_GET_PACKEDSCENE_PATH(id);
+        ResourceLoader::ThreadLoadStatus ls = RL->load_threaded_get_status(ppath);
+        if(ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_IN_PROGRESS || ls==ResourceLoader::ThreadLoadStatus::THREAD_LOAD_LOADED){
+            Ref<PackedScene> pscene = RL->load_threaded_get(ppath);
+            packed_scenes.insert(this,pscene);
+            return pscene;
+        }
+        return nullptr;
     }
 
     _FORCE_INLINE_ void unload(){

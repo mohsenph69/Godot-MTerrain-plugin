@@ -37,6 +37,9 @@ void MHlodNode3D::_bind_methods(){
 }
 
 MHlodNode3D::MHlodNode3D(){
+    #if MHLODSCENE_DEBUG_COUNT
+    MHlodScene::total_packed_scene_count++;
+    #endif
     if(state_data.is_empty()){
         state_data.init_cache(state_data_get_cache_size());
         state_data.set_invalid_data(Variant());
@@ -45,6 +48,9 @@ MHlodNode3D::MHlodNode3D(){
 
 MHlodNode3D::~MHlodNode3D(){
     std::lock_guard<std::mutex> lock(MHlodScene::packed_scene_mutex);
+    #if MHLODSCENE_DEBUG_COUNT
+    MHlodScene::total_packed_scene_count--;
+    #endif
     if(proc!=nullptr){
         for(int i=0; i < M_PACKED_SCENE_BIND_COUNT; i++){
             if(bind_items[i].is_valid()){
@@ -69,6 +75,12 @@ void MHlodNode3D::_notify_before_remove(){
 int MHlodNode3D::get_current_lod() const{
     return lod;
 }
+
+void MHlodNode3D::set_arg(int idx,int32_t val){
+    ERR_FAIL_INDEX(idx,M_PACKED_SCENE_ARG_COUNT);
+    args[idx] = val;
+}
+
 int32_t MHlodNode3D::get_arg(int idx) const{
     ERR_FAIL_INDEX_V_MSG(idx,M_PACKED_SCENE_ARG_COUNT,0,"MHlodNode3D arg idx shoud be between 0 and "+itos(M_PACKED_SCENE_ARG_COUNT));
     return args[idx];

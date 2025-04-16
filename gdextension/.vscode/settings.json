@@ -101,7 +101,11 @@
         "stdfloat": "cpp",
         "text_encoding": "cpp",
         "*.rh": "cpp",
-        "source_location": "cpp"
+        "source_location": "cpp",
+        "ranges": "cpp",
+        "*.ipp": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp"
     },
     "cmake.configureOnOpen": false
 }

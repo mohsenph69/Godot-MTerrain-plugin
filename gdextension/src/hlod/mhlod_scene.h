@@ -1,6 +1,15 @@
 #ifndef __MHLODSCENE
 #define __MHLODSCENE
 
+#define MHLODSCENE_DEBUG_COUNT 0
+#if MHLODSCENE_DEBUG_COUNT
+#include <atomic>
+#endif
+
+#define MHLODSCENE_DISABLE_PHYSICS 0
+#define MHLODSCENE_DISABLE_RENDERING 0
+#define MHLODSCENE_THREAD_RENDERING 0
+
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/templates/hash_set.hpp>
@@ -33,12 +42,63 @@ struct MDummyType
 
 class MHlodScene : public Node3D {
     friend MHlodNode3D;
+    struct Proc;
     GDCLASS(MHlodScene,Node3D);
-
+    #if MHLODSCENE_DEBUG_COUNT
+    /**
+     * @brief
+     * when body_add_shape(); will be total_shape_count++!
+     * when body_remove_shape(); will be total_shape_count--!
+     */
+    inline static std::atomic<int> total_shape_count = {0};
+    /**
+     * @brief
+     * when RS->instance_create(); will be total_rendering_instance_count++!
+     * when RS->free_rid(); will be total_rendering_instance_count--!
+     */
+    inline static std::atomic<int> total_rendering_instance_count = {0};
+    /**
+     * @brief
+     * in MHlodNode3D constructor total_rendering_instance_count++
+     * in MHlodNode3D destructor total_rendering_instance_count--
+     */
+    inline static std::atomic<int> total_packed_scene_count = {0};
+    #endif
+    static constexpr double load_rest_timeout = 0.01;
+    /**
+     * @brief After LOAD_REST all stage is done by @ref apply_update function
+     * I know APPLY_LIGHT and APPLY_COLLISION are almost empty but they are there for more cpu IDLE time and future update
+     */
+    enum class UpdateState:int8_t{
+        OCTREE = 0,
+        LOAD,
+        LOAD_REST,
+        APPLY_LIGHT,
+        APPLY_COLLISION,
+        APPLY_COLLISION_COMPLEX,
+        APPLY_DECAL,
+        APPLY_MESH,
+        APPLY_PACKED_SCENE,
+        REMOVE_USER,
+        APPLY_CLEAR,
+        UPDATE_STATE_MAX
+    };
+    _FORCE_INLINE_ static UpdateState get_next_update_state(const UpdateState _cs){
+        if(_cs==UpdateState::UPDATE_STATE_MAX){
+            return UpdateState::OCTREE;
+        }
+        return static_cast<UpdateState>(static_cast<int8_t>(_cs) + 1);
+    }
+    _FORCE_INLINE_ static bool is_update_state_rendering(const UpdateState _cs){
+        return _cs==UpdateState::APPLY_LIGHT || _cs==UpdateState::APPLY_DECAL || _cs==UpdateState::APPLY_MESH;
+    }
+    _FORCE_INLINE_ static bool is_update_state_physics(const UpdateState _cs){
+        return _cs==UpdateState::APPLY_COLLISION || _cs==UpdateState::APPLY_COLLISION_COMPLEX;
+    }
     protected:
     static void _bind_methods();
 
-    private:
+    public:
     union GlobalItemID
     {
         struct
@@ -55,7 +115,7 @@ class MHlodScene : public Node3D {
         _FORCE_INLINE_ GlobalItemID(int64_t id):id(id){};
         _FORCE_INLINE_ bool is_valid()const{return transform_index>=0;}
     };
-    
+    private:
     struct CreationInfo
     {
         // 1 more free byte Up here
@@ -77,20 +137,98 @@ class MHlodScene : public Node3D {
         }
         CreationInfo()=default;
     };
-
-    struct ApplyInfo
+    /**
+     * @brief As we create instance in update thread and both update thread and bind_item_set_disabled (in MHlodNode3D)
+     * use update_mutex protection as disable visual instance set disable_visible in update thread
+     * And disabling visuall has nothing to do with apply_update it is ok this way!
+     * This is not true for ApplyInfoPhysics as disable shape should be set in apply_update
+     * **More explanation in ApplyInfoPhysics**
+     */
+    class ApplyInfoRendering
     {
-        MHlod::Type type;
+        inline static Vector<ApplyInfoRendering> data;
         bool remove;
-        union
-        {
-            int64_t instance;
-        };
-        ApplyInfo()=default;
-        ApplyInfo(MHlod::Type _type,bool _remove);
-        // For type Mesh
-        _FORCE_INLINE_ void set_instance(const RID input);
-        _FORCE_INLINE_ RID get_instance() const;
+        MHlod::Item* item;
+        RID instance;
+        public:
+        ApplyInfoRendering()=default;
+        _FORCE_INLINE_ ApplyInfoRendering(RID instance, MHlod::Item* item,bool remove):
+        instance(instance),item(item),remove(remove){}
+        _FORCE_INLINE_ bool is_remove() const {return remove;}
+        _FORCE_INLINE_ MHlod::Item* get_item() const {return item;}
+        _FORCE_INLINE_ RID get_instance() const {return instance;}
+        _FORCE_INLINE_ static void add(RID instance, MHlod::Item* item,bool remove){
+            data.push_back(ApplyInfoRendering(instance,item,remove));
+        }
+        _FORCE_INLINE_ static void clear(){
+            data.clear();
+        }
+        _FORCE_INLINE_ static const ApplyInfoRendering& get(int index) {
+            return data[index];
+        }
+        _FORCE_INLINE_ static size_t size() {
+            return data.size();
+        }
+    };
+    /**
+     * @brief (Only Add) we can not determine the value of bind item disable in update thread and pass it with ApplyInfoPhysics
+     * As it might change afterward
+     * For ApplyInfoRendering we can do this because even if it change after it will automaticlly set by bind_item_set_disabled
+     * As in case of Physic Flickiring does not matter! only if has_cache is false will send apply info
+     * For the same reason above removing a physics Item only happen in update thread
+     */
+    class ApplyInfoPhysics {
+        inline static Vector<ApplyInfoPhysics> data;
+        MHlod::Item* item;
+        GlobalItemID gitem_id;
+        Proc* proc;
+        public:
+        ApplyInfoPhysics()=default;
+        _FORCE_INLINE_ ApplyInfoPhysics(MHlod::Item* item,Proc* proc,GlobalItemID gitem_id):
+        item(item),proc(proc),gitem_id(gitem_id) {}
+        _FORCE_INLINE_ MHlod::Item* get_item() const {return item;}
+        _FORCE_INLINE_ Proc* get_proc() const {return proc;}
+        _FORCE_INLINE_ GlobalItemID get_gitem_id() const {return gitem_id;}
+        _FORCE_INLINE_ static void add(MHlod::Item* item,Proc* proc,GlobalItemID gitem_id){
+            data.push_back(ApplyInfoPhysics(item,proc,gitem_id));
+        }
+        _FORCE_INLINE_ static void clear(){
+            data.clear();
+        }
+        _FORCE_INLINE_ static const ApplyInfoPhysics& get(int index) {
+            return data[index];
+        }
+        _FORCE_INLINE_ static size_t size() {
+            return data.size();
+        }
+    };
+    /**
+     * @brief For non-cached PackedScene only adding
+     */
+    class ApplyInfoPackedScene {
+        inline static Vector<ApplyInfoPackedScene> data;
+        MHlod::Item* item;
+        GlobalItemID gitem_id;
+        Proc* proc;
+        public:
+        ApplyInfoPackedScene()=default;
+        _FORCE_INLINE_ ApplyInfoPackedScene(MHlod::Item* item,Proc* proc,GlobalItemID gitem_id):
+        item(item),proc(proc),gitem_id(gitem_id) {}
+        _FORCE_INLINE_ MHlod::Item* get_item() const {return item;}
+        _FORCE_INLINE_ Proc* get_proc() const {return proc;}
+        _FORCE_INLINE_ GlobalItemID get_gitem_id() const {return gitem_id;}
+        _FORCE_INLINE_ static void add(MHlod::Item* item,Proc* proc,GlobalItemID gitem_id){
+            data.push_back(ApplyInfoPackedScene(item,proc,gitem_id));
+        }
+        _FORCE_INLINE_ static void clear(){
+            data.clear();
+        }
+        _FORCE_INLINE_ static const ApplyInfoPackedScene& get(int index) {
+            return data[index];
+        }
+        _FORCE_INLINE_ static size_t size() {
+            return data.size();
+        }
     };
     /*
     Update Steps for procs
@@ -109,7 +247,6 @@ class MHlodScene : public Node3D {
         bool is_transform_changed = false;
         bool is_visible = true;
         bool is_enable = false;
-        bool is_sub_proc_enable = true;
         int8_t lod = -1;
         uint16_t scene_layers = 0;
         uint16_t sub_procs_size = 0; // sub proc size is same as sub hlod 
@@ -134,11 +271,11 @@ class MHlodScene : public Node3D {
         // or in another word enable and disable will only turn off and not remove the the sturcture of procs and subprocs
         // enable and disable will remove themself from octree
         void enable(const bool recursive=true);
-        void disable(const bool recursive=true,const bool immediate=false,const bool is_destruction=false);
+        void disable(const bool recursive,const bool is_destruction);
         void enable_sub_proc();
         void disable_sub_proc();
-        _FORCE_INLINE_ void add_item(MHlod::Item* item,const int item_id,const bool immediate=false); // can be called in non-game loop thread as it generate apply info which will be affected in main game-loop
-        _FORCE_INLINE_ void remove_item(MHlod::Item* item,const int item_id,const bool immediate=false,const bool is_destruction=false); // should clear creation_info afer calling this
+        _FORCE_INLINE_ void add_item(MHlod::Item* item,const int item_id); // can be called in non-game loop thread as it generate apply info which will be affected in main game-loop
+        _FORCE_INLINE_ void remove_item(MHlod::Item* item,const int item_id,const bool is_destruction=false); // should clear creation_info afer calling this
         _FORCE_INLINE_ Transform3D get_item_transform(const int32_t transform_index) const;
         // use bellow rather than upper
         _FORCE_INLINE_ Transform3D get_item_transform(const MHlod::Item* item) const;
@@ -146,7 +283,7 @@ class MHlodScene : public Node3D {
         void update_all_transform();
         void reload_meshes(const bool recursive=true); // must be called with mutex lock
         void remove_all_items(const bool immediate=false,const bool is_destruction=false);
-        void update_lod(int8_t _lod,const bool immediate=false);
+        void update_lod(int8_t _lod);
         void set_visibility(bool visibility);
         _FORCE_INLINE_ const Proc* get_subprocs_ptr() const{
             return scene->procs.ptr() + sub_proc_index;
@@ -173,6 +310,7 @@ class MHlodScene : public Node3D {
     bool is_hidden = false;
     bool is_init = false;
     uint16_t scene_layers = 0;
+    Ref<MHlod> main_hlod;
     Vector<Proc> procs; // Consist root proc and all sub_procs /// 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
     MBoolVector procs_update_state; // show each proc if they are update or not in the last recent update, access it under update_mutex protection
     friend Proc;
@@ -187,11 +325,10 @@ class MHlodScene : public Node3D {
     static WorkerThreadPool::TaskID thread_task_id;
     static std::mutex update_mutex;
     static std::mutex packed_scene_mutex;
-    static bool is_updating;
+    static UpdateState update_state;
     static bool is_octree_inserted;
     static uint16_t oct_id;
     static int32_t last_oct_point_id;
-    static Vector<ApplyInfo> apply_info;
     static Vector<MHlod::Item*> removing_users;
     static VSet<MHlodNode3D*> removed_packed_scenes;
     // key is global ID if Item, should be access with protection of packed_scene_mutex
@@ -212,9 +349,8 @@ class MHlodScene : public Node3D {
     static void first_octree_update(Vector<MOctree::PointUpdate>* update_info);
     static void octree_update(Vector<MOctree::PointUpdate>* update_info);
     static void octree_thread_update(void* input);
-    static void update_tick();
-    static void apply_remove_item_users();
-    static void apply_update();
+    static void update_tick(double delta);
+    static void apply_update(UpdateState u_state);
 
     static void sleep();
     static void awake();
@@ -225,10 +361,11 @@ class MHlodScene : public Node3D {
 
     private:
     _FORCE_INLINE_ Proc* get_root_proc(){
-        ERR_FAIL_COND_V(procs.size()==0,nullptr);
+        if(procs.size()==0){
+            procs.resize(1);
+        }
         return procs.ptrw();
     }
-    _FORCE_INLINE_ void _init_proc();
     public:
     //Ref<MHlod> hlod;
     MHlodScene();
@@ -239,7 +376,7 @@ class MHlodScene : public Node3D {
     void set_is_hidden(bool input);
     bool is_init_scene() const;
     void set_hlod(Ref<MHlod> input);
-    Ref<MHlod> get_hlod();
+    Ref<MHlod> get_hlod() const;
     AABB get_aabb() const;
     void set_scene_layers(int64_t input);
     int64_t get_scene_layers();
@@ -254,75 +391,10 @@ class MHlodScene : public Node3D {
     Ref<TriangleMesh> cached_triangled_mesh;
     Ref<TriangleMesh> get_triangle_mesh();
     #endif
-
-
-    template<bool UseLock>
-    void init_proc(){
-        if(procs.size()==0){
-            procs.resize(1);
-        }
-        if(!is_inside_tree()){
-            return;
-        }
-        ERR_FAIL_COND(get_root_proc()==nullptr);
-        if(is_init_procs() || get_root_proc()->hlod.is_null()){
-            return;
-        }
-        std::conditional_t<UseLock,std::lock_guard<std::mutex>,MDummyType<std::mutex>> lock(MHlodScene::update_mutex);
-        if(is_sleep){
-            return;
-        }
-        ERR_FAIL_COND(procs.size() == 0);
-        Ref<MHlod> main_hlod = procs[0].hlod;
-        ERR_FAIL_COND(main_hlod.is_null());
-        procs.clear();
-        Transform3D gtransform = get_global_transform();
-        int checked_children_to_add_index = -1;
-        // Adding root proc
-        procs.push_back(Proc(this,main_hlod,0,scene_layers,gtransform));
-        while (checked_children_to_add_index != procs.size() - 1)
-        {
-            ++checked_children_to_add_index;
-            Ref<MHlod> current_hlod = procs.ptrw()[checked_children_to_add_index].hlod;
-            ERR_CONTINUE(current_hlod.is_null());
-            int sub_proc_size = current_hlod->sub_hlods.size();
-            int sub_proc_index = procs.size();
-            procs.ptrw()[checked_children_to_add_index].init_sub_proc(sub_proc_index,sub_proc_size,checked_children_to_add_index);
-            // pushing back childrens
-            for(int i=0; i < sub_proc_size; i++){
-                Ref<MHlod> s = current_hlod->sub_hlods[i];
-                ERR_FAIL_COND(s.is_null());
-                uint16_t s_layers = current_hlod->sub_hlods_scene_layers[i];
-                Transform3D s_transform = procs.ptrw()[checked_children_to_add_index].transform * current_hlod->sub_hlods_transforms[i];
-                int32_t proc_id = sub_proc_index + i;
-                procs.push_back(Proc(this,s,proc_id,s_layers,s_transform));
-            }
-        }
-        // enabling procs, don't use recursive, important for ordering!
-        for(int i=0; i < procs.size(); i++){
-            procs.ptrw()[i].oct_point_id = get_free_oct_point_id();
-            procs.ptrw()[i].enable(false);
-        }
-        is_init = true;
-    }
-    
-    template<bool UseLock>
-    void deinit_proc(){
-        #ifdef DEBUG_ENABLED
-        if(cached_triangled_mesh.is_valid()){
-            cached_triangled_mesh.unref();
-        }
-        #endif
-        if(!is_init_procs()){
-            return;
-        }
-        std::conditional_t<UseLock,std::lock_guard<std::mutex>,MDummyType<std::mutex>> lock(MHlodScene::update_mutex);
-        is_init = false;
-        apply_update();
-        get_root_proc()->disable(true,true,true);
-        apply_remove_item_users();
-        procs.resize(1);
-    }
+    /// @brief  must be called with update_mutex
+    void init_proc();
+    /// @brief  must be called with update_mutex
+    void deinit_proc();
 };
 
 _FORCE_INLINE_ Transform3D MHlodScene::Proc::get_item_transform(const int32_t transform_index) const{

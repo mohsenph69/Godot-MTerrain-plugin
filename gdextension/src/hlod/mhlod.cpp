@@ -2,6 +2,7 @@
 
 #include <godot_cpp/classes/resource_loader.hpp>
 #include "../mtool.h"
+#include "mhlod_node3d.h"
 #ifdef DEBUG_ENABLED
 #include "../editor/masset_table.h"
 #include "../editor/mmesh_joiner.h"
@@ -247,6 +248,23 @@ MHlod::Item::Item(const Item& other){
 MHlod::Item& MHlod::Item::operator=(const Item& other){
     copy(other);
     return *this;
+}
+
+MHlodNode3D* MHlod::Item::get_hlod_node3d(){
+    ERR_FAIL_COND_V(type!=Type::PACKED_SCENE,nullptr);
+    Ref<PackedScene> pscene = packed_scene.get_packed_scene();
+    if(pscene.is_null()){
+        return nullptr;
+    }
+    Node* node = pscene->instantiate();
+    ERR_FAIL_COND_V(node==nullptr,nullptr);
+    MHlodNode3D* hlod_node = Object::cast_to<MHlodNode3D>(node);
+    if(unlikely(hlod_node==nullptr)){
+        node->queue_free();
+        ERR_FAIL_V_MSG(nullptr,"PackedScene should be type MHlodNode3D!");
+    }
+    for(int i=0;i<M_PACKED_SCENE_ARG_COUNT;i++){hlod_node->set_arg(i,packed_scene.args[i]);}
+    return hlod_node;
 }
 
 void MHlod::Item::set_header_data(const PackedByteArray& data){

@@ -1271,7 +1271,7 @@ bool MOctree::is_valid_octmesh_updater(){
 	return is_octmesh_updater && MOctMesh::is_my_octree(this);
 }
 
-void MOctree::process_tick(){
+void MOctree::_process(double delta){
 	if(is_updating){
 		if(WorkerThreadPool::get_singleton()->is_task_completed(tid)){
 			is_updating = false;
@@ -1293,7 +1293,7 @@ void MOctree::process_tick(){
 			MOctMesh::update_tick();
 		}
 		if(is_hlod_updater){
-			MHlodScene::update_tick();
+			MHlodScene::update_tick(delta);
 		}
 	}
 	if(is_first_update){
@@ -1318,7 +1318,7 @@ void MOctree::_notification(int p_what){
 	switch (p_what)
 	{
 	case NOTIFICATION_PROCESS:
-		process_tick();
+		//process_tick();
 		break;
 	case NOTIFICATION_READY:
 		ERR_BREAK_MSG(!is_inside_tree(),"MOctree Condition ready with with not inside tree");

@@ -21,6 +21,8 @@ using namespace godot;
 #define MHLOD_CONST_GI_MODE_DYNAMIC 2
 #define MHLOD_CONST_GI_MODE_STATIC_DYNAMIC 3
 
+class MHlodNode3D;
+
 class MHlod : public Resource{
     GDCLASS(MHlod, Resource);
 
@@ -47,18 +49,9 @@ class MHlod : public Resource{
         // index of it is the shape index in PhysicsServer
         Vector<int64_t> shapes;
         _FORCE_INLINE_ PhysicBodyInfo(RID body_rid):rid(body_rid){}
+        _FORCE_INLINE_ int size() {return shapes.size();}
     };
-    struct ItemResource {
-        RID rid;
-        PackedScene* packed_scene = nullptr;
-        _FORCE_INLINE_ ItemResource(const RID p_rid){
-            rid = p_rid;
-        }
-        _FORCE_INLINE_ ItemResource(PackedScene* p_packed_scene){
-            packed_scene = p_packed_scene;
-        }
-    };
-    static inline const char* type_string = "NONE,MESH,COLLISION,LIGHT,PACKED_SCENE,DECAL";
+    static inline const char* type_string = "NONE,MESH,COLLISION,COLLISION_COMPLEX,LIGHT,PACKED_SCENE,DECAL";
     enum GIMode : uint8_t {
         GI_MODE_DISABLED = MHLOD_CONST_GI_MODE_DISABLED,
         GI_MODE_STATIC = MHLOD_CONST_GI_MODE_STATIC,
@@ -102,8 +95,13 @@ class MHlod : public Resource{
         Item& operator=(const Item& other);
         
         _FORCE_INLINE_ int16_t get_physics_body();
-        _FORCE_INLINE_ ItemResource get_res_and_add_user();
+        /// @brief this must be called after @ref add_user()
+        _FORCE_INLINE_ bool has_cache() const;
+        _FORCE_INLINE_ void add_user();
         _FORCE_INLINE_ void remove_user();
+        _FORCE_INLINE_ RID get_rid();
+        /// @brief Get and set args (Args only)
+        MHlodNode3D* get_hlod_node3d();
         void set_header_data(const PackedByteArray& data);
         PackedByteArray get_header_data() const;
         void set_data(const PackedByteArray& d);
@@ -204,73 +202,64 @@ class MHlod : public Resource{
 };
 
 
-_FORCE_INLINE_ int16_t MHlod::Item::get_physics_body(){
+int16_t MHlod::Item::get_physics_body(){
     switch (type)
     {
         case Type::COLLISION:
             return collision.get_body_id();
         case Type::COLLISION_COMPLEX:
             return collision_complex.get_body_id();
+        default:
+            ERR_FAIL_V_MSG(-1,"Not a physics Item!");
     }
     return -1;
 }
 
-_FORCE_INLINE_ MHlod::ItemResource MHlod::Item::get_res_and_add_user(){
+bool MHlod::Item::has_cache() const{
+    switch (type)
+    {
+    case Type::MESH:              return mesh.has_cache();
+    case Type::COLLISION:         return collision.has_cache();
+    case Type::COLLISION_COMPLEX: return collision_complex.has_cache();
+    case Type::LIGHT:             return light.has_cache();
+    case Type::DECAL:             return decal.has_cache();
+    case Type::PACKED_SCENE:      return packed_scene.has_cache();
+    default:                      ERR_FAIL_V_MSG(false,"Undefine Item Type!");
+    }
+    return false;
+}
+
+void MHlod::Item::add_user(){
     user_count++;
     if(user_count==1){
         switch (type)
         {
         case Type::MESH:
-            return ItemResource(mesh.load());
+            mesh.load();
             break;
         case Type::COLLISION:
-            return ItemResource(collision.load());
+            collision.load();
             break;
         case Type::COLLISION_COMPLEX:
-            return ItemResource(collision_complex.load());
+            collision_complex.load();
             break;
         case Type::LIGHT:
-            return ItemResource(light.load());
+            light.load();
             break;
         case Type::DECAL:
-            return ItemResource(decal.load());
+            decal.load();
             break;
         case Type::PACKED_SCENE:
-            return ItemResource(packed_scene.load());
+            packed_scene.load();
             break;
         default:
-            ERR_FAIL_V_MSG(RID(),"Undefine Item Type!");
-            break;
-        }
-    } else {
-        switch (type)
-        {
-        case Type::MESH:
-            return ItemResource(mesh.get_mesh());
-            break;
-        case Type::COLLISION:
-            return ItemResource(collision.get_shape());
-            break;
-        case Type::COLLISION_COMPLEX:
-            return ItemResource(collision_complex.get_shape());
-            break;
-        case Type::LIGHT:
-            return ItemResource(light.get_light());
-        case Type::DECAL:
-            return ItemResource(decal.get_decal());
-            break;
-        case Type::PACKED_SCENE:
-            return ItemResource(packed_scene.get_packed_scene());
-            break;
-        default:
-            ERR_FAIL_V_MSG(RID(),"Undefine Item Type!");
+            ERR_FAIL_MSG("Undefine Item Type!");
             break;
         }
     }
-    return RID();
 }
 
-_FORCE_INLINE_ void MHlod::Item::remove_user(){
+void MHlod::Item::remove_user(){
     ERR_FAIL_COND(user_count==0);
     user_count--;
     if(user_count==0){
@@ -291,6 +280,9 @@ _FORCE_INLINE_ void MHlod::Item::remove_user(){
         case Type::DECAL:
             decal.unload();
             break;
+        case Type::PACKED_SCENE:
+            packed_scene.unload();
+            break;
         default:
             ERR_FAIL_MSG("Undefine Item Type!"); 
             break;
@@ -298,7 +290,22 @@ _FORCE_INLINE_ void MHlod::Item::remove_user(){
     }
 }
 
-_FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
+RID MHlod::Item::get_rid(){
+    switch (type)
+    {
+    case Type::MESH: return mesh.get_mesh();
+    case Type::COLLISION: return collision.get_shape();
+    case Type::COLLISION_COMPLEX: return collision_complex.get_shape();
+    case Type::LIGHT: return light.get_light();
+    case Type::DECAL: return decal.get_decal();
+    default:
+        ERR_FAIL_V_MSG(RID(),"Type does not have RID!"); 
+        break;
+    }
+    return RID();
+}
+
+MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
     if(physic_bodies.has(id)){
         return *physic_bodies.getptr(id);
     }
@@ -340,7 +347,7 @@ _FORCE_INLINE_ MHlod::PhysicBodyInfo& MHlod::get_physic_body(int16_t id){
     return *physic_bodies.getptr(id);
 }
 
-_FORCE_INLINE_ void MHlod::clear_physic_body(){
+void MHlod::clear_physic_body(){
     for(HashMap<int16_t,PhysicBodyInfo>::Iterator it=physic_bodies.begin();it!=physic_bodies.end();++it){
         PhysicsServer3D::get_singleton()->free_rid(it->value.rid);
     }

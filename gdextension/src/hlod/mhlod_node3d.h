@@ -13,7 +13,7 @@ using namespace godot;
 class MHlodNode3D : public Node3D {
     GDCLASS(MHlodNode3D,Node3D);
     friend MHlodScene;
-
+    
     protected:
     static void _bind_methods();
     private:
@@ -32,6 +32,7 @@ class MHlodNode3D : public Node3D {
     void _notify_update_lod(int _lod); // only called by MHlodScene
     void _notify_before_remove();
     int get_current_lod() const;
+    void set_arg(int idx,int32_t val);
     int32_t get_arg(int idx) const;
     int64_t get_global_id() const;
 
