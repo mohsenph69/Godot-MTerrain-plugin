@@ -8,7 +8,7 @@ extends Window
 @onready var data_compress_option = find_child("data_compress_option")
 @onready var file_compress = find_child("file_compress")
 
-var mterrain
+var mterrain:MTerrain
 
 func _on_close_requested():
 	queue_free()
@@ -28,8 +28,8 @@ func create_image():
 	var file_compress = file_compress.selected
 	var data_compress = data_compress_option.selected
 	var data_dir = mterrain.dataDir
-	var region_grid_size = (mterrain.terrain_size) / mterrain.region_size
-	var image_width = (mterrain.region_size * mterrain.get_base_size() ) / mterrain.get_h_scale()	
+	var region_grid_size = (mterrain.terrain_quad_count) / mterrain.region_quad_count
+	var image_width = (mterrain.region_quad_count * mterrain.get_base_size() ) / mterrain.get_h_scale()	
 	
 	var dir = DirAccess.open(data_dir)
 	if not dir:
