@@ -31,6 +31,9 @@ void MHlodScene::_bind_methods(){
     ClassDB::bind_method(D_METHOD("_update_visibility"), &MHlodScene::_update_visibility);
     ClassDB::bind_method(D_METHOD("get_last_lod_mesh_ids_transforms"), &MHlodScene::get_last_lod_mesh_ids_transforms);
 
+    ClassDB::bind_static_method("MHlodScene",D_METHOD("set_load_rest_timeout","val"), &MHlodScene::set_load_rest_timeout);
+    ClassDB::bind_static_method("MHlodScene",D_METHOD("get_load_rest_timeout"), &MHlodScene::get_load_rest_timeout);
+
     ClassDB::bind_static_method("MHlodScene",D_METHOD("sleep"), &MHlodScene::sleep);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("awake"), &MHlodScene::awake);
     ClassDB::bind_static_method("MHlodScene",D_METHOD("get_hlod_users","hlod_path"), &MHlodScene::get_hlod_users);
@@ -544,6 +547,7 @@ void MHlodScene::Proc::_get_editor_tri_mesh_info(PackedVector3Array& vertices,Pa
 /////////////////////////////////////////////////////
 /// Static --> Proc Manager
 /////////////////////////////////////////////////////
+double MHlodScene::load_rest_timeout = 0.2;
 bool MHlodScene::is_sleep = false;
 Vector<MHlodScene::Proc*> MHlodScene::all_tmp_procs;
 VSet<MHlodScene*> MHlodScene::all_hlod_scenes;
@@ -807,6 +811,14 @@ void MHlodScene::apply_update(UpdateState u_state){
         removing_users.clear();
         return;
     }
+}
+
+void MHlodScene::set_load_rest_timeout(double input){
+    load_rest_timeout = input;
+}
+
+double MHlodScene::get_load_rest_timeout(){
+    return load_rest_timeout;
 }
 
 void MHlodScene::sleep(){

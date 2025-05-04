@@ -33,13 +33,6 @@ class MMesh;
 
 using namespace godot;
 
-template <typename T>
-struct MDummyType
-{
-    MDummyType(const T& foo){}
-};
-
-
 class MHlodScene : public Node3D {
     friend MHlodNode3D;
     struct Proc;
@@ -64,7 +57,6 @@ class MHlodScene : public Node3D {
      */
     inline static std::atomic<int> total_packed_scene_count = {0};
     #endif
-    static constexpr double load_rest_timeout = 0.01;
     /**
      * @brief After LOAD_REST all stage is done by @ref apply_update function
      * I know APPLY_LIGHT and APPLY_COLLISION are almost empty but they are there for more cpu IDLE time and future update
@@ -317,6 +309,7 @@ class MHlodScene : public Node3D {
     friend MMesh;
 
     /// Static --> Proc Manager
+    static double load_rest_timeout;
     static bool is_sleep;
     static Vector<Proc*> all_tmp_procs;
     static VSet<MHlodScene*> all_hlod_scenes;
@@ -352,6 +345,8 @@ class MHlodScene : public Node3D {
     static void update_tick(double delta);
     static void apply_update(UpdateState u_state);
 
+    static void set_load_rest_timeout(double input);
+    static double get_load_rest_timeout();
     static void sleep();
     static void awake();
     static Array get_hlod_users(const String& hlod_path);
