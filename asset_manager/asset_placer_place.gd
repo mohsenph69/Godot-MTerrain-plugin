@@ -11,6 +11,8 @@ extends HBoxContainer
 @onready var y_btn:Button = find_child("y_btn")
 @onready var z_btn:Button = find_child("z_btn")
 
+@onready var replace_btn:Button = find_child("replace_btn")
+
 var asset_library := MAssetTable.get_singleton()
 var assets_tree
 
@@ -38,6 +40,10 @@ func _ready():
 	ur = EditorInterface.get_editor_undo_redo()
 	update_reposition_button_text()	
 	place_button.toggled.connect(toggle_place_with_confirmation)
+	replace_btn.pressed.connect(replace_btn_pressed)
+	x_btn.pressed.connect(reposition_x)
+	y_btn.pressed.connect(reposition_y)
+	z_btn.pressed.connect(reposition_z)
 
 func validate_place_button(_mouse_pos, _button):		
 	var item = assets_tree.get_selected()
@@ -240,12 +246,73 @@ func update_reposition_button_text():
 	y_btn.text = "y("+str(current_placement_dir.y)+")"
 	z_btn.text = "z("+str(current_placement_dir.z)+")"
 
-func _replace_asset(new_ids:PackedInt64Array,masset_node:Array) -> void:
-	if new_ids.size() != masset_node.size():
+func _replace_asset(collection_ids:PackedInt32Array,masset_node:Array,type:MAssetTable.ItemType) -> void:
+	var at:MAssetTable = MAssetTable.get_singleton()
+	if collection_ids.size() != masset_node.size():
 		printerr("mismatch new_asset old asset count")
 		return
-	for i in range(new_ids.size()):
-		masset_node[i].collection_id = new_ids[i]
+	match type:
+		MAssetTable.ItemType.MESH:
+			for i in range(collection_ids.size()):
+				masset_node[i].collection_id = collection_ids[i]
+		MAssetTable.ItemType.DECAL:
+			for i in range(collection_ids.size()):
+				var cid = collection_ids[i]
+				var mdecal:MDecal
+				if cid!=-1:
+					var item_id = at.collection_get_item_id(cid)
+					mdecal=load(MHlod.get_decal_path(item_id))
+				masset_node[i].decal = mdecal
+		MAssetTable.ItemType.HLOD:
+			for i in range(collection_ids.size()):
+				var cid = collection_ids[i]
+				var hlod:MHlod
+				if cid!=-1:
+					var item_id = at.collection_get_item_id(cid)
+					hlod=load(MHlod.get_hlod_path(item_id))
+				masset_node[i].hlod = hlod
+
+func replace_btn_pressed()->void:
+	var cid = get_current_collection_id()
+	if cid == -1 : return
+	var at:MAssetTable = MAssetTable.get_singleton()
+	var old_collection_ids:PackedInt32Array
+	var type = MAssetTable.get_singleton().collection_get_type(cid)
+	var sels = EditorInterface.get_selection().get_selected_nodes()
+	match type:
+		MAssetTable.ItemType.MESH:
+			sels=sels.filter(func(a):return a is MAssetMesh)
+			for n:MAssetMesh in sels:
+				old_collection_ids.push_back(n.collection_id)
+		MAssetTable.ItemType.DECAL:
+			sels=sels.filter(func(a):return a is MDecalInstance)
+			for n:MDecalInstance in sels:
+				if n.decal==null:
+					old_collection_ids.push_back(-1) # invalid ID
+				else:
+					var item_id=int(n.decal.resource_path)
+					var n_cid = at.collection_find_with_item_type_item_id(MAssetTable.DECAL,item_id)
+					old_collection_ids.push_back(n_cid)
+		MAssetTable.ItemType.HLOD:
+			sels=sels.filter(func(a):return a is MHlodScene)
+			for n:MHlodScene in sels:
+				if n.hlod==null:
+					old_collection_ids.push_back(-1)
+				else:
+					var item_id=int(n.hlod.resource_path)
+					var n_cid = at.collection_find_with_item_type_item_id(MAssetTable.HLOD,item_id)
+					old_collection_ids.push_back(n_cid)
+	#################
+	if old_collection_ids.size() != sels.size():
+		printerr("Mismatch size old_collection_ids with sels nodes!")
+		return
+	var new_collection_ids:PackedInt32Array
+	new_collection_ids.resize(old_collection_ids.size())
+	new_collection_ids.fill(cid)
+	ur.create_action("replace_assets")
+	ur.add_do_method(self,"_replace_asset",new_collection_ids,sels,type)
+	ur.add_undo_method(self,"_replace_asset",old_collection_ids,sels,type)
+	ur.commit_action(true)
 
 # should be called after moving
 func undo_redo_reposition(node:Node3D,old_transform:Transform3D,old_dir:Vector3):
