@@ -51,7 +51,7 @@ func validate_place_button(_mouse_pos, _button):
 func toggle_place_with_confirmation(toggle_on):
 	if not EditorInterface.get_edited_scene_root(): return
 	if toggle_on:
-		if not EditorInterface.get_edited_scene_root() is HLod_Baker and not EditorInterface.get_edited_scene_root() is MHlodNode3D:		
+		if not EditorInterface.get_edited_scene_root() is HLod_Baker and get_current_collection_type()!=MAssetTable.ItemType.HLOD:		
 			var confirm := ConfirmationDialog.new()
 			confirm.confirmed.connect(toggle_place.bind(true))
 			confirm.dialog_text = "The current scene is not a baker and not a MHlodNode3D. Are you sure you want to add asset?"
@@ -89,9 +89,20 @@ func toggle_place(toggle_on):
 ##################
 ## PLACE ASSETS ##
 ##################
+func get_current_collection_id()->int:
+	var item = assets_tree.get_selected()
+	if not item: return -1
+	var column = assets_tree.get_selected_column()
+	return item.get_metadata(column)
+
+func get_current_collection_type()->MAssetTable.ItemType:
+	var cid:int = get_current_collection_id()
+	if cid==-1 : return MAssetTable.ItemType.NONE
+	return MAssetTable.get_singleton().collection_get_type(cid)
+
 func add_asset_to_scene_from_assets_tree_selection_with_confirmation():
 	if not EditorInterface.get_edited_scene_root(): return	
-	if not EditorInterface.get_edited_scene_root() is HLod_Baker and not EditorInterface.get_edited_scene_root() is MHlodNode3D:		
+	if not EditorInterface.get_edited_scene_root() is HLod_Baker and get_current_collection_type()!=MAssetTable.ItemType.HLOD:
 		var confirm := ConfirmationDialog.new()
 		confirm.confirmed.connect(add_asset_to_scene_from_assets_tree_selection)
 		confirm.dialog_text = "The current scene is not a baker and not a MHlodNode3D. Are you sure you want to add asset?"
@@ -100,15 +111,14 @@ func add_asset_to_scene_from_assets_tree_selection_with_confirmation():
 		confirm.popup_centered()			
 	else:
 		add_asset_to_scene_from_assets_tree_selection()
-func add_asset_to_scene_from_assets_tree_selection():
-	var item = assets_tree.get_selected()
-	var column = assets_tree.get_selected_column()
-	var collection_id = item.get_metadata(column)
-	var collection_name = item.get_tooltip_text(column)
-	if collection_id and collection_id >= 0:
-		return add_asset_to_scene(collection_id, collection_name)
+
+func add_asset_to_scene_from_assets_tree_selection()->Node:
+	var collection_id = get_current_collection_id()
+	if collection_id < 0 : return null
+	var collection_name = MAssetTable.get_singleton().collection_get_name(collection_id)
+	return add_asset_to_scene(collection_id, collection_name)
 	
-func add_asset_to_scene(collection_id, asset_name,create_ur:=true):	
+func add_asset_to_scene(collection_id, asset_name,create_ur:=true)->Node:
 	var node
 	if collection_id in asset_library.collections_get_by_type(MAssetTable.ItemType.MESH):
 		node = MAssetMesh.new()

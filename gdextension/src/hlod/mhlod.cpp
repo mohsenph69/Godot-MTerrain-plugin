@@ -897,6 +897,9 @@ Ref<ArrayMesh> MHlod::get_joined_mesh(bool for_triangle_mesh,bool best_mesh_qual
 #endif
 
 void MHlod::_set_data(const Array& data){
+    if(data.is_empty()){
+        return;
+    }
     ERR_FAIL_COND(data.size()!=ARRAY_DATA_MAX);
     int version = data[ARRAY_DATA_VERSION];
     ERR_FAIL_COND_MSG(version!=MHLOD_DATA_VERSION,vformat("Current hlod version format is %d and data version is %d you need to rebake hlod",version,MHLOD_DATA_VERSION));
