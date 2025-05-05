@@ -7,6 +7,7 @@ extends HBoxContainer
 @onready var rotation_enabled_button:BaseButton = find_child("rotation_enabled_button")
 @onready var scale_enabled_button:BaseButton = find_child("scale_enabled_button")
 
+@onready var o_btn:Button = find_child("o_btn")
 @onready var x_btn:Button = find_child("x_btn")
 @onready var y_btn:Button = find_child("y_btn")
 @onready var z_btn:Button = find_child("z_btn")
@@ -41,9 +42,11 @@ func _ready():
 	update_reposition_button_text()	
 	place_button.toggled.connect(toggle_place_with_confirmation)
 	replace_btn.pressed.connect(replace_btn_pressed)
+	o_btn.pressed.connect(reposition_origin)
 	x_btn.pressed.connect(reposition_x)
 	y_btn.pressed.connect(reposition_y)
 	z_btn.pressed.connect(reposition_z)
+	
 
 func validate_place_button(_mouse_pos, _button):		
 	var item = assets_tree.get_selected()
