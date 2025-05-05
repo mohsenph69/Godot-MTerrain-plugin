@@ -61,7 +61,7 @@ void MHlod::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MHlod::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MHlod::_get_data);
-    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY,"_data",PROPERTY_HINT_NONE,""),"_set_data","_get_data");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"_data",PROPERTY_HINT_NONE,""),"_set_data","_get_data");
 
 
     ClassDB::bind_method(D_METHOD("set_baker_path","input"), &MHlod::set_baker_path);

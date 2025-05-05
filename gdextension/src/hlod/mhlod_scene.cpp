@@ -126,9 +126,6 @@ void MHlodScene::Proc::disable_sub_proc(){
 }
 
 void MHlodScene::Proc::add_item(MHlod::Item* item,const int item_id){
-    if(item->type==MHlod::Type::DECAL || item->type==MHlod::Type::LIGHT){
-        return;
-    }
     #if MHLODSCENE_DISABLE_RENDERING
     if(item->type==MHlod::Type::DECAL || item->type==MHlod::Type::LIGHT || item->type==MHlod::Type::MESH){
         return;
@@ -1115,9 +1112,10 @@ void MHlodScene::deinit_proc(){
 
 #ifdef DEBUG_ENABLED
 Ref<TriangleMesh> MHlodScene::get_triangle_mesh(){
-    ERR_FAIL_COND_V(procs.size()==0,Ref<TriangleMesh>());
+    if(procs.size()==0){
+        return Ref<TriangleMesh>();
+    }
     ERR_FAIL_COND_V(procs[0].hlod.is_null(),Ref<TriangleMesh>());
-
     if(cached_triangled_mesh.is_valid()){
         return cached_triangled_mesh;
     }
