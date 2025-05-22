@@ -145,7 +145,7 @@ class MCurve : public Resource{
     //PackedInt32Array root_ids;
     static MOctree* octree;
     int32_t last_curve_id = 0;
-    Vector<int32_t> curve_users;
+    VSet<int32_t> curve_users;
     VSet<int32_t> processing_users;
     VSet<int32_t> active_points;
     VSet<int64_t> active_conn;

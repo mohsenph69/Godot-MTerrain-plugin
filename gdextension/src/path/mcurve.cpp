@@ -176,7 +176,7 @@ void MCurve::_increase_points_buffer_size(size_t q){
 
 int32_t MCurve::get_curve_users_id(){
     last_curve_id++;
-    curve_users.push_back(last_curve_id);
+    curve_users.insert(last_curve_id);
     return last_curve_id;
 }
 void MCurve::remove_curve_user_id(int32_t user_id){
@@ -489,6 +489,7 @@ void MCurve::_octree_update_finish(){
             }
         }
     }
+    processing_users = curve_users;
     emit_signal("curve_updated");
     is_waiting_for_user = true;
     emit_signal("connection_updated");
