@@ -27,7 +27,7 @@ class MMeshLod : public Resource {
     Ref<Mesh> get_mesh_last(int8_t lod);
     Ref<Mesh> get_last_valid_mesh();
     void set_meshes(TypedArray<Mesh> input);
-    TypedArray<Mesh> get_meshes();
+    TypedArray<Mesh> get_meshes() const;
 
 	
 	bool _set(const StringName &p_name, const Variant &p_value);

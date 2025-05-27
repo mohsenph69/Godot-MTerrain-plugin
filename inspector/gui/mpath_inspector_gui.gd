@@ -1,8 +1,10 @@
 @tool
 extends Control
 
-
 @onready var point_count_lable:=$point_count_lable
+
+# remebering this to open the correct if node deselcted
+static var selected_child:Node
 
 var is_started:=false
 
@@ -10,7 +12,7 @@ var gizmo:EditorNode3DGizmoPlugin
 
 var current_path:MPath
 var current_curve:MCurve
-var current_curve_mesh:MCurveMesh=null
+var current_modify_node=null
 
 var connection_mode :=true
 var mesh_mode:=true
@@ -19,21 +21,62 @@ var child_selector:OptionButton
 var items:ItemList
 var connection_tab:Button
 var intersection_tab:Button
+var exclude_connection_btn:Button
+
+
+# Instance Setting
+var instance_add_remove_btn:Button
+var instance_start_offset_slider:Slider
+var instance_end_offset_slider:Slider
+var instance_rand_remove_slider:Slider
+var instance_setting_header:Control
+
+enum MODIFY_MODE {
+	NONE,
+	CURVE_MESH,
+	CURVE_INSTANCE,
+}
+
+var modify_mode:=MODIFY_MODE.NONE
+
+# Hide on empty
+func push_on_warn_lable(msg:String)->void:
+	if msg.is_empty():
+		$warn_lable.visible = false
+		return
+	$warn_lable.visible = true
+	$warn_lable.text = msg
+	$warn_lable/wtimer.start()
+
 func start():
 	if is_started: return
 	is_started = true
 	child_selector = $child_selctor
 	items = $itemlist
 	items.item_selected.connect(Callable(self,"item_selected"))
-	connection_tab = $HBoxContainer/connection_tab
-	intersection_tab = $HBoxContainer/intersection_tab
+	connection_tab = $mesh_header/connection_tab
+	intersection_tab = $mesh_header/intersection_tab
+	exclude_connection_btn = $button_header/exclude_connection
 	connection_tab.connect("pressed",Callable(self,"change_tab").bind(true))
 	intersection_tab.connect("pressed",Callable(self,"change_tab").bind(false))
-	$HBoxContainer2/clear_override.connect("button_up",Callable(self,"clear_override"))
-	$HBoxContainer2/Remove_mesh.connect("button_up",Callable(self,"remove_mesh"))
+	$button_header/clear_override.connect("button_up",Callable(self,"clear_override"))
+	exclude_connection_btn.connect("button_up",Callable(self,"exclude_connection"))
 	$mesh_mode_option.connect("item_selected",Callable(self,"mesh_mode_selected"))
 	if not gizmo: printerr("Gizmo is NULL")
 	gizmo.connect("selection_changed",Callable(self,"update_curve_item_selection"))
+	# Instance settings
+	instance_add_remove_btn = $add_remove
+	instance_start_offset_slider = $instance_setting/start_offset/slider
+	instance_end_offset_slider = $instance_setting/end_offset/slider
+	instance_rand_remove_slider = $instance_setting/rand_rm/slider
+	instance_setting_header = $instance_setting
+	instance_add_remove_btn.connect("button_up",instance_add_remove_element)
+	instance_start_offset_slider.connect("value_changed",instance_set_start_offset)
+	instance_end_offset_slider.connect("value_changed",instance_set_end_offset)
+	instance_rand_remove_slider.connect("value_changed",instance_set_rand_remove)
+	# End Instance settings
+
+
 
 func set_path(input:MPath)->void:
 	start()
@@ -43,27 +86,59 @@ func set_path(input:MPath)->void:
 	child_selector.add_item("ovveride")
 	if not input: return
 	var children = input.get_children()
+	var last_selection_index:=-1
+	var i=0
 	for child in children:
-		if child is MCurveMesh:
+		if child is MCurveMesh or child is MCurveInstance:
 			child_selector.add_item(child.name)
+			if child == selected_child:
+				last_selection_index = i
+			i+=1
+	last_selection_index += 1 # ovveride not included
+	if last_selection_index!=-1:
+		child_selector.select(last_selection_index)
+		_on_child_selctor_item_selected(last_selection_index)
 
 func _on_child_selctor_item_selected(index):
-	set_curve_mesh_gui_visible(false)
+	set_modify_gui_visible(false)
+	items.clear()
+	modify_mode=MODIFY_MODE.NONE
 	if index==0 or not current_path:
+		selected_child = null
 		return
 	var cname = child_selector.get_item_text(index)
 	var child = current_path.get_node(cname)
+	selected_child = child
 	if not child: return
 	if child is MCurveMesh:
-		set_curve_mesh_gui_visible(true)
-		current_curve_mesh = child
+		modify_mode=MODIFY_MODE.CURVE_MESH
+		current_modify_node = child
+		set_modify_gui_visible(true)
 		update_curve_mesh_items()
+	if child is MCurveInstance:
+		modify_mode=MODIFY_MODE.CURVE_INSTANCE
+		current_modify_node = child
+		set_modify_gui_visible(true)
+		update_curve_instance_items()
+		update_curve_instance_selection()
 
-func set_curve_mesh_gui_visible(input:bool):
-	$HBoxContainer.visible = input
-	$HBoxContainer2.visible = input
-	$mesh_mode_option.visible = input
-	$itemlist.visible = input
+func set_modify_gui_visible(input:bool):
+	items.select_mode = ItemList.SELECT_SINGLE
+	if not input:
+		$mesh_header.visible = false
+		$button_header.visible = false
+		$mesh_mode_option.visible = false
+		$itemlist.visible = false
+		instance_setting_header.visible = false
+	elif modify_mode==MODIFY_MODE.CURVE_MESH:
+		$mesh_header.visible = true
+		$button_header.visible = true
+		$mesh_mode_option.visible = true
+		$itemlist.visible = true
+	elif modify_mode==MODIFY_MODE.CURVE_INSTANCE:
+		$button_header.visible = true
+		$itemlist.visible = true
+		instance_setting_header.visible = true
 
 func change_tab(_conn_mod:bool):
 	connection_tab.button_pressed = _conn_mod
@@ -73,13 +148,13 @@ func change_tab(_conn_mod:bool):
 	update_curve_mesh_items()
 
 func update_curve_mesh_items():
-	if not current_curve_mesh: return
+	if not current_modify_node: return
 	items.clear()
 	var ed:=EditorScript.new()
 	var preview:EditorResourcePreview= ed.get_editor_interface().get_resource_previewer()
 	var count:int = 0
 	if not mesh_mode:
-		for mat in current_curve_mesh.materials:
+		for mat in current_modify_node.materials:
 			if not mat:
 				items.add_item("empty")
 				continue
@@ -91,12 +166,12 @@ func update_curve_mesh_items():
 			count+=1
 		update_curve_item_selection()
 		return
-	if connection_mode:count = current_curve_mesh.meshes.size()
-	else:count = current_curve_mesh.intersections.size()
+	if connection_mode:count = current_modify_node.meshes.size()
+	else:count = current_modify_node.intersections.size()
 	for i in range(count):
 		var mlod:MMeshLod
-		if connection_mode: mlod = current_curve_mesh.meshes[i]
-		else: mlod = current_curve_mesh.intersections[i].mesh
+		if connection_mode: mlod = current_modify_node.meshes[i]
+		else: mlod = current_modify_node.intersections[i].mesh
 		if not mlod:
 			items.add_item("empty")
 			continue
@@ -111,59 +186,145 @@ func update_curve_mesh_items():
 		preview.queue_edited_resource_preview(m,self,"set_icon",i)
 	update_curve_item_selection()
 
+func update_curve_instance_items():
+	items.clear()
+	var element_count = MCurveInstance.get_element_count()
+	var current_element:MCurveInstanceElement = null
+	for i in range(0,element_count):
+		current_element = current_modify_node.get("element_"+str(i))
+		var element_name = "Element_"+str(i)
+		if current_element:
+			if not current_element.name.is_empty():
+				element_name = current_element.name
+			if not current_element.mesh:
+				element_name += " (Currently No Mesh)"
+		else:
+			element_name += " (Currently Null)"
+		items.add_item(element_name,null,true)
+
 # must be called after update_curve_mesh_items()
 func update_curve_item_selection():
-	if not current_curve_mesh or not gizmo: return
+	if not current_modify_node or not gizmo: return
+	if modify_mode==MODIFY_MODE.CURVE_MESH:
+		update_curve_mesh_selection()
+	elif modify_mode==MODIFY_MODE.CURVE_INSTANCE:
+		update_curve_instance_selection()
+
+func update_curve_mesh_selection():
 	var ids:PackedInt64Array = get_selected_ids()
 	var ov_index:int=-100 # some invalide number
 	for cid in ids:
 		var current_index:int
-		if mesh_mode: current_index = current_curve_mesh.override.get_mesh_override(cid)
-		else: current_index = current_curve_mesh.override.get_material_override(cid)
+		if mesh_mode: current_index = current_modify_node.override.get_mesh_override(cid)
+		else: current_index = current_modify_node.override.get_material_override(cid)
 		if ov_index == -100: ov_index = current_index
 		if current_index != ov_index: ## multiple connection is selected with multiple ovverride value
 			ov_index = -1
 			break
 		### Up to this point connection ovveride is same
 		ov_index = current_index
-	$HBoxContainer2/Remove_mesh.button_pressed = connection_mode and ov_index == -2
+	exclude_connection_btn.set_pressed_no_signal(connection_mode and ov_index == -2)
 	if ov_index < 0:
 		items.deselect_all()
 	else:
 		items.select(ov_index)
 
+func update_curve_instance_selection():
+	# Clear to default sate
+	instance_setting_header.visible = false
+	var sel_index = items.get_selected_items()
+	var total_capacity:int= MCurveInstance.get_instance_count()
+	instance_add_remove_btn.text = "add"
+	var element_count = MCurveInstance.get_element_count()
+	for i in range(0,element_count):
+		items.set_item_custom_fg_color(i,Color(0.8,0.8,0.8))
+	exclude_connection_btn.button_pressed = false
+	# end clear
+	var ids:PackedInt64Array = gizmo.get_selected_connections()
+	if ids.size()!=1:
+		instance_add_remove_btn.disabled = true
+		return
+	instance_add_remove_btn.disabled = sel_index.size()!=1
+	instance_add_remove_btn.text = "add (capacity "+str(total_capacity)+")"
+	var cid := ids[0]
+	var curve_instance:MCurveInstance= current_modify_node
+	var ov:MCurveInstanceOverride = curve_instance.override_data
+	if not ov or not ov.has_override(cid):
+		return
+	# selecting element if they are active
+	for i in range(0,element_count):
+		if ov.has_element(cid,i):
+			items.set_item_custom_fg_color(i,Color(0.4,0.9,0.4))
+	exclude_connection_btn.set_pressed_no_signal(ov.is_exclude_connection(cid))
+	var sel_item = items.get_selected_items()
+	instance_setting_header.visible = true
+	instance_start_offset_slider.value = ov.get_start_offset(cid)
+	instance_end_offset_slider.value = ov.get_end_offset(cid)
+	instance_rand_remove_slider.value = ov.get_rand_remove(cid)
+	total_capacity = ov.get_conn_element_capacity(cid)
+	if sel_index.size()==1:
+		if ov.has_element(cid,sel_index[0]):
+			instance_add_remove_btn.text = "remove (capacity "+str(total_capacity)+")"
+		else:
+			instance_add_remove_btn.text = "add (capacity "+str(total_capacity)+")"
+			
+			
+
 func set_icon(path:String,preview:Texture2D,thumnail_preview:Texture2D,index:int):
 	items.set_item_icon(index,preview)
 
 func item_selected(index:int):
-	if not is_instance_valid(current_curve_mesh) or not gizmo: return
-	var ids:PackedInt64Array = get_selected_ids()
-	for cid in ids:
-		if mesh_mode:
-			current_curve_mesh.override.set_mesh_override(cid,index)
-		else:
-			current_curve_mesh.override.set_material_override(cid,index)
-	update_curve_item_selection()
+	if not is_instance_valid(current_modify_node) or not gizmo: return
+	if modify_mode==MODIFY_MODE.CURVE_MESH:
+		var ids:PackedInt64Array = get_selected_ids()
+		for cid in ids:
+			if mesh_mode:
+				current_modify_node.override.set_mesh_override(cid,index)
+			else:
+				current_modify_node.override.set_material_override(cid,index)
+		update_curve_item_selection()
+	elif modify_mode==MODIFY_MODE.CURVE_INSTANCE:
+		update_curve_instance_selection()
 
 func clear_override():
-	if not is_instance_valid(current_curve_mesh) or not gizmo: return
-	var ids:PackedInt64Array = get_selected_ids()
-	if mesh_mode:
-		for cid in ids:
-			current_curve_mesh.override.clear_mesh_override(cid)
-	else:
-		for cid in ids:
-			current_curve_mesh.override.clear_material_override(cid)
-	update_curve_item_selection()
+	if not is_instance_valid(current_modify_node) or not gizmo: return
+	if modify_mode==MODIFY_MODE.CURVE_MESH:
+		var ids:PackedInt64Array = get_selected_ids()
+		if mesh_mode:
+			for cid in ids:
+				current_modify_node.override.clear_mesh_override(cid)
+		else:
+			for cid in ids:
+				current_modify_node.override.clear_material_override(cid)
+		update_curve_item_selection()
+	elif modify_mode==MODIFY_MODE.CURVE_INSTANCE:
+		var ov:MCurveInstanceOverride = current_modify_node.override_data
+		if not ov: return
+		var ids:PackedInt64Array = get_selected_ids()
+		if ids.size()==1:
+			ov.clear_to_default(ids[0])
+		update_curve_instance_selection()
 
-func remove_mesh():
-	if not is_instance_valid(current_curve_mesh) or not gizmo: return
-	var ids:PackedInt64Array = get_selected_ids()
-	
-	for cid in ids:
-		current_curve_mesh.override.set_mesh_override(cid,-2)
-	update_curve_item_selection()
+func exclude_connection()->void:
+	if not is_instance_valid(current_modify_node) or not gizmo: return
+	if modify_mode==MODIFY_MODE.CURVE_MESH:
+		var ids:PackedInt64Array = get_selected_ids()
+		for cid in ids:
+			current_modify_node.override.set_mesh_override(cid,-2)
+		update_curve_item_selection()
+	elif modify_mode==MODIFY_MODE.CURVE_INSTANCE:
+		var ids:PackedInt64Array= gizmo.get_selected_connections()
+		var ov:MCurveInstanceOverride = current_modify_node.override_data
+		if not ov:
+			ov = MCurveInstanceOverride.new()
+			current_modify_node.override_data = ov
+		if ids.size()==1:
+			var val = not ov.is_exclude_connection(ids[0])
+			ov.set_exclude_connection(ids[0],val)
+			update_curve_instance_selection()
+			
 
+# will use only in curve_mesh mode
 func get_selected_ids()->PackedInt64Array:
 	if connection_mode:
 		return gizmo.get_selected_connections()
@@ -180,3 +341,48 @@ func _on_update_info_timer_timeout():
 	if current_curve:
 		point_count = current_curve.get_points_count()
 	point_count_lable.text = "Point count " + str(point_count)
+
+func _on_wtimer_timeout() -> void:
+	push_on_warn_lable("")
+
+
+func instance_add_remove_element()->void:
+	var ov:MCurveInstanceOverride = current_modify_node.override_data
+	if not ov:
+		ov = MCurveInstanceOverride.new()
+	current_modify_node.override_data = ov
+	var ids:PackedInt64Array = gizmo.get_selected_connections()
+	if ids.size()!=1: return
+	var cid:int = ids[0]
+	var sel_items = items.get_selected_items()
+	if sel_items.size()!=1: return
+	var element_index = sel_items[0]
+	if ov.has_element(cid,element_index): # is add
+		ov.remove_element(cid,element_index)
+	else: # is remove
+		ov.add_element(cid,element_index)
+	update_curve_instance_selection()
+
+func instance_set_start_offset(value:float)->void:
+	var ov:MCurveInstanceOverride = current_modify_node.override_data
+	if not ov: return
+	var ids:PackedInt64Array = gizmo.get_selected_connections()
+	if ids.size()!=1: return
+	var cid:int = ids[0]
+	ov.set_start_offset(cid,value)
+
+func instance_set_end_offset(value:float)->void:
+	var ov:MCurveInstanceOverride = current_modify_node.override_data
+	if not ov: return
+	var ids:PackedInt64Array = gizmo.get_selected_connections()
+	if ids.size()!=1: return
+	var cid:int = ids[0]
+	ov.set_end_offset(cid,value)
+
+func instance_set_rand_remove(value:float)->void:
+	var ov:MCurveInstanceOverride = current_modify_node.override_data
+	if not ov: return
+	var ids:PackedInt64Array = gizmo.get_selected_connections()
+	if ids.size()!=1: return
+	var cid:int = ids[0]
+	ov.set_rand_remove(cid,value)

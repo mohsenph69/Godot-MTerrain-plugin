@@ -1296,7 +1296,7 @@ Pair<int,int> MCurve::get_conn_distances_ratios(int64_t conn_id,const Vector<flo
     ERR_FAIL_COND_V(dis==nullptr,out);
     float smallest_ratio = 10.0;
     int smallest_ration_index = -1;
-    float biggest_ratio = 0.0;
+    float biggest_ratio = -10.0;
     int biggest_ratio_index = -1;
     for(int i=0; i < distances.size(); i++){
         float ratio = _get_conn_distance_ratios(dis,distances[i]);

@@ -30,11 +30,11 @@ popup/item_0/id = 0
 popup/item_1/text = "Other_child"
 popup/item_1/id = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="mesh_header" type="HBoxContainer" parent="."]
 visible = false
 layout_mode = 2
 
-[node name="connection_tab" type="Button" parent="HBoxContainer"]
+[node name="connection_tab" type="Button" parent="mesh_header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_jefn3")
@@ -42,7 +42,7 @@ toggle_mode = true
 button_pressed = true
 text = "Connection"
 
-[node name="intersection_tab" type="Button" parent="HBoxContainer"]
+[node name="intersection_tab" type="Button" parent="mesh_header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_jefn3")
@@ -55,39 +55,103 @@ layout_mode = 2
 [node name="mesh_mode_option" type="OptionButton" parent="."]
 visible = false
 layout_mode = 2
-item_count = 2
 selected = 0
+item_count = 2
 popup/item_0/text = "mesh"
 popup/item_0/id = 0
 popup/item_1/text = "material"
 popup/item_1/id = 1
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="."]
-visible = false
+[node name="button_header" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="clear_override" type="Button" parent="HBoxContainer2"]
+[node name="clear_override" type="Button" parent="button_header"]
 layout_mode = 2
 text = "restore default"
 
-[node name="Remove_mesh" type="Button" parent="HBoxContainer2"]
+[node name="exclude_connection" type="Button" parent="button_header"]
 layout_mode = 2
 theme_override_styles/pressed = SubResource("StyleBoxFlat_t7soo")
 toggle_mode = true
-text = "Remove mesh"
+text = "Exclude Connection"
 
 [node name="itemlist" type="ItemList" parent="."]
 visible = false
 custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
+theme_override_colors/font_selected_color = Color(0.611765, 0.631373, 0.835294, 1)
+theme_override_colors/font_hovered_selected_color = Color(0.788235, 0.768627, 1, 1)
+theme_override_colors/font_hovered_color = Color(0.392157, 0.396078, 0.545098, 1)
 allow_reselect = true
-
-[node name="update_info_timer" type="Timer" parent="."]
-wait_time = 0.752
-autostart = true
 
 [node name="HSeparator4" type="HSeparator" parent="."]
 layout_mode = 2
 
+[node name="warn_lable" type="Label" parent="."]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.864851, 0.793048, 0, 1)
+
+[node name="wtimer" type="Timer" parent="warn_lable"]
+wait_time = 4.0
+one_shot = true
+
+[node name="add_remove" type="Button" parent="."]
+layout_mode = 2
+text = "Add Remove"
+
+[node name="instance_setting" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="start_offset" type="HBoxContainer" parent="instance_setting"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="lable" type="Label" parent="instance_setting/start_offset"]
+layout_mode = 2
+text = "  Start     Offset"
+
+[node name="slider" type="HSlider" parent="instance_setting/start_offset"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.02
+
+[node name="end_offset" type="HBoxContainer" parent="instance_setting"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="lable" type="Label" parent="instance_setting/end_offset"]
+layout_mode = 2
+text = "  End       Offset"
+
+[node name="slider" type="HSlider" parent="instance_setting/end_offset"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.02
+
+[node name="rand_rm" type="HBoxContainer" parent="instance_setting"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="lable" type="Label" parent="instance_setting/rand_rm"]
+layout_mode = 2
+text = "  Rand Remove"
+
+[node name="slider" type="HSlider" parent="instance_setting/rand_rm"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.02
+
+[node name="update_info_timer" type="Timer" parent="."]
+wait_time = 2.0
+autostart = true
+
 [connection signal="item_selected" from="child_selctor" to="." method="_on_child_selctor_item_selected"]
+[connection signal="timeout" from="warn_lable/wtimer" to="." method="_on_wtimer_timeout"]
 [connection signal="timeout" from="update_info_timer" to="." method="_on_update_info_timer_timeout"]

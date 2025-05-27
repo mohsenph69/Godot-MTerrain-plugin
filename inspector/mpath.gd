@@ -26,7 +26,3 @@ func _parse_begin(object):
 		gizmo.curve_terrain.terrain = gizmo.tools.get_active_mterrain()
 		curve_terrain.start_curve_terrain(gizmo,object)
 		
-
-
-
-

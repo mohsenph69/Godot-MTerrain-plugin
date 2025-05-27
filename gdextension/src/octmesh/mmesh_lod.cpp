@@ -72,7 +72,7 @@ void MMeshLod::set_meshes(TypedArray<Mesh> input){
     meshes = input;
 }
 
-TypedArray<Mesh> MMeshLod::get_meshes(){
+TypedArray<Mesh> MMeshLod::get_meshes() const {
     return meshes;
 }
 

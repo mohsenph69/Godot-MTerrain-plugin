@@ -473,7 +473,9 @@ void MCurveMesh::_connection_remove(int64_t conn_id){
 }
 
 void MCurveMesh::_generate_connection(const MCurve::ConnUpdateInfo& update_info,bool immediate_update){
-    ERR_FAIL_COND(meshlod_sliced_info.size() == 0);
+    if(meshlod_sliced_info.size() == 0){
+        return;
+    }
     int64_t cid = update_info.conn_id;
     int lod = update_info.current_lod;
     int last_lod = update_info.last_lod;
