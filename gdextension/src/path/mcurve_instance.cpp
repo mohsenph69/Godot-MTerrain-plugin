@@ -325,6 +325,9 @@ float MCurveInstanceElement::get_rand_uniform_scale_end() const{
 MCurveInstanceOverride::OverrideData::OverrideData(){
     for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
         element_ovveride[i] = -1;
+        start_offset[i] = 0;
+        end_offset[i] = 0;
+        random_remove[i] = 0;
     }
 }
 
@@ -343,8 +346,8 @@ void MCurveInstanceOverride::_bind_methods(){
     ClassDB::bind_method(D_METHOD("clear_to_default","conn_id"), &MCurveInstanceOverride::clear_to_default);
     ClassDB::bind_method(D_METHOD("has_override","conn_id"), &MCurveInstanceOverride::has_override);
 
-    ClassDB::bind_method(D_METHOD("set_start_offset","conn_id","value"), &MCurveInstanceOverride::set_start_offset);
-    ClassDB::bind_method(D_METHOD("get_start_offset","conn_id"), &MCurveInstanceOverride::get_start_offset);
+    ClassDB::bind_method(D_METHOD("set_start_offset","conn_id","element_index","value"), &MCurveInstanceOverride::set_start_offset);
+    ClassDB::bind_method(D_METHOD("get_start_offset","conn_id","element_index"), &MCurveInstanceOverride::get_start_offset);
 
     ClassDB::bind_method(D_METHOD("set_end_offset","conn_id","value"), &MCurveInstanceOverride::set_end_offset);
     ClassDB::bind_method(D_METHOD("get_end_offset","conn_id"), &MCurveInstanceOverride::get_end_offset);
@@ -480,7 +483,7 @@ bool MCurveInstanceOverride::has_override(int64_t conn_id) const{
     return data.has(conn_id);
 }
 
-void MCurveInstanceOverride::set_start_offset(int64_t conn_id,float val){
+void MCurveInstanceOverride::set_start_offset(int64_t conn_id,int element_index,float val){
     auto it = data.find(conn_id);
     if(it==data.end()){
         data.insert(conn_id,OverrideData());
@@ -488,20 +491,31 @@ void MCurveInstanceOverride::set_start_offset(int64_t conn_id,float val){
         ERR_FAIL_COND(it==data.end());
     }
     OverrideData& ov = it->value;
-    ov.start_offset.set_float(val);
-    emit_connection_changed(conn_id);
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov.element_ovveride[i]==element_index){
+            ov.start_offset[i].set_float(val);
+            emit_connection_changed(conn_id);
+            return;
+        }
+    }
+    ERR_FAIL_MSG("set_start_offset element not found!");
 }
 
-float MCurveInstanceOverride::get_start_offset(int64_t conn_id) const{
+float MCurveInstanceOverride::get_start_offset(int64_t conn_id,int element_index) const{
     auto it = data.find(conn_id);
     if(it==data.end()){
         return 0;
     }
     const OverrideData& ov = it->value;
-    return ov.start_offset.get_float();
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov.element_ovveride[i]==element_index){
+            return ov.start_offset[i].get_float();
+        }
+    }
+    ERR_FAIL_V_MSG(0.0f,"get_start_offset element not found!");
 }
 
-void MCurveInstanceOverride::set_end_offset(int64_t conn_id,float val){
+void MCurveInstanceOverride::set_end_offset(int64_t conn_id,int element_index,float val){
     auto it = data.find(conn_id);
     if(it==data.end()){
         data.insert(conn_id,OverrideData());
@@ -509,20 +523,31 @@ void MCurveInstanceOverride::set_end_offset(int64_t conn_id,float val){
         ERR_FAIL_COND(it==data.end());
     }
     OverrideData& ov = it->value;
-    ov.end_offset.set_float(val);
-    emit_connection_changed(conn_id);
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov.element_ovveride[i]==element_index){
+            ov.end_offset[i].set_float(val);
+            emit_connection_changed(conn_id);
+            return;
+        }
+    }
+    ERR_FAIL_MSG("set_end_offset element not found!");
 }
 
-float MCurveInstanceOverride::get_end_offset(int64_t conn_id) const{
+float MCurveInstanceOverride::get_end_offset(int64_t conn_id,int element_index) const{
     auto it = data.find(conn_id);
     if(it==data.end()){
         return 0;
     }
     const OverrideData& ov = it->value;
-    return ov.end_offset.get_float();
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov.element_ovveride[i]==element_index){
+            return ov.end_offset[i].get_float();
+        }
+    }
+    ERR_FAIL_V_MSG(0.0f,"get_end_offset element not found!");
 }
 
-void MCurveInstanceOverride::set_rand_remove(int64_t conn_id,float val){
+void MCurveInstanceOverride::set_rand_remove(int64_t conn_id,int element_index,float val){
     auto it = data.find(conn_id);
     if(it==data.end()){
         data.insert(conn_id,OverrideData());
@@ -530,20 +555,29 @@ void MCurveInstanceOverride::set_rand_remove(int64_t conn_id,float val){
         ERR_FAIL_COND(it==data.end());
     }
     OverrideData& ov = it->value;
-    ov.random_remove.set_float(val);
-    emit_connection_changed(conn_id);
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov.element_ovveride[i]==element_index){
+            ov.random_remove[i].set_float(val);
+            emit_connection_changed(conn_id);
+            return;
+        }
+    }
+    ERR_FAIL_MSG("set_rand_remove element not found!");
 }
 
-float MCurveInstanceOverride::get_rand_remove(int64_t conn_id) const{
+float MCurveInstanceOverride::get_rand_remove(int64_t conn_id,int element_index) const{
     auto it = data.find(conn_id);
     if(it==data.end()){
         return 0;
     }
     const OverrideData& ov = it->value;
-    return ov.random_remove.get_float();
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov.element_ovveride[i]==element_index){
+            return ov.random_remove[i].get_float();
+        }
+    }
+    ERR_FAIL_V_MSG(0.0f,"get_rand_remove element not found!");
 }
-
-
 
 void MCurveInstanceOverride::set_data(const PackedByteArray& input){
     using OvPair = Pair<int64_t,OverrideData>;
@@ -579,6 +613,8 @@ PackedByteArray MCurveInstanceOverride::get_data() const {
 ///////////////////////////////////////////////////////////////////////
 
 void MCurveInstance::_bind_methods(){
+
+    ClassDB::bind_method(D_METHOD("_update_visibilty"), &MCurveInstance::_update_visibilty);
 
     ClassDB::bind_method(D_METHOD("set_override","input"), &MCurveInstance::set_override);
     ClassDB::bind_method(D_METHOD("get_override"), &MCurveInstance::get_override);
@@ -652,7 +688,8 @@ void MCurveInstance::Instance::remove_scene(int row){
 }
 
 MCurveInstance::MCurveInstance(){
-    rand_gen.instantiate();
+    connect("tree_exited", Callable(this, "_update_visibilty"));
+    connect("tree_entered", Callable(this, "_update_visibilty"));
 }
 
 MCurveInstance::~MCurveInstance(){
@@ -707,18 +744,21 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
         _remove_instance(cid);
         return;
     }
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////// Instance Index Loop ///////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
     for(int instance_index=0; instance_index < M_CURVE_CONNECTION_INSTANCE_COUNT; instance_index++){
         int element_index = ov_data.element_ovveride[instance_index];
         if(element_index < 0 || element_index >= M_CURVE_ELEMENT_COUNT){
             _remove_instance(cid,instance_index,false);
             continue; // No element
         }
-        Ref<MCurveInstanceElement> sett = elements[element_index];
-        if(sett.is_null()){
+        Ref<MCurveInstanceElement> element = elements[element_index];
+        if(element.is_null()){
             _remove_instance(cid,instance_index,false);
             continue; // No element
         }
-        RID mesh = sett->get_mesh_lod(lod);
+        RID mesh = element->get_mesh_lod(lod);
         if(!mesh.is_valid()){
             _remove_instance(cid,instance_index,false); // No mesh so removing
             continue;
@@ -728,121 +768,109 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
         if(instance.mesh_rid == mesh){
             continue; // Is same so no change
         }
-        if(!instance.instance.is_valid()){
-            instance.instance = RS->instance_create();
-            RS->instance_set_scenario(instance.instance,path->get_scenario());
-        }
-        if(!instance.multimesh.is_valid()){
-            instance.multimesh = RS->multimesh_create();
-            RS->instance_set_base(instance.instance,instance.multimesh);
-        }
         instance.mesh_rid = mesh;
-        // Creating curve instances
-        bool is_created = _generate_connection_element(sett,instance,ov_data,cid);
-        if(!is_created){
-            curve_instance_instances.erase(cid);
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////Creating Instance///////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        {
+            float curve_len = curve->get_conn_lenght(cid);
+            float start_offset_len = curve_len*ov_data.start_offset[instance_index];
+            float end_offset_len = curve_len*ov_data.end_offset[instance_index];
+            curve_len = curve_len - (start_offset_len + end_offset_len);
+            if(curve_len < M_CURVE_INSTANCE_EPSILON){
+                _remove_instance(cid,instance_index,false); // No mesh so removing
+                continue;
+            }
+            int total_mesh_count = curve_len/element->interval;
+            float rinterval = curve_len/total_mesh_count; // true interval due to integer rounding
+            if(total_mesh_count==0){
+                _remove_instance(cid,instance_index,false); // No mesh so removing
+                continue;
+            }
+            Vector<Transform3D> transforms;
+            {
+                Vector<float> ratios;
+                {
+                    Vector<float> distances;
+                    if(!element->middle && element->include_end){
+                        total_mesh_count++;
+                    }
+                    distances.resize(total_mesh_count);
+                    float current_dis = element->middle ? rinterval/2.0f : 0.0f;
+                    current_dis += start_offset_len;
+                    for(int i=0; i < total_mesh_count; i++){
+                        distances.set(i,current_dis);
+                        current_dis += rinterval;
+                    }
+                    curve->get_conn_distances_ratios(cid,distances,ratios);
+                }
+                ERR_FAIL_COND(ratios.size()!=total_mesh_count);
+                curve->get_conn_transforms(cid,ratios,transforms);
+                ERR_FAIL_COND(transforms.size()!=total_mesh_count);
+            }
+            PackedFloat32Array multimesh_buffer;
+            int multimesh_buffer_index=0;
+            int multimesh_count=0;
+            // mesh creation loop /////////////////////////////////////
+            for(int i=0; i < total_mesh_count; i++){
+                // Here we have two mode
+                // One is for multimesh
+                // other is packedscene
+                if(element->index_exist(i,ov_data.random_remove[instance_index])){
+                    Transform3D t = element->modify_transform(transforms[i],i);
+                    _set_multimesh_buffer(multimesh_buffer,t,multimesh_buffer_index);
+                    multimesh_count++;
+                    if(element->mirror && element->index_exist_mirror(i,ov_data.random_remove[instance_index])){
+                        t = element->modify_transform_mirror(transforms[i],i);
+                        _set_multimesh_buffer(multimesh_buffer,t,multimesh_buffer_index);
+                        multimesh_count++;
+                    }
+                }
+            }
+            if(multimesh_count==0){
+                _remove_instance(cid,instance_index,false);
+                continue;
+            }
+            // Adding meshes
+            if(!instance.instance.is_valid()){
+                instance.instance = RS->instance_create();
+                RS->instance_set_scenario(instance.instance,path->get_scenario());
+            }
+            if(!instance.multimesh.is_valid()){
+                instance.multimesh = RS->multimesh_create();
+                RS->instance_set_base(instance.instance,instance.multimesh);
+            }
+            instance.multimesh_count = multimesh_count;
+            ERR_FAIL_COND(!instance.mesh_rid.is_valid());
+            RS->multimesh_set_mesh(instance.multimesh,instance.mesh_rid);
+            RS->multimesh_allocate_data(instance.multimesh,multimesh_count,RenderingServer::MULTIMESH_TRANSFORM_3D,false,false);
+            RS->multimesh_set_buffer(instance.multimesh,multimesh_buffer);
         }
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////// END Creating Instance ///////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////
     }
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////// END Instance Index Loop ///////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
     if(!instances->has_valid_instance()){
         curve_instance_instances.erase(cid);
     }
 }
 
-bool MCurveInstance::_generate_connection_element(Ref<MCurveInstanceElement> element,Instance& curve_instance,const MCurveInstanceOverride::OverrideData& ov,int64_t conn_id){
-    // Creating curve instances
-    float curve_len = curve->get_conn_lenght(conn_id);
-    float start_offset_len = curve_len*ov.start_offset;
-    float end_offset_len = curve_len*ov.end_offset;
-    curve_len = curve_len - (start_offset_len + end_offset_len);
-    if(curve_len < M_CURVE_INSTANCE_EPSILON){
-        return false;
+void MCurveInstance::_update_visibilty(){
+    if(path==nullptr || curve.is_null()){
+        return;
     }
-    int total_mesh_count = curve_len/element->interval;
-    float rinterval = curve_len/total_mesh_count; // true interval due to integer rounding
-    if(total_mesh_count==0){
-        return false;
-    }
-    Vector<Transform3D> transforms;
-    {
-        Vector<float> ratios;
-        {
-            Vector<float> distances;
-            if(!element->middle && element->include_end){
-                total_mesh_count++;
-            }
-            distances.resize(total_mesh_count);
-            float current_dis = element->middle ? rinterval/2.0f : 0.0f;
-            current_dis += start_offset_len;
-            for(int i=0; i < total_mesh_count; i++){
-                distances.set(i,current_dis);
-                current_dis += rinterval;
-            }
-            curve->get_conn_distances_ratios(conn_id,distances,ratios);
-        }
-        ERR_FAIL_COND_V(ratios.size()!=total_mesh_count,false);
-        curve->get_conn_transforms(conn_id,ratios,transforms);
-        ERR_FAIL_COND_V(transforms.size()!=total_mesh_count,false);
-    }
-    PackedFloat32Array multimesh_buffer;
-    int multimesh_buffer_index=0;
-    int multimesh_count=0;
-    // mesh creation loop /////////////////////////////////////
-    for(int i=0; i < total_mesh_count; i++){
-        // Here we have two mode
-        // One is for multimesh
-        // other is packedscene
-        if(element->index_exist(i,ov.random_remove)){
-            Transform3D t = element->modify_transform(transforms[i],i);
-            multimesh_buffer.resize(multimesh_buffer.size()+12);
-            multimesh_buffer.set(multimesh_buffer_index,t.basis[0][0]);
-            multimesh_buffer.set(multimesh_buffer_index+1,t.basis[0][1]);
-            multimesh_buffer.set(multimesh_buffer_index+2,t.basis[0][2]);
-            multimesh_buffer.set(multimesh_buffer_index+3,t.origin[0]);
-
-            multimesh_buffer.set(multimesh_buffer_index+4,t.basis[1][0]);
-            multimesh_buffer.set(multimesh_buffer_index+5,t.basis[1][1]);
-            multimesh_buffer.set(multimesh_buffer_index+6,t.basis[1][2]);
-            multimesh_buffer.set(multimesh_buffer_index+7,t.origin[1]);
-
-            multimesh_buffer.set(multimesh_buffer_index+8,t.basis[2][0]);
-            multimesh_buffer.set(multimesh_buffer_index+9,t.basis[2][1]);
-            multimesh_buffer.set(multimesh_buffer_index+10,t.basis[2][2]);
-            multimesh_buffer.set(multimesh_buffer_index+11,t.origin[2]);
-            multimesh_buffer_index += 12;
-            multimesh_count++;
-            if(element->mirror && element->index_exist_mirror(i,ov.random_remove)){
-                //pos = origin + origin - pos;
-                t = element->modify_transform_mirror(transforms[i],i);
-                multimesh_buffer.resize(multimesh_buffer.size()+12);
-                multimesh_buffer.set(multimesh_buffer_index,t.basis[0][0]);
-                multimesh_buffer.set(multimesh_buffer_index+1,t.basis[0][1]);
-                multimesh_buffer.set(multimesh_buffer_index+2,t.basis[0][2]);
-                multimesh_buffer.set(multimesh_buffer_index+3,t.origin[0]);
-
-                multimesh_buffer.set(multimesh_buffer_index+4,t.basis[1][0]);
-                multimesh_buffer.set(multimesh_buffer_index+5,t.basis[1][1]);
-                multimesh_buffer.set(multimesh_buffer_index+6,t.basis[1][2]);
-                multimesh_buffer.set(multimesh_buffer_index+7,t.origin[1]);
-
-                multimesh_buffer.set(multimesh_buffer_index+8,t.basis[2][0]);
-                multimesh_buffer.set(multimesh_buffer_index+9,t.basis[2][1]);
-                multimesh_buffer.set(multimesh_buffer_index+10,t.basis[2][2]);
-                multimesh_buffer.set(multimesh_buffer_index+11,t.origin[2]);
-                multimesh_buffer_index += 12;
-                multimesh_count++;
+    bool v = path->is_visible() && path->is_inside_tree() && is_inside_tree();
+    for(auto it=curve_instance_instances.begin();it!=curve_instance_instances.end();++it){
+        Instances& instances = it->value;
+        for(int j=0; j < M_CURVE_CONNECTION_INSTANCE_COUNT; j++){
+            if(instances[j].instance.is_valid()){
+                RS->instance_set_visible(instances[j].instance,v);
             }
         }
     }
-    if(multimesh_count==0){
-        return false;
-    }
-    // immediete
-    curve_instance.multimesh_count = multimesh_count;
-    ERR_FAIL_COND_V(!curve_instance.mesh_rid.is_valid(),false);
-    RS->multimesh_set_mesh(curve_instance.multimesh,curve_instance.mesh_rid);
-    RS->multimesh_allocate_data(curve_instance.multimesh,multimesh_count,RenderingServer::MULTIMESH_TRANSFORM_3D,false,false);
-    RS->multimesh_set_buffer(curve_instance.multimesh,multimesh_buffer);
-    return true;
 }
 
 void MCurveInstance::_connection_force_update(int64_t conn_id){
@@ -863,9 +891,11 @@ void MCurveInstance::_connection_remove(int64_t conn_id){
 }
 
 void MCurveInstance::_recreate(){
-    ERR_FAIL_COND(curve.is_null());
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
     _remove_all_instance();
+    if(curve.is_null()){
+        return;
+    }
     PackedInt64Array conns = curve->get_active_conns();
     for(int i=0;i<conns.size();++i){
         MCurve::ConnUpdateInfo cu;

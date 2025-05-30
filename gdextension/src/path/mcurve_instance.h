@@ -163,9 +163,9 @@ class MCurveInstanceOverride : public Resource {
     {
         bool is_exclude = false;
         int8_t element_ovveride[M_CURVE_CONNECTION_INSTANCE_COUNT];
-        MByteFloat<false,1> start_offset = 0;
-        MByteFloat<false,1> end_offset = 0;
-        MByteFloat<false,1> random_remove = 0;
+        MByteFloat<false,1> start_offset[M_CURVE_CONNECTION_INSTANCE_COUNT];
+        MByteFloat<false,1> end_offset[M_CURVE_CONNECTION_INSTANCE_COUNT];
+        MByteFloat<false,1> random_remove[M_CURVE_CONNECTION_INSTANCE_COUNT];
         OverrideData();
     };
     
@@ -183,12 +183,12 @@ class MCurveInstanceOverride : public Resource {
     void clear_to_default(int64_t conn_id);
     bool has_override(int64_t conn_id) const;
     // set override setting
-    void set_start_offset(int64_t conn_id,float val);
-    float get_start_offset(int64_t conn_id) const;
-    void set_end_offset(int64_t conn_id,float val);
-    float get_end_offset(int64_t conn_id) const;
-    void set_rand_remove(int64_t conn_id,float val);
-    float get_rand_remove(int64_t conn_id) const;
+    void set_start_offset(int64_t conn_id,int element_index,float val);
+    float get_start_offset(int64_t conn_id,int element_index) const;
+    void set_end_offset(int64_t conn_id,int element_index,float val);
+    float get_end_offset(int64_t conn_id,int element_index) const;
+    void set_rand_remove(int64_t conn_id,int element_index,float val);
+    float get_rand_remove(int64_t conn_id,int element_index) const;
     // Data
     void set_data(const PackedByteArray& input);
     PackedByteArray get_data() const;
@@ -268,12 +268,11 @@ class MCurveInstance : public Node {
     Ref<MCurveInstanceElement> elements[M_CURVE_ELEMENT_COUNT];
     MPath* path=nullptr;
     Ref<MCurve> curve;
-    Ref<RandomNumberGenerator> rand_gen;
     
     Ref<MCurveInstanceOverride> override_data;
     Vector<MultimeshUpdate> multimesh_updates;
     HashMap<int64_t,MCurveInstance::Instances> curve_instance_instances;
-
+    _FORCE_INLINE_ void _set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const;
     public:
     std::recursive_mutex update_mutex;
     MCurveInstance();
@@ -282,10 +281,7 @@ class MCurveInstance : public Node {
     static void thread_update(void* input);
     /// Decide what element should be added and calling _generate_connection_element
     void _generate_connection(const MCurve::ConnUpdateInfo& update_info,bool immediate_update=false);
-    private:
-    /// Do not call directly bellow use _generate_connection instead
-    bool _generate_connection_element(Ref<MCurveInstanceElement> element,MCurveInstance::Instance& curve_instance,const MCurveInstanceOverride::OverrideData& ov,int64_t conn_id);
-    public:
+    void _update_visibilty();
     void _connection_force_update(int64_t conn_id);
     void _connection_remove(int64_t conn_id);
     void _recreate();
@@ -312,4 +308,24 @@ class MCurveInstance : public Node {
     static int get_instance_count();
     static int get_element_count();
 };
+
+void MCurveInstance::_set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const{
+    multimesh_buffer.resize(multimesh_buffer.size()+12);
+    multimesh_buffer.set(buffer_index,t.basis[0][0]);
+    multimesh_buffer.set(buffer_index+1,t.basis[0][1]);
+    multimesh_buffer.set(buffer_index+2,t.basis[0][2]);
+    multimesh_buffer.set(buffer_index+3,t.origin[0]);
+
+    multimesh_buffer.set(buffer_index+4,t.basis[1][0]);
+    multimesh_buffer.set(buffer_index+5,t.basis[1][1]);
+    multimesh_buffer.set(buffer_index+6,t.basis[1][2]);
+    multimesh_buffer.set(buffer_index+7,t.origin[1]);
+
+    multimesh_buffer.set(buffer_index+8,t.basis[2][0]);
+    multimesh_buffer.set(buffer_index+9,t.basis[2][1]);
+    multimesh_buffer.set(buffer_index+10,t.basis[2][2]);
+    multimesh_buffer.set(buffer_index+11,t.origin[2]);
+    buffer_index += 12;
+}
+
 #endif

@@ -256,12 +256,16 @@ func update_curve_instance_selection():
 		if ov.has_element(cid,i):
 			items.set_item_custom_fg_color(i,Color(0.4,0.9,0.4))
 	exclude_connection_btn.set_pressed_no_signal(ov.is_exclude_connection(cid))
-	var sel_item = items.get_selected_items()
-	instance_setting_header.visible = true
-	instance_start_offset_slider.value = ov.get_start_offset(cid)
-	instance_end_offset_slider.value = ov.get_end_offset(cid)
-	instance_rand_remove_slider.value = ov.get_rand_remove(cid)
+	var sel_elemenet:int = get_selected_element()
+	if sel_elemenet!=-1 and ov.has_element(cid,sel_elemenet):
+		instance_setting_header.visible = true
+		instance_start_offset_slider.value = ov.get_start_offset(cid,sel_elemenet)
+		instance_end_offset_slider.value = ov.get_end_offset(cid,sel_elemenet)
+		instance_rand_remove_slider.value = ov.get_rand_remove(cid,sel_elemenet)
+	else:
+		instance_setting_header.visible = false
 	total_capacity = ov.get_conn_element_capacity(cid)
+	
 	if sel_index.size()==1:
 		if ov.has_element(cid,sel_index[0]):
 			instance_add_remove_btn.text = "remove (capacity "+str(total_capacity)+")"
@@ -369,7 +373,14 @@ func instance_set_start_offset(value:float)->void:
 	var ids:PackedInt64Array = gizmo.get_selected_connections()
 	if ids.size()!=1: return
 	var cid:int = ids[0]
-	ov.set_start_offset(cid,value)
+	var sel_element := get_selected_element()
+	if sel_element!=-1:
+		ov.set_start_offset(cid,sel_element,value)
+
+func get_selected_element()->int:
+	var sels := items.get_selected_items()
+	if sels.size()!=1: return -1
+	return sels[0];
 
 func instance_set_end_offset(value:float)->void:
 	var ov:MCurveInstanceOverride = current_modify_node.override_data
@@ -377,7 +388,9 @@ func instance_set_end_offset(value:float)->void:
 	var ids:PackedInt64Array = gizmo.get_selected_connections()
 	if ids.size()!=1: return
 	var cid:int = ids[0]
-	ov.set_end_offset(cid,value)
+	var sel_element := get_selected_element()
+	if sel_element!=-1:
+		ov.set_end_offset(cid,sel_element,value)
 
 func instance_set_rand_remove(value:float)->void:
 	var ov:MCurveInstanceOverride = current_modify_node.override_data
@@ -385,4 +398,6 @@ func instance_set_rand_remove(value:float)->void:
 	var ids:PackedInt64Array = gizmo.get_selected_connections()
 	if ids.size()!=1: return
 	var cid:int = ids[0]
-	ov.set_rand_remove(cid,value)
+	var sel_element := get_selected_element()
+	if sel_element!=-1:
+		ov.set_rand_remove(cid,sel_element,value)
