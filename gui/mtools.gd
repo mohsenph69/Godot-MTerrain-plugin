@@ -542,13 +542,8 @@ func set_edit_mode(object = active_object, mode=current_edit_mode):
 	brush_popup_button.visible = true
 	mask_popup_button.visible = true
 	if object is MPath:		
-		#deactivate_editing()
 		mpath_gizmo_gui.visible = true
-		var active_mterrain = get_active_mterrain()
-		if active_mterrain and active_mterrain.is_grid_created():
-			mpath_gizmo_gui.set_terrain_snap(active_mterrain)
-		else:
-			mpath_gizmo_gui.set_terrain_snap(null)
+		mpath_gizmo_gui.mterrain_for_snap = get_active_mterrain()
 		object.update_gizmos()
 	elif object is MCurveMesh:
 		mcurve_mesh_gui.set_curve_mesh(object)

@@ -75,7 +75,7 @@ void MPath::_notification(int p_what){
         }
         break;
     case NOTIFICATION_READY:
-        update_scenario();
+        update_scenario_space();
         break;
     case NOTIFICATION_TRANSFORM_CHANGED:
         set_global_transform(Transform3D());
@@ -104,13 +104,21 @@ void MPath::_notification(int p_what){
     }
 }
 
-void MPath::update_scenario(){
+void MPath::update_scenario_space(){
     scenario = get_world_3d()->get_scenario();
+    space = get_world_3d()->get_space();
 }
 
 RID MPath::get_scenario(){
     if(!scenario.is_valid()){
-        update_scenario();
+        update_scenario_space();
     }
     return scenario;
+}
+
+RID MPath::get_space(){
+    if(!space.is_valid()){
+        update_scenario_space();
+    }
+    return space;
 }

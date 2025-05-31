@@ -2,6 +2,7 @@
 extends Control
 
 @onready var point_count_lable:=$point_count_lable
+var conn_info:Label
 
 # remebering this to open the correct if node deselcted
 static var selected_child:Node
@@ -54,6 +55,7 @@ func start():
 	child_selector = $child_selctor
 	items = $itemlist
 	items.item_selected.connect(Callable(self,"item_selected"))
+	conn_info= $conn_info
 	connection_tab = $mesh_header/connection_tab
 	intersection_tab = $mesh_header/intersection_tab
 	exclude_connection_btn = $button_header/exclude_connection
@@ -64,6 +66,7 @@ func start():
 	$mesh_mode_option.connect("item_selected",Callable(self,"mesh_mode_selected"))
 	if not gizmo: printerr("Gizmo is NULL")
 	gizmo.connect("selection_changed",Callable(self,"update_curve_item_selection"))
+	gizmo.connect("point_commit",Callable(self,"update_curve_lenght_info"))
 	# Instance settings
 	instance_add_remove_btn = $add_remove
 	instance_start_offset_slider = $instance_setting/start_offset/slider
@@ -74,7 +77,13 @@ func start():
 	instance_start_offset_slider.connect("value_changed",instance_set_start_offset)
 	instance_end_offset_slider.connect("value_changed",instance_set_end_offset)
 	instance_rand_remove_slider.connect("value_changed",instance_set_rand_remove)
+	#### End commit to save override
+	instance_add_remove_btn.connect("button_up",instance_edit_commit.bind(true))
+	instance_start_offset_slider.connect("drag_ended",instance_edit_commit)
+	instance_end_offset_slider.connect("drag_ended",instance_edit_commit)
+	instance_rand_remove_slider.connect("drag_ended",instance_edit_commit)
 	# End Instance settings
+	update_curve_lenght_info()
 
 
 
@@ -203,7 +212,15 @@ func update_curve_instance_items():
 		items.add_item(element_name,null,true)
 
 # must be called after update_curve_mesh_items()
+func update_curve_lenght_info()->void:
+	var conn_sel:PackedInt64Array= gizmo.get_selected_connections()
+	var l:float=0.0
+	for cid in conn_sel:
+		l += current_curve.get_conn_lenght(cid)
+	conn_info.text = "Lenght: %.1f meter" %  l
+
 func update_curve_item_selection():
+	update_curve_lenght_info()
 	if not current_modify_node or not gizmo: return
 	if modify_mode==MODIFY_MODE.CURVE_MESH:
 		update_curve_mesh_selection()
@@ -401,3 +418,8 @@ func instance_set_rand_remove(value:float)->void:
 	var sel_element := get_selected_element()
 	if sel_element!=-1:
 		ov.set_rand_remove(cid,sel_element,value)
+
+func instance_edit_commit(is_changed:bool)->void:
+	if is_changed and current_modify_node and current_modify_node is MCurveInstance:
+		var ov:MCurveInstanceOverride = current_modify_node.override_data
+		if ov: ResourceSaver.save(ov,ov.resource_path)

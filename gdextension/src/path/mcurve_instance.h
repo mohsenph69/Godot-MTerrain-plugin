@@ -6,6 +6,10 @@
 #include <godot_cpp/classes/packed_scene.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/classes/random_number_generator.hpp>
+#include <godot_cpp/classes/shape3d.hpp>
+#include <godot_cpp/classes/physics_material.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/physics_server3d.hpp>
 
 #include "mpath.h"
 #include "mcurve.h"
@@ -16,7 +20,7 @@
 #include <mutex>
 
 #define M_CURVE_CONNECTION_INSTANCE_COUNT 4
-#define M_CURVE_ELEMENT_COUNT 10
+#define M_CURVE_ELEMENT_COUNT 16
 #define M_CURVE_INSTANCE_EPSILON 0.001
 
 using namespace godot;
@@ -33,6 +37,7 @@ class MCurveInstanceElement : public Resource {
     bool middle = false;
     bool include_end = false;
     bool curve_align = true;
+    int8_t shape_lod_cutoff = 2;
     float interval = 2.0;
     int seed = 101;
     Vector3 offset  = Vector3(0,0,0);
@@ -47,12 +52,22 @@ class MCurveInstanceElement : public Resource {
     Vector3 rand_scale_end = Vector3(1,1,1);
     float rand_uniform_scale_start = 1.0f;
     float rand_uniform_scale_end = 1.0f;
+    Ref<MMeshLod> mesh;
+    Ref<Shape3D> shape;
+    Vector3 shape_local_position;
+    Basis shape_local_basis;
     // Contain basis and offset including randomness and non-randomness like offset combined
     Basis bases[transform_count];
     Vector3 offsets[transform_count]; // generated in _generate_transforms()
     float random_numbers[transform_count]; // this also will be generated in _generate_transforms()
-    // mesh
-    Ref<MMeshLod> mesh;
+    ///////////// Render Setting
+    RenderingServer::ShadowCastingSetting shadow_setting = RenderingServer::ShadowCastingSetting::SHADOW_CASTING_SETTING_ON;
+    uint32_t render_layers = 1;
+    ///////////// Physics Settings
+    Ref<PhysicsMaterial> physics_material;
+    int32_t collision_layer=1;
+    int32_t collision_mask=1;
+    //////////////////////////////////
     void _generate_transforms();
     protected:
     static void _bind_methods();
@@ -71,6 +86,14 @@ class MCurveInstanceElement : public Resource {
         Vector3 origin = t.origin + t.basis.get_column(0)*__offset.x + t.basis.get_column(1)*__offset.y + t.basis.get_column(2)*__offset.z;
         Basis b = mirror_rotation ? bases[index].rotated(Vector3(0,1,0),3.14159265359) : bases[index];
         return Transform3D(b,origin);
+    }
+
+    inline Transform3D modify_transform_shape(const Transform3D& item_transform) const{
+        return Transform3D(shape_local_basis*item_transform.basis,shape_local_position+item_transform.origin);
+    }
+
+    inline Transform3D modify_transform_mirror_shape(const Transform3D& item_transform_mirror) const{
+        return Transform3D(shape_local_basis*item_transform_mirror.basis,shape_local_position+item_transform_mirror.origin);
     }
 
     inline bool index_exist(int index,float remove_possibility) const {
@@ -98,6 +121,13 @@ class MCurveInstanceElement : public Resource {
         return m->get_rid();
     }
 
+    inline RID get_shape_rid() const{
+        if(shape.is_null()){
+            return RID();
+        }
+        return shape->get_rid();
+    }
+
     void emit_elements_changed();
 
     void set_element_name(const String& input);
@@ -105,6 +135,12 @@ class MCurveInstanceElement : public Resource {
 
     void set_mesh(Ref<MMeshLod> input);
     Ref<MMeshLod> get_mesh() const;
+
+    void set_shape(Ref<Shape3D> input);
+    Ref<Shape3D> get_shape() const;
+
+    void set_shape_lod_cutoff(int8_t input);
+    int8_t get_shape_lod_cutoff() const;
 
     void set_seed(int input);
     int get_seed() const;
@@ -151,6 +187,27 @@ class MCurveInstanceElement : public Resource {
 
     void set_rand_uniform_scale_end(float input);
     float get_rand_uniform_scale_end() const;
+
+    void set_shape_local_position(const Vector3& input);
+    Vector3 get_shape_local_position() const;
+
+    void set_shape_local_basis(const Basis& input);
+    Basis get_shape_local_basis() const;
+
+    /////////// Render
+    void set_shadow_setting(RenderingServer::ShadowCastingSetting input);
+    RenderingServer::ShadowCastingSetting get_shadow_setting();
+    void set_render_layers(uint32_t input);
+    uint32_t get_render_layers() const;
+    /////////// Physics
+    void set_physics_material(Ref<PhysicsMaterial> input);
+    Ref<PhysicsMaterial> get_physics_material() const;
+
+    void set_collision_layer(uint32_t input);
+    uint32_t get_collision_layer() const;
+
+    void set_collision_mask(uint32_t input);
+    uint32_t get_collision_mask() const;
 };
 
 class MCurveInstanceOverride : public Resource {
@@ -167,6 +224,14 @@ class MCurveInstanceOverride : public Resource {
         MByteFloat<false,1> end_offset[M_CURVE_CONNECTION_INSTANCE_COUNT];
         MByteFloat<false,1> random_remove[M_CURVE_CONNECTION_INSTANCE_COUNT];
         OverrideData();
+        inline bool has_any_element(){
+            for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT ; i++){
+                if(element_ovveride[i]>=0){
+                    return true;
+                }
+            }
+            return false;
+        }
     };
     
     private:
@@ -208,12 +273,9 @@ class MCurveInstance : public Node {
     private:    
     struct Instance
     {
-        inline static int mcurve_instance_count = 0;
         Instance(){
-            mcurve_instance_count++;
         }
         ~Instance(){
-            mcurve_instance_count--;
         }
         struct Scene
         {
@@ -222,22 +284,42 @@ class MCurveInstance : public Node {
         };
         
         public:
-        int multimesh_count = 0;
-        private:
-        int scene_count = 0;
-        // Row number start from zero at start of connection
-        // and increase up to end of connection
-        // Here we determine which of instances is not part of multimesh and is a scene
-        Instance::Scene* scenes = nullptr;
+        int count = 0;
         public:
         RID mesh_rid;
         RID instance;
         RID multimesh;
-        _FORCE_INLINE_ int get_scene_count(){return scene_count;}
-        //void insert_scene(int row,MNode* node);
-        //MNode* get_scene(int row);
-        bool has_scene(int row);
-        void remove_scene(int row);
+        // physics shape
+        RID shape;
+        RID body;
+        
+        inline void ensure_render_instance_exist(RID scenario,const uint32_t layers,const RenderingServer::ShadowCastingSetting shadow_setting){
+            if(!instance.is_valid()){
+                ERR_FAIL_COND_MSG(multimesh.is_valid(),"instance and multimesh should create and destroy together");
+                instance = RenderingServer::get_singleton()->instance_create();
+                RenderingServer::get_singleton()->instance_set_scenario(instance,scenario);
+                multimesh = RenderingServer::get_singleton()->multimesh_create();
+                RenderingServer::get_singleton()->instance_set_base(instance,multimesh);
+                RenderingServer::get_singleton()->instance_set_layer_mask(instance,layers);
+                RenderingServer::get_singleton()->instance_geometry_set_cast_shadows_setting(instance,shadow_setting);
+            }
+        }
+
+        inline void ensure_physics_body_exist(RID space,uint32_t layer,uint32_t mask,Ref<PhysicsMaterial> physics_material){
+            if(!body.is_valid()){
+                body = PhysicsServer3D::get_singleton()->body_create();
+                PhysicsServer3D::get_singleton()->body_set_mode(body,PhysicsServer3D::BodyMode::BODY_MODE_STATIC);
+                PhysicsServer3D::get_singleton()->body_set_space(body,space);
+                PhysicsServer3D::get_singleton()->body_set_collision_layer(body,layer);
+                PhysicsServer3D::get_singleton()->body_set_collision_mask(body,mask);
+                if(physics_material.is_valid()){
+                    float friction = physics_material->is_rough() ? - physics_material->get_friction() : physics_material->get_friction();
+                    float bounce = physics_material->is_absorbent() ? - physics_material->get_bounce() : physics_material->get_bounce();
+                    PhysicsServer3D::get_singleton()->body_set_param(body,PhysicsServer3D::BODY_PARAM_BOUNCE,bounce);
+                    PhysicsServer3D::get_singleton()->body_set_param(body,PhysicsServer3D::BODY_PARAM_FRICTION,friction);
+                }
+            }
+        }
     };
 
     struct Instances {
@@ -247,7 +329,7 @@ class MCurveInstance : public Node {
         }
         inline bool has_valid_instance() const {
             for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
-                if(instances[i].multimesh.is_valid() || instances[i].instance.is_valid()){
+                if(instances[i].multimesh.is_valid() || instances[i].instance.is_valid() || instances[i].body.is_valid()){
                     return true;
                 }
             }
@@ -255,22 +337,16 @@ class MCurveInstance : public Node {
         }
     };
 
-    struct MultimeshUpdate
-    {
-        int64_t conn_id;
-        RID multimesh;
-    };
     bool is_thread_updating = false;
     bool keep_default = false;
     int default_element = 0;
     int32_t curve_user_id;
     WorkerThreadPool::TaskID thread_task_id;
+    Ref<MCurveInstanceOverride> override_data;
     Ref<MCurveInstanceElement> elements[M_CURVE_ELEMENT_COUNT];
     MPath* path=nullptr;
     Ref<MCurve> curve;
     
-    Ref<MCurveInstanceOverride> override_data;
-    Vector<MultimeshUpdate> multimesh_updates;
     HashMap<int64_t,MCurveInstance::Instances> curve_instance_instances;
     _FORCE_INLINE_ void _set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const;
     public:
@@ -327,5 +403,4 @@ void MCurveInstance::_set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,
     multimesh_buffer.set(buffer_index+11,t.origin[2]);
     buffer_index += 12;
 }
-
 #endif

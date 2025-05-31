@@ -20,6 +20,7 @@ class MPath : public Node3D{
     private:
     int32_t selected_handle = -1;
     RID scenario;
+    RID space;
     void _get_handle(PackedVector3Array& positions, PackedInt32Array& ids, const MCurve::Point* p,uint32_t p_id,bool secondary) const;
     bool mirror_control = true;
     static Vector<MPath*> all_path_nodes;
@@ -34,7 +35,8 @@ class MPath : public Node3D{
     Ref<MCurve> get_curve();
 
     void _notification(int p_what);
-    void update_scenario();
+    void update_scenario_space();
     RID get_scenario();
+    RID get_space();
 };
 #endif

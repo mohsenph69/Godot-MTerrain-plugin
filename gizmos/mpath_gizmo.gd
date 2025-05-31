@@ -1,6 +1,7 @@
 @tool
 extends EditorNode3DGizmoPlugin
 
+signal point_commit
 signal selection_changed
 signal lock_mode_changed
 signal active_point_position_updated
@@ -258,7 +259,7 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
-		var active_terrain = gui.get_terrain_for_snap() 
+		var active_terrain = gui.get_terrain_for_snap()
 		if active_terrain and lock_mode == LOCK_MODE.NONE:			
 			if active_terrain and active_terrain.is_grid_created():
 				drag.y = active_terrain.get_height(drag)
@@ -450,7 +451,10 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 		curve_terrain.terrain.save_all_dirty_images()
 		ur.add_do_method(curve_terrain.terrain,"update_all_dirty_image_texture",false)
 		ur.add_undo_method(curve_terrain.terrain,"update_all_dirty_image_texture",false)
+	ur.add_do_method(self,"emit_signal","point_commit")
+	ur.add_undo_method(self,"emit_signal","point_commit")
 	ur.commit_action(false)
+	emit_signal("point_commit")
 
 
 func move_with_commit(curve:MCurve,handle_id:int, secondary:bool,pos:Vector3):

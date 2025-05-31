@@ -11,6 +11,10 @@ bg_color = Color(0.6, 0, 0, 1)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -10.0
+offset_top = -6.0
+offset_right = -10.0
+offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_jv20c")
@@ -18,6 +22,10 @@ script = ExtResource("1_jv20c")
 [node name="point_count_lable" type="Label" parent="."]
 layout_mode = 2
 text = "Point count: "
+
+[node name="conn_info" type="Label" parent="."]
+layout_mode = 2
+text = "Conn: "
 
 [node name="HSeparator2" type="HSeparator" parent="."]
 layout_mode = 2

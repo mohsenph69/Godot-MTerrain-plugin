@@ -1,7 +1,10 @@
 #include "mcurve_instance.h"
 #include <godot_cpp/classes/rendering_server.hpp>
 #define RS RenderingServer::get_singleton()
+#include <godot_cpp/classes/physics_server3d.hpp>
+#define PS PhysicsServer3D::get_singleton()
 #include <godot_cpp/classes/random_number_generator.hpp>
+
 
 
 void MCurveInstanceElement::_generate_transforms(){
@@ -67,6 +70,14 @@ void MCurveInstanceElement::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_mesh","input"), &MCurveInstanceElement::set_mesh);
     ClassDB::bind_method(D_METHOD("get_mesh"), &MCurveInstanceElement::get_mesh);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"mesh",PROPERTY_HINT_RESOURCE_TYPE,"MMeshLod"), "set_mesh", "get_mesh");
+
+    ClassDB::bind_method(D_METHOD("set_shape_lod_cutoff","input"), &MCurveInstanceElement::set_shape_lod_cutoff);
+    ClassDB::bind_method(D_METHOD("get_shape_lod_cutoff"), &MCurveInstanceElement::get_shape_lod_cutoff);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"shape_lod_cutoff"), "set_shape_lod_cutoff", "get_shape_lod_cutoff");
+
+    ClassDB::bind_method(D_METHOD("set_shape","input"), &MCurveInstanceElement::set_shape);
+    ClassDB::bind_method(D_METHOD("get_shape"), &MCurveInstanceElement::get_shape);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"shape",PROPERTY_HINT_RESOURCE_TYPE,"Shape3D"), "set_shape", "get_shape");
 
     ClassDB::bind_method(D_METHOD("set_seed","input"), &MCurveInstanceElement::set_seed);
     ClassDB::bind_method(D_METHOD("get_seed"), &MCurveInstanceElement::get_seed);
@@ -139,6 +150,40 @@ void MCurveInstanceElement::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_rand_uniform_scale_end","input"), &MCurveInstanceElement::set_rand_uniform_scale_end);
     ClassDB::bind_method(D_METHOD("get_rand_uniform_scale_end"), &MCurveInstanceElement::get_rand_uniform_scale_end);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"rand_uniform_scale_end"), "set_rand_uniform_scale_end", "get_rand_uniform_scale_end");
+
+    ADD_GROUP("Shape in Mesh Space","");
+
+    ClassDB::bind_method(D_METHOD("set_shape_local_position","input"), &MCurveInstanceElement::set_shape_local_position);
+    ClassDB::bind_method(D_METHOD("get_shape_local_position"), &MCurveInstanceElement::get_shape_local_position);
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR3,"shape_local_position"), "set_shape_local_position", "get_shape_local_position");
+
+    ClassDB::bind_method(D_METHOD("set_shape_local_basis","input"), &MCurveInstanceElement::set_shape_local_basis);
+    ClassDB::bind_method(D_METHOD("get_shape_local_basis"), &MCurveInstanceElement::get_shape_local_basis);
+    ADD_PROPERTY(PropertyInfo(Variant::BASIS,"shape_local_basis"), "set_shape_local_basis", "get_shape_local_basis");
+
+    ADD_GROUP("Render Settings","");
+    
+    ClassDB::bind_method(D_METHOD("set_shadow_setting","input"), &MCurveInstanceElement::set_shadow_setting);
+    ClassDB::bind_method(D_METHOD("get_shadow_setting"), &MCurveInstanceElement::get_shadow_setting);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"shadow_setting",PropertyHint::PROPERTY_HINT_ENUM,"OFF,ON,DOUBLE_SIDED,SHADOWS_ONLY"), "set_shadow_setting","get_shadow_setting");
+
+    ClassDB::bind_method(D_METHOD("set_render_layers","input"), &MCurveInstanceElement::set_render_layers);
+    ClassDB::bind_method(D_METHOD("get_render_layers"), &MCurveInstanceElement::get_render_layers);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"render_layers",PROPERTY_HINT_LAYERS_3D_RENDER), "set_render_layers","get_render_layers");
+
+    ADD_GROUP("Physics Settings","");
+
+    ClassDB::bind_method(D_METHOD("set_physics_material","input"), &MCurveInstanceElement::set_physics_material);
+    ClassDB::bind_method(D_METHOD("get_physics_material"), &MCurveInstanceElement::get_physics_material);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"physics_material",PROPERTY_HINT_RESOURCE_TYPE,"PhysicsMaterial"), "set_physics_material","get_physics_material");
+
+    ClassDB::bind_method(D_METHOD("set_collision_layer","input"), &MCurveInstanceElement::set_collision_layer);
+    ClassDB::bind_method(D_METHOD("get_collision_layer"), &MCurveInstanceElement::get_collision_layer);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_layer",PROPERTY_HINT_LAYERS_3D_PHYSICS), "set_collision_layer","get_collision_layer");
+
+    ClassDB::bind_method(D_METHOD("set_collision_mask","input"), &MCurveInstanceElement::set_collision_mask);
+    ClassDB::bind_method(D_METHOD("get_collision_mask"), &MCurveInstanceElement::get_collision_mask);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_mask",PROPERTY_HINT_LAYERS_3D_PHYSICS), "set_collision_mask","get_collision_mask");
 }
 
 void MCurveInstanceElement::emit_elements_changed(){
@@ -178,6 +223,22 @@ int MCurveInstanceElement::get_seed() const{
 
 Ref<MMeshLod> MCurveInstanceElement::get_mesh() const{
     return mesh;
+}
+
+void MCurveInstanceElement::set_shape(Ref<Shape3D> input){
+    shape = input;
+}
+
+Ref<Shape3D> MCurveInstanceElement::get_shape() const{
+    return shape;
+}
+
+void MCurveInstanceElement::set_shape_lod_cutoff(int8_t input){
+    shape_lod_cutoff = input;
+}
+
+int8_t MCurveInstanceElement::get_shape_lod_cutoff() const{
+    return shape_lod_cutoff;
 }
 
 void MCurveInstanceElement::set_mirror_rotation(bool input){
@@ -317,6 +378,68 @@ float MCurveInstanceElement::get_rand_uniform_scale_end() const{
     return rand_uniform_scale_end;
 }
 
+void MCurveInstanceElement::set_shape_local_position(const Vector3& input){
+    shape_local_position = input;
+    emit_elements_changed();
+}
+
+Vector3 MCurveInstanceElement::get_shape_local_position() const{
+    return shape_local_position;
+}
+
+void MCurveInstanceElement::set_shape_local_basis(const Basis& input){
+    shape_local_basis = input;
+    emit_elements_changed();
+}
+
+Basis MCurveInstanceElement::get_shape_local_basis() const{
+    return shape_local_basis;
+}
+
+void MCurveInstanceElement::set_shadow_setting(RenderingServer::ShadowCastingSetting input){
+    shadow_setting = input;
+    emit_elements_changed();
+}
+
+RenderingServer::ShadowCastingSetting MCurveInstanceElement::get_shadow_setting(){
+    return shadow_setting;
+}
+
+void MCurveInstanceElement::set_render_layers(uint32_t input){
+    render_layers = input;
+    emit_elements_changed();
+}
+
+uint32_t MCurveInstanceElement::get_render_layers() const{
+    return render_layers;
+}
+
+void MCurveInstanceElement::set_physics_material(Ref<PhysicsMaterial> input){
+    physics_material = input;
+    emit_elements_changed();
+}
+
+Ref<PhysicsMaterial> MCurveInstanceElement::get_physics_material() const{
+    return physics_material;
+}
+
+void MCurveInstanceElement::set_collision_layer(uint32_t input){
+    collision_layer = input;
+    emit_elements_changed();
+}
+
+uint32_t MCurveInstanceElement::get_collision_layer() const{
+    return collision_layer;
+}
+
+void MCurveInstanceElement::set_collision_mask(uint32_t input){
+    collision_mask = input;
+    emit_elements_changed();
+}
+
+uint32_t MCurveInstanceElement::get_collision_mask() const{
+    return collision_mask;
+}
 
 ///////////////////////////////////////////////////////////////////////
 //////////////// Override Data
@@ -386,6 +509,10 @@ void MCurveInstanceOverride::set_exclude_connection(int64_t conn_id,bool value){
         data.insert(conn_id,OverrideData());
         it = data.find(conn_id);
         ERR_FAIL_COND(it==data.end());
+    } else if(!value && !it->value.has_any_element()){
+        data.erase(conn_id);
+        emit_connection_changed(conn_id);
+        return;
     }
     OverrideData& ov = it->value;
     ov.is_exclude = value;
@@ -437,6 +564,9 @@ void MCurveInstanceOverride::remove_element(int64_t conn_id,int element_index){
     for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
         if(ov.element_ovveride[i]==element_index){
             ov.element_ovveride[i] = -1;
+            if(!ov.has_any_element()){
+                data.erase(conn_id);
+            }
             emit_connection_changed(conn_id);
             return;
         }
@@ -638,54 +768,21 @@ void MCurveInstance::_bind_methods(){
     ClassDB::bind_static_method("MCurveInstance",D_METHOD("get_instance_count"), &MCurveInstance::get_instance_count);
     ClassDB::bind_static_method("MCurveInstance",D_METHOD("get_element_count"), &MCurveInstance::get_element_count);
 }
-/*
-void MCurveInstance::Instance::insert_scene(int row,MNode* node){
-    int index = scene_count;
-    scene_count++;
-    scenes = (Instance::Scene*)memrealloc(scenes,scene_count*sizeof(Instance::Scene));
-    scenes[index].row = row;
-    scenes[index].node = node;
-}
 
-MNode* MCurveInstance::Instance::get_scene(int row){
-    for(int i=0; i < scene_count; i++){
-        if(scenes[i].row == row){
-            return scenes[i].node;
+/*
+void MCurveInstance::_update_physics_body(){
+    if(physics_body.is_valid()){
+        PS->body_set_collision_layer(physics_body,collision_layer);
+        PS->body_set_collision_mask(physics_body,collision_layer);
+        if(physics_material.is_valid()){
+            float friction = physics_material->is_rough() ? - physics_material->get_friction() : physics_material->get_friction();
+            float bounce = physics_material->is_absorbent() ? - physics_material->get_bounce() : physics_material->get_bounce();
+            PS->body_set_param(physics_body,PhysicsServer3D::BODY_PARAM_BOUNCE,bounce);
+            PS->body_set_param(physics_body,PhysicsServer3D::BODY_PARAM_FRICTION,friction);
         }
     }
-    return nullptr;
 }
 */
-bool MCurveInstance::Instance::has_scene(int row){
-    for(int i=0; i < scene_count; i++){
-        if(scenes[i].row == row){
-            return true;
-        }
-    }
-    return false;
-}
-
-void MCurveInstance::Instance::remove_scene(int row){
-    int rm_index = -1;
-    for(int i=0; i < scene_count; i++){
-        if(scenes[i].row == row){
-            rm_index = i;
-            break;
-        }
-    }
-    if(rm_index!=-1){
-        scene_count--;
-        if(scene_count==0){
-            memfree(scenes);
-            scenes == nullptr;
-            return;
-        }
-        for(int i=rm_index; i < scene_count; i++){
-            scenes[i] = scenes[i+1];
-        }
-        scenes = (Instance::Scene*)memrealloc(scenes,scene_count*sizeof(Instance::Scene));
-    }
-}
 
 MCurveInstance::MCurveInstance(){
     connect("tree_exited", Callable(this, "_update_visibilty"));
@@ -693,7 +790,7 @@ MCurveInstance::MCurveInstance(){
 }
 
 MCurveInstance::~MCurveInstance(){
-
+    _remove_all_instance();
 }
 
 void MCurveInstance::_on_connections_updated(){
@@ -759,16 +856,19 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
             continue; // No element
         }
         RID mesh = element->get_mesh_lod(lod);
-        if(!mesh.is_valid()){
+        // Cheating LOD into shape
+        RID shape = element->shape_lod_cutoff > lod ? element->get_shape_rid() : RID();
+        if(!mesh.is_valid() && !shape.is_valid()){
             _remove_instance(cid,instance_index,false); // No mesh so removing
             continue;
         }
         // Checking if has instance!
         Instance& instance = instances->instances[instance_index];
-        if(instance.mesh_rid == mesh){
+        if(instance.mesh_rid == mesh && shape==instance.shape){
             continue; // Is same so no change
         }
         instance.mesh_rid = mesh;
+        instance.shape = shape;
         //////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Creating Instance///////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////////
@@ -788,6 +888,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
                 continue;
             }
             Vector<Transform3D> transforms;
+            /// Creating Transforms
             {
                 Vector<float> ratios;
                 {
@@ -808,43 +909,58 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
                 curve->get_conn_transforms(cid,ratios,transforms);
                 ERR_FAIL_COND(transforms.size()!=total_mesh_count);
             }
+            //// End of creating transforms
+            ////////////////////////////////////
             PackedFloat32Array multimesh_buffer;
             int multimesh_buffer_index=0;
-            int multimesh_count=0;
-            // mesh creation loop /////////////////////////////////////
+            int item_count =0;
+            ///////////////////// Creating multimesh buffer and adding shapes
+            instance.ensure_physics_body_exist(path->get_space(),element->collision_layer,element->collision_mask,element->physics_material);
+            RID body = instance.body;
             for(int i=0; i < total_mesh_count; i++){
-                // Here we have two mode
-                // One is for multimesh
-                // other is packedscene
+                // should check for element->index_exist here as element->index_exist_mirror might have different result
                 if(element->index_exist(i,ov_data.random_remove[instance_index])){
+                    // mesh
                     Transform3D t = element->modify_transform(transforms[i],i);
-                    _set_multimesh_buffer(multimesh_buffer,t,multimesh_buffer_index);
-                    multimesh_count++;
-                    if(element->mirror && element->index_exist_mirror(i,ov_data.random_remove[instance_index])){
-                        t = element->modify_transform_mirror(transforms[i],i);
+                    if(mesh.is_valid()){
                         _set_multimesh_buffer(multimesh_buffer,t,multimesh_buffer_index);
-                        multimesh_count++;
                     }
+                    // shape
+                    if(shape.is_valid()){
+                        t = element->modify_transform_shape(t);
+                        PS->body_add_shape(body,shape,t);
+                    }
+                    // adding count
+                    item_count++;
+                }
+                if(element->mirror && element->index_exist_mirror(i,ov_data.random_remove[instance_index])){
+                    // mesh
+                    Transform3D t = element->modify_transform_mirror(transforms[i],i);
+                    if(mesh.is_valid()){
+                        _set_multimesh_buffer(multimesh_buffer,t,multimesh_buffer_index);
+                    }
+                    // shape
+                    if(shape.is_valid()){
+                        t = element->modify_transform_mirror_shape(t);
+                        PS->body_add_shape(body,shape,t);
+                    }
+                    // adding count
+                    item_count++;
                 }
             }
-            if(multimesh_count==0){
+            if(item_count==0){
                 _remove_instance(cid,instance_index,false);
                 continue;
             }
             // Adding meshes
-            if(!instance.instance.is_valid()){
-                instance.instance = RS->instance_create();
-                RS->instance_set_scenario(instance.instance,path->get_scenario());
+            if(mesh.is_valid()){
+                instance.ensure_render_instance_exist(path->get_scenario(),element->render_layers,element->shadow_setting);
+                instance.count = item_count;
+                ERR_FAIL_COND(!instance.mesh_rid.is_valid());
+                RS->multimesh_set_mesh(instance.multimesh,instance.mesh_rid);
+                RS->multimesh_allocate_data(instance.multimesh,item_count,RenderingServer::MULTIMESH_TRANSFORM_3D,false,false);
+                RS->multimesh_set_buffer(instance.multimesh,multimesh_buffer);
             }
-            if(!instance.multimesh.is_valid()){
-                instance.multimesh = RS->multimesh_create();
-                RS->instance_set_base(instance.instance,instance.multimesh);
-            }
-            instance.multimesh_count = multimesh_count;
-            ERR_FAIL_COND(!instance.mesh_rid.is_valid());
-            RS->multimesh_set_mesh(instance.multimesh,instance.mesh_rid);
-            RS->multimesh_allocate_data(instance.multimesh,multimesh_count,RenderingServer::MULTIMESH_TRANSFORM_3D,false,false);
-            RS->multimesh_set_buffer(instance.multimesh,multimesh_buffer);
         }
         //////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////// END Creating Instance ///////////////////////////////////////////////
@@ -921,6 +1037,12 @@ void MCurveInstance::_remove_instance(int64_t conn_id,int instance_index,bool rm
             RS->free_rid(instances[instance_index].instance);
             instances[instance_index].instance = RID();
         }
+        if(instances[instance_index].body.is_valid()){
+            PS->free_rid(instances[instance_index].body);
+            instances[instance_index].body = RID();
+        }
+        instances[instance_index].mesh_rid = RID();
+        instances[instance_index].shape = RID();
         if(!instances.has_valid_instance() && rm_curve_instance_instances){
             curve_instance_instances.erase(conn_id);
         }
@@ -931,6 +1053,9 @@ void MCurveInstance::_remove_instance(int64_t conn_id,int instance_index,bool rm
             }
             if(instances[i].instance.is_valid()){
                 RS->free_rid(instances[i].instance);
+            }
+            if(instances[i].body.is_valid()){
+                PS->free_rid(instances[i].body);
             }
         }
         if(rm_curve_instance_instances){
