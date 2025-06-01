@@ -1,7 +1,10 @@
 @tool
 extends Control
 
+var no_icon_tex:Texture2D = preload("res://addons/m_terrain/icons/no_images.png")
+
 @onready var point_count_lable:=$point_count_lable
+
 var conn_info:Label
 
 # remebering this to open the correct if node deselcted
@@ -199,17 +202,26 @@ func update_curve_instance_items():
 	items.clear()
 	var element_count = MCurveInstance.get_element_count()
 	var current_element:MCurveInstanceElement = null
+	var ed:=EditorScript.new()
+	var preview:EditorResourcePreview= ed.get_editor_interface().get_resource_previewer()
 	for i in range(0,element_count):
 		current_element = current_modify_node.get("element_"+str(i))
 		var element_name = "Element_"+str(i)
 		if current_element:
 			if not current_element.name.is_empty():
 				element_name = current_element.name
-			if not current_element.mesh:
-				element_name += " (Currently No Mesh)"
 		else:
 			element_name += " (Currently Null)"
-		items.add_item(element_name,null,true)
+		var index = items.add_item(element_name,null,true)
+		var mesh:Mesh
+		if current_element and current_element.mesh:
+			for m in current_element.mesh.meshes:
+				if m: mesh = m
+		if mesh:
+			preview.queue_edited_resource_preview(mesh,self,"set_icon",index)
+		else:
+			items.set_item_icon(index,no_icon_tex)
+		
 
 # must be called after update_curve_mesh_items()
 func update_curve_lenght_info()->void:
