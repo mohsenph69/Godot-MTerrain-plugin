@@ -85,6 +85,14 @@ void MCurveInstanceElement::_bind_methods(){
 
     ADD_GROUP("Placement","");
 
+    ClassDB::bind_method(D_METHOD("set_middle","input"), &MCurveInstanceElement::set_middle);
+    ClassDB::bind_method(D_METHOD("get_middle"), &MCurveInstanceElement::get_middle);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"middle"), "set_middle", "get_middle");
+
+    ClassDB::bind_method(D_METHOD("set_include_end","input"), &MCurveInstanceElement::set_include_end);
+    ClassDB::bind_method(D_METHOD("get_include_end"), &MCurveInstanceElement::get_include_end);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"include_end"), "set_include_end", "get_include_end");
+
     ClassDB::bind_method(D_METHOD("set_mirror","input"), &MCurveInstanceElement::set_mirror);
     ClassDB::bind_method(D_METHOD("get_mirror"), &MCurveInstanceElement::get_mirror);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"mirror"), "set_mirror", "get_mirror");
@@ -240,6 +248,26 @@ void MCurveInstanceElement::set_shape_lod_cutoff(int8_t input){
 int8_t MCurveInstanceElement::get_shape_lod_cutoff() const{
     return shape_lod_cutoff;
 }
+
+void MCurveInstanceElement::set_middle(bool input){
+    middle = input;
+    emit_elements_changed();
+}
+
+bool MCurveInstanceElement::get_middle() const{
+    return middle;
+}
+
+
+void MCurveInstanceElement::set_include_end(bool input){
+    include_end = input;
+    emit_elements_changed();
+}
+
+bool MCurveInstanceElement::get_include_end() const{
+    return include_end;
+}
+
 
 void MCurveInstanceElement::set_mirror_rotation(bool input){
     mirror_rotation = input;

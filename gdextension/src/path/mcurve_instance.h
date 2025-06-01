@@ -32,10 +32,10 @@ class MCurveInstanceElement : public Resource {
     GDCLASS(MCurveInstanceElement,Resource);
     private:
     static constexpr int transform_count = 30;
-    bool mirror = false;
-    bool mirror_rotation = false;
     bool middle = false;
     bool include_end = false;
+    bool mirror = false;
+    bool mirror_rotation = false;
     bool curve_align = true;
     int8_t shape_lod_cutoff = 2;
     float interval = 2.0;
@@ -144,6 +144,12 @@ class MCurveInstanceElement : public Resource {
 
     void set_seed(int input);
     int get_seed() const;
+
+    void set_middle(bool input);
+    bool get_middle() const;
+
+    void set_include_end(bool input);
+    bool get_include_end() const;
 
     void set_mirror_rotation(bool input);
     bool get_mirror_rotation() const;
