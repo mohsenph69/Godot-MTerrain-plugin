@@ -771,6 +771,9 @@ PackedByteArray MCurveInstanceOverride::get_data() const {
 ///////////////////////////////////////////////////////////////////////
 
 void MCurveInstance::_bind_methods(){
+    ClassDB::bind_method(D_METHOD("_set_dummy","input"), &MCurveInstance::_set_dummy);
+    ClassDB::bind_method(D_METHOD("_get_dummy"), &MCurveInstance::_get_dummy);
+
 
     ClassDB::bind_method(D_METHOD("_update_visibilty"), &MCurveInstance::_update_visibilty);
 
@@ -778,9 +781,15 @@ void MCurveInstance::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_override"), &MCurveInstance::get_override);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"override_data",PROPERTY_HINT_RESOURCE_TYPE,"MCurveInstanceOverride"), "set_override","get_override");
 
-    ClassDB::bind_method(D_METHOD("set_default_element","input"), &MCurveInstance::set_default_element);
-    ClassDB::bind_method(D_METHOD("get_default_element"), &MCurveInstance::get_default_element);
-    ADD_PROPERTY(PropertyInfo(Variant::INT,"default_element"), "set_default_element","get_default_element");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"Default Elements",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_CATEGORY),"_set_dummy","_get_dummy");
+
+    ClassDB::bind_method(D_METHOD("set_default_element","instance_index","input"), &MCurveInstance::set_default_element);
+    ClassDB::bind_method(D_METHOD("get_default_element","instance_index"), &MCurveInstance::get_default_element);
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        ADD_PROPERTYI(PropertyInfo(Variant::INT,"default_element_"+itos(i)), "set_default_element","get_default_element",i);
+    }
+
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"Elements",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_CATEGORY),"_set_dummy","_get_dummy");
 
     ClassDB::bind_method(D_METHOD("set_element","input","instance_index"), &MCurveInstance::set_element);
     ClassDB::bind_method(D_METHOD("get_element","instance_index"), &MCurveInstance::get_element);
@@ -813,6 +822,10 @@ void MCurveInstance::_update_physics_body(){
 */
 
 MCurveInstance::MCurveInstance(){
+    default_element[0] = 0;
+    for(int i=1; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        default_element[i] = -1;
+    }
     connect("tree_exited", Callable(this, "_update_visibilty"));
     connect("tree_entered", Callable(this, "_update_visibilty"));
 }
@@ -887,7 +900,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
         // Cheating LOD into shape
         RID shape = element->shape_lod_cutoff > lod ? element->get_shape_rid() : RID();
         if(!mesh.is_valid() && !shape.is_valid()){
-            _remove_instance(cid,instance_index,false); // No mesh so removing
+            _remove_instance(cid,instance_index,false); // No mesh or shape so removing
             continue;
         }
         // Checking if has instance!
@@ -895,6 +908,15 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
         if(instance.mesh_rid == mesh && shape==instance.shape){
             continue; // Is same so no change
         }
+        // Removing shape or instance they are not valide
+        // Both of bellow can not be false
+        if(!shape.is_valid()){
+            instance.remove_physics();
+        }
+        if(!mesh.is_valid()){
+            instance.remove_render_instance();
+        }
+        //////////////////////////////////////////////////////////////
         instance.mesh_rid = mesh;
         instance.shape = shape;
         //////////////////////////////////////////////////////////////////////////////////////////////
@@ -1120,9 +1142,20 @@ void MCurveInstance::set_override(Ref<MCurveInstanceOverride> input){
 
 MCurveInstance::OverrideData MCurveInstance::get_default_override_data() const{
     OverrideData ov;
-    ov.element_ovveride[0] = default_element;
-    for(int i=1; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
-        ov.element_ovveride[i] = -1;
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        // Avoiding duplicate
+        bool has_element = false;
+        for(int j=0; j < i; j++){
+            if(default_element[i] == default_element[j]){
+                has_element = true;
+                break;
+            }
+        }
+        if(has_element){
+            ov.element_ovveride[i] = -1;
+        } else {
+            ov.element_ovveride[i] = default_element[i];
+        }
     }
     return ov;
 }
@@ -1131,13 +1164,13 @@ Ref<MCurveInstanceOverride> MCurveInstance::get_override() const{
     return override_data;
 }
 
-void MCurveInstance::set_default_element(int input){
-    default_element = input;
+void MCurveInstance::set_default_element(int instance_index,int input){
+    default_element[instance_index] = input;
     _recreate();
 }
 
-int MCurveInstance::get_default_element() const{
-    return default_element;
+int MCurveInstance::get_default_element(int instance_index) const{
+    return default_element[instance_index];
 }
 
 void MCurveInstance::_on_curve_changed(){

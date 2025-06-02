@@ -76,7 +76,7 @@ class MCurveInstanceElement : public Resource {
         index = index%transform_count;
         Vector3 __offset = offsets[index];
         Vector3 origin = t.origin + t.basis.get_column(0)*__offset.x + t.basis.get_column(1)*__offset.y + t.basis.get_column(2)*__offset.z;
-        return Transform3D(bases[index]*t.basis,origin);
+        return Transform3D(t.basis*bases[index],origin);
     }
 
     inline Transform3D modify_transform_mirror(const Transform3D& t, int index) const{
@@ -85,15 +85,15 @@ class MCurveInstanceElement : public Resource {
         __offset.z *= -1.0;
         Vector3 origin = t.origin + t.basis.get_column(0)*__offset.x + t.basis.get_column(1)*__offset.y + t.basis.get_column(2)*__offset.z;
         Basis b = mirror_rotation ? bases[index].rotated(Vector3(0,1,0),3.14159265359) : bases[index];
-        return Transform3D(b,origin);
+        return Transform3D(t.basis*b,origin);
     }
 
     inline Transform3D modify_transform_shape(const Transform3D& item_transform) const{
-        return Transform3D(shape_local_basis*item_transform.basis,shape_local_position+item_transform.origin);
+        return Transform3D(item_transform.basis*shape_local_basis,shape_local_position+item_transform.origin);
     }
 
     inline Transform3D modify_transform_mirror_shape(const Transform3D& item_transform_mirror) const{
-        return Transform3D(shape_local_basis*item_transform_mirror.basis,shape_local_position+item_transform_mirror.origin);
+        return Transform3D(item_transform_mirror.basis*shape_local_basis,shape_local_position+item_transform_mirror.origin);
     }
 
     inline bool index_exist(int index,float remove_possibility) const {
@@ -292,7 +292,7 @@ class MCurveInstance : public Node {
         public:
         int count = 0;
         public:
-        RID mesh_rid;
+        RID mesh_rid; // curently bound mesh
         RID instance;
         RID multimesh;
         // physics shape
@@ -326,6 +326,25 @@ class MCurveInstance : public Node {
                 }
             }
         }
+
+        inline void remove_physics() {
+            if(body.is_valid()){
+                PhysicsServer3D::get_singleton()->free_rid(body);
+                body = RID();
+                shape = RID();
+            }
+        }
+
+        inline void remove_render_instance() {
+            if(multimesh.is_valid()){
+                RenderingServer::get_singleton()->free_rid(multimesh);
+                multimesh = RID();
+            }
+            if(instance.is_valid()){
+                RenderingServer::get_singleton()->free_rid(instance);
+                instance = RID();
+            }
+        }
     };
 
     struct Instances {
@@ -344,8 +363,7 @@ class MCurveInstance : public Node {
     };
 
     bool is_thread_updating = false;
-    bool keep_default = false;
-    int default_element = 0;
+    int default_element[M_CURVE_CONNECTION_INSTANCE_COUNT];
     int32_t curve_user_id;
     WorkerThreadPool::TaskID thread_task_id;
     Ref<MCurveInstanceOverride> override_data;
@@ -373,10 +391,8 @@ class MCurveInstance : public Node {
     void set_override(Ref<MCurveInstanceOverride> input);
     OverrideData get_default_override_data() const;
     Ref<MCurveInstanceOverride> get_override() const;
-    void set_keep_default(bool input);
-    bool get_keep_default() const;
-    void set_default_element(int input);
-    int get_default_element() const;
+    void set_default_element(int instance_index,int input);
+    int get_default_element(int instance_index) const;
 
 
     void _on_curve_changed();
@@ -389,6 +405,9 @@ class MCurveInstance : public Node {
 
     static int get_instance_count();
     static int get_element_count();
+
+    void _set_dummy(bool input){}
+    bool _get_dummy()const{ return true;}
 };
 
 void MCurveInstance::_set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const{
