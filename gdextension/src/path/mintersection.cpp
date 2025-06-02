@@ -20,7 +20,7 @@ bool MIntersection::is_init(){
     return _is_init;
 }
 
-Ref<MIntersectionInfo> MIntersection::get_mesh_info(int lod){
+Ref<MIntersectionInfoSurfaces> MIntersection::get_mesh_info(int lod){
     return mesh_info[lod];
 }
 
@@ -31,17 +31,20 @@ void MIntersection::generate_mesh_info(){
     }
     TypedArray<Mesh> p_meshes = mesh->get_meshes();
     mesh_info.resize(p_meshes.size());
-    HashMap<RID,Ref<MIntersectionInfo>> hm;
+    HashMap<RID,Ref<MIntersectionInfoSurfaces>> hm;
     for(int i=0; i < p_meshes.size(); i++){
         Ref<Mesh> m = p_meshes[i];
         if(m.is_valid()){
-            Ref<MIntersectionInfo> ii;
+            Ref<MIntersectionInfoSurfaces> ii;
             if(hm.has(m->get_rid())){
                 ii = hm[m->get_rid()];
             } else{
                 ii.instantiate();
+                int surface_count = m->get_surface_count();
                 ii->mesh_rid = m->get_rid();
-                _generate_mesh_info(m,ii);
+                for(int cc=0; cc < surface_count; cc++){
+                    ii->intersections.push_back(_generate_mesh_info(m,cc));
+                }
                 hm.insert(m->get_rid(),ii);
             }
             mesh_info.set(i,ii);
@@ -52,21 +55,22 @@ void MIntersection::generate_mesh_info(){
 /*
     All distance are squared distance
 */
-void MIntersection::_generate_mesh_info(Ref<Mesh> m,Ref<MIntersectionInfo> info){
-    ERR_FAIL_COND(sockets.size() == 0);
-    ERR_FAIL_COND(m.is_null());
-    info->material = m->surface_get_material(0);
-    Array surf_info = m->surface_get_arrays(0);
-    info->vertex = surf_info[Mesh::ARRAY_VERTEX];
-    info->normal = surf_info[Mesh::ARRAY_NORMAL];
-    info->tangent = surf_info[Mesh::ARRAY_TANGENT];
-    info->color = surf_info[Mesh::ARRAY_COLOR];
-    info->uv = surf_info[Mesh::ARRAY_TEX_UV];
-    info->uv2 = surf_info[Mesh::ARRAY_TEX_UV2];
-    info->index = surf_info[Mesh::ARRAY_INDEX];
+MIntersectionInfo MIntersection::_generate_mesh_info(Ref<Mesh> m,int surface_index){
+    MIntersectionInfo info;
+    ERR_FAIL_COND_V(sockets.size() == 0,info);
+    ERR_FAIL_COND_V(m.is_null(),info);
+    info.material = m->surface_get_material(surface_index);
+    Array surf_info = m->surface_get_arrays(surface_index);
+    info.vertex = surf_info[Mesh::ARRAY_VERTEX];
+    info.normal = surf_info[Mesh::ARRAY_NORMAL];
+    info.tangent = surf_info[Mesh::ARRAY_TANGENT];
+    info.color = surf_info[Mesh::ARRAY_COLOR];
+    info.uv = surf_info[Mesh::ARRAY_TEX_UV];
+    info.uv2 = surf_info[Mesh::ARRAY_TEX_UV2];
+    info.index = surf_info[Mesh::ARRAY_INDEX];
     int num_sockets = sockets.size();
-    info->weights.resize(info->vertex.size() * num_sockets);
-    info->weights.fill(0.0f);
+    info.weights.resize(info.vertex.size() * num_sockets);
+    info.weights.fill(0.0f);
     
     struct SocketDistance
     {
@@ -85,14 +89,14 @@ void MIntersection::_generate_mesh_info(Ref<Mesh> m,Ref<MIntersectionInfo> info)
         Vector<SocketDistance> distance_socket;
     };
     Vector<VertexSockets> vertex_socket;
-    vertex_socket.resize(info->vertex.size());
+    vertex_socket.resize(info.vertex.size());
     // Determining the socket distances and distance sum
-    for(int i=0; i < info->vertex.size(); i++){
+    for(int i=0; i < info.vertex.size(); i++){
         for(int j=0; j < num_sockets; j++){
             Transform3D s = sockets[j];
             Vector3 s_pos = s.origin;
             s_pos.y = 0.0f;
-            Vector3 v_pos = info->vertex[i];
+            Vector3 v_pos = info.vertex[i];
             v_pos.y = 0.0f;
             float d = v_pos.distance_squared_to(s_pos);
             float inv_d = d < 0.001f ? 1.0f/0.001f : 1.0f/d;
@@ -101,12 +105,12 @@ void MIntersection::_generate_mesh_info(Ref<Mesh> m,Ref<MIntersectionInfo> info)
         }
     }
     // Sorting
-    for(int i=0; i < info->vertex.size(); i++){
+    for(int i=0; i < info.vertex.size(); i++){
         vertex_socket.ptrw()[i].distance_socket.sort();
     }
     // Determingin main sockets vertex
-    for(int i=0; i < info->vertex.size(); i++){
-        Vector3 v_pos = info->vertex[i];
+    for(int i=0; i < info.vertex.size(); i++){
+        Vector3 v_pos = info.vertex[i];
         v_pos.y = 0; // we determine everything in flat plane
         // We start from closest one!!!
         for(int j=0; j < vertex_socket.ptrw()[i].distance_socket.size(); j++){
@@ -122,13 +126,13 @@ void MIntersection::_generate_mesh_info(Ref<Mesh> m,Ref<MIntersectionInfo> info)
             float adot = std::abs(dir.dot(z)); // Dot product to z direction of basis
             if(adot > 0.999 || v_pos.is_equal_approx(s.origin)){ // Setting this socket index as main controller
                 vertex_socket.ptrw()[i].is_set_as_main = true;
-                info->weights.ptrw()[(i * num_sockets) + socket_index] = 1.0;
+                info.weights.ptrw()[(i * num_sockets) + socket_index] = 1.0;
             }
         }
     }
     // Determingin other vertecies weight
     // Weight is determined by square distnace
-    for(int i=0; i < info->vertex.size(); i++){
+    for(int i=0; i < info.vertex.size(); i++){
         if(vertex_socket.ptrw()[i].is_set_as_main){
             continue; // if already set nothing to do
         }
@@ -138,34 +142,34 @@ void MIntersection::_generate_mesh_info(Ref<Mesh> m,Ref<MIntersectionInfo> info)
             float socket_inv_dis = vertex_socket.ptrw()[i].distance_socket[j].inv_distnace;
             
             float w = socket_inv_dis/inv_dis_sum;
-            info->weights.set((i * num_sockets) + socket_index, w);
+            info.weights.set((i * num_sockets) + socket_index, w);
             
         }
         float w_sum=0;
         for(int j=0; j < vertex_socket.ptrw()[i].distance_socket.size(); j++){
             int socket_index = vertex_socket.ptrw()[i].distance_socket[j].socket_index;
             float dis = vertex_socket.ptrw()[i].distance_socket[j].distance;
-            float w = info->weights[(i * num_sockets) + socket_index];
+            float w = info.weights[(i * num_sockets) + socket_index];
             w_sum += w;
         }
     }
 
-    return;
+    return info;
     /// Debug mesh creating
     if(debug_mesh.is_null()){
         debug_mesh.instantiate();
     }
     PackedColorArray vcol;
-    vcol.resize(info->vertex.size());
-    memcpy(vcol.ptrw(),info->weights.ptr(),info->weights.size() * sizeof(float));
+    vcol.resize(info.vertex.size());
+    memcpy(vcol.ptrw(),info.weights.ptr(),info.weights.size() * sizeof(float));
     Array msurf_info;
     msurf_info.resize(Mesh::ARRAY_MAX);
-    msurf_info[Mesh::ARRAY_VERTEX] = info->vertex;
+    msurf_info[Mesh::ARRAY_VERTEX] = info.vertex;
     msurf_info[Mesh::ARRAY_COLOR] = vcol;
-    msurf_info[Mesh::ARRAY_INDEX] = info->index;
+    msurf_info[Mesh::ARRAY_INDEX] = info.index;
 
     debug_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES,msurf_info);
-
+    return info;
 }
 
 Ref<ArrayMesh> MIntersection::get_debug_mesh(){
