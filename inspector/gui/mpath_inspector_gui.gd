@@ -2,8 +2,8 @@
 extends Control
 
 var no_icon_tex:Texture2D = preload("res://addons/m_terrain/icons/no_images.png")
-
 @onready var point_count_lable:=$point_count_lable
+var lod_reg:=RegEx.create_from_string("[_]?lod[\\d]+")
 
 var conn_info:Label
 
@@ -191,7 +191,14 @@ func update_curve_mesh_items():
 		if not m:
 			items.add_item("empty")
 			continue
-		var mname:String = m.get_path().get_file().get_basename()
+		var mname:String
+		if not m.resource_name.is_empty():
+			mname = m.resource_name
+		elif m.get_path().find("::") == -1:
+			mname = m.get_path().get_file()
+		else:
+			mname = "Mesh " + str(i)
+		mname = lod_reg.sub(mname,"")
 		if mname.is_empty():
 			mname = str(i)
 		items.add_item(mname)
