@@ -151,7 +151,9 @@ MCurve::MCurve(){
 }
 
 MCurve::~MCurve(){
-
+    if(octree){
+        octree->remove_oct_id(oct_id);
+    }
 }
 
 int MCurve::get_points_count(){
@@ -379,7 +381,6 @@ void MCurve::remove_point(const int32_t point_index){
 }
 
 void MCurve::clear_points(){
-    UtilityFunctions::print("Clear points ");
     points_buffer.clear();
     free_buffer_indicies.clear();
     if(is_init_insert){
