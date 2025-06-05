@@ -76,7 +76,10 @@ class MCurveInstanceElement : public Resource {
         index = index%transform_count;
         Vector3 __offset = offsets[index];
         Vector3 origin = t.origin + t.basis.get_column(0)*__offset.x + t.basis.get_column(1)*__offset.y + t.basis.get_column(2)*__offset.z;
-        return Transform3D(t.basis*bases[index],origin);
+        if(curve_align){
+            return Transform3D(t.basis*bases[index],origin);
+        }
+        return Transform3D(bases[index],origin);
     }
 
     inline Transform3D modify_transform_mirror(const Transform3D& t, int index) const{
@@ -85,7 +88,10 @@ class MCurveInstanceElement : public Resource {
         __offset.z *= -1.0;
         Vector3 origin = t.origin + t.basis.get_column(0)*__offset.x + t.basis.get_column(1)*__offset.y + t.basis.get_column(2)*__offset.z;
         Basis b = mirror_rotation ? bases[index].rotated(Vector3(0,1,0),3.14159265359) : bases[index];
-        return Transform3D(t.basis*b,origin);
+        if(curve_align){
+            return Transform3D(t.basis*b,origin);
+        }
+        return Transform3D(b,origin);
     }
 
     inline Transform3D modify_transform_shape(const Transform3D& item_transform) const{
@@ -157,6 +163,9 @@ class MCurveInstanceElement : public Resource {
     void set_mirror(bool input);
     bool get_mirror() const;
 
+    void set_curve_align(bool input);
+    bool get_curve_align() const;
+
     void set_interval(float input);
     float get_interval() const;
 
@@ -222,15 +231,21 @@ class MCurveInstanceOverride : public Resource {
     protected:
     static void _bind_methods();
     public:
+    /// EXCLUDE is a special case flag which will be same for all instance_index
+    enum FLAG {
+        // EXCLUDE = 1 << 0, // not part of enum set by set_exclude and get exclude
+        REVERSE_OFFSET = 1 << 1
+        // 6 more can be added before data structure change
+    };
     struct OverrideData
     {
-        bool is_exclude = false;
         int8_t element_ovveride[M_CURVE_CONNECTION_INSTANCE_COUNT];
         MByteFloat<false,1> start_offset[M_CURVE_CONNECTION_INSTANCE_COUNT];
         MByteFloat<false,1> end_offset[M_CURVE_CONNECTION_INSTANCE_COUNT];
         MByteFloat<false,1> random_remove[M_CURVE_CONNECTION_INSTANCE_COUNT];
+        uint8_t flags[M_CURVE_CONNECTION_INSTANCE_COUNT];
         OverrideData();
-        inline bool has_any_element(){
+        inline bool has_any_element() const {
             for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT ; i++){
                 if(element_ovveride[i]>=0){
                     return true;
@@ -238,15 +253,57 @@ class MCurveInstanceOverride : public Resource {
             }
             return false;
         }
+        inline void set_exclude(bool value){
+            uint8_t ex_flag = 1;
+            if(value){
+                flags[0] |= ex_flag;
+            } else {
+                flags[0] &= ~ex_flag;
+            }
+        }
+        inline bool get_exclude() const {
+            uint8_t ex_flag = 1;
+            return (flags[0] & ex_flag) != 0;
+        }
+        /// return true and usually use for cases which tell us if we have any override for conn_id
+        /// so we should keep our override if this return false in many cases override data will be removed
+        inline bool has_any_override() const {
+            // any none default override
+            if(has_any_element() || get_exclude()){
+                return true;
+            }
+            return false;
+        }
+        inline int get_instance_index(int element_index) const {
+            for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+                if(element_ovveride[i]==element_index){
+                    return i;
+                }
+            }
+            return -1;
+        }
+        inline void set_flag(int instance_index,FLAG flag,bool value){
+            if(value){
+                flags[instance_index] |= flag;
+            } else {
+                flags[instance_index] &= ~flag;
+            }
+        }
+        inline bool get_flag(int instance_index,FLAG flag) const {
+            return (flags[instance_index] & flag) != 0;
+        }
     };
     
     private:
     HashMap<int64_t,OverrideData> data;
     public:
+    void set_exclude(int64_t conn_id,bool value);
+    bool get_exclude(int64_t conn_id) const;
+
+    void set_flag(int64_t conn_id,int element_index,FLAG flag,bool value);
+    bool get_flag(int64_t conn_id,int element_index,FLAG flag) const;
     void emit_connection_changed(int64_t conn_id);
     int get_conn_element_capacity(int64_t conn_id) const;
-    void set_exclude_connection(int64_t conn_id,bool value);
-    bool is_exclude_connection(int64_t conn_id) const;
     void add_element(int64_t conn_id,int element_index);
     void remove_element(int64_t conn_id,int element_index);
     PackedByteArray get_elements(int64_t conn_id) const;
@@ -264,6 +321,8 @@ class MCurveInstanceOverride : public Resource {
     void set_data(const PackedByteArray& input);
     PackedByteArray get_data() const;
 };
+
+VARIANT_ENUM_CAST(MCurveInstanceOverride::FLAG);
 
 class MCurveInstance : public Node {
     GDCLASS(MCurveInstance, Node);
@@ -366,6 +425,7 @@ class MCurveInstance : public Node {
     int default_element[M_CURVE_CONNECTION_INSTANCE_COUNT];
     int32_t curve_user_id;
     WorkerThreadPool::TaskID thread_task_id;
+    // Don't access directrly use get_override_data function
     Ref<MCurveInstanceOverride> override_data;
     Ref<MCurveInstanceElement> elements[M_CURVE_ELEMENT_COUNT];
     MPath* path=nullptr;
@@ -373,6 +433,8 @@ class MCurveInstance : public Node {
     
     HashMap<int64_t,MCurveInstance::Instances> curve_instance_instances;
     _FORCE_INLINE_ void _set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const;
+    // return override data if exist or default override data if not exist
+    _FORCE_INLINE_ OverrideData get_override_data(int64_t conn_id) const;
     public:
     std::recursive_mutex update_mutex;
     MCurveInstance();
@@ -389,7 +451,6 @@ class MCurveInstance : public Node {
     void _remove_instance(int64_t conn_id,int instance_index=-1,bool rm_curve_instance_instances=true);
     void _remove_all_instance();
     void set_override(Ref<MCurveInstanceOverride> input);
-    OverrideData get_default_override_data() const;
     Ref<MCurveInstanceOverride> get_override() const;
     void set_default_element(int instance_index,int input);
     int get_default_element(int instance_index) const;
@@ -428,4 +489,33 @@ void MCurveInstance::_set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,
     multimesh_buffer.set(buffer_index+11,t.origin[2]);
     buffer_index += 12;
 }
+
+MCurveInstance::OverrideData MCurveInstance::get_override_data(int64_t conn_id) const{
+    OverrideData ov;
+    if(override_data.is_valid()){
+        HashMap<int64_t,OverrideData>::ConstIterator it = override_data->data.find(conn_id);
+        if(it!=override_data->data.end()){
+            ov = it->value;
+        }
+    }
+    if(!ov.has_any_element()){
+        for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+            // Avoiding duplicate
+            bool has_element = false;
+            for(int j=0; j < i; j++){
+                if(default_element[i] == default_element[j]){
+                    has_element = true;
+                    break;
+                }
+            }
+            if(has_element){
+                ov.element_ovveride[i] = -1;
+            } else {
+                ov.element_ovveride[i] = default_element[i];
+            }
+        }
+    }
+    return ov;
+}
+
 #endif

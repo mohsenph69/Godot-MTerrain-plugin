@@ -30,6 +30,7 @@ var exclude_connection_btn:Button
 
 # Instance Setting
 var instance_add_remove_btn:Button
+var instance_rev_offset_checkbox:CheckBox
 var instance_start_offset_slider:Slider
 var instance_end_offset_slider:Slider
 var instance_rand_remove_slider:Slider
@@ -72,15 +73,18 @@ func start():
 	gizmo.connect("point_commit",Callable(self,"update_curve_lenght_info"))
 	# Instance settings
 	instance_add_remove_btn = $add_remove
+	instance_rev_offset_checkbox = $instance_setting/reverse_offset/rev_offset_checkbox
 	instance_start_offset_slider = $instance_setting/start_offset/slider
 	instance_end_offset_slider = $instance_setting/end_offset/slider
 	instance_rand_remove_slider = $instance_setting/rand_rm/slider
 	instance_setting_header = $instance_setting
 	instance_add_remove_btn.connect("button_up",instance_add_remove_element)
+	instance_rev_offset_checkbox.connect("toggled",instance_set_rev_offset)
 	instance_start_offset_slider.connect("value_changed",instance_set_start_offset)
 	instance_end_offset_slider.connect("value_changed",instance_set_end_offset)
 	instance_rand_remove_slider.connect("value_changed",instance_set_rand_remove)
 	#### End commit to save override
+	instance_rev_offset_checkbox.connect("button_up",instance_edit_commit.bind(true))
 	instance_add_remove_btn.connect("button_up",instance_edit_commit.bind(true))
 	instance_start_offset_slider.connect("drag_ended",instance_edit_commit)
 	instance_end_offset_slider.connect("drag_ended",instance_edit_commit)
@@ -291,8 +295,8 @@ func update_curve_instance_selection():
 	for i in range(0,element_count):
 		if ov.has_element(cid,i):
 			items.set_item_custom_fg_color(i,Color(0.4,0.9,0.4))
-	exclude_connection_btn.set_pressed_no_signal(ov.is_exclude_connection(cid))
 	var sel_elemenet:int = get_selected_element()
+	exclude_connection_btn.set_pressed_no_signal(ov.get_exclude(cid))
 	if sel_elemenet!=-1 and ov.has_element(cid,sel_elemenet):
 		instance_setting_header.visible = true
 		instance_start_offset_slider.value = ov.get_start_offset(cid,sel_elemenet)
@@ -359,8 +363,9 @@ func exclude_connection()->void:
 			ov = MCurveInstanceOverride.new()
 			current_modify_node.override_data = ov
 		if ids.size()==1:
-			var val = not ov.is_exclude_connection(ids[0])
-			ov.set_exclude_connection(ids[0],val)
+			var sel_element:int = get_selected_element()
+			var val = not ov.get_exclude(ids[0])
+			ov.set_exclude(ids[0],val)
 			update_curve_instance_selection()
 			
 
@@ -402,6 +407,16 @@ func instance_add_remove_element()->void:
 	else: # is remove
 		ov.add_element(cid,element_index)
 	update_curve_instance_selection()
+
+func instance_set_rev_offset(value:bool)->void:
+	var ov:MCurveInstanceOverride = current_modify_node.override_data
+	if not ov: return
+	var ids:PackedInt64Array = gizmo.get_selected_connections()
+	if ids.size()!=1: return
+	var cid:int = ids[0]
+	var sel_element := get_selected_element()
+	if sel_element!=-1:
+		ov.set_flag(cid,sel_element,MCurveInstanceOverride.REVERSE_OFFSET,value)
 
 func instance_set_start_offset(value:float)->void:
 	var ov:MCurveInstanceOverride = current_modify_node.override_data

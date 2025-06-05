@@ -101,6 +101,10 @@ void MCurveInstanceElement::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_mirror_rotation"), &MCurveInstanceElement::get_mirror_rotation);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"mirror_rotation"), "set_mirror_rotation", "get_mirror_rotation");
 
+    ClassDB::bind_method(D_METHOD("set_curve_align","input"), &MCurveInstanceElement::set_curve_align);
+    ClassDB::bind_method(D_METHOD("get_curve_align"), &MCurveInstanceElement::get_curve_align);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"curve_align"), "set_curve_align", "get_curve_align");
+
     ClassDB::bind_method(D_METHOD("set_interval","input"), &MCurveInstanceElement::set_interval);
     ClassDB::bind_method(D_METHOD("get_interval"), &MCurveInstanceElement::get_interval);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT,"interval"), "set_interval", "get_interval");
@@ -287,6 +291,16 @@ void MCurveInstanceElement::set_mirror(bool input){
 bool MCurveInstanceElement::get_mirror() const{
     return mirror;
 }
+
+void MCurveInstanceElement::set_curve_align(bool input){
+    curve_align = input;
+    emit_elements_changed();
+}
+
+bool MCurveInstanceElement::get_curve_align() const{
+    return curve_align;
+}
+
 
 void MCurveInstanceElement::set_interval(float input){
     if(input >= 0.01){
@@ -479,6 +493,7 @@ MCurveInstanceOverride::OverrideData::OverrideData(){
         start_offset[i] = 0;
         end_offset[i] = 0;
         random_remove[i] = 0;
+        flags[i] = 0;
     }
 }
 
@@ -487,8 +502,11 @@ void MCurveInstanceOverride::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("get_conn_element_capacity","conn_id"), &MCurveInstanceOverride::get_conn_element_capacity);
 
-    ClassDB::bind_method(D_METHOD("set_exclude_connection","conn_id","value"), &MCurveInstanceOverride::set_exclude_connection);
-    ClassDB::bind_method(D_METHOD("is_exclude_connection","conn_id"), &MCurveInstanceOverride::is_exclude_connection);
+    ClassDB::bind_method(D_METHOD("set_exclude","conn_id","value"), &MCurveInstanceOverride::set_exclude);
+    ClassDB::bind_method(D_METHOD("get_exclude","conn_id"), &MCurveInstanceOverride::get_exclude);
+
+    ClassDB::bind_method(D_METHOD("set_flag","conn_id","element_index","flag","value"), &MCurveInstanceOverride::set_flag);
+    ClassDB::bind_method(D_METHOD("get_flag","conn_id","element_index","flag"), &MCurveInstanceOverride::get_flag);
 
     ClassDB::bind_method(D_METHOD("add_element","conn_id","element_index"), &MCurveInstanceOverride::add_element);
     ClassDB::bind_method(D_METHOD("remove_element","conn_id","element_index"), &MCurveInstanceOverride::remove_element);
@@ -509,10 +527,66 @@ void MCurveInstanceOverride::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_data","input"), &MCurveInstanceOverride::set_data);
     ClassDB::bind_method(D_METHOD("get_data"), &MCurveInstanceOverride::get_data);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_data","get_data");
+
+    BIND_ENUM_CONSTANT(REVERSE_OFFSET);
 }
 
 void MCurveInstanceOverride::emit_connection_changed(int64_t conn_id){
     emit_signal("connection_changed",conn_id);
+}
+
+void MCurveInstanceOverride::set_exclude(int64_t conn_id,bool value){
+    auto it = data.find(conn_id);
+    if(it==data.end()){
+        data.insert(conn_id,OverrideData());
+        it = data.find(conn_id);
+        ERR_FAIL_COND(it==data.end());
+    }
+    OverrideData& ov = it->value;
+    ov.set_exclude(value);
+    if(!ov.has_any_override()){
+        data.erase(conn_id);
+    }
+    emit_connection_changed(conn_id);
+}
+
+bool MCurveInstanceOverride::get_exclude(int64_t conn_id) const{
+    auto it = data.find(conn_id);
+    if(it==data.end()){
+        return false;
+    }
+    return it->value.get_exclude();
+}
+
+void MCurveInstanceOverride::set_flag(int64_t conn_id,int element_index,FLAG flag,bool value){
+    auto it = data.find(conn_id);
+    if(it==data.end()){
+        data.insert(conn_id,OverrideData());
+        it = data.find(conn_id);
+        ERR_FAIL_COND(it==data.end());
+    }
+    OverrideData& ov = it->value;
+    int instance_index = ov.get_instance_index(element_index);
+    ERR_FAIL_COND(instance_index==-1);
+    ov.set_flag(instance_index,flag,value);
+    if(!ov.has_any_override()){
+        UtilityFunctions::print("erase on set flag!");
+        data.erase(conn_id);
+    }
+    emit_connection_changed(conn_id);
+}
+
+bool MCurveInstanceOverride::get_flag(int64_t conn_id,int element_index,FLAG flag) const{
+    auto it = data.find(conn_id);
+    if(it==data.end()){
+        return false;
+    }
+    const OverrideData& ov = it->value;
+    int instance_index = ov.get_instance_index(element_index);
+    if(instance_index==-1){
+        return false;
+    }
+    return ov.get_flag(instance_index,flag);
 }
 
 int MCurveInstanceOverride::get_conn_element_capacity(int64_t conn_id) const{
@@ -531,33 +605,6 @@ int MCurveInstanceOverride::get_conn_element_capacity(int64_t conn_id) const{
     return capacity;
 }
 
-void MCurveInstanceOverride::set_exclude_connection(int64_t conn_id,bool value){
-    auto it = data.find(conn_id);
-    if(it==data.end()){
-        data.insert(conn_id,OverrideData());
-        it = data.find(conn_id);
-        ERR_FAIL_COND(it==data.end());
-    } else if(!value && !it->value.has_any_element()){
-        data.erase(conn_id);
-        emit_connection_changed(conn_id);
-        return;
-    }
-    OverrideData& ov = it->value;
-    ov.is_exclude = value;
-    emit_connection_changed(conn_id);
-}
-
-bool MCurveInstanceOverride::is_exclude_connection(int64_t conn_id) const{
-    auto it = data.find(conn_id);
-    if(it==data.end()){
-        WARN_PRINT("Not found!");
-        return false;
-    }
-    const OverrideData& ov = it->value;
-    return ov.is_exclude;
-}
-
-
 void MCurveInstanceOverride::add_element(int64_t conn_id,int element_index){
     auto it = data.find(conn_id);
     if(it==data.end()){
@@ -574,7 +621,7 @@ void MCurveInstanceOverride::add_element(int64_t conn_id,int element_index){
     for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
         if(ov.element_ovveride[i]==-1){
             ov.element_ovveride[i] = element_index;
-            ov.is_exclude = false;
+            ov.set_exclude(false); // for exclude instance_index does not matter
             emit_connection_changed(conn_id);
             return;
         }
@@ -592,7 +639,7 @@ void MCurveInstanceOverride::remove_element(int64_t conn_id,int element_index){
     for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
         if(ov.element_ovveride[i]==element_index){
             ov.element_ovveride[i] = -1;
-            if(!ov.has_any_element()){
+            if(!ov.has_any_override()){
                 data.erase(conn_id);
             }
             emit_connection_changed(conn_id);
@@ -871,14 +918,9 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
     ERR_FAIL_COND(it==curve_instance_instances.end());
     instances = &it->value;
     // Looping in instance index
-    OverrideData ov_data = get_default_override_data();
-    if(override_data.is_valid()){
-        auto it = override_data->data.find(cid);
-        if(it!=override_data->data.end()){
-            ov_data = it->value;
-        }
-    }
-    if(ov_data.is_exclude){ // condition which ignore conn entirly
+    OverrideData ov_data = get_override_data(cid);
+    float main_curve_len = curve->get_conn_lenght(cid);
+    if(ov_data.get_exclude() || main_curve_len < M_CURVE_INSTANCE_EPSILON){ // condition which ignore conn entirly
         _remove_instance(cid);
         return;
     }
@@ -923,10 +965,15 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
         ///////////////////////Creating Instance///////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////////
         {
-            float curve_len = curve->get_conn_lenght(cid);
+            float curve_len = main_curve_len; // used for calculating total_mesh_count and curve coverd with instances
             float start_offset_len = curve_len*ov_data.start_offset[instance_index];
             float end_offset_len = curve_len*ov_data.end_offset[instance_index];
-            curve_len = curve_len - (start_offset_len + end_offset_len);
+            if(ov_data.get_flag(instance_index,MCurveInstanceOverride::FLAG::REVERSE_OFFSET)){
+                float _l = start_offset_len + end_offset_len;
+                curve_len = _l < curve_len ? _l : curve_len;
+            } else {
+                curve_len = curve_len - (start_offset_len + end_offset_len);
+            }
             if(curve_len < M_CURVE_INSTANCE_EPSILON){
                 _remove_instance(cid,instance_index,false); // No mesh so removing
                 continue;
@@ -948,10 +995,26 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
                     }
                     distances.resize(total_mesh_count);
                     float current_dis = element->middle ? rinterval/2.0f : 0.0f;
-                    current_dis += start_offset_len;
-                    for(int i=0; i < total_mesh_count; i++){
-                        distances.set(i,current_dis);
-                        current_dis += rinterval;
+                    if(ov_data.get_flag(instance_index,MCurveInstanceOverride::FLAG::REVERSE_OFFSET)){
+                        int begin_mesh_count = (start_offset_len/curve_len) * total_mesh_count;
+                        int end_mesh_count = total_mesh_count - begin_mesh_count;
+                        // start
+                        for(int i=0; i < begin_mesh_count; i++){
+                            distances.set(i,current_dis);
+                            current_dis += rinterval;
+                        }
+                        // end
+                        current_dis = element->include_end ? main_curve_len : main_curve_len - rinterval;
+                        for(int i=begin_mesh_count; i < total_mesh_count; i++){
+                            distances.set(i,current_dis);
+                            current_dis -= rinterval;
+                        }
+                    } else {
+                        current_dis += start_offset_len;
+                        for(int i=0; i < total_mesh_count; i++){
+                            distances.set(i,current_dis);
+                            current_dis += rinterval;
+                        }
                     }
                     curve->get_conn_distances_ratios(cid,distances,ratios);
                 }
@@ -1000,6 +1063,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
             }
             if(item_count==0){
                 _remove_instance(cid,instance_index,false);
+                UtilityFunctions::print("s100");
                 continue;
             }
             // Adding meshes
@@ -1053,6 +1117,9 @@ void MCurveInstance::_connection_force_update(int64_t conn_id){
 void MCurveInstance::_connection_remove(int64_t conn_id){
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
     ERR_FAIL_COND(curve.is_null());
+    if(override_data.is_valid()){
+        override_data->clear_to_default(conn_id);
+    }
     _remove_instance(conn_id);
 }
 
@@ -1138,26 +1205,6 @@ void MCurveInstance::set_override(Ref<MCurveInstanceOverride> input){
         override_data->connect("connection_changed",Callable(this,"_connection_force_update"));
     }
     _recreate();
-}
-
-MCurveInstance::OverrideData MCurveInstance::get_default_override_data() const{
-    OverrideData ov;
-    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
-        // Avoiding duplicate
-        bool has_element = false;
-        for(int j=0; j < i; j++){
-            if(default_element[i] == default_element[j]){
-                has_element = true;
-                break;
-            }
-        }
-        if(has_element){
-            ov.element_ovveride[i] = -1;
-        } else {
-            ov.element_ovveride[i] = default_element[i];
-        }
-    }
-    return ov;
 }
 
 Ref<MCurveInstanceOverride> MCurveInstance::get_override() const{
