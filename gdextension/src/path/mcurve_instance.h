@@ -30,13 +30,15 @@ class MCurveInstance;
 class MCurveInstanceElement : public Resource {
     friend MCurveInstance;
     GDCLASS(MCurveInstanceElement,Resource);
+    public:
+    enum ALIGN : int8_t {NO_ALIGN=0,CURVE_XYZ=1,CURVE_XZ=2};
     private:
     static constexpr int transform_count = 30;
     bool middle = false;
     bool include_end = false;
     bool mirror = false;
     bool mirror_rotation = false;
-    bool curve_align = true;
+    ALIGN curve_align_mode = ALIGN::CURVE_XYZ;
     int8_t shape_lod_cutoff = 2;
     float interval = 2.0;
     int seed = 101;
@@ -76,10 +78,21 @@ class MCurveInstanceElement : public Resource {
         index = index%transform_count;
         Vector3 __offset = offsets[index];
         Vector3 origin = t.origin + t.basis.get_column(0)*__offset.x + t.basis.get_column(1)*__offset.y + t.basis.get_column(2)*__offset.z;
-        if(curve_align){
+        if(curve_align_mode==NO_ALIGN){
+            return Transform3D(bases[index],origin);
+        } else if(curve_align_mode==CURVE_XYZ){
             return Transform3D(t.basis*bases[index],origin);
+        } else if(curve_align_mode==CURVE_XZ){
+            Basis b = t.basis*bases[index];
+            Vector3 x = b.get_column(0);
+            Vector3 z = b.get_column(2);
+            x.y = 0;
+            z.y = 0;
+            x.normalize();
+            z.normalize();
+            return Transform3D(Basis(x,Vector3(0,1,0),z), origin);
         }
-        return Transform3D(bases[index],origin);
+        ERR_FAIL_V_MSG(Transform3D(),"Curve align mode is unkown");
     }
 
     inline Transform3D modify_transform_mirror(const Transform3D& t, int index) const{
@@ -88,10 +101,21 @@ class MCurveInstanceElement : public Resource {
         __offset.z *= -1.0;
         Vector3 origin = t.origin + t.basis.get_column(0)*__offset.x + t.basis.get_column(1)*__offset.y + t.basis.get_column(2)*__offset.z;
         Basis b = mirror_rotation ? bases[index].rotated(Vector3(0,1,0),3.14159265359) : bases[index];
-        if(curve_align){
+        if(curve_align_mode==NO_ALIGN){
+            return Transform3D(b,origin);
+        } else if(curve_align_mode==CURVE_XYZ){
             return Transform3D(t.basis*b,origin);
+        } else if(curve_align_mode==CURVE_XZ){
+            b = t.basis*b;
+            Vector3 x = b.get_column(0);
+            Vector3 z = b.get_column(2);
+            x.y = 0;
+            z.y = 0;
+            x.normalize();
+            z.normalize();
+            return Transform3D(Basis(x,Vector3(0,1,0),z), origin);
         }
-        return Transform3D(b,origin);
+        ERR_FAIL_V_MSG(Transform3D(),"Curve align mode is unkown");
     }
 
     inline Transform3D modify_transform_shape(const Transform3D& item_transform) const{
@@ -163,8 +187,8 @@ class MCurveInstanceElement : public Resource {
     void set_mirror(bool input);
     bool get_mirror() const;
 
-    void set_curve_align(bool input);
-    bool get_curve_align() const;
+    void set_curve_align_mode(ALIGN input);
+    ALIGN get_curve_align_mode() const;
 
     void set_interval(float input);
     float get_interval() const;
@@ -224,6 +248,8 @@ class MCurveInstanceElement : public Resource {
     void set_collision_mask(uint32_t input);
     uint32_t get_collision_mask() const;
 };
+
+VARIANT_ENUM_CAST(MCurveInstanceElement::ALIGN);
 
 class MCurveInstanceOverride : public Resource {
     friend MCurveInstance;

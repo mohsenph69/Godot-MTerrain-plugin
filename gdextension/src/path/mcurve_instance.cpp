@@ -101,9 +101,9 @@ void MCurveInstanceElement::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_mirror_rotation"), &MCurveInstanceElement::get_mirror_rotation);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"mirror_rotation"), "set_mirror_rotation", "get_mirror_rotation");
 
-    ClassDB::bind_method(D_METHOD("set_curve_align","input"), &MCurveInstanceElement::set_curve_align);
-    ClassDB::bind_method(D_METHOD("get_curve_align"), &MCurveInstanceElement::get_curve_align);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"curve_align"), "set_curve_align", "get_curve_align");
+    ClassDB::bind_method(D_METHOD("set_curve_align_mode","input"), &MCurveInstanceElement::set_curve_align_mode);
+    ClassDB::bind_method(D_METHOD("get_curve_align_mode"), &MCurveInstanceElement::get_curve_align_mode);
+    ADD_PROPERTY(PropertyInfo(Variant::INT,"curve_align",PROPERTY_HINT_ENUM,"NO_ALIGN,CURVE_XYZ,CURVE_XZ"), "set_curve_align_mode", "get_curve_align_mode");
 
     ClassDB::bind_method(D_METHOD("set_interval","input"), &MCurveInstanceElement::set_interval);
     ClassDB::bind_method(D_METHOD("get_interval"), &MCurveInstanceElement::get_interval);
@@ -196,6 +196,10 @@ void MCurveInstanceElement::_bind_methods(){
     ClassDB::bind_method(D_METHOD("set_collision_mask","input"), &MCurveInstanceElement::set_collision_mask);
     ClassDB::bind_method(D_METHOD("get_collision_mask"), &MCurveInstanceElement::get_collision_mask);
     ADD_PROPERTY(PropertyInfo(Variant::INT,"collision_mask",PROPERTY_HINT_LAYERS_3D_PHYSICS), "set_collision_mask","get_collision_mask");
+
+    BIND_ENUM_CONSTANT(NO_ALIGN);
+    BIND_ENUM_CONSTANT(CURVE_XYZ);
+    BIND_ENUM_CONSTANT(CURVE_XZ);
 }
 
 void MCurveInstanceElement::emit_elements_changed(){
@@ -292,15 +296,14 @@ bool MCurveInstanceElement::get_mirror() const{
     return mirror;
 }
 
-void MCurveInstanceElement::set_curve_align(bool input){
-    curve_align = input;
+void MCurveInstanceElement::set_curve_align_mode(MCurveInstanceElement::ALIGN input){
+    curve_align_mode = input;
     emit_elements_changed();
 }
 
-bool MCurveInstanceElement::get_curve_align() const{
-    return curve_align;
+MCurveInstanceElement::ALIGN MCurveInstanceElement::get_curve_align_mode() const{
+    return curve_align_mode;
 }
-
 
 void MCurveInstanceElement::set_interval(float input){
     if(input >= 0.01){
@@ -995,6 +998,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
                     }
                     distances.resize(total_mesh_count);
                     float current_dis = element->middle ? rinterval/2.0f : 0.0f;
+                    // Getting Distances of each object along the curve
                     if(ov_data.get_flag(instance_index,MCurveInstanceOverride::FLAG::REVERSE_OFFSET)){
                         int begin_mesh_count = (start_offset_len/curve_len) * total_mesh_count;
                         int end_mesh_count = total_mesh_count - begin_mesh_count;
@@ -1016,9 +1020,12 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
                             current_dis += rinterval;
                         }
                     }
+                    // End getting distances along the curve
+                    // getting ratios anlog the curve
                     curve->get_conn_distances_ratios(cid,distances,ratios);
                 }
                 ERR_FAIL_COND(ratios.size()!=total_mesh_count);
+                // getting transform along the curve
                 curve->get_conn_transforms(cid,ratios,transforms);
                 ERR_FAIL_COND(transforms.size()!=total_mesh_count);
             }
