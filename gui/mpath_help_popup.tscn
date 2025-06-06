@@ -1,12 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://dpd66ybtq65sa"]
-
-[sub_resource type="GDScript" id="GDScript_xqplk"]
-script/source = "@tool
-extends Window
-
-func _on_button_pressed():
-	queue_free()
-"
+[gd_scene load_steps=2 format=3 uid="uid://dpd66ybtq65sa"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_cjcwk"]
 font_size = 32
@@ -16,7 +8,6 @@ initial_position = 2
 size = Vector2i(600, 450)
 exclusive = true
 popup_window = true
-script = SubResource("GDScript_xqplk")
 
 [node name="Panel" type="PanelContainer" parent="."]
 anchors_preset = 15
@@ -70,12 +61,22 @@ horizontal_alignment = 1
 
 [node name="Label5" type="Label" parent="Panel/ScrollContainer/VBoxContainer/Panel/VBoxContainer"]
 layout_mode = 2
-text = "Ctrl + Click : Add Point               "
+text = "              Ctrl + Click : Add Point               "
+horizontal_alignment = 1
+
+[node name="Label8" type="Label" parent="Panel/ScrollContainer/VBoxContainer/Panel/VBoxContainer"]
+layout_mode = 2
+text = "      Ctrl + Click (On point): Connect two point"
 horizontal_alignment = 1
 
 [node name="Label6" type="Label" parent="Panel/ScrollContainer/VBoxContainer/Panel/VBoxContainer"]
 layout_mode = 2
-text = "         Alt + Click : Remove Point               "
+text = "         Alt + Click : Remove Point (Only with 2 connections)"
+horizontal_alignment = 1
+
+[node name="Label9" type="Label" parent="Panel/ScrollContainer/VBoxContainer/Panel/VBoxContainer"]
+layout_mode = 2
+text = "       Backspace : Remove Point + Connections"
 horizontal_alignment = 1
 
 [node name="Label7" type="Label" parent="Panel/ScrollContainer/VBoxContainer/Panel/VBoxContainer"]
@@ -83,6 +84,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 text = "
+T: Change the flow of curve (select a active point and its connection
+to change the flow of curve)
+
 For more keyboard shortcuts, please see:
 settings / more settings"
 horizontal_alignment = 1
@@ -91,4 +95,5 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "OK"
 
-[connection signal="pressed" from="Panel/ScrollContainer/VBoxContainer/Button" to="." method="_on_button_pressed"]
+[connection signal="close_requested" from="." to="." method="queue_free"]
+[connection signal="pressed" from="Panel/ScrollContainer/VBoxContainer/Button" to="." method="queue_free"]

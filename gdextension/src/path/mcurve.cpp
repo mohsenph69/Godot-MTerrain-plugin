@@ -10,6 +10,26 @@
 
 MOctree* MCurve::octree = nullptr;
 
+
+void MCurveConnCollision::_bind_methods(){
+    ClassDB::bind_method(D_METHOD("is_collided"), &MCurveConnCollision::is_collided);
+    ClassDB::bind_method(D_METHOD("get_collision_ratio"), &MCurveConnCollision::get_collision_ratio);
+    ClassDB::bind_method(D_METHOD("get_conn_id"), &MCurveConnCollision::get_conn_id);
+}
+
+bool MCurveConnCollision::is_collided() const{
+    return _is_col;
+}
+
+float MCurveConnCollision::get_collision_ratio() const{
+    return _ratio;
+}
+
+int64_t MCurveConnCollision::get_conn_id() const{
+    return _conn_id;
+}
+
+
 void MCurve::set_octree(MOctree* input){
     ERR_FAIL_COND_MSG(octree!=nullptr,"Only one octree can udpate MPath");
     octree = input;
@@ -36,6 +56,7 @@ void MCurve::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("add_point","position","in","out","prev_conn"), &MCurve::add_point);
     ClassDB::bind_method(D_METHOD("add_point_conn_point","position","in","out","conn_types","conn_points"), &MCurve::add_point_conn_point);
+    ClassDB::bind_method(D_METHOD("add_point_conn_split","conn_id","t"), &MCurve::add_point_conn_split);
     ClassDB::bind_method(D_METHOD("connect_points","p0","p1","conn_type"), &MCurve::connect_points);
     ClassDB::bind_method(D_METHOD("disconnect_conn","conn_id"), &MCurve::disconnect_conn);
     ClassDB::bind_method(D_METHOD("disconnect_points","p0","p1"), &MCurve::disconnect_points);
@@ -43,6 +64,7 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("clear_points"), &MCurve::clear_points);
 
     ClassDB::bind_method(D_METHOD("get_conn_id","p0","p1"), &MCurve::get_conn_id);
+    ClassDB::bind_method(D_METHOD("get_conn_points","conn_id"), &MCurve::get_conn_points);
     ClassDB::bind_method(D_METHOD("get_conn_ids_exist","points"), &MCurve::get_conn_ids_exist);
     ClassDB::bind_method(D_METHOD("get_conn_lod","conn_id"), &MCurve::get_conn_lod);
     ClassDB::bind_method(D_METHOD("get_active_points"), &MCurve::get_active_points);
@@ -56,6 +78,7 @@ void MCurve::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("has_point","p_index"), &MCurve::has_point);
     ClassDB::bind_method(D_METHOD("has_conn","conn_id"), &MCurve::has_conn);
+    ClassDB::bind_method(D_METHOD("is_point_connected","pa","pb"), &MCurve::is_point_connected);
     ClassDB::bind_method(D_METHOD("get_conn_type","conn_id"), &MCurve::get_conn_type);
     ClassDB::bind_method(D_METHOD("get_point_conn_count","p_index"), &MCurve::get_point_conn_count);
     ClassDB::bind_method(D_METHOD("get_point_conn_points","p_index"), &MCurve::get_point_conn_points);
@@ -92,10 +115,12 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_conn_aabb","conn_id"), &MCurve::get_conn_aabb);
     ClassDB::bind_method(D_METHOD("get_conns_aabb","conn_ids"), &MCurve::get_conns_aabb);
     ClassDB::bind_method(D_METHOD("get_closest_ratio_to_point","conn_id","pos"), &MCurve::get_closest_ratio_to_point);
+    ClassDB::bind_method(D_METHOD("get_closest_ratio_to_line","conn_id","line_pos","line_dir"), &MCurve::get_closest_ratio_to_line);
     ClassDB::bind_method(D_METHOD("get_conn_lenght","conn_id"), &MCurve::get_conn_lenght);
     ClassDB::bind_method(D_METHOD("get_conn_distance_ratio","conn_id","distance"), &MCurve::get_conn_distance_ratio);
 
     ClassDB::bind_method(D_METHOD("ray_active_point_collision","org","dir","threshold"), &MCurve::ray_active_point_collision);
+    ClassDB::bind_method(D_METHOD("ray_active_conn_collision","org","dir","threshold"), &MCurve::ray_active_conn_collision);
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MCurve::_set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MCurve::_get_data);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"_data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_data","_get_data");
@@ -249,6 +274,92 @@ int32_t MCurve::add_point_conn_point(const Vector3& position,const Vector3& in,c
     return free_index;
 }
 
+void MCurve::clear_conn_cache_data(int64_t conn_id){
+    baked_lines.erase(conn_id);
+    conn_distances.erase(conn_id);
+    conn_aabb.erase(conn_id);
+}
+
+int32_t MCurve::add_point_conn_split(int64_t conn_id,float t){
+    ERR_FAIL_COND_V(!has_conn(conn_id),INVALID_POINT_INDEX);
+    if(free_buffer_indicies.size() == 0){
+        _increase_points_buffer_size(INC_POINTS_BUFFER_SIZE);
+        ERR_FAIL_COND_V(free_buffer_indicies.size()==0,INVALID_POINT_INDEX);
+    }
+    Conn conn(conn_id);
+    Point* a = points_buffer.ptrw() + conn.p.a;
+    Point* b = points_buffer.ptrw() + conn.p.b;
+    bool a_use_in = true;
+    bool b_use_in = true;
+    Vector3 a_control = a->in;
+    Vector3 b_control = b->in;
+    for(int8_t i=0; i < MAX_CONN; i++){
+        if(a->conn[i] == conn.p.b){
+            a_control = a->out;
+            a_use_in = false;
+        }
+        if(b->conn[i] == conn.p.a){
+            b_control = b->out;
+            b_use_in = false;
+        }
+    }
+    /// Creating npoint
+    Point npoint;
+    npoint.position =  a->position.bezier_interpolate(a_control,b_control,b->position,t);
+    Vector3 tangent = get_conn_tangent(conn_id,t);
+    Vector3 normal = _get_bezier_normal(a->position,b->position,a_control,b_control,t);
+    float n_handl_len = normal.length()/24.0f;
+    tangent.normalize();
+    npoint.in = npoint.position - tangent*n_handl_len;
+    npoint.out = npoint.position + tangent*n_handl_len;
+    //// Removing current connection
+    int freed_conn_index_a = -1;
+    int freed_conn_index_b = -1;
+    for(int8_t c=0; c < MAX_CONN; c++){
+        if(abs(a->conn[c]) == conn.p.b){
+            a->conn[c] = INVALID_POINT_INDEX; // Everything is positive here correcting connections types down
+            freed_conn_index_a = c;
+        }
+        if(abs(b->conn[c]) == conn.p.a){
+            b->conn[c] = INVALID_POINT_INDEX; // Everything is positive here correcting connections types down
+            freed_conn_index_b = c;
+        }
+    }
+    ERR_FAIL_COND_V(freed_conn_index_a==-1,INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(freed_conn_index_b==-1,INVALID_POINT_INDEX);
+    active_conn.erase(conn.id);
+    conn_list.erase(conn.id);
+    clear_conn_cache_data(conn.id);
+    emit_signal("remove_connection",conn.id);
+    //// Adding new conns and point
+    if(free_buffer_indicies.size() == 0){
+        _increase_points_buffer_size(INC_POINTS_BUFFER_SIZE);
+        ERR_FAIL_COND_V(free_buffer_indicies.size()==0,INVALID_POINT_INDEX);
+    }
+    int32_t npid = free_buffer_indicies[free_buffer_indicies.size() - 1];
+    free_buffer_indicies.remove_at(free_buffer_indicies.size() - 1);
+    // connecting
+    npoint.conn[0] = -conn.p.a; // using in to connect to a (this is why negetive)
+    npoint.conn[1] = conn.p.b;  // using out to connect to b
+    a->conn[freed_conn_index_a] = a_use_in ? -npid : npid;
+    b->conn[freed_conn_index_b] = b_use_in ? -npid : npid;
+    points_buffer.set(npid,npoint);
+    /// Calculating LOD and force updateds
+    if(is_init_insert && octree != nullptr){
+        octree->insert_point(npoint.position,npid,oct_id);
+    }
+    return npid;
+}
+/*
+    ConnType conn_a_type = a_use_in ? IN_IN : OUT_IN;
+    ConnType conn_b_type = b_use_in ? OUT_IN : OUT_OUT;
+    Array conn_types;
+    conn_types.resize(2);
+    conn_types[0] = conn_a_type;
+    conn_types[1] = conn_b_type;
+    PackedInt32Array points = {conn.p.a,conn.p.b};
+    int32_t pid = add_point_conn_point(npos,nin,nout,conn_types,points);
+*/
 bool MCurve::connect_points(int32_t p0,int32_t p1,ConnType con_type){
     Conn conn(p0,p1); // Making the order right
     ERR_FAIL_COND_V(has_conn(conn.id), false);
@@ -335,9 +446,9 @@ bool MCurve::disconnect_points(int32_t p0,int32_t p1){
     Conn conn(p0,p1);
     conn_list.erase(conn.id);
     active_conn.erase(conn.id);
+    clear_conn_cache_data(conn.id);
     emit_signal("curve_updated");
     emit_signal("remove_connection",conn.id);
-    baked_lines.erase(conn.id);
     return is_removed;
 }
 
@@ -353,8 +464,7 @@ void MCurve::remove_point(const int32_t point_index){
             Conn conn(point_index,conn_point_id);
             active_conn.erase(conn.id);
             conn_list.erase(conn.id);
-            conn_distances.erase(conn.id);
-            baked_lines.erase(conn.id);
+            clear_conn_cache_data(conn.id);
             Point* conn_p = points_buffer.ptrw() + conn_point_id;
             for(int8_t c=0; c < MAX_CONN; c++){
                 if(std::abs(conn_p->conn[c]) == point_index){
@@ -476,8 +586,7 @@ void MCurve::_octree_update_finish(){
                 }
                 if(new_lod == INVALID_OCT_POINT_ID){
                     active_conn.erase(conn.id);
-                    conn_distances.erase(conn.id);
-                    baked_lines.erase(conn.id);
+                    clear_conn_cache_data(conn.id);
                 } else {
                     active_conn.insert(conn.id);
                 }
@@ -510,6 +619,12 @@ void MCurve::user_finish_process(int32_t user_id){
 int64_t MCurve::get_conn_id(int32_t p0, int32_t p1){
     Conn c(p0,p1);
     return c.id;
+}
+
+PackedInt32Array MCurve::get_conn_points(int64_t conn_id){
+    Conn conn(conn_id);
+    PackedInt32Array ids = {conn.p.a,conn.p.b};
+    return ids;
 }
 
 PackedInt64Array MCurve::get_conn_ids_exist(const PackedInt32Array points){
@@ -632,13 +747,13 @@ bool MCurve::has_point(int p_index) const{
     return true;
 }
 
-bool MCurve::has_conn(int64_t conn_id){
+bool MCurve::has_conn(int64_t conn_id) const{
     Conn conn(conn_id);
     if(!has_point(conn.p.a) || !has_point(conn.p.b)){
         return false;
     }
-    Point* a = points_buffer.ptrw() + conn.p.a;
-    Point* b = points_buffer.ptrw() + conn.p.b;
+    const Point* a = points_buffer.ptr() + conn.p.a;
+    const Point* b = points_buffer.ptr() + conn.p.b;
     bool has_in_a = false;
     bool has_in_b = false;
     for(int8_t i=0; i < MAX_CONN; i++){
@@ -650,6 +765,11 @@ bool MCurve::has_conn(int64_t conn_id){
         }
     }
     return has_in_a && has_in_b;
+}
+
+bool MCurve::is_point_connected(int32_t pa,int32_t pb) const{
+    Conn conn(pa,pb);
+    return has_conn(conn.id);
 }
 
 MCurve::ConnType MCurve::get_conn_type(int64_t conn_id) const{
@@ -863,7 +983,7 @@ void MCurve::commit_point_update(int p_index){
     }
     for(int i=0; i < u_conn.size(); i++){
         // This will force them to rebake if the will needed later
-        conn_distances.erase(u_conn[i]);
+        clear_conn_cache_data(u_conn[i]);
     }
     // Updating points
     for(int8_t i=0; i < u_point.size() ; i++){
@@ -877,6 +997,7 @@ void MCurve::commit_point_update(int p_index){
 
 void MCurve::commit_conn_update(int64_t conn_id){
     ERR_FAIL_COND(has_conn(conn_id));
+    clear_conn_cache_data(conn_id);
     emit_signal("force_update_connection",conn_id);
 }
 
@@ -903,6 +1024,12 @@ Vector3 MCurve::get_conn_position(int64_t conn_id,float t){
 ////////
 AABB MCurve::get_conn_aabb(int64_t conn_id){
     ERR_FAIL_COND_V(!has_conn(conn_id),AABB());
+    {
+        auto it = conn_aabb.find(conn_id);
+        if(it!=conn_aabb.end()){
+            return it->value;
+        }
+    }
     Conn cc(conn_id);
     const Point* a = points_buffer.ptr() + cc.p.a;
     const Point* b = points_buffer.ptr() + cc.p.b;
@@ -976,7 +1103,9 @@ AABB MCurve::get_conn_aabb(int64_t conn_id){
             ma.z = MAX(ma.z,q);
         }
     }
-    return AABB(mi, ma - mi);
+    AABB faabb(mi, ma - mi);
+    conn_aabb.insert(conn_id,faabb);
+    return faabb;
 }
 
 AABB MCurve::get_conns_aabb(const PackedInt64Array& conn_ids){
@@ -989,7 +1118,7 @@ AABB MCurve::get_conns_aabb(const PackedInt64Array& conn_ids){
     return faabb;
 }
 
-float MCurve::get_closest_ratio_to_point(int64_t conn_id,Vector3 pos){
+float MCurve::get_closest_ratio_to_point(int64_t conn_id,Vector3 pos) const {
     ERR_FAIL_COND_V(!has_conn(conn_id), 0.0f);
     Conn conn(conn_id);
     const Point* a = points_buffer.ptr() + conn.p.a;
@@ -1065,6 +1194,84 @@ float MCurve::get_closest_ratio_to_point(int64_t conn_id,Vector3 pos){
         }
     }
     return (low+high)/2.0;
+}
+
+float MCurve::get_closest_ratio_to_line(int64_t conn_id,Vector3 line_pos,Vector3 line_dir) const{
+    ERR_FAIL_COND_V(!has_conn(conn_id), 0.0f);
+    // Creating Transform to view space
+    line_dir.normalize();
+    Vector3 up = std::abs(line_dir.y) < 0.9 ? Vector3(0,1,0) : Vector3(1,0,0);
+    Vector3 side = -up.cross(line_dir);
+    up = side.cross(line_dir);
+    Transform3D t = Transform3D(Basis(side,up,line_dir),line_pos);
+    t = t.inverse();
+    ///////
+    Conn conn(conn_id);
+    const Point* a = points_buffer.ptr() + conn.p.a;
+    const Point* b = points_buffer.ptr() + conn.p.b;
+    Vector3 a_pos = a->position;
+    Vector3 b_pos = b->position;
+    Vector3 a_control = a->in; 
+    Vector3 b_control = b->in;
+    for(int8_t i=0; i < MAX_CONN; i++){
+        if(a->conn[i] == conn.p.b){
+            a_control = a->out;
+        }
+        if(b->conn[i] == conn.p.a){
+            b_control = b->out;
+        }
+    }
+    /// Converting to our space
+    a_pos = t.xform(a_pos);
+    b_pos = t.xform(b_pos);
+    a_control = t.xform(a_control);
+    b_control = t.xform(b_control);
+    ///////////// Creating 2d
+    Vector2 a_pos_2d(a_pos.x,a_pos.y);
+    Vector2 b_pos_2d(b_pos.x,b_pos.y);
+    Vector2 a_control_2d(a_control.x,a_control.y);
+    Vector2 b_control_2d(b_control.x,b_control.y);
+    ////////////////////////////
+    ////////////////////////////
+    real_t low = 0.0f;
+    real_t high = 1.0;
+    constexpr int sample_count = 16;
+    float smallest_dis;
+    while (high - low > 0.005f)
+    {
+        float step = (high-low)/sample_count;
+        float _s[sample_count];
+        float _dis[sample_count];
+        for(int i=0; i < sample_count; i++){
+            _s[i] = low + step*i;
+            Vector2 _p_2d = a_pos_2d.bezier_interpolate(a_control_2d,b_control_2d,b_pos_2d,_s[i]);
+            _dis[i] = _p_2d.length();
+        }
+        smallest_dis = _dis[0];
+        int smallest_index = 0;
+        for(int i=1; i < sample_count; i++){
+            if(_dis[i] < smallest_dis){
+                smallest_dis = _dis[i];
+                smallest_index = i;
+            }
+        }
+        if(smallest_index==0){
+            high = _s[1];
+            continue;
+        }
+        if(smallest_index==sample_count-1){
+            low = _s[7];
+            continue;
+        }
+        if(_dis[smallest_index-1] < _dis[smallest_index+1]){
+            low = _s[smallest_index -1];
+            high = _s[smallest_index];
+        } else {
+            high = _s[smallest_index +1];
+            low = _s[smallest_index];
+        }
+    }
+    return (low+high)/2.0f;
 }
 /*
     Other function always return the direction start from smaller point id index
@@ -1435,7 +1642,7 @@ void MCurve::toggle_conn_type(int32_t point, int64_t conn_id){
         if(std::abs(tp->conn[i]) == other_point){
             tp->conn[i] = -tp->conn[i];
             Conn cc(point,std::abs(tp->conn[i]));
-            baked_lines.erase(cc.id);
+            clear_conn_cache_data(cc.id);
             return;
         }
     }
@@ -1451,8 +1658,7 @@ void MCurve::validate_conn(int64_t conn_id,bool send_signal){
     if(send_signal){
         emit_signal("remove_connection",conn_id);
     }
-    conn_distances.erase(conn_id);
-    baked_lines.erase(conn_id);
+    clear_conn_cache_data(conn_id);
     if(!has_conn(conn_id)){
         active_conn.erase(conn_id);
         conn_list.erase(conn_id);
@@ -1633,7 +1839,7 @@ void MCurve::move_point(int p_index,const Vector3& pos){
     for(int i=0 ; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn cc(std::abs(p->conn[i]),p_index);
-            baked_lines.erase(cc.id);
+            clear_conn_cache_data(cc.id);
         }
     }
     emit_signal("curve_updated");
@@ -1646,7 +1852,7 @@ void MCurve::move_point_in(int p_index,const Vector3& pos){
     for(int i=0 ; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn cc(std::abs(p->conn[i]),p_index);
-            baked_lines.erase(cc.id);
+            clear_conn_cache_data(cc.id);
         }
     }
     emit_signal("curve_updated");
@@ -1659,14 +1865,14 @@ void MCurve::move_point_out(int p_index,const Vector3& pos){
     for(int i=0 ; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn cc(std::abs(p->conn[i]),p_index);
-            baked_lines.erase(cc.id);
+            clear_conn_cache_data(cc.id);
         }
     }
     emit_signal("curve_updated");
 }
 
 int32_t MCurve::ray_active_point_collision(const Vector3& org,Vector3 dir,float threshold){
-    ERR_FAIL_COND_V(threshold < 0.999,INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(threshold < 0.99,INVALID_POINT_INDEX);
     dir.normalize();
     for(int i=0; i < active_points.size(); i++){
         Vector3 pto = points_buffer[active_points[i]].position - org;
@@ -1690,6 +1896,40 @@ int32_t MCurve::ray_active_point_collision(const Vector3& org,Vector3 dir,float 
     }
     return INVALID_POINT_INDEX;
 }
+
+Ref<MCurveConnCollision> MCurve::ray_active_conn_collision(const Vector3& org,Vector3 dir,float threshold){
+    ERR_FAIL_COND_V(threshold < 0.99,INVALID_POINT_INDEX);
+    Ref<MCurveConnCollision> col;
+    col.instantiate();
+    dir.normalize();
+    constexpr float grow = 0.5;
+    for(int i=0; i < active_conn.size(); i++){
+        int64_t cid = active_conn[i];
+        AABB aabb = get_conn_aabb(cid);
+        // inline not using .grow() function for performance
+        aabb.position.x -= grow;
+        aabb.position.y -= grow;
+        aabb.position.z -= grow;
+        aabb.size.x += grow;
+        aabb.size.y += grow;
+        aabb.size.z += grow;
+        if(aabb.intersects_ray(org,dir)){
+            float ratio = get_closest_ratio_to_line(cid,org,dir);
+            Vector3 pos = get_conn_position(cid,ratio);
+            Vector3 p_dir = pos - org;
+            p_dir.normalize();
+            float val = p_dir.dot(dir);
+            if(val >= threshold){
+                col->_is_col = true;
+                col->_ratio = ratio;
+                col->_conn_id = cid;
+                return col;
+            }
+        }
+    }
+    return col;
+}
+
 /*
     Header in order -> Total header size 16 Byte
     uint32_t -> PointSave struct size

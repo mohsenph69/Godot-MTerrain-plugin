@@ -239,6 +239,9 @@ func show_image_creator_window():
 		window.mterrain = tools.get_active_mterrain()		
 
 func show_info_window(active_terrain = tools.get_active_mterrain()):
+	if not active_terrain:
+		printerr("No Active Terrain")
+		return
 	var is_grid_created = active_terrain.is_grid_created()
 	if is_instance_valid(current_window_info):
 		current_window_info.queue_free()

@@ -94,6 +94,7 @@ void initialize_test_module(ModuleInitializationLevel p_level) {
 
 	ClassDB::register_class<MPath>();
 	ClassDB::register_class<MCurve>();
+	ClassDB::register_class<MCurveConnCollision>();
 	ClassDB::register_class<MIntersection>();
 	ClassDB::register_class<MCurveMesh>();
 	ClassDB::register_class<MCurveMeshOverride>();

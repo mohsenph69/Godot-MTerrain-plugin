@@ -31,6 +31,21 @@
 using namespace godot;
 
 class MPath;
+class MCurve;
+
+class MCurveConnCollision : public RefCounted {
+    friend MCurve;
+    GDCLASS(MCurveConnCollision,RefCounted);
+    bool _is_col = false;
+    float _ratio;
+    int64_t _conn_id;
+    protected:
+    static void _bind_methods();
+    public:
+    bool is_collided() const;
+    float get_collision_ratio() const;
+    int64_t get_conn_id() const;
+};
 /*
     Each point has int32_t id
     Each has an array of next conn in conn!
@@ -151,6 +166,7 @@ class MCurve : public Resource{
     VSet<int64_t> active_conn;
     //Vector<int32_t> force_reupdate_points;
     HashMap<int64_t,int8_t> conn_list; // Key -> conn, Value -> LOD
+    HashMap<int64_t,AABB> conn_aabb; // Cached conn aabb
     HashMap<int64_t,ConnDistances> conn_distances;
 
     float bake_interval = 0.2;
@@ -177,6 +193,11 @@ class MCurve : public Resource{
     // In case prev_conn = -1 this will insert as root node and if a root node exist this will give an error
     int32_t add_point(const Vector3& position,const Vector3& in,const Vector3& out, const int32_t prev_conn);
     int32_t add_point_conn_point(const Vector3& position,const Vector3& in,const Vector3& out,const Array& conn_types,const PackedInt32Array& conn_points);
+    // important this should be called when conn change or remove
+    void clear_conn_cache_data(int64_t conn_id);
+    /// break a connection into two connection by adding a point on top of that
+    /// t is ratio
+    int32_t add_point_conn_split(int64_t conn_id,float t);
     bool connect_points(int32_t p0,int32_t p1,ConnType con_type=CONN_NONE);
     bool disconnect_conn(int64_t conn_id);
     bool disconnect_points(int32_t p0,int32_t p1);
@@ -189,6 +210,7 @@ class MCurve : public Resource{
 
     public:
     int64_t get_conn_id(int32_t p0, int32_t p1);
+    PackedInt32Array get_conn_points(int64_t conn_id);
     PackedInt64Array get_conn_ids_exist(const PackedInt32Array points);
     int8_t get_conn_lod(int64_t conn_id);
     int8_t get_point_lod(int64_t p_id);
@@ -209,7 +231,8 @@ class MCurve : public Resource{
     void move_point_out(int p_index,const Vector3& pos);
 
     bool has_point(int p_index) const;
-    bool has_conn(int64_t conn_id);
+    bool has_conn(int64_t conn_id) const;
+    bool is_point_connected(int32_t pa,int32_t pb) const;
     ConnType get_conn_type(int64_t conn_id) const;
     Array get_point_conn_types(int32_t p_index) const;
     int get_point_conn_count(int32_t p_index) const;
@@ -235,7 +258,9 @@ class MCurve : public Resource{
     Vector3 get_conn_position(int64_t conn_id,float t);
     AABB get_conn_aabb(int64_t conn_id);
     AABB get_conns_aabb(const PackedInt64Array& conn_ids);
-    float get_closest_ratio_to_point(int64_t conn_id,Vector3 pos);
+    float get_closest_ratio_to_point(int64_t conn_id,Vector3 pos) const;
+    /// first is ratio and second is distance
+    float get_closest_ratio_to_line(int64_t conn_id,Vector3 line_pos,Vector3 line_dir) const;
     Vector3 get_point_order_tangent(int32_t point_a,int32_t point_b,float t);
     Vector3 get_conn_tangent(int64_t conn_id,float t);
     Transform3D get_point_order_transform(int32_t point_a,int32_t point_b,float t,bool tilt=true,bool scale=true);
@@ -253,6 +278,7 @@ class MCurve : public Resource{
     // End of thread safe
     public:
     int32_t ray_active_point_collision(const Vector3& org,Vector3 dir,float threshold); // Maybe later optmize this
+    Ref<MCurveConnCollision> ray_active_conn_collision(const Vector3& org,Vector3 dir,float threshold);
     void _set_data(const PackedByteArray& input);
     PackedByteArray _get_data();
 
@@ -267,6 +293,12 @@ class MCurve : public Resource{
     #define BEZIER_EPSILON 0.1f
     _FORCE_INLINE_ Vector3 _get_bezier_extreme_t(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control){
         return (2*a_control - (b_control + a))/(b - a + 3*(a_control - b_control));
+    }
+    /// Return the second derivative of bezier curve (not normlized)
+    /// not used in _get_bezier_transform, as it can create problems
+    _FORCE_INLINE_ Vector3 _get_bezier_normal(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control,const float t){
+        float u = 1 - t;
+        return 6*(u*(b_control - 2*a_control + a) + t*(b - 2*b_control + a_control));
     }
     _FORCE_INLINE_ Vector3 _get_bezier_tangent(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control,const float t){
 

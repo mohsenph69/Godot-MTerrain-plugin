@@ -374,6 +374,8 @@ func _commit_handle(gizmo, handle_id, secondary, restore, cancel):
 	if not ur:
 		return
 	if not secondary:
+		var mv_l = (curve.get_point_position(handle_id) - restore).length()
+		if mv_l == 0.0: return
 		curve.commit_point_update(handle_id)
 		ur.create_action("move_mcurve")
 		ur.add_do_method(curve,"move_point",handle_id,curve.get_point_position(handle_id))
@@ -531,20 +533,26 @@ func _forward_3d_gui_input(camera, event, terrain_col:MCollision):
 	if gui.is_select_lock() and event is InputEventMouse and event.button_mask == MOUSE_BUTTON_LEFT:		
 		return EditorPlugin.AFTER_GUI_INPUT_STOP
 		
-func process_mouse_left_click(camera, event, terrain_col):
+func process_mouse_left_click(camera, event, terrain_col)->bool:
 	var mpath = find_mpath()
-	if not mpath: return
+	if not mpath: return false
 	var curve:MCurve = mpath.curve
-	if not curve: return
+	if not curve: return false
 	#### Handling Selections
 	var from = camera.project_ray_origin(event.position)
 	var to = camera.project_ray_normal(event.position)
 	### Get collission point id
 	var pcol = curve.ray_active_point_collision(from,to,0.9999)
 	if pcol != 0:
-		if Input.is_key_pressed(KEY_ALT):			
+		if Input.is_key_pressed(KEY_ALT):
 			change_active_point(pcol)
-			remove_point()
+			remove_only_point()
+			return true
+		elif Input.is_key_pressed(KEY_CTRL) and curve.has_point(active_point) and active_point!=pcol and selected_points.size()==0 and not curve.is_point_connected(active_point,pcol):
+			selected_points.push_back(active_point)
+			change_active_point(pcol)
+			connect_points()
+			return true
 		elif Input.is_key_pressed(KEY_SHIFT):
 			var last:int= selected_points.find(pcol)
 			if last != -1:
@@ -554,7 +562,7 @@ func process_mouse_left_click(camera, event, terrain_col):
 		else:
 			if pcol == active_point and selected_points.size() == 0:
 				change_active_point(0)						
-				return
+				return false
 			else:
 				selected_points.clear()
 				change_active_point(pcol)
@@ -571,8 +579,9 @@ func process_mouse_left_click(camera, event, terrain_col):
 	if pcol: #### if we have selection then we should stop here and not go into creation stuff
 		mpath.update_gizmos()
 		selection_changed.emit()				
-		return
+		return false
 	if gui.get_mode() == gui.MODE.CREATE or Input.is_key_pressed(KEY_CTRL):
+		if split_connection(curve,from,to): return true
 		### Here should be adjusted later with MTerrain
 		var new_index:int
 		var new_pos:Vector3
@@ -616,6 +625,7 @@ func process_mouse_left_click(camera, event, terrain_col):
 		change_active_point(new_index)
 		mpath.update_gizmos()				
 		return true
+	return false
 
 #Mouse motion for curve tilt and scale
 func process_mouse_motion(event):	
@@ -899,6 +909,31 @@ func disconnect_points():
 	path.update_gizmos()
 	return false
 
+## Check if can split connection it will split connection
+## And return true othrwise return false
+## From is ray pos
+## to is ray dirs
+func split_connection(curve:MCurve,from:Vector3,to:Vector3)->bool:
+	# list of connection which statisfy minum distance of click point
+	var col: = curve.ray_active_conn_collision(from,to,0.99)
+	if not col.is_collided(): return false
+	var has_active_point = curve.has_point(active_point)
+	var cid = col.get_conn_id()
+	var ratio = col.get_collision_ratio()
+	var conn_type = curve.get_conn_type(cid)
+	var point_ids = curve.get_conn_points(cid)
+	var pid = curve.add_point_conn_split(cid,ratio) # this will remove conn
+	if has_active_point:
+		curve.connect_points(pid,active_point,MCurve.IN_OUT)
+	curve.get_conn_points
+	ur.create_action("split connection")
+	ur.add_do_method(curve,"add_point_conn_split",cid,ratio)
+	ur.add_do_method(curve,"connect_points",pid,active_point,MCurve.IN_OUT)
+	ur.add_undo_method(curve,"remove_point",pid)
+	ur.add_undo_method(curve,"connect_points",point_ids[0],point_ids[1],conn_type)
+	ur.commit_action(false)
+	return true
+	
 func _toggle_connection(curve:MCurve,toggle_point,toggle_conn):
 	for conn in selected_connections:
 		curve.toggle_conn_type(active_point,conn)
@@ -929,6 +964,51 @@ func remove_point()->bool:
 	ur.add_undo_method(curve,"add_point_conn_point",p_pos,p_in,p_out,conn_types,conn_points)
 	if conn_ids.size()!=0:
 		ur.add_undo_method(self,"curve_terrain_modify",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
+	ur.commit_action(true)
+	return true
+
+func remove_only_point()->bool:
+	var path = find_mpath()
+	if not path: return false
+	var curve:MCurve = path.curve
+	if not curve or not curve.has_point(active_point): return false
+	var conn_points:PackedInt32Array
+	for __pid in curve.get_point_conn_points(active_point):
+		if __pid!=0:conn_points.push_back(__pid)
+	if conn_points.size() != 2: return remove_point()
+	var active_point_pos = curve.get_point_position(active_point)
+	var active_point_in = curve.get_point_in(active_point)
+	var active_point_out = curve.get_point_out(active_point)
+	
+	var a_p_id:int=conn_points[0]
+	var b_p_id:int=conn_points[1]
+	var a_conn_id:int =curve.get_conn_id(active_point,a_p_id)
+	var b_conn_id:int =curve.get_conn_id(active_point,b_p_id)
+	var a_conn_type:MCurve.ConnType = curve.get_conn_type(a_conn_id)
+	var b_conn_type:MCurve.ConnType = curve.get_conn_type(b_conn_id)
+	var merge_conn_type:=MCurve.ConnType.CONN_NONE
+	var active_use_in_with_a:=true
+	var active_use_in_with_b:=true
+	if active_point > a_p_id and (a_conn_type==MCurve.ConnType.OUT_OUT or a_conn_type==MCurve.ConnType.OUT_IN): active_use_in_with_a = false
+	elif active_point < a_p_id and (a_conn_type==MCurve.ConnType.OUT_OUT or a_conn_type==MCurve.ConnType.IN_OUT): active_use_in_with_a = false
+	if active_point > b_p_id and (b_conn_type==MCurve.ConnType.OUT_OUT or b_conn_type==MCurve.ConnType.OUT_IN): active_use_in_with_b = false
+	elif active_point < b_p_id and (b_conn_type==MCurve.ConnType.OUT_OUT or b_conn_type==MCurve.ConnType.IN_OUT): active_use_in_with_b = false
+	
+	if active_use_in_with_a and active_use_in_with_b:
+		merge_conn_type=MCurve.ConnType.IN_IN
+	elif not active_use_in_with_a and not active_use_in_with_b:
+		merge_conn_type=MCurve.ConnType.OUT_OUT
+	elif a_p_id < b_p_id:
+		if not active_use_in_with_a and active_use_in_with_b: merge_conn_type=MCurve.ConnType.OUT_IN
+		elif active_use_in_with_a and not active_use_in_with_b: merge_conn_type=MCurve.ConnType.IN_OUT
+	else:
+		if not active_use_in_with_b and active_use_in_with_a: merge_conn_type=MCurve.ConnType.OUT_IN
+		elif active_use_in_with_b and not active_use_in_with_a: merge_conn_type=MCurve.ConnType.IN_OUT
+	ur.create_action("Remove Point only")
+	ur.add_do_method(curve,"remove_point",active_point)
+	ur.add_do_method(curve,"connect_points",a_p_id,b_p_id,merge_conn_type)
+	ur.add_undo_method(curve,"disconnect_points",a_p_id,b_p_id)
+	ur.add_undo_method(curve,"add_point_conn_point",active_point_pos,active_point_in,active_point_out,[a_conn_type,b_conn_type],conn_points)
 	ur.commit_action(true)
 	return true
 
