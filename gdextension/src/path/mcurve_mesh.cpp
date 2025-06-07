@@ -196,6 +196,9 @@ MCurveMesh::~MCurveMesh(){
             break;
         }
     }
+    if(curve.is_valid()){
+        curve->remove_curve_user_id(curve_user_id);
+    }
 }
 
 void MCurveMesh::_on_connections_updated(){
@@ -466,12 +469,18 @@ void MCurveMesh::_connection_force_update(int64_t conn_id){
 void MCurveMesh::_point_remove(int32_t point_id){
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
     _remove_instance(point_id);
+    if(ov.is_valid()){
+        ov->clear_override_no_signal(point_id);
+    }
 }
 
 void MCurveMesh::_connection_remove(int64_t conn_id){
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
     conn_ratio_limits.erase(conn_id);
     _remove_instance(conn_id);
+    if(ov.is_valid()){
+        ov->clear_override(conn_id);
+    }
 }
 
 void MCurveMesh::_generate_connection(const MCurve::ConnUpdateInfo& update_info,bool immediate_update){
@@ -1017,7 +1026,7 @@ void MCurveMesh::_on_curve_changed(){
         }
         curve = new_curve;
         if(curve.is_valid()){
-            curve_user_id = curve->get_curve_users_id();
+            curve_user_id = curve->get_curve_users_id(this);
             curve->connect("connection_updated",Callable(this,"_on_connections_updated"));
             curve->connect("force_update_point",Callable(this,"_point_force_update"));
             curve->connect("force_update_connection",Callable(this,"_connection_force_update"));

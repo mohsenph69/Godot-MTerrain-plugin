@@ -5,6 +5,8 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include "mpath.h"
+#include "mcurve_mesh.h"
+#include "mcurve_instance.h"
 
 
 
@@ -52,12 +54,15 @@ void MCurve::_bind_methods(){
     ADD_SIGNAL(MethodInfo("recreate"));
     // end of signals
 
+    ClassDB::bind_method(D_METHOD("set_override_entry","id","override_data"), &MCurve::set_override_entry);
+    ClassDB::bind_method(D_METHOD("get_override_entry","id"), &MCurve::get_override_entry);
+
     ClassDB::bind_method(D_METHOD("get_points_count"), &MCurve::get_points_count);
 
-    ClassDB::bind_method(D_METHOD("add_point","position","in","out","prev_conn"), &MCurve::add_point);
-    ClassDB::bind_method(D_METHOD("add_point_conn_point","position","in","out","conn_types","conn_points"), &MCurve::add_point_conn_point);
+    ClassDB::bind_method(D_METHOD("add_point","position","in","out","prev_conn","point_override","conn_override"), &MCurve::add_point,DEFVAL(nullptr),DEFVAL(nullptr));
+    ClassDB::bind_method(D_METHOD("add_point_conn_point","position","in","out","conn_types","conn_points","point_override","conn_overrides"), &MCurve::add_point_conn_point, DEFVAL(nullptr),DEFVAL(nullptr));
     ClassDB::bind_method(D_METHOD("add_point_conn_split","conn_id","t"), &MCurve::add_point_conn_split);
-    ClassDB::bind_method(D_METHOD("connect_points","p0","p1","conn_type"), &MCurve::connect_points);
+    ClassDB::bind_method(D_METHOD("connect_points","p0","p1","conn_type","conn_ov_data"), &MCurve::connect_points,DEFVAL(nullptr));
     ClassDB::bind_method(D_METHOD("disconnect_conn","conn_id"), &MCurve::disconnect_conn);
     ClassDB::bind_method(D_METHOD("disconnect_points","p0","p1"), &MCurve::disconnect_points);
     ClassDB::bind_method(D_METHOD("remove_point","point_index"), &MCurve::remove_point);
@@ -82,8 +87,10 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_conn_type","conn_id"), &MCurve::get_conn_type);
     ClassDB::bind_method(D_METHOD("get_point_conn_count","p_index"), &MCurve::get_point_conn_count);
     ClassDB::bind_method(D_METHOD("get_point_conn_points","p_index"), &MCurve::get_point_conn_points);
+    ClassDB::bind_method(D_METHOD("get_point_conn_overrides","p_index"), &MCurve::get_point_conn_overrides);
     ClassDB::bind_method(D_METHOD("get_point_conn_points_recursive","p_index"), &MCurve::get_point_conn_points_recursive);
     ClassDB::bind_method(D_METHOD("get_point_conns","p_index"), &MCurve::get_point_conns);
+    ClassDB::bind_method(D_METHOD("get_point_conns_override_entries","p_index"), &MCurve::get_point_conns_override_entries);
     ClassDB::bind_method(D_METHOD("get_point_conns_inc_neighbor_points","p_index"), &MCurve::get_point_conns_inc_neighbor_points);
     ClassDB::bind_method(D_METHOD("growed_conn","conn_ids"), &MCurve::growed_conn);
     ClassDB::bind_method(D_METHOD("get_point_conn_types","p_index"), &MCurve::get_point_conn_types);
@@ -181,6 +188,62 @@ MCurve::~MCurve(){
     }
 }
 
+void MCurve::set_override_entry(int64_t id,Ref<MCurveOverrideData> override_data){
+    ERR_FAIL_COND(override_data.is_null());
+    for(int i=0; i < override_data->entries.size(); i++){
+        const MCurveOverrideData::Entry& entry = override_data->entries[i];
+        int user_id = entry.user_id;
+        ERR_CONTINUE(!curve_users.has(user_id));
+        Node* node = entry.node;
+        ERR_CONTINUE(curve_users[user_id]==nullptr);
+        ERR_CONTINUE(node==nullptr);
+        ERR_CONTINUE(curve_users[user_id]!=node);
+        MCurveMesh* curve_mesh = Object::cast_to<MCurveMesh>(node);
+        MCurveInstance* curve_instance = Object::cast_to<MCurveInstance>(node);
+        if(curve_mesh){
+            ERR_CONTINUE(curve_mesh->get_overrides().is_null());
+            curve_mesh->get_overrides()->set_override_entry(id,entry.data);
+        } else if(curve_instance){
+            ERR_CONTINUE(curve_instance->get_override().is_null());
+            curve_instance->get_override()->set_override_entry(id,entry.data);
+        } else {
+            ERR_CONTINUE_MSG(true,"Invalid User Type!");
+        }
+    }
+}
+
+Ref<MCurveOverrideData> MCurve::get_override_entry(int64_t id) const{
+    Ref<MCurveOverrideData> out;
+    out.instantiate();
+    for(int i=0; i < curve_users.size(); i++){
+        MCurveOverrideData::Entry entry;
+        Node* node = curve_users.get_array()[i].value;
+        int user_id = curve_users.get_array()[i].key;
+        entry.user_id = user_id;
+        entry.node = node;
+        MCurveMesh* curve_mesh = Object::cast_to<MCurveMesh>(node);
+        MCurveInstance* curve_instance = Object::cast_to<MCurveInstance>(node);
+        if(curve_mesh){
+            if(curve_mesh->get_overrides().is_null()){
+                continue; // no data
+            } else {
+                entry.data = curve_mesh->get_overrides()->get_override_entry(id);
+            }
+        } else if(curve_instance){
+            if(curve_instance->get_override().is_null()){
+                continue; // not data
+            } else {
+                entry.data = curve_instance->get_override()->get_override_entry(id);
+            }
+        } else {
+            ERR_CONTINUE_MSG(true,"Invalid User Type!");
+        }
+        out->entries.push_back(entry);
+    }
+    return out;
+}
+
+
 int MCurve::get_points_count(){
     // -1 because 0 index is always empty
     return points_buffer.size() - free_buffer_indicies.size() - 1;
@@ -201,9 +264,9 @@ void MCurve::_increase_points_buffer_size(size_t q){
     }
 }
 
-int32_t MCurve::get_curve_users_id(){
+int32_t MCurve::get_curve_users_id(Node* node){
     last_curve_id++;
-    curve_users.insert(last_curve_id);
+    curve_users.insert(last_curve_id,node);
     return last_curve_id;
 }
 void MCurve::remove_curve_user_id(int32_t user_id){
@@ -214,7 +277,7 @@ void MCurve::remove_curve_user_id(int32_t user_id){
 }
 
 
-int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector3& out, const int32_t prev_conn){
+int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector3& out, const int32_t prev_conn,Ref<MCurveOverrideData> point_override_data,Ref<MCurveOverrideData> conn_override_data){
     // In case of prev_conn==INVALID_POINT_INDEX this is a single point in space
     ERR_FAIL_COND_V(!has_point(prev_conn) && prev_conn!=INVALID_POINT_INDEX,INVALID_POINT_INDEX);
     if(free_buffer_indicies.size() == 0){
@@ -223,7 +286,8 @@ int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector
     }
     int32_t free_index = free_buffer_indicies[free_buffer_indicies.size() - 1];
     Point new_point(position,in,out);
-    if(prev_conn!=INVALID_POINT_INDEX){ // if this statement not run this means this is a single point in space
+    bool has_prev_point = has_point(prev_conn);
+    if(has_prev_point){ // if this statement not run this means this is a single point in space
         Point* prev_point = points_buffer.ptrw() + prev_conn;
         // Check if prev_conn has free slot, As we are creating new point my slot defently has free slot
         int8_t prev_conn_free_slot = -1;
@@ -236,13 +300,23 @@ int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector
         ERR_FAIL_COND_V_EDMSG(prev_conn_free_slot==-1,INVALID_POINT_INDEX,"Maximum number of conn is "+itos(MAX_CONN));
         prev_point->conn[prev_conn_free_slot] = free_index;
         new_point.conn[0] = -prev_conn;
+        /// Adding Override Entry if exist
+        if(conn_override_data.is_valid()){
+            Conn __conn(prev_conn,free_index);
+            set_override_entry(__conn.id,conn_override_data);
+        }
     }
     points_buffer.set(free_index,new_point);
     free_buffer_indicies.remove_at(free_buffer_indicies.size() - 1);
+    if(point_override_data.is_valid()){
+        set_override_entry(free_index,point_override_data);
+    }
     if(is_init_insert && octree != nullptr){
         octree->insert_point(position,free_index,oct_id);
     }
-    emit_signal("force_update_point",prev_conn);
+    if(has_prev_point){
+        emit_signal("force_update_point",prev_conn);
+    }
     emit_signal("force_update_point",free_index);
     return free_index;
 }
@@ -250,8 +324,9 @@ int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector
 /*
     mostly has only for undo-redo use
 */
-int32_t MCurve::add_point_conn_point(const Vector3& position,const Vector3& in,const Vector3& out,const Array& conn_types,const PackedInt32Array& conn_points){
+int32_t MCurve::add_point_conn_point(const Vector3& position,const Vector3& in,const Vector3& out,const Array& conn_types,const PackedInt32Array& conn_points,Ref<MCurveOverrideData> point_override,TypedArray<MCurveOverrideData> conn_overrides){
     ERR_FAIL_COND_V(conn_types.size() != conn_points.size(),INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(conn_overrides.size() != conn_points.size() && conn_overrides.size()!=0,INVALID_POINT_INDEX);
     ERR_FAIL_COND_V(conn_types.size() > MAX_CONN,INVALID_POINT_INDEX);
     if(free_buffer_indicies.size() == 0){
         _increase_points_buffer_size(INC_POINTS_BUFFER_SIZE);
@@ -265,9 +340,16 @@ int32_t MCurve::add_point_conn_point(const Vector3& position,const Vector3& in,c
         if(conn_points[i] == INVALID_POINT_INDEX){
             continue;
         }
-        connect_points(free_index,conn_points[i],(ConnType)((int)conn_types[i]));
+        if(conn_overrides.size()==0){
+            connect_points(free_index,conn_points[i],(ConnType)((int)conn_types[i]));
+        } else {
+            connect_points(free_index,conn_points[i],(ConnType)((int)conn_types[i]),conn_overrides[i]);
+        }
     }
     /// Correcting connection types
+    if(point_override.is_valid()){
+        set_override_entry(free_index,point_override);
+    }
     if(is_init_insert && octree != nullptr){
         octree->insert_point(position,free_index,oct_id);
     }
@@ -313,6 +395,7 @@ int32_t MCurve::add_point_conn_split(int64_t conn_id,float t){
     npoint.in = npoint.position - tangent*n_handl_len;
     npoint.out = npoint.position + tangent*n_handl_len;
     //// Removing current connection
+    Ref<MCurveOverrideData> ov_data = get_override_entry(conn.id); // Caching override data to apply on two other created connections
     int freed_conn_index_a = -1;
     int freed_conn_index_b = -1;
     for(int8_t c=0; c < MAX_CONN; c++){
@@ -344,7 +427,13 @@ int32_t MCurve::add_point_conn_split(int64_t conn_id,float t){
     a->conn[freed_conn_index_a] = a_use_in ? -npid : npid;
     b->conn[freed_conn_index_b] = b_use_in ? -npid : npid;
     points_buffer.set(npid,npoint);
-    /// Calculating LOD and force updateds
+    ////// New Conn IDs
+    Conn nconn_a(conn.p.a,npid);
+    Conn nconn_b(conn.p.b,npid);
+    ///////// putting same override data into new connections
+    set_override_entry(nconn_a.id,ov_data);
+    set_override_entry(nconn_b.id,ov_data);
+    //////////////////////////////////
     if(is_init_insert && octree != nullptr){
         octree->insert_point(npoint.position,npid,oct_id);
     }
@@ -360,7 +449,7 @@ int32_t MCurve::add_point_conn_split(int64_t conn_id,float t){
     PackedInt32Array points = {conn.p.a,conn.p.b};
     int32_t pid = add_point_conn_point(npos,nin,nout,conn_types,points);
 */
-bool MCurve::connect_points(int32_t p0,int32_t p1,ConnType con_type){
+bool MCurve::connect_points(int32_t p0,int32_t p1,ConnType con_type,Ref<MCurveOverrideData> conn_ov_data){
     Conn conn(p0,p1); // Making the order right
     ERR_FAIL_COND_V(has_conn(conn.id), false);
     Point* a = points_buffer.ptrw() + conn.p.a;
@@ -414,6 +503,9 @@ bool MCurve::connect_points(int32_t p0,int32_t p1,ConnType con_type){
     conn_list.insert(conn.id,clod);
     if(clod <= active_lod_limit){
         active_conn.insert(conn.id);
+    }
+    if(conn_ov_data.is_valid()){
+        set_override_entry(conn.id,conn_ov_data);
     }
     emit_signal("force_update_point",conn.p.a);
     emit_signal("force_update_point",conn.p.b);
@@ -599,7 +691,10 @@ void MCurve::_octree_update_finish(){
             }
         }
     }
-    processing_users = curve_users;
+    for(int i=0; i < curve_users.size();i++){
+        processing_users.insert(curve_users.get_array()[i].key);
+    }
+    
     emit_signal("curve_updated");
     is_waiting_for_user = true;
     emit_signal("connection_updated");
@@ -848,6 +943,17 @@ PackedInt32Array MCurve::get_point_conn_points(int32_t p_index) const{
     }
     return out;
 }
+
+TypedArray<MCurveOverrideData> MCurve::get_point_conn_overrides(int32_t p_index) const{
+    TypedArray<MCurveOverrideData> out;
+    ERR_FAIL_COND_V(!has_point(p_index),out);
+    const Point* p = points_buffer.ptr() + p_index;
+    for(int8_t i=0; i < MAX_CONN ; i++){
+        Conn conn(p_index,abs(p->conn[i]));
+        out.push_back(get_override_entry(conn.id));
+    }
+    return out;
+}
 /*
     output does not include p_index
 */
@@ -885,6 +991,20 @@ PackedInt64Array MCurve::get_point_conns(int32_t p_index) const{
             int32_t other_index = std::abs(p->conn[i]);
             Conn cc(p_index,other_index);
             out.push_back(cc.id);
+        }
+    }
+    return out;
+}
+
+Dictionary MCurve::get_point_conns_override_entries(int32_t p_index) const{
+    Dictionary out;
+    ERR_FAIL_COND_V(!has_point(p_index),out);
+    const Point* p = points_buffer.ptr() + p_index;
+    for(int8_t i=0; i < MAX_CONN ; i++){
+        if(p->conn[i]!=0){
+            int32_t other_index = std::abs(p->conn[i]);
+            Conn cc(p_index,other_index);
+            out[cc.id] = get_override_entry(cc.id);;
         }
     }
     return out;

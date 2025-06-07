@@ -787,6 +787,30 @@ float MCurveInstanceOverride::get_rand_remove(int64_t conn_id,int element_index)
     ERR_FAIL_V_MSG(0.0f,"get_rand_remove element not found!");
 }
 
+void  MCurveInstanceOverride::set_override_entry(int64_t id,PackedByteArray input_data){
+    if(input_data.size()==0){
+        data.erase(id);
+        return;
+    }
+    size_t _size = sizeof(OverrideData);
+    ERR_FAIL_COND(input_data.size()!=_size);
+    OverrideData ov;
+    memcpy(&ov,input_data.ptr(),_size);
+    data.insert(id,ov);
+}
+
+PackedByteArray MCurveInstanceOverride::get_override_entry(int64_t id) const{
+    PackedByteArray out;
+    HashMap<int64_t,OverrideData>::ConstIterator it = data.find(id);
+    if(it==data.end()){
+        return out;
+    }
+    size_t _size = sizeof(OverrideData);
+    out.resize(_size);
+    memcpy(out.ptrw(),&it->value,_size);
+    return out;
+}
+
 void MCurveInstanceOverride::set_data(const PackedByteArray& input){
     using OvPair = Pair<int64_t,OverrideData>;
     constexpr size_t osize = sizeof(OvPair);
@@ -882,6 +906,9 @@ MCurveInstance::MCurveInstance(){
 
 MCurveInstance::~MCurveInstance(){
     _remove_all_instance();
+    if(curve.is_valid()){
+        curve->remove_curve_user_id(curve_user_id);
+    }
 }
 
 void MCurveInstance::_on_connections_updated(){
@@ -1261,7 +1288,7 @@ void MCurveInstance::_on_curve_changed(){
         }
         curve = new_curve;
         if(curve.is_valid()){
-            curve_user_id = curve->get_curve_users_id();
+            curve_user_id = curve->get_curve_users_id(this);
             curve->connect("connection_updated",Callable(this,"_on_connections_updated"));
             curve->connect("force_update_connection",Callable(this,"_connection_force_update"));
             curve->connect("remove_connection",Callable(this,"_connection_remove"));

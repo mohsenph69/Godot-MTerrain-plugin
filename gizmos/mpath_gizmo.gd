@@ -600,22 +600,25 @@ func process_mouse_left_click(camera, event, terrain_col)->bool:
 					is_new_pos_set = true
 		var conn_ids:PackedInt64Array
 		if curve.has_point(active_point):
+			var conn_ov_data:MCurveOverrideData
+			var ov_entries:Dictionary= curve.get_point_conns_override_entries(active_point)
+			if ov_entries.size()==1: conn_ov_data = ov_entries.values()[0]
 			var creation_distance = curve.get_point_position(active_point).distance_to(from)
 			if not is_new_pos_set:
 				new_pos = from + to * creation_distance
-			new_index = curve.add_point(new_pos,new_pos,new_pos,active_point)
+			new_index = curve.add_point(new_pos,new_pos,new_pos,active_point,null,conn_ov_data)
 			conn_ids.push_back(curve.get_conn_id(new_index,active_point))
 		else:
 			if not is_new_pos_set:
 				new_pos = from + to * 4.0
-			new_index = curve.add_point(new_pos,new_pos,new_pos,0)
+			new_index = curve.add_point(new_pos,new_pos,new_pos,0,null,null)
 		if new_index == 0: ### In case for error					
 			return true
 		## Undo Redo
 		ur.create_action("create_point")
 		ur.add_do_method(self,"change_active_point",new_index)
 		ur.add_undo_method(self,"change_active_point",active_point)
-		ur.add_do_method(curve,"add_point",new_pos,new_pos,new_pos,active_point)
+		ur.add_do_method(curve,"add_point",new_pos,new_pos,new_pos,active_point,null,null)
 		if conn_ids.size()!=0:
 			curve_terrain_modify(conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 			ur.add_do_method(self,"curve_terrain_modify",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
@@ -866,7 +869,7 @@ func connect_points()->bool:
 		push_error("More than two points is selected")
 		return false
 	var other_point:int = selected_points[0]
-	var res:bool = curve.connect_points(active_point,other_point,MCurve.CONN_NONE)
+	var res:bool = curve.connect_points(active_point,other_point,MCurve.CONN_NONE,null)
 	if res:
 		var conn_ids:PackedInt64Array
 		conn_ids.push_back(curve.get_conn_id(active_point,other_point))
@@ -922,15 +925,19 @@ func split_connection(curve:MCurve,from:Vector3,to:Vector3)->bool:
 	var ratio = col.get_collision_ratio()
 	var conn_type = curve.get_conn_type(cid)
 	var point_ids = curve.get_conn_points(cid)
+	 # on split cpp file override will set automaticlly we need to set it only for undo
+	var conn_override_data = curve.get_override_entry(cid)
 	var pid = curve.add_point_conn_split(cid,ratio) # this will remove conn
+	var conn_ov_data:MCurveOverrideData
 	if has_active_point:
-		curve.connect_points(pid,active_point,MCurve.IN_OUT)
-	curve.get_conn_points
+		curve.connect_points(pid,active_point,MCurve.IN_OUT,null)
+		var ov_entries = curve.get_point_conns_override_entries(active_point)
+		if ov_entries.size()==1:conn_ov_data=ov_entries.values()[0]
 	ur.create_action("split connection")
 	ur.add_do_method(curve,"add_point_conn_split",cid,ratio)
-	ur.add_do_method(curve,"connect_points",pid,active_point,MCurve.IN_OUT)
+	ur.add_do_method(curve,"connect_points",pid,active_point,MCurve.IN_OUT,conn_ov_data)
 	ur.add_undo_method(curve,"remove_point",pid)
-	ur.add_undo_method(curve,"connect_points",point_ids[0],point_ids[1],conn_type)
+	ur.add_undo_method(curve,"connect_points",point_ids[0],point_ids[1],conn_type,conn_override_data) # this will send update conn so set override data before
 	ur.commit_action(false)
 	return true
 	
@@ -954,14 +961,15 @@ func remove_point()->bool:
 	var p_out = curve.get_point_out(active_point)
 	var conn_points = curve.get_point_conn_points(active_point)
 	var conn_types = curve.get_point_conn_types(active_point)
+	var conn_overrides = curve.get_point_conn_overrides(active_point)
+	var point_override = curve.get_override_entry(active_point)
 	var conn_ids:PackedInt64Array = curve.get_point_conns(active_point)
 	ur.create_action("Remove Point")
 	if conn_ids.size()!=0:
 		curve_terrain_modify(conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 		ur.add_do_method(self,"curve_terrain_clear",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 	ur.add_do_method(curve,"remove_point",active_point)
-	#curve.add_point_conn_point(p_pos,p_in,p_out,conn_types,conn_points)
-	ur.add_undo_method(curve,"add_point_conn_point",p_pos,p_in,p_out,conn_types,conn_points)
+	ur.add_undo_method(curve,"add_point_conn_point",p_pos,p_in,p_out,conn_types,conn_points,point_override,conn_overrides)
 	if conn_ids.size()!=0:
 		ur.add_undo_method(self,"curve_terrain_modify",conn_ids,auto_terrain_deform,auto_terrain_paint,auto_grass_modify,grass_modify_settings)
 	ur.commit_action(true)

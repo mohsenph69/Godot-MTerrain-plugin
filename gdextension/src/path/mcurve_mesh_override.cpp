@@ -12,6 +12,9 @@ void MCurveMeshOverride::_bind_methods(){
     ClassDB::bind_method(D_METHOD("clear_material_override","id"), &MCurveMeshOverride::clear_material_override);
     ClassDB::bind_method(D_METHOD("clear_override","id"), &MCurveMeshOverride::clear_override);
 
+    ClassDB::bind_method(D_METHOD("set_override_entry","id","data_input"), &MCurveMeshOverride::set_override_entry);
+    ClassDB::bind_method(D_METHOD("get_override_entry","id"), &MCurveMeshOverride::get_override_entry);
+
     ClassDB::bind_method(D_METHOD("_set_data","input"), &MCurveMeshOverride::set_data);
     ClassDB::bind_method(D_METHOD("_get_data"), &MCurveMeshOverride::get_data);
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"_data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"_set_data","_get_data");
@@ -93,6 +96,35 @@ void MCurveMeshOverride::clear_override(int64_t id){
     emit_signal("id_updated",id);
 }
 
+void MCurveMeshOverride::clear_override_no_signal(int64_t id){
+    data.erase(id);
+}
+
+void MCurveMeshOverride::set_override_entry(int64_t id,PackedByteArray data_input){
+    if(data_input.size()==0){
+        data.erase(id);
+        return;
+    }
+    size_t size = sizeof(MCurveMeshOverride::Override);
+    ERR_FAIL_COND(data_input.size()!=size);
+    MCurveMeshOverride::Override ov;
+    memcpy(&ov,data_input.ptr(),size);
+    data.insert(id,ov);
+}
+
+PackedByteArray MCurveMeshOverride::get_override_entry(int64_t id) const{
+    PackedByteArray out;
+    HashMap<int64_t,Override>::ConstIterator it = data.find(id);
+    if(it==data.end()){
+        return out;
+    }
+    size_t size = sizeof(MCurveMeshOverride::Override);
+    out.resize(size);
+    memcpy(out.ptrw(),&it->value,size);
+    return out;
+}
+
+
 void MCurveMeshOverride::set_data(const PackedByteArray& input){
     data.clear();
     if(input.size()==0){
@@ -109,11 +141,11 @@ void MCurveMeshOverride::set_data(const PackedByteArray& input){
     }
 }
 
-PackedByteArray MCurveMeshOverride::get_data(){
+PackedByteArray MCurveMeshOverride::get_data() const {
     PackedByteArray out;
     int sb = sizeof(Pair<int64_t,Override>);
     int counter = 0;
-    for(HashMap<int64_t,Override>::Iterator it=data.begin();it!=data.end();++it){
+    for(HashMap<int64_t,Override>::ConstIterator it=data.begin();it!=data.end();++it){
         int pos = counter*sb;
         out.resize(pos+sb);
         Pair<int64_t,Override> dp(it->key,it->value);

@@ -23,6 +23,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/templates/hash_set.hpp>
+#include <godot_cpp/templates/vmap.hpp>
 
 
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -30,7 +31,6 @@
 
 using namespace godot;
 
-class MPath;
 class MCurve;
 
 class MCurveConnCollision : public RefCounted {
@@ -45,6 +45,29 @@ class MCurveConnCollision : public RefCounted {
     bool is_collided() const;
     float get_collision_ratio() const;
     int64_t get_conn_id() const;
+};
+
+/**
+ * use set_override_entry and get_override_entry for setting and getting MCurveOverrideData
+ * use get_point_conns_override_entries to get all override data for connection connected to a point
+ * 
+ * usefull for things like copying override data and undo a redo
+ * Only run-time for temporary stuff not save or ...
+ * 
+ * set_override_entry, get_override_entry id can be id of conn or point
+ * as id of conn or point will never collide
+ */
+class MCurveOverrideData : public RefCounted {
+    GDCLASS(MCurveOverrideData,RefCounted);
+    protected:
+    static void _bind_methods(){};
+    public:
+    struct Entry {
+        int user_id;
+        Node* node;
+        PackedByteArray data;
+    };
+    Vector<Entry> entries;
 };
 /*
     Each point has int32_t id
@@ -160,7 +183,7 @@ class MCurve : public Resource{
     //PackedInt32Array root_ids;
     static MOctree* octree;
     int32_t last_curve_id = 0;
-    VSet<int32_t> curve_users;
+    VMap<int32_t,Node*> curve_users;
     VSet<int32_t> processing_users;
     VSet<int32_t> active_points;
     VSet<int64_t> active_conn;
@@ -184,21 +207,22 @@ class MCurve : public Resource{
     Vector<MCurve::Point> points_buffer;
     MCurve();
     ~MCurve();
-
+    void set_override_entry(int64_t id,Ref<MCurveOverrideData> override_data);
+    Ref<MCurveOverrideData> get_override_entry(int64_t id) const;
     int get_points_count();
     // Users
-    int32_t get_curve_users_id();
+    int32_t get_curve_users_id(Node* node);
     void remove_curve_user_id(int32_t user_id);
 
     // In case prev_conn = -1 this will insert as root node and if a root node exist this will give an error
-    int32_t add_point(const Vector3& position,const Vector3& in,const Vector3& out, const int32_t prev_conn);
-    int32_t add_point_conn_point(const Vector3& position,const Vector3& in,const Vector3& out,const Array& conn_types,const PackedInt32Array& conn_points);
+    int32_t add_point(const Vector3& position,const Vector3& in,const Vector3& out, const int32_t prev_conn,Ref<MCurveOverrideData> point_override_data,Ref<MCurveOverrideData> conn_override_data);
+    int32_t add_point_conn_point(const Vector3& position,const Vector3& in,const Vector3& out,const Array& conn_types,const PackedInt32Array& conn_points,Ref<MCurveOverrideData> point_override=nullptr,TypedArray<MCurveOverrideData> conn_overrides=TypedArray<MCurveOverrideData>());
     // important this should be called when conn change or remove
     void clear_conn_cache_data(int64_t conn_id);
     /// break a connection into two connection by adding a point on top of that
     /// t is ratio
     int32_t add_point_conn_split(int64_t conn_id,float t);
-    bool connect_points(int32_t p0,int32_t p1,ConnType con_type=CONN_NONE);
+    bool connect_points(int32_t p0,int32_t p1,ConnType con_type=CONN_NONE,Ref<MCurveOverrideData> conn_ov_data=nullptr);
     bool disconnect_conn(int64_t conn_id);
     bool disconnect_points(int32_t p0,int32_t p1);
     void remove_point(const int32_t point_index);
@@ -238,8 +262,15 @@ class MCurve : public Resource{
     int get_point_conn_count(int32_t p_index) const;
     PackedInt32Array get_point_conn_points_exist(int32_t p_index) const;
     PackedInt32Array get_point_conn_points(int32_t p_index) const;
+    TypedArray<MCurveOverrideData> get_point_conn_overrides(int32_t p_index) const;
     PackedInt32Array get_point_conn_points_recursive(int32_t p_index) const;
     PackedInt64Array get_point_conns(int32_t p_index) const;
+    /// Return OverrideData which can be set by set_override_entry
+    /// p_index is point index
+    /// Dictionary key is conn_id connected to point
+    /// Dictionary value is OverrideData
+    /// For grabing single OverrideData data for point or conn use get_override_entry
+    Dictionary get_point_conns_override_entries(int32_t p_index) const;
     PackedInt64Array get_point_conns_inc_neighbor_points(int32_t p_index) const;
     PackedInt64Array growed_conn(PackedInt64Array conn_ids) const;
     Vector3 get_point_position(int p_index);
