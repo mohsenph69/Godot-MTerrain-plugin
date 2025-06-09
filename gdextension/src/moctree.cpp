@@ -660,6 +660,15 @@ MOctree::~MOctree(){
 	if(is_updating){
 		WorkerThreadPool::get_singleton()->wait_for_task_completion(tid);
 	}
+	if(is_valid_octmesh_updater()){
+		MOctMesh::remove_octree(this);
+	}
+	if(is_hlod_updater){
+		MHlodScene::set_octree(nullptr);
+	}
+	if(is_path_updater){
+		MCurve::set_octree(nullptr);
+	}
 }
 
 int MOctree::get_oct_id(){

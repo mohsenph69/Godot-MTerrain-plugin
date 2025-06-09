@@ -574,7 +574,11 @@ bool MHlodScene::set_octree(MOctree* input){
         return false;
     }
     octree = input;
-    oct_id = octree->get_oct_id();
+    if(octree){
+        oct_id = octree->get_oct_id();
+    } else {
+        is_octree_inserted = false;
+    }
     // Octree will call us when we need to insert point or update
     return true;
 }

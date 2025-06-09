@@ -667,7 +667,9 @@ func process_keyboard_actions(): #returns true to return AFTER_GUI_INPUT_STOP
 		if path:
 			var curve:MCurve = path.curve
 			if curve and curve.has_point(active_point):
-				var pp = curve.get_point_conn_points_recursive(active_point)
+				var pp:PackedInt32Array= curve.get_point_conn_points_recursive(active_point)
+				var aindex = pp.find(active_point)
+				if aindex != -1: pp.remove_at(aindex)
 				selected_points = pp
 				pp.push_back(active_point)
 				selected_connections = curve.get_conn_ids_exist(pp)
@@ -1027,11 +1029,10 @@ func swap_points():
 	if selected_points.size() != 1:
 		printerr("For swaping point you should select only two points")
 		return
-	curve.swap_points_with_validation(active_point,selected_points[0])
 	ur.create_action("swap_points")
-	ur.add_do_method(curve,"swap_points_with_validation",active_point,selected_points[0])
-	ur.add_undo_method(curve,"swap_points_with_validation",active_point,selected_points[0])
-	ur.commit_action(false)
+	ur.add_do_method(curve,"swap_points",active_point,selected_points[0])
+	ur.add_undo_method(curve,"swap_points",active_point,selected_points[0])
+	ur.commit_action(true)
 
 func gui_visibility_changed():
 	if not gui.visible:
@@ -1111,6 +1112,7 @@ func sort(increasing:bool):
 	if not path or not path.curve: return
 	var curve = path.curve
 	active_point = curve.sort_from(active_point,increasing)
+	return
 	var cuid = ur.get_object_history_id(curve)
 	var suid = ur.get_object_history_id(self)
 	var cu = ur.get_history_undo_redo(cuid)

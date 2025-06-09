@@ -107,6 +107,23 @@ class MCurve : public Resource{
         Point() = default;
         Point(Vector3 _position,Vector3 _in,Vector3 _out);
         PointSave get_point_save();
+        inline bool is_connected_to(int32_t p_id) const {
+            for(int i=0; i < MAX_CONN; i++){
+                if(conn[i]!=0 && std::abs(conn[i])==p_id){
+                    return true;
+                }
+            }
+            return false;
+        }
+        inline int get_conn_count() const {
+            int count = 0;
+            for(int i=0; i < MAX_CONN; i++){
+                if(conn[i]!=0){
+                    count++;
+                }
+            }
+            return count;
+        }
     };
 
     union Conn
@@ -123,6 +140,9 @@ class MCurve : public Resource{
         ~Conn() = default;
         inline bool is_connection(){
             return p.b!=0;
+        }
+        inline String str(){
+            return String("Conn(") + itos(p.a) + "-" + itos(p.b) + ")";
         }
     };
 
@@ -247,8 +267,20 @@ class MCurve : public Resource{
     public:
     void toggle_conn_type(int32_t point, int64_t conn_id);
     void validate_conn(int64_t conn_id,bool send_signal=true);
+    private:
+    _FORCE_INLINE_ int8_t _calculate_conn_lod(const int64_t conn_id) const;
+    void _validate_points(const VSet<int32_t>& points);
+    /// if conn is removed handle it!
+    /// recalculate LOD base on conn points and update conn_list and active_conn accordingly
+    void _validate_conns(const VSet<int64_t>& conns);
+    void _swap_points(const int32_t p_a,const int32_t p_b,VSet<int64_t>& affected_conns);
+    public:
     void swap_points(const int32_t p_a,const int32_t p_b);
-    void swap_points_with_validation(const int32_t p_a,const int32_t p_b);
+    /**
+        sort increasing or decreasing
+        if _selected_points is empty it will sort in all points
+        this will return new root point as that will change during sorting
+    */
     int32_t sort_from(int32_t root_point,bool increasing);
     void move_point(int p_index,const Vector3& pos);
     void move_point_in(int p_index,const Vector3& pos);
@@ -263,7 +295,14 @@ class MCurve : public Resource{
     PackedInt32Array get_point_conn_points_exist(int32_t p_index) const;
     PackedInt32Array get_point_conn_points(int32_t p_index) const;
     TypedArray<MCurveOverrideData> get_point_conn_overrides(int32_t p_index) const;
-    PackedInt32Array get_point_conn_points_recursive(int32_t p_index) const;
+    /*
+        output is in order of IDs
+    */
+    VSet<int32_t> get_point_conn_points_recursive(int32_t p_index) const;
+    /*
+        Above function for gdscript as gdscript not recognize VSet<int32_t>
+    */
+    PackedInt32Array get_point_conn_points_recursive_gd(int32_t p_index) const;
     PackedInt64Array get_point_conns(int32_t p_index) const;
     /// Return OverrideData which can be set by set_override_entry
     /// p_index is point index

@@ -240,7 +240,10 @@ func update_curve_lenght_info()->void:
 	var l:float=0.0
 	for cid in conn_sel:
 		l += current_curve.get_conn_lenght(cid)
-	conn_info.text = "Lenght: %.1f meter" %  l
+	if conn_sel.size()!=1:
+		conn_info.text = "Lenght: %.1fm" %  l
+	else:
+		conn_info.text = "Lenght: %.1fm (%d)" %  [l,conn_sel[0]]
 
 func update_curve_item_selection():
 	update_curve_lenght_info()

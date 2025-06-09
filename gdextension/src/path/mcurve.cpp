@@ -88,7 +88,7 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_point_conn_count","p_index"), &MCurve::get_point_conn_count);
     ClassDB::bind_method(D_METHOD("get_point_conn_points","p_index"), &MCurve::get_point_conn_points);
     ClassDB::bind_method(D_METHOD("get_point_conn_overrides","p_index"), &MCurve::get_point_conn_overrides);
-    ClassDB::bind_method(D_METHOD("get_point_conn_points_recursive","p_index"), &MCurve::get_point_conn_points_recursive);
+    ClassDB::bind_method(D_METHOD("get_point_conn_points_recursive","p_index"), &MCurve::get_point_conn_points_recursive_gd);
     ClassDB::bind_method(D_METHOD("get_point_conns","p_index"), &MCurve::get_point_conns);
     ClassDB::bind_method(D_METHOD("get_point_conns_override_entries","p_index"), &MCurve::get_point_conns_override_entries);
     ClassDB::bind_method(D_METHOD("get_point_conns_inc_neighbor_points","p_index"), &MCurve::get_point_conns_inc_neighbor_points);
@@ -112,7 +112,6 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("toggle_conn_type","point","conn_id"), &MCurve::toggle_conn_type);
     ClassDB::bind_method(D_METHOD("validate_conn","conn_id"), &MCurve::validate_conn);
     ClassDB::bind_method(D_METHOD("swap_points","p_a","p_b"), &MCurve::swap_points);
-    ClassDB::bind_method(D_METHOD("swap_points_with_validation","p_a","p_b"), &MCurve::swap_points_with_validation);
     ClassDB::bind_method(D_METHOD("sort_from","root_id","increasing"), &MCurve::sort_from);
     ClassDB::bind_method(D_METHOD("move_point","p_index","pos"), &MCurve::move_point);
     ClassDB::bind_method(D_METHOD("move_point_in","p_index","pos"), &MCurve::move_point_in);
@@ -954,12 +953,10 @@ TypedArray<MCurveOverrideData> MCurve::get_point_conn_overrides(int32_t p_index)
     }
     return out;
 }
-/*
-    output does not include p_index
-*/
-PackedInt32Array MCurve::get_point_conn_points_recursive(int32_t p_index) const {
-    PackedInt32Array out;
-    ERR_FAIL_COND_V(!has_point(p_index),out);
+
+VSet<int32_t> MCurve::get_point_conn_points_recursive(int32_t p_index) const {
+    VSet<int32_t> out_set;
+    ERR_FAIL_COND_V(!has_point(p_index),out_set);
     HashSet<int32_t> processed_points;
     PackedInt32Array stack = get_point_conn_points_exist(p_index);
     processed_points.insert(p_index);
@@ -968,7 +965,7 @@ PackedInt32Array MCurve::get_point_conn_points_recursive(int32_t p_index) const 
         int32_t current_index = stack[stack.size()-1];
         const Point* current_point = points_buffer.ptr() + current_index;
         stack.remove_at(stack.size()-1);
-        out.push_back(current_index);
+        out_set.insert(current_index);
         processed_points.insert(current_index);
         for(int i=0;i < MAX_CONN; i++){
             if(current_point->conn[i] != 0){
@@ -978,6 +975,17 @@ PackedInt32Array MCurve::get_point_conn_points_recursive(int32_t p_index) const 
                 }
             }
         }
+    }
+    out_set.insert(p_index);
+    return out_set;
+}
+
+PackedInt32Array MCurve::get_point_conn_points_recursive_gd(int32_t p_index) const{
+    VSet<int32_t> psets = get_point_conn_points_recursive(p_index);
+    PackedInt32Array out;
+    out.resize(psets.size());
+    for(int i=0; i < out.size(); i++){
+        out.set(i,psets[i]);
     }
     return out;
 }
@@ -1799,150 +1807,283 @@ void MCurve::validate_conn(int64_t conn_id,bool send_signal){
         emit_signal("force_update_connection",conn_id);
     }
 }
+
+int8_t MCurve::_calculate_conn_lod(const int64_t conn_id) const{
+    Conn conn(conn_id);
+    const Point& a = points_buffer[conn.p.a];
+    const Point& b = points_buffer[conn.p.b];
+    int8_t lod = a.lod < b.lod ? a.lod : b.lod;
+    return lod;
+}
+
+void MCurve::_validate_points(const VSet<int32_t>& points){
+    Vector<int32_t> removed_point;
+    Vector<int32_t> updated_point;
+    for(int i=0; i < points.size(); i++){
+        int32_t p_id = points[i];
+        if(!has_point(p_id)){
+            removed_point.push_back(p_id);
+            continue;
+        }
+        const Point& point = points_buffer[p_id];
+        if(point.lod > active_lod_limit){
+            active_points.erase(p_id);
+            removed_point.push_back(p_id);
+        } else {
+            active_points.insert(p_id);
+            updated_point.push_back(p_id);
+        }
+    }
+    for(int i=0; i < removed_point.size(); i++){
+        emit_signal("remove_point",removed_point[i]);
+    }
+    for(int i=0; i < updated_point.size(); i++){
+        emit_signal("force_update_point",updated_point[i]);
+    }
+}
+
+void MCurve::_validate_conns(const VSet<int64_t>& conns){
+    Vector<int64_t> removed_conn;
+    Vector<int64_t> updated_conn;
+    for(int i=0; i < conns.size(); i++){
+        int64_t cid = conns[i];
+        clear_conn_cache_data(cid);
+        if(!has_conn(cid)){
+            conn_list.erase(cid);
+            active_conn.erase(cid);
+            removed_conn.push_back(cid);
+            continue;
+        }
+        int8_t conn_lod = _calculate_conn_lod(cid);
+        if(conn_lod > active_lod_limit){
+            conn_list.erase(cid);
+            active_conn.erase(cid);
+            removed_conn.push_back(cid);
+        } else {
+            active_conn.insert(cid);
+            conn_list.insert(cid,conn_lod);
+            updated_conn.push_back(cid);
+        }
+    }
+    for(int i=0; i < removed_conn.size(); i++){
+        Conn conn(removed_conn[i]);
+        //UtilityFunctions::print("remove_connection ",conn.str());
+        emit_signal("remove_connection",removed_conn[i]);
+    }
+    for(int i=0; i < updated_conn.size(); i++){
+        Conn conn(updated_conn[i]);
+        //UtilityFunctions::print("updated_conn ",conn.str());
+        emit_signal("force_update_connection",updated_conn[i]);
+    }
+}
 /*
     After calling this the connection id connected to these points will be invalid
 */
-void MCurve::swap_points(const int32_t p_a,const int32_t p_b){
+void MCurve::_swap_points(const int32_t p_a,const int32_t p_b,VSet<int64_t>& affected_conns){
     if(p_a==p_b){
         return;
     }
     ERR_FAIL_COND(!has_point(p_a)||!has_point(p_b));
-    Point a = points_buffer[p_a];
-    Point b = points_buffer[p_b];
-    // Correcting connection for p_a
-    for(int i=0; i < MAX_CONN; i++){
-        if(a.conn[i]!=INVALID_POINT_INDEX){
-            int32_t other_index = std::abs(a.conn[i]);
-            Point* other = points_buffer.ptrw() + other_index;
-            if(other_index==p_b){ // in this conn_id will not change
-                a.conn[i] = p_a * Math::sign(a.conn[i]);
-                continue;
+    const Point& a_old = points_buffer[p_a];
+    const Point& b_old = points_buffer[p_b];
+    Ref<MCurveOverrideData> a_old_override = get_override_entry(p_a);
+    Ref<MCurveOverrideData> b_old_override = get_override_entry(p_b);
+    Point a_new = b_old;
+    Point b_new = a_old;
+    bool is_a_b_connected = false;
+    { // sign between connection should swap if is_a_b_connected true
+        int b_sign_in_a_old = 0; // +1
+        int a_sign_in_b_old = 0; // -1
+        int b_index_in_a_old; // 3i
+        int a_index_in_b_old; // 1i
+        for(int i=0; i < MAX_CONN; i++){
+            if(std::abs(a_old.conn[i])==p_b){
+                is_a_b_connected = true;
+                b_sign_in_a_old = a_old.conn[i] > 0 ? 1 : -1;
+                b_index_in_a_old = i;
             }
-            Conn old_conn(p_a,other_index);
-            Conn new_conn(p_b,other_index);
+            if(std::abs(b_old.conn[i])==p_a){
+                is_a_b_connected = true;
+                a_sign_in_b_old = b_old.conn[i] > 0 ? 1 : -1;
+                a_index_in_b_old = i;
+            }
+        }
+        if(is_a_b_connected){
+            ERR_FAIL_COND(a_sign_in_b_old==0||b_sign_in_a_old==0);
+            a_new.conn[a_index_in_b_old] = a_sign_in_b_old * p_b;
+            b_new.conn[b_index_in_a_old] = b_sign_in_a_old * p_a;
+            Conn ab(p_a,p_b);
+            affected_conns.insert(ab.id);
+        }
+    }
+    /////////// Now everything point to p_a should point to p_b with conserving the sign
+    // pointing to p_a
+    Conn orignal_conn[MAX_LOD*2];
+    Conn replace_conn[MAX_CONN*2];
+    for(int i=0; i < MAX_CONN; i++){
+        orignal_conn[i].id = 0;
+        replace_conn[i].id = 0;
+        int other_index = std::abs(a_old.conn[i]);
+        if(a_old.conn[i]!=0 && other_index!=p_b){
+            Point* other_p = points_buffer.ptrw() + other_index;
             for(int j=0; j < MAX_CONN; j++){
-                if(std::abs(other->conn[j])==p_a){
-                    int32_t sign = Math::sign(other->conn[j]);
-                    other->conn[j] = p_b * sign;
+                if(std::abs(other_p->conn[j])==p_a){
+                    int sign = other_p->conn[j] > 0 ? 1 : -1;
+                    other_p->conn[j] = sign * p_b;
+                    orignal_conn[i] = Conn(p_a,other_index);
+                    replace_conn[i] = Conn(p_b,other_index);
+                    affected_conns.insert(orignal_conn[i].id);
+                    affected_conns.insert(replace_conn[i].id);
                     break;
                 }
             }
         }
     }
-    // Correcting connection for p_b
+    // pointing to p_b
     for(int i=0; i < MAX_CONN; i++){
-        if(b.conn[i]!=INVALID_POINT_INDEX){
-            int32_t other_index = std::abs(b.conn[i]);
-            Point* other = points_buffer.ptrw() + other_index;
-            if(other_index==p_a){ // in this conn_id will not change
-                b.conn[i] = p_b * Math::sign(b.conn[i]);
-                continue;
-            }
-            Conn old_conn(p_b,other_index);
-            Conn new_conn(p_a,other_index);
+        int ii = i + MAX_CONN;
+        orignal_conn[ii].id = 0;
+        replace_conn[ii].id = 0;
+        int other_index = std::abs(b_old.conn[i]);
+        if(b_old.conn[i]!=0 && other_index!=p_a){
+            Point* other_p = points_buffer.ptrw() + other_index;
             for(int j=0; j < MAX_CONN; j++){
-                if(std::abs(other->conn[j])==p_b){
-                    int32_t sign = Math::sign(other->conn[j]);
-                    other->conn[j] = p_a * sign;
+                if(std::abs(other_p->conn[j])==p_b){
+                    int sign = other_p->conn[j] > 0 ? 1 : -1;
+                    other_p->conn[j] = sign * p_a;
+                    orignal_conn[ii] = Conn(p_b,other_index);
+                    replace_conn[ii] = Conn(p_a,other_index);
+                    affected_conns.insert(orignal_conn[ii].id);
+                    affected_conns.insert(replace_conn[ii].id);
                     break;
                 }
             }
         }
     }
-    bool is_a_active = active_points.has(p_a);
-    bool is_b_active = active_points.has(p_b);
-    if(is_a_active){
-        active_points.insert(p_b);
-    } else {
-        active_points.erase(p_b);
+    if(octree && is_init_insert){ // don't move affter points_buffer.set
+        octree->change_point_id(oct_id,a_old.position,p_a,p_b);
+        octree->change_point_id(oct_id,b_old.position,p_b,p_a);
     }
-    if(is_b_active){
-        active_points.insert(p_a);
-    } else {
-        active_points.erase(p_a);
+    points_buffer.set(p_a,a_new);
+    points_buffer.set(p_b,b_new);
+    set_override_entry(p_a,b_old_override);
+    set_override_entry(p_b,a_old_override);
+    // if p_a p_b connected their conn_id will not change only for others
+    Ref<MCurveOverrideData> conn_overrides[MAX_CONN*2];
+    for(int c=0; c < MAX_CONN*2; c++){
+        if(orignal_conn[c].id!=0){
+            conn_overrides[c] = get_override_entry(orignal_conn[c].id);
+        }
     }
-    if(octree && is_init_insert){
-        octree->change_point_id(oct_id,a.position,p_a,p_b);
-        octree->change_point_id(oct_id,b.position,p_b,p_a);
+    // Replaceing overrides and removin old conn from list and replace it with new one
+    for(int c=0; c < MAX_CONN*2; c++){
+        if(conn_overrides[c].is_valid()){
+            set_override_entry(replace_conn[c].id,conn_overrides[c]);
+        }
     }
-    points_buffer.set(p_a,b);
-    points_buffer.set(p_b,a);
-    emit_signal("swap_point_id",p_a,p_b);
+}
+
+void MCurve::swap_points(const int32_t p_a,const int32_t p_b){
+    VSet<int64_t> affected_conns;
+    _swap_points(p_a,p_b,affected_conns);
+    VSet<int32_t> affected_points;
+    for(int i=0; i < affected_conns.size(); i++){
+        Conn conn(affected_conns[i]);
+        affected_points.insert(conn.p.a);
+        affected_points.insert(conn.p.b);
+    }
+    _validate_points(affected_points);
+    _validate_conns(affected_conns);
     emit_signal("curve_updated");
 }
 
-void MCurve::swap_points_with_validation(const int32_t p_a,const int32_t p_b){
-    ERR_FAIL_COND(!has_point(p_a)||!has_point(p_b));
-    HashSet<int64_t> validate_conn_list;
-    for(int i=0; i < MAX_CONN; i++){
-        if(points_buffer[p_a].conn[i]!=0){
-            Conn tconn(p_a,std::abs(points_buffer[p_a].conn[i]));
-            validate_conn_list.insert(tconn.id);
-        }
-        if(points_buffer[p_b].conn[i]!=0){
-            Conn tconn(p_b,std::abs(points_buffer[p_b].conn[i]));
-            validate_conn_list.insert(tconn.id);
-        }
-    }
-    swap_points(p_a,p_b);
-    for(int i=0; i < MAX_CONN; i++){
-        if(points_buffer[p_a].conn[i]!=0){
-            Conn tconn(p_a,std::abs(points_buffer[p_a].conn[i]));
-            validate_conn_list.insert(tconn.id);
-        }
-        if(points_buffer[p_b].conn[i]!=0){
-            Conn tconn(p_b,std::abs(points_buffer[p_b].conn[i]));
-            validate_conn_list.insert(tconn.id);
-        }
-    }
-    // validating
-    for(HashSet<int64_t>::Iterator it=validate_conn_list.begin();it!=validate_conn_list.end();++it){
-        validate_conn(*it);
-    }
-}
-/*
-    sort increasing or decreasing
-    this will return new root point as that will change during sorting
-*/
 int32_t MCurve::sort_from(int32_t root_point,bool increasing){
-    ERR_FAIL_COND_V(!has_point(root_point),root_point);
-    PackedInt32Array all_points = get_point_conn_points_recursive(root_point);
-    if(all_points.size() == 0){
-        return root_point;
+    ERR_FAIL_COND_V(!has_point(root_point),0);
+    VSet<int64_t> affected_conns;
+    // we consume all sorted points and points until they finish
+    VSet<int32_t> psets = get_point_conn_points_recursive(root_point);
+    PackedInt32Array points_sorted; // PackedInt32Array so we can reverse it
+    points_sorted.resize(psets.size());
+    for(int i=0; i < points_sorted.size(); i++){
+        points_sorted.set(i,psets[i]);
     }
-    all_points.insert(0,root_point);
-    PackedInt32Array all_points_sorted = all_points.duplicate();
-    PackedInt64Array conns_before = get_conn_ids_exist(all_points);
-    all_points_sorted.sort();
-    if(!increasing){
-        all_points_sorted.reverse();
+    if(increasing){ // as removing from end is faster
+        points_sorted.reverse();
     }
-    for(int i=0; i < all_points.size(); i++){
-        int32_t pid = all_points[i];
-        int32_t sorted_pid = all_points_sorted[i];
-        if( (sorted_pid < pid && increasing) || (sorted_pid > pid && !increasing) ){
-            swap_points(pid,sorted_pid);
-            // swaping in all_point
-            // as we pass this index we don't check it we need to only change other index
-            int oswap = all_points.find(sorted_pid);
-            ERR_FAIL_COND_V(oswap==-1,root_point);
-            all_points.set(oswap,pid);
+    {
+        // First do it for root point
+        int32_t next_swap = points_sorted[points_sorted.size()-1];
+        if(increasing){
+            if(root_point > next_swap){
+                _swap_points(root_point,next_swap,affected_conns);
+            }
+        } else {
+            if(root_point < next_swap){
+                _swap_points(root_point,next_swap,affected_conns);
+            }
+        }
+        points_sorted.remove_at(points_sorted.size()-1);
+        root_point = next_swap; // important
+    }
+    HashSet<int32_t> finish_points;
+    finish_points.insert(root_point);
+    PackedInt32Array parent_points = {0};
+    // now we go and sort for each child one by one
+    while (points_sorted.size()!=0 && parent_points.size()!=0)
+    {
+        int32_t current_parent_point_id = parent_points[parent_points.size()-1];
+        parent_points.remove_at(parent_points.size()-1);
+        const Point* current_parent_point = current_parent_point_id==0 ? &points_buffer[root_point] : &points_buffer[current_parent_point_id];
+        for(int c=0; c < MAX_CONN; c++){
+            if(points_sorted.size()==0){
+                break;
+            }
+            if(current_parent_point->conn[c]!=0){
+                int32_t child_id = std::abs(current_parent_point->conn[c]);
+                if(finish_points.has(child_id)){
+                    continue;
+                }
+                // Remove if at branch no need to go further
+                if(points_buffer[child_id].get_conn_count()==0){ 
+                    int _i = points_sorted.find(child_id);
+                    if(_i!=-1){ points_sorted.remove_at(_i); }
+                    finish_points.insert(child_id);
+                    continue;
+                }
+                int32_t next_swap = points_sorted[points_sorted.size()-1];
+                if(current_parent_point->is_connected_to(next_swap)){
+                    // we will encounter this point in this inner loop soon
+                    continue;
+                }
+                if(increasing){
+                    if(child_id > next_swap){
+                        _swap_points(child_id,next_swap,affected_conns);
+                        points_sorted.remove_at(points_sorted.size()-1); 
+                        child_id = next_swap;
+                    } else {
+                        int _i = points_sorted.find(child_id);
+                        if(_i!=-1){ points_sorted.remove_at(_i); }
+                    }
+                } else {
+                    if(child_id < next_swap){
+                        _swap_points(child_id,next_swap,affected_conns);
+                        points_sorted.remove_at(points_sorted.size()-1); 
+                        child_id = next_swap;
+                    } else {
+                        int _i = points_sorted.find(child_id);
+                        if(_i!=-1){ points_sorted.remove_at(_i); }
+                    }
+                }
+                parent_points.push_back(child_id);
+                finish_points.insert(child_id);
+            }
         }
     }
-    // Must use all_point_sorted as all_points is modified
-    PackedInt64Array conns_after = get_conn_ids_exist(all_points_sorted);
-    HashSet<int64_t> processed_conn;
-    for(int i=0; i < conns_before.size(); i++){
-        validate_conn(conns_before[i],false);
-        processed_conn.insert(conns_before[i]);
-    }
-    for(int i=0; i < conns_after.size(); i++){
-        if(!processed_conn.has(conns_after[i])){
-            validate_conn(conns_after[i],false);
-        }
-    }
-    emit_signal("recreate");
-    return all_points_sorted[0];
+    /// updating
+    _validate_points(psets);
+    _validate_conns(affected_conns);
+    emit_signal("curve_updated");
+    return root_point;
 }
 
 void MCurve::move_point(int p_index,const Vector3& pos){

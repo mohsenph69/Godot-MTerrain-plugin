@@ -45,20 +45,18 @@ MPath::~MPath(){
 }
 
 void MPath::set_curve(Ref<MCurve> input){
-    if(!input.is_valid()){
-        if(curve.is_valid()){
-            curve->disconnect("curve_updated",Callable(this,"update_gizmos"));
-        }
-        curve = input;
-        emit_signal("curve_changed");
-        return;
+    if(curve.is_valid()){
+        curve->disconnect("curve_updated",Callable(this,"update_gizmos"));
     }
     curve = input;
-    if(is_inside_tree()){
-        input->init_insert();
+    if(curve.is_valid()){
+        if(is_inside_tree()){
+            input->init_insert();
+        }
+        curve->connect("curve_updated",Callable(this,"update_gizmos"));
     }
-    curve->connect("curve_updated",Callable(this,"update_gizmos"));
     emit_signal("curve_changed");
+    update_gizmos();
 }
 
 Ref<MCurve> MPath::get_curve(){
