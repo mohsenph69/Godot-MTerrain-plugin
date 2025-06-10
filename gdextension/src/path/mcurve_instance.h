@@ -471,14 +471,14 @@ class MCurveInstance : public Node {
     void _on_connections_updated();
     static void thread_update(void* input);
     /// Decide what element should be added and calling _generate_connection_element
-    void _generate_connection(const MCurve::ConnUpdateInfo& update_info,bool immediate_update=false);
+    void _generate_connection(const MCurve::ConnUpdateInfo& update_info);
     void _update_visibilty();
     void _connection_force_update(int64_t conn_id);
     void _connection_remove(int64_t conn_id);
     void _recreate();
     // in case instance_index=-1 all instance will be removed
     void _remove_instance(int64_t conn_id,int instance_index=-1,bool rm_curve_instance_instances=true);
-    void _remove_all_instance();
+    void _remove_all_instances();
     void set_override(Ref<MCurveInstanceOverride> input);
     Ref<MCurveInstanceOverride> get_override() const;
     void set_default_element(int instance_index,int input);

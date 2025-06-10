@@ -204,6 +204,10 @@ MCurveMesh::~MCurveMesh(){
 void MCurveMesh::_on_connections_updated(){
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
     ERR_FAIL_COND(curve.is_null());
+    if(!is_inside_tree()){
+        curve->user_finish_process(curve_user_id);
+        return;
+    }
     //ERR_FAIL_COND(!path->is_inside_tree());
     thread_task_id = WorkerThreadPool::get_singleton()->add_native_task(&MCurveMesh::thread_update,(void*)this);
     is_thread_updating = true;
@@ -1070,6 +1074,20 @@ void MCurveMesh::_notification(int p_what){
         if(!ov->get_path().is_empty()){
             ResourceSaver::get_singleton()->save(ov,ov->get_path());
         }
+    case NOTIFICATION_ENTER_TREE:
+        recreate();
+        break;
+    case NOTIFICATION_EXIT_TREE:
+        if(is_thread_updating){
+            WorkerThreadPool::get_singleton()->wait_for_task_completion(thread_task_id);
+            is_thread_updating = false;
+            ERR_FAIL_COND(curve.is_null());
+            _apply_update();
+            set_process(false);
+            curve->user_finish_process(curve_user_id);
+        }
+        clear();
+        break;
     default:
         break;
     }

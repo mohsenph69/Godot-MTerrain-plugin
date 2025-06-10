@@ -1067,18 +1067,6 @@ void MOctree::release_move_req_cache(){
 	moves_req_cache.clear();
 }
 
-int8_t MOctree::get_pos_lod_classic(const Vector3& pos){
-	real_t dis = camera_position.distance_to(pos);
-	int8_t lod = lod_setting.size();
-	for(int8_t i=0;i<lod_setting.size();i++){
-		if(dis < lod_setting[i]){
-			lod = i;
-			return lod;
-		}
-	}
-	return lod;
-}
-
 PackedInt32Array MOctree::get_ids(const AABB& search_bound,int oct_id){
 	std::lock_guard<std::mutex> lock(oct_mutex);
 	PackedInt32Array out;

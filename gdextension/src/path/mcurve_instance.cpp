@@ -905,7 +905,7 @@ MCurveInstance::MCurveInstance(){
 }
 
 MCurveInstance::~MCurveInstance(){
-    _remove_all_instance();
+    _remove_all_instances();
     if(curve.is_valid()){
         curve->remove_curve_user_id(curve_user_id);
     }
@@ -913,8 +913,11 @@ MCurveInstance::~MCurveInstance(){
 
 void MCurveInstance::_on_connections_updated(){
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
-    //ERR_FAIL_COND(!UtilityFunctions::is_instance_valid(path));
     ERR_FAIL_COND(curve.is_null());
+    if(!is_inside_tree()){
+        curve->user_finish_process(curve_user_id);
+        return;
+    }
     thread_task_id = WorkerThreadPool::get_singleton()->add_native_task(&MCurveInstance::thread_update,(void*)this);
     is_thread_updating = true;
     set_process(true);
@@ -930,7 +933,7 @@ void MCurveInstance::thread_update(void* input){
     }
 }
 
-void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_info,bool immediate_update){
+void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_info){
     int64_t cid = update_info.conn_id;
     int lod = update_info.current_lod;
     int last_lod = update_info.last_lod;
@@ -1145,7 +1148,7 @@ void MCurveInstance::_connection_force_update(int64_t conn_id){
     cu.last_lod = -1;
     cu.current_lod = curve->get_conn_lod(conn_id);
     cu.conn_id = conn_id;
-    _generate_connection(cu,true);
+    _generate_connection(cu);
 }
 
 void MCurveInstance::_connection_remove(int64_t conn_id){
@@ -1159,7 +1162,7 @@ void MCurveInstance::_connection_remove(int64_t conn_id){
 
 void MCurveInstance::_recreate(){
     std::lock_guard<std::recursive_mutex> lock(update_mutex);
-    _remove_all_instance();
+    _remove_all_instances();
     if(curve.is_null()){
         return;
     }
@@ -1169,7 +1172,7 @@ void MCurveInstance::_recreate(){
         cu.last_lod = -1;
         cu.current_lod = curve->get_conn_lod(conns[i]);
         cu.conn_id = conns[i];
-        _generate_connection(cu,true);
+        _generate_connection(cu);
     }
 }
 
@@ -1215,7 +1218,7 @@ void MCurveInstance::_remove_instance(int64_t conn_id,int instance_index,bool rm
     }
 }
 
-void MCurveInstance::_remove_all_instance(){
+void MCurveInstance::_remove_all_instances(){
     for(auto it=curve_instance_instances.begin();it!=curve_instance_instances.end();++it){
         Instances& instances = it->value;
         for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
@@ -1332,6 +1335,22 @@ void MCurveInstance::_notification(int p_what){
         //if(!ov->get_path().is_empty()){
         //    ResourceSaver::get_singleton()->save(ov,ov->get_path());
         //}
+        break;
+    case NOTIFICATION_EXIT_TREE:
+        UtilityFunctions::print("NOTIFICATION_EXIT_TREE curve instance ",is_thread_updating);
+        if(is_thread_updating){
+            WorkerThreadPool::get_singleton()->wait_for_task_completion(thread_task_id);
+            is_thread_updating = false;
+            ERR_FAIL_COND(curve.is_null());
+            //_apply_update();
+            set_process(false);
+            curve->user_finish_process(curve_user_id);
+        }
+        _remove_all_instances();
+        break;
+    case NOTIFICATION_ENTER_TREE:
+        _recreate();
+        break;
     default:
         break;
     }

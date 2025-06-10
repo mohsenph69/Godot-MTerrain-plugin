@@ -217,7 +217,7 @@ class MOctree : public Node3D {
     void add_move_req(const PointMoveReq& mv_data);
     void release_move_req_cache();
     
-    int8_t get_pos_lod_classic(const Vector3& pos);
+    _FORCE_INLINE_ int8_t get_pos_lod_classic(Vector3 pos);
     PackedInt32Array get_ids(const AABB& search_bound,int oct_id);
     PackedInt32Array get_ids_exclude(const AABB& search_bound, const AABB& exclude_bound,int oct_id);
     void update_lod(bool include_root_bound);
@@ -252,4 +252,18 @@ class MOctree : public Node3D {
 
 
 };
+
+int8_t MOctree::get_pos_lod_classic(Vector3 pos){
+	pos = pos - camera_position;
+	pos.x = std::abs(pos.x);
+	pos.y = std::abs(pos.y);
+	pos.z = std::abs(pos.z);
+	for(int8_t i=0;i<lod_setting.size();i++){
+		real_t dis = lod_setting[i];
+		if(pos.x<=dis && pos.y<=dis && pos.z<=dis){
+			return i;
+		}
+	}
+	return lod_setting.size();
+}
 #endif
