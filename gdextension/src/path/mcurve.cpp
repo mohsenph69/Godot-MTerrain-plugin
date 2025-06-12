@@ -110,7 +110,7 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_conn_transform","conn_id","t","tilt","scale"), &MCurve::get_conn_transform);
 
     ClassDB::bind_method(D_METHOD("toggle_conn_type","point","conn_id"), &MCurve::toggle_conn_type);
-    ClassDB::bind_method(D_METHOD("validate_conn","conn_id"), &MCurve::validate_conn);
+    //ClassDB::bind_method(D_METHOD("validate_conn","conn_id"), &MCurve::validate_conn);
     ClassDB::bind_method(D_METHOD("swap_points","p_a","p_b"), &MCurve::swap_points);
     ClassDB::bind_method(D_METHOD("sort_from","root_id","increasing"), &MCurve::sort_from);
     ClassDB::bind_method(D_METHOD("move_point","p_index","pos"), &MCurve::move_point);
@@ -175,6 +175,14 @@ MCurve::Conn::Conn(int32_t p0, int32_t p1){
 }
 
 MCurve::Conn::Conn(int64_t _id):id(_id){
+}
+
+void MCurve::ConnAdditionalPoints::update_positions(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control){
+    float current_ratio;
+    for(int i=0; i < CONN_ADDITIONAL_POINT_COUNT; i++){
+        current_ratio += CONN_ADDITIONAL_POINT_INTERVAL_RATIO;
+        positions[i] = a.bezier_interpolate(a_control,b_control,b,current_ratio);
+    }
 }
 
 MCurve::MCurve(){
@@ -263,6 +271,160 @@ void MCurve::_increase_points_buffer_size(size_t q){
     }
 }
 
+void MCurve::_increase_conn_data_buffer_size(size_t q){
+    if(q<=0){
+        return;
+    }
+    int64_t lsize = conn_additional_points.size();
+    conn_additional_points.resize(lsize + q);
+    conn_additional.resize(lsize + q);
+    for(int64_t i=conn_additional_points.size() - 1; i >= lsize ; i--){
+        if(i==0 || i==1){
+            continue;
+        }
+        conn_free_id32.push_back(i);
+    }
+}
+
+void MCurve::_init_conn_additional_points(const int64_t conn_id,PackedVector3Array& positions,PackedInt32Array& ids){
+    Conn conn(conn_id);
+    bool is_connected = false;
+    const Point& a = points_buffer[conn.p.a];
+    const Point& b = points_buffer[conn.p.b];
+    const Vector3* a_control;
+    const Vector3* b_control;
+    for(int i=0; i < MAX_CONN; i++){
+        if(std::abs(a.conn[i])==conn.p.b){
+            // means not negated a.conn[i]==conn.p.b
+            a_control = a.conn[i]==conn.p.b ? &a.out : &a.in;
+        }
+        if(std::abs(b.conn[i])==conn.p.a){
+            b_control = b.conn[i]==conn.p.a ? &b.out : &b.in;
+        }
+    }
+    if(conn_free_id32.size()==0){
+        _increase_conn_data_buffer_size(10);
+    }
+    ERR_FAIL_COND(conn_free_id32.size()==0);
+    int32_t free_index = conn_free_id32[conn_free_id32.size()-1];
+    conn_free_id32.remove_at(conn_free_id32.size()-1);
+    _set_conn_id32(conn_id,free_index);
+    ConnAdditionalPoints& ap = conn_additional_points.ptrw()[free_index];
+    ap.update_positions(a.position,b.position,*a_control,*b_control);
+    int32_t base_index = free_index*CONN_ADDITIONAL_POINT_COUNT;
+    for(int i=0; i < CONN_ADDITIONAL_POINT_COUNT; i++){
+        int32_t oindex = base_index + i;
+        positions.push_back(ap.positions[i]);
+        ids.push_back(-oindex);
+    }
+}
+
+void MCurve::_update_conn_additional_points(const int64_t conn_id){
+    ERR_FAIL_COND(octree==nullptr);
+    Conn conn(conn_id);
+    bool is_connected = false;
+    const Point& a = points_buffer[conn.p.a];
+    const Point& b = points_buffer[conn.p.b];
+    const Vector3* a_control;
+    const Vector3* b_control;
+    if(has_point(conn.p.a) && has_point(conn.p.b)){
+        for(int i=0; i < MAX_CONN; i++){
+            if(std::abs(a.conn[i])==conn.p.b){
+                is_connected = true;
+                // means not negated a.conn[i]==conn.p.b 
+                a_control = a.conn[i]==conn.p.b ? &a.out : &a.in;
+            }
+            if(std::abs(b.conn[i])==conn.p.a){
+                is_connected = true;
+                b_control = b.conn[i]==conn.p.a ? &b.out : &b.in;
+            }
+        }
+    }
+    auto it_cid32 = conn_id32.find(conn_id);
+    //////////////////////////
+    // Remove
+    //////////////////////////
+    if(!is_connected){
+        if(it_cid32!=conn_id32.end()){
+            int32_t cid32 = it_cid32->value;
+            const ConnAdditionalPoints& __additional_point = conn_additional_points[cid32];
+            ConnAdditional& __additional = conn_additional.ptrw()[cid32];
+            int32_t base_oct_id = cid32*CONN_ADDITIONAL_POINT_COUNT;
+            for(int a=0; a < CONN_ADDITIONAL_POINT_COUNT; a++){
+                octree->remove_point(-(base_oct_id+a),__additional_point.positions[a],oct_id);
+                __additional.lod[a] = -1; // reseting lod back to -1
+                __additional.conn_id = 0;
+            }
+            conn_free_id32.push_back(cid32);
+            conn_id32.erase(conn_id);
+        }
+        return;
+    }
+    ConnAdditionalPoints* __additional_point;
+    ConnAdditional* __additional;
+    //////////////////////////
+    // if is new
+    //////////////////////////
+    if(it_cid32==conn_id32.end()){
+        // grab a free index
+        if(conn_free_id32.size()==0){
+            _increase_conn_data_buffer_size(10);
+        }
+        ERR_FAIL_COND(conn_free_id32.size()==0);
+        int32_t free_index = conn_free_id32[conn_free_id32.size()-1];
+        conn_free_id32.remove_at(conn_free_id32.size()-1);
+        _set_conn_id32(conn_id,free_index);
+        __additional_point = conn_additional_points.ptrw() + free_index;
+        __additional = conn_additional.ptrw() + free_index;
+        __additional_point->update_positions(a.position,b.position,*a_control,*b_control);
+        // Inserting and updating lod in classic mode
+        int32_t base_octree_point_id = free_index*CONN_ADDITIONAL_POINT_COUNT;
+        for(int p=0; p < CONN_ADDITIONAL_POINT_COUNT; p++){
+            int32_t octree_point_id = -(base_octree_point_id + p);
+            __additional->lod[p] = octree->get_pos_lod_classic(__additional_point->positions[p]);
+            octree->insert_point(__additional_point->positions[p],octree_point_id,oct_id);
+        }
+        //// Recalculating conn LOD
+        int8_t conn_lod = _calculate_conn_lod(conn_id);
+        if(conn_lod > active_lod_limit || conn_lod==-1){
+            active_conn.erase(conn_id);
+            conn_list.erase(conn_id);
+        } else {
+            active_conn.insert(conn_id);
+            conn_list.insert(conn_id,conn_lod);
+        }
+        return;
+    }
+    ///////////////////////////
+    // update position (OR move)
+    ///////////////////////////
+    __additional_point = conn_additional_points.ptrw() + it_cid32->value;
+    __additional = conn_additional.ptrw() + it_cid32->value;
+    int32_t base_octree_point_id = it_cid32->value*CONN_ADDITIONAL_POINT_COUNT;
+    MOctree::PointMoveReq mv_req[CONN_ADDITIONAL_POINT_COUNT];
+    for(int p=0; p < CONN_ADDITIONAL_POINT_COUNT; p++){
+        mv_req[p].p_id = -(base_octree_point_id + p);
+        mv_req[p].oct_id = oct_id;
+        mv_req[p].old_pos = __additional_point->positions[p];
+    }
+    __additional_point->update_positions(a.position,b.position,*a_control,*b_control);
+    ///////////// recalculating LOD
+    int8_t conn_lod = _calculate_conn_lod(conn_id);
+    if(conn_lod > active_lod_limit || conn_lod==-1){
+        active_conn.erase(conn_id);
+        conn_list.erase(conn_id);
+    } else {
+        active_conn.insert(conn_id);
+        conn_list.insert(conn_id,conn_lod);
+    }
+    ////////////
+    for(int p=0; p < CONN_ADDITIONAL_POINT_COUNT; p++){
+        __additional->lod[p] = octree->get_pos_lod_classic(__additional_point->positions[p]);
+        mv_req[p].new_pos = __additional_point->positions[p];
+        octree->add_move_req(mv_req[p]);
+    }
+}
+
 int32_t MCurve::get_curve_users_id(Node* node){
     last_curve_id++;
     curve_users.insert(last_curve_id,node);
@@ -285,7 +447,11 @@ int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector
     }
     int32_t free_index = free_buffer_indicies[free_buffer_indicies.size() - 1];
     Point new_point(position,in,out);
+    if(octree){
+        new_point.lod = octree->get_pos_lod_classic(new_point.position);
+    }
     bool has_prev_point = has_point(prev_conn);
+    Conn conn_prev(0);
     if(has_prev_point){ // if this statement not run this means this is a single point in space
         Point* prev_point = points_buffer.ptrw() + prev_conn;
         // Check if prev_conn has free slot, As we are creating new point my slot defently has free slot
@@ -299,11 +465,15 @@ int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector
         ERR_FAIL_COND_V_EDMSG(prev_conn_free_slot==-1,INVALID_POINT_INDEX,"Maximum number of conn is "+itos(MAX_CONN));
         prev_point->conn[prev_conn_free_slot] = free_index;
         new_point.conn[0] = -prev_conn;
+        Conn __conn(prev_conn,free_index);
+        conn_prev.id = __conn.id;
         /// Adding Override Entry if exist
         if(conn_override_data.is_valid()){
-            Conn __conn(prev_conn,free_index);
             set_override_entry(__conn.id,conn_override_data);
         }
+    }
+    if(new_point.lod <= active_lod_limit){
+        active_points.insert(free_index);
     }
     points_buffer.set(free_index,new_point);
     free_buffer_indicies.remove_at(free_buffer_indicies.size() - 1);
@@ -317,6 +487,10 @@ int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector
         emit_signal("force_update_point",prev_conn);
     }
     emit_signal("force_update_point",free_index);
+    if(conn_prev.id!=0){
+        _update_conn_additional_points(conn_prev.id);
+        emit_signal("force_update_connection",conn_prev.id);
+    }
     return free_index;
 }
 
@@ -333,8 +507,15 @@ int32_t MCurve::add_point_conn_point(const Vector3& position,const Vector3& in,c
     }
     int32_t free_index = free_buffer_indicies[free_buffer_indicies.size() - 1];
     Point new_points(position,in,out);
+    if(octree){
+        new_points.lod = octree->get_pos_lod_classic(new_points.position);
+        if(new_points.lod <= active_lod_limit){
+            active_points.insert(free_index);
+        }
+    }
     points_buffer.set(free_index,new_points);
     free_buffer_indicies.remove_at(free_buffer_indicies.size() - 1);
+    // force update singal point will be sended by connect_points
     for(int8_t i=0; i < conn_points.size() ; i++){
         if(conn_points[i] == INVALID_POINT_INDEX){
             continue;
@@ -412,6 +593,7 @@ int32_t MCurve::add_point_conn_split(int64_t conn_id,float t){
     active_conn.erase(conn.id);
     conn_list.erase(conn.id);
     clear_conn_cache_data(conn.id);
+    _update_conn_additional_points(conn.id);
     emit_signal("remove_connection",conn.id);
     //// Adding new conns and point
     if(free_buffer_indicies.size() == 0){
@@ -425,14 +607,27 @@ int32_t MCurve::add_point_conn_split(int64_t conn_id,float t){
     npoint.conn[1] = conn.p.b;  // using out to connect to b
     a->conn[freed_conn_index_a] = a_use_in ? -npid : npid;
     b->conn[freed_conn_index_b] = b_use_in ? -npid : npid;
+    if(octree){
+        npoint.lod = octree->get_pos_lod_classic(npoint.position);
+        if(npoint.lod <= active_lod_limit){
+            active_points.insert(npid);
+        }
+    }
     points_buffer.set(npid,npoint);
     ////// New Conn IDs
     Conn nconn_a(conn.p.a,npid);
     Conn nconn_b(conn.p.b,npid);
+    _update_conn_additional_points(nconn_a.id);
+    _update_conn_additional_points(nconn_b.id);
     ///////// putting same override data into new connections
     set_override_entry(nconn_a.id,ov_data);
     set_override_entry(nconn_b.id,ov_data);
     //////////////////////////////////
+    emit_signal("force_update_point",npid);
+    emit_signal("force_update_point",conn.p.a);
+    emit_signal("force_update_point",conn.p.b);
+    emit_signal("force_update_connection",nconn_a.id);
+    emit_signal("force_update_connection",nconn_b.id);
     if(is_init_insert && octree != nullptr){
         octree->insert_point(npoint.position,npid,oct_id);
     }
@@ -506,6 +701,7 @@ bool MCurve::connect_points(int32_t p0,int32_t p1,ConnType con_type,Ref<MCurveOv
     if(conn_ov_data.is_valid()){
         set_override_entry(conn.id,conn_ov_data);
     }
+    _update_conn_additional_points(conn.id);
     emit_signal("force_update_point",conn.p.a);
     emit_signal("force_update_point",conn.p.b);
     emit_signal("force_update_connection",conn.id);
@@ -538,6 +734,7 @@ bool MCurve::disconnect_points(int32_t p0,int32_t p1){
     conn_list.erase(conn.id);
     active_conn.erase(conn.id);
     clear_conn_cache_data(conn.id);
+    _update_conn_additional_points(conn.id);
     emit_signal("curve_updated");
     emit_signal("remove_connection",conn.id);
     return is_removed;
@@ -548,6 +745,7 @@ void MCurve::remove_point(const int32_t point_index){
     ERR_FAIL_COND(!has_point(point_index));
     const Point* p = points_buffer.ptr() + point_index;
     // Removing from conn
+    Vector<int64_t> removed_conns;
     for(int8_t i=0; i < MAX_CONN; i++){
         if(p->conn[i]!=INVALID_POINT_INDEX){
             int32_t conn_point_id = std::abs(p->conn[i]);
@@ -563,7 +761,7 @@ void MCurve::remove_point(const int32_t point_index){
                     break;
                 }
             }
-            emit_signal("remove_connection",conn.id);
+            removed_conns.push_back(conn.id);
         }
     }
     if(is_init_insert){
@@ -576,6 +774,10 @@ void MCurve::remove_point(const int32_t point_index){
         if(p->conn[i]!=INVALID_POINT_INDEX){
             emit_signal("force_update_point",std::abs(p->conn[i]));
         }
+    }
+    for(int c=0; c < removed_conns.size(); c++){
+        _update_conn_additional_points(removed_conns[c]);
+        emit_signal("remove_connection",removed_conns[c]);
     }
     emit_signal("curve_updated");
     emit_signal("remove_point",point_index);
@@ -602,12 +804,25 @@ void MCurve::init_insert(){
     // inserting points into octree
     PackedVector3Array positions;
     PackedInt32Array ids;
+    HashSet<int64_t> handled_conn; // for additional conn positions
     for (int i=0; i < points_buffer.size(); i++){
         if(free_buffer_indicies.has(i) || i == INVALID_POINT_INDEX){
             continue;
         }
         positions.push_back(points_buffer[i].position);
         ids.push_back(i);
+        /// Aditional conn positions
+        for(int c=0; c < MAX_CONN; c++){
+            if(points_buffer[i].conn[c]==0){
+                continue;
+            }
+            Conn conn(i,std::abs(points_buffer[i].conn[c]));
+            if(handled_conn.has(conn.id)){
+                continue;
+            }
+            _init_conn_additional_points(conn.id,positions,ids);
+            handled_conn.insert(conn.id);
+        }
     }
     oct_id = octree->get_oct_id();
     is_init_insert = true;
@@ -624,12 +839,26 @@ void MCurve::_octree_update_finish(){
     conn_update.clear();
     point_update.clear();
     Point* ptrw = points_buffer.ptrw();
-    //HashSet<int32_t> updated_points;
-    Vector<int32_t> updated_points;
+    HashSet<int64_t> updated_conn_set;
     for(int i=0; i < update_info.size(); i++){
+        ////////////////////////////////////////////
+        /////////// Updating Additional Conn Points
+        ////////////////////////////////////////////
+        if(update_info[i].id < 0){
+            int32_t oct_point_id = -update_info[i].id;
+            int32_t cid32 = (oct_point_id/CONN_ADDITIONAL_POINT_COUNT);
+            ERR_FAIL_INDEX(cid32,conn_additional.size());
+            int32_t oindex = oct_point_id%CONN_ADDITIONAL_POINT_COUNT;
+            conn_additional.ptrw()[cid32].lod[oindex] = update_info[i].lod;
+            updated_conn_set.insert(conn_additional.ptrw()[cid32].conn_id);
+            Conn conn(conn_additional.ptrw()[cid32].conn_id);
+            continue;
+        }
+        ////////////////////////////////////////////
+        /////////// Updating Points
+        ////////////////////////////////////////////
         ERR_CONTINUE(!has_point(update_info[i].id));
         // see if the lod is not active remove that!
-        //int8_t lod = update_info[i].lod < active_lod_limit ? update_info[i].lod : INVALID_POINT_LOD;
         Point* p = points_buffer.ptrw() + update_info[i].id;
         // Updating LOD of point
         // Updating active points
@@ -648,55 +877,46 @@ void MCurve::_octree_update_finish(){
         point_update_info.last_lod = update_info[i].last_lod > active_lod_limit ? -1 : update_info[i].last_lod;
         point_update_info.point_id = update_info[i].id;
         point_update.push_back(point_update_info);
-        updated_points.push_back(update_info[i].id);
+        //updated_points.push_back(update_info[i].id);
         p->lod = update_info[i].lod;
-    }
-    // Now updating conns base on updated Points
-    HashSet<int64_t> processed_conns; // As both side point of this conn may updated
-    for(int32_t k=0; k < updated_points.size(); k++){
-        int32_t cpoint = updated_points[k];
-        const Point* p = points_buffer.ptr() + cpoint;
-        for(int c=0; c < MAX_CONN; c++){ // Here we really using c++
-            if(p->conn[c] != INVALID_POINT_INDEX){
-                int32_t next_point_index = std::abs(p->conn[c]); // We don't care about conn type here! conneciton type is encode in positive and negetive of conn
-                Conn conn(cpoint , next_point_index);
-                if(processed_conns.has(conn.id)){
-                    continue;
-                }
-                ERR_FAIL_COND(!has_point(next_point_index));
-                Point* next_point = points_buffer.ptrw() + next_point_index;
-                // bellow can be done considering the fact INVALID_POINT_LOD is a big number
-                int8_t new_lod = p->lod < next_point->lod ? p->lod : next_point->lod;
-                int8_t last_lod = conn_list.has(conn.id) ? conn_list[conn.id] : INVALID_POINT_LOD;
-                conn_list.insert(conn.id,new_lod); // contain real lod without active_lod_limit
-                new_lod = new_lod > active_lod_limit ? INVALID_POINT_LOD : new_lod;
-                last_lod = last_lod > active_lod_limit ? INVALID_POINT_LOD : last_lod;
-                if(new_lod == last_lod){ // NOTHING TO DO
-                    processed_conns.insert(conn.id);
-                    continue;
-                }
-                if(new_lod == INVALID_OCT_POINT_ID){
-                    active_conn.erase(conn.id);
-                    clear_conn_cache_data(conn.id);
-                } else {
-                    active_conn.insert(conn.id);
-                }
-                ConnUpdateInfo cuinfo;
-                cuinfo.current_lod = new_lod;
-                cuinfo.last_lod = last_lod;
-                cuinfo.conn_id = conn.id;
-                conn_update.push_back(cuinfo);
-                processed_conns.insert(conn.id);
+        for(int t=0; t < MAX_CONN; t++){
+            if(p->conn[t]!=0){
+                Conn conn(update_info[i].id,std::abs(p->conn[t]));
+                updated_conn_set.insert(conn.id);
             }
         }
+    }
+    for(HashSet<int64_t>::Iterator it=updated_conn_set.begin();it!=updated_conn_set.end();++it){
+        int64_t conn_id = *(it);
+        int8_t new_conn_lod = _calculate_conn_lod(conn_id);
+        if(new_conn_lod > active_lod_limit){
+            new_conn_lod = -1;
+        }
+        auto it_conn_list = conn_list.find(conn_id);
+        int8_t old_conn_lod = it_conn_list!=conn_list.end() ? it_conn_list->value : -1;
+        if(new_conn_lod==old_conn_lod){
+            continue;
+        }
+        if(new_conn_lod == -1){
+            conn_list.erase(conn_id);
+            active_conn.erase(conn_id);
+            clear_conn_cache_data(conn_id);
+        } else {
+            conn_list.insert(conn_id,new_conn_lod);
+            active_conn.insert(conn_id);
+        }
+        ConnUpdateInfo cuinfo;
+        cuinfo.current_lod = new_conn_lod;
+        cuinfo.last_lod = old_conn_lod;
+        cuinfo.conn_id = conn_id;
+        conn_update.push_back(cuinfo);
     }
     for(int i=0; i < curve_users.size();i++){
         processing_users.insert(curve_users.get_array()[i].key);
     }
-    
     emit_signal("curve_updated");
     is_waiting_for_user = true;
-    emit_signal("connection_updated");
+    emit_signal("connection_updated"); // for both point and conn
     if(curve_users.size()==0){
         octree->call_deferred("point_process_finished",oct_id);
     }
@@ -740,11 +960,8 @@ PackedInt64Array MCurve::get_conn_ids_exist(const PackedInt32Array points){
 }
 
 int8_t MCurve::get_conn_lod(int64_t conn_id){
-    int8_t out = conn_list.has(conn_id) ? conn_list[conn_id] : -1;
-    if(out > active_lod_limit){
-        return -1;
-    }
-    return out;
+    auto it = conn_list.find(conn_id);
+    return it==conn_list.end() ? -1 : it->value;
 }
 
 int8_t MCurve::get_point_lod(int64_t p_id){
@@ -1781,7 +1998,7 @@ void MCurve::toggle_conn_type(int32_t point, int64_t conn_id){
     If conn does not exist it will take care of it and will remove in all place were need
     It do the same if conn exist it will calculate its LOD and it will create that everywere is needed
     Also if conn exist and its lod is not right it will recaculate that
-*/
+
 void MCurve::validate_conn(int64_t conn_id,bool send_signal){
     if(send_signal){
         emit_signal("remove_connection",conn_id);
@@ -1796,23 +2013,49 @@ void MCurve::validate_conn(int64_t conn_id,bool send_signal){
     ERR_FAIL_COND(!has_point(conn.p.a)||!has_point(conn.p.a));
     int8_t a_lod = points_buffer[conn.p.a].lod;
     int8_t b_lod = points_buffer[conn.p.b].lod;
-    int8_t conn_lod = a_lod < b_lod ? a_lod : b_lod;
-    if(conn_lod > active_lod_limit){
+    int8_t conn_lod = _calculate_conn_lod(conn_id);
+    if(conn_lod > active_lod_limit || conn_lod==-1){
         active_conn.erase(conn_id);
+        conn_list.erase(conn_id);
     } else {
         active_conn.insert(conn_id);
+        conn_list.insert(conn_id,conn_lod);
     }
-    conn_list.insert(conn_id,conn_lod);
     if(send_signal){
         emit_signal("force_update_connection",conn_id);
     }
+}
+*/
+
+int32_t MCurve::_get_conn_id32(int64_t conn_id) const{
+    auto it = conn_id32.find(conn_id);
+    return it==conn_id32.end() ? -1 : it->value;
+}
+
+void MCurve::_set_conn_id32(int64_t conn_id,int32_t cid32) {
+    ConnAdditional& ca = conn_additional.ptrw()[cid32];
+    if(cid32==0){
+        conn_id32.erase(conn_id);
+        ca.conn_id = 0;
+        return;
+    }
+    conn_id32.insert(conn_id,cid32);
+    ca.conn_id = conn_id;
 }
 
 int8_t MCurve::_calculate_conn_lod(const int64_t conn_id) const{
     Conn conn(conn_id);
     const Point& a = points_buffer[conn.p.a];
     const Point& b = points_buffer[conn.p.b];
-    int8_t lod = a.lod < b.lod ? a.lod : b.lod;
+    int8_t lod = (a.lod < b.lod) && a.lod!=-1 ? a.lod : b.lod;
+    auto it_cid32 = conn_id32.find(conn_id);
+    ERR_FAIL_COND_V_MSG(it_cid32==conn_id32.end(),lod,"no cid32 "+itos(conn_id));
+    const ConnAdditional& ca = conn_additional[it_cid32->value];
+    for(int c=0; c < CONN_ADDITIONAL_POINT_COUNT; c++){
+        if(lod>ca.lod[c] || lod==-1){
+            lod = ca.lod[c];
+        }
+    }
     return lod;
 }
 
@@ -1825,7 +2068,10 @@ void MCurve::_validate_points(const VSet<int32_t>& points){
             removed_point.push_back(p_id);
             continue;
         }
-        const Point& point = points_buffer[p_id];
+        Point& point = points_buffer.ptrw()[p_id];
+        if(octree){
+            point.lod = octree->get_pos_lod_classic(point.position);
+        }
         if(point.lod > active_lod_limit){
             active_points.erase(p_id);
             removed_point.push_back(p_id);
@@ -1918,8 +2164,10 @@ void MCurve::_swap_points(const int32_t p_a,const int32_t p_b,VSet<int64_t>& aff
     }
     /////////// Now everything point to p_a should point to p_b with conserving the sign
     // pointing to p_a
-    Conn orignal_conn[MAX_LOD*2];
+    Conn orignal_conn[MAX_CONN*2];
     Conn replace_conn[MAX_CONN*2];
+    /// Swaping conn_id32 will swap all additional_point stuff
+    int32_t orignal_conn_id32[MAX_CONN*2];
     for(int i=0; i < MAX_CONN; i++){
         orignal_conn[i].id = 0;
         replace_conn[i].id = 0;
@@ -1932,6 +2180,7 @@ void MCurve::_swap_points(const int32_t p_a,const int32_t p_b,VSet<int64_t>& aff
                     other_p->conn[j] = sign * p_b;
                     orignal_conn[i] = Conn(p_a,other_index);
                     replace_conn[i] = Conn(p_b,other_index);
+                    orignal_conn_id32[i] = _get_conn_id32(orignal_conn[i].id);
                     affected_conns.insert(orignal_conn[i].id);
                     affected_conns.insert(replace_conn[i].id);
                     break;
@@ -1953,6 +2202,7 @@ void MCurve::_swap_points(const int32_t p_a,const int32_t p_b,VSet<int64_t>& aff
                     other_p->conn[j] = sign * p_a;
                     orignal_conn[ii] = Conn(p_b,other_index);
                     replace_conn[ii] = Conn(p_a,other_index);
+                    orignal_conn_id32[ii] = _get_conn_id32(orignal_conn[ii].id);
                     affected_conns.insert(orignal_conn[ii].id);
                     affected_conns.insert(replace_conn[ii].id);
                     break;
@@ -1979,6 +2229,18 @@ void MCurve::_swap_points(const int32_t p_a,const int32_t p_b,VSet<int64_t>& aff
     for(int c=0; c < MAX_CONN*2; c++){
         if(conn_overrides[c].is_valid()){
             set_override_entry(replace_conn[c].id,conn_overrides[c]);
+        }
+    }
+    // Removing original id32
+    for(int c=0; c < MAX_CONN*2; c++){
+        if(orignal_conn[c].id!=0){
+            _set_conn_id32(orignal_conn[c].id,0);
+        }
+    }
+    // Adding replaced id32
+    for(int c=0; c < MAX_CONN*2; c++){
+        if(replace_conn[c].id!=0){
+            _set_conn_id32(replace_conn[c].id,orignal_conn_id32[c]);
         }
     }
 }
@@ -2097,6 +2359,12 @@ void MCurve::move_point(int p_index,const Vector3& pos){
     p->position = pos;
     p->in += diff;
     p->out += diff;
+    for(int i=0; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn conn(p_index,std::abs(p->conn[i]));
+            _update_conn_additional_points(conn.id);
+        }
+    }
     for(int i=0 ; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn cc(std::abs(p->conn[i]),p_index);
@@ -2110,6 +2378,12 @@ void MCurve::move_point_in(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
     Point* p = points_buffer.ptrw() + p_index;
     p->in = pos;
+    for(int i=0; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn conn(p_index,std::abs(p->conn[i]));
+            _update_conn_additional_points(conn.id);
+        }
+    }
     for(int i=0 ; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn cc(std::abs(p->conn[i]),p_index);
@@ -2123,6 +2397,12 @@ void MCurve::move_point_out(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
     Point* p = points_buffer.ptrw() + p_index;
     p->out = pos;
+    for(int i=0; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn conn(p_index,std::abs(p->conn[i]));
+            _update_conn_additional_points(conn.id);
+        }
+    }
     for(int i=0 ; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn cc(std::abs(p->conn[i]),p_index);
@@ -2308,8 +2588,10 @@ void MCurve::set_active_lod_limit(int input){
             }
             if(new_lod==-1){
                 active_conn.erase(cc.id);
+                conn_list.erase(cc.id);
             } else {
                 active_conn.insert(cc.id);
+                conn_list.insert(cc.id,new_lod);
             }
             emit_signal("force_update_connection",cc.id);
         }

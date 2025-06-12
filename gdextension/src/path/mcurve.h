@@ -6,6 +6,10 @@
 #define MAX_CONN 4
 #define conn_DEFAULT_VALUE {0,0,0,0}
 
+#define CONN_ADDITIONAL_POINT_COUNT 8 // additional point for calculting better LOD
+#define CONN_ADDITIONAL_POINT_LOD {-1,-1,-1,-1,-1,-1,-1,-1} // correct accordingly base on CONN_ADDITIONAL_POINT_COUNT
+#define CONN_ADDITIONAL_POINT_INTERVAL_RATIO (1.0f/(CONN_ADDITIONAL_POINT_COUNT+1)) // Also start point
+
 #define INIT_POINTS_BUFFER_SIZE 10
 #define INC_POINTS_BUFFER_SIZE 10
 #define INVALID_POINT_INDEX 0
@@ -142,10 +146,32 @@ class MCurve : public Resource{
             return p.b!=0;
         }
         inline String str(){
-            return String("Conn(") + itos(p.a) + "-" + itos(p.b) + ")";
+            return String("Conn(") + itos(p.a) + " , " + itos(p.b) + ")";
         }
     };
-
+    private:
+    /**
+     * ConnData contain additional point for sending to octree for more accurate LOD calculation
+     * octree id of each point will be calculated base on ConnData position in array and CONN_ADDITIONAL_POINT_COUNT
+     * octree_id = -(CONN_ADDITIONAL_POINT_COUNT*conn_id + i)
+     * Also octree_id of each point is negetive to not collide with point IDs
+     * 
+     * additional point in octree is -> (conn_id32*CONN_ADDITIONAL_POINT_COUNT) + additonal_index;
+     * additonal_index is between [0,CONN_ADDITIONAL_POINT_COUNT-1]
+     */
+    struct ConnAdditionalPoints {
+        Vector3 positions[CONN_ADDITIONAL_POINT_COUNT]; // points to send to octree
+        inline void update_positions(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control);
+    };
+    /**
+     * Keep the lod and conn_id of ConnAdditionalPoints with the same index in data
+     * seperated as accessing each one require at different time and there is no need to both loaded at the same time
+     */
+    struct ConnAdditional {
+        int8_t lod[CONN_ADDITIONAL_POINT_COUNT] = CONN_ADDITIONAL_POINT_LOD;
+        int64_t conn_id;
+    };
+    public:
     enum ConnType {
         CONN_NONE = 0,
         OUT_IN = 1,
@@ -200,6 +226,17 @@ class MCurve : public Resource{
     uint16_t oct_id = 0;
     PackedInt32Array free_buffer_indicies;
     void _increase_points_buffer_size(size_t q);
+    /// Conn additional points
+    void _increase_conn_data_buffer_size(size_t q);
+    /////////////////// _init_conn_additional_points for init_insert
+    ///////// Warning _init_conn_additional_points do the least error checking
+    /// use for start to at load time and it assume that conn_addition_point does not exist and it is empty
+    /// conn_id must exist it will not check if it exist or not
+    _FORCE_INLINE_ void _init_conn_additional_points(const int64_t conn_id,PackedVector3Array& positions,PackedInt32Array& ids);
+    /// this will not use at load time it should be called at each connection modification
+    /// it is not inlined and optimized as usually use for editor during curve modification and will be called for few connection each time
+    /// IMPORTANT: this will asume you calculate point LOD before calling this and this will take care of conn_list and active_conn
+    void _update_conn_additional_points(const int64_t conn_id);
     //PackedInt32Array root_ids;
     static MOctree* octree;
     int32_t last_curve_id = 0;
@@ -208,6 +245,10 @@ class MCurve : public Resource{
     VSet<int32_t> active_points;
     VSet<int64_t> active_conn;
     //Vector<int32_t> force_reupdate_points;
+    HashMap<int64_t,int32_t> conn_id32;
+    Vector<int32_t> conn_free_id32;
+    Vector<ConnAdditionalPoints> conn_additional_points;
+    Vector<ConnAdditional> conn_additional;
     HashMap<int64_t,int8_t> conn_list; // Key -> conn, Value -> LOD
     HashMap<int64_t,AABB> conn_aabb; // Cached conn aabb
     HashMap<int64_t,ConnDistances> conn_distances;
@@ -266,8 +307,12 @@ class MCurve : public Resource{
 
     public:
     void toggle_conn_type(int32_t point, int64_t conn_id);
-    void validate_conn(int64_t conn_id,bool send_signal=true);
+    //void validate_conn(int64_t conn_id,bool send_signal=true);
     private:
+    /// Return zero if not exist
+    _FORCE_INLINE_ int32_t _get_conn_id32(int64_t conn_id) const;
+    /// Will remove if cid32 is zero
+    _FORCE_INLINE_ void _set_conn_id32(int64_t conn_id,int32_t cid32);
     _FORCE_INLINE_ int8_t _calculate_conn_lod(const int64_t conn_id) const;
     void _validate_points(const VSet<int32_t>& points);
     /// if conn is removed handle it!
