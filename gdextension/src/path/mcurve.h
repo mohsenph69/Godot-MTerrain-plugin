@@ -158,12 +158,7 @@ class MCurve : public Resource{
      * 
      * additional point in octree is -> (conn_id32*CONN_ADDITIONAL_POINT_COUNT) + additonal_index;
      * additonal_index is between [0,CONN_ADDITIONAL_POINT_COUNT-1]
-     */
-    struct ConnAdditionalPoints {
-        Vector3 positions[CONN_ADDITIONAL_POINT_COUNT]; // points to send to octree
-        inline void update_positions(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control);
-    };
-    /**
+     * 
      * Keep the lod and conn_id of ConnAdditionalPoints with the same index in data
      * seperated as accessing each one require at different time and there is no need to both loaded at the same time
      */
@@ -228,6 +223,10 @@ class MCurve : public Resource{
     void _increase_points_buffer_size(size_t q);
     /// Conn additional points
     void _increase_conn_data_buffer_size(size_t q);
+    /// positions is the pointer to a block of memory with Vector3 ptrw[CONN_ADDITIONAL_POINT_COUNT]
+    _FORCE_INLINE_ void _get_additional_points(Vector3* positions,const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control) const;
+    /// More slow version of _get_additional_points for handling light stuff
+    void _get_conn_additional_points(ino64_t conn_id,Vector3* positions) const;
     /////////////////// _init_conn_additional_points for init_insert
     ///////// Warning _init_conn_additional_points do the least error checking
     /// use for start to at load time and it assume that conn_addition_point does not exist and it is empty
@@ -236,7 +235,8 @@ class MCurve : public Resource{
     /// this will not use at load time it should be called at each connection modification
     /// it is not inlined and optimized as usually use for editor during curve modification and will be called for few connection each time
     /// IMPORTANT: this will asume you calculate point LOD before calling this and this will take care of conn_list and active_conn
-    void _update_conn_additional_points(const int64_t conn_id);
+    /// No need to old_positions for add new or remove conn_id can be set to nullptr (only move need that)
+    void _update_conn_additional_points(const int64_t conn_id,Vector3* old_positions=nullptr);
     //PackedInt32Array root_ids;
     static MOctree* octree;
     int32_t last_curve_id = 0;
@@ -247,7 +247,6 @@ class MCurve : public Resource{
     //Vector<int32_t> force_reupdate_points;
     HashMap<int64_t,int32_t> conn_id32;
     Vector<int32_t> conn_free_id32;
-    Vector<ConnAdditionalPoints> conn_additional_points;
     Vector<ConnAdditional> conn_additional;
     HashMap<int64_t,int8_t> conn_list; // Key -> conn, Value -> LOD
     HashMap<int64_t,AABB> conn_aabb; // Cached conn aabb

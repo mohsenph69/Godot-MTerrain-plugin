@@ -179,14 +179,6 @@ MCurve::Conn::Conn(int32_t p0, int32_t p1){
 MCurve::Conn::Conn(int64_t _id):id(_id){
 }
 
-void MCurve::ConnAdditionalPoints::update_positions(const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control){
-    float current_ratio;
-    for(int i=0; i < CONN_ADDITIONAL_POINT_COUNT; i++){
-        current_ratio += CONN_ADDITIONAL_POINT_INTERVAL_RATIO;
-        positions[i] = a.bezier_interpolate(a_control,b_control,b,current_ratio);
-    }
-}
-
 MCurve::MCurve(){
     _increase_points_buffer_size(INIT_POINTS_BUFFER_SIZE);
 }
@@ -277,10 +269,9 @@ void MCurve::_increase_conn_data_buffer_size(size_t q){
     if(q<=0){
         return;
     }
-    int64_t lsize = conn_additional_points.size();
-    conn_additional_points.resize(lsize + q);
+    int64_t lsize = conn_additional.size();
     conn_additional.resize(lsize + q);
-    for(int64_t i=conn_additional_points.size() - 1; i >= lsize ; i--){
+    for(int64_t i=conn_additional.size() - 1; i >= lsize ; i--){
         if(i==0 || i==1){
             continue;
         }
@@ -288,9 +279,35 @@ void MCurve::_increase_conn_data_buffer_size(size_t q){
     }
 }
 
-void MCurve::_init_conn_additional_points(const int64_t conn_id,PackedVector3Array& positions,PackedInt32Array& ids){
+void MCurve::_get_additional_points(Vector3* positions,const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control) const {
+    float current_ratio = 0.0f;
+    for(int i=0; i < CONN_ADDITIONAL_POINT_COUNT; i++){
+        current_ratio += CONN_ADDITIONAL_POINT_INTERVAL_RATIO;
+        positions[i] = a.bezier_interpolate(a_control,b_control,b,current_ratio);
+    }
+}
+
+void MCurve::_get_conn_additional_points(ino64_t conn_id,Vector3* positions) const{
+    ERR_FAIL_COND(!has_conn(conn_id));
     Conn conn(conn_id);
     bool is_connected = false;
+    const Point& a = points_buffer[conn.p.a];
+    const Point& b = points_buffer[conn.p.b];
+    const Vector3* a_control;
+    const Vector3* b_control;
+    for(int i=0; i < MAX_CONN; i++){
+        if(std::abs(a.conn[i])==conn.p.b){
+            a_control = a.conn[i]==conn.p.b ? &a.out : &a.in;
+        }
+        if(std::abs(b.conn[i])==conn.p.a){
+            b_control = b.conn[i]==conn.p.a ? &b.out : &b.in;
+        }
+    }
+    _get_additional_points(positions,a.position,b.position,*a_control,*b_control);
+}
+
+void MCurve::_init_conn_additional_points(const int64_t conn_id,PackedVector3Array& positions,PackedInt32Array& ids){
+    Conn conn(conn_id);
     const Point& a = points_buffer[conn.p.a];
     const Point& b = points_buffer[conn.p.b];
     const Vector3* a_control;
@@ -311,17 +328,17 @@ void MCurve::_init_conn_additional_points(const int64_t conn_id,PackedVector3Arr
     int32_t free_index = conn_free_id32[conn_free_id32.size()-1];
     conn_free_id32.remove_at(conn_free_id32.size()-1);
     _set_conn_id32(conn_id,free_index);
-    ConnAdditionalPoints& ap = conn_additional_points.ptrw()[free_index];
-    ap.update_positions(a.position,b.position,*a_control,*b_control);
+    Vector3 additional_positions[CONN_ADDITIONAL_POINT_COUNT];
+    _get_additional_points(additional_positions,a.position,b.position,*a_control,*b_control);
     int32_t base_index = free_index*CONN_ADDITIONAL_POINT_COUNT;
     for(int i=0; i < CONN_ADDITIONAL_POINT_COUNT; i++){
         int32_t oindex = base_index + i;
-        positions.push_back(ap.positions[i]);
+        positions.push_back(additional_positions[i]);
         ids.push_back(-oindex);
     }
 }
 
-void MCurve::_update_conn_additional_points(const int64_t conn_id){
+void MCurve::_update_conn_additional_points(const int64_t conn_id,Vector3* old_positions){
     ERR_FAIL_COND(octree==nullptr);
     Conn conn(conn_id);
     bool is_connected = false;
@@ -348,12 +365,13 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id){
     //////////////////////////
     if(!is_connected){
         if(it_cid32!=conn_id32.end()){
+            Vector3 new_positions[CONN_ADDITIONAL_POINT_COUNT];
+            _get_additional_points(new_positions,a.position,b.position,*a_control,*b_control);
             int32_t cid32 = it_cid32->value;
-            const ConnAdditionalPoints& __additional_point = conn_additional_points[cid32];
             ConnAdditional& __additional = conn_additional.ptrw()[cid32];
             int32_t base_oct_id = cid32*CONN_ADDITIONAL_POINT_COUNT;
             for(int a=0; a < CONN_ADDITIONAL_POINT_COUNT; a++){
-                octree->remove_point(-(base_oct_id+a),__additional_point.positions[a],oct_id);
+                octree->remove_point(-(base_oct_id+a),new_positions[a],oct_id);
                 __additional.lod[a] = -1; // reseting lod back to -1
                 __additional.conn_id = 0;
             }
@@ -362,7 +380,6 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id){
         }
         return;
     }
-    ConnAdditionalPoints* __additional_point;
     ConnAdditional* __additional;
     //////////////////////////
     // if is new
@@ -376,15 +393,15 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id){
         int32_t free_index = conn_free_id32[conn_free_id32.size()-1];
         conn_free_id32.remove_at(conn_free_id32.size()-1);
         _set_conn_id32(conn_id,free_index);
-        __additional_point = conn_additional_points.ptrw() + free_index;
         __additional = conn_additional.ptrw() + free_index;
-        __additional_point->update_positions(a.position,b.position,*a_control,*b_control);
+        Vector3 new_positions[CONN_ADDITIONAL_POINT_COUNT];
+        _get_additional_points(new_positions,a.position,b.position,*a_control,*b_control);
         // Inserting and updating lod in classic mode
         int32_t base_octree_point_id = free_index*CONN_ADDITIONAL_POINT_COUNT;
         for(int p=0; p < CONN_ADDITIONAL_POINT_COUNT; p++){
             int32_t octree_point_id = -(base_octree_point_id + p);
-            __additional->lod[p] = octree->get_pos_lod_classic(__additional_point->positions[p]);
-            octree->insert_point(__additional_point->positions[p],octree_point_id,oct_id);
+            __additional->lod[p] = octree->get_pos_lod_classic(new_positions[p]);
+            octree->insert_point(new_positions[p],octree_point_id,oct_id);
         }
         //// Recalculating conn LOD
         int8_t conn_lod = _calculate_conn_lod(conn_id);
@@ -397,19 +414,12 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id){
         }
         return;
     }
+    ERR_FAIL_COND_MSG(old_positions==nullptr,"old_position need for move");
     ///////////////////////////
     // update position (OR move)
     ///////////////////////////
-    __additional_point = conn_additional_points.ptrw() + it_cid32->value;
     __additional = conn_additional.ptrw() + it_cid32->value;
     int32_t base_octree_point_id = it_cid32->value*CONN_ADDITIONAL_POINT_COUNT;
-    MOctree::PointMoveReq mv_req[CONN_ADDITIONAL_POINT_COUNT];
-    for(int p=0; p < CONN_ADDITIONAL_POINT_COUNT; p++){
-        mv_req[p].p_id = -(base_octree_point_id + p);
-        mv_req[p].oct_id = oct_id;
-        mv_req[p].old_pos = __additional_point->positions[p];
-    }
-    __additional_point->update_positions(a.position,b.position,*a_control,*b_control);
     ///////////// recalculating LOD
     int8_t conn_lod = _calculate_conn_lod(conn_id);
     if(conn_lod > active_lod_limit || conn_lod==-1){
@@ -420,10 +430,16 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id){
         conn_list.insert(conn_id,conn_lod);
     }
     ////////////
+    Vector3 new_positions[CONN_ADDITIONAL_POINT_COUNT];
+    _get_additional_points(new_positions,a.position,b.position,*a_control,*b_control);
     for(int p=0; p < CONN_ADDITIONAL_POINT_COUNT; p++){
-        __additional->lod[p] = octree->get_pos_lod_classic(__additional_point->positions[p]);
-        mv_req[p].new_pos = __additional_point->positions[p];
-        octree->add_move_req(mv_req[p]);
+        MOctree::PointMoveReq mv_req;
+        mv_req.p_id = -(base_octree_point_id + p);
+        mv_req.oct_id = oct_id;
+        mv_req.old_pos = old_positions[p];
+        mv_req.new_pos = new_positions[p];
+        __additional->lod[p] = octree->get_pos_lod_classic(old_positions[p]);
+        octree->add_move_req(mv_req);
     }
 }
 
@@ -2325,6 +2341,13 @@ void MCurve::move_point(int p_index,const Vector3& pos){
         MOctree::PointMoveReq req(p_index,oct_id,p->position,pos);
         octree->add_move_req(req);
     }
+    Vector3 old_positions[MAX_CONN][CONN_ADDITIONAL_POINT_COUNT];
+    for(int i=0; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn conn(p_index,std::abs(p->conn[i]));
+            _get_conn_additional_points(conn.id,old_positions[i]);
+        }
+    }
     Vector3 diff = pos - p->position;
     p->position = pos;
     p->in += diff;
@@ -2332,7 +2355,7 @@ void MCurve::move_point(int p_index,const Vector3& pos){
     for(int i=0; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn conn(p_index,std::abs(p->conn[i]));
-            _update_conn_additional_points(conn.id);
+            _update_conn_additional_points(conn.id,old_positions[i]);
         }
     }
     for(int i=0 ; i < MAX_CONN; i++){
@@ -2347,11 +2370,18 @@ void MCurve::move_point(int p_index,const Vector3& pos){
 void MCurve::move_point_in(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
     Point* p = points_buffer.ptrw() + p_index;
+    Vector3 old_positions[MAX_CONN][CONN_ADDITIONAL_POINT_COUNT];
+    for(int i=0; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn conn(p_index,std::abs(p->conn[i]));
+            _get_conn_additional_points(conn.id,old_positions[i]);
+        }
+    }
     p->in = pos;
     for(int i=0; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn conn(p_index,std::abs(p->conn[i]));
-            _update_conn_additional_points(conn.id);
+            _update_conn_additional_points(conn.id,old_positions[i]);
         }
     }
     for(int i=0 ; i < MAX_CONN; i++){
@@ -2366,11 +2396,18 @@ void MCurve::move_point_in(int p_index,const Vector3& pos){
 void MCurve::move_point_out(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
     Point* p = points_buffer.ptrw() + p_index;
+    Vector3 old_positions[MAX_CONN][CONN_ADDITIONAL_POINT_COUNT];
+    for(int i=0; i < MAX_CONN; i++){
+        if(p->conn[i]!=0){
+            Conn conn(p_index,std::abs(p->conn[i]));
+            _get_conn_additional_points(conn.id,old_positions[i]);
+        }
+    }
     p->out = pos;
     for(int i=0; i < MAX_CONN; i++){
         if(p->conn[i]!=0){
             Conn conn(p_index,std::abs(p->conn[i]));
-            _update_conn_additional_points(conn.id);
+            _update_conn_additional_points(conn.id,old_positions[i]);
         }
     }
     for(int i=0 ; i < MAX_CONN; i++){
