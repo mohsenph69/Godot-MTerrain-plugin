@@ -5,7 +5,7 @@ var no_icon_tex:Texture2D = preload("res://addons/m_terrain/icons/no_images.png"
 @onready var point_count_lable:=$point_count_lable
 var lod_reg:=RegEx.create_from_string("[_]?lod[\\d]+")
 
-var conn_info:Label
+var selection_info:Label
 
 # remebering this to open the correct if node deselcted
 static var selected_child:Node
@@ -59,7 +59,7 @@ func start():
 	child_selector = $child_selctor
 	items = $itemlist
 	items.item_selected.connect(Callable(self,"item_selected"))
-	conn_info= $conn_info
+	selection_info = $selection_info
 	connection_tab = $mesh_header/connection_tab
 	intersection_tab = $mesh_header/intersection_tab
 	exclude_connection_btn = $button_header/exclude_connection
@@ -90,7 +90,6 @@ func start():
 	instance_end_offset_slider.connect("drag_ended",instance_edit_commit)
 	instance_rand_remove_slider.connect("drag_ended",instance_edit_commit)
 	# End Instance settings
-	update_curve_lenght_info()
 
 
 
@@ -98,6 +97,7 @@ func set_path(input:MPath)->void:
 	start()
 	current_path = input
 	current_curve = current_path.curve
+	update_curve_lenght_info()
 	child_selector.clear()
 	child_selector.add_item("ovveride")
 	if not input: return
@@ -236,14 +236,25 @@ func update_curve_instance_items():
 
 # must be called after update_curve_mesh_items()
 func update_curve_lenght_info()->void:
+	if not is_instance_valid(current_curve) or not is_instance_valid(current_path): return
+	var point_sel:PackedInt32Array = gizmo.get_selected_points32()
+	if point_sel.size()==1:
+		selection_info.text = "Point " + str(point_sel[0])
+		if point_sel[0]!=current_path.get_current_editing_point():
+			current_path.set_current_editing_point(point_sel[0])
+		return
+	if current_path.get_current_editing_point()!=0:
+		current_path.set_current_editing_point(0)
 	var conn_sel:PackedInt64Array= gizmo.get_selected_connections()
-	var l:float=0.0
-	for cid in conn_sel:
-		l += current_curve.get_conn_lenght(cid)
-	if conn_sel.size()!=1:
-		conn_info.text = "Lenght: %.1fm" %  l
-	else:
-		conn_info.text = "Lenght: %.1fm (%d)" %  [l,conn_sel[0]]
+	if conn_sel.size()!=0:
+		selection_info.visible = true
+		var l:float=0.0
+		for cid in conn_sel:
+			l += current_curve.get_conn_lenght(cid)
+		if conn_sel.size()!=1:
+			selection_info.text = "Lenght: %.1fm" %  l
+		else:
+			selection_info.text = "Lenght: %.1fm (%d)" %  [l,conn_sel[0]]
 
 func update_curve_item_selection():
 	update_curve_lenght_info()
@@ -385,6 +396,7 @@ func mesh_mode_selected(index:int):
 
 
 func _on_update_info_timer_timeout():
+	if not is_instance_valid(current_curve): return
 	var point_count:int = 0
 	if current_curve:
 		point_count = current_curve.get_points_count()

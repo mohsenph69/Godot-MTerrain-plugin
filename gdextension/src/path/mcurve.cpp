@@ -33,6 +33,9 @@ int64_t MCurveConnCollision::get_conn_id() const{
 
 
 void MCurve::set_octree(MOctree* input){
+    if(input==nullptr){
+        octree = nullptr;
+    }
     ERR_FAIL_COND_MSG(octree!=nullptr,"Only one octree can udpate MPath");
     octree = input;
 }
@@ -110,7 +113,6 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_conn_transform","conn_id","t","tilt","scale"), &MCurve::get_conn_transform);
 
     ClassDB::bind_method(D_METHOD("toggle_conn_type","point","conn_id"), &MCurve::toggle_conn_type);
-    //ClassDB::bind_method(D_METHOD("validate_conn","conn_id"), &MCurve::validate_conn);
     ClassDB::bind_method(D_METHOD("swap_points","p_a","p_b"), &MCurve::swap_points);
     ClassDB::bind_method(D_METHOD("sort_from","root_id","increasing"), &MCurve::sort_from);
     ClassDB::bind_method(D_METHOD("move_point","p_index","pos"), &MCurve::move_point);
@@ -926,6 +928,7 @@ void MCurve::user_finish_process(int32_t user_id){
     ERR_FAIL_COND(!is_waiting_for_user);
     processing_users.erase(user_id);
     if(processing_users.size()==0){
+        is_waiting_for_user = false;
         octree->call_deferred("point_process_finished",oct_id);
     }
 }
@@ -1341,7 +1344,7 @@ void MCurve::commit_point_update(int p_index){
 }
 
 void MCurve::commit_conn_update(int64_t conn_id){
-    ERR_FAIL_COND(has_conn(conn_id));
+    ERR_FAIL_COND(!has_conn(conn_id));
     clear_conn_cache_data(conn_id);
     emit_signal("force_update_connection",conn_id);
 }
@@ -1993,39 +1996,6 @@ void MCurve::toggle_conn_type(int32_t point, int64_t conn_id){
     }
     WARN_PRINT("Can't find conn between "+itos(point)+" and "+itos(other_point));
 }
-/*
-    ------------ will remove and recreate connection ----------------------
-    If conn does not exist it will take care of it and will remove in all place were need
-    It do the same if conn exist it will calculate its LOD and it will create that everywere is needed
-    Also if conn exist and its lod is not right it will recaculate that
-
-void MCurve::validate_conn(int64_t conn_id,bool send_signal){
-    if(send_signal){
-        emit_signal("remove_connection",conn_id);
-    }
-    clear_conn_cache_data(conn_id);
-    if(!has_conn(conn_id)){
-        active_conn.erase(conn_id);
-        conn_list.erase(conn_id);
-        return;
-    }
-    Conn conn(conn_id);
-    ERR_FAIL_COND(!has_point(conn.p.a)||!has_point(conn.p.a));
-    int8_t a_lod = points_buffer[conn.p.a].lod;
-    int8_t b_lod = points_buffer[conn.p.b].lod;
-    int8_t conn_lod = _calculate_conn_lod(conn_id);
-    if(conn_lod > active_lod_limit || conn_lod==-1){
-        active_conn.erase(conn_id);
-        conn_list.erase(conn_id);
-    } else {
-        active_conn.insert(conn_id);
-        conn_list.insert(conn_id,conn_lod);
-    }
-    if(send_signal){
-        emit_signal("force_update_connection",conn_id);
-    }
-}
-*/
 
 int32_t MCurve::_get_conn_id32(int64_t conn_id) const{
     auto it = conn_id32.find(conn_id);

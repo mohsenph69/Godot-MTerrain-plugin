@@ -13,6 +13,9 @@ Vector<MPath*> MPath::all_path_nodes;
 void MPath::_bind_methods(){
     ADD_SIGNAL(MethodInfo("curve_changed"));
 
+    ClassDB::bind_method(D_METHOD("set_current_editing_point","input"), &MPath::set_current_editing_point);
+    ClassDB::bind_method(D_METHOD("get_current_editing_point"), &MPath::get_current_editing_point);
+
     ClassDB::bind_method(D_METHOD("set_curve","input"), &MPath::set_curve);
     ClassDB::bind_method(D_METHOD("get_curve"), &MPath::get_curve);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "curve", PROPERTY_HINT_RESOURCE_TYPE, "MCurve"),"set_curve","get_curve");
@@ -44,6 +47,21 @@ MPath::~MPath(){
     }
 }
 
+void MPath::set_current_editing_point(int32_t point_id){
+    #ifdef DEBUG_ENABLED
+    current_editing_point = point_id;
+    notify_property_list_changed();
+    #endif
+}
+
+int32_t MPath::get_current_editing_point() const{
+    #ifdef DEBUG_ENABLED
+    return current_editing_point;
+    #else
+    return 0;
+    #endif
+}
+
 void MPath::set_curve(Ref<MCurve> input){
     if(curve.is_valid()){
         curve->disconnect("curve_updated",Callable(this,"update_gizmos"));
@@ -57,6 +75,9 @@ void MPath::set_curve(Ref<MCurve> input){
     }
     emit_signal("curve_changed");
     update_gizmos();
+    #ifdef DEBUG_ENABLED
+    notify_property_list_changed();
+    #endif
 }
 
 Ref<MCurve> MPath::get_curve(){
@@ -67,6 +88,21 @@ void MPath::_notification(int p_what){
     switch (p_what)
     { 
     case NOTIFICATION_PROCESS:
+        #ifdef DEBUG_ENABLED
+        if(is_current_editing_dirty){
+            wait_commit_time+= get_process_delta_time();
+            if(wait_commit_time>=1.0){
+                wait_commit_time=0.0;
+                is_current_editing_dirty=false;
+                if(curve.is_valid()){
+                    for(auto it=dirty_points.begin();it!=dirty_points.end();++it){
+                        curve->commit_point_update(*(it));
+                    }
+                    dirty_points.clear();
+                }
+            }
+        }
+        #endif
         if(curve.is_valid()){
             curve->init_insert();
             //set_process(false);
@@ -120,3 +156,67 @@ RID MPath::get_space(){
     }
     return space;
 }
+
+
+#ifdef DEBUG_ENABLED
+void MPath::_get_property_list(List<PropertyInfo> *p_list) const{
+    if(curve.is_null() || !curve->has_point(current_editing_point)){
+        return;
+    }
+    p_list->push_back(
+    PropertyInfo(Variant::VECTOR3,"point_position",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR)
+    );
+    p_list->push_back(
+    PropertyInfo(Variant::VECTOR3,"point_in",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR)
+    );
+    p_list->push_back(
+    PropertyInfo(Variant::VECTOR3,"point_out",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_EDITOR)
+    );
+}
+
+bool MPath::_get(const StringName &p_name, Variant &r_ret) const{
+    if(curve.is_null() || !curve->has_point(current_editing_point)){
+        return false;
+    }
+    if(p_name==String("point_position")){
+        r_ret = curve->get_point_position(current_editing_point);
+        return true;
+    }
+    if(p_name==String("point_in")){
+        r_ret = curve->get_point_in(current_editing_point);
+        return true;
+    }
+    if(p_name==String("point_out")){
+        r_ret = curve->get_point_out(current_editing_point);
+        return true;
+    }
+    return false;
+}
+
+bool MPath::_set(const StringName &p_name, const Variant &p_value){
+    if(curve.is_null() || !curve->has_point(current_editing_point)){
+        return false;
+    }
+    bool is_val_set = false;
+    if(p_name==String("point_position")){
+        curve->move_point(current_editing_point,p_value);
+        is_current_editing_dirty = true;
+        is_val_set=true;
+    }
+    if(p_name==String("point_in")){
+        curve->move_point_in(current_editing_point,p_value);
+        is_current_editing_dirty = true;
+        is_val_set=true;
+    }
+    if(p_name==String("point_out")){
+        curve->move_point_out(current_editing_point,p_value);
+        is_current_editing_dirty = true;
+        is_val_set=true;
+    }
+    if(is_val_set){
+        dirty_points.insert(current_editing_point);
+        return true;
+    }
+    return false;
+}
+#endif

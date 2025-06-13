@@ -541,7 +541,7 @@ func process_mouse_left_click(camera, event, terrain_col)->bool:
 	#### Handling Selections
 	var from = camera.project_ray_origin(event.position)
 	var to = camera.project_ray_normal(event.position)
-	### Get collission point id
+	### process point selection
 	var pcol = curve.ray_active_point_collision(from,to,0.9999)
 	if pcol != 0:
 		if Input.is_key_pressed(KEY_ALT):
@@ -569,8 +569,6 @@ func process_mouse_left_click(camera, event, terrain_col)->bool:
 				var last:int= selected_points.find(pcol)
 				if last != -1:
 					selected_points.remove_at(last)
-	if active_point != 0 and  Input.is_key_pressed(KEY_SHIFT) and pcol==0: # Maybe a miss selction
-		return EditorPlugin.AFTER_GUI_INPUT_STOP
 	## selected connections
 	selected_connections.clear()
 	var all_pp = selected_points.duplicate()
@@ -580,8 +578,12 @@ func process_mouse_left_click(camera, event, terrain_col)->bool:
 		mpath.update_gizmos()
 		selection_changed.emit()				
 		return false
+	### process connection selection
+	elif process_connection_click(curve,from,to): return true
+	elif active_point != 0 and  Input.is_key_pressed(KEY_SHIFT) and pcol==0: # Maybe a miss selction
+		return EditorPlugin.AFTER_GUI_INPUT_STOP
+	
 	if gui.get_mode() == gui.MODE.CREATE or Input.is_key_pressed(KEY_CTRL):
-		if split_connection(curve,from,to): return true
 		### Here should be adjusted later with MTerrain
 		var new_index:int
 		var new_pos:Vector3
@@ -914,33 +916,52 @@ func disconnect_points():
 	path.update_gizmos()
 	return false
 
-## Check if can split connection it will split connection
+## Check if can split connection or select an selection
 ## And return true othrwise return false
 ## From is ray pos
 ## to is ray dirs
-func split_connection(curve:MCurve,from:Vector3,to:Vector3)->bool:
+func process_connection_click(curve:MCurve,from:Vector3,to:Vector3)->bool:
 	# list of connection which statisfy minum distance of click point
+	for ccc in curve.get_active_conns():
+		if not curve.has_conn(ccc):
+			print("Not exist conn ",ccc)
 	var col: = curve.ray_active_conn_collision(from,to,0.99)
 	if not col.is_collided(): return false
-	var has_active_point = curve.has_point(active_point)
-	var cid = col.get_conn_id()
-	var ratio = col.get_collision_ratio()
-	var conn_type = curve.get_conn_type(cid)
-	var point_ids = curve.get_conn_points(cid)
-	 # on split cpp file override will set automaticlly we need to set it only for undo
-	var conn_override_data = curve.get_override_entry(cid)
-	var pid = curve.add_point_conn_split(cid,ratio) # this will remove conn
-	var conn_ov_data:MCurveOverrideData
-	if has_active_point:
-		curve.connect_points(pid,active_point,MCurve.IN_OUT,null)
-		var ov_entries = curve.get_point_conns_override_entries(active_point)
-		if ov_entries.size()==1:conn_ov_data=ov_entries.values()[0]
-	ur.create_action("split connection")
-	ur.add_do_method(curve,"add_point_conn_split",cid,ratio)
-	ur.add_do_method(curve,"connect_points",pid,active_point,MCurve.IN_OUT,conn_ov_data)
-	ur.add_undo_method(curve,"remove_point",pid)
-	ur.add_undo_method(curve,"connect_points",point_ids[0],point_ids[1],conn_type,conn_override_data) # this will send update conn so set override data before
-	ur.commit_action(false)
+	if Input.is_key_pressed(KEY_CTRL):
+		var has_active_point = curve.has_point(active_point)
+		var cid = col.get_conn_id()
+		if has_active_point:
+			var active_point_conns:PackedInt64Array= curve.get_point_conns(active_point)
+			has_active_point = active_point_conns.find(cid)==-1
+		var ratio = col.get_collision_ratio()
+		var conn_type = curve.get_conn_type(cid)
+		var point_ids = curve.get_conn_points(cid)
+		 # on split cpp file override will set automaticlly we need to set it only for undo
+		var conn_override_data = curve.get_override_entry(cid)
+		var pid = curve.add_point_conn_split(cid,ratio) # this will remove conn
+		var conn_ov_data:MCurveOverrideData
+		if has_active_point:
+			curve.connect_points(pid,active_point,MCurve.IN_OUT,null)
+			var ov_entries = curve.get_point_conns_override_entries(active_point)
+			if ov_entries.size()==1:conn_ov_data=ov_entries.values()[0]
+		ur.create_action("split connection")
+		ur.add_do_method(curve,"add_point_conn_split",cid,ratio)
+		ur.add_do_method(curve,"connect_points",pid,active_point,MCurve.IN_OUT,conn_ov_data)
+		ur.add_undo_method(curve,"remove_point",pid)
+		ur.add_undo_method(curve,"connect_points",point_ids[0],point_ids[1],conn_type,conn_override_data) # this will send update conn so set override data before
+		ur.commit_action(false)
+	else:
+		var cid = col.get_conn_id()
+		var points:PackedInt32Array= curve.get_conn_points(cid)
+		if not Input.is_key_pressed(KEY_SHIFT):
+			selected_connections.clear()
+			active_point = points[0]
+			selected_points.clear()
+		selected_connections.push_back(col.get_conn_id())
+		if points[0]!=active_point and selected_points.find(points[0])==-1: selected_points.push_back(points[0])
+		if points[1]!=active_point and selected_points.find(points[1])==-1: selected_points.push_back(points[1])
+		curve.emit_signal("curve_updated")
+	emit_signal("selection_changed")
 	return true
 	
 func _toggle_connection(curve:MCurve,toggle_point,toggle_conn):

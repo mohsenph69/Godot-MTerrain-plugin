@@ -307,7 +307,6 @@ class MCurve : public Resource{
 
     public:
     void toggle_conn_type(int32_t point, int64_t conn_id);
-    //void validate_conn(int64_t conn_id,bool send_signal=true);
     private:
     /// Return zero if not exist
     _FORCE_INLINE_ int32_t _get_conn_id32(int64_t conn_id) const;

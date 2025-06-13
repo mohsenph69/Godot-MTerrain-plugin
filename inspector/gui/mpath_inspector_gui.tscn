@@ -23,7 +23,7 @@ script = ExtResource("1_jv20c")
 layout_mode = 2
 text = "Point count: "
 
-[node name="conn_info" type="Label" parent="."]
+[node name="selection_info" type="Label" parent="."]
 layout_mode = 2
 text = "Conn: "
 

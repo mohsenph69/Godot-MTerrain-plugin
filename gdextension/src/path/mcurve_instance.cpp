@@ -1323,21 +1323,14 @@ void MCurveInstance::_notification(int p_what){
         _process_tick();
         break;
     case NOTIFICATION_READY:
-        //if(!ov.is_valid()){
-        //    ov.instantiate();
-        //}
         _on_curve_changed();
         break;
     case NOTIFICATION_PARENTED:
         _on_curve_changed();
         break;
     case NOTIFICATION_EDITOR_PRE_SAVE:
-        //if(!ov->get_path().is_empty()){
-        //    ResourceSaver::get_singleton()->save(ov,ov->get_path());
-        //}
         break;
     case NOTIFICATION_EXIT_TREE:
-        UtilityFunctions::print("NOTIFICATION_EXIT_TREE curve instance ",is_thread_updating);
         if(is_thread_updating){
             WorkerThreadPool::get_singleton()->wait_for_task_completion(thread_task_id);
             is_thread_updating = false;
