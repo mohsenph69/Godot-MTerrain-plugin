@@ -123,6 +123,13 @@ text = "  Reverse Offset"
 layout_mode = 2
 size_flags_vertical = 4
 
+[node name="lable2" type="Label" parent="instance_setting/reverse_offset"]
+layout_mode = 2
+text = "Mirror"
+
+[node name="mirror_checkbox" type="CheckBox" parent="instance_setting/reverse_offset"]
+layout_mode = 2
+
 [node name="start_offset" type="HBoxContainer" parent="instance_setting"]
 layout_mode = 2
 size_flags_vertical = 3

@@ -93,9 +93,9 @@ void MCurveInstanceElement::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_include_end"), &MCurveInstanceElement::get_include_end);
     ADD_PROPERTY(PropertyInfo(Variant::BOOL,"include_end"), "set_include_end", "get_include_end");
 
-    ClassDB::bind_method(D_METHOD("set_mirror","input"), &MCurveInstanceElement::set_mirror);
-    ClassDB::bind_method(D_METHOD("get_mirror"), &MCurveInstanceElement::get_mirror);
-    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"mirror"), "set_mirror", "get_mirror");
+    ClassDB::bind_method(D_METHOD("set_plus_mirror","input"), &MCurveInstanceElement::set_plus_mirror);
+    ClassDB::bind_method(D_METHOD("get_plus_mirror"), &MCurveInstanceElement::get_plus_mirror);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"plus_mirror"), "set_plus_mirror", "get_plus_mirror");
 
     ClassDB::bind_method(D_METHOD("set_mirror_rotation","input"), &MCurveInstanceElement::set_mirror_rotation);
     ClassDB::bind_method(D_METHOD("get_mirror_rotation"), &MCurveInstanceElement::get_mirror_rotation);
@@ -287,13 +287,13 @@ bool MCurveInstanceElement::get_mirror_rotation() const{
 }
 
 
-void MCurveInstanceElement::set_mirror(bool input){
-    mirror = input;
+void MCurveInstanceElement::set_plus_mirror(bool input){
+    plus_mirror = input;
     emit_elements_changed();
 }
 
-bool MCurveInstanceElement::get_mirror() const{
-    return mirror;
+bool MCurveInstanceElement::get_plus_mirror() const{
+    return plus_mirror;
 }
 
 void MCurveInstanceElement::set_curve_align_mode(MCurveInstanceElement::ALIGN input){
@@ -532,6 +532,7 @@ void MCurveInstanceOverride::_bind_methods(){
     ADD_PROPERTY(PropertyInfo(Variant::PACKED_BYTE_ARRAY,"data",PROPERTY_HINT_NONE,"",PROPERTY_USAGE_STORAGE),"set_data","get_data");
 
     BIND_ENUM_CONSTANT(REVERSE_OFFSET);
+    BIND_ENUM_CONSTANT(MIRROR);
 }
 
 void MCurveInstanceOverride::emit_connection_changed(int64_t conn_id){
@@ -1064,6 +1065,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
             PackedFloat32Array multimesh_buffer;
             int multimesh_buffer_index=0;
             int item_count =0;
+            bool ov_mirror = ov_data.get_flag(instance_index,MCurveInstanceOverride::MIRROR);
             ///////////////////// Creating multimesh buffer and adding shapes
             instance.ensure_physics_body_exist(path->get_space(),element->collision_layer,element->collision_mask,element->physics_material);
             RID body = instance.body;
@@ -1071,7 +1073,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
                 // should check for element->index_exist here as element->index_exist_mirror might have different result
                 if(element->index_exist(i,ov_data.random_remove[instance_index])){
                     // mesh
-                    Transform3D t = element->modify_transform(transforms[i],i);
+                    Transform3D t = element->modify_transform(transforms[i],i,ov_mirror);
                     if(mesh.is_valid()){
                         _set_multimesh_buffer(multimesh_buffer,t,multimesh_buffer_index);
                     }
@@ -1083,9 +1085,9 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
                     // adding count
                     item_count++;
                 }
-                if(element->mirror && element->index_exist_mirror(i,ov_data.random_remove[instance_index])){
+                if(element->plus_mirror && element->index_exist_mirror(i,ov_data.random_remove[instance_index])){
                     // mesh
-                    Transform3D t = element->modify_transform_mirror(transforms[i],i);
+                    Transform3D t = element->modify_transform(transforms[i],i,!ov_mirror);
                     if(mesh.is_valid()){
                         _set_multimesh_buffer(multimesh_buffer,t,multimesh_buffer_index);
                     }

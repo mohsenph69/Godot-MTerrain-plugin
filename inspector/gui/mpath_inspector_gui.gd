@@ -31,6 +31,7 @@ var exclude_connection_btn:Button
 # Instance Setting
 var instance_add_remove_btn:Button
 var instance_rev_offset_checkbox:CheckBox
+var instance_mirror_checkbox:CheckBox
 var instance_start_offset_slider:Slider
 var instance_end_offset_slider:Slider
 var instance_rand_remove_slider:Slider
@@ -74,17 +75,20 @@ func start():
 	# Instance settings
 	instance_add_remove_btn = $add_remove
 	instance_rev_offset_checkbox = $instance_setting/reverse_offset/rev_offset_checkbox
+	instance_mirror_checkbox = $instance_setting/reverse_offset/mirror_checkbox
 	instance_start_offset_slider = $instance_setting/start_offset/slider
 	instance_end_offset_slider = $instance_setting/end_offset/slider
 	instance_rand_remove_slider = $instance_setting/rand_rm/slider
 	instance_setting_header = $instance_setting
 	instance_add_remove_btn.connect("button_up",instance_add_remove_element)
-	instance_rev_offset_checkbox.connect("toggled",instance_set_rev_offset)
+	instance_rev_offset_checkbox.connect("toggled",instance_set_flag.bind(MCurveInstanceOverride.FLAG.REVERSE_OFFSET))
+	instance_mirror_checkbox.connect("toggled",instance_set_flag.bind(MCurveInstanceOverride.FLAG.MIRROR))
 	instance_start_offset_slider.connect("value_changed",instance_set_start_offset)
 	instance_end_offset_slider.connect("value_changed",instance_set_end_offset)
 	instance_rand_remove_slider.connect("value_changed",instance_set_rand_remove)
 	#### End commit to save override
 	instance_rev_offset_checkbox.connect("button_up",instance_edit_commit.bind(true))
+	instance_mirror_checkbox.connect("button_up",instance_edit_commit.bind(true))
 	instance_add_remove_btn.connect("button_up",instance_edit_commit.bind(true))
 	instance_start_offset_slider.connect("drag_ended",instance_edit_commit)
 	instance_end_offset_slider.connect("drag_ended",instance_edit_commit)
@@ -313,6 +317,8 @@ func update_curve_instance_selection():
 	exclude_connection_btn.set_pressed_no_signal(ov.get_exclude(cid))
 	if sel_elemenet!=-1 and ov.has_element(cid,sel_elemenet):
 		instance_setting_header.visible = true
+		instance_rev_offset_checkbox.button_pressed = ov.get_flag(cid,sel_elemenet,MCurveInstanceOverride.FLAG.REVERSE_OFFSET)
+		instance_mirror_checkbox.button_pressed = ov.get_flag(cid,sel_elemenet,MCurveInstanceOverride.FLAG.MIRROR)
 		instance_start_offset_slider.value = ov.get_start_offset(cid,sel_elemenet)
 		instance_end_offset_slider.value = ov.get_end_offset(cid,sel_elemenet)
 		instance_rand_remove_slider.value = ov.get_rand_remove(cid,sel_elemenet)
@@ -423,7 +429,7 @@ func instance_add_remove_element()->void:
 		ov.add_element(cid,element_index)
 	update_curve_instance_selection()
 
-func instance_set_rev_offset(value:bool)->void:
+func instance_set_flag(value:bool,flag:MCurveInstanceOverride.FLAG)->void:
 	var ov:MCurveInstanceOverride = current_modify_node.override_data
 	if not ov: return
 	var ids:PackedInt64Array = gizmo.get_selected_connections()
@@ -431,7 +437,7 @@ func instance_set_rev_offset(value:bool)->void:
 	var cid:int = ids[0]
 	var sel_element := get_selected_element()
 	if sel_element!=-1:
-		ov.set_flag(cid,sel_element,MCurveInstanceOverride.REVERSE_OFFSET,value)
+		ov.set_flag(cid,sel_element,flag,value)
 
 func instance_set_start_offset(value:float)->void:
 	var ov:MCurveInstanceOverride = current_modify_node.override_data

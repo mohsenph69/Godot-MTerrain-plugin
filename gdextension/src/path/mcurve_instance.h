@@ -36,7 +36,7 @@ class MCurveInstanceElement : public Resource {
     static constexpr int transform_count = 30;
     bool middle = false;
     bool include_end = false;
-    bool mirror = false;
+    bool plus_mirror = false;
     bool mirror_rotation = false;
     ALIGN curve_align_mode = ALIGN::CURVE_XYZ;
     int8_t shape_lod_cutoff = 2;
@@ -126,6 +126,14 @@ class MCurveInstanceElement : public Resource {
         return Transform3D(item_transform_mirror.basis*shape_local_basis,shape_local_position+item_transform_mirror.origin);
     }
 
+    inline Transform3D modify_transform(const Transform3D& t, int index,bool mirror){
+        return mirror ? modify_transform_mirror(t,index) : modify_transform(t,index);
+    }
+
+    inline Transform3D modify_transform_shape(const Transform3D& item_transform,bool mirror){
+        return mirror ? modify_transform_shape(item_transform) : modify_transform_mirror_shape(item_transform);
+    }
+
     inline bool index_exist(int index,float remove_possibility) const {
         float rnum = random_numbers[index%transform_count];
         return remove_possibility < rnum;
@@ -184,8 +192,8 @@ class MCurveInstanceElement : public Resource {
     void set_mirror_rotation(bool input);
     bool get_mirror_rotation() const;
 
-    void set_mirror(bool input);
-    bool get_mirror() const;
+    void set_plus_mirror(bool input);
+    bool get_plus_mirror() const;
 
     void set_curve_align_mode(ALIGN input);
     ALIGN get_curve_align_mode() const;
@@ -260,7 +268,8 @@ class MCurveInstanceOverride : public Resource {
     /// EXCLUDE is a special case flag which will be same for all instance_index
     enum FLAG {
         // EXCLUDE = 1 << 0, // not part of enum set by set_exclude and get exclude
-        REVERSE_OFFSET = 1 << 1
+        REVERSE_OFFSET = 1 << 1,
+        MIRROR = 1 << 2
         // 6 more can be added before data structure change
     };
     struct OverrideData
