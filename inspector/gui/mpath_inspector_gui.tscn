@@ -27,6 +27,21 @@ text = "Point count: "
 layout_mode = 2
 text = "Conn: "
 
+[node name="copy_past_header" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="copy_btn" type="Button" parent="copy_past_header"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Copy"
+
+[node name="past_btn" type="Button" parent="copy_past_header"]
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "Past"
+
 [node name="HSeparator2" type="HSeparator" parent="."]
 layout_mode = 2
 

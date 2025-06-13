@@ -7,12 +7,17 @@ var lod_reg:=RegEx.create_from_string("[_]?lod[\\d]+")
 
 var selection_info:Label
 
+static var override_clipboard:MCurveOverrideData=null
+static var is_override_clipboard_conn:bool
+static var override_clipboard_owner:MCurve = null
+
 # remebering this to open the correct if node deselcted
 static var selected_child:Node
 
 var is_started:=false
 
 var gizmo:EditorNode3DGizmoPlugin
+var ur:EditorUndoRedoManager
 
 var current_path:MPath
 var current_curve:MCurve
@@ -27,6 +32,10 @@ var connection_tab:Button
 var intersection_tab:Button
 var exclude_connection_btn:Button
 
+
+# Override copy past
+var copy_btn:Button
+var past_btn:Button
 
 # Instance Setting
 var instance_add_remove_btn:Button
@@ -72,6 +81,11 @@ func start():
 	if not gizmo: printerr("Gizmo is NULL")
 	gizmo.connect("selection_changed",Callable(self,"update_curve_item_selection"))
 	gizmo.connect("point_commit",Callable(self,"update_curve_lenght_info"))
+	# Copy past Override
+	copy_btn=$copy_past_header/copy_btn
+	past_btn=$copy_past_header/past_btn
+	copy_btn.button_up.connect(copy_btn_pressed)
+	past_btn.button_up.connect(past_btn_pressed)
 	# Instance settings
 	instance_add_remove_btn = $add_remove
 	instance_rev_offset_checkbox = $instance_setting/reverse_offset/rev_offset_checkbox
@@ -102,6 +116,7 @@ func set_path(input:MPath)->void:
 	current_path = input
 	current_curve = current_path.curve
 	update_curve_lenght_info()
+	update_copy_past_selection()
 	child_selector.clear()
 	child_selector.add_item("ovveride")
 	if not input: return
@@ -262,11 +277,25 @@ func update_curve_lenght_info()->void:
 
 func update_curve_item_selection():
 	update_curve_lenght_info()
+	update_copy_past_selection()
 	if not current_modify_node or not gizmo: return
 	if modify_mode==MODIFY_MODE.CURVE_MESH:
 		update_curve_mesh_selection()
 	elif modify_mode==MODIFY_MODE.CURVE_INSTANCE:
 		update_curve_instance_selection()
+
+func update_copy_past_selection():
+	if not is_instance_valid(current_curve) or not is_instance_valid(current_path): return
+	var point_sel:PackedInt32Array = gizmo.get_selected_points32()
+	var conn_sel:PackedInt64Array= gizmo.get_selected_connections()
+	## Copy button
+	copy_btn.disabled=not((point_sel.size()==1 and conn_sel.size()==0) or (point_sel.size()==2 and conn_sel.size()==1))
+	# past button
+	if override_clipboard and current_curve==override_clipboard_owner:
+		if is_override_clipboard_conn: past_btn.disabled = conn_sel.size()==0
+		else: past_btn.disabled = point_sel.size()==0
+	else:
+		past_btn.disabled = true
 
 func update_curve_mesh_selection():
 	var ids:PackedInt64Array = get_selected_ids()
@@ -478,3 +507,59 @@ func instance_edit_commit(is_changed:bool)->void:
 	if is_changed and current_modify_node and current_modify_node is MCurveInstance:
 		var ov:MCurveInstanceOverride = current_modify_node.override_data
 		if ov: ResourceSaver.save(ov,ov.resource_path)
+
+
+########### Copy Paste Override
+
+func copy_btn_pressed()->void:
+	if not is_instance_valid(current_curve) or not is_instance_valid(current_path): return
+	var point_sel:PackedInt32Array = gizmo.get_selected_points32()
+	var conn_sel:PackedInt64Array= gizmo.get_selected_connections()
+	if conn_sel.size()==0 and point_sel.size()==1:
+		override_clipboard = current_curve.get_override_entry(point_sel[0])
+		is_override_clipboard_conn = false
+		override_clipboard_owner = current_curve
+		update_copy_past_selection()
+		return
+	if conn_sel.size()==1 and point_sel.size()==2:
+		override_clipboard = current_curve.get_override_entry(conn_sel[0])
+		is_override_clipboard_conn = true
+		override_clipboard_owner = current_curve
+		update_copy_past_selection()
+		return
+
+func past_btn_pressed()->void:
+	if not is_instance_valid(current_curve) or not is_instance_valid(current_path) or not override_clipboard: return
+	if override_clipboard_owner!=current_curve:
+		return
+	var ids:PackedInt64Array
+	var ov_array:Array
+	var ov_undo_array:Array
+	if is_override_clipboard_conn:
+		for cid in gizmo.get_selected_connections():
+			ids.push_back(cid)
+			ov_array.push_back(override_clipboard)
+			ov_undo_array.push_back(current_curve.get_override_entry(cid))
+	else:
+		for pid in gizmo.get_selected_points32():
+			ids.push_back(pid)
+			ov_array.push_back(override_clipboard)
+			ov_undo_array.push_back(current_curve.get_override_entry(pid))
+	# creating action
+	ur.create_action("PastOverride",0,EditorInterface.get_edited_scene_root())
+	ur.add_do_method(current_curve,"set_override_entries_and_apply",ids,ov_array,is_override_clipboard_conn)
+	ur.add_undo_method(current_curve,"set_override_entries_and_apply",ids,ov_undo_array,is_override_clipboard_conn)
+	ur.commit_action(true)
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+### end

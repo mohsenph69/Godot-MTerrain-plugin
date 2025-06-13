@@ -17,6 +17,7 @@ func _parse_begin(object):
 		gui = gui_res.instantiate()
 	add_custom_control(gui)
 	gui.gizmo = gizmo
+	gui.ur = gizmo.ur
 	gui.set_path(object)
 	## Curve terrain
 	if gizmo.tools.get_active_mterrain():

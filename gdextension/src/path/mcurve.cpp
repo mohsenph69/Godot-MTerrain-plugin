@@ -59,6 +59,7 @@ void MCurve::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("set_override_entry","id","override_data"), &MCurve::set_override_entry);
     ClassDB::bind_method(D_METHOD("get_override_entry","id"), &MCurve::get_override_entry);
+    ClassDB::bind_method(D_METHOD("set_override_entries_and_apply","ids","override_data_array","is_conn_override"), &MCurve::set_override_entries_and_apply);
 
     ClassDB::bind_method(D_METHOD("get_points_count"), &MCurve::get_points_count);
 
@@ -242,6 +243,18 @@ Ref<MCurveOverrideData> MCurve::get_override_entry(int64_t id) const{
         out->entries.push_back(entry);
     }
     return out;
+}
+
+void MCurve::set_override_entries_and_apply(PackedInt64Array ids,TypedArray<MCurveOverrideData> override_data_array,bool is_conn_override){
+    ERR_FAIL_COND(ids.size()!=override_data_array.size());
+    for(int i=0; i < ids.size(); i++){
+        set_override_entry(ids[i],override_data_array[i]);
+        if(is_conn_override){
+            emit_signal("force_update_connection",ids[i]);
+        } else {
+            emit_signal("force_update_point",ids[i]);
+        }
+    }
 }
 
 
