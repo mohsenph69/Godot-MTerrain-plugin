@@ -690,6 +690,10 @@ func _on_info_btn_pressed():
 	request_info_window.emit()
 	request_info_window
 
+func _on_mmeshlod_parser_pressed() -> void:
+	var parser=load("res://addons/m_terrain/gui/parse_mmeshlod.tscn").instantiate()
+	add_child(parser)
+
 func _on_reload_pressed() -> void:
 	get_active_mterrain().create_grid()
 

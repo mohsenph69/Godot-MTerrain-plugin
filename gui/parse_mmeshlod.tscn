@@ -1,0 +1,121 @@
+[gd_scene load_steps=2 format=3 uid="uid://cy5wlqjd5au70"]
+
+[ext_resource type="Script" uid="uid://cjv72uqf54fav" path="res://addons/m_terrain/gui/parse_mmeshlod.gd" id="1_y7cl0"]
+
+[node name="parse_mmeshlod" type="Window"]
+initial_position = 4
+size = Vector2i(520, 460)
+script = ExtResource("1_y7cl0")
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Open a Directory"
+initial_position = 4
+size = Vector2i(840, 640)
+ok_button_text = "Select Current Folder"
+file_mode = 2
+
+[node name="vb" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="sep" type="HSeparator" parent="vb"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="vb"]
+layout_mode = 2
+text = "Naming convention: [Name]_lod_[lod_number]
+Mesh Directory"
+
+[node name="hb" type="HBoxContainer" parent="vb"]
+layout_mode = 2
+
+[node name="mesh_dir_btn" type="Button" parent="vb/hb"]
+layout_mode = 2
+text = "Select path"
+
+[node name="mesh_dir" type="LineEdit" parent="vb/hb"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="sep2" type="HSeparator" parent="vb"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="vb"]
+layout_mode = 2
+text = "MMeshLOD save path"
+
+[node name="hb2" type="HBoxContainer" parent="vb"]
+layout_mode = 2
+
+[node name="meshlod_dir_btn" type="Button" parent="vb/hb2"]
+layout_mode = 2
+text = "Select path"
+
+[node name="meshlod_dir" type="LineEdit" parent="vb/hb2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator" type="HSeparator" parent="vb"]
+layout_mode = 2
+
+[node name="hb3" type="HBoxContainer" parent="vb"]
+layout_mode = 2
+
+[node name="fill_all" type="CheckBox" parent="vb/hb3"]
+layout_mode = 2
+text = "fill all"
+alignment = 1
+
+[node name="fill_between" type="CheckBox" parent="vb/hb3"]
+layout_mode = 2
+text = "fill between"
+alignment = 1
+
+[node name="lodcutoff" type="SpinBox" parent="vb/hb3"]
+custom_minimum_size = Vector2(136, 0)
+layout_mode = 2
+min_value = -1.0
+max_value = 10.0
+value = -1.0
+suffix = "  cutoff lod"
+
+[node name="HSeparator2" type="HSeparator" parent="vb"]
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="vb"]
+custom_minimum_size = Vector2(0, 164)
+layout_mode = 2
+
+[node name="parsed_meshes_info" type="RichTextLabel" parent="vb/Panel"]
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="vb"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="vb/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[node name="update" type="Button" parent="vb/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "update"
+
+[connection signal="close_requested" from="." to="." method="queue_free"]
+[connection signal="dir_selected" from="FileDialog" to="." method="_on_file_dialog_dir_selected"]
+[connection signal="button_up" from="vb/hb/mesh_dir_btn" to="." method="select_path_pressed" binds= [true]]
+[connection signal="text_changed" from="vb/hb/mesh_dir" to="." method="parse_meshes"]
+[connection signal="button_up" from="vb/hb2/meshlod_dir_btn" to="." method="select_path_pressed" binds= [false]]
+[connection signal="pressed" from="vb/HBoxContainer/Button" to="." method="queue_free"]
+[connection signal="button_down" from="vb/HBoxContainer/update" to="." method="update_mmeshlod"]
