@@ -98,6 +98,8 @@ class MNavigationRegion3D : public NavigationRegion3D{
     void update_navmesh(Vector3 cam_pos);
     void _finish_update(Ref<NavigationMesh> nvm);
     void _set_is_updating(bool input);
+    void set_custom_camera(Node3D* node3d);
+    Node3D* get_custom_camera() const;
     void get_cam_pos();
     void force_update();
     bool has_data();

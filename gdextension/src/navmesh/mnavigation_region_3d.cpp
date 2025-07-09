@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/box_shape3d.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/resource_saver.hpp>
+#include <godot_cpp/classes/engine.hpp>
 #include "../mtool.h"
 
 
@@ -23,6 +24,9 @@ void MNavigationRegion3D::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_npoint_by_pixel","px","py"), &MNavigationRegion3D::get_npoint_by_pixel);
     ClassDB::bind_method(D_METHOD("draw_npoints","brush_pos","radius","add"), &MNavigationRegion3D::draw_npoints);
     ClassDB::bind_method(D_METHOD("set_npoints_visible","val"), &MNavigationRegion3D::set_npoints_visible);
+
+    ClassDB::bind_method(D_METHOD("set_custom_camera","input"), &MNavigationRegion3D::set_custom_camera);
+    ClassDB::bind_method(D_METHOD("get_custom_camera"), &MNavigationRegion3D::get_custom_camera);
 
     ClassDB::bind_method(D_METHOD("set_active","input"), &MNavigationRegion3D::set_active);
     ClassDB::bind_method(D_METHOD("get_active"), &MNavigationRegion3D::get_active);
@@ -351,11 +355,40 @@ void MNavigationRegion3D::_set_is_updating(bool input){
 }
 
 
+void MNavigationRegion3D::set_custom_camera(Node3D* node3d){
+    custom_camera = node3d;
+}
+
+Node3D* MNavigationRegion3D::get_custom_camera() const{
+    return custom_camera;
+}
+
 void MNavigationRegion3D::get_cam_pos(){
     g_pos = get_global_position();
-    Node3D* n = MTool::find_editor_camera(false);
-    ERR_FAIL_COND_MSG(n==nullptr,"Can't find editor camera");
-    cam_pos = n->get_global_position();
+    if(custom_camera){
+        cam_pos = custom_camera->get_global_position();
+        return;
+    }
+	if(Engine::get_singleton()->is_editor_hint()){
+		Node3D* cam = MTool::find_editor_camera(true);
+		if(cam){
+			cam_pos = cam->get_global_position();
+		} else {
+			WARN_PRINT("Can not find editor camera you can set that manually by set_camera_node");
+		}
+		return;
+	}
+	Viewport* viewport = get_viewport();
+	if(unlikely(!viewport)){
+        WARN_PRINT("Can not find viewport, You can set that manually by set_camera_node");
+		return;
+	}
+	Camera3D* cam = viewport->get_camera_3d();
+	if(unlikely(!cam)){
+		WARN_PRINT("Can not find camera, You can set that manually by set_camera_node");
+		return;
+	}
+	cam_pos = cam->get_global_position();
 }
 
 void MNavigationRegion3D::force_update(){
