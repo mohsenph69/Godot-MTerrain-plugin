@@ -922,7 +922,6 @@ func disconnect_points():
 ## From is ray pos
 ## to is ray dirs
 func process_connection_click(curve:MCurve,from:Vector3,to:Vector3)->bool:
-	print("process_connection_click")
 	# list of connection which statisfy minum distance of click point
 	for ccc in curve.get_active_conns():
 		if not curve.has_conn(ccc):
