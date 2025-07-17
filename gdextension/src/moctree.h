@@ -197,6 +197,7 @@ class MOctree : public Node3D {
     void clear_oct_id(int oct_id);
     void remove_oct_id(int oct_id);
     bool remove_point(int32_t id, const Vector3& pos,uint16_t oct_id);
+    bool remove_point_no_pos(int32_t id,uint16_t oct_id);
     bool check_for_mergeable(Octant* start_point);
     void set_camera_node(Node3D* camera);
     void set_world_boundary(const Vector3& start,const Vector3& end);

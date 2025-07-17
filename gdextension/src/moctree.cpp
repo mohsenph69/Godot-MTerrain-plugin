@@ -724,6 +724,29 @@ bool MOctree::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
 	check_for_mergeable(res);
 	return res!=nullptr;
 }
+
+bool MOctree::remove_point_no_pos(int32_t id,uint16_t oct_id){
+	std::lock_guard<std::mutex> lock(oct_mutex);
+	if(disable_octree){
+		return true;
+	}
+	{
+		std::lock_guard<std::mutex> lock2(move_req_mutex);
+		//PointMoveReq rm_mv_req(id,oct_id,Vector3(),Vector3());
+		PointMoveReq rm_mv_req(id,oct_id);
+		moves_req_cache.erase(rm_mv_req);
+	}
+	int p_index;
+	Octant* res = root.find_octant_by_point_classic(id,oct_id,p_index);
+	if(unlikely(!res)){
+		WARN_PRINT("Can not find point with ID "+itos(id)+" OCT_ID "+itos(oct_id)+" to remove!");
+	} else {
+		res->points.remove_at(p_index);
+		point_count--;
+	}
+	check_for_mergeable(res);
+	return res!=nullptr;
+}
 /*
 	I you pass the octant pointer and you call root.clear or merge octs
 	this  will crash, this cause to intiale octant pointer will be removed!

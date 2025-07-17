@@ -378,13 +378,11 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id,Vector3* old_p
     //////////////////////////
     if(!is_connected){
         if(it_cid32!=conn_id32.end()){
-            Vector3 new_positions[CONN_ADDITIONAL_POINT_COUNT];
-            _get_additional_points(new_positions,a.position,b.position,*a_control,*b_control);
             int32_t cid32 = it_cid32->value;
             ConnAdditional& __additional = conn_additional.ptrw()[cid32];
             int32_t base_oct_id = cid32*CONN_ADDITIONAL_POINT_COUNT;
             for(int a=0; a < CONN_ADDITIONAL_POINT_COUNT; a++){
-                octree->remove_point(-(base_oct_id+a),new_positions[a],oct_id);
+                octree->remove_point_no_pos(-(base_oct_id+a),oct_id);
                 __additional.lod[a] = -1; // reseting lod back to -1
                 __additional.conn_id = 0;
             }
