@@ -259,12 +259,12 @@ func _set_handle(gizmo, points_id, secondary, camera, screen_pos):
 		var point_pos:Vector3 = curve.get_point_position(points_id)
 		var drag:Vector3 = from + to * from.distance_to(point_pos)
 		drag = get_constraint_pos(handle_init_pos,drag)
-		var active_terrain = gui.get_terrain_for_snap()
-		if active_terrain and lock_mode == LOCK_MODE.NONE:			
-			if active_terrain and active_terrain.is_grid_created():
-				drag.y = active_terrain.get_height(drag)
+		if gui.is_snap_active() and lock_mode == LOCK_MODE.NONE:
+			var active_terrain = gui.get_terrain_for_snap()
+			if active_terrain and active_terrain.is_grid_created(): drag.y = active_terrain.get_height(drag)
 			else:
-				drag.y = 0.0
+				var rcol:MCollision = MTool.ray_collision_y_zero_plane(from,to)
+				if rcol.is_collided(): drag = rcol.get_collision_position()
 		curve.move_point(points_id,drag)
 		change_active_point(points_id)
 	else: # is secondary		
@@ -588,18 +588,19 @@ func process_mouse_left_click(camera, event, terrain_col)->bool:
 		var new_index:int
 		var new_pos:Vector3
 		var is_new_pos_set = false
-		var active_mterrain = gui.get_terrain_for_snap()
-		if active_mterrain:
-			#To Do: user should be able to select which mterrain is used for snapping			
-			if active_mterrain and active_mterrain.is_grid_created():				
-				if terrain_col.is_collided():
-					new_pos = terrain_col.get_collision_position()
-					is_new_pos_set = true
+		if gui.is_snap_active():
+			var active_mterrain:MTerrain= gui.get_terrain_for_snap()
+			if active_mterrain and active_mterrain.is_grid_created():
+				if active_mterrain and active_mterrain.is_grid_created():
+					var mcol:MCollision=active_mterrain.get_ray_collision_point(from,to,0.1,50000)
+					if mcol.is_collided():
+						is_new_pos_set = true
+						new_pos = mcol.get_collision_position()
 			else:
-				var col = MTool.ray_collision_y_zero_plane(camera.global_position,camera.project_ray_normal(event.position))
-				if col.is_collided():
-					new_pos = col.get_collision_position()
+				var mcol:MCollision=MTool.ray_collision_y_zero_plane(from,to)
+				if mcol.is_collided():
 					is_new_pos_set = true
+					new_pos = mcol.get_collision_position()
 		var conn_ids:PackedInt64Array
 		if curve.has_point(active_point):
 			var conn_ov_data:MCurveOverrideData

@@ -63,10 +63,11 @@ func is_mirror_lenght()->bool:
 func is_xz_handle_lock()->bool:
 	return y_lock.button_pressed
 
+func is_snap_active()->bool:
+	return snap_checkbox.button_pressed
+
 func get_terrain_for_snap():
-	if mterrain_for_snap and snap_checkbox.button_pressed:
-		return mterrain_for_snap
-	return null
+	return mterrain_for_snap
 
 func get_mode():
 	return mode_option.selected
