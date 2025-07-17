@@ -922,12 +922,14 @@ func disconnect_points():
 ## From is ray pos
 ## to is ray dirs
 func process_connection_click(curve:MCurve,from:Vector3,to:Vector3)->bool:
+	print("process_connection_click")
 	# list of connection which statisfy minum distance of click point
 	for ccc in curve.get_active_conns():
 		if not curve.has_conn(ccc):
 			print("Not exist conn ",ccc)
 	var col: = curve.ray_active_conn_collision(from,to,0.99)
-	if not col.is_collided(): return false
+	if not col.is_collided() and (Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT)):
+		return false
 	if Input.is_key_pressed(KEY_CTRL):
 		var has_active_point = curve.has_point(active_point)
 		var cid = col.get_conn_id()
@@ -951,7 +953,7 @@ func process_connection_click(curve:MCurve,from:Vector3,to:Vector3)->bool:
 		ur.add_undo_method(curve,"remove_point",pid)
 		ur.add_undo_method(curve,"connect_points",point_ids[0],point_ids[1],conn_type,conn_override_data) # this will send update conn so set override data before
 		ur.commit_action(false)
-	else:
+	elif col.is_collided():
 		var cid = col.get_conn_id()
 		var points:PackedInt32Array= curve.get_conn_points(cid)
 		if not Input.is_key_pressed(KEY_SHIFT):
@@ -961,6 +963,11 @@ func process_connection_click(curve:MCurve,from:Vector3,to:Vector3)->bool:
 		selected_connections.push_back(col.get_conn_id())
 		if points[0]!=active_point and selected_points.find(points[0])==-1: selected_points.push_back(points[0])
 		if points[1]!=active_point and selected_points.find(points[1])==-1: selected_points.push_back(points[1])
+		curve.emit_signal("curve_updated")
+	else: # deselecting
+		selected_connections.clear()
+		active_point = 0
+		selected_points.clear()
 		curve.emit_signal("curve_updated")
 	emit_signal("selection_changed")
 	return true
