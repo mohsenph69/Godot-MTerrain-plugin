@@ -139,8 +139,10 @@ void MPath::_notification(int p_what){
 }
 
 void MPath::update_scenario_space(){
-    scenario = get_world_3d()->get_scenario();
-    space = get_world_3d()->get_space();
+    if(is_inside_tree()){
+        scenario = get_world_3d()->get_scenario();
+        space = get_world_3d()->get_space();
+    }
 }
 
 RID MPath::get_scenario(){

@@ -194,7 +194,7 @@ func load_grass_settings():
 		grass_count+=1
 		$g_container/grass_list.add_item(grass.name,grass_icon_tex)
 		if grass.has_meta("curve_terrain"):
-			settings[grass.name] = grass.get_meta("curve_terrain")
+			settings[NodePath(grass.name)] = grass.get_meta("curve_terrain")
 	set_grass_items_visibilty(grass_count!=0)
 	gizmo.grass_modify_settings = settings
 	if grass_count !=0 :
@@ -209,7 +209,7 @@ func _on_grass_list_item_selected(index):
 	call_deferred("change_active_grass",index)
 
 func change_active_grass(index):
-	var grass_name = $g_container/grass_list.get_item_text(index)
+	var grass_name = NodePath($g_container/grass_list.get_item_text(index))
 	if not curve_terrain.terrain.has_node(grass_name):
 		printerr("Can not find "+grass_name)
 		return
@@ -273,5 +273,3 @@ func grass_tool_index_pressed(index:int):
 	if index == 3:
 		gizmo.clear_grass_large(only_selected)
 		return
-
-
