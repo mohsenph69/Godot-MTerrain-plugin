@@ -48,6 +48,7 @@ class MChunks {
     void create_chunks(int32_t _min_size, int32_t _max_size, real_t _min_h_scale, real_t _max_h_scale, Array _info);
     _FORCE_INLINE_ void clear(){
         meshes.clear();
+        sizes.clear();
     }
 };
 #endif
