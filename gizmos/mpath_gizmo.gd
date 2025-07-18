@@ -1203,6 +1203,7 @@ func modify_grass(only_selected:bool):
 	if conns.size() == 0: return
 	var g_names = grass_modify_settings.keys()
 	for gname in g_names:
+		gname = NodePath(gname)
 		var setting:Dictionary = grass_modify_settings[gname]
 		if not setting["active"] : return
 		if not curve_terrain.terrain.has_node(gname):

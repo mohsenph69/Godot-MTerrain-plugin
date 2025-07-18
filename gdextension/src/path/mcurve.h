@@ -66,9 +66,14 @@ class MCurveOverrideData : public RefCounted {
     protected:
     static void _bind_methods(){};
     public:
+    enum Type {
+        NO_TYPE,
+        CURVE_MESH,
+        CURVE_INSTANCE
+    };
     struct Entry {
-        int user_id;
-        Node* node;
+        Type type = NO_TYPE;
+        String node_name;
         PackedByteArray data;
     };
     Vector<Entry> entries;
@@ -272,6 +277,7 @@ class MCurve : public Resource{
     void set_override_entries_and_apply(PackedInt64Array ids,TypedArray<MCurveOverrideData> override_data_array,bool is_conn_override);
     int get_points_count();
     // Users
+    Node* get_curve_user_by_name(String user_name);
     int32_t get_curve_users_id(Node* node);
     void remove_curve_user_id(int32_t user_id);
 

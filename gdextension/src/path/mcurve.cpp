@@ -194,19 +194,25 @@ void MCurve::set_override_entry(int64_t id,Ref<MCurveOverrideData> override_data
     ERR_FAIL_COND(override_data.is_null());
     for(int i=0; i < override_data->entries.size(); i++){
         const MCurveOverrideData::Entry& entry = override_data->entries[i];
-        int user_id = entry.user_id;
-        ERR_CONTINUE(!curve_users.has(user_id));
-        Node* node = entry.node;
-        ERR_CONTINUE(curve_users[user_id]==nullptr);
-        ERR_CONTINUE(node==nullptr);
-        ERR_CONTINUE(curve_users[user_id]!=node);
+        Node* node = get_curve_user_by_name(entry.node_name);
+        ERR_CONTINUE_MSG(node==nullptr,"Curve user by name \""+entry.node_name+"\" not found!");
         MCurveMesh* curve_mesh = Object::cast_to<MCurveMesh>(node);
         MCurveInstance* curve_instance = Object::cast_to<MCurveInstance>(node);
         if(curve_mesh){
-            ERR_CONTINUE(curve_mesh->get_overrides().is_null());
+            ERR_FAIL_COND(entry.type!=MCurveOverrideData::CURVE_MESH);
+            if(curve_mesh->get_overrides().is_null()){
+                Ref<MCurveMeshOverride> ov;
+                ov.instantiate();
+                curve_mesh->set_overrides(ov);
+            }
             curve_mesh->get_overrides()->set_override_entry(id,entry.data);
         } else if(curve_instance){
-            ERR_CONTINUE(curve_instance->get_override().is_null());
+            ERR_FAIL_COND(entry.type!=MCurveOverrideData::CURVE_INSTANCE);
+            if(curve_instance->get_override().is_null()){
+                Ref<MCurveInstanceOverride> ov;
+                ov.instantiate();
+                curve_instance->set_override(ov);
+            }
             curve_instance->get_override()->set_override_entry(id,entry.data);
         } else {
             ERR_CONTINUE_MSG(true,"Invalid User Type!");
@@ -221,17 +227,18 @@ Ref<MCurveOverrideData> MCurve::get_override_entry(int64_t id) const{
         MCurveOverrideData::Entry entry;
         Node* node = curve_users.get_array()[i].value;
         int user_id = curve_users.get_array()[i].key;
-        entry.user_id = user_id;
-        entry.node = node;
+        entry.node_name = node->get_name();
         MCurveMesh* curve_mesh = Object::cast_to<MCurveMesh>(node);
         MCurveInstance* curve_instance = Object::cast_to<MCurveInstance>(node);
         if(curve_mesh){
+            entry.type=MCurveOverrideData::CURVE_MESH;
             if(curve_mesh->get_overrides().is_null()){
                 continue; // no data
             } else {
                 entry.data = curve_mesh->get_overrides()->get_override_entry(id);
             }
         } else if(curve_instance){
+            entry.type=MCurveOverrideData::CURVE_INSTANCE;
             if(curve_instance->get_override().is_null()){
                 continue; // not data
             } else {
@@ -452,6 +459,17 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id,Vector3* old_p
         __additional->lod[p] = octree->get_pos_lod_classic(old_positions[p]);
         octree->add_move_req(mv_req);
     }
+}
+
+Node* MCurve::get_curve_user_by_name(String user_name){
+    for(int i=0; i < curve_users.size(); i++){
+        Node* n = curve_users.get_array()[i].value;
+        ERR_CONTINUE(n==nullptr);
+        if(n->get_name()==user_name && n->is_inside_tree()){
+            return n;
+        }
+    }
+    return nullptr;
 }
 
 int32_t MCurve::get_curve_users_id(Node* node){

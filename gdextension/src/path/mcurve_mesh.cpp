@@ -1071,7 +1071,7 @@ void MCurveMesh::_notification(int p_what){
         _on_curve_changed();
         break;
     case NOTIFICATION_EDITOR_PRE_SAVE:
-        if(!ov->get_path().is_empty()){
+        if(ov.is_valid() && !ov->get_path().is_empty()){
             ResourceSaver::get_singleton()->save(ov,ov->get_path());
         }
     case NOTIFICATION_ENTER_TREE:

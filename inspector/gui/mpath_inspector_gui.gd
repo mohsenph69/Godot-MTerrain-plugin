@@ -9,7 +9,6 @@ var selection_info:Label
 
 static var override_clipboard:MCurveOverrideData=null
 static var is_override_clipboard_conn:bool
-static var override_clipboard_owner:MCurve = null
 
 # remebering this to open the correct if node deselcted
 static var selected_child:Node
@@ -291,7 +290,7 @@ func update_copy_past_selection():
 	## Copy button
 	copy_btn.disabled=not((point_sel.size()==1 and conn_sel.size()==0) or (point_sel.size()==2 and conn_sel.size()==1))
 	# past button
-	if override_clipboard and current_curve==override_clipboard_owner:
+	if override_clipboard:
 		if is_override_clipboard_conn: past_btn.disabled = conn_sel.size()==0
 		else: past_btn.disabled = point_sel.size()==0
 	else:
@@ -518,20 +517,16 @@ func copy_btn_pressed()->void:
 	if conn_sel.size()==0 and point_sel.size()==1:
 		override_clipboard = current_curve.get_override_entry(point_sel[0])
 		is_override_clipboard_conn = false
-		override_clipboard_owner = current_curve
 		update_copy_past_selection()
 		return
 	if conn_sel.size()==1 and point_sel.size()==2:
 		override_clipboard = current_curve.get_override_entry(conn_sel[0])
 		is_override_clipboard_conn = true
-		override_clipboard_owner = current_curve
 		update_copy_past_selection()
 		return
 
 func past_btn_pressed()->void:
 	if not is_instance_valid(current_curve) or not is_instance_valid(current_path) or not override_clipboard: return
-	if override_clipboard_owner!=current_curve:
-		return
 	var ids:PackedInt64Array
 	var ov_array:Array
 	var ov_undo_array:Array

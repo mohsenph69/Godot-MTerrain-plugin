@@ -239,9 +239,8 @@ func upate_grass_meta():
 	g_setting["add"] = $g_container/gh/gadd.button_pressed
 	g_setting["radius"] = $g_container/ov7/gradius.value
 	g_setting["offset"] = $g_container/ov6/goffset.value
-	gizmo.grass_modify_settings[active_grass.name] = g_setting
+	gizmo.grass_modify_settings[NodePath(active_grass.name)] = g_setting
 	active_grass.set_meta("curve_terrain",g_setting)
-	print(active_grass.name ," update offset ",g_setting["offset"])
 
 func set_grass_items_visibilty(input:bool):
 	## change the visibilty of nodes not container

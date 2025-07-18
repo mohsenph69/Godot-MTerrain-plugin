@@ -321,6 +321,7 @@ void MCurveTerrain::deform_on_conns(const PackedInt64Array& conn_ids){
     Vector2i start = grid->get_closest_pixel(caabb.position);
     Vector2i end = grid->get_closest_pixel(caabb.position + caabb.size);
     grid->update_normals(start.x,end.x,start.y,end.y);
+    grid->save_all_dirty_images();
 }
 
 void MCurveTerrain::clear_paint_aabb(AABB aabb){
