@@ -1297,8 +1297,10 @@ void MCurveInstance::_on_curve_changed(){
             curve->connect("connection_updated",Callable(this,"_on_connections_updated"));
             curve->connect("force_update_connection",Callable(this,"_connection_force_update"));
             curve->connect("remove_connection",Callable(this,"_connection_remove"));
-            //curve->connect("swap_point_id",Callable(this,"_recreate"));
             curve->connect("recreate",Callable(this,"_recreate"));
+            _recreate();
+        } else {
+            _remove_all_instances();
         }
     }
     update_configuration_warnings();
