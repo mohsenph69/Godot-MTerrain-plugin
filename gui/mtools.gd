@@ -345,6 +345,7 @@ func on_selection_changed(obj):
 	request_hide()
 
 func on_handles(object):
+	if not object is Node: return #ignoring none node
 	active_snap_object = null
 	if mcurve_mesh_gui and mcurve_mesh_gui.obj and mcurve_mesh_gui.is_active(): 
 		return false
