@@ -460,6 +460,8 @@ class MCurveInstance : public Node {
     };
 
     bool is_thread_updating = false;
+    bool disable_rendering = false;
+    bool disable_physics = false;
     int default_element[M_CURVE_CONNECTION_INSTANCE_COUNT];
     int32_t curve_user_id;
     WorkerThreadPool::TaskID thread_task_id;
@@ -488,6 +490,10 @@ class MCurveInstance : public Node {
     // in case instance_index=-1 all instance will be removed
     void _remove_instance(int64_t conn_id,int instance_index=-1,bool rm_curve_instance_instances=true);
     void _remove_all_instances();
+    void set_disable_rendering(bool input);
+    bool get_disable_rendering() const;
+    void set_disable_physics(bool input);
+    bool get_disable_physics() const;
     void set_override(Ref<MCurveInstanceOverride> input);
     Ref<MCurveInstanceOverride> get_override() const;
     void set_default_element(int instance_index,int input);

@@ -852,6 +852,14 @@ void MCurveInstance::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("_update_visibilty"), &MCurveInstance::_update_visibilty);
 
+    ClassDB::bind_method(D_METHOD("set_disable_rendering","input"), &MCurveInstance::set_disable_rendering);
+    ClassDB::bind_method(D_METHOD("get_disable_rendering"), &MCurveInstance::get_disable_rendering);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"disbale_rendering"),"set_disable_rendering","get_disable_rendering");
+
+    ClassDB::bind_method(D_METHOD("set_disable_physics","input"), &MCurveInstance::set_disable_physics);
+    ClassDB::bind_method(D_METHOD("get_disable_physics"), &MCurveInstance::get_disable_physics);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL,"disable_physics"),"set_disable_physics","get_disable_physics");
+
     ClassDB::bind_method(D_METHOD("set_override","input"), &MCurveInstance::set_override);
     ClassDB::bind_method(D_METHOD("get_override"), &MCurveInstance::get_override);
     ADD_PROPERTY(PropertyInfo(Variant::OBJECT,"override_data",PROPERTY_HINT_RESOURCE_TYPE,"MCurveInstanceOverride"), "set_override","get_override");
@@ -972,9 +980,9 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
             _remove_instance(cid,instance_index,false);
             continue; // No element
         }
-        RID mesh = element->get_mesh_lod(lod);
+        RID mesh = disable_rendering ? RID() : element->get_mesh_lod(lod);
         // Cheating LOD into shape
-        RID shape = element->shape_lod_cutoff > lod ? element->get_shape_rid() : RID();
+        RID shape = element->shape_lod_cutoff > lod && !disable_physics ? element->get_shape_rid() : RID();
         if(!mesh.is_valid() && !shape.is_valid()){
             _remove_instance(cid,instance_index,false); // No mesh or shape so removing
             continue;
@@ -1233,6 +1241,23 @@ void MCurveInstance::_remove_all_instances(){
         }
     }
     curve_instance_instances.clear();
+}
+
+void MCurveInstance::set_disable_rendering(bool input){
+    disable_rendering = input;
+    _recreate();
+}
+
+bool MCurveInstance::get_disable_rendering() const{
+    return disable_rendering;
+}
+
+void MCurveInstance::set_disable_physics(bool input){
+    disable_physics = input;
+}
+
+bool MCurveInstance::get_disable_physics() const{
+    return disable_physics;
 }
 
 void MCurveInstance::set_override(Ref<MCurveInstanceOverride> input){
