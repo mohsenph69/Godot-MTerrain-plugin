@@ -487,6 +487,9 @@ void MCurve::remove_curve_user_id(int32_t user_id){
 
 int32_t MCurve::add_point(const Vector3& position,const Vector3& in,const Vector3& out, const int32_t prev_conn,Ref<MCurveOverrideData> point_override_data,Ref<MCurveOverrideData> conn_override_data){
     // In case of prev_conn==INVALID_POINT_INDEX this is a single point in space
+    ERR_FAIL_COND_V(is_vec3_nan(position),INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(is_vec3_nan(in),INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(is_vec3_nan(out),INVALID_POINT_INDEX);
     ERR_FAIL_COND_V(!has_point(prev_conn) && prev_conn!=INVALID_POINT_INDEX,INVALID_POINT_INDEX);
     if(free_buffer_indicies.size() == 0){
         _increase_points_buffer_size(INC_POINTS_BUFFER_SIZE);
@@ -548,6 +551,9 @@ int32_t MCurve::add_point_conn_point(const Vector3& position,const Vector3& in,c
     ERR_FAIL_COND_V(conn_types.size() != conn_points.size(),INVALID_POINT_INDEX);
     ERR_FAIL_COND_V(conn_overrides.size() != conn_points.size() && conn_overrides.size()!=0,INVALID_POINT_INDEX);
     ERR_FAIL_COND_V(conn_types.size() > MAX_CONN,INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(is_vec3_nan(position),INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(is_vec3_nan(in),INVALID_POINT_INDEX);
+    ERR_FAIL_COND_V(is_vec3_nan(out),INVALID_POINT_INDEX);
     if(free_buffer_indicies.size() == 0){
         _increase_points_buffer_size(INC_POINTS_BUFFER_SIZE);
         ERR_FAIL_COND_V(free_buffer_indicies.size()==0,INVALID_POINT_INDEX);
@@ -2365,6 +2371,7 @@ int32_t MCurve::sort_from(int32_t root_point,bool increasing){
 
 void MCurve::move_point(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
+    ERR_FAIL_COND(is_vec3_nan(pos));
     Point* p = points_buffer.ptrw() + p_index;
     if(octree && is_init_insert){
         MOctree::PointMoveReq req(p_index,oct_id,p->position,pos);
@@ -2398,6 +2405,7 @@ void MCurve::move_point(int p_index,const Vector3& pos){
 
 void MCurve::move_point_in(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
+    ERR_FAIL_COND(is_vec3_nan(pos));
     Point* p = points_buffer.ptrw() + p_index;
     Vector3 old_positions[MAX_CONN][CONN_ADDITIONAL_POINT_COUNT];
     for(int i=0; i < MAX_CONN; i++){
@@ -2424,6 +2432,7 @@ void MCurve::move_point_in(int p_index,const Vector3& pos){
 
 void MCurve::move_point_out(int p_index,const Vector3& pos){
     ERR_FAIL_INDEX(p_index,points_buffer.size());
+    ERR_FAIL_COND(is_vec3_nan(pos));
     Point* p = points_buffer.ptrw() + p_index;
     Vector3 old_positions[MAX_CONN][CONN_ADDITIONAL_POINT_COUNT];
     for(int i=0; i < MAX_CONN; i++){

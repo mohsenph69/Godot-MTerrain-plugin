@@ -97,6 +97,9 @@ class MCurveOverrideData : public RefCounted {
     In total id of 0 are not usable and they be left empty in points_buffer
 */  
 class MCurve : public Resource{
+    _FORCE_INLINE_ bool is_vec3_nan(const Vector3& input){
+        return std::isnan(input.x) || std::isnan(input.y) || std::isnan(input.z);
+    }
     GDCLASS(MCurve,Resource);
     protected:
     static void _bind_methods();
