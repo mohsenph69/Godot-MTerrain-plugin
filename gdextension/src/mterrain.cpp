@@ -44,7 +44,8 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_closest_height", "world_position"), &MTerrain::get_closest_height);
     ClassDB::bind_method(D_METHOD("get_height", "world_position"), &MTerrain::get_height);
     ClassDB::bind_method(D_METHOD("get_ray_collision_point", "ray_origin","ray_vector","step","max_step"), &MTerrain::get_ray_collision_point);
-    
+    ClassDB::bind_method(D_METHOD("get_ray_collision_point_ignore_holes", "ray_origin","ray_vector","step","max_step"), &MTerrain::get_ray_collision_point_ignore_holes);
+
     ClassDB::bind_method(D_METHOD("set_dataDir","dir"), &MTerrain::set_dataDir);
     ClassDB::bind_method(D_METHOD("get_dataDir"), &MTerrain::get_dataDir);
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "dataDir",PROPERTY_HINT_DIR), "set_dataDir", "get_dataDir");
@@ -983,6 +984,15 @@ Ref<MCollision> MTerrain::get_ray_collision_point(Vector3 ray_origin,Vector3 ray
         return col;
     }
     return grid->get_ray_collision_point(ray_origin,ray_vector,step,max_step);
+}
+
+Ref<MCollision> MTerrain::get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
+    if(!grid->is_created()){
+        Ref<MCollision> col;
+        col.instantiate();
+        return col;
+    }
+    return grid->get_ray_collision_point_ignore_holes(ray_origin,ray_vector,step,max_step);
 }
 
 bool MTerrain::_get(const StringName &p_name, Variant &r_ret) const {

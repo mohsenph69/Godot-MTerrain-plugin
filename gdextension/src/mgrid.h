@@ -273,6 +273,7 @@ class MGrid {
     real_t get_closest_height(const Vector3& pos);
     real_t get_height(Vector3 pos);
     Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
+    Ref<MCollision> get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
 
     // This will create the initiale region lod state, This is needed so two nested thread do a good job
     // In update chunk update_point thread should finish but update region will check in the next

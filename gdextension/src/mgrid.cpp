@@ -701,6 +701,78 @@ Ref<MCollision> MGrid::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_ve
     if(col->collided){
         Vector3 las_pos = ray_origin - ray_vector*step;
         col->collision_position = las_pos.lerp(ray_origin, 0.5);
+        col->collision_position.y = get_height(col->collision_position);
+    }
+    return col;
+}
+
+Ref<MCollision> MGrid::get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
+    ray_vector.normalize();
+    Ref<MCollision> col;
+    col.instantiate();
+    float last_height=std::numeric_limits<float>::quiet_NaN();
+    bool is_before_hole_set=false;
+    bool is_after_hole_set=false;
+    Vector3 before_hole;
+    Vector3 after_hole;
+    Vector3 last_ray = ray_origin;
+    Vector3 ray_origin_original = ray_origin;
+    for(int i=0;i<max_step;i++){
+        ray_origin += ray_vector*step;
+        real_t terrain_height = get_height(ray_origin);
+        if(std::isnan(terrain_height) && !std::isnan(last_height)){
+            if(last_height<last_ray.y){
+                before_hole.x = last_ray.x;
+                before_hole.z = last_ray.z;
+                before_hole.y = last_height;
+                is_before_hole_set=true;
+            }
+        }
+        if(std::isnan(last_height) && !std::isnan(terrain_height)){
+            if(terrain_height>ray_origin.y){
+                after_hole.x = ray_origin.x;
+                after_hole.z = ray_origin.z;
+                after_hole.y = terrain_height;
+                is_after_hole_set = true;
+                col->collided = true;
+                break;
+            }
+        }
+        if(terrain_height > ray_origin.y){
+            col->collided = true;
+            break;
+        }
+        last_height = terrain_height;
+        last_ray = ray_origin;
+    }
+    if(is_after_hole_set && !is_before_hole_set){
+        // going backward to find other side
+        ray_origin=ray_origin_original;
+        for(int i=1;i<max_step;i++){
+            ray_origin -= ray_vector*step;
+            float terrain_height = get_height(ray_origin);
+            if(!std::isnan(terrain_height)){
+                if(terrain_height<ray_origin.y){
+                    before_hole.x = last_ray.x;
+                    before_hole.z = last_ray.z;
+                    before_hole.y = terrain_height;
+                    is_before_hole_set=true;
+                }
+            }
+        }   
+    }
+    if(col->collided){
+        if(is_before_hole_set && is_after_hole_set){
+            col->collision_position = before_hole.lerp(after_hole,0.5);
+        } else if (is_after_hole_set){
+            col->collision_position = after_hole;
+        } else {
+            col->collision_position = last_ray.lerp(ray_origin, 0.5);
+            float h = get_height(col->collision_position);
+            if(!std::isnan(h)){
+                col->collision_position.y = h;
+            }
+        }
     }
     return col;
 }

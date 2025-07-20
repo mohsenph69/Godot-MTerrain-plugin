@@ -377,7 +377,7 @@ func forward_3d_gui_input(viewport_camera, event):
 	elif event is InputEventMouse:
 		var ray:Vector3 = viewport_camera.project_ray_normal(event.position)
 		var pos:Vector3 = viewport_camera.global_position
-		ray_col = active_terrain.get_ray_collision_point(pos,ray,collision_ray_step,1000)
+		ray_col = active_terrain.get_ray_collision_point_ignore_holes(pos,ray,collision_ray_step,1000)
 	
 	if walking_terrain:
 		editor_camera = viewport_camera

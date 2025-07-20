@@ -202,6 +202,7 @@ class MTerrain : public  Node3D {
     real_t get_closest_height(const Vector3& pos);
     real_t get_height(const Vector3& pos);
     Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
+    Ref<MCollision> get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
 
     void _get_property_list(List<PropertyInfo> *p_list) const;
     bool _get(const StringName &p_name, Variant &r_ret) const;
