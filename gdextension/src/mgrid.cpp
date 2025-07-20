@@ -1241,6 +1241,15 @@ Vector3 MGrid::get_pixel_world_pos(uint32_t x,uint32_t y){
     return out;
 }
 
+Vector2 MGrid::get_pixel_world_pos_flat(uint32_t x,uint32_t y){
+    Vector2 out;
+    out.x = _chunks.h_scale*(real_t)x;
+    out.y = _chunks.h_scale*(real_t)y;
+    out.x += offset.x;
+    out.y += offset.z;
+    return out;
+}
+
 void MGrid::set_brush_manager(MBrushManager* input){
     _brush_manager = input;
 }
@@ -1283,20 +1292,19 @@ void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
     MImage* draw_image = memnew(MImage);
     {
         draw_image->create(draw_pixel_region.get_width(),draw_pixel_region.get_height(),Image::Format::FORMAT_RF);
-        Vector<MPixelRegion> draw_pixel_regions = draw_pixel_region.devide(4);
+        Vector<MPixelRegion> draw_pixel_regions = draw_pixel_region.devide(2);
+        std::thread threads[8]; // change this if you change above
         Vector<MPixelRegion> local_pixel_regions;
         for(int i=0;i<draw_pixel_regions.size();i++){
             local_pixel_regions.append(draw_pixel_region.get_local(draw_pixel_regions[i]));
         }
-        Vector<std::thread*> threads_pull;
         for(int i=0;i<draw_pixel_regions.size();i++){
-            std::thread* t = new std::thread(&MGrid::draw_height_region,this, draw_image,draw_pixel_regions[i],local_pixel_regions[i],brush);
-            threads_pull.append(t);
+            //std::thread t(&MGrid::draw_height_region,this, draw_image,draw_pixel_regions[i],local_pixel_regions[i],brush);
+            //threads[i] = std::move(t);
+            draw_height_region(draw_image,draw_pixel_regions[i],local_pixel_regions[i],brush);
         }
-        for(int i=0;i<threads_pull.size();i++){
-            std::thread* t = threads_pull[i];
-            t->join();
-            delete t;
+        for(int i=0;i<draw_pixel_regions.size();i++){
+            //threads[i].join();
         }
     }
     uint32_t local_x=0;

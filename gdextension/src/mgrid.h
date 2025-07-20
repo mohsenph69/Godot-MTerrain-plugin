@@ -307,6 +307,7 @@ class MGrid {
 
     Vector2i get_closest_pixel(Vector3 world_pos);
     Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
+    Vector2 get_pixel_world_pos_flat(uint32_t x,uint32_t y);
 
     void set_brush_manager(MBrushManager* input);
     MBrushManager* get_brush_manager();

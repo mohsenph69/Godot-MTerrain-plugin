@@ -84,7 +84,8 @@ void MToHeight::before_draw(){
 }
 float MToHeight::get_height(uint32_t x,uint32_t y){
     Vector3 world_pos = grid->get_pixel_world_pos(x,y);
-    real_t dis = grid->brush_world_pos.distance_to(world_pos);
+    uint32_t ppx = 0, ppy=0;
+    real_t dis = get_pixel_flat_world_dis_to_brush(x,y);
     dis = dis/grid->brush_radius;
     dis = UtilityFunctions::smoothstep(1,hardness,dis);
     float toh;
