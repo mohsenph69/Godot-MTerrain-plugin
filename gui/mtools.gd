@@ -90,6 +90,7 @@ var timer
 #endregion
 
 var current_edit_mode = &"" # &"", &"sculpt", &"paint"
+var is_painting:=false
 var active_object = null
 
 
@@ -412,6 +413,7 @@ func forward_3d_gui_input(viewport_camera, event):
 						edit_human_position = true
 						
 		else:
+			finish_draw()
 			col_dis=1000000
 			status_bar.disable_height_label()
 			status_bar.disable_distance_label()
@@ -446,13 +448,16 @@ func paint_mode_handle(event:InputEvent):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				if active_object is MGrass:
+					is_painting=true
 					active_object.check_undo()
 					undo_redo.create_action("GrassPaint")
 					undo_redo.add_undo_method(active_object,"undo")
 					undo_redo.commit_action(false)
 				elif active_object is MNavigationRegion3D:
+					is_painting=true
 					pass
 				elif active_object is MTerrain: ## Start of painting						
+					is_painting=true
 					active_object.set_brush_start_point(ray_col.get_collision_position(),brush_decal.radius)
 					#set_active_layer()
 					active_object.images_add_undo_stage()
@@ -460,14 +465,7 @@ func paint_mode_handle(event:InputEvent):
 					undo_redo.add_undo_method(active_object,"images_undo")
 					undo_redo.commit_action(false)
 			else:
-				if mask_decal.is_being_edited and pin_mask_button.button_pressed:
-					mask_decal.is_being_edited = false	
-				elif active_object is MGrass:
-					active_object.save_grass_data()
-				elif active_object is MNavigationRegion3D:
-					active_object.save_nav_data()
-				elif active_object is MTerrain:
-					active_object.save_all_dirty_images()
+				finish_draw()
 		if event.button_mask == MOUSE_BUTTON_LEFT:			
 			var t = Time.get_ticks_msec()
 			var dt = t - last_draw_time			
@@ -628,6 +626,18 @@ func draw(brush_position):
 			push_warning("trying to 'draw' on mterrain, but not in sculpt or paint mode")
 	else:
 		print("draw mterrain fail: active object is ", active_object.name)	
+
+func finish_draw():
+	if not is_painting: return
+	is_painting=false
+	if mask_decal.is_being_edited and pin_mask_button.button_pressed:
+		mask_decal.is_being_edited = false	
+	elif active_object is MGrass:
+		active_object.save_grass_data()
+	elif active_object is MNavigationRegion3D:
+		active_object.save_nav_data()
+	elif active_object is MTerrain:
+		active_object.save_all_dirty_images()
 
 func remove_image(active_terrain, dname):
 	var is_grid_created = active_terrain.is_grid_created()
