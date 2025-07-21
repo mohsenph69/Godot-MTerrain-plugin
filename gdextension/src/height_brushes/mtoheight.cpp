@@ -93,8 +93,10 @@ float MToHeight::get_height(uint32_t x,uint32_t y){
         toh=offset;
     } else if(mode==0) { // relative
         toh = grid->brush_world_pos.y + offset;
-    } else if(mode==1) { // relative to start position
+    } else if(mode==1 && !std::isnan(start_height)) { // relative to start position
         toh = start_height + offset;
+    } else {
+        return grid->get_height_by_pixel(x,y);
     }
     float h = grid->get_height_by_pixel(x,y);
     float mask = grid->get_brush_mask_value(x,y);
