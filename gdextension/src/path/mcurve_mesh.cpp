@@ -695,12 +695,22 @@ void MCurveMesh::_generate_intersection(const MCurve::PointUpdateInfo& update_in
     }
     // Finding a match intersection for number of connections
     Ref<MIntersection> finter;
-    for(int i=0; i < intersections.size(); i++){
-        Ref<MIntersection> ff = intersections[i];
+    if(p_override.mesh>=0 && p_override.mesh < intersections.size()){
+        Ref<MIntersection> ff = intersections[p_override.mesh];
         if(ff.is_valid() && ff->get_socket_count() == conn_count && ff->get_mesh_count() != 0){
-            ERR_CONTINUE(!ff->is_init());
-            finter = ff;
-            break;
+            if(ff->is_init()){
+                finter = ff;
+            }
+        }
+    }
+    if(finter.is_null()){ // if still null search and find the first match
+        for(int i=0; i < intersections.size(); i++){
+            Ref<MIntersection> ff = intersections[i];
+            if(ff.is_valid() && ff->get_socket_count() == conn_count && ff->get_mesh_count() != 0){
+                ERR_CONTINUE(!ff->is_init());
+                finter = ff;
+                break;
+            }
         }
     }
     if(finter.is_null()){

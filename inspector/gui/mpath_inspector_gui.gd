@@ -367,6 +367,8 @@ func set_icon(path:String,preview:Texture2D,thumnail_preview:Texture2D,index:int
 
 func item_selected(index:int):
 	if not is_instance_valid(current_modify_node) or not gizmo: return
+	if current_modify_node is MCurveMesh and not current_modify_node.override:
+		current_modify_node.override = MCurveMeshOverride.new()
 	if modify_mode==MODIFY_MODE.CURVE_MESH:
 		var ids:PackedInt64Array = get_selected_ids()
 		for cid in ids:
