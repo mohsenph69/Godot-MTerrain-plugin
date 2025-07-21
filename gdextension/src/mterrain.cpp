@@ -40,6 +40,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_pixel", "x","y","image_index"), &MTerrain::get_pixel);
     ClassDB::bind_method(D_METHOD("set_pixel", "x","y","color","image_index"), &MTerrain::set_pixel);
     ClassDB::bind_method(D_METHOD("get_height_by_pixel", "x","y"), &MTerrain::get_height_by_pixel);
+    ClassDB::bind_method(D_METHOD("get_height_by_pixel_in_layer", "x","y"), &MTerrain::get_height_by_pixel_in_layer);
     ClassDB::bind_method(D_METHOD("set_height_by_pixel", "x","y","value"), &MTerrain::set_height_by_pixel);
     ClassDB::bind_method(D_METHOD("get_closest_height", "world_position"), &MTerrain::get_closest_height);
     ClassDB::bind_method(D_METHOD("get_height", "world_position"), &MTerrain::get_height);
@@ -620,6 +621,11 @@ void MTerrain::set_pixel(const uint32_t x,const uint32_t y,const Color& col,cons
 real_t MTerrain::get_height_by_pixel(const uint32_t x,const uint32_t y){
     return grid->get_height_by_pixel(x,y);
 }
+
+real_t MTerrain::get_height_by_pixel_in_layer(const uint32_t x,const uint32_t y){
+    return grid->get_height_by_pixel_in_layer(x,y);
+}
+
 void MTerrain::set_height_by_pixel(const uint32_t x,const uint32_t y,const real_t value){
     grid->set_height_by_pixel(x,y,value);
 }

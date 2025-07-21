@@ -132,6 +132,7 @@ class MTerrain : public  Node3D {
     Color get_pixel(const uint32_t x,const uint32_t y, const int32_t index);
     void set_pixel(const uint32_t x,const uint32_t y,const Color& col,const int32_t index);
     real_t get_height_by_pixel(const uint32_t x,const uint32_t y);
+    real_t get_height_by_pixel_in_layer(const uint32_t x,const uint32_t y);
     void set_height_by_pixel(const uint32_t x,const uint32_t y,const real_t value);
 
     void get_cam_pos();
