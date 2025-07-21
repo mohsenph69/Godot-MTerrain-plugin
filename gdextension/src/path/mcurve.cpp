@@ -307,7 +307,7 @@ void MCurve::_get_additional_points(Vector3* positions,const Vector3& a,const Ve
     }
 }
 
-void MCurve::_get_conn_additional_points(ino64_t conn_id,Vector3* positions) const{
+void MCurve::_get_conn_additional_points(int64_t conn_id,Vector3* positions) const{
     ERR_FAIL_COND(!has_conn(conn_id));
     Conn conn(conn_id);
     bool is_connected = false;

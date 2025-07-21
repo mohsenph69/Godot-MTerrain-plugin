@@ -234,7 +234,7 @@ class MCurve : public Resource{
     /// positions is the pointer to a block of memory with Vector3 ptrw[CONN_ADDITIONAL_POINT_COUNT]
     _FORCE_INLINE_ void _get_additional_points(Vector3* positions,const Vector3& a,const Vector3& b,const Vector3& a_control, const Vector3& b_control) const;
     /// More slow version of _get_additional_points for handling light stuff
-    void _get_conn_additional_points(ino64_t conn_id,Vector3* positions) const;
+    void _get_conn_additional_points(int64_t conn_id,Vector3* positions) const;
     /////////////////// _init_conn_additional_points for init_insert
     ///////// Warning _init_conn_additional_points do the least error checking
     /// use for start to at load time and it assume that conn_addition_point does not exist and it is empty
