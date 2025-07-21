@@ -1371,14 +1371,14 @@ void MGrid::draw_height(Vector3 brush_pos,real_t radius,int brush_id){
         for(int i=0;i<draw_pixel_regions.size();i++){
             local_pixel_regions.append(draw_pixel_region.get_local(draw_pixel_regions[i]));
         }
-        for(int i=0;i<max_thread;i++){
+        for(int i=0;i<draw_pixel_regions.size();i++){
             std::thread t(&MGrid::draw_height_region,this, draw_image,draw_pixel_regions[i],local_pixel_regions[i],brush);
             threads[i] = std::move(t);
         }
         for(int i=max_thread; i<draw_pixel_regions.size();i++){
             draw_height_region(draw_image,draw_pixel_regions[i],local_pixel_regions[i],brush);
         }
-        for(int i=0;i<max_thread;i++){
+        for(int i=0;i<draw_pixel_regions.size();i++){
             threads[i].join();
         }
     }
