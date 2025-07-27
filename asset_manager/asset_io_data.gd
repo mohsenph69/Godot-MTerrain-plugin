@@ -138,7 +138,9 @@ func add_master_collection(node_name:String,transform:Transform3D):
 func add_sub_collection(node_name:String,sub_collection_node_name:String,sub_collection_transform:Transform3D):
 	if not collections.has(node_name):
 		collections[node_name] = get_empty_collection()
-	collections[node_name]["sub_collections"][sub_collection_node_name] = sub_collection_transform
+	if not collections[node_name]["sub_collections"].has(sub_collection_node_name):
+		collections[node_name]["sub_collections"][sub_collection_node_name] = []
+	collections[node_name]["sub_collections"][sub_collection_node_name].push_back(sub_collection_transform)
 	collections[node_name]["is_master"] = true
 
 	
@@ -420,9 +422,9 @@ func add_glb_import_info(info:Dictionary)->void:
 		if mesh_id!=-1:
 			original_meshes = MAssetTable.mesh_item_meshes_no_replace(mesh_id)
 		var original_sub_collections:Dictionary = info[collection_glb_name]["sub_collections"]		
-		for sub_collection_name in original_sub_collections:
-			var t = asset_library.collection_get_sub_collections_transform(collection_id,original_sub_collections[sub_collection_name])
-			collections[collection_glb_name]["original_sub_collections"][sub_collection_name] = t
+		#for sub_collection_name in original_sub_collections:
+		#	var t = asset_library.collection_get_sub_collections_transform(collection_id,original_sub_collections[sub_collection_name])
+		#	collections[collection_glb_name]["original_sub_collections"][sub_collection_name] = t
 		collections[collection_glb_name]["id"] = collection_id
 		collections[collection_glb_name]["original_meshes"] = original_meshes
 		if collection_id >= 0 and asset_library.has_collection(collection_id):
