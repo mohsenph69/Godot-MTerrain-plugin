@@ -794,7 +794,9 @@ void MHlodScene::apply_update(UpdateState u_state){
             ci.root_node = hlod_node;
             proc->items_creation_info.insert(item->transform_index,ci);
             // Done
+            String n_name = hlod_node->get_name();
             scene->call_deferred("add_child",hlod_node);
+            hlod_node->call_deferred("set_name",n_name);
             hlod_node->call_deferred("set_global_transform",proc->get_item_transform(item));
             hlod_node->call_deferred("_notify_update_lod",proc->lod);
         }
