@@ -109,8 +109,9 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				asset_data.add_mesh_data(material_sets, mmesh, node)
 				asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
 				var collection_name = mesh_item_name if active_collection == "__root__" else active_collection
-				if not active_collection == "__root__":
-					asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)
+				if not active_collection == "__root__":					
+					if active_collection != mesh_item_name:
+						asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)
 			#MAKE MATERIAL SET NAMING CONVENTION
 			else: 
 				var mesh_item_name = name_data["name"]
@@ -132,8 +133,9 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 				asset_data.add_mesh_data(material_set,mmesh, node)
 				asset_data.update_collection_mesh(mesh_item_name,name_data["lod"],mmesh)
 				# if we are not on root then we add ourself as sub collection to whatever active_collection is
-				if not active_collection == "__root__":
-					asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)				
+				if not active_collection == "__root__":					
+					if active_collection != mesh_item_name:
+						asset_data.add_sub_collection(active_collection,mesh_item_name,node.transform)				
 			if child_count > 0:
 				push_error(node.name + " can not have children! ignoring its children! this can be due to naming with _lod of that or it is a mesh!")									
 		############################
@@ -322,7 +324,10 @@ static func import_collection(glb_node_name:String,glb_id:int,func_depth:=0):
 			sub_collection_id = asset_data.get_collection_id(sub_collection_name)
 			if not asset_library.has_collection(sub_collection_id):
 				push_error("trying to add subcollection to collection, but sub_collection_id ", sub_collection_id, " does not exist")
-			asset_library.collection_add_sub_collection(collection_id, sub_collection_id,sub_collections[sub_collection_name])
+			for sub_collection_transform in sub_collections[sub_collection_name]:
+				if not asset_library.has_collection(sub_collection_id):
+					push_error("trying to add subcollection to collection, but sub_collection_id ", sub_collection_id, " does not exist")
+				asset_library.collection_add_sub_collection(collection_id, sub_collection_id, sub_collection_transform)									
 	## ADD TAGS
 	if collection_id != -1:		
 		if asset_data.tags.mode == 0:
