@@ -72,11 +72,12 @@ void MRegion::configure() {
 }
 
 void MRegion::load(){
+	static std::mutex MRegionloadMutex;
 	set_material(grid->_terrain_material->get_material(id));
 	String res_path = get_res_path();
 	Ref<MResource> mres;
 	if(ResourceLoader::get_singleton()->exists(res_path)){
-		
+		std::lock_guard<std::mutex> lock(MRegionloadMutex);
 		mres = ResourceLoader::get_singleton()->load(res_path);
 	}
 	for(int i=0; i < images.size(); i++){
