@@ -10,7 +10,7 @@ void MIntersection::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("set_sockets","input"), &MIntersection::set_sockets);
     ClassDB::bind_method(D_METHOD("get_sockets"), &MIntersection::get_sockets);
-    ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"sockets",PROPERTY_HINT_RESOURCE_TYPE,"MMeshLod"),"set_sockets","get_sockets");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY,"sockets",PROPERTY_HINT_RESOURCE_TYPE,"Transform3D"),"set_sockets","get_sockets");
 
     ClassDB::bind_method(D_METHOD("get_debug_mesh"), &MIntersection::get_debug_mesh);
     ClassDB::bind_method(D_METHOD("generate_mesh_info"), &MIntersection::generate_mesh_info);
