@@ -1007,66 +1007,11 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
         ///////////////////////Creating Instance///////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////////
         {
-            float curve_len = main_curve_len; // used for calculating total_mesh_count and curve coverd with instances
-            float start_offset_len = curve_len*ov_data.start_offset[instance_index];
-            float end_offset_len = curve_len*ov_data.end_offset[instance_index];
-            if(ov_data.get_flag(instance_index,MCurveInstanceOverride::FLAG::REVERSE_OFFSET)){
-                float _l = start_offset_len + end_offset_len;
-                curve_len = _l < curve_len ? _l : curve_len;
-            } else {
-                curve_len = curve_len - (start_offset_len + end_offset_len);
-            }
-            if(curve_len < M_CURVE_INSTANCE_EPSILON){
-                _remove_instance(cid,instance_index,false); // No mesh so removing
-                continue;
-            }
-            int total_mesh_count = curve_len/element->interval;
-            float rinterval = curve_len/total_mesh_count; // true interval due to integer rounding
-            if(total_mesh_count==0){
-                _remove_instance(cid,instance_index,false); // No mesh so removing
-                continue;
-            }
             Vector<Transform3D> transforms;
-            /// Creating Transforms
-            {
-                Vector<float> ratios;
-                {
-                    Vector<float> distances;
-                    if(!element->middle && element->include_end){
-                        total_mesh_count++;
-                    }
-                    distances.resize(total_mesh_count);
-                    float current_dis = element->middle ? rinterval/2.0f : 0.0f;
-                    // Getting Distances of each object along the curve
-                    if(ov_data.get_flag(instance_index,MCurveInstanceOverride::FLAG::REVERSE_OFFSET)){
-                        int begin_mesh_count = (start_offset_len/curve_len) * total_mesh_count;
-                        int end_mesh_count = total_mesh_count - begin_mesh_count;
-                        // start
-                        for(int i=0; i < begin_mesh_count; i++){
-                            distances.set(i,current_dis);
-                            current_dis += rinterval;
-                        }
-                        // end
-                        current_dis = element->include_end ? main_curve_len : main_curve_len - rinterval;
-                        for(int i=begin_mesh_count; i < total_mesh_count; i++){
-                            distances.set(i,current_dis);
-                            current_dis -= rinterval;
-                        }
-                    } else {
-                        current_dis += start_offset_len;
-                        for(int i=0; i < total_mesh_count; i++){
-                            distances.set(i,current_dis);
-                            current_dis += rinterval;
-                        }
-                    }
-                    // End getting distances along the curve
-                    // getting ratios anlog the curve
-                    curve->get_conn_distances_ratios(cid,distances,ratios);
-                }
-                ERR_FAIL_COND(ratios.size()!=total_mesh_count);
-                // getting transform along the curve
-                curve->get_conn_transforms(cid,ratios,transforms);
-                ERR_FAIL_COND(transforms.size()!=total_mesh_count);
+            _get_curve_transforms(transforms,ov_data,cid,instance_index,main_curve_len);
+            if(transforms.size()==0){
+                _remove_instance(cid,instance_index,false);
+                continue;
             }
             //// End of creating transforms
             ////////////////////////////////////
@@ -1077,7 +1022,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
             ///////////////////// Creating multimesh buffer and adding shapes
             instance.ensure_physics_body_exist(path->get_space(),element->collision_layer,element->collision_mask,element->physics_material);
             RID body = instance.body;
-            for(int i=0; i < total_mesh_count; i++){
+            for(int i=0; i < transforms.size(); i++){
                 // should check for element->index_exist here as element->index_exist_mirror might have different result
                 if(element->index_exist(i,ov_data.random_remove[instance_index])){
                     // mesh

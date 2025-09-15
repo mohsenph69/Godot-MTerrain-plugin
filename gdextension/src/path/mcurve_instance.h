@@ -472,6 +472,7 @@ class MCurveInstance : public Node {
     Ref<MCurve> curve;
     
     HashMap<int64_t,MCurveInstance::Instances> curve_instance_instances;
+    _FORCE_INLINE_ void _get_curve_transforms(Vector<Transform3D>& transforms,const OverrideData& ov_data,const int64_t cid,const int instance_index,const float curve_len) const;
     _FORCE_INLINE_ void _set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const;
     // return override data if exist or default override data if not exist
     _FORCE_INLINE_ OverrideData get_override_data(int64_t conn_id) const;
@@ -514,6 +515,69 @@ class MCurveInstance : public Node {
     void _set_dummy(bool input){}
     bool _get_dummy()const{ return true;}
 };
+
+void MCurveInstance::_get_curve_transforms(Vector<Transform3D>& transforms,const OverrideData& ov_data,const int64_t cid,const int instance_index,float curve_len) const{
+    float main_curve_len = curve_len; // curve_len will change down so keep the main one for furhter calculation
+    int element_index = ov_data.element_ovveride[instance_index];
+    Ref<MCurveInstanceElement> element = elements[element_index];
+    float start_offset_len = curve_len*ov_data.start_offset[instance_index];
+    float end_offset_len = curve_len*ov_data.end_offset[instance_index];
+    if(ov_data.get_flag(instance_index,MCurveInstanceOverride::FLAG::REVERSE_OFFSET)){
+        float _l = start_offset_len + end_offset_len;
+        curve_len = _l < curve_len ? _l : curve_len;
+    } else {
+        curve_len = curve_len - (start_offset_len + end_offset_len);
+    }
+    if(curve_len < M_CURVE_INSTANCE_EPSILON){
+        return;
+    }
+    int total_mesh_count = curve_len/element->interval;
+    float rinterval = curve_len/total_mesh_count; // true interval due to integer rounding
+    if(total_mesh_count==0){
+        return;
+    }
+    /// Creating Transforms
+    {
+        Vector<float> ratios;
+        {
+            Vector<float> distances;
+            if(!element->middle && element->include_end){
+                total_mesh_count++;
+            }
+            distances.resize(total_mesh_count);
+            float current_dis = element->middle ? rinterval/2.0f : 0.0f;
+            // Getting Distances of each object along the curve
+            if(ov_data.get_flag(instance_index,MCurveInstanceOverride::FLAG::REVERSE_OFFSET)){
+                int begin_mesh_count = (start_offset_len/curve_len) * total_mesh_count;
+                int end_mesh_count = total_mesh_count - begin_mesh_count;
+                // start
+                for(int i=0; i < begin_mesh_count; i++){
+                    distances.set(i,current_dis);
+                    current_dis += rinterval;
+                }
+                // end
+                current_dis = element->include_end ? main_curve_len : main_curve_len - rinterval;
+                for(int i=begin_mesh_count; i < total_mesh_count; i++){
+                    distances.set(i,current_dis);
+                    current_dis -= rinterval;
+                }
+            } else {
+                current_dis += start_offset_len;
+                for(int i=0; i < total_mesh_count; i++){
+                    distances.set(i,current_dis);
+                    current_dis += rinterval;
+                }
+            }
+            // End getting distances along the curve
+            // getting ratios anlog the curve
+            curve->get_conn_distances_ratios(cid,distances,ratios);
+        }
+        ERR_FAIL_COND(ratios.size()!=total_mesh_count);
+        // getting transform along the curve
+        curve->get_conn_transforms(cid,ratios,transforms);
+        ERR_FAIL_COND(transforms.size()!=total_mesh_count);
+    }
+}
 
 void MCurveInstance::_set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const{
     multimesh_buffer.resize(multimesh_buffer.size()+12);
