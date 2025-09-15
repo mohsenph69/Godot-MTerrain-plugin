@@ -472,6 +472,9 @@ class MCurveInstance : public Node {
     Ref<MCurve> curve;
     
     HashMap<int64_t,MCurveInstance::Instances> curve_instance_instances;
+    // will add to transforms vector all the point along the vector with no Element transform effect
+    // element transform effect should be added later by yourself
+    // there is no error checking pay attention all ov_data instance_index and element exist before calling this function
     _FORCE_INLINE_ void _get_curve_transforms(Vector<Transform3D>& transforms,const OverrideData& ov_data,const int64_t cid,const int instance_index,const float curve_len) const;
     _FORCE_INLINE_ void _set_multimesh_buffer(PackedFloat32Array& multimesh_buffer,const Transform3D& t,int& buffer_index) const;
     // return override data if exist or default override data if not exist
@@ -484,6 +487,7 @@ class MCurveInstance : public Node {
     static void thread_update(void* input);
     /// Decide what element should be added and calling _generate_connection_element
     void _generate_connection(const MCurve::ConnUpdateInfo& update_info);
+    Array get_connection_transforms(int64_t cid,int element_index);
     void _update_visibilty();
     void _connection_force_update(int64_t conn_id);
     void _connection_remove(int64_t conn_id);
@@ -504,7 +508,7 @@ class MCurveInstance : public Node {
     void _on_curve_changed();
     void _process_tick();
     void _notification(int p_what);
-    PackedStringArray _get_configuration_warnings() const;
+    PackedStringArray _get_configuration_warnings() const override;
 
     void set_element(int instance_index,Ref<MCurveInstanceElement> input);
     Ref<MCurveInstanceElement> get_element(int instance_index) const;

@@ -139,7 +139,7 @@ class MCurveMesh : public Node {
     void _on_curve_changed();
     void _generate_all_intersections_info();
     void _notification(int p_what);
-    PackedStringArray _get_configuration_warnings() const;
+    PackedStringArray _get_configuration_warnings() const override;
 	bool _set(const StringName &p_name, const Variant &p_value);
 	bool _get(const StringName &p_name, Variant &r_ret) const;
 	void _get_property_list(List<PropertyInfo> *p_list) const;

@@ -744,6 +744,7 @@ bool MCurve::connect_points(int32_t p0,int32_t p1,ConnType con_type,Ref<MCurveOv
         break;
     //case OUT_OUT: // Nothing to do here has both will remain positive
     //    break;
+    default: break;
     }
     /// Calculating LOD and force updateds
     int8_t clod = a->lod < b->lod ? a->lod : b->lod;
@@ -847,6 +848,7 @@ void MCurve::clear_points(){
         active_points.erase(active_points[i]);
     }
     conn_list.clear();
+    emit_signal("recreate");
 }
 
 void MCurve::init_insert(){

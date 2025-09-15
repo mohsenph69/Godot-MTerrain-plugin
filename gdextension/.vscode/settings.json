@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.json": "cpp",
         "*.inc": "cpp",
         "mutex": "cpp",
         "thread": "cpp",
@@ -105,7 +106,9 @@
         "ranges": "cpp",
         "*.ipp": "cpp",
         "csetjmp": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "execution": "cpp",
+        "print": "cpp"
     },
     "cmake.configureOnOpen": false
 }

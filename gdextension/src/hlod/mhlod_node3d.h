@@ -58,7 +58,7 @@ class MHlodNode3D : public Node3D {
     void _get_property_list(List<PropertyInfo> *p_list) const;
     bool _get(const StringName &p_name, Variant &r_ret) const;
     bool _set(const StringName &p_name, const Variant &p_value);
-    PackedStringArray _get_configuration_warnings() const;
+    PackedStringArray _get_configuration_warnings() const override;
 
 
     GDVIRTUAL1(_update_lod,int);

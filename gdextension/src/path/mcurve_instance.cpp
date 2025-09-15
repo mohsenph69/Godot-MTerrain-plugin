@@ -846,6 +846,8 @@ PackedByteArray MCurveInstanceOverride::get_data() const {
 ///////////////////////////////////////////////////////////////////////
 
 void MCurveInstance::_bind_methods(){
+    ClassDB::bind_method(D_METHOD("get_connection_transforms","conn_id","element_index"), &MCurveInstance::get_connection_transforms);
+
     ClassDB::bind_method(D_METHOD("_set_dummy","input"), &MCurveInstance::_set_dummy);
     ClassDB::bind_method(D_METHOD("_get_dummy"), &MCurveInstance::_get_dummy);
 
@@ -1008,6 +1010,7 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
         //////////////////////////////////////////////////////////////////////////////////////////////
         {
             Vector<Transform3D> transforms;
+            // getting Transform points on the curve
             _get_curve_transforms(transforms,ov_data,cid,instance_index,main_curve_len);
             if(transforms.size()==0){
                 _remove_instance(cid,instance_index,false);
@@ -1078,6 +1081,49 @@ void MCurveInstance::_generate_connection(const MCurve::ConnUpdateInfo& update_i
     if(!instances->has_valid_instance()){
         curve_instance_instances.erase(cid);
     }
+}
+
+Array MCurveInstance::get_connection_transforms(int64_t cid, int element_index){
+    Array out;
+    out.resize(2);
+    out[0] = Array();
+    out[1] = Array();
+    ERR_FAIL_COND_V(!curve->has_conn(cid),out);
+    ERR_FAIL_INDEX_V(element_index,M_CURVE_ELEMENT_COUNT,out);
+    OverrideData ov_data = get_override_data(cid);
+    if(ov_data.get_exclude()) return out;
+    Ref<MCurveInstanceElement> element = elements[element_index];
+    if(element.is_null()) return out;
+    // getting instance index
+    int instance_index = -1;
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov_data.element_ovveride[i]==element_index){
+            instance_index=i;
+            break;
+        }
+    }
+    if(instance_index==-1) return out;
+    // getting point on curve
+    Vector<Transform3D> ptransforms;
+    _get_curve_transforms(ptransforms,ov_data,cid,instance_index,curve->get_conn_lenght(cid));
+    if(ptransforms.size()==0) return out;
+    bool ov_mirror = ov_data.get_flag(instance_index,MCurveInstanceOverride::MIRROR);
+    Array row_first;
+    Array row_second;
+    for(int i=0; i < ptransforms.size(); i++){
+        // should check for element->index_exist here as element->index_exist_mirror might have different result
+        if(element->index_exist(i,ov_data.random_remove[instance_index])){
+            Transform3D t = element->modify_transform(ptransforms[i],i,ov_mirror);
+            row_first.push_back(t);
+        }
+        if(element->plus_mirror && element->index_exist_mirror(i,ov_data.random_remove[instance_index])){
+            Transform3D t = element->modify_transform(ptransforms[i],i,!ov_mirror);
+            row_second.push_back(t);
+        }
+    }
+    out[0] = row_first;
+    out[1] = row_second;
+    return out;
 }
 
 void MCurveInstance::_update_visibilty(){
@@ -1237,6 +1283,7 @@ void MCurveInstance::_on_curve_changed(){
             path->disconnect("visibility_changed",Callable(this,"_update_visibilty"));
             path->disconnect("tree_exited",Callable(this,"_update_visibilty"));
             path->disconnect("tree_entered",Callable(this,"_update_visibilty"));
+            
         }
         if(new_path!=nullptr){
             new_path->connect("curve_changed",Callable(this,"_on_curve_changed"));
@@ -1256,7 +1303,6 @@ void MCurveInstance::_on_curve_changed(){
             curve->disconnect("connection_updated",Callable(this,"_on_connections_updated"));
             curve->disconnect("force_update_connection",Callable(this,"_connection_force_update"));
             curve->disconnect("remove_connection",Callable(this,"_connection_remove"));
-            //curve->disconnect("swap_point_id",Callable(this,"_recreate"));
             curve->disconnect("recreate",Callable(this,"_recreate"));
             curve->remove_curve_user_id(curve_user_id);
             curve_user_id = -1;

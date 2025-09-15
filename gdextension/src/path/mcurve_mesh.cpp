@@ -42,6 +42,7 @@ void MCurveMesh::_bind_methods(){
 
     ClassDB::bind_method(D_METHOD("reload"), &MCurveMesh::reload);
     ClassDB::bind_method(D_METHOD("recreate"), &MCurveMesh::recreate);
+    ClassDB::bind_method(D_METHOD("clear"), &MCurveMesh::clear);
 
     ClassDB::bind_static_method("MCurveMesh",D_METHOD("get_all_curve_mesh_nodes"), &MCurveMesh::get_all_curve_mesh_nodes);
 }
@@ -354,9 +355,7 @@ void MCurveMesh::_apply_update(){
 }
 
 void MCurveMesh::_remove_instance(int64_t id,bool is_intersection){
-    if(!curve_mesh_instances.has(id)){
-        return;
-    }
+    ERR_FAIL_COND_MSG(!curve_mesh_instances.has(id),"id "+itos(id)+" not exist to remove");
     if(is_intersection){
         clear_point_conn_ratio_limits(id);
     }
@@ -368,7 +367,9 @@ void MCurveMesh::_remove_instance(int64_t id,bool is_intersection){
 
 void MCurveMesh::clear(){
     for(HashMap<int64_t,Instance>::Iterator it=curve_mesh_instances.begin();it!=curve_mesh_instances.end();++it){
-        _remove_instance(it->key);
+        const MCurveMesh::Instance& ii = it->value;
+        if(ii.mesh.is_valid()) RS->free_rid(ii.mesh);
+        if(ii.instance.is_valid()) RS->free_rid(ii.instance);
     }
     curve_mesh_instances.clear();
     conn_ratio_limits.clear();
@@ -402,6 +403,7 @@ void MCurveMesh::reload(){
 
 void MCurveMesh::recreate(){
     clear();
+    UtilityFunctions::print("Recreate! MCurveMesh");
     if(curve.is_valid()){
         PackedInt32Array apoints = curve->get_active_points();
         PackedInt64Array aconns = curve->get_active_conns();
