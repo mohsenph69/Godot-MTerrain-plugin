@@ -1383,6 +1383,9 @@ PackedStringArray MCurveInstance::_get_configuration_warnings() const{
 }
 
 void MCurveInstance::set_element(int instance_index,Ref<MCurveInstanceElement> input){
+    if(instance_index<0 || instance_index >= M_CURVE_ELEMENT_COUNT){
+        return;
+    }
     elements[instance_index] = input;
     if(elements[instance_index].is_valid()){
         elements[instance_index]->_generate_transforms();
@@ -1395,7 +1398,9 @@ void MCurveInstance::set_element(int instance_index,Ref<MCurveInstanceElement> i
 }
 
 Ref<MCurveInstanceElement> MCurveInstance::get_element(int instance_index) const{
-    ERR_FAIL_INDEX_V(instance_index,M_CURVE_ELEMENT_COUNT,Ref<MCurveInstanceElement>());
+    if(instance_index<0 || instance_index >= M_CURVE_ELEMENT_COUNT){
+        return Ref<MCurveInstanceElement>();
+    }
     return elements[instance_index];
 }
 

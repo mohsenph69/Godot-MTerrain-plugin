@@ -56,14 +56,15 @@ void MCurve::_bind_methods(){
     ADD_SIGNAL(MethodInfo("swap_point_id",PropertyInfo(Variant::INT,"p_a"),PropertyInfo(Variant::INT,"p_b")));
     ADD_SIGNAL(MethodInfo("recreate"));
     // end of signals
-
+    ClassDB::bind_method(D_METHOD("emit_recreate"), &MCurve::emit_recreate);
+    
     ClassDB::bind_method(D_METHOD("set_override_entry","id","override_data"), &MCurve::set_override_entry);
     ClassDB::bind_method(D_METHOD("get_override_entry","id"), &MCurve::get_override_entry);
     ClassDB::bind_method(D_METHOD("set_override_entries_and_apply","ids","override_data_array","is_conn_override"), &MCurve::set_override_entries_and_apply);
 
     ClassDB::bind_method(D_METHOD("get_points_count"), &MCurve::get_points_count);
 
-    ClassDB::bind_method(D_METHOD("add_point","position","in","out","prev_conn","point_override","conn_override"), &MCurve::add_point,DEFVAL(nullptr),DEFVAL(nullptr));
+    ClassDB::bind_method(D_METHOD("add_point","position","in","out","prev_conn","point_override","conn_override"), &MCurve::add_point,DEFVAL(0),DEFVAL(nullptr),DEFVAL(nullptr));
     ClassDB::bind_method(D_METHOD("add_point_conn_point","position","in","out","conn_types","conn_points","point_override","conn_overrides"), &MCurve::add_point_conn_point, DEFVAL(nullptr),DEFVAL(nullptr));
     ClassDB::bind_method(D_METHOD("add_point_conn_split","conn_id","t"), &MCurve::add_point_conn_split);
     ClassDB::bind_method(D_METHOD("connect_points","p0","p1","conn_type","conn_ov_data"), &MCurve::connect_points,DEFVAL(nullptr));
@@ -188,6 +189,10 @@ MCurve::~MCurve(){
     if(octree){
         octree->remove_oct_id(oct_id);
     }
+}
+
+void MCurve::emit_recreate() {
+    emit_signal("recreate");
 }
 
 void MCurve::set_override_entry(int64_t id,Ref<MCurveOverrideData> override_data){
@@ -838,8 +843,12 @@ void MCurve::remove_point(const int32_t point_index){
 }
 
 void MCurve::clear_points(){
+    if(octree){
+        octree->clear_oct_id(oct_id);
+    }
     points_buffer.clear();
     free_buffer_indicies.clear();
+    last_curve_id = 0;
     if(is_init_insert){
         ERR_FAIL_COND(octree==nullptr);
         octree->clear_oct_id(oct_id);
@@ -847,7 +856,17 @@ void MCurve::clear_points(){
     for(int i=active_points.size() - 1; i >= 0; i--){
         active_points.erase(active_points[i]);
     }
+    for(int i=active_conn.size()-1;i>=0;i--){
+        active_conn.erase(active_conn[active_conn.size()-1]);
+    }
+    for(int i=active_points.size()-1;i>=0;i--){
+        active_points.erase(active_points[active_points.size()-1]);
+    }
+    conn_aabb.clear();
     conn_list.clear();
+    conn_distances.clear();
+    baked_lines.clear();
+    conn_id32.clear();
     emit_signal("recreate");
 }
 

@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://ma2dx0qeblo" path="res://addons/m_terrain/asset_manager/asset_placer_filter.gd" id="1_04ohp"]
 [ext_resource type="Texture2D" uid="uid://b4ylxie43lan2" path="res://addons/m_terrain/icons/more_options_icon.svg" id="2_5wba7"]
-[ext_resource type="Script" uid="uid://bhilw77wu88pr" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="3_yrogc"]
+[ext_resource type="Script" uid="uid://ijmcdn1dc7kf" path="res://addons/m_terrain/asset_manager/popup_button.gd" id="3_yrogc"]
 [ext_resource type="Texture2D" uid="uid://bw2njdr7ynhtk" path="res://addons/m_terrain/icons/settings_icon.svg" id="4_5l5rt"]
-[ext_resource type="Script" uid="uid://c4drap1v2ms6n" path="res://addons/m_terrain/asset_manager/collection_type_filter.gd" id="5_7po1r"]
+[ext_resource type="Script" uid="uid://kck7njj1v1ho" path="res://addons/m_terrain/asset_manager/collection_type_filter.gd" id="5_7po1r"]
 [ext_resource type="Texture2D" uid="uid://bo00mqw6wv8av" path="res://addons/m_terrain/icons/tag_icon.svg" id="6_ydvf1"]
 [ext_resource type="PackedScene" uid="uid://bq3mcnrp6nw4k" path="res://addons/m_terrain/asset_manager/ui/filter_by_tags_control.tscn" id="7_ik2hp"]
 [ext_resource type="Texture2D" uid="uid://ccomudiismbqn" path="res://addons/m_terrain/icons/grouping_icon.svg" id="8_w5cwh"]

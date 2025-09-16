@@ -275,6 +275,7 @@ class MCurve : public Resource{
     Vector<MCurve::Point> points_buffer;
     MCurve();
     ~MCurve();
+    void emit_recreate();
     void set_override_entry(int64_t id,Ref<MCurveOverrideData> override_data);
     Ref<MCurveOverrideData> get_override_entry(int64_t id) const;
     void set_override_entries_and_apply(PackedInt64Array ids,TypedArray<MCurveOverrideData> override_data_array,bool is_conn_override);

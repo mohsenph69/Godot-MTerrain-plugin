@@ -355,7 +355,9 @@ void MCurveMesh::_apply_update(){
 }
 
 void MCurveMesh::_remove_instance(int64_t id,bool is_intersection){
-    ERR_FAIL_COND_MSG(!curve_mesh_instances.has(id),"id "+itos(id)+" not exist to remove");
+    if(!curve_mesh_instances.has(id)){
+        return;
+    }
     if(is_intersection){
         clear_point_conn_ratio_limits(id);
     }
@@ -403,7 +405,6 @@ void MCurveMesh::reload(){
 
 void MCurveMesh::recreate(){
     clear();
-    UtilityFunctions::print("Recreate! MCurveMesh");
     if(curve.is_valid()){
         PackedInt32Array apoints = curve->get_active_points();
         PackedInt64Array aconns = curve->get_active_conns();
