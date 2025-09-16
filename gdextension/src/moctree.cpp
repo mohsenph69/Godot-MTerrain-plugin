@@ -683,9 +683,29 @@ int MOctree::get_oct_id(){
 void MOctree::clear_oct_id(int oct_id){
 	ERR_FAIL_COND(!oct_ids.has(oct_id));
 	std::lock_guard<std::mutex> lock(oct_mutex);
+	std::lock_guard<std::mutex> mv_lock(move_req_mutex);
 	uint32_t p_count = get_oct_id_points_count(oct_id);
 	root.remove_points_with_oct_id(oct_id);
 	point_count -= p_count;
+	Vector<PointMoveReq> __rm_moves;
+	auto it = moves_req.begin();
+	for(auto it=moves_req.begin();it!=moves_req.end();++it){
+		if((*it).oct_id==oct_id){
+			__rm_moves.push_back(*it);
+		}
+	}
+	for(const PointMoveReq r : __rm_moves){
+		moves_req.erase(r);
+	}
+	__rm_moves.clear();
+	for(auto it=moves_req_cache.begin();it!=moves_req_cache.end();++it){
+		if((*it).oct_id==oct_id){
+			__rm_moves.push_back(*it);
+		}
+	}
+	for(const PointMoveReq r : __rm_moves){
+		moves_req_cache.erase(r);
+	}
 }
 
 void MOctree::remove_oct_id(int oct_id){
