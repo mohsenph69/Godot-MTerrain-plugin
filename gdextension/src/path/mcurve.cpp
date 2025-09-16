@@ -390,16 +390,9 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id,Vector3* old_p
     //////////////////////////
     if(!is_connected){
         if(it_cid32!=conn_id32.end()){
-            int32_t cid32 = it_cid32->value;
-            ConnAdditional& __additional = conn_additional.ptrw()[cid32];
-            int32_t base_oct_id = cid32*CONN_ADDITIONAL_POINT_COUNT;
-            for(int a=0; a < CONN_ADDITIONAL_POINT_COUNT; a++){
-                octree->remove_point_no_pos(-(base_oct_id+a),oct_id);
-                __additional.lod[a] = -1; // reseting lod back to -1
-                __additional.conn_id = 0;
-            }
-            conn_free_id32.push_back(cid32);
+            _remove_conn_additional_points(it_cid32->value);
             conn_id32.erase(conn_id);
+            conn_free_id32.push_back(it_cid32->value);
         }
         return;
     }
@@ -463,6 +456,16 @@ void MCurve::_update_conn_additional_points(const int64_t conn_id,Vector3* old_p
         mv_req.new_pos = new_positions[p];
         __additional->lod[p] = octree->get_pos_lod_classic(old_positions[p]);
         octree->add_move_req(mv_req);
+    }
+}
+
+void MCurve::_remove_conn_additional_points(const int32_t cid32) {
+    ConnAdditional& __additional = conn_additional.ptrw()[cid32];
+    int32_t base_oct_id = cid32*CONN_ADDITIONAL_POINT_COUNT;
+    for(int a=0; a < CONN_ADDITIONAL_POINT_COUNT; a++){
+        octree->remove_point_no_pos(-(base_oct_id+a),oct_id);
+        __additional.lod[a] = -1; // reseting lod back to -1
+        __additional.conn_id = 0;
     }
 }
 
@@ -849,12 +852,14 @@ void MCurve::clear_points(){
     points_buffer.clear();
     free_buffer_indicies.clear();
     last_curve_id = 0;
+    conn_free_id32.clear();
     if(is_init_insert){
         ERR_FAIL_COND(octree==nullptr);
         octree->clear_oct_id(oct_id);
     }
     for(int i=active_points.size() - 1; i >= 0; i--){
-        active_points.erase(active_points[i]);
+        int64_t cid = active_points[i];
+        active_points.erase(cid);
     }
     for(int i=active_conn.size()-1;i>=0;i--){
         active_conn.erase(active_conn[active_conn.size()-1]);

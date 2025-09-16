@@ -734,6 +734,7 @@ bool MOctree::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
 		//PointMoveReq rm_mv_req(id,oct_id,Vector3(),Vector3());
 		PointMoveReq rm_mv_req(id,oct_id);
 		moves_req_cache.erase(rm_mv_req);
+		moves_req.erase(rm_mv_req);
 	}
 	Octant* res = root.remove_point(id,pos,oct_id);
 	if(unlikely(!res)){
@@ -755,6 +756,7 @@ bool MOctree::remove_point_no_pos(int32_t id,uint16_t oct_id){
 		//PointMoveReq rm_mv_req(id,oct_id,Vector3(),Vector3());
 		PointMoveReq rm_mv_req(id,oct_id);
 		moves_req_cache.erase(rm_mv_req);
+		moves_req.erase(rm_mv_req);
 	}
 	int p_index;
 	Octant* res = root.find_octant_by_point_classic(id,oct_id,p_index);

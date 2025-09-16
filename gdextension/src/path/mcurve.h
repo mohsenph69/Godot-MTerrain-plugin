@@ -245,6 +245,8 @@ class MCurve : public Resource{
     /// IMPORTANT: this will asume you calculate point LOD before calling this and this will take care of conn_list and active_conn
     /// No need to old_positions for add new or remove conn_id can be set to nullptr (only move need that)
     void _update_conn_additional_points(const int64_t conn_id,Vector3* old_positions=nullptr);
+    // does not remove from conn_id32 just remove from octree
+    inline void _remove_conn_additional_points(const int32_t conn_32id);
     //PackedInt32Array root_ids;
     static MOctree* octree;
     int32_t last_curve_id = 0;
