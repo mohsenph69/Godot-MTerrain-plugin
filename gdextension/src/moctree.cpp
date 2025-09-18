@@ -603,6 +603,9 @@ MOctree::Octant* MOctree::Octant::get_mergeable(int capacity){
 }
 
 MOctree::Octant* MOctree::Octant::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
+	if(!has_point(pos)){
+		return nullptr;
+	}
 	if(octs){
 		for(uint8_t i=0; i < 8; i++){
 			MOctree::Octant* res = octs[i].remove_point(id,pos,oct_id);
