@@ -306,14 +306,16 @@ class MCurve : public Resource{
 
 
     public:
-    int64_t get_conn_id(int32_t p0, int32_t p1);
-    PackedInt32Array get_conn_points(int64_t conn_id);
-    PackedInt64Array get_conn_ids_exist(const PackedInt32Array points);
-    int8_t get_conn_lod(int64_t conn_id);
-    int8_t get_point_lod(int64_t p_id);
-    PackedInt32Array get_active_points();
-    PackedVector3Array get_active_points_positions();
-    PackedInt64Array get_active_conns();
+    int64_t get_conn_id(int32_t p0, int32_t p1) const;
+    PackedInt64Array get_conn_next(int64_t conn_id) const;
+    PackedInt64Array get_conn_prev(int64_t conn_id) const;
+    PackedInt32Array get_conn_points(int64_t conn_id) const;
+    PackedInt64Array get_conn_ids_exist(const PackedInt32Array points) const;
+    int8_t get_conn_lod(int64_t conn_id) const;
+    int8_t get_point_lod(int64_t p_id) const;
+    PackedInt32Array get_active_points() const;
+    PackedVector3Array get_active_points_positions() const;
+    PackedInt64Array get_active_conns() const;
     PackedVector3Array get_conn_baked_points(int64_t input_conn);
     PackedVector3Array get_conn_baked_line(int64_t input_conn);
 

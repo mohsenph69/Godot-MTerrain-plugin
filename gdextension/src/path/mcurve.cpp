@@ -74,6 +74,9 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("clear_points"), &MCurve::clear_points);
 
     ClassDB::bind_method(D_METHOD("get_conn_id","p0","p1"), &MCurve::get_conn_id);
+    ClassDB::bind_method(D_METHOD("get_conn_next","conn_id"), &MCurve::get_conn_next);
+    ClassDB::bind_method(D_METHOD("get_conn_prev","conn_id"), &MCurve::get_conn_prev);
+    ClassDB::bind_method(D_METHOD("get_conn_id","p0","p1"), &MCurve::get_conn_id);
     ClassDB::bind_method(D_METHOD("get_conn_points","conn_id"), &MCurve::get_conn_points);
     ClassDB::bind_method(D_METHOD("get_conn_ids_exist","points"), &MCurve::get_conn_ids_exist);
     ClassDB::bind_method(D_METHOD("get_conn_lod","conn_id"), &MCurve::get_conn_lod);
@@ -192,6 +195,7 @@ MCurve::~MCurve(){
 }
 
 void MCurve::emit_recreate() {
+    emit_signal("curve_updated");
     emit_signal("recreate");
 }
 
@@ -1010,18 +1014,48 @@ void MCurve::user_finish_process(int32_t user_id){
     }
 }
 
-int64_t MCurve::get_conn_id(int32_t p0, int32_t p1){
+int64_t MCurve::get_conn_id(int32_t p0, int32_t p1) const{
     Conn c(p0,p1);
     return c.id;
 }
 
-PackedInt32Array MCurve::get_conn_points(int64_t conn_id){
+PackedInt64Array MCurve::get_conn_next(int64_t conn_id) const{
+    PackedInt64Array out;
+    Conn conn(conn_id);
+    ERR_FAIL_COND_V(!has_point(conn.p.b),out);
+    const Point& p = points_buffer[conn.p.b];
+    for(int i=0; i < MAX_CONN; i++){
+        int32_t other = std::abs(p.conn[i]);
+        if(other!=conn.p.a){
+            Conn cc(conn.p.b,other);
+            out.push_back(cc.id);
+        }
+    }
+    return out;
+}
+
+PackedInt64Array MCurve::get_conn_prev(int64_t conn_id) const{
+    PackedInt64Array out;
+    Conn conn(conn_id);
+    ERR_FAIL_COND_V(!has_point(conn.p.a),out);
+    const Point& p = points_buffer[conn.p.a];
+    for(int i=0; i < MAX_CONN; i++){
+        int32_t other = std::abs(p.conn[i]);
+        if(other!=conn.p.b){
+            Conn cc(conn.p.b,other);
+            out.push_back(cc.id);
+        }
+    }
+    return out;
+}
+
+PackedInt32Array MCurve::get_conn_points(int64_t conn_id) const{
     Conn conn(conn_id);
     PackedInt32Array ids = {conn.p.a,conn.p.b};
     return ids;
 }
 
-PackedInt64Array MCurve::get_conn_ids_exist(const PackedInt32Array points){
+PackedInt64Array MCurve::get_conn_ids_exist(const PackedInt32Array points) const{
     PackedInt64Array out;
     if(points.size() < 2){
         return out;
@@ -1039,12 +1073,12 @@ PackedInt64Array MCurve::get_conn_ids_exist(const PackedInt32Array points){
     return out;
 }
 
-int8_t MCurve::get_conn_lod(int64_t conn_id){
+int8_t MCurve::get_conn_lod(int64_t conn_id) const{
     auto it = conn_list.find(conn_id);
     return it==conn_list.end() ? -1 : it->value;
 }
 
-int8_t MCurve::get_point_lod(int64_t p_id){
+int8_t MCurve::get_point_lod(int64_t p_id) const{
     ERR_FAIL_COND_V(!has_point(p_id),-1);
     int8_t out = points_buffer[p_id].lod;
     if(out > active_lod_limit){
@@ -1053,7 +1087,7 @@ int8_t MCurve::get_point_lod(int64_t p_id){
     return out;
 }
 
-PackedInt32Array MCurve::get_active_points(){
+PackedInt32Array MCurve::get_active_points() const{
     PackedInt32Array out;
     out.resize(active_points.size());
     for(int i=0; i < out.size(); i++){
@@ -1062,7 +1096,7 @@ PackedInt32Array MCurve::get_active_points(){
     return out;
 }
 
-PackedVector3Array MCurve::get_active_points_positions(){
+PackedVector3Array MCurve::get_active_points_positions() const{
     PackedVector3Array out;
     out.resize(active_points.size());
     for(int i=0; i < out.size(); i++){
@@ -1073,7 +1107,7 @@ PackedVector3Array MCurve::get_active_points_positions(){
     return out;
 }
 
-PackedInt64Array MCurve::get_active_conns(){
+PackedInt64Array MCurve::get_active_conns() const{
     PackedInt64Array out;
     out.resize(active_conn.size());
     for(int i=0; i < active_conn.size(); i++){
