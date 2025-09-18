@@ -77,7 +77,6 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_conn_id","p0","p1"), &MCurve::get_conn_id);
     ClassDB::bind_method(D_METHOD("get_conn_next","conn_id"), &MCurve::get_conn_next);
     ClassDB::bind_method(D_METHOD("get_conn_prev","conn_id"), &MCurve::get_conn_prev);
-    ClassDB::bind_method(D_METHOD("get_conn_id","p0","p1"), &MCurve::get_conn_id);
     ClassDB::bind_method(D_METHOD("get_conn_points","conn_id"), &MCurve::get_conn_points);
     ClassDB::bind_method(D_METHOD("get_conn_ids_exist","points"), &MCurve::get_conn_ids_exist);
     ClassDB::bind_method(D_METHOD("get_conn_lod","conn_id"), &MCurve::get_conn_lod);

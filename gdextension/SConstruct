@@ -45,5 +45,7 @@ if env["target"] == "template_debug":
 
 libname :str= 'MTerrain{}{}'.format( env['suffix'], env['SHLIBSUFFIX'] )
 libpath :str= str(libdir.joinpath(libname).resolve())
+if env["platform"] == "windows":
+    env.Replace(LIBPREFIX='')
 sharedlib = env.SharedLibrary(libpath, src)
 Default(sharedlib)
