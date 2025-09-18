@@ -71,6 +71,7 @@ void MCurve::_bind_methods(){
     ClassDB::bind_method(D_METHOD("disconnect_conn","conn_id"), &MCurve::disconnect_conn);
     ClassDB::bind_method(D_METHOD("disconnect_points","p0","p1"), &MCurve::disconnect_points);
     ClassDB::bind_method(D_METHOD("remove_point","point_index"), &MCurve::remove_point);
+    ClassDB::bind_method(D_METHOD("remove_points","point_ids"), &MCurve::remove_points);
     ClassDB::bind_method(D_METHOD("clear_points"), &MCurve::clear_points);
 
     ClassDB::bind_method(D_METHOD("get_conn_id","p0","p1"), &MCurve::get_conn_id);
@@ -847,6 +848,54 @@ void MCurve::remove_point(const int32_t point_index){
     }
     emit_signal("curve_updated");
     emit_signal("remove_point",point_index);
+}
+
+void MCurve::remove_points(const PackedInt32Array &pids) {
+    HashSet<int64_t> rm_conns;
+    HashSet<int32_t> rm_oct_points;
+    for(int32_t pid : pids){
+        ERR_CONTINUE(!has_point(pid));
+        rm_oct_points.insert(pid);
+        const Point& point = points_buffer[pid];
+        ////////////////// adding conn
+        for(int i=0; i < MAX_CONN; i++){
+            if(point.conn[i]!=0){
+                Conn conn(pid,std::abs(point.conn[i]));
+                active_conn.erase(conn.id);
+                conn_list.erase(conn.id);
+                baked_lines.erase(conn.id);
+                conn_aabb.erase(conn.id);
+                if(!rm_conns.has(conn.id)){
+                    rm_conns.insert(conn.id);
+                    //////////// Adding extra conn points
+                    auto c32_it = conn_id32.find(conn.id);
+                    if(c32_it!=conn_id32.end()){
+                        int32_t cid32 = c32_it->value;
+                        ConnAdditional& __additional = conn_additional.ptrw()[cid32];
+                        int32_t base_oct_id = cid32*CONN_ADDITIONAL_POINT_COUNT;
+                        for(int a=0; a < CONN_ADDITIONAL_POINT_COUNT; a++){
+                            rm_oct_points.insert(-(base_oct_id+a));
+                            __additional.lod[a] = -1; // reseting lod back to -1
+                            __additional.conn_id = 0;
+                        }
+                        conn_id32.remove(c32_it);
+                        conn_free_id32.push_back(c32_it->value);
+                    }
+                    ////////////END  Adding extra conn points
+                }
+            }
+        }
+        //////////////////End adding conn
+        free_buffer_indicies.push_back(pid);
+        active_points.erase(pid);
+    }
+    /// End adding points
+    if(octree){
+        bool res = octree->remove_points(rm_oct_points,oct_id);
+        if(!res){
+            WARN_PRINT(itos(rm_oct_points.size()) + " Points can't be find to be removed!");
+        }
+    }
 }
 
 void MCurve::clear_points(){

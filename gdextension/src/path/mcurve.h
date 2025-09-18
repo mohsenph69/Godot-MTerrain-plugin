@@ -299,6 +299,7 @@ class MCurve : public Resource{
     bool disconnect_conn(int64_t conn_id);
     bool disconnect_points(int32_t p0,int32_t p1);
     void remove_point(const int32_t point_index);
+    void remove_points(const PackedInt32Array& pids);
     void clear_points();
     void init_insert();
     void _octree_update_finish();

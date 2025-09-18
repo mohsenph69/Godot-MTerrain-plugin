@@ -13,6 +13,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/vset.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
+#include <godot_cpp/templates/hash_set.hpp>
 #include <godot_cpp/variant/packed_vector3_array.hpp>
 #include <godot_cpp/variant/packed_int32_array.hpp>
 #include <godot_cpp/variant/packed_float32_array.hpp>
@@ -133,6 +134,7 @@ class MOctree : public Node3D {
         void get_oct_id_points_count(uint16_t oct_id,int& count);
         Octant* get_mergeable(int capacity);
         Octant* remove_point(int32_t id,const Vector3& pos,uint16_t oct_id);
+        void remove_points(HashSet<int32_t>& pids,uint16_t oct_id);
         void clear();
         void remove_points_with_oct_id(uint16_t oct_id);
         _FORCE_INLINE_ static bool has_point(const Pair<Vector3,Vector3>& bound, const Vector3& point);
@@ -141,6 +143,7 @@ class MOctree : public Node3D {
         bool check_id_exist_classic(int32_t id);
         void get_tree_lines(PackedVector3Array& lines);
         void merge_octs();
+        void merge_octs_from_root(int capacity);
         private:
         _FORCE_INLINE_ bool divide();
         _FORCE_INLINE_ bool intersects(const Pair<Vector3,Vector3>& bound) const;
@@ -197,8 +200,14 @@ class MOctree : public Node3D {
     void clear_oct_id(int oct_id);
     void remove_oct_id(int oct_id);
     bool remove_point(int32_t id, const Vector3& pos,uint16_t oct_id);
+    /// Use remove_points if you can and pass the Hashset
+    bool remove_points_packedint32(const PackedInt32Array& points,uint16_t oct_id);
+    /// please not  all points which remove will be consume or remove from points
+    bool remove_points(HashSet<int32_t>& points,uint16_t oct_id);
     bool remove_point_no_pos(int32_t id,uint16_t oct_id);
     bool check_for_mergeable(Octant* start_point);
+    void merge_octs_from_root();
+    bool check_for_mergeable_from_root();
     void set_camera_node(Node3D* camera);
     void set_world_boundary(const Vector3& start,const Vector3& end);
     void enable_as_octmesh_updater();

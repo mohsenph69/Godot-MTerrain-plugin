@@ -297,6 +297,23 @@ void MOctree::Octant::merge_octs(){
 	}
 }
 
+void MOctree::Octant::merge_octs_from_root(int capacity){
+	if(!octs){
+		return;
+	}
+	int pcount = 0;
+	get_points_count(pcount);
+	if(pcount < capacity){
+		merge_octs();
+		return;
+	}
+	if(octs){
+		for(uint8_t i=0; i < 8; i++){
+			octs[i].merge_octs_from_root(capacity);
+		}
+	}
+}
+
 bool MOctree::Octant::divide(){
 	Vector3 half = (end - start)/2;
 	if(half.x < MIN_OCTANT_EDGE_LENGTH || half.y < MIN_OCTANT_EDGE_LENGTH || half.z < MIN_OCTANT_EDGE_LENGTH || octs!=nullptr){
@@ -624,6 +641,21 @@ MOctree::Octant* MOctree::Octant::remove_point(int32_t id,const Vector3& pos,uin
 	return nullptr;
 }
 
+void MOctree::Octant::remove_points(HashSet<int32_t> &pids,uint16_t oct_id) {
+	if(octs){
+		for(uint8_t i=0; i < 8; i++){
+			octs[i].remove_points(pids,oct_id);
+		}
+		return;
+	}
+	for(int32_t i=points.size()-1; i >=0 ; i--){
+		if(points[i].oct_id==oct_id && pids.has(points[i].id)){
+			pids.erase(points[i].id);
+			points.remove_at(i);
+		}
+	}
+}
+
 void MOctree::Octant::clear(){
 	if(octs){
 		memdelete_arr(octs);
@@ -709,6 +741,7 @@ void MOctree::clear_oct_id(int oct_id){
 	for(const PointMoveReq r : __rm_moves){
 		moves_req_cache.erase(r);
 	}
+	merge_octs_from_root();
 }
 
 void MOctree::remove_oct_id(int oct_id){
@@ -724,6 +757,7 @@ void MOctree::remove_oct_id(int oct_id){
 	oct_ids.erase(oct_id);
 	root.remove_points_with_oct_id(oct_id);
 	point_count -= p_count;
+	merge_octs_from_root();
 	check_point_process_finished();
 }
 
@@ -742,6 +776,7 @@ bool MOctree::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
 	Octant* res = root.remove_point(id,pos,oct_id);
 	if(unlikely(!res)){
 		WARN_PRINT("Can not find point with ID "+itos(id)+" OCT_ID "+itos(oct_id)+" to remove!");
+		return false;
 	} else {
 		point_count--;
 	}
@@ -749,8 +784,35 @@ bool MOctree::remove_point(int32_t id,const Vector3& pos,uint16_t oct_id){
 	return res!=nullptr;
 }
 
-bool MOctree::remove_point_no_pos(int32_t id,uint16_t oct_id){
+bool MOctree::remove_points_packedint32(const PackedInt32Array &points, uint16_t oct_id) {
+    HashSet<int32_t> ids;
+	for(int32_t id : points){
+		ids.insert(id);
+	}
+	return remove_points(ids,oct_id);
+}
+
+bool MOctree::remove_points(HashSet<int32_t> &points, uint16_t oct_id) {
 	std::lock_guard<std::mutex> lock(oct_mutex);
+	if(disable_octree){
+		return true;
+	}
+	int start_size = points.size();
+	for(auto it=points.begin(); it!=points.end(); ++it){
+		std::lock_guard<std::mutex> lock2(move_req_mutex);
+		PointMoveReq rm_mv_req(*it,oct_id);
+		moves_req_cache.erase(rm_mv_req);
+		moves_req.erase(rm_mv_req);
+	}
+	root.remove_points(points,oct_id);
+	point_count -= (start_size - points.size());
+	merge_octs_from_root();
+	return points.size()==0;
+}
+
+bool MOctree::remove_point_no_pos(int32_t id, uint16_t oct_id)
+{
+    std::lock_guard<std::mutex> lock(oct_mutex);
 	if(disable_octree){
 		return true;
 	}
@@ -787,6 +849,15 @@ bool MOctree::check_for_mergeable(Octant* start_point){
 		return true;
 	}
 	return false;
+}
+
+void MOctree::merge_octs_from_root() {
+	int capacity = get_capacity(point_count);
+	root.merge_octs_from_root(capacity);
+}
+
+bool MOctree::check_for_mergeable_from_root() {
+    return false;
 }
 
 void MOctree::set_camera_node(Node3D* camera){
