@@ -314,6 +314,8 @@ class MCurve : public Resource{
     PackedInt64Array get_conn_ids_exist(const PackedInt32Array points) const;
     int8_t get_conn_lod(int64_t conn_id) const;
     int8_t get_point_lod(int64_t p_id) const;
+    PackedInt32Array get_all_points() const;
+    PackedInt64Array get_all_conns() const;
     PackedInt32Array get_active_points() const;
     PackedVector3Array get_active_points_positions() const;
     PackedInt64Array get_active_conns() const;

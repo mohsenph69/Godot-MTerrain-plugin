@@ -847,8 +847,7 @@ PackedByteArray MCurveInstanceOverride::get_data() const {
 
 void MCurveInstance::_bind_methods(){
     ClassDB::bind_method(D_METHOD("get_connection_transforms","conn_id","element_index"), &MCurveInstance::get_connection_transforms);
-    ClassDB::bind_method(D_METHOD("get_connection_next_first_transforms","conn_id","element_index"), &MCurveInstance::get_connection_next_first_transforms);
-    ClassDB::bind_method(D_METHOD("get_connection_prev_last_transforms","conn_id","element_index"), &MCurveInstance::get_connection_prev_last_transforms);
+    ClassDB::bind_method(D_METHOD("get_connection_transforms_combined","conn_id","element_index"), &MCurveInstance::get_connection_transforms_combined);
 
     ClassDB::bind_method(D_METHOD("_set_dummy","input"), &MCurveInstance::_set_dummy);
     ClassDB::bind_method(D_METHOD("_get_dummy"), &MCurveInstance::_get_dummy);
@@ -1128,85 +1127,39 @@ Array MCurveInstance::get_connection_transforms(int64_t cid, int element_index){
     return out;
 }
 
-Array MCurveInstance::get_connection_next_first_transforms(int64_t conn_id, int element_index) {
-    Array out;
-    out.resize(2);
-    out[0] = Array();
-    out[1] = Array();
+TypedArray<Transform3D> MCurveInstance::get_connection_transforms_combined(int64_t cid, int element_index) {
+    TypedArray<Transform3D> out;
+    ERR_FAIL_COND_V(!curve->has_conn(cid),out);
     ERR_FAIL_INDEX_V(element_index,M_CURVE_ELEMENT_COUNT,out);
+    OverrideData ov_data = get_override_data(cid);
+    if(ov_data.get_exclude()) return out;
     Ref<MCurveInstanceElement> element = elements[element_index];
     if(element.is_null()) return out;
-    PackedInt64Array conns = curve->get_conn_next(conn_id);
-    Vector<Transform3D> ptransforms;
-    Array row_first;
-    Array row_second;
-    for(int64_t cid : conns){
-        ptransforms.clear();
-        OverrideData ov_data = get_override_data(cid);
-        if(ov_data.get_exclude()) continue;
-        int instance_index = -1;
-        for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
-            if(ov_data.element_ovveride[i]==element_index){
-                instance_index=i;
-                break;
-            }
-        }
-        if(instance_index==-1) continue;
-        _get_curve_transforms(ptransforms,ov_data,cid,instance_index,curve->get_conn_lenght(cid));
-        if(ptransforms.size()==0) continue;
-        bool ov_mirror = ov_data.get_flag(instance_index,MCurveInstanceOverride::MIRROR);
-        if(element->index_exist(0,ov_data.random_remove[instance_index])){
-            Transform3D t = element->modify_transform(ptransforms[0],0,ov_mirror);
-            row_first.push_back(t);
-        }
-        if(element->plus_mirror && element->index_exist_mirror(0,ov_data.random_remove[instance_index])){
-            Transform3D t = element->modify_transform(ptransforms[0],0,!ov_mirror);
-            row_second.push_back(t);
+    // getting instance index
+    int instance_index = -1;
+    for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
+        if(ov_data.element_ovveride[i]==element_index){
+            instance_index=i;
+            break;
         }
     }
-    out[0] = row_first;
-    out[1] = row_second;
-    return out;
-}
-
-Array MCurveInstance::get_connection_prev_last_transforms(int64_t conn_id, int element_index) {
-    Array out;
-    out.resize(2);
-    out[0] = Array();
-    out[1] = Array();
-    ERR_FAIL_INDEX_V(element_index,M_CURVE_ELEMENT_COUNT,out);
-    Ref<MCurveInstanceElement> element = elements[element_index];
-    if(element.is_null()) return out;
-    PackedInt64Array conns = curve->get_conn_prev(conn_id);
+    if(instance_index==-1) return out;
+    // getting point on curve
     Vector<Transform3D> ptransforms;
-    Array row_first;
-    Array row_second;
-    for(int64_t cid : conns){
-        ptransforms.clear();
-        OverrideData ov_data = get_override_data(cid);
-        if(ov_data.get_exclude()) continue;
-        int instance_index = -1;
-        for(int i=0; i < M_CURVE_CONNECTION_INSTANCE_COUNT; i++){
-            if(ov_data.element_ovveride[i]==element_index){
-                instance_index=i;
-                break;
-            }
+    _get_curve_transforms(ptransforms,ov_data,cid,instance_index,curve->get_conn_lenght(cid));
+    if(ptransforms.size()==0) return out;
+    bool ov_mirror = ov_data.get_flag(instance_index,MCurveInstanceOverride::MIRROR);
+    for(int i=0; i < ptransforms.size(); i++){
+        // should check for element->index_exist here as element->index_exist_mirror might have different result
+        if(element->index_exist(i,ov_data.random_remove[instance_index])){
+            Transform3D t = element->modify_transform(ptransforms[i],i,ov_mirror);
+            out.push_back(t);
         }
-        if(instance_index==-1) continue;
-        _get_curve_transforms(ptransforms,ov_data,cid,instance_index,curve->get_conn_lenght(cid));
-        if(ptransforms.size()==0) continue;
-        bool ov_mirror = ov_data.get_flag(instance_index,MCurveInstanceOverride::MIRROR);
-        if(element->index_exist(0,ov_data.random_remove[instance_index])){
-            Transform3D t = element->modify_transform(ptransforms[0],0,ov_mirror);
-            row_first.push_back(t);
-        }
-        if(element->plus_mirror && element->index_exist_mirror(0,ov_data.random_remove[instance_index])){
-            Transform3D t = element->modify_transform(ptransforms[0],0,!ov_mirror);
-            row_second.push_back(t);
+        if(element->plus_mirror && element->index_exist_mirror(i,ov_data.random_remove[instance_index])){
+            Transform3D t = element->modify_transform(ptransforms[i],i,!ov_mirror);
+            out.push_back(t);
         }
     }
-    out[0] = row_first;
-    out[1] = row_second;
     return out;
 }
 

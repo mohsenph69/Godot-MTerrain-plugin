@@ -488,8 +488,7 @@ class MCurveInstance : public Node {
     /// Decide what element should be added and calling _generate_connection_element
     void _generate_connection(const MCurve::ConnUpdateInfo& update_info);
     Array get_connection_transforms(int64_t cid,int element_index);
-    Array get_connection_next_first_transforms(int64_t conn_id,int element_index);
-    Array get_connection_prev_last_transforms(int64_t conn_id,int element_index);
+    TypedArray<Transform3D> get_connection_transforms_combined(int64_t cid,int element_index);
     void _update_visibilty();
     void _connection_force_update(int64_t conn_id);
     void _connection_remove(int64_t conn_id);
