@@ -467,7 +467,7 @@ void MCurveTerrain::clear_grass_aabb(MGrass* grass,AABB aabb,float radius_plus_o
     ERR_FAIL_COND(grass==nullptr);
     ERR_FAIL_COND(!grass->is_init());
 
-    aabb = aabb.grow(radius_plus_offset + grass->grass_data->density);
+    aabb = aabb.grow(radius_plus_offset + grass->get_density());
     grass->clear_grass_sublayer_aabb(aabb);
 }
 
@@ -484,7 +484,7 @@ void MCurveTerrain::clear_grass(const PackedInt64Array& conn_ids,MGrass* grass,f
         grass->create_sublayer();
     }
     
-    float interval_meter = grass->get_grass_data()->density * 0.4;
+    float interval_meter = grass->get_density() * 0.4;
     radius_plus_offset += interval_meter;
     for(int c=0; c < conn_ids.size(); c++){
         int64_t conn_id = conn_ids[c];
@@ -545,7 +545,7 @@ void MCurveTerrain::modify_grass(const PackedInt64Array& conn_ids,MGrass* grass,
         grass->create_sublayer();
     }
     
-    float interval_meter = grass->get_grass_data()->density * 0.4;
+    float interval_meter = grass->get_grass_data()->get_density() * 0.4;
     for(int c=0; c < conn_ids.size(); c++){
         int64_t conn_id = conn_ids[c];
         ERR_CONTINUE(!curve->has_conn(conn_id));

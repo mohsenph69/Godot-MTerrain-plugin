@@ -78,10 +78,6 @@ void MGrid::clear() {
     }
 }
 
-bool MGrid::is_created() {
-    return is_dirty;
-}
-
 MGridPos MGrid::get_size() {
     return _size;
 }
@@ -657,28 +653,6 @@ real_t MGrid::get_closest_height(const Vector3& pos) {
     return r->get_closest_height(pos);
 }
 
-real_t MGrid::get_height(Vector3 pos){
-    if(!is_created()){
-        return 0.0;
-    }
-    pos -= offset;
-    pos = pos/_chunks.h_scale;
-    if(pos.x <0 || pos.z <0){
-        return 0.0;
-    }
-    uint32_t x = (uint32_t)pos.x;
-    uint32_t y = (uint32_t)pos.z;
-    real_t hx0z0 = get_height_by_pixel(x,y);
-    real_t hx1z0 = get_height_by_pixel(x+1,y);
-    real_t hx0z1 = get_height_by_pixel(x,y+1);
-    real_t hx1z1 = get_height_by_pixel(x+1,y+1);
-    real_t factor_x = pos.x - floor(pos.x);
-    real_t factor_z = pos.z - floor(pos.z);
-    real_t ivaltop = (hx1z0 - hx0z0)*factor_x + hx0z0;
-    real_t ivalbottom = (hx1z1 - hx0z1)*factor_x + hx0z1;
-    return (ivalbottom - ivaltop)*factor_z + ivaltop;
-}
-
 Ref<MCollision> MGrid::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
     ray_vector.normalize();
     Ref<MCollision> col;
@@ -939,24 +913,8 @@ void MGrid::update_physics(const Vector3& cam_pos){
     }
 }
 
-bool MGrid::_has_pixel(const uint32_t x,const uint32_t y){
-    if(x>=pixel_width) return false;
-    if(y>=pixel_height) return false;
-    //if(x<0) return false; // There is no need for this as we use uint32
-    //if(y<0) return false;
-    return true;
-}
-
-bool MGrid::has_pixel(const uint32_t x,const uint32_t y){
-    if(x>=pixel_width) return false;
-    if(y>=pixel_height) return false;
-    //if(x<0) return false;
-    //if(y<0) return false;
-    return true;
-}
-
 MImage* MGrid::get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index){
-    if(!_has_pixel(x,y)){
+    if(!has_pixel(x,y)){
         return nullptr;
     }
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
@@ -970,7 +928,7 @@ MImage* MGrid::get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index){
 }
 
 Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t index) {
-    if(!_has_pixel(x,y)){
+    if(!has_pixel(x,y)){
         return Color();
     }
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
@@ -984,7 +942,7 @@ Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t index) {
 }
 
 const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t index){
-    ERR_FAIL_COND_V(!_has_pixel(x,y),nullptr);
+    ERR_FAIL_COND_V(!has_pixel(x,y),nullptr);
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
     uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
     uint32_t rx = (x/rp) - ex;
@@ -995,7 +953,7 @@ const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t 
 }
 
 void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index) {
-    if(!_has_pixel(x,y)){
+    if(!has_pixel(x,y)){
         return;
     }
     bool ex = (x%rp == 0 && x!=0);
@@ -1025,7 +983,7 @@ void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index
 }
 
 void MGrid::set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t index){
-    if(!_has_pixel(x,y)){
+    if(!has_pixel(x,y)){
         return;
     }
     bool ex = (x%rp == 0 && x!=0);
@@ -1055,7 +1013,7 @@ void MGrid::set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32
 }
 
 real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
-    if(!_has_pixel(x,y)){
+    if(!has_pixel(x,y)){
         return 0.0;
     }
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
@@ -1069,7 +1027,7 @@ real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
 }
 
 void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t value){
-    if(!_has_pixel(x,y)){
+    if(!has_pixel(x,y)){
         return;
     }
     bool ex = (x%rp == 0 && x!=0);
@@ -1100,7 +1058,7 @@ void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t value){
 }
 
 real_t MGrid::get_height_by_pixel_in_layer(uint32_t x,uint32_t y){
-    if(!_has_pixel(x,y)){
+    if(!has_pixel(x,y)){
         return 0.0;
     }
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
@@ -1138,15 +1096,15 @@ void MGrid::generate_normals(MPixelRegion pxr) {
             // Caculating face normals around point
             // and average them
             // In total there are 8 face around each point
-            float heightL = _has_pixel(x-1,y) ? get_height_by_pixel(x-1,y) : h;
-            float heightR = _has_pixel(x+1,y) ? get_height_by_pixel(x+1,y) : h;
-            float heightU = _has_pixel(x,y-1) ? get_height_by_pixel(x,y-1) : h;
-            float heightD = _has_pixel(x,y+1) ? get_height_by_pixel(x,y+1) : h;
+            float heightL = has_pixel(x-1,y) ? get_height_by_pixel(x-1,y) : h;
+            float heightR = has_pixel(x+1,y) ? get_height_by_pixel(x+1,y) : h;
+            float heightU = has_pixel(x,y-1) ? get_height_by_pixel(x,y-1) : h;
+            float heightD = has_pixel(x,y+1) ? get_height_by_pixel(x,y+1) : h;
 
-            float heightTL = _has_pixel(x-1,y-1) ? get_height_by_pixel(x-1,y-1) : h;
-            float heightTR = _has_pixel(x+1,y-1) ? get_height_by_pixel(x+1,y-1) : h;
-            float heightBL = _has_pixel(x-1,y+1) ? get_height_by_pixel(x-1,y+1) : h;
-            float heightBR = _has_pixel(x+1,y+1) ? get_height_by_pixel(x+1,y+1) : h;
+            float heightTL = has_pixel(x-1,y-1) ? get_height_by_pixel(x-1,y-1) : h;
+            float heightTR = has_pixel(x+1,y-1) ? get_height_by_pixel(x+1,y-1) : h;
+            float heightBL = has_pixel(x-1,y+1) ? get_height_by_pixel(x-1,y+1) : h;
+            float heightBR = has_pixel(x+1,y+1) ? get_height_by_pixel(x+1,y+1) : h;
 
             float nx = heightTL - heightBR + 2.0f * (heightL - heightR) + heightBL - heightTR;
             //float ny = 8.0f;
@@ -1193,7 +1151,7 @@ Vector3 MGrid::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
         px1 += px;
         px2 += px;
         // Edge of the terrain
-        if(!_has_pixel(px1.x,px1.y) || !_has_pixel(px2.x,px2.y)){
+        if(!has_pixel(px1.x,px1.y) || !has_pixel(px2.x,px2.y)){
             continue;
         }
         Vector3 vec1 = nvec8[i];

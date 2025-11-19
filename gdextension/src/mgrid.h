@@ -169,8 +169,6 @@ class MGrid {
     uint64_t total_add=0;
     uint64_t total_chunks=0;
 
-    _FORCE_INLINE_ bool _has_pixel(const uint32_t x,const uint32_t y);
-
     std::future<void> update_regions_future;
     bool is_update_regions_future_valid = false;
 
@@ -235,7 +233,7 @@ class MGrid {
     ~MGrid();
     uint64_t get_update_id();
     void clear();
-    bool is_created();
+    _FORCE_INLINE_ bool is_created() const;
     MGridPos get_size();
     void set_scenario(RID scenario);
     RID get_scenario();
@@ -271,7 +269,7 @@ class MGrid {
 
     MGridPos get_3d_grid_pos_by_middle_point(MGridPos input);
     real_t get_closest_height(const Vector3& pos);
-    real_t get_height(Vector3 pos);
+    _FORCE_INLINE_ real_t get_height(Vector3 pos);
     Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
     Ref<MCollision> get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
 
@@ -294,7 +292,7 @@ class MGrid {
     real_t get_height_by_pixel(uint32_t x,uint32_t y);
     void set_height_by_pixel(uint32_t x,uint32_t y,const real_t value);
     real_t get_height_by_pixel_in_layer(uint32_t x,uint32_t y);
-    bool has_pixel(const uint32_t x,const uint32_t y);
+    _FORCE_INLINE_ bool has_pixel(const uint32_t x,const uint32_t y);
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
     void update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom);
@@ -350,4 +348,37 @@ class MGrid {
     void set_visibility(bool input);
 };
 
+bool MGrid::is_created() const {
+    return is_dirty;
+}
+
+bool MGrid::has_pixel(const uint32_t x,const uint32_t y){
+    if(x>=pixel_width) return false;
+    if(y>=pixel_height) return false;
+    //if(x<0) return false;
+    //if(y<0) return false;
+    return true;
+}
+
+real_t MGrid::get_height(Vector3 pos){
+    if(!is_created()){
+        return 0.0;
+    }
+    pos -= offset;
+    pos = pos/_chunks.h_scale;
+    if(pos.x <0 || pos.z <0){
+        return 0.0;
+    }
+    uint32_t x = (uint32_t)pos.x;
+    uint32_t y = (uint32_t)pos.z;
+    real_t hx0z0 = get_height_by_pixel(x,y);
+    real_t hx1z0 = get_height_by_pixel(x+1,y);
+    real_t hx0z1 = get_height_by_pixel(x,y+1);
+    real_t hx1z1 = get_height_by_pixel(x+1,y+1);
+    real_t factor_x = pos.x - floor(pos.x);
+    real_t factor_z = pos.z - floor(pos.z);
+    real_t ivaltop = (hx1z0 - hx0z0)*factor_x + hx0z0;
+    real_t ivalbottom = (hx1z1 - hx0z1)*factor_x + hx0z1;
+    return (ivalbottom - ivaltop)*factor_z + ivaltop;
+}
 #endif

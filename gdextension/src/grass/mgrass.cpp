@@ -153,7 +153,7 @@ void MGrass::init_grass(MGrid* _grid) {
     scenario = grid->get_scenario();
     space = grid->space;
     region_grid_width = grid->get_region_grid_size().x;
-    grass_region_pixel_width = (uint32_t)round((float)grid->region_size_meter/grass_data->density);
+    grass_region_pixel_width = (uint32_t)round((float)grid->region_size_meter/get_density());
     grass_region_pixel_size = grass_region_pixel_width*grass_region_pixel_width;
     base_grid_size_in_pixel = (uint32_t)round((double)grass_region_pixel_width/(double)grid->region_size);
     width = grass_region_pixel_width*grid->get_region_grid_size().x;
@@ -167,12 +167,17 @@ void MGrass::init_grass(MGrid* _grid) {
     grass_bound_limit.top = grass_pixel_region.top;
     grass_bound_limit.bottom = grass_pixel_region.bottom;
     int64_t data_size = ((grass_region_pixel_size*grid->get_regions_count() - 1)/8) + 1;
-    if(grass_data->data.size()==0){
-        // grass data is empty so we create grass data here
-        grass_data->data.resize(data_size);
-    } else {
-        // Data already created so we check if the data size is correct
-        ERR_FAIL_COND_EDMSG(grass_data->data.size()!=data_size,"Grass \""+get_name()+"\" data not match, Some Terrain setting and grass density should not change after grass data creation, change back setting or create a new grass data");
+    if(grass_data.is_valid()){
+        if(grass_data->data.size()==0){
+            // grass data is empty so we create grass data here
+            grass_data->data.resize(data_size);
+        } else {
+            // Data already created so we check if the data size is correct
+            ERR_FAIL_COND_EDMSG(grass_data->data.size()!=data_size,"Grass \""+get_name()+"\" data not match, Some Terrain setting and grass density should not change after grass data creation, change back setting or create a new grass data");
+        }
+        grass_data->grass_region_pixel_width = grass_region_pixel_width;
+        grass_data->region_grid_width = region_grid_width;
+        grass_data->grass_region_pixel_size = grass_region_pixel_size;
     }
     for(int i=0;i<materials.size();i++){
         Ref<Material> m = materials[i];
@@ -200,7 +205,7 @@ void MGrass::init_grass(MGrid* _grid) {
         if(settings[i]->grid_lod >=0){
             lod_scale = pow(2,settings[i]->grid_lod);
         }
-        float cdensity = grass_data->density*lod_scale;
+        float cdensity = get_density()*lod_scale;
         rand_buffer_pull.push_back(settings[i]->generate_random_number(cdensity,100));
         set_lod_setting_image_index(settings[i]);
     }
@@ -334,11 +339,16 @@ void MGrass::cull_out_of_bound(){
 }
 
 void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
+    float density = get_density();
     MGrassChunk* g;
     MPixelRegion px;
     if(grass_chunk==nullptr){
+        uint32_t rx = CHUNK_INFO.region_id%region_grid_width;
+        uint32_t ry = CHUNK_INFO.region_id/region_grid_width;
         px.left = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.x);
         px.top = (uint32_t)round(((double)grass_region_pixel_width)*CHUNK_INFO.region_offset_ratio.y);
+        px.left += rx*grass_region_pixel_width;
+        px.top += ry*grass_region_pixel_width;
         int size_scale = pow(2,CHUNK_INFO.chunk_size);
         px.right = px.left + base_grid_size_in_pixel*size_scale - 1;
         px.bottom = px.top + base_grid_size_in_pixel*size_scale - 1;
@@ -359,7 +369,6 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
     } else {
         lod_scale = pow(2,lod);
     }
-    int grass_region_pixel_width_lod = grass_region_pixel_width/lod_scale;
 
     uint32_t divide_amount= (uint32_t)settings[lod]->multimesh_subdivisions;
     Vector<MPixelRegion> pixel_regions = px.devide(divide_amount);
@@ -408,18 +417,19 @@ void MGrass::create_grass_chunk(int grid_index,MGrassChunk* grass_chunk){
                 uint32_t ibyte = offs/8;
                 uint32_t ibit = offs%8;
                 uint32_t cell_id = g->region_id*grass_region_pixel_size + offs;
-                if( (ptr[ibyte] & (1 << ibit)) != 0){
+                //if( (ptr[ibyte] & (1 << ibit)) != 0){
+                if(grass_data->get_pixel(x,y)){
                     for(int r=0;r<cell_instance_count;r++){
                         index=count*buffer_strid_float;
-                        int rand_index = y*grass_region_pixel_width_lod + x*cell_instance_count + r;
+                        int rand_index = _get_rand_index(x,y,r,cell_instance_count);
                         const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*buffer_strid_float;
                         buffer.resize(buffer.size()+buffer_strid_float);
                         float* ptrw = (float*)buffer.ptrw();
                         ptrw += index;
                         memcpy(ptrw,ptr,buffer_strid_byte);
                         Vector3 pos;
-                        pos.x = root_g->world_pos.x + x*grass_data->density + ptrw[3];
-                        pos.z = root_g->world_pos.z + y*grass_data->density + ptrw[11];
+                        pos.x = grid->offset.x + x*density + ptrw[3];
+                        pos.z = grid->offset.z + y*density + ptrw[11];
                         ptrw[7] += grid->get_height(pos);
                         if(std::isnan(ptrw[7])){
                             buffer.resize(buffer.size()-buffer_strid_float);
@@ -571,7 +581,8 @@ void MGrass::make_grass_dirty_by_pixel(uint32_t px, uint32_t py){
     if(!is_grass_init) return;
     if(px>=width) return;
     if(py>=height) return;
-    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    float density = get_density();
+    Vector2 flat_pos(float(px)*density,float(py)*density);
     int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
     dirty_points_id->insert(point_id);
 }
@@ -596,7 +607,8 @@ void MGrass::set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value){
     //if(p_value == ((b & (1 << ibit)) != 0) ){
     //    return;
     //}
-    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    float density = get_density();
+    Vector2 flat_pos(float(px)*density,float(py)*density);
     int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
     dirty_points_id->insert(point_id);
     if(!cell_creation.has(offs)){
@@ -634,7 +646,8 @@ void MGrass::set_grass_sublayer_by_pixel(uint32_t px, uint32_t py, bool p_value)
     if(p_value == ((b & (1 << ibit)) != 0) ){
         return;
     }
-    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    float density = get_density();
+    Vector2 flat_pos(float(px)*density,float(py)*density);
     int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
     dirty_points_id->insert(point_id);
     if(!cell_creation.has(offs)){
@@ -653,7 +666,7 @@ bool MGrass::is_init(){
     return is_grass_init;
 }
 
-bool MGrass::has_sublayer(){
+bool MGrass::has_sublayer() const{
     if(grass_data.is_null()){
         return false;
     }
@@ -693,9 +706,9 @@ void MGrass::clear_grass_sublayer_by_pixel(uint32_t px, uint32_t py){
     if(byte_backup==byte){
         return;
     }
+    float density = get_density();
     bool backup_val = (byte_backup & (1 << ibit)) != 0;
-    
-    Vector2 flat_pos(float(px)*grass_data->density,float(py)*grass_data->density);
+    Vector2 flat_pos(float(px)*density,float(py)*density);
     int point_id = grid->get_point_id_by_non_offs_ws(flat_pos);
     dirty_points_id->insert(point_id);
 
@@ -707,7 +720,7 @@ void MGrass::clear_grass_sublayer_by_pixel(uint32_t px, uint32_t py){
     grass_data->data.set(ibyte,byte);
 }
 
-bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) {
+bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) const{
     if(!is_grass_init) return false;
     ERR_FAIL_INDEX_V(px, width,false);
     ERR_FAIL_INDEX_V(py, height,false);
@@ -722,26 +735,27 @@ bool MGrass::get_grass_by_pixel(uint32_t px, uint32_t py) {
     return (grass_data->data[ibyte] & (1 << ibit)) != 0;
 }
 
-Vector2i MGrass::get_closest_pixel(Vector3 pos){
+Vector2i MGrass::get_closest_pixel(Vector3 pos) const{
     if(!is_grass_init) return Vector2i();
     if(!grid) return Vector2i();
     pos -= grid->offset;
-    pos = pos / grass_data->density;
+    pos = pos / get_density();
     return Vector2i(round(pos.x),round(pos.z));
 }
 
-Vector3 MGrass::get_pixel_world_pos(uint32_t px, uint32_t py){
+Vector3 MGrass::get_pixel_world_pos(uint32_t px, uint32_t py) const {
     Vector3 out(0,0,0);
     ERR_FAIL_COND_V(!grass_data.is_valid(),out);
-    out.x = grid->offset.x + ((float)px)*grass_data->density;
-    out.z = grid->offset.z + ((float)py)*grass_data->density;
+    float density = get_density();
+    out.x = grid->offset.x + ((float)px)*density;
+    out.z = grid->offset.z + ((float)py)*density;
     return out;
 }
 
-Vector2i MGrass::grass_px_to_grid_px(uint32_t px, uint32_t py){
+Vector2i MGrass::grass_px_to_grid_px(uint32_t px, uint32_t py) const {
     Vector2 v;
     ERR_FAIL_COND_V(!grass_data.is_valid(),Vector2i(v));
-    v = Vector2(px,py)*grass_data->density;
+    v = Vector2(px,py)*get_density();
     v = v/grid->get_h_scale();
     return Vector2i(round(v.x),round(v.y));
 }
@@ -756,7 +770,7 @@ void MGrass::draw_grass(Vector3 brush_pos,real_t radius,bool add){
     if(px_pos.x<0 || px_pos.y<0 || px_pos.x>width || px_pos.y>height){
         return;
     }
-    uint32_t brush_px_radius = (uint32_t)(radius/grass_data->density);
+    uint32_t brush_px_radius = (uint32_t)(radius/get_density());
     uint32_t brush_px_pos_x = px_pos.x;
     uint32_t brush_px_pos_y = px_pos.y;
     // Setting left right top bottom
@@ -822,14 +836,14 @@ void MGrass::set_lod_setting_image_index(Ref<MGrassLodSetting> lod_setting){
 void MGrass::set_active(bool input){
     active = input;
 }
-bool MGrass::get_active(){
+bool MGrass::get_active() const {
     return active;
 }
 void MGrass::set_grass_data(Ref<MGrassData> d){
     grass_data = d;
 }
 
-Ref<MGrassData> MGrass::get_grass_data(){
+Ref<MGrassData> MGrass::get_grass_data() const {
     return grass_data;
 }
 
@@ -837,14 +851,14 @@ void MGrass::set_cell_creation_time_data_limit(int input){
     cell_creation_time_data_limit = input;
 }
 
-int MGrass::get_cell_creation_time_data_limit(){
+int MGrass::get_cell_creation_time_data_limit() const {
     return cell_creation_time_data_limit;
 }
 
 void MGrass::set_grass_count_limit(int input){
     grass_count_limit = input;
 }
-int MGrass::get_grass_count_limit(){
+int MGrass::get_grass_count_limit() const {
     return grass_count_limit;
 }
 
@@ -853,14 +867,14 @@ void MGrass::set_min_grass_cutoff(int input){
     min_grass_cutoff = input;
 }
 
-int MGrass::get_min_grass_cutoff(){
+int MGrass::get_min_grass_cutoff() const{
     return min_grass_cutoff;
 }
 
 void MGrass::set_lod_settings(Array input){
     lod_settings = input;
 }
-Array MGrass::get_lod_settings(){
+Array MGrass::get_lod_settings() const{
     return lod_settings;
 }
 
@@ -891,7 +905,7 @@ void MGrass::set_meshes(Variant input){ // For comtibilty with older MTerrain ve
     }
     recreate_all_grass();
 }
-Ref<MMeshLod> MGrass::get_meshes(){
+Ref<MMeshLod> MGrass::get_meshes() const{
     return meshes;
 }
 
@@ -899,18 +913,18 @@ void MGrass::set_materials(Array input){
     materials = input;
 }
 
-Array MGrass::get_materials(){
+Array MGrass::get_materials() const{
     return materials;
 }
 
-uint32_t MGrass::get_width(){
+uint32_t MGrass::get_width() const {
     return width;
 }
-uint32_t MGrass::get_height(){
+uint32_t MGrass::get_height() const {
     return height;
 }
 
-int64_t MGrass::get_count(){
+int64_t MGrass::get_count() const {
     return final_count;
 }
 
@@ -918,7 +932,7 @@ void MGrass::set_collision_radius(float input){
     collision_radius=input;
 }
 
-float MGrass::get_collision_radius(){
+float MGrass::get_collision_radius() const{
     return collision_radius;
 }
 
@@ -926,24 +940,24 @@ void MGrass::set_shape_offset(Vector3 input){
     shape_offset = input;
 }
 
-Vector3 MGrass::get_shape_offset(){
+Vector3 MGrass::get_shape_offset() const{
     return shape_offset;
 }
 
 void MGrass::set_shape(Ref<Shape3D> input){
     shape = input;
 }
-Ref<Shape3D> MGrass::get_shape(){
+Ref<Shape3D> MGrass::get_shape() const {
     return shape;
 }
 
-int MGrass::get_collision_layer(){
+int MGrass::get_collision_layer() const{
     return collision_layer;
 }
 void MGrass::set_collision_layer(int input){
     collision_layer = input;
 }
-int MGrass::get_collision_mask(){
+int MGrass::get_collision_mask() const {
     return collision_mask;
 }
 void MGrass::set_collision_mask(int input){
@@ -960,7 +974,7 @@ void MGrass::set_active_shape_resize(bool input){
     active_shape_resize = input;
 }
 
-bool MGrass::get_active_shape_resize(){
+bool MGrass::get_active_shape_resize() const {
     return active_shape_resize;
 }
 
@@ -968,25 +982,17 @@ void MGrass::set_nav_obstacle_radius(float input){
     ERR_FAIL_COND(input<0.05);
     nav_obstacle_radius = input;
 }
-float MGrass::get_nav_obstacle_radius(){
+float MGrass::get_nav_obstacle_radius() const {
     return nav_obstacle_radius;
 }
-/*
-Vector3 pos;
-pos.x = root_g->world_pos.x + x*grass_data->density + ptrw[3];
-pos.z = root_g->world_pos.z + y*grass_data->density + ptrw[11];
-ptrw[3] = pos.x;
-ptrw[7] += grid->get_height(pos);
-ptrw[11] = pos.z;
-uint32_t rx = x/grass_region_pixel_width;
-uint32_t ry = y/grass_region_pixel_width;
-*/
+
 void MGrass::update_physics(Vector3 cam_pos){
     ERR_FAIL_COND(!main_physics_body.is_valid());
     if(!shape.is_valid()){
         return;
     }
     ERR_FAIL_COND(!is_grass_init);
+    float density = get_density();
     int cell_instance_count = settings[0]->cell_instance_count;
     uint32_t buffer_strid_float = settings[0]->get_buffer_strid_float();
     uint32_t buffer_strid_byte = settings[0]->get_buffer_strid_byte();
@@ -1039,10 +1045,7 @@ void MGrass::update_physics(Vector3 cam_pos){
                 }
                 int rx = (x/grass_region_pixel_width);
                 int ry = (y/grass_region_pixel_width);
-                int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width)*cell_instance_count + r;
-                //UtilityFunctions::print("grass_region_pixel_width ", grass_region_pixel_width);
-                //UtilityFunctions::print("X ",x, " Y ", y, " RX ",rx, " RY ", ry);
-                //UtilityFunctions::print("rand_index ",(rand_index));
+                int rand_index = _get_rand_index(x,y,r,cell_instance_count);
                 const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*buffer_strid_float;
                 Vector3 wpos(x*grass_data->density+ptr[3],0,y*grass_data->density+ptr[11]);
                 //UtilityFunctions::print("Physic pos ",wpos);
@@ -1107,7 +1110,7 @@ void MGrass::remove_all_physics(){
     }
 }
 
-RID MGrass::get_resized_shape(Vector3 scale){
+RID MGrass::get_resized_shape(Vector3 scale) const {
     RID new_shape;
     ERR_FAIL_COND_V(!shape.is_valid(),new_shape);
     if(shape_type==PhysicsServer3D::ShapeType::SHAPE_SPHERE){
@@ -1153,7 +1156,7 @@ RID MGrass::get_resized_shape(Vector3 scale){
     return new_shape;
 }
 
-PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
+PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius) const {
     uint32_t buffer_strid_float = settings[0]->get_buffer_strid_float();
     //uint32_t buffer_strid_byte = settings[0]->get_buffer_strid_byte();
     PackedVector3Array positions;
@@ -1161,6 +1164,7 @@ PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
         return positions;
     }
     ERR_FAIL_COND_V(!is_grass_init,positions);
+    float density = get_density();
     int cell_instance_count = settings[0]->cell_instance_count;
     cam_pos -= grid->offset;
     cam_pos = cam_pos / grass_data->density;
@@ -1188,9 +1192,7 @@ PackedVector3Array MGrass::get_physic_positions(Vector3 cam_pos,float radius){
                 continue;
             }
             for(int r=0;r<cell_instance_count;r++){
-                int rx = (x/grass_region_pixel_width);
-                int ry = (y/grass_region_pixel_width);
-                int rand_index = (y-ry*grass_region_pixel_width)*grass_region_pixel_width + (x-rx*grass_region_pixel_width) + r;
+                int rand_index = _get_rand_index(x,y,r,cell_instance_count);
                 const float* ptr = rand_buffer + (rand_index%rand_buffer_size)*buffer_strid_float;
                 Vector3 wpos(x*grass_data->density+ptr[3],0,y*grass_data->density+ptr[11]);
                 wpos += grid->offset;
@@ -1316,7 +1318,7 @@ void MGrass::update_random_buffer_pull(int lod){
     } else {
         lod_scale = pow(2,lod);
     }
-    float cdensity = grass_data->density*lod_scale;
+    float cdensity = get_density()*lod_scale;
     rand_buffer_pull.set(lod,settings[lod]->generate_random_number(cdensity,100));
     set_lod_setting_image_index(settings[lod]);
 }

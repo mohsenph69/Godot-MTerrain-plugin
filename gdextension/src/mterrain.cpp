@@ -1113,7 +1113,7 @@ void MTerrain::draw_color(Vector3 brush_pos,real_t radius,String brush_name, Str
     for(MGrass* g : confirm_grass_list){
         if(g->is_depend_on_image(id)){
             Vector2i px_pos = g->get_closest_pixel(brush_pos);
-            int l = ceil(radius/g->grass_data->density);
+            int l = ceil(radius/g->get_density());
             int left = px_pos.x - l;
             int right = px_pos.x + l;
             int top = px_pos.y - l;

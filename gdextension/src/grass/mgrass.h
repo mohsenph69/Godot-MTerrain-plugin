@@ -106,58 +106,58 @@ class MGrass : public Node3D {
     void set_grass_by_pixel(uint32_t px, uint32_t py, bool p_value);
     void set_grass_sublayer_by_pixel(uint32_t px, uint32_t py, bool p_value);
     bool is_init();
-    bool has_sublayer();
+    bool has_sublayer() const;
     void merge_sublayer();
     void create_sublayer();
     void clear_grass_sublayer_by_pixel(uint32_t px, uint32_t py);
-    bool get_grass_by_pixel(uint32_t px, uint32_t py);
-    Vector2i get_closest_pixel(Vector3 pos);
-    Vector3 get_pixel_world_pos(uint32_t px, uint32_t py);
-    Vector2i grass_px_to_grid_px(uint32_t px, uint32_t py);
+    bool get_grass_by_pixel(uint32_t px, uint32_t py) const;
+    Vector2i get_closest_pixel(Vector3 pos) const;
+    Vector3 get_pixel_world_pos(uint32_t px, uint32_t py) const;
+    Vector2i grass_px_to_grid_px(uint32_t px, uint32_t py) const;
     void draw_grass(Vector3 brush_pos,real_t radius,bool add);
     void clear_grass_sublayer_aabb(AABB aabb);
     _FORCE_INLINE_ void set_lod_setting_image_index(Ref<MGrassLodSetting> lod_setting); // Should be called after generate_random_number
     void set_active(bool input);
-    bool get_active();
+    bool get_active() const;
     void set_grass_data(Ref<MGrassData> d);
-    Ref<MGrassData> get_grass_data();
+    Ref<MGrassData> get_grass_data() const ;
     void set_cell_creation_time_data_limit(int input);
-    int get_cell_creation_time_data_limit();
+    int get_cell_creation_time_data_limit() const ;
     void set_grass_count_limit(int input);
-    int get_grass_count_limit();
+    int get_grass_count_limit() const;
     void set_min_grass_cutoff(int input);
-    int get_min_grass_cutoff();
+    int get_min_grass_cutoff() const;
     void set_lod_settings(Array input);
-    Array get_lod_settings();
+    Array get_lod_settings() const;
     void set_meshes(Variant input);
-    Ref<MMeshLod> get_meshes();
+    Ref<MMeshLod> get_meshes() const;
     void set_materials(Array input);
-    Array get_materials();
-    uint32_t get_width();
-    uint32_t get_height();
+    Array get_materials() const;
+    uint32_t get_width() const;
+    uint32_t get_height() const;
 
-    int64_t get_count();
+    int64_t get_count() const;
 
     void set_collision_radius(float input);
-    float get_collision_radius();
+    float get_collision_radius() const;
     void set_shape_offset(Vector3 input);
-    Vector3 get_shape_offset();
+    Vector3 get_shape_offset() const;
     void set_shape(Ref<Shape3D> input);
-    Ref<Shape3D> get_shape();
-    int get_collision_layer();
+    Ref<Shape3D> get_shape() const;
+    int get_collision_layer() const;
     void set_collision_layer(int input);
-    int get_collision_mask();
+    int get_collision_mask() const;
     void set_collision_mask(int input);
     Ref<PhysicsMaterial> get_physics_material();
     void set_physics_material(Ref<PhysicsMaterial> input);
     void set_active_shape_resize(bool input);
-    bool get_active_shape_resize();
+    bool get_active_shape_resize() const;
     void set_nav_obstacle_radius(float input);
-    float get_nav_obstacle_radius();
+    float get_nav_obstacle_radius() const;
     void update_physics(Vector3 cam_pos);
     void remove_all_physics();
-    RID get_resized_shape(Vector3 scale);
-    PackedVector3Array get_physic_positions(Vector3 cam_pos,float radius);
+    RID get_resized_shape(Vector3 scale) const;
+    PackedVector3Array get_physic_positions(Vector3 cam_pos,float radius) const;
 
 
     void _get_property_list(List<PropertyInfo> *p_list) const;
@@ -184,5 +184,25 @@ class MGrass : public Node3D {
     bool is_visible();
     void _update_visibilty();
     void set_visibility(bool input);
+
+
+    inline float get_density() const;
+
+    private:
+    /**
+     * @brief x and y are grass cell position and r is the grass index int the cell
+     * this will return the index that should be used in randbuffer for grass randomization
+     */
+    inline int _get_rand_index(const int x,const int y,const int r,const int cell_count) const;
 };
+
+
+inline float MGrass::get_density() const{
+    return grass_data->density;
+}
+
+inline int MGrass::_get_rand_index(int x, int y, int r,const int cell_count) const
+{
+    return (y*width + x)*cell_count + r;
+}
 #endif
