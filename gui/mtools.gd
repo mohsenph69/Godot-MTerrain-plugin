@@ -328,13 +328,13 @@ func on_selection_changed(obj):
 		if last_edit_mode.has(obj) and last_edit_mode[obj]:
 			edit_mode_button.edit_selected(obj, last_edit_mode[obj])		
 		return
-	if obj.get_parent() is MTerrain:
+	if obj.get_parent() is MTerrain and obj.get_parent().is_grid_created():
 		if obj is MGrass or obj is MNavigationRegion3D:			
 			request_show()	
 			if last_edit_mode.has(obj) and last_edit_mode[obj]:
 				edit_mode_button.edit_selected(obj, last_edit_mode[obj])					
 			return
-	if obj is MPath or obj is MCurveMesh:
+	if obj is MPath or obj is MCurveMesh  and obj.get_parent().is_grid_created():
 		if last_edit_mode.has(obj) and last_edit_mode[obj]:
 			edit_mode_button.edit_selected(obj, last_edit_mode[obj])				
 		request_show()	
