@@ -129,10 +129,10 @@ class MTerrain : public  Node3D {
     bool has_unsave_image();
     void save_all_dirty_images();
 
-    Color get_pixel(const uint32_t x,const uint32_t y, const int32_t index);
+    Color get_pixel(const uint32_t x,const uint32_t y, const int32_t index) const;
     void set_pixel(const uint32_t x,const uint32_t y,const Color& col,const int32_t index);
-    real_t get_height_by_pixel(const uint32_t x,const uint32_t y);
-    real_t get_height_by_pixel_in_layer(const uint32_t x,const uint32_t y);
+    real_t get_height_by_pixel(const uint32_t x,const uint32_t y) const;
+    real_t get_height_by_pixel_in_layer(const uint32_t x,const uint32_t y) const;
     void set_height_by_pixel(const uint32_t x,const uint32_t y,const real_t value);
 
     void get_cam_pos();
@@ -151,19 +151,19 @@ class MTerrain : public  Node3D {
     int get_regions_limit();
     float get_chunks_update_interval();
     void set_chunks_update_interval(float input);
-    float get_distance_update_threshold();
+    float get_distance_update_threshold() const;
     void set_distance_update_threshold(float input);
     void set_chunks_update_loop_enabled(bool input);
-    bool get_chunks_update_loop_enabled();
-    float get_physics_update_interval();
+    bool get_chunks_update_loop_enabled() const;
+    float get_physics_update_interval() const;
     void set_physics_update_interval(float input);
     bool get_physics_update_loop_enabled();
     void set_physics_update_loop_enabled(bool input);
     void set_regions_processing_physics(int32_t input);
     int32_t get_regions_processing_physics();
-    Vector2i get_terrain_size();
+    Vector2i get_terrain_size() const;
     void set_terrain_size(Vector2i size);
-    Vector2i get_terrain_region_count();
+    Vector2i get_terrain_region_count() const;
     void set_terrain_region_count(Vector2i size);
 
 
@@ -174,43 +174,43 @@ class MTerrain : public  Node3D {
     void set_custom_camera(Node3D* camera_node);
 
     void set_offset(Vector3 input);
-    Vector3 get_offset();
+    Vector3 get_offset() const;
 
     void set_region_size(int32_t input);
     int32_t get_region_size();
     
 
     void recalculate_terrain_config(const bool& force_calculate);
-    int get_min_size();
+    int get_min_size() const;
     void set_min_size(int index);
-    int get_max_size();
+    int get_max_size() const;
     void set_max_size(int index);
-    int get_min_h_scale();
+    int get_min_h_scale() const;
     void set_min_h_scale(int index);
-    int get_max_h_scale();
+    int get_max_h_scale() const;
     void set_max_h_scale(int index);
-    int get_collision_layer();
+    int get_collision_layer() const;
     void set_collision_layer(int input);
-    int get_collision_mask();
-    void set_collision_mask(int input);
+    int get_collision_mask() const;
+    void set_collision_mask(int input) const;
     Ref<PhysicsMaterial> get_physics_material();
     void set_physics_material(Ref<PhysicsMaterial> input);
     void set_size_info(const Array& arr);
-    Array get_size_info();
+    Array get_size_info() const;
     void set_lod_distance(const PackedInt32Array& input);
-    PackedInt32Array get_lod_distance();
+    PackedInt32Array get_lod_distance() const;
     
-    real_t get_closest_height(const Vector3& pos);
-    real_t get_height(const Vector3& pos);
-    Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
-    Ref<MCollision> get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step);
+    real_t get_closest_height(const Vector3& pos) const;
+    real_t get_height(const Vector3& pos) const;
+    Ref<MCollision> get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step) const;
+    Ref<MCollision> get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step) const;
 
     void _get_property_list(List<PropertyInfo> *p_list) const;
     bool _get(const StringName &p_name, Variant &r_ret) const;
     bool _set(const StringName &p_name, const Variant &p_value);
 
-    Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
-    Vector2i get_closest_pixel(const Vector3& world_pos);
+    Vector3 get_pixel_world_pos(uint32_t x,uint32_t y) const;
+    Vector2i get_closest_pixel(const Vector3& world_pos) const;
     void set_brush_manager(Object* input);
     void set_brush_start_point(Vector3 brush_pos,real_t radius);
     void draw_height(Vector3 brush_pos,real_t radius,int brush_id);
@@ -229,12 +229,12 @@ class MTerrain : public  Node3D {
     void toggle_heightmap_layer_visibile();
     void terrain_child_changed(Node* n);
     void terrain_ready_signal();
-    Vector2i get_region_grid_size();
-    int get_region_id_by_world_pos(const Vector3& world_pos);
-    int32_t get_base_size();
-    float get_h_scale();
-    int get_pixel_width();
-    int get_pixel_height();
+    Vector2i get_region_grid_size() const;
+    int get_region_id_by_world_pos(const Vector3& world_pos) const;
+    int32_t get_base_size() const;
+    float get_h_scale() const;
+    int get_pixel_width() const;
+    int get_pixel_height() const;
 
     void set_brush_layers(Array input);
     Array get_brush_layers();
@@ -242,9 +242,9 @@ class MTerrain : public  Node3D {
     int get_brush_layers_num();
 
     void set_set_mtime(bool input);
-    bool get_set_mtime();
+    bool get_set_mtime() const;
 
-    Array get_layers_info();
+    Array get_layers_info() const;
     void set_color_layer(int index,int group_index,String brush_name);
 
     void disable_brush_mask();
@@ -260,10 +260,10 @@ class MTerrain : public  Node3D {
 
     bool is_grid_created();
 
-    Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);
-    Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
-    Vector3 get_normal(const Vector3 world_pos);
-    Vector3 get_normal_accurate(Vector3 world_pos);
+    Vector3 get_normal_by_pixel(uint32_t x,uint32_t y) const;
+    Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y) const;
+    Vector3 get_normal(const Vector3 world_pos) const;
+    Vector3 get_normal_accurate(Vector3 world_pos) const;
 
     void update_all_dirty_image_texture(bool update_physics);
     void update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom);

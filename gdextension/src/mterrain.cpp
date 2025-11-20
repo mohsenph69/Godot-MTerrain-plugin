@@ -612,17 +612,17 @@ void MTerrain::save_all_dirty_images(){
     }
 }
 
-Color MTerrain::get_pixel(const uint32_t x,const uint32_t y, const int32_t index){
+Color MTerrain::get_pixel(const uint32_t x,const uint32_t y, const int32_t index) const {
     return grid->get_pixel(x,y,index);
 }
 void MTerrain::set_pixel(const uint32_t x,const uint32_t y,const Color& col,const int32_t index){
     grid->set_pixel(x,y,col,index);
 }
-real_t MTerrain::get_height_by_pixel(const uint32_t x,const uint32_t y){
+real_t MTerrain::get_height_by_pixel(const uint32_t x,const uint32_t y) const {
     return grid->get_height_by_pixel(x,y);
 }
 
-real_t MTerrain::get_height_by_pixel_in_layer(const uint32_t x,const uint32_t y){
+real_t MTerrain::get_height_by_pixel_in_layer(const uint32_t x,const uint32_t y) const {
     return grid->get_height_by_pixel_in_layer(x,y);
 }
 
@@ -714,7 +714,7 @@ void MTerrain::set_chunks_update_interval(float input){
     update_chunks_timer->set_wait_time(chunks_update_interval);
 }
 
-float MTerrain::get_distance_update_threshold(){
+float MTerrain::get_distance_update_threshold() const {
     return distance_update_threshold;
 }
 void MTerrain::set_distance_update_threshold(float input){
@@ -728,11 +728,11 @@ void MTerrain::set_chunks_update_loop_enabled(bool input) {
     }
 }
 
-bool MTerrain::get_chunks_update_loop_enabled() {
+bool MTerrain::get_chunks_update_loop_enabled() const {
     return chunks_update_loop_enabled;
 }
 
-float MTerrain::get_physics_update_interval(){
+float MTerrain::get_physics_update_interval() const{
     return physics_update_interval;
 }
 void MTerrain::set_physics_update_interval(float input){
@@ -763,7 +763,7 @@ int32_t MTerrain::get_regions_processing_physics(){
     return grid->regions_processing_physics;
 }
 
-Vector2i MTerrain::get_terrain_size(){
+Vector2i MTerrain::get_terrain_size() const{
     return terrain_size;
 }
 
@@ -775,7 +775,7 @@ void MTerrain::set_terrain_size(Vector2i size){
     terrain_size = size;
 }
 
-Vector2i MTerrain::get_terrain_region_count(){
+Vector2i MTerrain::get_terrain_region_count() const{
     return terrain_size/region_size;
 }
 
@@ -806,7 +806,7 @@ void MTerrain::set_offset(Vector3 input){
     offset = input;
 }
 
-Vector3 MTerrain::get_offset(){
+Vector3 MTerrain::get_offset() const {
     return offset;
 }
 
@@ -863,7 +863,7 @@ void MTerrain::recalculate_terrain_config(const bool& force_calculate) {
     }
 }
 
-int MTerrain::get_min_size() {
+int MTerrain::get_min_size() const {
     return min_size_index;
 }
 
@@ -875,7 +875,7 @@ void MTerrain::set_min_size(int index) {
     recalculate_terrain_config(false);
 }
 
-int MTerrain::get_max_size() {
+int MTerrain::get_max_size() const {
     return max_size_index;
 }
 
@@ -895,7 +895,7 @@ void MTerrain::set_min_h_scale(int index) {
     recalculate_terrain_config(false);
 }
 
-int MTerrain::get_min_h_scale() {
+int MTerrain::get_min_h_scale() const {
     return min_h_scale_index;
 }
 
@@ -907,20 +907,20 @@ void MTerrain::set_max_h_scale(int index) {
     recalculate_terrain_config(false);
 }
 
-int MTerrain::get_max_h_scale(){
+int MTerrain::get_max_h_scale() const {
     return max_h_scale_index;
 }
 
-int MTerrain::get_collision_layer(){
+int MTerrain::get_collision_layer() const {
     return grid->collision_layer;
 }
 void MTerrain::set_collision_layer(int input){
     grid->collision_layer = input;
 }
-int MTerrain::get_collision_mask(){
+int MTerrain::get_collision_mask() const {
     return grid->collision_mask;
 }
-void MTerrain::set_collision_mask(int input){
+void MTerrain::set_collision_mask(int input) const {
     grid->collision_mask = input;
 }
 Ref<PhysicsMaterial> MTerrain::get_physics_material(){
@@ -933,7 +933,7 @@ void MTerrain::set_physics_material(Ref<PhysicsMaterial> input){
 void MTerrain::set_size_info(const Array& arr) {
     size_info = arr;
 }
-Array MTerrain::get_size_info() {
+Array MTerrain::get_size_info() const {
     return size_info;
 }
 
@@ -941,7 +941,7 @@ void MTerrain::set_lod_distance(const PackedInt32Array& input){
     lod_distance = input;
 }
 
-PackedInt32Array MTerrain::get_lod_distance() {
+PackedInt32Array MTerrain::get_lod_distance() const {
     return lod_distance;
 }
 
@@ -976,14 +976,14 @@ void MTerrain::_get_property_list(List<PropertyInfo> *p_list) const {
     }
 }
 
-real_t MTerrain::get_closest_height(const Vector3& pos) {
+real_t MTerrain::get_closest_height(const Vector3& pos) const {
     return grid->get_closest_height(pos);
 }
-real_t MTerrain::get_height(const Vector3& pos){
+real_t MTerrain::get_height(const Vector3& pos) const{
     return grid->get_height(pos);
 }
 
-Ref<MCollision> MTerrain::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
+Ref<MCollision> MTerrain::get_ray_collision_point(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step) const {
     if(!grid->is_created()){
         Ref<MCollision> col;
         col.instantiate();
@@ -992,7 +992,7 @@ Ref<MCollision> MTerrain::get_ray_collision_point(Vector3 ray_origin,Vector3 ray
     return grid->get_ray_collision_point(ray_origin,ray_vector,step,max_step);
 }
 
-Ref<MCollision> MTerrain::get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step){
+Ref<MCollision> MTerrain::get_ray_collision_point_ignore_holes(Vector3 ray_origin,Vector3 ray_vector,real_t step,int max_step) const {
     if(!grid->is_created()){
         Ref<MCollision> col;
         col.instantiate();
@@ -1085,7 +1085,7 @@ bool MTerrain::_set(const StringName &p_name, const Variant &p_value) {
     return false;
 }
 
-Vector2i MTerrain::get_closest_pixel(const Vector3& world_pos){
+Vector2i MTerrain::get_closest_pixel(const Vector3& world_pos) const {
     return grid->get_closest_pixel(world_pos);
 }
 void MTerrain::set_brush_manager(Object* input){
@@ -1129,7 +1129,7 @@ void MTerrain::draw_color(Vector3 brush_pos,real_t radius,String brush_name, Str
     }
 }
 
-Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y){
+Vector3 MTerrain::get_pixel_world_pos(uint32_t x,uint32_t y) const {
     return grid->get_pixel_world_pos(x,y);
 }
 
@@ -1266,22 +1266,22 @@ void MTerrain::terrain_ready_signal(){
     /// Finish initlaztion start update
 }
 
-Vector2i MTerrain::get_region_grid_size(){
+Vector2i MTerrain::get_region_grid_size() const{
     return Vector2i(grid->get_region_grid_size().x,grid->get_region_grid_size().z);
 }
 
-int MTerrain::get_region_id_by_world_pos(const Vector3& world_pos){
+int MTerrain::get_region_id_by_world_pos(const Vector3& world_pos) const{
     return grid->get_region_id_by_world_pos(world_pos);
 }
 
-int32_t MTerrain::get_base_size(){
+int32_t MTerrain::get_base_size() const{
     return size_list[min_size_index];
 }
-float MTerrain::get_h_scale(){
+float MTerrain::get_h_scale() const {
     return h_scale_list[min_h_scale_index];
 }
 
-int MTerrain::get_pixel_width(){
+int MTerrain::get_pixel_width() const {
     #ifdef DEBUG_ENABLED
     if(!grid->is_created()){
         WARN_PRINT("First create grid and then get the pixel width");
@@ -1290,7 +1290,7 @@ int MTerrain::get_pixel_width(){
     return grid->grid_pixel_region.get_width();
 }
 
-int MTerrain::get_pixel_height(){
+int MTerrain::get_pixel_height() const {
     #ifdef DEBUG_ENABLED
     if(!grid->is_created()){
         WARN_PRINT("First create grid and then get the pixel height");
@@ -1317,11 +1317,11 @@ int MTerrain::get_brush_layers_num(){
 void MTerrain::set_set_mtime(bool input){
     set_mtime = input;
 }
-bool MTerrain::get_set_mtime(){
+bool MTerrain::get_set_mtime() const{
     return set_mtime;
 }
 
-Array MTerrain::get_layers_info(){
+Array MTerrain::get_layers_info() const{
     Array info;
     for(int i=0;i<brush_layers.size();i++){
         Ref<MBrushLayers> layers = brush_layers[i];
@@ -1398,21 +1398,21 @@ bool MTerrain::is_grid_created() {
     return grid->is_created();
 }
 
-Vector3 MTerrain::get_normal_by_pixel(uint32_t x,uint32_t y){
+Vector3 MTerrain::get_normal_by_pixel(uint32_t x,uint32_t y) const {
     ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal_by_pixel(x,y);
 }
-Vector3 MTerrain::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
+Vector3 MTerrain::get_normal_accurate_by_pixel(uint32_t x,uint32_t y) const {
     ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal_accurate_by_pixel(x,y);
 }
 
-Vector3 MTerrain::get_normal(const Vector3 world_pos){
+Vector3 MTerrain::get_normal(const Vector3 world_pos) const {
     ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal(world_pos);
 }
 
-Vector3 MTerrain::get_normal_accurate(Vector3 world_pos){
+Vector3 MTerrain::get_normal_accurate(Vector3 world_pos) const {
     ERR_FAIL_COND_V(!grid->is_created(),Vector3());
     return grid->get_normal_accurate(world_pos);
 }

@@ -234,27 +234,27 @@ class MGrid {
     uint64_t get_update_id();
     void clear();
     _FORCE_INLINE_ bool is_created() const;
-    MGridPos get_size();
+    MGridPos get_size() const;
     void set_scenario(RID scenario);
-    RID get_scenario();
+    RID get_scenario() const;
     void create(const int32_t width,const int32_t height);
     void update_all_image_list();
     Vector3 get_world_pos(const int32_t x,const int32_t y,const int32_t z);
     Vector3 get_world_pos(const MGridPos& pos);
-    int get_point_id_by_non_offs_ws(const Vector2& input); // Get point id non offset world posiotion usefull for grass for now
-    int64_t get_point_instance_id_by_point_id(int pid);
-    MGridPos get_grid_pos(const Vector3& pos);
-    int32_t get_regions_count();
-    MGridPos get_region_grid_size();
-    int32_t get_region_id_by_point(const int32_t x, const int32_t z);
-    MRegion* get_region_by_point(const int32_t x, const int32_t z);
-    MBound region_bound_to_point_bound(const MBound& rbound);
-    MRegion* get_region(const int32_t x, const int32_t z);
-    MGridPos get_region_pos_by_world_pos(Vector3 world_pos);
-    int get_region_id_by_world_pos(Vector3 world_pos);
-    Vector2 get_point_region_offset_ratio(int32_t x,int32_t z);
-    Vector3 get_region_world_pos_by_point(int32_t x,int32_t z);
-    int8_t get_lod_by_distance(const int32_t dis);
+    int get_point_id_by_non_offs_ws(const Vector2& input) const; // Get point id non offset world posiotion usefull for grass for now
+    int64_t get_point_instance_id_by_point_id(int pid) const;
+    MGridPos get_grid_pos(const Vector3& pos) const;
+    int32_t get_regions_count() const;
+    MGridPos get_region_grid_size() const;
+    int32_t get_region_id_by_point(const int32_t x, const int32_t z) const;
+    MRegion* get_region_by_point(const int32_t x, const int32_t z) const;
+    MBound region_bound_to_point_bound(const MBound& rbound) const;
+    MRegion* get_region(const int32_t x, const int32_t z) const;
+    MGridPos get_region_pos_by_world_pos(Vector3 world_pos) const;
+    int get_region_id_by_world_pos(Vector3 world_pos) const;
+    Vector2 get_point_region_offset_ratio(int32_t x,int32_t z) const;
+    Vector3 get_region_world_pos_by_point(int32_t x,int32_t z) const;
+    int8_t get_lod_by_distance(const int32_t dis) const;
     void set_cam_pos(const Vector3& cam_world_pos);
     void update_search_bound();
     void cull_out_of_bound();
@@ -285,28 +285,28 @@ class MGrid {
     void update_physics(const Vector3& cam_pos);
 
     MImage* get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index);
-    Color get_pixel(uint32_t x,uint32_t y, const int32_t index);
+    _FORCE_INLINE_ Color get_pixel(uint32_t x,uint32_t y, const int32_t index) const;
     const uint8_t* get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t index);
     void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index);
     void set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t index);
-    real_t get_height_by_pixel(uint32_t x,uint32_t y);
+    real_t get_height_by_pixel(uint32_t x,uint32_t y) const;
     void set_height_by_pixel(uint32_t x,uint32_t y,const real_t value);
-    real_t get_height_by_pixel_in_layer(uint32_t x,uint32_t y);
-    _FORCE_INLINE_ bool has_pixel(const uint32_t x,const uint32_t y);
+    real_t get_height_by_pixel_in_layer(uint32_t x,uint32_t y) const;
+    _FORCE_INLINE_ bool has_pixel(const uint32_t x,const uint32_t y) const;
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
     void update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom);
-    Vector3 get_normal_by_pixel(uint32_t x,uint32_t y);
+    Vector3 get_normal_by_pixel(uint32_t x,uint32_t y) const;
     Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
-    Vector3 get_normal(Vector3 world_pos);
+    Vector3 get_normal(Vector3 world_pos) const;
     Vector3 get_normal_accurate(Vector3 world_pos);
     void save_image(int index,bool force_save);
-    bool has_unsave_image();
+    bool has_unsave_image() const;
     void save_all_dirty_images();
 
-    Vector2i get_closest_pixel(Vector3 world_pos);
-    Vector3 get_pixel_world_pos(uint32_t x,uint32_t y);
-    Vector2 get_pixel_world_pos_flat(uint32_t x,uint32_t y);
+    _FORCE_INLINE_ Vector2i get_closest_pixel(Vector3 world_pos) const;
+    _FORCE_INLINE_ Vector3 get_pixel_world_pos(uint32_t x,uint32_t y) const;
+    _FORCE_INLINE_ Vector2 get_pixel_world_pos_flat(uint32_t x,uint32_t y) const;
 
     void set_brush_manager(MBrushManager* input);
     MBrushManager* get_brush_manager();
@@ -321,7 +321,7 @@ class MGrid {
 
     private:
     bool set_active_layer(String input);
-    String get_active_layer();
+    String get_active_layer() const;
     void add_heightmap_layer(String lname);
     void rename_heightmap_layer(int layer_index,String lname);
     void merge_heightmap_layer();
@@ -331,10 +331,10 @@ class MGrid {
     bool is_layer_visible(const String& lname);
 
     public:
-    float get_h_scale();
+    float get_h_scale() const;
 
-    float get_brush_mask_value(uint32_t x,uint32_t y);
-    bool get_brush_mask_value_bool(uint32_t x,uint32_t y);
+    float get_brush_mask_value(uint32_t x,uint32_t y) const;
+    bool get_brush_mask_value_bool(uint32_t x,uint32_t y) const;
 
     void images_add_undo_stage(); // This will called before drawing or change happen
     void images_undo();
@@ -342,9 +342,9 @@ class MGrid {
     void refresh_all_regions_uniforms();
 
     void update_renderer_info();
-    bool is_opengl();
+    bool is_opengl() const;
 
-    bool get_visibility();
+    bool get_visibility() const;
     void set_visibility(bool input);
 };
 
@@ -352,11 +352,9 @@ bool MGrid::is_created() const {
     return is_dirty;
 }
 
-bool MGrid::has_pixel(const uint32_t x,const uint32_t y){
+bool MGrid::has_pixel(const uint32_t x,const uint32_t y) const {
     if(x>=pixel_width) return false;
     if(y>=pixel_height) return false;
-    //if(x<0) return false;
-    //if(y<0) return false;
     return true;
 }
 
@@ -381,4 +379,43 @@ real_t MGrid::get_height(Vector3 pos){
     real_t ivalbottom = (hx1z1 - hx0z1)*factor_x + hx0z1;
     return (ivalbottom - ivaltop)*factor_z + ivaltop;
 }
+
+Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t index) const {
+    if(!has_pixel(x,y)){
+        return Color();
+    }
+    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
+    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - ex;
+    uint32_t ry = (y/rp) - ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    return r->get_pixel(x,y,index);
+}
+
+Vector2i MGrid::get_closest_pixel(Vector3 world_pos) const {
+    world_pos -= offset;
+    world_pos = world_pos/_chunks.h_scale;
+    return Vector2i(round(world_pos.x),round(world_pos.z));
+}
+
+Vector3 MGrid::get_pixel_world_pos(uint32_t x,uint32_t y) const {
+    Vector3 out;
+    out.x = _chunks.h_scale*(real_t)x;
+    out.z = _chunks.h_scale*(real_t)y;
+    out += offset;
+    out.y = get_height_by_pixel(x,y);
+    return out;
+}
+
+Vector2 MGrid::get_pixel_world_pos_flat(uint32_t x,uint32_t y) const{
+    Vector2 out;
+    out.x = _chunks.h_scale*(real_t)x;
+    out.y = _chunks.h_scale*(real_t)y;
+    out.x += offset.x;
+    out.y += offset.z;
+    return out;
+}
+
 #endif

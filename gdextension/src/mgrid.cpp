@@ -78,7 +78,7 @@ void MGrid::clear() {
     }
 }
 
-MGridPos MGrid::get_size() {
+MGridPos MGrid::get_size() const {
     return _size;
 }
 
@@ -86,7 +86,7 @@ void MGrid::set_scenario(RID scenario){
     _scenario = scenario;
 }
 
-RID MGrid::get_scenario(){
+RID MGrid::get_scenario() const {
     return _scenario;
 }
 
@@ -203,17 +203,17 @@ Vector3 MGrid::get_world_pos(const MGridPos& pos){
 
 // Get point id non offset world posiotion usefull for grass for now
 // in a flat x z plane
-int MGrid::get_point_id_by_non_offs_ws(const Vector2& input){
+int MGrid::get_point_id_by_non_offs_ws(const Vector2& input) const {
     int x = ((int)(input.x))/_chunks.base_size_meter;
     int z = ((int)(input.y))/_chunks.base_size_meter;
     return z*_size.z + x;
 }
 
-int64_t MGrid::get_point_instance_id_by_point_id(int pid){
+int64_t MGrid::get_point_instance_id_by_point_id(int pid) const{
     return points_row[pid].instance.get_id();
 }
 
-MGridPos MGrid::get_grid_pos(const Vector3& pos) {
+MGridPos MGrid::get_grid_pos(const Vector3& pos) const{
     MGridPos p;
     Vector3 rp = pos - offset;
     p.x = ((int32_t)(rp.x))/_chunks.base_size_meter;
@@ -222,24 +222,24 @@ MGridPos MGrid::get_grid_pos(const Vector3& pos) {
     return p;
 }
 
-int32_t MGrid::get_regions_count(){
+int32_t MGrid::get_regions_count() const {
     return _regions_count;
 }
 
-MGridPos MGrid::get_region_grid_size(){
+MGridPos MGrid::get_region_grid_size() const {
     return _region_grid_size;
 }
 
-int32_t MGrid::get_region_id_by_point(const int32_t x, const int32_t z) {
+int32_t MGrid::get_region_id_by_point(const int32_t x, const int32_t z) const{
     return x/region_size + (z/region_size)*_region_grid_size.x;
 }
 
-MRegion* MGrid::get_region_by_point(const int32_t x, const int32_t z){
+MRegion* MGrid::get_region_by_point(const int32_t x, const int32_t z) const {
     int32_t id = x/region_size + (z/region_size)*_region_grid_size.x;
     return regions + id;
 }
 
-MBound MGrid::region_bound_to_point_bound(const MBound& rbound){
+MBound MGrid::region_bound_to_point_bound(const MBound& rbound) const {
     MBound out;
     out.left = rbound.left * region_size;
     out.right = ((rbound.right + 1) * region_size) - 1;
@@ -248,7 +248,7 @@ MBound MGrid::region_bound_to_point_bound(const MBound& rbound){
     return out;
 }
 
-MRegion* MGrid::get_region(const int32_t x, const int32_t z){
+MRegion* MGrid::get_region(const int32_t x, const int32_t z) const {
     if(x < 0 || z < 0 || x >= _region_grid_size.x || z >= _region_grid_size.z ){
         return nullptr;
     }
@@ -257,7 +257,7 @@ MRegion* MGrid::get_region(const int32_t x, const int32_t z){
     return regions + id;
 }
 
-MGridPos MGrid::get_region_pos_by_world_pos(Vector3 world_pos){
+MGridPos MGrid::get_region_pos_by_world_pos(Vector3 world_pos) const {
     MGridPos p;
     world_pos -= offset;
     p.x = (int32_t)(world_pos.x/((real_t)region_size_meter));
@@ -265,14 +265,14 @@ MGridPos MGrid::get_region_pos_by_world_pos(Vector3 world_pos){
     return p;
 }
 
-int MGrid::get_region_id_by_world_pos(Vector3 world_pos){
+int MGrid::get_region_id_by_world_pos(Vector3 world_pos) const {
     world_pos -= offset;
     int32_t x = (int32_t)(world_pos.x/((real_t)region_size_meter));
     int32_t z = (int32_t)(world_pos.z/((real_t)region_size_meter));
     return x + z*_region_grid_size.x;
 }
 
-Vector2 MGrid::get_point_region_offset_ratio(int32_t x,int32_t z){
+Vector2 MGrid::get_point_region_offset_ratio(int32_t x,int32_t z) const {
     int ofsx = x%region_size;
     int ofsz = z%region_size;
     Vector2 offset;
@@ -281,7 +281,7 @@ Vector2 MGrid::get_point_region_offset_ratio(int32_t x,int32_t z){
     return offset;
 }
 
-Vector3 MGrid::get_region_world_pos_by_point(int32_t x,int32_t z){
+Vector3 MGrid::get_region_world_pos_by_point(int32_t x,int32_t z) const {
     int rx = x/region_size;
     int rz = z/region_size;
     Vector3 pos;
@@ -290,7 +290,7 @@ Vector3 MGrid::get_region_world_pos_by_point(int32_t x,int32_t z){
     return pos;
 }
 
-int8_t MGrid::get_lod_by_distance(const int32_t dis) {
+int8_t MGrid::get_lod_by_distance(const int32_t dis) const {
     for(int8_t i=0 ; i < lod_distance.size(); i++){
         if(dis < lod_distance[i]){
             return i;
@@ -927,20 +927,6 @@ MImage* MGrid::get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index){
     return r->images[index];
 }
 
-Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t index) {
-    if(!has_pixel(x,y)){
-        return Color();
-    }
-    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
-    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
-    uint32_t rx = (x/rp) - ex;
-    uint32_t ry = (y/rp) - ey;
-    x -=rp*rx;
-    y -=rp*ry;
-    MRegion* r = get_region(rx,ry);
-    return r->get_pixel(x,y,index);
-}
-
 const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t index){
     ERR_FAIL_COND_V(!has_pixel(x,y),nullptr);
     uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
@@ -1012,7 +998,7 @@ void MGrid::set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32
     }
 }
 
-real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) {
+real_t MGrid::get_height_by_pixel(uint32_t x,uint32_t y) const{
     if(!has_pixel(x,y)){
         return 0.0;
     }
@@ -1057,7 +1043,7 @@ void MGrid::set_height_by_pixel(uint32_t x,uint32_t y,const real_t value){
     }
 }
 
-real_t MGrid::get_height_by_pixel_in_layer(uint32_t x,uint32_t y){
+real_t MGrid::get_height_by_pixel_in_layer(uint32_t x,uint32_t y) const {
     if(!has_pixel(x,y)){
         return 0.0;
     }
@@ -1130,7 +1116,7 @@ void MGrid::update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t
     generate_normals(pxr);
 }
 
-Vector3 MGrid::get_normal_by_pixel(uint32_t x,uint32_t y) {
+Vector3 MGrid::get_normal_by_pixel(uint32_t x,uint32_t y)  const{
     int id = _terrain_material->get_texture_id(NORMALS_NAME);
     ERR_FAIL_COND_V(id==-1,Vector3());
     Color c = get_pixel(x,y,id);
@@ -1164,7 +1150,7 @@ Vector3 MGrid::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
     return normal_vec;
 }
 
-Vector3 MGrid::get_normal(Vector3 world_pos){
+Vector3 MGrid::get_normal(Vector3 world_pos) const {
     world_pos -= offset;
     world_pos = world_pos/_chunks.h_scale;
     if(world_pos.x <0 || world_pos.z <0){
@@ -1217,7 +1203,7 @@ void MGrid::save_image(int index,bool force_save){
     }
 }
 
-bool MGrid::has_unsave_image(){
+bool MGrid::has_unsave_image() const {
     for(int i=0;i<_all_image_list.size();i++){
         if(_all_image_list[i]->name==NORMALS_NAME){
             if(!_all_image_list[i]->is_save){
@@ -1254,30 +1240,6 @@ void MGrid::save_all_dirty_images(){
             ResourceSaver::get_singleton()->save(mres,res_path);
         }
    }
-}
-
-Vector2i MGrid::get_closest_pixel(Vector3 world_pos){
-    world_pos -= offset;
-    world_pos = world_pos/_chunks.h_scale;
-    return Vector2i(round(world_pos.x),round(world_pos.z));
-}
-
-Vector3 MGrid::get_pixel_world_pos(uint32_t x,uint32_t y){
-    Vector3 out;
-    out.x = _chunks.h_scale*(real_t)x;
-    out.z = _chunks.h_scale*(real_t)y;
-    out += offset;
-    out.y = get_height_by_pixel(x,y);
-    return out;
-}
-
-Vector2 MGrid::get_pixel_world_pos_flat(uint32_t x,uint32_t y){
-    Vector2 out;
-    out.x = _chunks.h_scale*(real_t)x;
-    out.y = _chunks.h_scale*(real_t)y;
-    out.x += offset.x;
-    out.y += offset.z;
-    return out;
 }
 
 void MGrid::set_brush_manager(MBrushManager* input){
@@ -1499,7 +1461,7 @@ bool MGrid::set_active_layer(String input){
     return index!=-1;
 }
 
-String MGrid::get_active_layer(){
+String MGrid::get_active_layer() const{
     ERR_FAIL_INDEX_V(active_heightmap_layer, heightmap_layers.size(),"background");
     return heightmap_layers[active_heightmap_layer];
 }
@@ -1571,11 +1533,11 @@ bool MGrid::is_layer_visible(const String& lname){
     return heightmap_layers_visibility[index];
 }
 
-float MGrid::get_h_scale(){
+float MGrid::get_h_scale() const {
     return _chunks.h_scale;
 }
 
-float MGrid::get_brush_mask_value(uint32_t x,uint32_t y){
+float MGrid::get_brush_mask_value(uint32_t x,uint32_t y) const {
     if(!brush_mask_active){
         return 1.0;
     }
@@ -1586,7 +1548,7 @@ float MGrid::get_brush_mask_value(uint32_t x,uint32_t y){
     return brush_mask->get_pixel(vpos.x,vpos.y).r;
 }
 
-bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y){
+bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y) const {
     if(!brush_mask_active){
         return true;
     }
@@ -1637,11 +1599,11 @@ void MGrid::update_renderer_info(){
     _is_opengl = RenderingServer::get_singleton()->get_rendering_device() == nullptr;
 }
 
-bool MGrid::is_opengl(){
+bool MGrid::is_opengl() const{
     return _is_opengl;
 }
 
-bool MGrid::get_visibility(){
+bool MGrid::get_visibility() const{
     return is_visible;
 }
 

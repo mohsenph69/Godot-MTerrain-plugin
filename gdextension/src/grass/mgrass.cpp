@@ -15,6 +15,7 @@ Vector<MGrass*> MGrass::all_grass_nodes;
 
 void MGrass::_bind_methods() {
     ADD_SIGNAL(MethodInfo("grass_is_ready"));
+    ADD_SIGNAL(MethodInfo("grass_is_init"));
     BIND_ENUM_CONSTANT(DATA);
     BIND_ENUM_CONSTANT(SCRIPTVIRTUAL);
     BIND_ENUM_CONSTANT(VIRTUAL);
@@ -237,6 +238,7 @@ void MGrass::init_grass(MGrid* _grid) {
     }
     // Done
     is_grass_init = true;
+    emit_signal("grass_is_init");
     update_grass();
     apply_update_grass();
     //Creating Main Physic Body
