@@ -20,10 +20,12 @@
 #include "../mbound.h"
 #include "../octmesh/mmesh_lod.h"
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/core/gdvirtual.gen.inc>
 
 #include "mgrass_chunk.h"
 
 using namespace godot;
+typedef bool(*GrassCellGetter)(int,int,void*);
 
 class MGrid;
 
@@ -45,12 +47,17 @@ class MGrass : public Node3D {
     bool visible = true;
     Variant shape_data;
     static Vector<MGrass*> all_grass_nodes;
+    GrassCellGetter _grass_cell_getter = nullptr;
+    void* _grass_cell_getter_ptr_input = nullptr;
+
 
     protected:
     static void _bind_methods();
 
     public:
+    enum Mode : uint8_t {DATA,SCRIPTVIRTUAL,VIRTUAL};
     static TypedArray<MGrass> get_all_grass_nodes();
+    Mode mode = Mode::DATA;
     bool active = true;
     bool is_grass_init = false;
     RID scenario;
@@ -67,6 +74,8 @@ class MGrass : public Node3D {
     MBound grass_bound_limit;
     int lod_count;
     int min_grass_cutoff=1;
+    int none_data_density_index=2;
+    float none_data_density = 1.0;
     Array lod_settings;
     Array materials;
     Ref<MMeshLod> meshes;
@@ -119,7 +128,12 @@ class MGrass : public Node3D {
     _FORCE_INLINE_ void set_lod_setting_image_index(Ref<MGrassLodSetting> lod_setting); // Should be called after generate_random_number
     void set_active(bool input);
     bool get_active() const;
+    Callable get_recreate_callable();
+    void set_mode(Mode _mode);
+    Mode get_mode() const;
     void set_grass_data(Ref<MGrassData> d);
+    void set_none_data_density(int input);
+    int get_none_data_density() const;
     Ref<MGrassData> get_grass_data() const ;
     void set_cell_creation_time_data_limit(int input);
     int get_cell_creation_time_data_limit() const ;
@@ -185,6 +199,12 @@ class MGrass : public Node3D {
     void _update_visibilty();
     void set_visibility(bool input);
 
+    GDVIRTUAL2RC(bool,_get_grass,int,int);
+    virtual bool _get_grass(int x,int y) const;
+    static bool get_grass_by_data(int x,int y,void* ptr);
+    static bool get_grass_by_virtual(int x,int y,void* ptr);
+    static bool get_grass_by_script_virtual(int x,int y,void* ptr);
+    
 
     inline float get_density() const;
 
@@ -195,10 +215,18 @@ class MGrass : public Node3D {
      */
     inline int _get_rand_index(const int x,const int y,const int r,const int cell_count) const;
 };
-
+VARIANT_ENUM_CAST(MGrass::Mode);
 
 inline float MGrass::get_density() const{
+    switch (mode)
+    {
+    case DATA:
     return grass_data->density;
+    case VIRTUAL:
+    case SCRIPTVIRTUAL:
+    return none_data_density;
+    }
+    return 1.0f;
 }
 
 inline int MGrass::_get_rand_index(int x, int y, int r,const int cell_count) const
