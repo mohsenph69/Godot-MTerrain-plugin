@@ -91,13 +91,13 @@ struct MImage {
     void update_texture(int scale,bool apply_update);
     void apply_update();
     // This works only for Format_RF
-    real_t get_pixel_RF(const uint32_t x, const uint32_t  y) const;
-    void set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value);
-    real_t get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y);
-    Color get_pixel(const uint32_t x, const uint32_t  y) const;
-    void set_pixel(const uint32_t x, const uint32_t  y,const Color& color);
-    void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
-    const uint8_t* get_pixel_by_data_pointer(uint32_t x,uint32_t y);
+    _FORCE_INLINE_ real_t get_pixel_RF(const uint32_t x, const uint32_t  y) const;
+    _FORCE_INLINE_ void set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value);
+    _FORCE_INLINE_ real_t get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y) const;
+    _FORCE_INLINE_ Color get_pixel(const uint32_t x, const uint32_t  y) const;
+    _FORCE_INLINE_ void set_pixel(const uint32_t x, const uint32_t  y,const Color& color);
+    _FORCE_INLINE_ void set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr);
+    _FORCE_INLINE_ const uint8_t* get_pixel_by_data_pointer(uint32_t x,uint32_t y) const;
     bool save(Ref<MResource> mres,bool force_save);
     void check_undo(); // Register the state of image before the draw
     void remove_undo_data(int ur_id);
@@ -119,5 +119,273 @@ struct MImage {
     void load_layer(String lname);
     _FORCE_INLINE_ String get_layer_data_dir();
 };
+
+
+
+// This works only for Format_RF
+real_t MImage::get_pixel_RF(const uint32_t x, const uint32_t  y) const {
+	if(is_null_image || !is_init){
+		return 0;
+	}
+	uint32_t ofs = (x + y*width);
+    return ((float *)data.ptr())[ofs];
+}
+
+void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value){
+	if(is_null_image || !is_init){
+		return;
+	}
+	check_undo();
+	// not visibile layers should not be modified but as this called many times
+	// it is better to check that in upper level
+	uint32_t ofs = (x + y*width);
+	#ifdef M_IMAGE_LAYER_ON
+	// For when we have only background layer
+	if(active_layer==0){
+		((float *)data.ptrw())[ofs] = value;
+		is_saved_layers.set(0,false);
+		is_dirty = true;
+		is_save = false;
+		return;
+	}
+	// Check if we the layer is empty we resize that
+	if(image_layers[active_layer]->size()!=data.size()){
+		image_layers[active_layer]->resize(data.size());
+		if(active_layer==holes_layer){ // Initialzation in case it is a holes layer
+			float* ptrw = (float*)image_layers[active_layer]->ptrw();
+			for(int i=0; i < total_pixel_amount; i++){
+				ptrw[i] = std::numeric_limits<float>::quiet_NaN();
+			}
+		}
+	}
+	is_saved_layers.set(active_layer,false);
+	if(std::isnan(value)){
+		if(!std::isnan(((float *)data.ptr())[ofs])){
+			((float *)image_layers[active_layer]->ptrw())[ofs] = ((float *)data.ptr())[ofs];
+		}
+		((float *)data.ptrw())[ofs] = value;
+	} else if(std::isnan(((float *)data.ptr())[ofs])) {
+		((float *)data.ptrw())[ofs] = ((float *)image_layers[active_layer]->ptr())[ofs];
+		((float *)image_layers[active_layer]->ptrw())[ofs] = std::numeric_limits<float>::quiet_NaN();
+	} else {
+		float dif = value - ((float *)data.ptr())[ofs];
+		((float *)image_layers[active_layer]->ptrw())[ofs] += dif;
+		((float *)data.ptrw())[ofs] = value;
+	}
+	#else
+	((float *)data.ptrw())[ofs] = value;
+	#endif
+	is_dirty = true;
+	is_save = false;
+}
+
+real_t MImage::get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y) const {
+	if(unlikely(!is_init)){
+		return 0.0;
+	}
+	if(image_layers[active_layer]->size()==0 || is_null_image){
+		return 0.0;
+	}
+	uint32_t ofs = (x + y*width);
+	return ((float *)image_layers[active_layer]->ptr())[ofs];
+}
+
+Color MImage::get_pixel(const uint32_t x, const uint32_t  y) const {
+	if(unlikely(is_null_image||!is_init)){
+		return Color();
+	}
+	uint32_t ofs = (x + y*width);
+	return _get_color_at_ofs(data.ptr(), ofs);
+}
+
+void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
+	if(is_null_image || !is_init){
+		return;
+	}
+	check_undo();
+	uint32_t ofs = (x + y*width);
+	_set_color_at_ofs(data.ptrw(), ofs, color);
+	is_dirty = true;
+	is_save = false;
+}
+
+void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
+	if(is_null_image || !is_init){
+		return;
+	}
+	check_undo();
+	uint32_t ofs = (x + y*width);
+	uint8_t* ptrw = data.ptrw() + ofs*pixel_size;
+	memcpy(ptrw,ptr,pixel_size);
+	is_dirty = true;
+	is_save = false;
+}
+
+const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y) const {
+	if(is_null_image || !is_init){
+		return nullptr;
+	}
+	uint32_t ofs = (x + y*width);
+	return data.ptr() + ofs*pixel_size;
+}
+
+
+
+Color MImage::_get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const {
+	switch (format) {
+		case Image::FORMAT_L8: {
+			float l = ptr[ofs] / 255.0;
+			return Color(l, l, l, 1);
+		}
+		case Image::FORMAT_LA8: {
+			float l = ptr[ofs * 2 + 0] / 255.0;
+			float a = ptr[ofs * 2 + 1] / 255.0;
+			return Color(l, l, l, a);
+		}
+		case Image::FORMAT_R8: {
+			float r = ptr[ofs] / 255.0;
+			return Color(r, 0, 0, 1);
+		}
+		case Image::FORMAT_RG8: {
+			float r = ptr[ofs * 2 + 0] / 255.0;
+			float g = ptr[ofs * 2 + 1] / 255.0;
+			return Color(r, g, 0, 1);
+		}
+		case Image::FORMAT_RGB8: {
+			float r = ptr[ofs * 3 + 0] / 255.0;
+			float g = ptr[ofs * 3 + 1] / 255.0;
+			float b = ptr[ofs * 3 + 2] / 255.0;
+			return Color(r, g, b, 1);
+		}
+		case Image::FORMAT_RGBA8: {
+			float r = ptr[ofs * 4 + 0] / 255.0;
+			float g = ptr[ofs * 4 + 1] / 255.0;
+			float b = ptr[ofs * 4 + 2] / 255.0;
+			float a = ptr[ofs * 4 + 3] / 255.0;
+			return Color(r, g, b, a);
+		}
+		case Image::FORMAT_RGBA4444: {
+			uint16_t u = ((uint16_t *)ptr)[ofs];
+			float r = ((u >> 12) & 0xF) / 15.0;
+			float g = ((u >> 8) & 0xF) / 15.0;
+			float b = ((u >> 4) & 0xF) / 15.0;
+			float a = (u & 0xF) / 15.0;
+			return Color(r, g, b, a);
+		}
+		case Image::FORMAT_RGB565: {
+			uint16_t u = ((uint16_t *)ptr)[ofs];
+			float r = (u & 0x1F) / 31.0;
+			float g = ((u >> 5) & 0x3F) / 63.0;
+			float b = ((u >> 11) & 0x1F) / 31.0;
+			return Color(r, g, b, 1.0);
+		}
+		case Image::FORMAT_RF: {
+			float r = ((float *)ptr)[ofs];
+			return Color(r, 0, 0, 1);
+		}
+		case Image::FORMAT_RGF: {
+			float r = ((float *)ptr)[ofs * 2 + 0];
+			float g = ((float *)ptr)[ofs * 2 + 1];
+			return Color(r, g, 0, 1);
+		}
+		case Image::FORMAT_RGBF: {
+			float r = ((float *)ptr)[ofs * 3 + 0];
+			float g = ((float *)ptr)[ofs * 3 + 1];
+			float b = ((float *)ptr)[ofs * 3 + 2];
+			return Color(r, g, b, 1);
+		}
+		case Image::FORMAT_RGBAF: {
+			float r = ((float *)ptr)[ofs * 4 + 0];
+			float g = ((float *)ptr)[ofs * 4 + 1];
+			float b = ((float *)ptr)[ofs * 4 + 2];
+			float a = ((float *)ptr)[ofs * 4 + 3];
+			return Color(r, g, b, a);
+		}
+		case Image::FORMAT_RGBE9995: {
+			return Color::from_rgbe9995(((uint32_t *)ptr)[ofs]);
+		}
+		default: {
+			ERR_FAIL_V_MSG(Color(), "Unsportet format for Mterrain");
+		}
+	}
+}
+
+void MImage::_set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color) {
+	check_undo();
+	switch (format) {
+		case Image::FORMAT_L8: {
+			ptr[ofs] = uint8_t(CLAMP(p_color.get_v() * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_LA8: {
+			ptr[ofs * 2 + 0] = uint8_t(CLAMP(p_color.get_v() * 255.0, 0, 255));
+			ptr[ofs * 2 + 1] = uint8_t(CLAMP(p_color.a * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_R8: {
+			ptr[ofs] = uint8_t(CLAMP(p_color.r * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_RG8: {
+			ptr[ofs * 2 + 0] = uint8_t(CLAMP(p_color.r * 255.0, 0, 255));
+			ptr[ofs * 2 + 1] = uint8_t(CLAMP(p_color.g * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_RGB8: {
+			ptr[ofs * 3 + 0] = uint8_t(CLAMP(p_color.r * 255.0, 0, 255));
+			ptr[ofs * 3 + 1] = uint8_t(CLAMP(p_color.g * 255.0, 0, 255));
+			ptr[ofs * 3 + 2] = uint8_t(CLAMP(p_color.b * 255.0, 0, 255));
+		} break;
+		case Image::FORMAT_RGBA8: {
+			ptr[ofs * 4 + 0] = uint8_t(CLAMP(p_color.r * 255.0, 0, 255));
+			ptr[ofs * 4 + 1] = uint8_t(CLAMP(p_color.g * 255.0, 0, 255));
+			ptr[ofs * 4 + 2] = uint8_t(CLAMP(p_color.b * 255.0, 0, 255));
+			ptr[ofs * 4 + 3] = uint8_t(CLAMP(p_color.a * 255.0, 0, 255));
+
+		} break;
+		case Image::FORMAT_RGBA4444: {
+			uint16_t rgba = 0;
+
+			rgba = uint16_t(CLAMP(p_color.r * 15.0, 0, 15)) << 12;
+			rgba |= uint16_t(CLAMP(p_color.g * 15.0, 0, 15)) << 8;
+			rgba |= uint16_t(CLAMP(p_color.b * 15.0, 0, 15)) << 4;
+			rgba |= uint16_t(CLAMP(p_color.a * 15.0, 0, 15));
+
+			((uint16_t *)ptr)[ofs] = rgba;
+
+		} break;
+		case Image::FORMAT_RGB565: {
+			uint16_t rgba = 0;
+
+			rgba = uint16_t(CLAMP(p_color.r * 31.0, 0, 31));
+			rgba |= uint16_t(CLAMP(p_color.g * 63.0, 0, 33)) << 5;
+			rgba |= uint16_t(CLAMP(p_color.b * 31.0, 0, 31)) << 11;
+
+			((uint16_t *)ptr)[ofs] = rgba;
+
+		} break;
+		case Image::FORMAT_RF: {
+			((float *)ptr)[ofs] = p_color.r;
+		} break;
+		case Image::FORMAT_RGF: {
+			((float *)ptr)[ofs * 2 + 0] = p_color.r;
+			((float *)ptr)[ofs * 2 + 1] = p_color.g;
+		} break;
+		case Image::FORMAT_RGBF: {
+			((float *)ptr)[ofs * 3 + 0] = p_color.r;
+			((float *)ptr)[ofs * 3 + 1] = p_color.g;
+			((float *)ptr)[ofs * 3 + 2] = p_color.b;
+		} break;
+		case Image::FORMAT_RGBAF: {
+			((float *)ptr)[ofs * 4 + 0] = p_color.r;
+			((float *)ptr)[ofs * 4 + 1] = p_color.g;
+			((float *)ptr)[ofs * 4 + 2] = p_color.b;
+			((float *)ptr)[ofs * 4 + 3] = p_color.a;
+		} break;
+		case Image::FORMAT_RGBE9995: {
+			((uint32_t *)ptr)[ofs] = p_color.to_rgbe9995();
+
+		} break;
+		default: {
+			ERR_FAIL_MSG("Can't set_pixel() on compressed image, sorry.");
+		}
+	}
+}
 
 #endif

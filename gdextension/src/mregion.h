@@ -92,12 +92,12 @@ class MRegion{
     void create_physics();
     void update_physics();
     void remove_physics();
-    Color get_pixel(const uint32_t x, const uint32_t y, const int32_t& index) const;
-    void set_pixel(const uint32_t x, const uint32_t y,const Color& color,const int32_t& index);
-    Color get_normal_by_pixel(const uint32_t x, const uint32_t y) const;
-    void set_normal_by_pixel(const uint32_t x, const uint32_t y,const Color& value);
-    real_t get_height_by_pixel(const uint32_t x, const uint32_t y) const;
-    void set_height_by_pixel(const uint32_t x, const uint32_t y,const real_t& value);
+    _FORCE_INLINE_ Color get_pixel(const uint32_t x, const uint32_t y, const int32_t& index) const;
+    _FORCE_INLINE_ void set_pixel(const uint32_t x, const uint32_t y,const Color& color,const int32_t& index);
+    _FORCE_INLINE_ Color get_normal_by_pixel(const uint32_t x, const uint32_t y) const;
+    _FORCE_INLINE_ void set_normal_by_pixel(const uint32_t x, const uint32_t y,const Color& value);
+    _FORCE_INLINE_ real_t get_height_by_pixel(const uint32_t x, const uint32_t y) const;
+    _FORCE_INLINE_ void set_height_by_pixel(const uint32_t x, const uint32_t y,const real_t& value);
     real_t get_closest_height(Vector3 pos);
     real_t get_height_by_pixel_in_layer(const uint32_t x, const uint32_t y) const;
 
@@ -126,4 +126,35 @@ class MRegion{
     void correct_bottom_right_corner();
     void correct_top_left_corner();
 };
+
+Color MRegion::get_pixel(const uint32_t x, const uint32_t y, const int32_t& index) const {
+	return images[index]->get_pixel(x,y);
+}
+
+void MRegion::set_pixel(const uint32_t x, const uint32_t y,const Color& color,const int32_t& index){
+	if(to_be_remove){
+		return;
+	}
+	images[index]->set_pixel(x,y,color);
+}
+
+Color MRegion::get_normal_by_pixel(const uint32_t x, const uint32_t y) const{
+	return normals->get_pixel(x,y);
+}
+
+void MRegion::set_normal_by_pixel(const uint32_t x, const uint32_t y,const Color& value){
+	normals->set_pixel(x,y,value);
+}
+
+real_t MRegion::get_height_by_pixel(const uint32_t x, const uint32_t y) const {
+	return heightmap->get_pixel_RF(x,y);
+}
+
+void MRegion::set_height_by_pixel(const uint32_t x, const uint32_t y,const real_t& value){
+	if(to_be_remove){
+		return;
+	}
+	heightmap->set_pixel_RF(x,y,value);
+}
+
 #endif

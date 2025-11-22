@@ -353,9 +353,7 @@ bool MGrid::is_created() const {
 }
 
 bool MGrid::has_pixel(const uint32_t x,const uint32_t y) const {
-    if(x>=pixel_width) return false;
-    if(y>=pixel_height) return false;
-    return true;
+    return x<pixel_width&&y<pixel_height;
 }
 
 real_t MGrid::get_height(Vector3 pos){

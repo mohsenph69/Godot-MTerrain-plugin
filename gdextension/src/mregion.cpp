@@ -240,36 +240,6 @@ void MRegion::remove_physics(){
 	has_physic = false;
 }
 
-Color MRegion::get_pixel(const uint32_t x, const uint32_t y, const int32_t& index) const {
-	return images[index]->get_pixel(x,y);
-}
-
-void MRegion::set_pixel(const uint32_t x, const uint32_t y,const Color& color,const int32_t& index){
-	if(to_be_remove){
-		return;
-	}
-	images[index]->set_pixel(x,y,color);
-}
-
-Color MRegion::get_normal_by_pixel(const uint32_t x, const uint32_t y) const{
-	return normals->get_pixel(x,y);
-}
-
-void MRegion::set_normal_by_pixel(const uint32_t x, const uint32_t y,const Color& value){
-	normals->set_pixel(x,y,value);
-}
-
-real_t MRegion::get_height_by_pixel(const uint32_t x, const uint32_t y) const {
-	return heightmap->get_pixel_RF(x,y);
-}
-
-void MRegion::set_height_by_pixel(const uint32_t x, const uint32_t y,const real_t& value){
-	if(to_be_remove){
-		return;
-	}
-	heightmap->set_pixel_RF(x,y,value);
-}
-
 real_t MRegion::get_closest_height(Vector3 pos){
 	pos.x -= world_pos.x;
 	pos.z -= world_pos.z;

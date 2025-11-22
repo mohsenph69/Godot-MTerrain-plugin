@@ -791,7 +791,7 @@ void MGrid::update_regions(){
         reg->set_data_load_status(true);
     }
 }
-
+#include <godot_cpp/classes/time.hpp>
 void MGrid::update_regions_at_load(){
     for(MRegion* reg : unload_region_list){
         reg->unload();
@@ -810,10 +810,13 @@ void MGrid::update_regions_at_load(){
     for(MRegion* reg : load_region_list){
         reg->correct_edges();
     }
+    int t0 = godot::Time::get_singleton()->get_ticks_msec();
     for(MRegion* reg : load_region_list){
         reg->is_edge_corrected = false;
         reg->recalculate_normals(true,false);
     }
+    int t1 = godot::Time::get_singleton()->get_ticks_msec();
+    UtilityFunctions::print("NORMAL CAL DT -> ",(t1-t0));
     for(MRegion* reg : load_region_list){
         reg->set_data_load_status(true);
     }
