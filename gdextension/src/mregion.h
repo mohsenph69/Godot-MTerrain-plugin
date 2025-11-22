@@ -98,6 +98,8 @@ class MRegion{
     _FORCE_INLINE_ void set_normal_by_pixel(const uint32_t x, const uint32_t y,const Color& value);
     _FORCE_INLINE_ real_t get_height_by_pixel(const uint32_t x, const uint32_t y) const;
     _FORCE_INLINE_ void set_height_by_pixel(const uint32_t x, const uint32_t y,const real_t& value);
+    _FORCE_INLINE_ void set_normal(uint32_t x,uint32_t y,MImageRGB8 rgb);
+    _FORCE_INLINE_ MImageRGB8 get_normal(uint32_t x,uint32_t y) const;
     real_t get_closest_height(Vector3 pos);
     real_t get_height_by_pixel_in_layer(const uint32_t x, const uint32_t y) const;
 
@@ -155,6 +157,16 @@ void MRegion::set_height_by_pixel(const uint32_t x, const uint32_t y,const real_
 		return;
 	}
 	heightmap->set_pixel_RF(x,y,value);
+}
+
+void MRegion::set_normal(uint32_t x, uint32_t y, MImageRGB8 rgb)
+{
+    return normals->set_pixel_rgb8(x,y,rgb);
+}
+
+MImageRGB8 MRegion::get_normal(uint32_t x, uint32_t y) const
+{
+    return normals->get_pixel_rgb8(x,y);
 }
 
 #endif

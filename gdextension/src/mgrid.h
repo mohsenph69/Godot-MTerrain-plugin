@@ -249,7 +249,7 @@ class MGrid {
     int32_t get_region_id_by_point(const int32_t x, const int32_t z) const;
     MRegion* get_region_by_point(const int32_t x, const int32_t z) const;
     MBound region_bound_to_point_bound(const MBound& rbound) const;
-    MRegion* get_region(const int32_t x, const int32_t z) const;
+    inline MRegion* get_region(const int32_t x, const int32_t z) const;
     MGridPos get_region_pos_by_world_pos(Vector3 world_pos) const;
     int get_region_id_by_world_pos(Vector3 world_pos) const;
     Vector2 get_point_region_offset_ratio(int32_t x,int32_t z) const;
@@ -287,8 +287,9 @@ class MGrid {
     MImage* get_image_by_pixel(uint32_t x,uint32_t y, const int32_t index);
     _FORCE_INLINE_ Color get_pixel(uint32_t x,uint32_t y, const int32_t index) const;
     const uint8_t* get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t index);
-    void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index);
+    _FORCE_INLINE_ void set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index);
     void set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t index);
+    _FORCE_INLINE_ void set_normal(uint32_t x,uint32_t y,const MImageRGB8 rgb);
     real_t get_height_by_pixel(uint32_t x,uint32_t y) const;
     void set_height_by_pixel(uint32_t x,uint32_t y,const real_t value);
     real_t get_height_by_pixel_in_layer(uint32_t x,uint32_t y) const;
@@ -352,6 +353,15 @@ bool MGrid::is_created() const {
     return is_dirty;
 }
 
+MRegion* MGrid::get_region(const int32_t x, const int32_t z) const {
+    if(x < 0 || z < 0 || x >= _region_grid_size.x || z >= _region_grid_size.z ){
+        return nullptr;
+    }
+    int32_t id = x + z*_region_grid_size.x;
+    ERR_FAIL_INDEX_V(id,_regions_count,regions);
+    return regions + id;
+}
+
 bool MGrid::has_pixel(const uint32_t x,const uint32_t y) const {
     return x<pixel_width&&y<pixel_height;
 }
@@ -390,6 +400,66 @@ Color MGrid::get_pixel(uint32_t x,uint32_t y, const int32_t index) const {
     y -=rp*ry;
     MRegion* r = get_region(rx,ry);
     return r->get_pixel(x,y,index);
+}
+
+void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index) {
+    if(unlikely(!has_pixel(x,y))){
+        return;
+    }
+    bool ex = (x%rp == 0 && x!=0);
+    bool ey = (y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - (uint32_t)ex;
+    uint32_t ry = (y/rp) - (uint32_t)ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    r->set_pixel(x,y,col,index);
+    // Take care of the edges
+    ex = (ex && rx != _region_grid_bound.right);
+    // Same for ey
+    ey = (ey && ry != _region_grid_bound.bottom);
+    if(ex && ey){
+        MRegion* re = get_region(rx+1,ry+1);
+        re->set_pixel(0,0,col,index);
+    }
+    if(ex){
+        MRegion* re = get_region(rx+1,ry);
+        re->set_pixel(0,y,col,index);
+    }
+    if(ey){
+        MRegion* re = get_region(rx,ry+1);
+        re->set_pixel(x,0,col,index);
+    }
+}
+
+void MGrid::set_normal(uint32_t x,uint32_t y,const MImageRGB8 rgb){
+    if(unlikely(!has_pixel(x,y))){
+        return;
+    }
+    bool ex = (x%rp == 0 && x!=0);
+    bool ey = (y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - (uint32_t)ex;
+    uint32_t ry = (y/rp) - (uint32_t)ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    r->set_normal(x,y,rgb);
+    // Take care of the edges
+    ex = (ex && rx != _region_grid_bound.right);
+    // Same for ey
+    ey = (ey && ry != _region_grid_bound.bottom);
+    if(ex && ey){
+        MRegion* re = get_region(rx+1,ry+1);
+        re->set_normal(0,0,rgb);
+    }
+    if(ex){
+        MRegion* re = get_region(rx+1,ry);
+        re->set_normal(0,y,rgb);
+    }
+    if(ey){
+        MRegion* re = get_region(rx,ry+1);
+        re->set_normal(x,0,rgb);
+    }
 }
 
 Vector2i MGrid::get_closest_pixel(Vector3 world_pos) const {

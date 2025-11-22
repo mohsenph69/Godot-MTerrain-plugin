@@ -23,6 +23,12 @@ using namespace godot;
 
 class MRegion;
 
+struct MImageRGB8 {
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+};
+
 struct MImageUndoData {
     int layer;
     bool empty=false;// In case the layer is empty at this data
@@ -93,6 +99,8 @@ struct MImage {
     // This works only for Format_RF
     _FORCE_INLINE_ real_t get_pixel_RF(const uint32_t x, const uint32_t  y) const;
     _FORCE_INLINE_ void set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value);
+	_FORCE_INLINE_ void set_pixel_rgb8(const uint32_t x,const uint32_t y,MImageRGB8 rgb);
+	_FORCE_INLINE_ MImageRGB8 get_pixel_rgb8(const uint32_t x,const uint32_t y) const;
     _FORCE_INLINE_ real_t get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y) const;
     _FORCE_INLINE_ Color get_pixel(const uint32_t x, const uint32_t  y) const;
     _FORCE_INLINE_ void set_pixel(const uint32_t x, const uint32_t  y,const Color& color);
@@ -177,6 +185,23 @@ void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value
 	#endif
 	is_dirty = true;
 	is_save = false;
+}
+
+void MImage::set_pixel_rgb8(const uint32_t x, const uint32_t y, MImageRGB8 rgb)
+{
+	if(!is_init) return;
+	uint32_t ofs = (x + y*width) * 3;
+	uint8_t* ptr = data.ptrw();
+	ptr[ofs] = rgb.r;
+	ptr[ofs + 1] = rgb.g;
+	ptr[ofs + 2] = rgb.b;
+}
+
+MImageRGB8 MImage::get_pixel_rgb8(const uint32_t x, const uint32_t y) const
+{
+	uint32_t ofs = (x + y*width) * 3;
+	const uint8_t* ptr = data.ptr() + ofs;
+	return {ptr[0], ptr[1], ptr[2]};
 }
 
 real_t MImage::get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y) const {

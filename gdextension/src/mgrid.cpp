@@ -248,15 +248,6 @@ MBound MGrid::region_bound_to_point_bound(const MBound& rbound) const {
     return out;
 }
 
-MRegion* MGrid::get_region(const int32_t x, const int32_t z) const {
-    if(x < 0 || z < 0 || x >= _region_grid_size.x || z >= _region_grid_size.z ){
-        return nullptr;
-    }
-    int32_t id = x + z*_region_grid_size.x;
-    ERR_FAIL_INDEX_V(id,_regions_count,regions);
-    return regions + id;
-}
-
 MGridPos MGrid::get_region_pos_by_world_pos(Vector3 world_pos) const {
     MGridPos p;
     world_pos -= offset;
@@ -791,7 +782,7 @@ void MGrid::update_regions(){
         reg->set_data_load_status(true);
     }
 }
-#include <godot_cpp/classes/time.hpp>
+
 void MGrid::update_regions_at_load(){
     for(MRegion* reg : unload_region_list){
         reg->unload();
@@ -810,13 +801,11 @@ void MGrid::update_regions_at_load(){
     for(MRegion* reg : load_region_list){
         reg->correct_edges();
     }
-    int t0 = godot::Time::get_singleton()->get_ticks_msec();
     for(MRegion* reg : load_region_list){
         reg->is_edge_corrected = false;
         reg->recalculate_normals(true,false);
     }
     int t1 = godot::Time::get_singleton()->get_ticks_msec();
-    UtilityFunctions::print("NORMAL CAL DT -> ",(t1-t0));
     for(MRegion* reg : load_region_list){
         reg->set_data_load_status(true);
     }
@@ -939,36 +928,6 @@ const uint8_t* MGrid::get_pixel_by_pointer(uint32_t x,uint32_t y, const int32_t 
     x -=rp*rx;
     y -=rp*ry;
     return get_region(rx,ry)->images[index]->get_pixel_by_data_pointer(x,y);
-}
-
-void MGrid::set_pixel(uint32_t x,uint32_t y,const Color& col,const int32_t index) {
-    if(!has_pixel(x,y)){
-        return;
-    }
-    bool ex = (x%rp == 0 && x!=0);
-    bool ey = (y%rp == 0 && y!=0);
-    uint32_t rx = (x/rp) - (uint32_t)ex;
-    uint32_t ry = (y/rp) - (uint32_t)ey;
-    x -=rp*rx;
-    y -=rp*ry;
-    MRegion* r = get_region(rx,ry);
-    r->set_pixel(x,y,col,index);
-    // Take care of the edges
-    ex = (ex && rx != _region_grid_bound.right);
-    // Same for ey
-    ey = (ey && ry != _region_grid_bound.bottom);
-    if(ex && ey){
-        MRegion* re = get_region(rx+1,ry+1);
-        re->set_pixel(0,0,col,index);
-    }
-    if(ex){
-        MRegion* re = get_region(rx+1,ry);
-        re->set_pixel(0,y,col,index);
-    }
-    if(ey){
-        MRegion* re = get_region(rx,ry+1);
-        re->set_pixel(x,0,col,index);
-    }
 }
 
 void MGrid::set_pixel_by_pointer(uint32_t x,uint32_t y,uint8_t* ptr, const int32_t index){
@@ -1107,9 +1066,11 @@ void MGrid::generate_normals(MPixelRegion pxr) {
             nx = nx/2.0 + 0.5;
             nz = nz/2.0 + 0.5;
 
-            // packing normals for image
-            Color col(nx,ny,nz);
-            set_pixel(x,y,col,id);
+            MImageRGB8 rgb;
+            rgb.r = nx*255;
+            rgb.g = ny*255;
+            rgb.b = nz*255;
+            set_normal(x,y,rgb);
         }
     }
 }
