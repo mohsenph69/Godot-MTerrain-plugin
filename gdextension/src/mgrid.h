@@ -297,10 +297,10 @@ class MGrid {
     void generate_normals_thread(MPixelRegion pxr);
     void generate_normals(MPixelRegion pxr);
     void update_normals(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom);
-    Vector3 get_normal_by_pixel(uint32_t x,uint32_t y) const;
-    Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
-    Vector3 get_normal(Vector3 world_pos) const;
-    Vector3 get_normal_accurate(Vector3 world_pos);
+    _FORCE_INLINE_ Vector3 get_normal_by_pixel(uint32_t x,uint32_t y) const;
+    _FORCE_INLINE_ Vector3 get_normal_accurate_by_pixel(uint32_t x,uint32_t y);
+    _FORCE_INLINE_ Vector3 get_normal(Vector3 world_pos) const;
+    _FORCE_INLINE_ Vector3 get_normal_accurate(Vector3 world_pos);
     void save_image(int index,bool force_save);
     bool has_unsave_image() const;
     void save_all_dirty_images();
@@ -460,6 +460,83 @@ void MGrid::set_normal(uint32_t x,uint32_t y,const MImageRGB8 rgb){
         MRegion* re = get_region(rx,ry+1);
         re->set_normal(x,0,rgb);
     }
+}
+
+Vector3 MGrid::get_normal_by_pixel(uint32_t x,uint32_t y)  const{
+    uint32_t ex = (uint32_t)(x%rp == 0 && x!=0);
+    uint32_t ey = (uint32_t)(y%rp == 0 && y!=0);
+    uint32_t rx = (x/rp) - ex;
+    uint32_t ry = (y/rp) - ey;
+    x -=rp*rx;
+    y -=rp*ry;
+    MRegion* r = get_region(rx,ry);
+    MImageRGB8 rgb = r->get_normal(x,y);
+    Vector3 n(((rgb.r*2.0f)/255.0f) -1.0,rgb.g/255.0f,((rgb.b*2.0)/255.0) -1.0);
+    return n;
+}
+
+Vector3 MGrid::get_normal_accurate_by_pixel(uint32_t x,uint32_t y){
+    Vector3 normal_vec;
+    Vector2i px(x,y);
+    real_t h = get_height_by_pixel(x,y);
+    // Caculating face normals around point
+    // and average them
+    // In total there are 8 face around each point
+    for(int i=0;i<nvec8.size()-1;i++){
+        Vector2i px1(nvec8[i].x,nvec8[i].z);
+        Vector2i px2(nvec8[i+1].x,nvec8[i+1].z);
+        px1 += px;
+        px2 += px;
+        // Edge of the terrain
+        if(!has_pixel(px1.x,px1.y) || !has_pixel(px2.x,px2.y)){
+            continue;
+        }
+        Vector3 vec1 = nvec8[i];
+        Vector3 vec2 = nvec8[i+1];
+        vec1.y = get_height_by_pixel(px1.x,px1.y) - h;
+        vec2.y = get_height_by_pixel(px2.x,px2.y) - h;
+        normal_vec += vec1.cross(vec2);
+    }
+    normal_vec.normalize();
+    return normal_vec;
+}
+
+Vector3 MGrid::get_normal(Vector3 world_pos) const {
+    world_pos -= offset;
+    world_pos = world_pos/_chunks.h_scale;
+    if(world_pos.x <0 || world_pos.z <0){
+        return Vector3(0,1,0);
+    }
+    uint32_t x = (uint32_t)world_pos.x;
+    uint32_t y = (uint32_t)world_pos.z;
+    Vector3 nx0z0 = get_normal_by_pixel(x,y);
+    Vector3 nx1z0 = get_normal_by_pixel(x+1,y);
+    Vector3 nx0z1 = get_normal_by_pixel(x,y+1);
+    Vector3 nx1z1 = get_normal_by_pixel(x+1,y+1);
+    real_t factor_x = world_pos.x - floor(world_pos.x);
+    real_t factor_z = world_pos.z - floor(world_pos.z);
+    Vector3 ivaltop = nx0z0.lerp(nx1z0,factor_x);
+    Vector3 ivalbottom = nx0z1.lerp(nx1z1,factor_x);
+    return ivaltop.lerp(ivalbottom,factor_z);
+}
+
+Vector3 MGrid::get_normal_accurate(Vector3 world_pos){
+    world_pos -= offset;
+    world_pos = world_pos/_chunks.h_scale;
+    if(world_pos.x <0 || world_pos.z <0){
+        return Vector3(0,1,0);
+    }
+    uint32_t x = (uint32_t)world_pos.x;
+    uint32_t y = (uint32_t)world_pos.z;
+    Vector3 nx0z0 = get_normal_accurate_by_pixel(x,y);
+    Vector3 nx1z0 = get_normal_accurate_by_pixel(x+1,y);
+    Vector3 nx0z1 = get_normal_accurate_by_pixel(x,y+1);
+    Vector3 nx1z1 = get_normal_accurate_by_pixel(x+1,y+1);
+    real_t factor_x = world_pos.x - floor(world_pos.x);
+    real_t factor_z = world_pos.z - floor(world_pos.z);
+    Vector3 ivaltop = nx0z0.lerp(nx1z0,factor_x);
+    Vector3 ivalbottom = nx0z1.lerp(nx1z1,factor_x);
+    return ivaltop.lerp(ivalbottom,factor_z);
 }
 
 Vector2i MGrid::get_closest_pixel(Vector3 world_pos) const {

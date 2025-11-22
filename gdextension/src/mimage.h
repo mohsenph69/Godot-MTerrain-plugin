@@ -189,7 +189,7 @@ void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value
 
 void MImage::set_pixel_rgb8(const uint32_t x, const uint32_t y, MImageRGB8 rgb)
 {
-	if(!is_init) return;
+	if(unlikely(!is_init)) return;
 	uint32_t ofs = (x + y*width) * 3;
 	uint8_t* ptr = data.ptrw();
 	ptr[ofs] = rgb.r;
