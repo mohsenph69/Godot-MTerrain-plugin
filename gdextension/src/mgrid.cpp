@@ -805,7 +805,6 @@ void MGrid::update_regions_at_load(){
         reg->is_edge_corrected = false;
         reg->recalculate_normals(true,false);
     }
-    int t1 = godot::Time::get_singleton()->get_ticks_msec();
     for(MRegion* reg : load_region_list){
         reg->set_data_load_status(true);
     }
