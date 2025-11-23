@@ -153,7 +153,6 @@ class MGrid {
     int32_t chunk_counter = 0;
     MGridPos _region_grid_size;
     int32_t _regions_count=0;
-    Vector<MImage*> _all_image_list;
     Vector<MImage*> _all_heightmap_image_list;
     PackedVector3Array nvec8;
     Vector<MRegion*> load_region_list;
@@ -238,7 +237,6 @@ class MGrid {
     void set_scenario(RID scenario);
     RID get_scenario() const;
     void create(const int32_t width,const int32_t height);
-    void update_all_image_list();
     Vector3 get_world_pos(const int32_t x,const int32_t y,const int32_t z);
     Vector3 get_world_pos(const MGridPos& pos);
     int get_point_id_by_non_offs_ws(const Vector2& input) const; // Get point id non offset world posiotion usefull for grass for now

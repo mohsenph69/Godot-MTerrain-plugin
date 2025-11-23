@@ -61,7 +61,6 @@ void MGrid::clear() {
     uniforms_id.clear();
     has_normals = false;
     _all_heightmap_image_list.clear();
-    _all_image_list.clear();
     //heightmap_layers.clear();
     heightmap_layers_visibility.clear();
     active_heightmap_layer=0;
@@ -164,7 +163,6 @@ void MGrid::create(const int32_t width,const int32_t height) {
     for(int i=0; i<_regions_count; i++){
         regions[i].configure();
     }
-    _all_image_list = _terrain_material->all_images;
     _all_heightmap_image_list = _terrain_material->all_heightmap_images;
     //Initilazing Heightmap layers visibilty
     heightmap_layers_visibility.clear();
@@ -177,20 +175,6 @@ void MGrid::create(const int32_t width,const int32_t height) {
     //    regions[i].load();
     //}
     //generate_normals_thread(grid_pixel_region);
-}
-
-void MGrid::update_all_image_list(){
-    _all_image_list.clear();
-    UtilityFunctions::print("Region count is ",_regions_count );
-    for(int i=0;i<_regions_count;i++){
-        Vector<MImage*> rimgs = regions[i].images;
-        for(int j=0;j<rimgs.size();j++){
-            _all_image_list.push_back(rimgs[j]);
-            if(rimgs[j]->name==HEIGHTMAP_NAME){
-                _all_heightmap_image_list.push_back(rimgs[j]);
-            }
-        }
-    }
 }
 
 Vector3 MGrid::get_world_pos(const int32_t x,const int32_t y,const int32_t z) {
@@ -1111,13 +1095,13 @@ void MGrid::save_image(int index,bool force_save){
 }
 
 bool MGrid::has_unsave_image() const {
-    for(int i=0;i<_all_image_list.size();i++){
-        if(_all_image_list[i]->name==NORMALS_NAME){
-            if(!_all_image_list[i]->is_save){
+    for(int i=0;i<_terrain_material->all_images.size();i++){
+        if(_terrain_material->all_images[i]->name==NORMALS_NAME){
+            if(!_terrain_material->all_images[i]->is_save){
                 return true;
             }
         } else {
-            if(!_all_image_list[i]->is_save){
+            if(!_terrain_material->all_images[i]->is_save){
                 return true;
             }
         }
@@ -1335,13 +1319,13 @@ void MGrid::draw_color_region(MImage* img, MPixelRegion draw_pixel_region, MPixe
 //&MGrid::generate_normals,this, px_regions[i]
 void MGrid::update_all_dirty_image_texture(bool update_physics){
     Vector<std::thread*> threads_pull;
-    for(int i=0;i<_all_image_list.size();i++){
-        if(_all_image_list[i]->is_dirty){
-            //_all_image_list[i]->update_texture(_all_image_list[i]->current_scale,true);
-            std::thread* t = new std::thread(&MImage::update_texture,_all_image_list[i],_all_image_list[i]->current_scale,true);
+    for(int i=0;i<_terrain_material->all_images.size();i++){
+        if(_terrain_material->all_images[i]->is_dirty){
+            //_terrain_material->all_images[i]->update_texture(_terrain_material->all_images[i]->current_scale,true);
+            std::thread* t = new std::thread(&MImage::update_texture,_terrain_material->all_images[i],_terrain_material->all_images[i]->current_scale,true);
             threads_pull.push_back(t);
-            if(_all_image_list[i]->name == HEIGHTMAP_NAME && update_physics){
-                MRegion* reg = _all_image_list[i]->region;
+            if(_terrain_material->all_images[i]->name == HEIGHTMAP_NAME && update_physics){
+                MRegion* reg = _terrain_material->all_images[i]->region;
                 std::thread* pt = new std::thread(&MRegion::update_physics,reg);
                 threads_pull.push_back(pt);
             }
@@ -1468,13 +1452,13 @@ bool MGrid::get_brush_mask_value_bool(uint32_t x,uint32_t y) const {
 
 void MGrid::images_add_undo_stage(){
     if(current_undo_id - lowest_undo_id > 5){
-        for(int i=0;i<_all_image_list.size();i++){
-            _all_image_list[i]->remove_undo_data(lowest_undo_id);
+        for(int i=0;i<_terrain_material->all_images.size();i++){
+            _terrain_material->all_images[i]->remove_undo_data(lowest_undo_id);
         }
         lowest_undo_id++;
     }
-    for(int i=0;i<_all_image_list.size();i++){
-        _all_image_list[i]->current_undo_id = current_undo_id;
+    for(int i=0;i<_terrain_material->all_images.size();i++){
+        _terrain_material->all_images[i]->current_undo_id = current_undo_id;
     }
     current_undo_id++;
 }
@@ -1486,11 +1470,11 @@ void MGrid::images_undo(){
         return;
     }
     current_undo_id--;
-    for(int i=0;i<_all_image_list.size();i++){
-        if(_all_image_list[i]->go_to_undo(current_undo_id)) {
-            last_images_undo_affected_list.push_back(_all_image_list[i]);
+    for(int i=0;i<_terrain_material->all_images.size();i++){
+        if(_terrain_material->all_images[i]->go_to_undo(current_undo_id)) {
+            last_images_undo_affected_list.push_back(_terrain_material->all_images[i]);
         }
-        _all_image_list[i]->remove_undo_data(current_undo_id);
+        _terrain_material->all_images[i]->remove_undo_data(current_undo_id);
         
     }
     update_all_dirty_image_texture();
