@@ -163,10 +163,10 @@ Ref<MGrassLodSetting> MGrass::get_default_lod_setting(){
 
 
 void MGrass::init_grass(MGrid* _grid) {
-    ERR_FAIL_COND_EDMSG(mode==DATA&&!grass_data.is_valid(),"Grass \""+get_name()+"\" Data is invalid, Please set grass data and save that with .res ext");
     if(!active){
         return;
     }
+    ERR_FAIL_COND_EDMSG(mode==DATA&&!grass_data.is_valid(),"Grass \""+get_name()+"\" Data is invalid, Please set grass data and save that with .res ext");
     time_rollover_secs = ProjectSettings::get_singleton()->get("rendering/limits/time/time_rollover_secs");
     grid = _grid;
     scenario = grid->get_scenario();
