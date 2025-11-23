@@ -1037,21 +1037,31 @@ void MGrid::generate_normals(MPixelRegion pxr) {
     int id = _terrain_material->get_texture_id(NORMALS_NAME);
     ERR_FAIL_COND(id==-1);
     for(uint32_t y=pxr.top; y<=pxr.bottom; y++){
+        // r for region coord and l for local x,y
+        // p for plus and m for minus
+        uint32_t ry0, ly0, ryp1, lyp1, rym1, lym1;
+        compute_region_y_from_global(y,ry0,ly0);
+        compute_region_y_from_global(y+1,ryp1,lyp1);
+        compute_region_y_from_global(y-1,rym1,lym1);
         for(uint32_t x=pxr.left; x<=pxr.right; x++){
-            Vector2i px(x,y);
-            real_t h = get_height_by_pixel(x,y);
+            uint32_t rx0, lx0, rxp1, lxp1, rxm1, lxm1;
+            compute_region_x_from_global(x,rx0,lx0);
+            compute_region_x_from_global(x+1,rxp1,lxp1);
+            compute_region_x_from_global(x-1,rxm1,lxm1);
+            if(unlikely(!has_pixel(x,y))) continue;
+            real_t h = get_region_unchecked(rx0,ry0)->get_height_by_pixel(lx0,ly0);
             // Caculating face normals around point
             // and average them
             // In total there are 8 face around each point
-            float heightL = has_pixel(x-1,y) ? get_height_by_pixel(x-1,y) : h;
-            float heightR = has_pixel(x+1,y) ? get_height_by_pixel(x+1,y) : h;
-            float heightU = has_pixel(x,y-1) ? get_height_by_pixel(x,y-1) : h;
-            float heightD = has_pixel(x,y+1) ? get_height_by_pixel(x,y+1) : h;
+            float heightL = likely(has_pixel(x-1,y)) ? get_region_unchecked(rxm1,ry0)->get_height_by_pixel(lxm1,ly0) : h;
+            float heightR = likely(has_pixel(x+1,y)) ? get_region_unchecked(rxp1,ry0)->get_height_by_pixel(lxp1,ly0) : h;
+            float heightU = likely(has_pixel(x,y-1))? get_region_unchecked(rx0,rym1)->get_height_by_pixel(lx0,lym1) : h;
+            float heightD = likely(has_pixel(x,y+1)) ? get_region_unchecked(rx0,ryp1)->get_height_by_pixel(lx0,lyp1) : h;
 
-            float heightTL = has_pixel(x-1,y-1) ? get_height_by_pixel(x-1,y-1) : h;
-            float heightTR = has_pixel(x+1,y-1) ? get_height_by_pixel(x+1,y-1) : h;
-            float heightBL = has_pixel(x-1,y+1) ? get_height_by_pixel(x-1,y+1) : h;
-            float heightBR = has_pixel(x+1,y+1) ? get_height_by_pixel(x+1,y+1) : h;
+            float heightTL = likely(has_pixel(x-1,y-1)) ? get_region_unchecked(rxm1,rym1)->get_height_by_pixel(lxm1,lym1) : h;
+            float heightTR = likely(has_pixel(x+1,y-1)) ? get_region_unchecked(rxp1,rym1)->get_height_by_pixel(lxp1,lym1) : h;
+            float heightBL = likely(has_pixel(x-1,y+1)) ? get_region_unchecked(rxm1,ryp1)->get_height_by_pixel(lxm1,lyp1) : h;
+            float heightBR = likely(has_pixel(x+1,y+1)) ? get_region_unchecked(rxp1,ryp1)->get_height_by_pixel(lxp1,lyp1) : h;
 
             float nx = heightTL - heightBR + 2.0f * (heightL - heightR) + heightBL - heightTR;
             //float ny = 8.0f;

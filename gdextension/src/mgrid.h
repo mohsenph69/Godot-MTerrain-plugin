@@ -250,6 +250,7 @@ class MGrid {
     MRegion* get_region_by_point(const int32_t x, const int32_t z) const;
     MBound region_bound_to_point_bound(const MBound& rbound) const;
     inline MRegion* get_region(const int32_t x, const int32_t z) const;
+    inline MRegion* get_region_unchecked(const int32_t x, const int32_t z) const;
     MGridPos get_region_pos_by_world_pos(Vector3 world_pos) const;
     int get_region_id_by_world_pos(Vector3 world_pos) const;
     Vector2 get_point_region_offset_ratio(int32_t x,int32_t z) const;
@@ -330,6 +331,10 @@ class MGrid {
     void toggle_heightmap_layer_visible();
     bool is_layer_visible(int index);
     bool is_layer_visible(const String& lname);
+    /// Use these to grab region coord and local coord in that region but use only for read not to write
+    /// For writing some condition for edge should be satisfied which you can see in function like set_pixel and ...
+    inline void compute_region_y_from_global(const uint32_t y_global,uint32_t& ry,uint32_t& local_y) const;
+    inline void compute_region_x_from_global(const uint32_t x_global,uint32_t& rx,uint32_t& local_x) const;
 
     public:
     float get_h_scale() const;
@@ -359,6 +364,11 @@ MRegion* MGrid::get_region(const int32_t x, const int32_t z) const {
     }
     int32_t id = x + z*_region_grid_size.x;
     ERR_FAIL_INDEX_V(id,_regions_count,regions);
+    return regions + id;
+}
+
+MRegion *MGrid::get_region_unchecked(const int32_t x, const int32_t z) const {
+    int32_t id = x + z*_region_grid_size.x;
     return regions + id;
 }
 
@@ -561,6 +571,18 @@ Vector2 MGrid::get_pixel_world_pos_flat(uint32_t x,uint32_t y) const{
     out.x += offset.x;
     out.y += offset.z;
     return out;
+}
+
+void MGrid::compute_region_y_from_global(const uint32_t y_global,uint32_t& ry,uint32_t& local_y) const {
+    uint32_t ey = (uint32_t)(y_global%rp == 0 && y_global!=0);
+    ry = (y_global/rp) - ey;
+    local_y = y_global - rp*ry;
+}
+
+void MGrid::compute_region_x_from_global(const uint32_t x_global,uint32_t& rx,uint32_t& local_x) const {
+    uint32_t ex = (uint32_t)(x_global%rp == 0 && x_global!=0);
+    rx = (x_global/rp) - ex;
+    local_x = x_global - rp*rx;
 }
 
 #endif
