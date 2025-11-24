@@ -6,6 +6,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/templates/vector.hpp>
@@ -73,7 +74,7 @@ struct MImage {
     int current_undo_id;
     // Key is undo redo id
     HashMap<int,MImageUndoData> undo_data;
-    bool is_init=false;
+	std::atomic<bool> is_init{false};
     bool is_corrupt_file = false;
     bool is_null_image=true;
     bool is_ram_image=false; // in case the image exist only on RAM not VRAM
@@ -132,7 +133,7 @@ struct MImage {
 
 // This works only for Format_RF
 real_t MImage::get_pixel_RF(const uint32_t x, const uint32_t  y) const {
-	if(is_null_image || !is_init){
+	if(is_null_image || !is_init.load(std::memory_order_acquire)){
 		return 0;
 	}
 	uint32_t ofs = (x + y*width);
@@ -140,7 +141,7 @@ real_t MImage::get_pixel_RF(const uint32_t x, const uint32_t  y) const {
 }
 
 void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value){
-	if(is_null_image || !is_init){
+	if(is_null_image || !is_init.load(std::memory_order_acquire)){
 		return;
 	}
 	check_undo();
@@ -189,7 +190,7 @@ void MImage::set_pixel_RF(const uint32_t x, const uint32_t  y,const real_t value
 
 void MImage::set_pixel_rgb8(const uint32_t x, const uint32_t y, MImageRGB8 rgb)
 {
-	if(unlikely(!is_init)) return;
+	if(unlikely(!is_init.load(std::memory_order_acquire))) return;
 	uint32_t ofs = (x + y*width) * 3;
 	uint8_t* ptr = data.ptrw();
 	ptr[ofs] = rgb.r;
@@ -199,13 +200,14 @@ void MImage::set_pixel_rgb8(const uint32_t x, const uint32_t y, MImageRGB8 rgb)
 
 MImageRGB8 MImage::get_pixel_rgb8(const uint32_t x, const uint32_t y) const
 {
+	if(unlikely(!is_init.load(std::memory_order_acquire))) return MImageRGB8();
 	uint32_t ofs = (x + y*width) * 3;
 	const uint8_t* ptr = data.ptr() + ofs;
 	return {ptr[0], ptr[1], ptr[2]};
 }
 
 real_t MImage::get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y) const {
-	if(unlikely(!is_init)){
+	if(unlikely(!is_init.load(std::memory_order_acquire))){
 		return 0.0;
 	}
 	if(image_layers[active_layer]->size()==0 || is_null_image){
@@ -216,7 +218,7 @@ real_t MImage::get_pixel_RF_in_layer(const uint32_t x, const uint32_t  y) const 
 }
 
 Color MImage::get_pixel(const uint32_t x, const uint32_t  y) const {
-	if(unlikely(is_null_image||!is_init)){
+	if(unlikely(is_null_image||!is_init.load(std::memory_order_acquire))){
 		return Color();
 	}
 	uint32_t ofs = (x + y*width);
@@ -224,7 +226,7 @@ Color MImage::get_pixel(const uint32_t x, const uint32_t  y) const {
 }
 
 void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
-	if(is_null_image || !is_init){
+	if(is_null_image || !is_init.load(std::memory_order_acquire)){
 		return;
 	}
 	check_undo();
@@ -235,7 +237,7 @@ void MImage::set_pixel(const uint32_t x, const uint32_t  y,const Color& color){
 }
 
 void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
-	if(is_null_image || !is_init){
+	if(is_null_image || !is_init.load(std::memory_order_acquire)){
 		return;
 	}
 	check_undo();
@@ -247,7 +249,7 @@ void MImage::set_pixel_by_data_pointer(uint32_t x,uint32_t y,uint8_t* ptr){
 }
 
 const uint8_t* MImage::get_pixel_by_data_pointer(uint32_t x,uint32_t y) const {
-	if(is_null_image || !is_init){
+	if(is_null_image || !is_init.load(std::memory_order_acquire)){
 		return nullptr;
 	}
 	uint32_t ofs = (x + y*width);

@@ -82,7 +82,7 @@ void MImage::load(Ref<MResource> mres){
 	image_layers.push_back(&data);
 	is_saved_layers.push_back(true);
 	is_null_image = false;
-	is_init = true;
+	is_init.store(true,std::memory_order_release);
 	if(width!=region->grid->region_pixel_size){
 		data.resize(0);
 		is_corrupt_file = true;
@@ -100,6 +100,7 @@ void MImage::unload(Ref<MResource> mres){
 	if(!is_init){
 		return;
 	}
+	is_init.store(false,std::memory_order_seq_cst);
 	save(mres,false);
 	for(HashMap<int,MImageUndoData>::Iterator it=undo_data.begin();it!=undo_data.end();++it){
 		it->value.free();
@@ -120,7 +121,6 @@ void MImage::unload(Ref<MResource> mres){
 	new_tex_rid = RID();
 	old_tex_rid = RID();
 	data.clear();
-	is_init = false;
 	has_texture_to_apply = false;
 	image_layers.clear();
 	is_saved_layers.clear();
