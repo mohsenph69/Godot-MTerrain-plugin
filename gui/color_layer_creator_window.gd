@@ -28,6 +28,7 @@ var active_terrain: MTerrain
 
 var advanced_settings = false
 var uniform_exists = false
+var exist_uniform_instruction:String
 
 func _ready():
 	layer_name_input.text_changed.connect(func(new_text):
@@ -100,9 +101,16 @@ func validate_settings():
 	instructions_label.text = warnings if instructions == "" else instructions 	
 	create_button.disabled = instructions != ""
 	
+	instructions_label.text += exist_uniform_instruction
 	
 func set_terrain(input:MTerrain):
 	active_terrain = input
+	exist_uniform_instruction=""
+	for img in active_terrain.get_image_list():
+		if img!="normals" and img!="heightmap":
+			exist_uniform_instruction += " " + img + " "
+	if not exist_uniform_instruction.is_empty():
+		exist_uniform_instruction = "\nAvailable or existing uniforms: " + exist_uniform_instruction + "\nAny new name will create a new image"
 	active_terrain.save_all_dirty_images()
 	validate_settings.call_deferred()
 	if input.terrain_quad_count.x % input.region_quad_count !=0:
