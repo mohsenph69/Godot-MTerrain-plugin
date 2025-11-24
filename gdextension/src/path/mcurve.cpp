@@ -606,6 +606,7 @@ int32_t MCurve::add_point_conn_point(const Vector3& position,const Vector3& in,c
 }
 
 void MCurve::clear_conn_cache_data(int64_t conn_id){
+    std::lock_guard<std::mutex> lock(curve_mutex);
     baked_lines.erase(conn_id);
     conn_distances.erase(conn_id);
     conn_aabb.erase(conn_id);
@@ -905,6 +906,7 @@ void MCurve::remove_points(const PackedInt32Array &pids) {
 }
 
 void MCurve::clear_points(){
+    std::lock_guard<std::mutex> lock(curve_mutex);
     if(octree){
         octree->clear_oct_id(oct_id);
     }
@@ -1978,16 +1980,6 @@ void MCurve::get_conn_transforms(int64_t conn_id,const Vector<float>& t,Vector<T
     }
 }
 
-float MCurve::get_conn_lenght(int64_t conn_id){
-    float* dis;
-    if(conn_distances.has(conn_id)){
-        dis = conn_distances[conn_id].dis;
-    } else {
-        dis = _bake_conn_distance(conn_id);
-    }
-    ERR_FAIL_COND_V(dis==nullptr,0.0f);
-    return dis[DISTANCE_BAKE_TOTAL - 1];
-}
 Pair<float,float> MCurve::conn_ratio_limit_to_dis_limit(int64_t conn_id,const Pair<float,float>& limits){
     Pair<float,float> out;
     ERR_FAIL_COND_V(limits.first > limits.second,out);
@@ -1996,12 +1988,8 @@ Pair<float,float> MCurve::conn_ratio_limit_to_dis_limit(int64_t conn_id,const Pa
         out.second = get_conn_lenght(conn_id);
         return out;
     }
-    float* dis;
-    if(conn_distances.has(conn_id)){
-        dis = conn_distances[conn_id].dis;
-    } else {
-        dis = _bake_conn_distance(conn_id);
-    }
+    ConnDistances dis;
+    _get_bake_conn_distance(conn_id,dis);
     out.first = _get_conn_ratio_distance(dis,limits.first);
     out.second = _get_conn_ratio_distance(dis,limits.second);
     return out;
@@ -2011,14 +1999,9 @@ Pair<float,float> MCurve::conn_ratio_limit_to_dis_limit(int64_t conn_id,const Pa
     in order of points provided
 */
 float MCurve::get_point_order_distance_ratio(int32_t point_a,int32_t point_b,float distance){
-    float* dis;
+    ConnDistances dis;
     Conn c(point_a,point_b);
-    if(conn_distances.has(c.id)){
-        dis = conn_distances[c.id].dis;
-    } else {
-        dis = _bake_conn_distance(c.id);
-    }
-    ERR_FAIL_COND_V(dis==nullptr,0.0f);
+    _get_bake_conn_distance(c.id,dis);
     distance = point_a > point_b ? dis[DISTANCE_BAKE_TOTAL - 1] - distance : distance;
     float t = _get_conn_distance_ratios(dis,distance);
     t = point_a > point_b ?  1.0f - t: t;
@@ -2026,13 +2009,8 @@ float MCurve::get_point_order_distance_ratio(int32_t point_a,int32_t point_b,flo
 }
 
 float MCurve::get_conn_distance_ratio(int64_t conn_id,float distance) {
-    float* dis;
-    if(conn_distances.has(conn_id)){
-        dis = conn_distances[conn_id].dis;
-    } else {
-        dis = _bake_conn_distance(conn_id);
-    }
-    ERR_FAIL_COND_V(dis==nullptr,0.0f);
+    ConnDistances dis;
+    _get_bake_conn_distance(conn_id,dis);
     return _get_conn_distance_ratios(dis,distance);
 }
 /*
@@ -2040,14 +2018,9 @@ float MCurve::get_conn_distance_ratio(int64_t conn_id,float distance) {
 */
 Pair<int,int> MCurve::get_conn_distances_ratios(int64_t conn_id,const Vector<float>& distances,Vector<float>& t){
     t.resize(distances.size());
-    float* dis;
-    if(conn_distances.has(conn_id)){
-        dis = conn_distances[conn_id].dis;
-    } else {
-        dis = _bake_conn_distance(conn_id);
-    }
+    ConnDistances dis;
+    _get_bake_conn_distance(conn_id,dis);
     Pair<int,int> out;
-    ERR_FAIL_COND_V(dis==nullptr,out);
     float smallest_ratio = 10.0;
     int smallest_ration_index = -1;
     float biggest_ratio = -10.0;
@@ -2070,7 +2043,7 @@ Pair<int,int> MCurve::get_conn_distances_ratios(int64_t conn_id,const Vector<flo
     return out;
 }
 
-float MCurve::_get_conn_ratio_distance(const float* baked_dis,const float ratio) const{
+float MCurve::_get_conn_ratio_distance(const ConnDistances& baked_dis,const float ratio) const{
     if(ratio < 0.001){
         return 0.0f;
     }
@@ -2082,7 +2055,7 @@ float MCurve::_get_conn_ratio_distance(const float* baked_dis,const float ratio)
     return Math::lerp(baked_dis[ratio_index],baked_dis[ratio_index+1],ratio_remainder);
 }
 
-float MCurve::_get_conn_distance_ratios(const float* baked_dis,const float distance) const{
+float MCurve::_get_conn_distance_ratios(const ConnDistances& baked_dis,const float distance) const{
     if(distance <= 0){
         return 0.0;
     }
@@ -2134,8 +2107,14 @@ float MCurve::_get_conn_distance_ratios(const float* baked_dis,const float dista
     There is not baked distnace at a.pos as it is always zero distance
 
 */
-_FORCE_INLINE_ float* MCurve::_bake_conn_distance(int64_t conn_id){
-    ERR_FAIL_COND_V(!has_conn(conn_id), nullptr);
+void MCurve::_get_bake_conn_distance(int64_t conn_id,ConnDistances& distances){
+    std::lock_guard<std::mutex> lock(curve_mutex);
+    ERR_FAIL_COND(!has_conn(conn_id));
+    HashMap<int64_t, MCurve::ConnDistances>::Iterator it = conn_distances.find(conn_id);
+    if(it!=conn_distances.end()){
+        distances = it->value;
+        return;
+    }
     Conn conn(conn_id);
     const Point* a = points_buffer.ptr() + conn.p.a;
     const Point* b = points_buffer.ptr() + conn.p.b;
@@ -2149,8 +2128,6 @@ _FORCE_INLINE_ float* MCurve::_bake_conn_distance(int64_t conn_id){
             b_control = b->out;
         }
     }
-
-    ConnDistances conn_d;
     float _interval = 1.0f/LENGTH_POINT_SAMPLE_COUNT;
     float lenght = 0;
     Vector3 last_pos = a->position;
@@ -2159,13 +2136,12 @@ _FORCE_INLINE_ float* MCurve::_bake_conn_distance(int64_t conn_id){
         lenght += last_pos.distance_to(current_pos);
         last_pos = current_pos;
         if(i%DISTANCE_BAKE_INTERVAL == 0){
-            conn_d.dis[(i/DISTANCE_BAKE_INTERVAL) -1] = lenght;
+            distances.dis[(i/DISTANCE_BAKE_INTERVAL) -1] = lenght;
         }
     }
     lenght += last_pos.distance_to(b->position);
-    conn_d.dis[DISTANCE_BAKE_TOTAL - 1] = lenght;
-    conn_distances.insert(conn_id,conn_d);
-    return conn_distances[conn_id].dis;
+    distances.dis[DISTANCE_BAKE_TOTAL - 1] = lenght;
+    conn_distances.insert(conn_id,distances);
 }
 /*
     bellow rename_ ... methods has only internal use and should not be called

@@ -29,6 +29,8 @@
 #include <godot_cpp/templates/hash_set.hpp>
 #include <godot_cpp/templates/vmap.hpp>
 
+#include <mutex>
+
 
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "../moctree.h"
@@ -197,6 +199,9 @@ class MCurve : public Resource{
 
     struct ConnDistances {
         float dis[DISTANCE_BAKE_TOTAL];
+        inline float operator[](int index) const{
+            return dis[index];
+        }
     };
 
     struct PointSave
@@ -227,6 +232,7 @@ class MCurve : public Resource{
     bool is_waiting_for_user = false;
     int8_t active_lod_limit = 2;
     uint16_t oct_id = 0;
+    std::mutex curve_mutex;
     PackedInt32Array free_buffer_indicies;
     void _increase_points_buffer_size(size_t q);
     /// Conn additional points
@@ -397,15 +403,15 @@ class MCurve : public Resource{
     Transform3D get_point_order_transform(int32_t point_a,int32_t point_b,float t,bool tilt=true,bool scale=true);
     Transform3D get_conn_transform(int64_t conn_id,float t,bool apply_tilt=true,bool apply_scale=true);
     void get_conn_transforms(int64_t conn_id,const Vector<float>& t,Vector<Transform3D>& transforms,bool apply_tilt=true,bool apply_scale=true);
-    float get_conn_lenght(int64_t conn_id);
+    _FORCE_INLINE_ float get_conn_lenght(int64_t conn_id);
     Pair<float,float> conn_ratio_limit_to_dis_limit(int64_t conn_id,const Pair<float,float>& limits);
     float get_point_order_distance_ratio(int32_t point_a,int32_t point_b,float distance);
     float get_conn_distance_ratio(int64_t conn_id,float distance);
     Pair<int,int> get_conn_distances_ratios(int64_t conn_id,const Vector<float>& distances,Vector<float>& t);
     private:
-    _FORCE_INLINE_ float _get_conn_ratio_distance(const float* baked_dis,const float ratio) const;
-    _FORCE_INLINE_ float _get_conn_distance_ratios(const float* baked_dis,const float distance) const;
-    _FORCE_INLINE_ float* _bake_conn_distance(int64_t conn_id);
+    float _get_conn_ratio_distance(const ConnDistances& baked_dis,const float ratio) const;
+    float _get_conn_distance_ratios(const ConnDistances& baked_dis,const float distance) const;
+    void _get_bake_conn_distance(int64_t conn_id,ConnDistances& distances);
     // End of thread safe
     public:
     int32_t ray_active_point_collision(const Vector3& org,Vector3 dir,float threshold); // Maybe later optmize this
@@ -500,6 +506,13 @@ class MCurve : public Resource{
 
 
 };
+
+
+float MCurve::get_conn_lenght(int64_t conn_id){
+    ConnDistances dis;
+    _get_bake_conn_distance(conn_id,dis);
+    return dis[DISTANCE_BAKE_TOTAL - 1];
+}
 
 VARIANT_ENUM_CAST(MCurve::ConnType);
 
