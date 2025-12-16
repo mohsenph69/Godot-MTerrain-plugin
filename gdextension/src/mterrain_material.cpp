@@ -148,6 +148,14 @@ void MTerrainMaterial::update_uniforms_list(){
             }
         }
     }
+    // Forcing to have NORMAL and HEIGHT Images
+    if(!new_terrain_textures_names.has(NORMALS_NAME)){
+        new_terrain_textures_names.push_back(NORMALS_NAME);
+        WARN_PRINT("Shader Error! Please run the terrain using a shader with no errors that also contains mterrain_heightmap and mterrain_normals uniforms Sampler2D; otherwise, GPU textures cannot be loaded properly.");
+    }
+    if(!new_terrain_textures_names.has(HEIGHTMAP_NAME)){
+        new_terrain_textures_names.push_back(HEIGHTMAP_NAME);
+    }
     uniforms_names = new_uniforms_names;
     terrain_textures_names = new_terrain_textures_names;
     notify_property_list_changed();
