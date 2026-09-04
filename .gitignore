@@ -1,6 +1,7 @@
 gdextension/.vscode/*
 tmp/*
-
+build/*
+gdextension/build/*
 *sconsign.dblite
 *.dblite
 *.os
