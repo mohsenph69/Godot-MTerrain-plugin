@@ -4,10 +4,10 @@ entry_symbol = "test_library_init"
 compatibility_minimum = 4.3
 
 [libraries]
-macos.debug = "res://mterrain/libMTerrain.macos.template_debug.double.universal.dylib"
-macos.release = "res://mterrain/libMTerrain.macos.template_release.double.universal.dylib"
-ios.debug = "res://mterrain/libMTerrain.ios.template_debug.double.universal.dylib"
-ios.release = "res://mterrain/libMTerrain.ios.template_release.double.universal.dylib"
+macos.debug = "res://mterrain/libMTerrain.macos.template_debug.double.arm64.dylib"
+macos.release = "res://mterrain/libMTerrain.macos.template_release.double.arm64.dylib"
+ios.debug = "res://mterrain/libMTerrain.ios.template_debug.double.arm64.dylib"
+ios.release = "res://mterrain/libMTerrain.ios.template_release.double.arm64.dylib"
 linux.debug.x86_64 = "res://mterrain/libMTerrain.linux.template_debug.double.x86_64.so"
 linux.release.x86_64 = "res://mterrain/libMTerrain.linux.template_release.double.x86_64.so"
 linux.debug.x86_32 = "res://mterrain/libMTerrain.linux.template_debug.double.x86_32.so"
