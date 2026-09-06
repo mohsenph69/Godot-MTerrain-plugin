@@ -31,6 +31,7 @@ else:
 
 src = Glob("src/*.cpp")
 src.append(Glob("src/util/*.cpp"))
+src.append("register_types.cpp")
 src.append(Glob("src/hlod/*.cpp"))
 src.append(Glob("src/height_brushes/*.cpp"))
 src.append(Glob("src/color_brushes/*.cpp"))
