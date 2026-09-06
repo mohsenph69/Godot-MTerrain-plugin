@@ -12,7 +12,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(IS_MAIN_CMAKE_BUILD TRUE)
     message(STATUS "${ESC}[1;34mMain terrain build is deteted: please put the repo in addons/m_terrain directory${ESC}[0m ")
 else()
-    message(STATUS "${ESC}[1;34musing terrain as subdirectory is deteted. please put all addons plugin gdscript file in addons/m_terrain directory${ESC}[0m ")
+    message(STATUS "${ESC}[1;34musing terrain as subdirectory is deteted. Please add godot-cpp subdirectory before this${ESC}[0m ")
 endif()
 
 
