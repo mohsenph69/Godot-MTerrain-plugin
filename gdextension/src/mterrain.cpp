@@ -168,6 +168,7 @@ void MTerrain::_bind_methods() {
     ClassDB::bind_method(D_METHOD("draw_height", "brush_pos","radius","brush_id"), &MTerrain::draw_height);
     ClassDB::bind_method(D_METHOD("draw_color","brush_pos","radius","brush_id","index"),&MTerrain::draw_color);
 
+    ClassDB::bind_method(D_METHOD("get_active_layer_name"), &MTerrain::get_active_layer_name);
     ClassDB::bind_method(D_METHOD("set_active_layer_by_name","layer_name"), &MTerrain::set_active_layer_by_name);
     ClassDB::bind_method(D_METHOD("add_heightmap_layer","layer_name"), &MTerrain::add_heightmap_layer);
     ClassDB::bind_method(D_METHOD("rename_heightmap_layer","old_name","new_name"), &MTerrain::rename_heightmap_layer);
