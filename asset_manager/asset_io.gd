@@ -1,6 +1,8 @@
 @tool
 class_name AssetIO extends Object
 
+const MeshImport = preload("res://addons/m_terrain/asset_manager/asset_mesh_import.gd")
+
 static var LOD_COUNT = 10  # The number of different LODs in your project
 
 static var regex_mesh_match := RegEx.create_from_string("(.*)[_|\\s]lod[_|\\s]?(\\d+)")
@@ -100,11 +102,15 @@ static func generate_asset_data_from_glb(scene:Array,active_collection="__root__
 		if name_data["lod"] >=0: ## Then definitly is a mesh					
 			#MAKE MATERIAL SET FROM META
 			if node.has_meta("material_sets"):
-				var mesh: ArrayMesh = node.mesh.get_mesh()												
-				var mmesh = MMesh.new()
-				mmesh.create_from_mesh( mesh )
-				var material_sets = node.get_meta("material_sets")				
-				mmesh.material_set_resize(len(material_sets[0]))
+				if not node is ImporterMeshInstance3D:
+					push_error("Material-set metadata requires an imported mesh: %s" % node.name)
+					continue
+				var imported := MeshImport.create(node.mesh, node.get_meta("material_sets"))
+				if not imported.ok:
+					push_error("Invalid material sets for %s: %s" % [node.name, imported.error])
+					continue
+				var mmesh: MMesh = imported.mesh
+				var material_sets: Array = imported.material_sets
 				var mesh_item_name = name_data["name"]							
 				asset_data.add_mesh_data(material_sets, mmesh, node)
 				asset_data.update_collection_mesh(mesh_item_name,name_data.lod,mmesh)
